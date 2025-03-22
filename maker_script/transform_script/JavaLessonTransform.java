@@ -11,7 +11,7 @@ public class JavaLessonTransform {
 	
     public static void main(String[] args) throws IOException {
 
-		
+		System.out.println("Base URL: " + baseGitHubUrl);
 		
         // 🔹 Xóa file HTML cũ
         deleteFile(outputPath);
