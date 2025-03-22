@@ -4,11 +4,11 @@ import java.util.*;
 
 public class JavaLessonTransform {
 	
-		String baseGitHubUrl = "https://marucho2020.github.io/Learning/JavaLearn/lessons/";
-		String filePath = "D:\\Dev\\Java\\Learn\\JavaSliveLearn.txt";  // File nguồn
-        String outputPath = "D:\\Dev\\Learning-all-git-page\\JavaLearn\\java-learning-list.html"; // File HTML danh sách bài học
-        String lessonDir = "D:\\Dev\\Learning-all-git-page\\JavaLearn\\lessons"; // Thư mục chứa bài học
-	
+    private static final String filePath = "D:\\Dev\\Java\\Learn\\JavaSliveLearn.txt";
+    private static final String outputPath = "D:\\Dev\\Learning-all-git-page\\JavaLearn\\java-learning-list.html";
+    private static final String lessonDir = "D:\\Dev\\Learning-all-git-page\\JavaLearn\\lessons";
+    private static final String baseGitHubUrl = "https://marucho2020.github.io/Learning/JavaLearn/lessons/";
+
     public static void main(String[] args) throws IOException {
 
 		System.out.println("Base URL: " + baseGitHubUrl);
