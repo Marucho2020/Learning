@@ -3,11 +3,16 @@ import java.nio.file.*;
 import java.util.*;
 
 public class JavaLessonTransform {
-    public static void main(String[] args) throws IOException {
-        String filePath = "D:\\Dev\\Java\\Learn\\JavaSliveLearn.txt";  // File nguồn
+	
+		String baseGitHubUrl = "https://marucho2020.github.io/Learning/JavaLearn/lessons/";
+		String filePath = "D:\\Dev\\Java\\Learn\\JavaSliveLearn.txt";  // File nguồn
         String outputPath = "D:\\Dev\\Learning-all-git-page\\JavaLearn\\java-learning-list.html"; // File HTML danh sách bài học
         String lessonDir = "D:\\Dev\\Learning-all-git-page\\JavaLearn\\lessons"; // Thư mục chứa bài học
+	
+    public static void main(String[] args) throws IOException {
 
+		
+		
         // 🔹 Xóa file HTML cũ
         deleteFile(outputPath);
 
@@ -136,12 +141,22 @@ static void generateHtml(String outputPath, List<Lesson> lessons) throws IOExcep
     html.append("<button onclick='toggleTheme()'>🌙 Chuyển giao diện</button>");
     html.append("<button onclick='fixTitles()'>🔧 Sửa tiêu đề</button><ul>");
 
-    for (Lesson lesson : lessons) {
-        html.append("<li><a href='").append(lesson.link).append("'>")
-            .append(lesson.title.replace("==========", "-").replace("==", "--"))
-            .append("</a></li>");
-        Files.write(Paths.get(lesson.link), lesson.toHtml().getBytes());
-    }
+    // for (Lesson lesson : lessons) {
+    //     html.append("<li><a href='").append(lesson.link).append("'>")
+    //         .append(lesson.title.replace("==========", "-").replace("==", "--"))
+    //         .append("</a></li>");
+    //     Files.write(Paths.get(lesson.link), lesson.toHtml().getBytes());
+    // }
+	
+	
+	for (Lesson lesson : lessons) {
+    String lessonUrl = baseGitHubUrl + new File(lesson.link).getName(); // Chuyển sang URL GitHub
+    html.append("<li><a href='").append(lessonUrl).append("'>")
+        .append(lesson.title.replace("==========", "-").replace("==", "--"))
+        .append("</a></li>");
+    
+    Files.write(Paths.get(lesson.link), lesson.toHtml().getBytes());
+}
 
     html.append("</ul></div>");
     
