@@ -1,0 +1,64 @@
+<html><head><title>Cách sử dụng Externalizable</title></head><body><h1>Cách sử dụng Externalizable</h1><pre>	
+	## Khai báo class và implements Externalizable  
+	
+		import java.io.*;
+		class Person implements Externalizable {
+			private String name;
+			private int age;
+		
+			// Bắt buộc có constructor không tham số
+			public Person() {}
+		
+			public Person(String name, int age) {
+				this.name = name;
+				this.age = age;
+			}
+		
+			// Ghi dữ liệu theo cách tùy chỉnh
+			@Override
+			public void writeExternal(ObjectOutput out) throws IOException {
+				out.writeUTF(name);
+				out.writeInt(age);
+			}
+		
+			// Đọc dữ liệu theo cách tùy chỉnh
+			@Override
+			public void readExternal(ObjectInput in) throws IOException {
+				name = in.readUTF();
+				age = in.readInt();
+			}
+		
+			@Override
+			public String toString() {
+				return "Person{name='" + name + "', age=" + age + "}";
+			}
+		}
+
+
+	## Serialize đối tượng với Externalizable 
+	
+		public class ExternalizableWriteExample {
+		public static void main(String[] args) {
+			try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream("person.ext"))) {
+				Person person = new Person("Alice", 25);
+				out.writeObject(person);
+				System.out.println("Object has been serialized.");
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	## Deserialize đối tượng với Externalizable
+		public class ExternalizableReadExample {
+		public static void main(String[] args) {
+			try (ObjectInputStream in = new ObjectInputStream(new FileInputStream("person.ext"))) {
+				Person person = (Person) in.readObject();
+				System.out.println("Object has been deserialized: " + person);
+			} catch (IOException | ClassNotFoundException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+</pre></body></html>

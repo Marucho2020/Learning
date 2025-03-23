@@ -1,0 +1,39 @@
+<html><head><title>Mã hóa dữ liệu khi serialize</title></head><body><h1>Mã hóa dữ liệu khi serialize</h1><pre>					class SecurePerson implements Externalizable {
+						private String name;
+						private int age;
+					
+						public SecurePerson() {}
+					
+						public SecurePerson(String name, int age) {
+							this.name = name;
+							this.age = age;
+						}
+					
+						@Override
+						public void writeExternal(ObjectOutput out) throws IOException {
+							out.writeUTF(encrypt(name)); // Mã hóa tên
+							out.writeInt(age);
+						}
+					
+						@Override
+						public void readExternal(ObjectInput in) throws IOException {
+							name = decrypt(in.readUTF()); // Giải mã tên
+							age = in.readInt();
+						}
+					
+						private String encrypt(String data) {
+							return new StringBuilder(data).reverse().toString(); // Đảo ngược chuỗi
+						}
+					
+						private String decrypt(String data) {
+							return new StringBuilder(data).reverse().toString(); // Đảo ngược lại
+						}
+					
+						@Override
+						public String toString() {
+							return "SecurePerson{name='" + name + "', age=" + age + "}";
+						}
+					}
+
+
+</pre></body></html>

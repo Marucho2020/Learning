@@ -1,0 +1,59 @@
+<html><head><title>Ví dụ thực tế: Sử dụng LinkedBlockingQueue để quản lý tác vụ 	và bài toán người tiêu dùng nhà sản xuất</title></head><body><h1>Ví dụ thực tế: Sử dụng LinkedBlockingQueue để quản lý tác vụ 	và bài toán người tiêu dùng nhà sản xuất</h1><pre>		
+					import java.util.concurrent.LinkedBlockingQueue;
+					
+					class Producer implements Runnable {
+						private LinkedBlockingQueue<Integer> queue;
+					
+						public Producer(LinkedBlockingQueue<Integer> queue) {
+							this.queue = queue;
+						}
+					
+						@Override
+						public void run() {
+							try {
+								for (int i = 1; i <= 5; i++) {
+									System.out.println("Produced: " + i);
+									queue.put(i); // Chặn nếu queue đầy
+									Thread.sleep(100); // Giả lập thời gian sản xuất
+								}
+							} catch (InterruptedException e) {
+								Thread.currentThread().interrupt();
+							}
+						}
+					}
+					
+					class Consumer implements Runnable {
+						private LinkedBlockingQueue<Integer> queue;
+					
+						public Consumer(LinkedBlockingQueue<Integer> queue) {
+							this.queue = queue;
+						}
+					
+						@Override
+						public void run() {
+							try {
+								while (true) {
+									Integer item = queue.take(); // Chặn nếu queue rỗng
+									System.out.println("Consumed: " + item);
+									Thread.sleep(200); // Giả lập thời gian tiêu thụ
+								}
+							} catch (InterruptedException e) {
+								Thread.currentThread().interrupt();
+							}
+						}
+					}
+					
+					public class LinkedBlockingQueueExample {
+						public static void main(String[] args) {
+							LinkedBlockingQueue<Integer> queue = new LinkedBlockingQueue<>(3);
+					
+							Thread producer = new Thread(new Producer(queue));
+							Thread consumer = new Thread(new Consumer(queue));
+					
+							producer.start();
+							consumer.start();
+						}
+					}
+		
+		
+</pre></body></html>

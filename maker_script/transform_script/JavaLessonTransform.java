@@ -106,18 +106,27 @@ public class JavaLessonTransform {
         return rootLessons;
     }
 
-    // 📌 Tạo file HTML cho từng bài học
-    private static void generateLessonHtml(Lesson lesson, String lessonDir) throws IOException {
-        String fileName = lesson.id + ".html";
-        String filePath = lessonDir + "/" + fileName;
-        String lessonHtml = "<html><head><title>" + lesson.title + "</title></head><body>"
-                            + "<h1>" + lesson.title + "</h1>"
-                            + "<pre>" + lesson.content + "</pre>"
-                            + "</body></html>";
+	// 📌 Tạo file HTML cho từng bài học
+	private static void generateLessonHtml(Lesson lesson, String lessonDir) throws IOException {
+		String fileName = sanitizeFileName(lesson.title) + ".html"; // Chuẩn hóa tên file
+		String filePath = lessonDir + "/" + fileName;
+		
+		String lessonHtml = "<html><head><title>" + lesson.title + "</title></head><body>"
+							+ "<h1>" + lesson.title + "</h1>"
+							+ "<pre>" + lesson.content + "</pre>"
+							+ "</body></html>";
+	
+		Files.write(Paths.get(filePath), lessonHtml.getBytes());
+		System.out.println("📄 Created: " + filePath);
+	}
+	
+	// 📌 Chuẩn hóa tiêu đề thành tên file hợp lệ
+	private static String sanitizeFileName(String title) {
+		return title.replaceAll("[\\\\/:*?\"<>|]", "")  // Loại bỏ ký tự không hợp lệ
+					.replaceAll("\\s+", "-")           // Thay khoảng trắng bằng dấu -
+					.replaceAll("[^\\p{ASCII}]", "");  // Loại bỏ ký tự Unicode nếu cần
+	}
 
-        Files.write(Paths.get(filePath), lessonHtml.getBytes());
-        System.out.println("📄 Created: " + filePath);
-    }
 
     // 📌 Tạo trang index danh sách bài học
     private static void generateHtml(String outputPath, List<Lesson> lessons) throws IOException {

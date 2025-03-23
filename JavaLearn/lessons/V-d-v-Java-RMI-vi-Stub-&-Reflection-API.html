@@ -1,0 +1,96 @@
+<html><head><title>Ví dụ về Java RMI với Stub & Reflection API</title></head><body><h1>Ví dụ về Java RMI với Stub & Reflection API</h1><pre>		
+
+	##📌 Bước 1 : Tạo Remote Interface 
+	
+		public interface Calculator extends Remote {
+			int add(int a, int b) throws RemoteException;
+		}
+		
+		###  Điểm quan trọng: 
+			Giao diện phải kế thừa Remote để trở thành Remote Interface.
+			Phương thức phải khai báo throws RemoteException để xử lý lỗi mạng
+
+
+
+
+	##📌 Bước 2: Cài đặt Remote Object trên Server 
+		
+			import java.rmi.server.UnicastRemoteObject;
+			import java.rmi.RemoteException;
+			
+			public class CalculatorImpl extends UnicastRemoteObject implements Calculator {
+				protected CalculatorImpl() throws RemoteException {
+					super();
+				}
+			
+				public int add(int a, int b) throws RemoteException {
+					return a + b;
+				}
+			}
+			
+			
+			
+				###  Điểm quan trọng: 
+					Kế thừa UnicastRemoteObject, giúp tự động tạo Stub cho Client.
+					Không cần Skeleton vì Server sẽ sử dụng Reflection API để gọi add().
+					
+
+
+
+
+	## 📌 Bước 3: Tạo Server và Đăng ký Object với RMI Registry
+		
+
+			import java.rmi.registry.LocateRegistry;
+			import java.rmi.registry.Registry;
+			
+			public class Server {
+				public static void main(String[] args) {
+					try {
+						Calculator calculator = new CalculatorImpl();
+						Registry registry = LocateRegistry.createRegistry(1099);
+						registry.rebind("CalculatorService", calculator);
+						System.out.println("Server is running...");
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+			}
+
+			### 📌 Điểm quan trọng  
+			
+				Tạo đối tượng từ xa (CalculatorImpl).
+				Đăng ký nó vào RMI Registry với tên "CalculatorService"
+
+
+			
+	
+	## 📌 Bước 4: Tạo Client để gọi phương thức từ xa 
+			
+				import java.rmi.registry.LocateRegistry;
+				import java.rmi.registry.Registry;
+				
+				public class Client {
+					public static void main(String[] args) {
+						try {
+							Registry registry = LocateRegistry.getRegistry("localhost", 1099);
+							Calculator stub = (Calculator) registry.lookup("CalculatorService");
+							int result = stub.add(5, 3);
+							System.out.println("Kết quả: " + result);
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					}
+				}
+
+	
+	
+			## 📌Điểm quan trọng:
+			
+				Lấy Stub từ RMI Registry và gọi add().
+				Stub tự động gửi yêu cầu đến Server mà Client không cần quan tâm đến kết nối mạng.
+
+	
+	
+	
+</pre></body></html>

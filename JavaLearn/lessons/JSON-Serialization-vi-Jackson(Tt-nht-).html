@@ -1,0 +1,133 @@
+<html><head><title>JSON Serialization với Jackson(Tốt nhất )</title></head><body><h1>JSON Serialization với Jackson(Tốt nhất )</h1><pre>			## Thêm phụ thuộc 
+			
+				<dependencies>
+					<dependency>
+						<groupId>com.fasterxml.jackson.core</groupId>
+						<artifactId>jackson-databind</artifactId>
+						<version>2.16.0</version>
+					</dependency>
+				</dependencies>
+
+
+			## Chuyển Object java thành JSON string 
+				import com.fasterxml.jackson.databind.ObjectMapper;
+				class Person {
+					public String name;
+					public int age;
+				
+					public Person(String name, int age) {
+						this.name = name;
+						this.age = age;
+					}
+				}
+				
+				public class JacksonSerializationExample {
+					public static void main(String[] args) throws Exception {
+						Person person = new Person("Alice", 25);
+						
+						// Tạo ObjectMapper
+						ObjectMapper objectMapper = new ObjectMapper();
+				
+						// Chuyển Object → JSON
+						String json = objectMapper.writeValueAsString(person);
+						System.out.println("Serialized JSON: " + json);
+					}
+				}
+				
+				
+			--> {"name":"Alice","age":25}
+			
+			
+			## Chuyển JSON Strign thành Object Java 
+					String json = "{\"name\":\"Alice\",\"age\":25}";
+					
+					// Deserialize JSON → Object
+					Person person = objectMapper.readValue(json, Person.class);
+					System.out.println("Deserialized Object: " + person.name + ", " + person.age);
+					
+					Deserialized Object: Alice, 25
+
+
+
+
+
+
+			## Dùng Annotation để tùy chỉnh JSON Serialization
+				
+				## @JsonIgnore - Bỏ qua một field chi serialize 
+					import com.fasterxml.jackson.annotation.JsonIgnore;
+					
+					class User {
+						public String username;
+						
+						@JsonIgnore
+						public String password; // Không serialize field này
+					
+						public User(String username, String password) {
+							this.username = username;
+							this.password = password;
+						}
+					}
+										
+					--> {"username":"admin"}
+					
+					
+				###	@JsonProperty - Đổi tên field trong JSON 
+				
+						import com.fasterxml.jackson.annotation.JsonProperty;
+						class Car {
+							@JsonProperty("car_name")
+							public String name;
+						
+							public Car(String name) {
+								this.name = name;
+							}
+						}
+		
+						---> 	{"car_name":"Tesla"}
+
+
+				
+				### @JsonFormat - Định dạng ngày tháng 
+				
+						import com.fasterxml.jackson.annotation.JsonFormat;
+						import java.util.Date;
+						
+						class Event {
+							public String name;
+						
+							@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy")
+							public Date date;
+						
+							public Event(String name, Date date) {
+								this.name = name;
+								this.date = date;
+							}
+						}
+						
+						--> {"name":"Conference","date":"15-02-2025"}
+						
+						
+				
+				### @JsonInclude - bỏ qua field có giá trị null hoặc default 
+				
+					import com.fasterxml.jackson.annotation.JsonInclude;
+					@JsonInclude(JsonInclude.Include.NON_NULL)
+					class Product {
+						public String name;
+						public Double price; // Nếu null sẽ bị bỏ qua
+					
+						public Product(String name, Double price) {
+							this.name = name;
+							this.price = price;
+						}
+					}
+					
+					--> {"name":"Laptop"}
+					
+					
+
+
+				
+
+</pre></body></html>

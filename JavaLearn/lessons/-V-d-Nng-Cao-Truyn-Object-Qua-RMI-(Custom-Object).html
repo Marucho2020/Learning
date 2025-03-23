@@ -1,0 +1,149 @@
+<html><head><title>📌 Ví dụ Nâng Cao: Truyền Object Qua RMI (Custom Object)</title></head><body><h1>📌 Ví dụ Nâng Cao: Truyền Object Qua RMI (Custom Object)</h1><pre>
+		Ngoài kiểu dữ liệu cơ bản, ta có thể gửi Object tự định nghĩa qua RMI.
+		!!! Bất kỳ trường hợp nào cũng thế, khi xử lý chuyển object thành stream thì phải implement Serializable 
+		
+		
+	
+		## Bước 1: Định nghĩa Object truyền qua mạng 
+		
+				import java.io.Serializable;
+			
+				public class AIModel implements Serializable {
+					private static final long serialVersionUID = 1L;
+					private String name;
+					private double accuracy;
+				
+					public AIModel(String name, double accuracy) {
+						this.name = name;
+						this.accuracy = accuracy;
+					}
+				
+					@Override
+					public String toString() {
+						return "AIModel{name='" + name + "', accuracy=" + accuracy + "}";
+					}
+				}
+					
+	
+	
+			## 📌 Lưu ý:
+				✅ implements Serializable → Bắt buộc để Marshalling/Unmarshalling Object.
+				✅ serialVersionUID → Đảm bảo tương thích giữa các phiên bản class.
+	
+	
+	
+		## Bước 2: Truyền Object qua RMI 
+			
+		📌Cập nhật Remote Interface
+	
+			public interface AIService extends Remote {
+				AIModel getModelInfo() throws RemoteException;
+			}
+
+	
+		📌Cập nhật Server 
+		
+			public class AIServiceImpl extends UnicastRemoteObject implements AIService {
+				protected AIServiceImpl() throws RemoteException {
+					super();
+				}
+			
+				@Override
+				public AIModel getModelInfo() {
+					return new AIModel("GPT-4", 99.5);
+				}
+			}
+
+	
+	
+		📌 Client Nhận Object 
+			public class Client {
+				public static void main(String[] args) {
+					try {
+						Registry registry = LocateRegistry.getRegistry("localhost", 1099);
+						AIService service = (AIService) registry.lookup("AIService");
+			
+						AIModel model = service.getModelInfo();
+						System.out.println("Received Model: " + model);
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+			}
+
+		
+		
+		###📌 Quá trình Marshalling & Unmarshalling:
+			✅ Object AIModel được serialize (Marshalling) trên Server.
+			✅ Client nhận dữ liệu, Unmarshalling thành Object AIModel.
+				
+	
+//==========Lession 47 == Các kỹ thuật Java RMI nâng cao ==========//
+ 
+//------------------✅ Giao tiếp giữa các máy khác nhau trong mạng
+	# Khái niệm 
+		Java RMI cho phép các đối tượng Java chạy trên máy này có thể gọi phương thức trên đối tượng chạy ở máy khác như thể chúng đang gọi phương thức cục bộ. Điều này thực hiện được nhờ stub(client) và skeleton (server)
+		
+			✅ Các thành phần chính trong RMI:
+			Remote Interface: Định nghĩa các phương thức mà client có thể gọi từ xa.
+			Remote Object (Implementation): Cung cấp phần triển khai của remote interface.
+			Stub & Skeleton: Stub là proxy trên client, còn Skeleton (trước Java 5) nhận yêu cầu từ stub, gọi hàm và gửi kết quả về.
+			RMI Registry: Cơ sở dữ liệu lưu trữ các remote object đã đăng ký.
+			RMI Transport: Lớp trừu tượng xử lý truyền dữ liệu giữa client và server.
+			
+			✅ Cách giao tiếp giữa hai máy:
+			Server khởi động: Đăng ký remote object với RMI Registry.
+			Client tra cứu (lookup) remote object từ Registry.
+			Stub trên client gửi yêu cầu tới remote object trên server.
+			Server thực hiện phương thức và trả kết quả về client.
+			
+			
+			
+	# Ví dụ giao tiếp qua mạng 
+		// Remote Interface
+					import java.rmi.*;
+					
+					public interface RemoteInterface extends Remote {
+						String sayHello() throws RemoteException;
+					}
+					
+					// Server Implementation
+					import java.rmi.*;
+					import java.rmi.server.*;
+					
+					public class RemoteImpl extends UnicastRemoteObject implements RemoteInterface {
+						protected RemoteImpl() throws RemoteException {
+							super();
+						}
+					
+						public String sayHello() {
+							return "Hello from Server!";
+						}
+					
+						public static void main(String[] args) {
+							try {
+								RemoteImpl obj = new RemoteImpl();
+								Naming.rebind("rmi://localhost/HelloServer", obj);
+								System.out.println("Server is ready.");
+							} catch (Exception e) {
+								e.printStackTrace();
+							}
+						}
+					}
+					
+					// Client
+					import java.rmi.*;
+					
+					public class RMIClient {
+						public static void main(String[] args) {
+							try {
+								RemoteInterface obj = (RemoteInterface) Naming.lookup("rmi://localhost/HelloServer");
+								System.out.println(obj.sayHello());
+							} catch (Exception e) {
+								e.printStackTrace();
+							}
+						}
+					}
+
+
+</pre></body></html>

@@ -1,0 +1,136 @@
+<html><head><title>Một số lưu ý quan trọng</title></head><body><h1>Một số lưu ý quan trọng</h1><pre>	## 1. Ưu tiên không đồng nghĩa với thứ tự duyệt : !!!CHÚ Ý!!! 
+		PriorityQueue không đảm bảo sắp xếp các phần tử khi quyệt qua bằng iterator. Thứ tự duyệt có thể không giống thứ tự ưu tiên. 
+		
+	## Ứng dụng : 
+		- Xây dựng bộ lập lịch ưu tiên(CPU Scheduling)
+		- Xử lý sự kiện trong hệ thống(Event-driven programming)
+		- Triển khai thuật toán như Dijktra hoặc Huffman Coding 
+	## So sánh với TreeSet : 
+		- PriorityQueue chỉ tập trung vào phần tử đầu tiên(ưu tiên )
+		- TreeSet Lưu các phần tử theo thứ tự sắp xếp toàn bộ  
+		
+
+//==========Lession 20 == ArrayDeque ==========//
+	#1. Định nghĩa :
+		ArrayDeque(Double Ended Queue) là một cấu trúc dữu liệu trong Java được cung cấp bởi java.util package. Nó là một deque (hàng đợi 2 đầu) được triển khai dựa trên một mảng động 
+		
+	Nó có thể được sử dụng 2 đầu nhưng 
+		+ Hàng đợi (Queue) : FIFO : Thêm vào cuối và xóa từ đầu  
+		+ Ngăn xếp(Stack) : LIFO  : Thêm vào đầu và xóa từ cuối 
+		
+	ArrayDeque được ưu tiên hơn LinkedList khi làm việc với deque hoặc stack vì hiệu suất tốt hơn(không có các overhead từ các nút liên kết) 
+
+
+
+	# 2. Tính năng nổi bật 
+	- Không giới hạn kích thước ban đầu: Kích thước của ArrayDeque tự động tăng khi cần. 
+	- Hiệu suât cao : hoạt động nhanh hơn LinkedList cho các thao tác đầu và cuối(enqueue, dequeue , pop)
+	- Không hỗ trợ null : Không cho phép lưu trữ giá trị null để tránh lỗi không xác định khi sử dụng các phương thức như peek() , poll 
+	
+	
+	#3 Khởi tạo  
+		// Khởi tạo với kích thước tự động 
+		ArrayDeque<Integer> deque = new ArrrayDeque<>(); 
+		
+		// Khởi tạo với kích thước ban đầu: 
+		ArrayDeque<Integer> deque = new ArrayDeque<>(50);
+		
+		
+	# 4. Các phương thức quan trọng  
+		## Thao tác thêm phần tử  
+			.addFirst(E e)        : Thêm vào đầu 
+			.addLast(E e)         : Thêm vào cuối 
+			.offerFirst(E e)      : Thêm vào đầu, trả về false nếu k thể thêm 
+			.offerLast(E e)       : Thêm vào cuối, trả về false nếu k thể thêm 
+		
+		
+		## Thao tác lấy/xóa phần tử 
+			.removeFirst() : Xóa và trả về phần tử ở đầu deque(exception nếu deque rỗng )
+			.removeLast() : Xóa và trả về phần tử ở cuối deque(exception nếu deque rỗng )
+			.pollFirst()  : Xóa và trả về phần tử ở đầu deque(trả về null nếu rỗng )
+			.pollLast() : Xóa và trả về phần tử ở cuối deque(trả về null nếu rỗng )
+			
+		## Thao tác xem phần tử 
+			.getFirst() : Trả về phần tử ở đầu deque(exception nếu deque rỗng)
+			.getLast()  : Trả về phần tử ở cuối deque(exception nếu deque rỗng )
+			.peekFirst(): Trả về phần tử ở đầu deque(trả về null nếu rỗng)
+			.peekLast() : Trả về phần tử ở cuối deque(trả về null nếu rỗng )
+		
+		
+		## Thao tác như Stack 
+			push(E e) 	: Thêm phần tử vào đầu(giống addFirst)
+			pop() 		: Xóa và trả về phần tử ở đầu(hoạt động như removeFirst )
+			
+			
+		
+	# 5 Ưu điểm và nhược điểm 
+		## Ưu điểm 
+			Hiệu suất cao hơn so với LinkedList khi làm việc với các thao tác đầu và cuối 
+			Đa năng, có thể hoạt động như một hàng đợi hoặc ngăn xếp 
+			Không cần quản lý các nút liên kết như trong LinkedList 
+			
+		## Nhược điểm 
+			Không cho phép giá trị null 
+			Không phải là thread-safe(Phải sử dụng Collections.synchronizedDeque()) để đồng bộ 
+			
+			
+	
+		
+		
+	# 6 Ví dụ 
+		##  Sử dụng ArrayDeque như một Queue(hàng đợi )
+			        ArrayDeque<String> deque = new ArrayDeque<>();
+        
+					// Thêm phần tử
+					deque.addLast("A");
+					deque.addLast("B");
+					deque.addLast("C");
+			
+					// Xem phần tử
+					System.out.println(deque.peekFirst()); // A
+					System.out.println(deque.peekLast());  // C
+			
+					// Xóa phần tử
+					deque.removeFirst(); // Xóa A
+					System.out.println(deque); // [B, C]
+		
+		// Sử dụng ArrayDeque như môt Stack(ngăn xếp)
+		        ArrayDeque<Integer> stack = new ArrayDeque<>();
+
+				// Thêm phần tử vào ngăn xếp
+				stack.push(10);
+				stack.push(20);
+				stack.push(30);
+		
+				// Lấy phần tử ra khỏi ngăn xếp
+				System.out.println(stack.pop()); // 30
+				System.out.println(stack.pop()); // 20
+				System.out.println(stack); // [10]
+		
+		
+		
+	# 7  So sánh với các cấu trúc dữ liệu khác  
+	Đặc điểm				ArrayDeque					LinkedList								Stack (deprecated)
+	Triển khai				Dựa trên mảng động			Dựa trên danh sách liên kết				Dựa trên Vector
+	Hiệu suất				Nhanh hơn LinkedList		Chậm hơn (do quản lý nút liên kết)		Chậm hơn (do đồng bộ hóa)
+	Lưu giá trị null		Không						Có thể									Có thể
+	Đa năng					Có (Deque và Stack)			Có (Deque và Stack)						Chỉ Stack
+		
+		
+		
+		
+		
+	# 8 Lưu ý :
+		
+		- Hiểu cách ArrayDeque hoạt động như một hàng đợi hoặc ngăn xếp 
+		- Phân biệt ArrayDeque với LinkedList và Stack 
+		- Biết các phương thức cơ bản như addFirst, pollLast, push pop 
+		
+		- Tập trung vào các tính chất hiệu suất và cách triển khai thực tế 
+		- Hiểu rõ ngoại lệ tiềm ẩn( NoSuchElementException khi gọi removeFirs() trên deque rỗng )
+		- Sử dụng ArrayDeque trong các tình huống phức tạp như hàng đợi ưu tiên hoặc DFS/BFS trong thuật toán 
+			
+		
+//==========Lession 21 == BlockingQueue ==========//
+
+</pre></body></html>

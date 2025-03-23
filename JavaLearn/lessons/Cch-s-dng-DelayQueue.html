@@ -1,0 +1,66 @@
+<html><head><title>Cách sử dụng DelayQueue</title></head><body><h1>Cách sử dụng DelayQueue</h1><pre>	
+	## Bước 1 : tạo một lớp triển khai implements lại interface Delayed 
+		- Mọi phần tử được thêm vào DelayQueue phải triển khai giao diện Delayed và ghi đè hai phương thức 
+		
+			getDelay(TimeUnit unit) : Trả về khoảng thời gian còn lại trước khi phần tử này sẵn sàng 
+			
+			compareTo(Delayed o) : Hàm để so sánh xác định thứ tự trong queue(thường dựa trên thời gian trễ )
+			
+			
+			
+	## Ví dụ tạo một DelayedTask 
+		
+					import java.util.concurrent.Delayed;
+					import java.util.concurrent.TimeUnit;
+					
+					class DelayedTask implements Delayed {
+						private final long startTime;
+						private final String taskName;
+					
+						public DelayedTask(String taskName, long delayInSeconds) {
+							this.taskName = taskName;
+							this.startTime = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(delayInSeconds);
+						}
+					
+						@Override
+						public long getDelay(TimeUnit unit) {
+							long remainingTime = startTime - System.currentTimeMillis();
+							return unit.convert(remainingTime, TimeUnit.MILLISECONDS);
+						}
+					
+						@Override
+						public int compareTo(Delayed o) {
+							return Long.compare(this.getDelay(TimeUnit.MILLISECONDS), o.getDelay(TimeUnit.MILLISECONDS));
+						}
+					
+						@Override
+						public String toString() {
+							return "Task: " + taskName + ", Scheduled in: " + getDelay(TimeUnit.SECONDS) + " seconds";
+						}
+					}
+							
+
+
+
+	##	Bước 2: Thêm các phần tử vào DelayQueue và xử lý chúng 
+		
+		
+				import java.util.concurrent.DelayQueue;
+				public class DelayQueueExample {
+					public static void main(String[] args) throws InterruptedException {
+						DelayQueue<DelayedTask> queue = new DelayQueue<>();
+				
+						// Thêm các công việc vào hàng đợi với thời gian trễ khác nhau
+						queue.put(new DelayedTask("Task 1", 5));  // Sau 5 giây mới lấy được
+						queue.put(new DelayedTask("Task 2", 10)); // Sau 10 giây mới lấy được
+						queue.put(new DelayedTask("Task 3", 3));  // Sau 3 giây mới lấy được
+				
+						while (!queue.isEmpty()) {
+							DelayedTask task = queue.take(); // Chờ đến khi phần tử sẵn sàng
+							System.out.println("Processing: " + task);
+						}
+					}
+				}
+	
+	
+</pre></body></html>

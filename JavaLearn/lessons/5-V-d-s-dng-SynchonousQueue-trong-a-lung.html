@@ -1,0 +1,46 @@
+<html><head><title>5 Ví dụ sử dụng SynchonousQueue trong đa luồng</title></head><body><h1>5 Ví dụ sử dụng SynchonousQueue trong đa luồng</h1><pre>
+	# Ví dụ 1 : Producer-Consumer đơn giản 
+			import java.util.concurrent.SynchronousQueue;
+		
+			public class SynchronousQueueExample {
+				public static void main(String[] args) {
+					SynchronousQueue<String> queue = new SynchronousQueue<>();
+			
+					// Producer Thread
+					Thread producer = new Thread(() -> {
+						try {
+							System.out.println("Producer: Đang đặt phần tử vào queue...");
+							queue.put("Data 1"); // Chờ cho đến khi consumer lấy dữ liệu
+							System.out.println("Producer: Đã đặt phần tử thành công!");
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+					});
+			
+					// Consumer Thread
+					Thread consumer = new Thread(() -> {
+						try {
+							Thread.sleep(2000); // Giả lập thời gian xử lý
+							System.out.println("Consumer: Đang lấy dữ liệu...");
+							String data = queue.take();
+							System.out.println("Consumer: Nhận được " + data);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+					});
+			
+					producer.start();
+					consumer.start();
+				}
+			}
+			
+			Kết quả (có độ trễ 2 giây trước khi producer tiếp tục):
+			
+			Producer: Đang đặt phần tử vào queue...
+			(Đợi 2 giây...)
+			Consumer: Đang lấy dữ liệu...
+			Consumer: Nhận được Data 1
+			Producer: Đã đặt phần tử thành công!
+
+
+</pre></body></html>

@@ -1,0 +1,24 @@
+<html><head><title>Các mức cách hoạt động của Transactional</title></head><body><h1>Các mức cách hoạt động của Transactional</h1><pre>		
+		
+		Mức độ Isolation					Mô tả
+		DEFAULT						Dùng mức của DB (thường là READ COMMITTED).
+		READ UNCOMMITTED			Thấp nhất, đọc dữ liệu chưa commit (dễ bị lỗi Dirty Read).
+		READ COMMITTED				Chỉ đọc dữ liệu đã commit (tránh Dirty Read).
+		REPEATABLE READ				Đọc dữ liệu giống nhau trong cùng một transaction (tránh Phantom Read).
+		SERIALIZABLE				Cao nhất, đảm bảo không có xung đột dữ liệu.
+
+
+
+
+		### 📌 Ví dụ: Cấu hình Isolation Level 
+		
+		
+			@Transactional(isolation = Isolation.REPEATABLE_READ)
+			public void updateUserBalance(Long userId, BigDecimal amount) {
+				User user = userRepository.findById(userId).orElseThrow();
+				user.setBalance(user.getBalance().add(amount));
+				userRepository.save(user);
+			}
+
+
+</pre></body></html>

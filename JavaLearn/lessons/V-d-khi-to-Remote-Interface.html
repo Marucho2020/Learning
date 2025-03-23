@@ -1,0 +1,92 @@
+<html><head><title>Ví dụ khi tạo Remote Interface</title></head><body><h1>Ví dụ khi tạo Remote Interface</h1><pre>
+	## Bước 1 Tạo một Remote Interface 
+		import java.rmi.Remote;
+		import java.rmi.RemoteException;
+		
+		// Remote Interface phải kế thừa từ java.rmi.Remote
+		public interface MyRemote extends Remote {
+			String sayHello() throws RemoteException;
+		}
+		
+		### 📌 Lưu ý quan trọng 
+			MyRemote là một Remote Interface, nên phải kế thừa Remote 
+			Tất cả phương thức phải khai báo throws RemoteException 
+			
+			
+	## Bước 2 Implement Remote Interface trong Remote Object  
+		
+		import java.rmi.server.UnicastRemoteObject;
+		import java.rmi.RemoteException;
+		
+		// Cần kế thừa từ UnicastRemoteObject để có thể gọi từ xa
+		public class MyRemoteImpl extends UnicastRemoteObject implements MyRemote {
+			
+			public MyRemoteImpl() throws RemoteException {
+				super(); // Gọi constructor của UnicastRemoteObject
+			}
+		
+			@Override
+			public String sayHello() throws RemoteException {
+				return "Hello from Remote Server!";
+			}
+		}
+	
+
+		### 📌 Lưu ý 
+			Class MyRemoteImpl phải kế thừa từ UnicastRemoteObject để có thể gọi từ xa 
+			Constructor phải gọi super() để đăng ký RemoteObject  
+			
+			
+		
+	## Bước 3 : Tạo Server để đăng ký Remote Object  
+	
+		import java.rmi.registry.LocateRegistry;
+		import java.rmi.registry.Registry;
+		
+		public class MyRemoteServer {
+			public static void main(String[] args) {
+				try {
+					MyRemoteImpl remoteObject = new MyRemoteImpl();
+					
+					// Đăng ký Remote Object với RMI Registry
+					Registry registry = LocateRegistry.createRegistry(1099);
+					registry.rebind("RemoteHello", remoteObject);
+					
+					System.out.println("Remote Server is running...");
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		
+		### 📌Lưu ý  
+			- Tạo một RMI Registry (một dịch vụ để quản lý các Remote Object )
+
+
+				import java.rmi.registry.LocateRegistry;
+				import java.rmi.registry.Registry;
+				
+				public class MyRemoteClient {
+					public static void main(String[] args) {
+						try {
+							// Kết nối tới RMI Registry
+							Registry registry = LocateRegistry.getRegistry("localhost", 1099);
+				
+							// Tìm kiếm Remote Object theo tên
+							MyRemote remoteObject = (MyRemote) registry.lookup("RemoteHello");
+				
+							// Gọi phương thức từ xa
+							String response = remoteObject.sayHello();
+							System.out.println("Response from server: " + response);
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					}
+				}
+
+
+				### 📌 Lưu ý  
+				registry.lookup("RemoteHello") tìm Remote Object đã đăng ký trên RMI Registry.
+				sayHello() được gọi từ xa trên máy chủ.
+
+</pre></body></html>

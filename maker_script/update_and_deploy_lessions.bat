@@ -2,14 +2,24 @@
 cd /d D:\Dev\Learning-all-git-page\maker_script\transform_script
 
 echo 🔹 Running each Java file...
+set "error_found=0"
+
 for %%F in (*.java) do (
-    echo 🔹 Run the program: %%F
+    echo 🔹 Running: %%F
     java %%F
+    if %ERRORLEVEL% NEQ 0 (
+        echo ❌ ERROR: %%F failed to execute!
+        set "error_found=1"
+    )
 )
 
-echo ✅ Done! Ready to deploy in 3 seconds
-timeout /t 3 >nul
+if %error_found% NEQ 0 (
+    echo ❌ Errors detected. Deployment aborted!
+    exit /b
+)
 
+echo ✅ All Java files executed successfully! Proceeding with deployment...
+timeout /t 3 >nul
 
 :: Chuyển về thư mục repo gốc
 cd /d D:\Dev\Learning-all-git-page
