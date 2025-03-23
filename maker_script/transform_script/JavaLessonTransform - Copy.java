@@ -148,10 +148,6 @@ static void generateHtml(String outputPath, List<Lesson> lessons) throws IOExcep
         .append(lesson.title.replace("==========", "-").replace("==", "--"))
         .append("</a></li>");
     
-	List<Lesson> lessons = parseContent(sampleContent);
-	buildHtmlTree(lessons);
-	
-	
     Files.write(Paths.get(lesson.link), lesson.toHtml().getBytes());
 }
 
@@ -183,89 +179,13 @@ static class Lesson {
     String title;
     String content;
     String link;
-	StringBuilder content-indev;
-	List<Lesson> children;
-	String builded-html-str;
-	
-	
+
     Lesson(String title, String content, String link) {
         this.title = title;
         this.content = content;
         this.link = link;
-		 this.content-indev = new StringBuilder();
-		 this.children = new ArrayList<>();
     }
-	
-	   static List<Lesson> parseContent(String content) {
-        List<Lesson> rootLessons = new ArrayList<>();
-        Stack<Lesson> stack = new Stack<>();
-        Pattern pattern = Pattern.compile("^(#{1,5})\\s*(.+)$"); // Regex để phát hiện tiêu đề
-
-        String[] lines = content-indev.split("\n");
-
-        for (String line : lines) {
-            Matcher matcher = pattern.matcher(line);
-            if (matcher.matches()) { // Nếu là tiêu đề
-                int level = matcher.group(1).length();
-                String title = matcher.group(2).trim();
-                Lesson newLesson = new Lesson(level, title);
-
-                while (!stack.isEmpty() && stack.peek().level >= level) {
-                    stack.pop(); // Thoát ra khỏi cấp trên nếu cần
-                }
-
-                if (stack.isEmpty()) {
-                    rootLessons.add(newLesson);
-                } else {
-                    stack.peek().children.add(newLesson);
-                }
-
-                stack.push(newLesson);
-            } else { // Nếu là nội dung
-                if (!stack.isEmpty()) {
-                    stack.peek().content-indev.append(line).append("\n");
-                }
-            }
-        }
-        return rootLessons;
-    }
-
-    static void printLessons(List<Lesson> lessons, int indent) {
-        for (Lesson lesson : lessons) {
-            System.out.println("  ".repeat(indent) + "- " + lesson.title);
-            if (!lesson.content-indev.toString().trim().isEmpty()) {
-                System.out.println("  ".repeat(indent + 1) + lesson.content-indev);
-            }
-            printLessons(lesson.children, indent + 1);
-        }
-    }
-	
-	static void buildHtmlTree(List<Lesson> lessons) {
-    StringBuilder html = new StringBuilder("<ul>");
-    for (Lesson lesson : lessons) {
-        html.append("<li>")
-            .append("<h").append(lesson.level).append(">").append(lesson.title).append("</h").append(lesson.level).append(">");
-        
-        if (!lesson.content.toString().trim().isEmpty()) {
-            html.append("<p>").append(lesson.content).append("</p>");
-        }
-
-        if (!lesson.children.isEmpty()) {
-            html.append(buildHtmlTree(lesson.children));
-        }
-
-        html.append("</li>");
-    }
-    html.append("</ul>");
-	
-	builded-html-str = html.toString();
-}
-
-	
-	
 	String toHtml() {
-
-		
     return "<html><head><title>" + title + "</title>" +
         "<style>" +
         "body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }" +
@@ -296,8 +216,7 @@ static class Lesson {
         "<div class='container'>" +
         "<a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br>" + 
         "<h1>" + title.replace("==========", "-").replace("==", "--") + "</h1>" +
-        // "<pre>" + content + "</pre>" +
-        builded-html-str +
+        "<pre>" + content + "</pre>" +
         "<a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br>" + 
         "<button onclick='toggleTheme()'>🌙 Chuyển giao diện</button>" +
         "</div>" +
@@ -332,6 +251,9 @@ static class Lesson {
 
 
 }
+
+
+
 
 
 // End Main Class 
