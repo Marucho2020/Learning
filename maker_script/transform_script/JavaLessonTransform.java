@@ -4,16 +4,15 @@ import java.util.*;
 import java.util.regex.*;
 
 public class JavaLessonTransform {
-	
+    
     private static final String filePath = "D:\\Dev\\Java\\Learn\\JavaSliveLearn.txt";
     private static final String outputPath = "D:\\Dev\\Learning-all-git-page\\JavaLearn\\java-learning-list.html";
     private static final String lessonDir = "D:\\Dev\\Learning-all-git-page\\JavaLearn\\lessons";
     private static final String baseGitHubUrl = "https://marucho2020.github.io/Learning/JavaLearn/lessons/";
 
     public static void main(String[] args) throws IOException {
+        System.out.println("Base URL: " + baseGitHubUrl);
 
-		System.out.println("Base URL: " + baseGitHubUrl);
-		
         // 🔹 Xóa file HTML cũ
         deleteFile(outputPath);
 
@@ -27,240 +26,29 @@ public class JavaLessonTransform {
 
         System.out.println("✅ HTML file created: " + outputPath);
     }
-	
-	 // 🔹 Xóa file nếu tồn tại
-    private static void deleteFile(String filePath) {
-        File file = new File(filePath);
-        if (file.exists() && file.delete()) {
-            System.out.println("✅ Đã xóa file: " + filePath);
+
+    // 📌 Xóa file cũ nếu tồn tại
+    private static void deleteFile(String path) {
+        try {
+            Files.deleteIfExists(Paths.get(path));
+        } catch (IOException e) {
+            System.err.println("❌ Lỗi khi xóa file: " + e.getMessage());
         }
     }
 
-    // 🔹 Xóa toàn bộ thư mục và file bên trong
-    private static void deleteDirectory(String dirPath) {
-        File dir = new File(dirPath);
-        if (dir.exists()) {
-            for (File file : dir.listFiles()) {
-                if (file.isDirectory()) {
-                    deleteDirectory(file.getAbsolutePath());
-                } else {
-                    file.delete();
-                }
-            }
-            dir.delete();
-            System.out.println("✅ Đã xóa thư mục: " + dirPath);
+    // 📌 Xóa thư mục bài học cũ nếu tồn tại
+    private static void deleteDirectory(String path) {
+        try {
+            Files.walk(Paths.get(path))
+                 .sorted(Comparator.reverseOrder())
+                 .map(Path::toFile)
+                 .forEach(File::delete);
+        } catch (IOException e) {
+            System.err.println("❌ Lỗi khi xóa thư mục: " + e.getMessage());
         }
     }
 
-    // 🔹 CHUẨN HÓA TIÊU ĐỀ BÀI HỌC (BỎ "Lession X" CŨ, ĐÁNH SỐ LẠI)
-    static void normalizeLessonTitles(String filePath) throws IOException {
-        List<String> lines = Files.readAllLines(Paths.get(filePath));
-        List<String> updatedLines = new ArrayList<>();
-        int lessonIndex = 1;
-
-        for (String line : lines) {
-            if (line.matches("//=+.*")) { // Dòng tiêu đề bài học
-                // Loại bỏ toàn bộ "Lession X ==" cũ nếu có
-                String lessonName = line.replaceAll("//=+", "").trim(); // Bỏ `//=`
-                lessonName = lessonName.replaceAll("Lession \\d+ == ", ""); // Bỏ "Lession X =="
-                lessonName = lessonName.replaceAll("[=/]+$", "").trim(); // Bỏ `=` và `/` cuối
-
-                // Tạo tiêu đề chuẩn mới
-                line = "//==========Lession " + lessonIndex + " == " + lessonName + " ==========//";
-                lessonIndex++;
-            }
-            updatedLines.add(line);
-        }
-
-        // Ghi đè lại file gốc
-        Files.write(Paths.get(filePath), updatedLines);
-    }
-
-    // 🔹 PHÂN TÍCH FILE & LƯU BÀI HỌC RIÊNG BIỆT
-    static List<Lesson> parseLessons(String filePath, String lessonDir) throws IOException {
-        List<Lesson> lessons = new ArrayList<>();
-        List<String> lines = Files.readAllLines(Paths.get(filePath));
-
-        StringBuilder content = new StringBuilder();
-        String title = "Untitled";
-        int lessonCount = 1;
-
-        for (String line : lines) {
-            if (line.startsWith("//==========Lession ")) {  // Gặp dòng tiêu đề mới
-                if (content.length() > 0) {
-                    lessons.add(new Lesson(title, content.toString(), lessonDir + "/lesson" + lessonCount + ".html"));
-                    lessonCount++;
-                    content.setLength(0);
-                }
-                title = line.replace("//==========", "").replaceAll("=+", "").trim();
-            } else {
-                content.append(line).append("\n");
-            }
-        }
-
-        // Lưu bài cuối cùng nếu có
-        if (content.length() > 0) {
-            lessons.add(new Lesson(title, content.toString(), lessonDir + "/lesson" + lessonCount + ".html"));
-        }
-
-        return lessons;
-    }
-
-// 🔹 TẠO FILE HTML DANH SÁCH BÀI HỌC
-static void generateHtml(String outputPath, List<Lesson> lessons) throws IOException {
-    StringBuilder html = new StringBuilder();
-    html.append("<html><head><title>Lesson List</title>")
-        .append("<style>")
-        .append("body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }")
-        .append(".dark-mode { background-color: #121212; color: #e0e0e0; }")
-        .append(".light-mode { background-color: #ffffff; color: #333333; }")
-        .append("h1 { text-align: center; color: #bb86fc; }")
-        .append(".container { width: 80%; margin: auto; text-align: center; }")
-
-        // 🔹 CSS cho nút Home
-        .append(".home-btn { background: #ffcc00; color: #121212; border: none; padding: 10px 15px; ")
-        .append("font-size: 16px; cursor: pointer; border-radius: 5px; font-weight: bold; margin-bottom: 15px; }")
-        .append(".home-btn:hover { background: #ff9900; }")
-
-        // 🔹 CSS cho các nút khác
-        .append("button { background: #bb86fc; color: #121212; border: none; padding: 10px 15px; ")
-        .append("font-size: 16px; cursor: pointer; border-radius: 5px; margin: 5px; }")
-        .append("button:hover { background: #9b67e2; }")
-
-        .append("ul { list-style: none; padding: 0; margin-left: 20px; }")
-        .append("li { margin: 8px 0; text-align: left; }")
-        .append("a { text-decoration: none; font-weight: bold; font-size: 18px; }")
-        .append(".dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }")
-        .append("</style></head><body onload='applyTheme()'>");
-
-    html.append("<div class='container'>");
-
-    // 🔹 Nút Home ở đầu trang
-    html.append("<button class='home-btn' onclick='goHome()'>🏠 Home</button>");
-
-    html.append("<h1>📖 Danh sách bài học</h1>");
-    html.append("<button onclick='toggleTheme()'>🌙 Chuyển giao diện</button>");
-    html.append("<button onclick='fixTitles()'>🔧 Sửa tiêu đề</button><ul>");
-	
-	for (Lesson lesson : lessons) {
-    String lessonUrl = baseGitHubUrl + new File(lesson.link).getName(); // Chuyển sang URL GitHub
-    html.append("<li><a href='").append(lessonUrl).append("'>")
-        .append(lesson.title.replace("==========", "-").replace("==", "--"))
-        .append("</a></li>");
-    
-    Files.write(Paths.get(lesson.link), lesson.toHtml().getBytes());
-}
-
-    html.append("</ul></div>");
-    
-    // 🔹 Script cho các chức năng
-    html.append("<script>")
-        .append("function toggleTheme() {")
-        .append("let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';")
-        .append("document.body.className = mode; localStorage.setItem('theme', mode);")
-        .append("}")
-        .append("function applyTheme() {")
-        .append("let savedTheme = localStorage.getItem('theme') || 'dark-mode';")
-        .append("document.body.className = savedTheme;")
-        .append("}")
-        .append("function fixTitles() { fetch('fix_titles').then(() => alert('✅ Tiêu đề đã được sửa!')); }")
-
-        // 🔹 JavaScript cho nút Home
-        .append("function goHome() { window.location.href = '../index.html'; }")
-        .append("</script>");
-
-    html.append("</body></html>");
-    Files.write(Paths.get(outputPath), html.toString().getBytes());
-}
-
-}
-
-// 🔹 CLASS BÀI HỌC
-class Lesson {
-    String title;
-    String content;
-    String link;
-
-    Lesson(String title, String content, String link) {
-        this.title = title;
-        this.content = content;
-        this.link = link;
-    }
-	String toHtml() {
-		return "<html><head><title>" + title + "</title>" +
-        "<style>" +
-        "body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }" +
-        ".dark-mode { background-color: #121212; color: #e0e0e0; }" +
-        ".light-mode { background-color: #ffffff; color: #333333; }" +
-        "h1 { text-align: center; color: #73d9f5; }" +
-        "pre { padding: 15px; border-radius: 5px; white-space: pre-wrap; transition: background 0.3s, color 0.3s; }" +
-        ".dark-mode pre { background: #1e1e1e; color: #e0e0e0; }" +
-        ".light-mode pre { background: #f5f5f5; color: #333333; }" +
-        "#backTop, #backBottom { " +
-        "   font-size: 2em; padding: 20px 40px; " +
-        "   background: #bb86fc; color: white; text-decoration: none; " +
-        "   border-radius: 10px; display: inline-block; text-align: center; " +
-        "}" +
-        "#backTop:hover, #backBottom:hover { background: #9b67e2; }" +
-        "button { font-size: 1.5em; padding: 15px 30px; " +
-        "   background: #03dac6; color: #121212; border: none; " +
-        "   cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }" +
-        "button:hover { background: #02b8a3; }" +
-
-        ".dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }" +
-        "</style></head><body onload='applyTheme(); checkPageHeight()'>" +
-        "<div class='container'>" +
-        "<a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br>" + 
-        "<h1>" + title.replace("==========", "-").replace("==", "--") + "</h1>" +
-        "<pre>" + content + "</pre>" +
-        "<a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br>" + 
-        "<button onclick='toggleTheme()'>🌙 Chuyển giao diện</button>" +
-        "</div>" +
-			"<script>" +
-			"function toggleTheme() {" +
-			"let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';" +
-			"document.body.className = mode; localStorage.setItem('theme', mode);" +
-			"syncTheme();" +
-			"}" +
-			"function applyTheme() {" +
-			"let savedTheme = localStorage.getItem('theme') || 'dark-mode';" +
-			"document.body.className = savedTheme;" +
-			"syncTheme();" +
-			"}" +
-			"function syncTheme() {" +
-			"let preElement = document.querySelector('pre');" +
-			"if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }" +
-			"else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }" +
-			"}" +
-			"function checkPageHeight() {" +
-			"let contentHeight = document.body.scrollHeight;" +
-			"let windowHeight = window.innerHeight;" +
-			"if (contentHeight > windowHeight * 1.2) {" +  // Nếu nội dung dài hơn 1.2 lần chiều cao màn hình
-			"document.getElementById('backBottom').style.display = 'block';" +  // Hiện nút "Quay lại" ở dưới cùng
-			"} else {" +
-			"document.getElementById('backBottom').style.display = 'none';" +  // Ẩn nếu bài ngắn
-			"}" +
-			"}" +
-			"</script>" +
-			"</body></html>";
-	}
-
-}
-
-
-// 🔹 CLASS Chỉnh sửa format bài học 
-class LessonParser {
-    public static void main(String[] args) throws IOException {
-        String filePath = "D:\\Dev\\Java\\Learn\\JavaSliveLearn.txt"; // File chứa nội dung bài học
-        List<Lesson> lessons = parseLessons(filePath);
-
-        // Xuất ra HTML
-        String htmlContent = generateHtml(lessons);
-        Files.write(Paths.get("D:\\Dev\\Learning-all-git-page\\JavaLearn\\java-learning-list-in-dev.html"), htmlContent.getBytes());
-        System.out.println("✅ HTML đã được tạo!");
-    }
-
-    // Lớp Lesson để lưu trữ tiêu đề và nội dung
+    // 📌 Lớp Lesson để lưu trữ tiêu đề và nội dung bài học
     static class Lesson {
         int level;
         String title;
@@ -277,8 +65,8 @@ class LessonParser {
         }
     }
 
-    // Hàm phân tích tiêu đề và nội dung, lưu theo dạng cây
-    static List<Lesson> parseLessons(String filePath) throws IOException {
+    // 📌 Phân tích bài học từ file TXT, tạo các file HTML cho từng bài học
+    private static List<Lesson> parseLessons(String filePath, String lessonDir) throws IOException {
         List<String> lines = Files.readAllLines(Paths.get(filePath));
         Pattern pattern = Pattern.compile("^(#{1,5})\\s*(.+)$");
         List<Lesson> rootLessons = new ArrayList<>();
@@ -309,11 +97,30 @@ class LessonParser {
                 }
             }
         }
+
+        // Tạo file HTML cho từng bài học
+        for (Lesson lesson : rootLessons) {
+            generateLessonHtml(lesson, lessonDir);
+        }
+
         return rootLessons;
     }
 
-    // Hàm chuyển cây bài học thành HTML
-    static String generateHtml(List<Lesson> lessons) {
+    // 📌 Tạo file HTML cho từng bài học
+    private static void generateLessonHtml(Lesson lesson, String lessonDir) throws IOException {
+        String fileName = lesson.id + ".html";
+        String filePath = lessonDir + "/" + fileName;
+        String lessonHtml = "<html><head><title>" + lesson.title + "</title></head><body>"
+                            + "<h1>" + lesson.title + "</h1>"
+                            + "<pre>" + lesson.content + "</pre>"
+                            + "</body></html>";
+
+        Files.write(Paths.get(filePath), lessonHtml.getBytes());
+        System.out.println("📄 Created: " + filePath);
+    }
+
+    // 📌 Tạo trang index danh sách bài học
+    private static void generateHtml(String outputPath, List<Lesson> lessons) throws IOException {
         StringBuilder html = new StringBuilder();
         html.append("<html><head><title>Danh sách bài học</title>")
             .append("<style>")
@@ -326,19 +133,16 @@ class LessonParser {
             .append(buildHtmlTree(lessons))
             .append("</body></html>");
 
-        return html.toString();
+        Files.write(Paths.get(outputPath), html.toString().getBytes());
     }
 
-    // Đệ quy xây dựng HTML từ danh sách bài học
-    static String buildHtmlTree(List<Lesson> lessons) {
+    // 📌 Đệ quy tạo danh sách HTML từ danh sách bài học
+    private static String buildHtmlTree(List<Lesson> lessons) {
         StringBuilder html = new StringBuilder("<ul>");
         for (Lesson lesson : lessons) {
+            String lessonUrl = baseGitHubUrl + lesson.id + ".html";
             html.append("<li>")
-                .append("<a href='#").append(lesson.id).append("'>").append(lesson.title).append("</a>");
-
-            if (!lesson.content.toString().trim().isEmpty()) {
-                html.append("<div class='lesson-content'>").append(lesson.content).append("</div>");
-            }
+                .append("<a href='").append(lessonUrl).append("'>").append(lesson.title).append("</a>");
 
             if (!lesson.children.isEmpty()) {
                 html.append(buildHtmlTree(lesson.children));
@@ -350,5 +154,3 @@ class LessonParser {
         return html.toString();
     }
 }
-
-
