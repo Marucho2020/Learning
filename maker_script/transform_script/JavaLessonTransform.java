@@ -148,8 +148,8 @@ static void generateHtml(String outputPath, List<Lesson> lessons) throws IOExcep
         .append(lesson.title.replace("==========", "-").replace("==", "--"))
         .append("</a></li>");
     
-	List<Lesson> lessons = parseContent(sampleContent);
-	buildHtmlTree(lessons);
+	List<Lesson> lessonsParsed = parseContent(sampleContent);
+	buildHtmlTree(lessonsParsed);
 	
 	
     Files.write(Paths.get(lesson.link), lesson.toHtml().getBytes());
