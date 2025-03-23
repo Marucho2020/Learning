@@ -237,8 +237,6 @@ class Lesson {
         "<a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br>" + 
         "<button onclick='toggleTheme()'>🌙 Chuyển giao diện</button>" +
         "</div>" +
-        "</body></html>";
-			
 			"<script>" +
 			"function toggleTheme() {" +
 			"let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';" +
