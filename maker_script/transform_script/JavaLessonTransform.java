@@ -200,8 +200,8 @@ static class Lesson {
         List<Lesson> rootLessons = new ArrayList<>();
         Stack<Lesson> stack = new Stack<>();
         Pattern pattern = Pattern.compile("^(#{1,5})\\s*(.+)$"); // Regex để phát hiện tiêu đề
-
-        String[] lines = content_indev.split("\n");
+		content_indev = content;
+        String[] lines = content_indev.split("\\n");
 
         for (String line : lines) {
             Matcher matcher = pattern.matcher(line);
