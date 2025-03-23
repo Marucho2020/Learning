@@ -6,9 +6,9 @@ import java.util.regex.*;
 public class JavaLessonTransform {
 	
     private static final String filePath = "D:\\Dev\\Java\\Learn\\JavaSliveLearn.txt";
-    private static final String outputPath = "D:\\Dev\\Learning-all-git-page\\JavaLearn\\java-learning-list.html";
-    private static final String lessonDir = "D:\\Dev\\Learning-all-git-page\\JavaLearn\\lessons";
-    private static final String baseGitHubUrl = "https://marucho2020.github.io/Learning/JavaLearn/lessons/";
+    private static final String outputPath = "D:\\Dev\\Learning-all-git-page\\pages\\Java\\java-learning-list.html";
+    private static final String lessonDir = "D:\\Dev\\Learning-all-git-page\\pages\\Java\\lessons";
+    private static final String baseGitHubUrl = "https://marucho2020.github.io/Learning/Java/lessons/";
 
     public static void main(String[] args) throws IOException {
 

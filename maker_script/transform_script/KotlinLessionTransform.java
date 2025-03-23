@@ -6,8 +6,8 @@ import java.util.regex.*;
 public class JavaLessonTransform {
 	
     private static final String filePath = "D:\\Dev\\Kotlin\\Kotlin_tutorial.txt";
-    private static final String outputPath = "D:\\Dev\\Learning-all-git-page\\Kotlin\\kotlin-learning-list.html";
-    private static final String lessonDir = "D:\\Dev\\Learning-all-git-page\\Kotlin\\lessons";
+    private static final String outputPath = "D:\\Dev\\Learning-all-git-page\\pages\\Kotlin\\kotlin-learning-list.html";
+    private static final String lessonDir = "D:\\Dev\\Learning-all-git-page\\pages\\Kotlin\\lessons";
     private static final String baseGitHubUrl = "https://marucho2020.github.io/Learning/Kotlin/lessons/";
 
     public static void main(String[] args) throws IOException {

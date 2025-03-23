@@ -6,8 +6,8 @@ import java.util.regex.*;
 public class JavaLessonTransform {
 	
     private static final String filePath = "D:\\Dev\\Linux\\CentOSCommand.txt";
-    private static final String outputPath = "D:\\Dev\\Learning-all-git-page\\CentOSCommand\\centos-command-list.html";
-    private static final String lessonDir = "D:\\Dev\\Learning-all-git-page\\CentOSCommand\\lessons";
+    private static final String outputPath = "D:\\Dev\\Learning-all-git-page\\pages\\CentOSCommand\\centos-command-list.html";
+    private static final String lessonDir = "D:\\Dev\\Learning-all-git-page\\pages\\CentOSCommand\\lessons";
     private static final String baseGitHubUrl = "https://marucho2020.github.io/Learning/CentOSCommand/lessons/";
 
     public static void main(String[] args) throws IOException {
