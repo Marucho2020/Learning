@@ -5,7 +5,7 @@ import java.util.regex.*;
 
 public class JavaLessonTransform {
 	
-    private static final String filePath = "D:\\Dev\Quantum\\QuantumComputingLearning.txt";
+    private static final String filePath = "D:\\Dev\\Quantum\\QuantumComputingLearning.txt";
     private static final String outputPath = "D:\\Dev\\Learning-all-git-page\\pages\\QuantumComputing\\quantum-computing-learning-list.html";
     private static final String lessonDir = "D:\\Dev\\Learning-all-git-page\\pages\\QuantumComputing\\lessons";
     private static final String baseGitHubUrl = "https://marucho2020.github.io/Learning/QuantumComputing/lessons/";
