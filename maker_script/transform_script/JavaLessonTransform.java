@@ -183,16 +183,16 @@ static class Lesson {
     String title;
     String content;
     String link;
-	StringBuilder content-indev;
+	StringBuilder content_indev;
 	List<Lesson> children;
-	String builded-html-str;
+	String builded_html_str;
 	
 	
     Lesson(String title, String content, String link) {
         this.title = title;
         this.content = content;
         this.link = link;
-		 this.content-indev = new StringBuilder();
+		 this.content_indev = new StringBuilder();
 		 this.children = new ArrayList<>();
     }
 	
@@ -201,7 +201,7 @@ static class Lesson {
         Stack<Lesson> stack = new Stack<>();
         Pattern pattern = Pattern.compile("^(#{1,5})\\s*(.+)$"); // Regex để phát hiện tiêu đề
 
-        String[] lines = content-indev.split("\n");
+        String[] lines = content_indev.split("\n");
 
         for (String line : lines) {
             Matcher matcher = pattern.matcher(line);
@@ -223,7 +223,7 @@ static class Lesson {
                 stack.push(newLesson);
             } else { // Nếu là nội dung
                 if (!stack.isEmpty()) {
-                    stack.peek().content-indev.append(line).append("\n");
+                    stack.peek().content_indev.append(line).append("\n");
                 }
             }
         }
@@ -233,8 +233,8 @@ static class Lesson {
     static void printLessons(List<Lesson> lessons, int indent) {
         for (Lesson lesson : lessons) {
             System.out.println("  ".repeat(indent) + "- " + lesson.title);
-            if (!lesson.content-indev.toString().trim().isEmpty()) {
-                System.out.println("  ".repeat(indent + 1) + lesson.content-indev);
+            if (!lesson.content_indev.toString().trim().isEmpty()) {
+                System.out.println("  ".repeat(indent + 1) + lesson.content_indev);
             }
             printLessons(lesson.children, indent + 1);
         }
@@ -258,7 +258,7 @@ static class Lesson {
     }
     html.append("</ul>");
 	
-	builded-html-str = html.toString();
+	builded_html_str = html.toString();
 }
 
 	
@@ -297,7 +297,7 @@ static class Lesson {
         "<a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br>" + 
         "<h1>" + title.replace("==========", "-").replace("==", "--") + "</h1>" +
         // "<pre>" + content + "</pre>" +
-        builded-html-str +
+        builded_html_str +
         "<a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br>" + 
         "<button onclick='toggleTheme()'>🌙 Chuyển giao diện</button>" +
         "</div>" +
