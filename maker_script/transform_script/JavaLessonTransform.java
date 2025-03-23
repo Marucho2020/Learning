@@ -186,26 +186,31 @@ static class Lesson {
         this.link = link;
     }
 	String toHtml() {
-		return "<html><head><title>" + title + "</title>" +
+    return "<html><head><title>" + title + "</title>" +
         "<style>" +
         "body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }" +
         ".dark-mode { background-color: #121212; color: #e0e0e0; }" +
         ".light-mode { background-color: #ffffff; color: #333333; }" +
         "h1 { text-align: center; color: #73d9f5; }" +
-        "pre { padding: 15px; border-radius: 5px; white-space: pre-wrap; transition: background 0.3s, color 0.3s; }" +
+        /* Xử lý hiển thị trên mobile */
+        "pre { padding: 15px; border-radius: 5px; " +
+        "      white-space: pre-wrap; word-wrap: break-word; " +  // Xuống dòng khi cần
+        "      overflow-x: auto; max-width: 100%; " +  // Cuộn ngang nếu quá dài
+        "      transition: background 0.3s, color 0.3s; }" +
         ".dark-mode pre { background: #1e1e1e; color: #e0e0e0; }" +
         ".light-mode pre { background: #f5f5f5; color: #333333; }" +
+        /* Nút điều hướng */
         "#backTop, #backBottom { " +
         "   font-size: 2em; padding: 20px 40px; " +
         "   background: #bb86fc; color: white; text-decoration: none; " +
         "   border-radius: 10px; display: inline-block; text-align: center; " +
         "}" +
         "#backTop:hover, #backBottom:hover { background: #9b67e2; }" +
+        /* Nút chuyển giao diện */
         "button { font-size: 1.5em; padding: 15px 30px; " +
         "   background: #03dac6; color: #121212; border: none; " +
         "   cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }" +
         "button:hover { background: #02b8a3; }" +
-
         ".dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }" +
         "</style></head><body onload='applyTheme(); checkPageHeight()'>" +
         "<div class='container'>" +
@@ -215,34 +220,35 @@ static class Lesson {
         "<a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br>" + 
         "<button onclick='toggleTheme()'>🌙 Chuyển giao diện</button>" +
         "</div>" +
-			"<script>" +
-			"function toggleTheme() {" +
-			"let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';" +
-			"document.body.className = mode; localStorage.setItem('theme', mode);" +
-			"syncTheme();" +
-			"}" +
-			"function applyTheme() {" +
-			"let savedTheme = localStorage.getItem('theme') || 'dark-mode';" +
-			"document.body.className = savedTheme;" +
-			"syncTheme();" +
-			"}" +
-			"function syncTheme() {" +
-			"let preElement = document.querySelector('pre');" +
-			"if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }" +
-			"else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }" +
-			"}" +
-			"function checkPageHeight() {" +
-			"let contentHeight = document.body.scrollHeight;" +
-			"let windowHeight = window.innerHeight;" +
-			"if (contentHeight > windowHeight * 1.2) {" +  // Nếu nội dung dài hơn 1.2 lần chiều cao màn hình
-			"document.getElementById('backBottom').style.display = 'block';" +  // Hiện nút "Quay lại" ở dưới cùng
-			"} else {" +
-			"document.getElementById('backBottom').style.display = 'none';" +  // Ẩn nếu bài ngắn
-			"}" +
-			"}" +
-			"</script>" +
-			"</body></html>";
-	}
+        "<script>" +
+        "function toggleTheme() {" +
+        "   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';" +
+        "   document.body.className = mode; localStorage.setItem('theme', mode);" +
+        "   syncTheme();" +
+        "}" +
+        "function applyTheme() {" +
+        "   let savedTheme = localStorage.getItem('theme') || 'dark-mode';" +
+        "   document.body.className = savedTheme;" +
+        "   syncTheme();" +
+        "}" +
+        "function syncTheme() {" +
+        "   let preElement = document.querySelector('pre');" +
+        "   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }" +
+        "   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }" +
+        "}" +
+        "function checkPageHeight() {" +
+        "   let contentHeight = document.body.scrollHeight;" +
+        "   let windowHeight = window.innerHeight;" +
+        "   if (contentHeight > windowHeight * 1.2) {" +
+        "       document.getElementById('backBottom').style.display = 'block';" +
+        "   } else {" +
+        "       document.getElementById('backBottom').style.display = 'none';" +
+        "   }" +
+        "}" +
+        "</script>" +
+        "</body></html>";
+}
+
 
 }
 
