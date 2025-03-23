@@ -148,12 +148,8 @@ static void generateHtml(String outputPath, List<Lesson> lessons) throws IOExcep
         .append(lesson.title.replace("==========", "-").replace("==", "--"))
         .append("</a></li>");
     
-	List<Lesson> lessonsParsed = Lesson.parseContent(lesson.content);
-	Lesson.buildHtmlTree(lessonsParsed);
-	
-	
     Files.write(Paths.get(lesson.link), lesson.toHtml().getBytes());
-	}
+}
 
     html.append("</ul></div>");
     
@@ -177,166 +173,79 @@ static void generateHtml(String outputPath, List<Lesson> lessons) throws IOExcep
     Files.write(Paths.get(outputPath), html.toString().getBytes());
 }
 
+}
 
 // 🔹 CLASS BÀI HỌC
-static class Lesson {
+class Lesson {
     String title;
     String content;
     String link;
-	StringBuilder content_indev;
-	List<Lesson> children;
-	String builded_html_str;
-	
-	
+
     Lesson(String title, String content, String link) {
         this.title = title;
         this.content = content;
         this.link = link;
-		 this.content_indev = new StringBuilder();
-		 this.children = new ArrayList<>();
     }
-	
-	   static List<Lesson> parseContent(String content) {
-        List<Lesson> rootLessons = new ArrayList<>();
-        Stack<Lesson> stack = new Stack<>();
-        Pattern pattern = Pattern.compile("^(#{1,5})\\s*(.+)$"); // Regex để phát hiện tiêu đề
-		content_indev = content;
-        String[] lines = content_indev.split("\\n");
-
-        for (String line : lines) {
-            Matcher matcher = pattern.matcher(line);
-            if (matcher.matches()) { // Nếu là tiêu đề
-                int level = matcher.group(1).length();
-                String title = matcher.group(2).trim();
-                Lesson newLesson = new Lesson(level, title);
-
-                while (!stack.isEmpty() && stack.peek().level >= level) {
-                    stack.pop(); // Thoát ra khỏi cấp trên nếu cần
-                }
-
-                if (stack.isEmpty()) {
-                    rootLessons.add(newLesson);
-                } else {
-                    stack.peek().children.add(newLesson);
-                }
-
-                stack.push(newLesson);
-            } else { // Nếu là nội dung
-                if (!stack.isEmpty()) {
-                    stack.peek().content_indev.append(line).append("\n");
-                }
-            }
-        }
-        return rootLessons;
-    }
-
-    static void printLessons(List<Lesson> lessons, int indent) {
-        for (Lesson lesson : lessons) {
-            System.out.println("  ".repeat(indent) + "- " + lesson.title);
-            if (!lesson.content_indev.toString().trim().isEmpty()) {
-                System.out.println("  ".repeat(indent + 1) + lesson.content_indev);
-            }
-            printLessons(lesson.children, indent + 1);
-        }
-    }
-	
-	static void buildHtmlTree(List<Lesson> lessons) {
-    StringBuilder html = new StringBuilder("<ul>");
-    for (Lesson lesson : lessons) {
-        html.append("<li>")
-            .append("<h").append(lesson.level).append(">").append(lesson.title).append("</h").append(lesson.level).append(">");
-        
-        if (!lesson.content.toString().trim().isEmpty()) {
-            html.append("<p>").append(lesson.content).append("</p>");
-        }
-
-        if (!lesson.children.isEmpty()) {
-            html.append(buildHtmlTree(lesson.children));
-        }
-
-        html.append("</li>");
-    }
-    html.append("</ul>");
-	
-	builded_html_str = html.toString();
-}
-
-	
-	
 	String toHtml() {
-
-		
-    return "<html><head><title>" + title + "</title>" +
+		return "<html><head><title>" + title + "</title>" +
         "<style>" +
         "body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }" +
         ".dark-mode { background-color: #121212; color: #e0e0e0; }" +
         ".light-mode { background-color: #ffffff; color: #333333; }" +
         "h1 { text-align: center; color: #73d9f5; }" +
-        /* Xử lý hiển thị trên mobile */
-        "pre { padding: 15px; border-radius: 5px; " +
-        "      white-space: pre-wrap; word-wrap: break-word; " +  // Xuống dòng khi cần
-        "      overflow-x: auto; max-width: 100%; " +  // Cuộn ngang nếu quá dài
-        "      transition: background 0.3s, color 0.3s; }" +
+        "pre { padding: 15px; border-radius: 5px; white-space: pre-wrap; transition: background 0.3s, color 0.3s; }" +
         ".dark-mode pre { background: #1e1e1e; color: #e0e0e0; }" +
         ".light-mode pre { background: #f5f5f5; color: #333333; }" +
-        /* Nút điều hướng */
         "#backTop, #backBottom { " +
         "   font-size: 2em; padding: 20px 40px; " +
         "   background: #bb86fc; color: white; text-decoration: none; " +
         "   border-radius: 10px; display: inline-block; text-align: center; " +
         "}" +
         "#backTop:hover, #backBottom:hover { background: #9b67e2; }" +
-        /* Nút chuyển giao diện */
         "button { font-size: 1.5em; padding: 15px 30px; " +
         "   background: #03dac6; color: #121212; border: none; " +
         "   cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }" +
         "button:hover { background: #02b8a3; }" +
+
         ".dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }" +
         "</style></head><body onload='applyTheme(); checkPageHeight()'>" +
         "<div class='container'>" +
         "<a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br>" + 
         "<h1>" + title.replace("==========", "-").replace("==", "--") + "</h1>" +
-        // "<pre>" + content + "</pre>" +
-        builded_html_str +
+        "<pre>" + content + "</pre>" +
         "<a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br>" + 
         "<button onclick='toggleTheme()'>🌙 Chuyển giao diện</button>" +
         "</div>" +
-        "<script>" +
-        "function toggleTheme() {" +
-        "   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';" +
-        "   document.body.className = mode; localStorage.setItem('theme', mode);" +
-        "   syncTheme();" +
-        "}" +
-        "function applyTheme() {" +
-        "   let savedTheme = localStorage.getItem('theme') || 'dark-mode';" +
-        "   document.body.className = savedTheme;" +
-        "   syncTheme();" +
-        "}" +
-        "function syncTheme() {" +
-        "   let preElement = document.querySelector('pre');" +
-        "   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }" +
-        "   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }" +
-        "}" +
-        "function checkPageHeight() {" +
-        "   let contentHeight = document.body.scrollHeight;" +
-        "   let windowHeight = window.innerHeight;" +
-        "   if (contentHeight > windowHeight * 1.2) {" +
-        "       document.getElementById('backBottom').style.display = 'block';" +
-        "   } else {" +
-        "       document.getElementById('backBottom').style.display = 'none';" +
-        "   }" +
-        "}" +
-        "</script>" +
-        "</body></html>";
+			"<script>" +
+			"function toggleTheme() {" +
+			"let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';" +
+			"document.body.className = mode; localStorage.setItem('theme', mode);" +
+			"syncTheme();" +
+			"}" +
+			"function applyTheme() {" +
+			"let savedTheme = localStorage.getItem('theme') || 'dark-mode';" +
+			"document.body.className = savedTheme;" +
+			"syncTheme();" +
+			"}" +
+			"function syncTheme() {" +
+			"let preElement = document.querySelector('pre');" +
+			"if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }" +
+			"else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }" +
+			"}" +
+			"function checkPageHeight() {" +
+			"let contentHeight = document.body.scrollHeight;" +
+			"let windowHeight = window.innerHeight;" +
+			"if (contentHeight > windowHeight * 1.2) {" +  // Nếu nội dung dài hơn 1.2 lần chiều cao màn hình
+			"document.getElementById('backBottom').style.display = 'block';" +  // Hiện nút "Quay lại" ở dưới cùng
+			"} else {" +
+			"document.getElementById('backBottom').style.display = 'none';" +  // Ẩn nếu bài ngắn
+			"}" +
+			"}" +
+			"</script>" +
+			"</body></html>";
+	}
+
 }
-
-
-}
-
-
-// End Main Class 
-}
-
 
 
 
