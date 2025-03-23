@@ -1,0 +1,106 @@
+<html><head><title>Lession 51  Reflection //</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lession 51  Reflection //</h1><pre># Khái niệm 
+	
+	Reflection là cơ chế giúp chương trình Java có thể kiểm tra hoặc thay đổi cấu trúc của chính nó trong lúc chạy (runtime)
+	
+	💡 Hiểu đơn giản 
+		Bình thường, bạn dùng Person person = new Person() ; để tạo object 
+		Với Reflection, bạn có thể tạo object, gọi method, truy cập field ngay cả khi không biến trước class nào sẽ được dùng 
+		
+		
+	🛠 Ứng dụng của Reflection  
+		✅ Framework như Spring, Hibernate - dùng để inject dependencies(DI) và mapping object 
+		✅ Gson, Jackson - Chuyển đổi Object thành Json 
+		✅ JUnit - CHạy test case tự động mà không cần gọi method thủ công 
+		
+		
+	🔥 Hình dung đơn giản 
+		- Giả sử bạn có một cánh cửa (class), thông thường bạn cần chìa khóa(xác định class để mở)
+		👉 Nhưng với Reflection bạn có thể bẻ khóa, tháo bản lề hoặc xem cấu trúc bên trong ngay cả khi không có chìa ! 
+		
+		
+# Các dùng Reflection trong Java 
+
+	## 🔹 Lấy thông tin lúc Runtime 
+		Dùng Class<?> để lấy thông tin về một class 
+		📌 Lệnh Class.forName("Tên class") giúp lấy class tại runtime! 
+		
+		
+		Class<?> clazz = Class.forName("com.example.Person");
+		System.out.println("Class Name: " + clazz.getName());
+
+	
+	## 🔹 Lấy danh sách Constructor 
+
+		Constructor<?>[] constructors = clazz.getDeclaredConstructors();
+		for (Constructor<?> constructor : constructors) {
+			System.out.println("Constructor: " + constructor);
+		}
+
+
+
+	## 🔹 Lấy danh sách Field (biến)
+	
+		Field[] fields = clazz.getDeclaredFields();
+		for (Field field : fields) {
+			System.out.println("Field: " + field.getName());
+		}
+
+
+	## 🔹 Lấy danh sách Method 
+	
+		Method[] methods = clazz.getDeclaredMethods();
+		for (Method method : methods) {
+			System.out.println("Method: " + method.getName());
+		}
+
+		
+
+	## 🔹 Truy cập Field private (Hack biến private)
+		Bình thường không thể truy cập biến private, nhưng với Reflection thì có thể:
+		
+		Person person = new Person();
+		Field nameField = clazz.getDeclaredField("name");
+		nameField.setAccessible(true); // Bypass private!
+		nameField.set(person, "John Doe"); // Gán giá trị mới
+		System.out.println(person.getName()); // In ra John Doe
+
+	🚨 Lưu ý: Việc này phá vỡ nguyên tắc đóng gói (encapsulation), nên chỉ dùng khi thực sự cần
+	
+	
+	## 🔹 Gọi Method tại runtime 
+		Method method = clazz.getDeclaredMethod("sayHello");
+		method.invoke(person);  // Gọi sayHello() mà không cần biết trước class
+ 
+		📌 Ứng dụng: Spring dùng để gọi Bean method tự động.
+
+	
+
+	## 🔹 Tạo Object tại runtime 
+	
+		Constructor<?> constructor = clazz.getDeclaredConstructor();
+		Person person = (Person) constructor.newInstance(); // Tạo object
+		System.out.println(person);
+
+
+
+# 	Khi nào nên và không nên dùng Reflection? 
+
+✅ Nên dùng khi															❌ Không nên dùng khi
+Dùng trong framework như Spring, Hibernate							Khi hiệu suất quan trọng
+Test Automation (JUnit, Mockito)									Khi không cần thay đổi class lúc runtime
+Xây dựng Plugin, Dependency Injection								Khi có thể dùng cách khác tốt hơn
+
+
+# Hạn chế của Reflection
+❌ Hiệu suất thấp hơn do phải truy vấn metadata class.
+❌ Bỏ qua tính đóng gói (private, protected có thể bị truy cập).
+❌ Dễ lỗi nếu class bị đổi tên (Refactor tên class có thể gây lỗi runtime).
+
+
+🔥 Kết luận
+✔ Reflection giúp ta khám phá và thao tác với class tại runtime.
+✔ Rất mạnh mẽ nhưng cần dùng cẩn thận để tránh giảm hiệu suất.
+✔ Hữu ích trong Spring, Hibernate, JUnit, và nhiều framework khác.
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

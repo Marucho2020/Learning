@@ -1,0 +1,150 @@
+<html><head><title>Lession 42  Các loại interface trong Java //</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lession 42  Các loại interface trong Java //</h1><pre>
+	# Khái niệm 
+		Có 4 loại interface chính  
+	
+
+	# Normal Interface(Interface thông thường )
+		- Có thể chứa public abstract methods ,  default method và static methods 
+		- Class phải implement tất cả abstract methods 
+		- Không thể có constructor 
+		
+		
+		## Ví dụ 
+				interface Animal {
+				void makeSound(); // Abstract method
+				}
+				
+				class Dog implements Animal {
+					public void makeSound() {
+						System.out.println("Woof! Woof!");
+					}
+				}
+	
+
+	# Funtional Interface(Interface hàm)
+		
+		- Chỉ có 1 phương thức trừu tượng 
+		- Có thể dùng Lambda Expression 
+		- Dùng annotation @FunctionalInterface để đảm bảo chỉ có 1 method 
+		
+		
+		## Ví dụ 
+			@FunctionalInterface
+			interface Calculator {
+				int add(int a, int b);
+			}
+			
+			public class LambdaExample {
+				public static void main(String[] args) {
+					Calculator sum = (a, b) -> a + b;
+					System.out.println(sum.add(10, 20)); // Output: 30
+				}
+			}
+			
+			
+			
+		🎯 Functional Interface – Khi nào nên và không nên dùng?
+		✅ Khi nào nên dùng Functional Interface?
+		
+		Khi cần sử dụng Lambda Expression để viết code ngắn gọn và dễ đọc.
+		Khi làm việc với Stream API (map(), filter(), reduce()).
+		Khi cần callback trong lập trình bất đồng bộ.
+		Khi sử dụng Java Functional Programming (Predicate, Consumer, Supplier, Function).
+		❌ Khi nào KHÔNG nên dùng Functional Interface?
+		
+		Khi logic quá phức tạp, Lambda Expression sẽ làm code khó đọc.
+		Khi cần mở rộng (extensibility), vì Functional Interface chỉ có 1 method abstract, khó mở rộng thêm.
+		Khi code cần rõ ràng và dễ debug – vì stack trace của Lambda không trực quan.
+
+
+
+		@FunctionalInterface
+		interface MathOperation {
+			int operate(int a, int b);
+		}
+		
+		public class FunctionalInterfaceExample {
+			public static void main(String[] args) {
+				MathOperation add = (a, b) -> a + b;
+				System.out.println("Sum: " + add.operate(10, 20)); // Output: 30
+			}
+		}
+		
+		
+		💡 Nhưng nếu cần nhiều logic hơn, tốt hơn nên dùng class bình thường thay vì Functional Interface.
+
+
+			
+	
+	
+	# Marker Interface
+		- Interface dùng để đánh dấu class có cách xử lý đặc biệt 
+
+
+
+	# Nested Interface (Interface lồng nhau ) 
+		Interface có thể được khai báo bên trong một class hoặc một interface khác. 
+			
+			class Outer {
+			interface Inner {
+					void show();
+				}
+			}
+			
+			class Test implements Outer.Inner {
+				public void show() {
+					System.out.println("Hello from Nested Interface");
+				}
+			}
+
+		
+		
+		🎯 Nested Interface – Khi nào nên và không nên dùng?
+		✅ Khi nào nên dùng Nested Interface?
+		
+		Khi muốn giới hạn phạm vi sử dụng của Interface (chỉ dùng trong class chứa nó).
+		Khi mô tả quan hệ chặt chẽ giữa interface và class chứa nó.
+		Khi xây dựng plugin architecture hoặc design pattern đặc biệt.
+		🔥 Ví dụ hợp lý (Nested Interface giúp đảm bảo Button chỉ có OnClickListener):
+	
+
+
+			class Button {
+			interface OnClickListener {
+					void onClick();
+				}
+				
+				private OnClickListener listener;
+				
+				public void setOnClickListener(OnClickListener listener) {
+					this.listener = listener;
+				}
+			
+				public void click() {
+					if (listener != null) listener.onClick();
+				}
+			}
+			
+			public class NestedInterfaceExample {
+				public static void main(String[] args) {
+					Button button = new Button();
+					button.setOnClickListener(() -> System.out.println("Button clicked!"));
+					button.click();
+				}
+			}
+		
+		💡 Trường hợp này Nested Interface hợp lý vì OnClickListener không cần thiết bên ngoài Button.
+
+		❌ Khi nào KHÔNG nên dùng Nested Interface?
+		Khi interface có thể tái sử dụng ở nhiều nơi → Nên để thành interface bình thường.
+		Khi Nested Interface không có liên kết chặt chẽ với class chứa nó.
+		Khi Nested Interface khiến code khó đọc và khó bảo trì.
+
+
+📌 Kết luận
+🔹 Functional Interface phù hợp khi làm việc với Lambda, nhưng tránh dùng nếu logic quá phức tạp.
+🔹 Nested Interface hữu ích khi cần giới hạn phạm vi sử dụng, nhưng nên tránh nếu không thực sự cần.
+🔹 Dự án lớn thường tránh lạm dụng hai loại này vì làm giảm khả năng bảo trì và khó mở rộng về sau.
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

@@ -1,0 +1,212 @@
+<html><head><title>Lession 54  Stateful //</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lession 54  Stateful //</h1><pre># Khái niệm 
+	Trong Spring, Stateful liên quan đến việc lưu trữ trạng thái giữa các request hoặc giữa các session của người dùng. Điều này trái ngược với Stateless, nơi mỗi request độc lập và không giữ trạng thái.
+	
+# 	Khi nào Stateful quan trọng trong hệ thống? 
+
+	✔ Ứng dụng cần lưu trữ thông tin người dùng (session, shopping cart, authentication, v.v.)
+	✔ Các hệ thống giao dịch tài chính cần đảm bảo dữ liệu không mất trạng thái
+	✔ Ứng dụng cần giữ trạng thái trên nhiều bước (multi-step forms, wizard, v.v.)
+	✔ Khi cần quản lý phiên làm việc (WebSocket, chat application, game servers, v.v.)
+
+
+# Cách triển khai Stateful trong Spring
+	Spring hỗ trợ nhiều cách để lưu trữ trạng thái, tùy vào yêu cầu của hệ thống:
+
+	## 🔹 a) Lưu trữ trạng thái trong Session (@SessionAttributes, HttpSession) 
+			Cách này giúp giữ trạng thái trong session của người dùng.
+			Sử dụng @SessionAttributes để lưu dữ liệu giữa các request của một user.
+
+
+		@Controller
+		@SessionAttributes("cart")
+		public class CartController {
+		
+			@ModelAttribute("cart")
+			public List<String> createCart() {
+				return new ArrayList<>();
+			}
+		
+			@PostMapping("/add")
+			public String addToCart(@ModelAttribute("cart") List<String> cart, 
+									@RequestParam String item) {
+				cart.add(item);
+				return "cartView";
+			}
+		}
+
+
+			💡 Giải thích:
+			
+			@SessionAttributes("cart") lưu trạng thái của cart trong session của user.
+			Khi user thêm sản phẩm, giỏ hàng sẽ giữ nguyên trạng thái cho đến khi session bị hủy.
+			➡ Nhược điểm: Không phù hợp với hệ thống có nhiều server (horizontal scaling) vì session lưu trên từng server riêng lẻ.
+
+
+
+
+
+
+	## 🔹 b) Lưu trạng thái với HttpSession (Thủ công hơn, nhưng linh hoạt hơn)
+			@Controller
+			public class SessionController {
+			
+				@GetMapping("/setSession")
+				public String setSession(HttpSession session) {
+					session.setAttribute("username", "User123");
+					return "sessionView";
+				}
+			
+				@GetMapping("/getSession")
+				@ResponseBody
+				public String getSession(HttpSession session) {
+					return "Hello, " + session.getAttribute("username");
+				}
+			}
+
+			
+					💡 Giải thích:
+					
+					session.setAttribute("username", "User123") lưu giá trị trong session.
+					Khi gọi /getSession, nó lấy lại giá trị username.
+					Phù hợp với các hệ thống cần lưu dữ liệu tạm thời cho user đăng nhập.
+
+
+
+
+	## 🔹 c) Lưu trạng thái bằng Stateful Bean (@Scope("session") hoặc @Scope("prototype"))
+	Spring hỗ trợ Bean có trạng thái thông qua scope:
+	
+
+		Scope						Mô tả
+		singleton				Chỉ có một instance duy nhất trong toàn bộ ứng dụng (Stateless).
+		prototype				Mỗi request tạo một instance mới (Stateful).
+		session					Một instance duy trì trong suốt phiên làm việc của user (Stateful).
+		request					Một instance tồn tại trong một HTTP request (Stateless).
+
+
+
+		### Ví dụ: Lưu trạng thái trong session bằng @SessionScope 
+
+		@Component
+		@SessionScope
+		public class UserSession {
+			private String username;
+		
+			public String getUsername() {
+				return username;
+			}
+		
+			public void setUsername(String username) {
+				this.username = username;
+			}
+		}
+		
+
+		### Controller sử dụng Stateful Bean
+		
+		@Controller
+		public class UserController {
+		
+			private final UserSession userSession;
+		
+			public UserController(UserSession userSession) {
+				this.userSession = userSession;
+			}
+		
+			@GetMapping("/setUser")
+			public String setUser(@RequestParam String name) {
+				userSession.setUsername(name);
+				return "userView";
+			}
+		
+			@GetMapping("/getUser")
+			@ResponseBody
+			public String getUser() {
+				return "User: " + userSession.getUsername();
+			}
+		}
+				
+
+			@Controller
+			public class UserController {
+			
+				private final UserSession userSession;
+			
+				public UserController(UserSession userSession) {
+					this.userSession = userSession;
+				}
+			
+				@GetMapping("/setUser")
+				public String setUser(@RequestParam String name) {
+					userSession.setUsername(name);
+					return "userView";
+				}
+			
+				@GetMapping("/getUser")
+				@ResponseBody
+				public String getUser() {
+					return "User: " + userSession.getUsername();
+				}
+			}
+
+
+
+
+	##  🔹 d) Lưu trạng thái với Redis (Hỗ trợ Scaling tốt hơn) 
+		Khi chạy hệ thống trên nhiều server (distributed system), sử dụng session sẽ gây lỗi vì mỗi server có session riêng. Để giải quyết, ta dùng Redis để lưu session.
+		
+			
+	### Cấu hình Redis Session trong application.properties	
+		spring.session.store-type=redis
+		spring.redis.host=localhost
+		spring.redis.port=6379
+
+
+	### Controller sử dụng Redis Session 
+		@RestController
+		@RequestMapping("/session")
+		public class RedisSessionController {
+		
+			@GetMapping("/set")
+			public String setSession(HttpSession session) {
+				session.setAttribute("message", "Hello from Redis");
+				return "Session set!";
+			}
+		
+			@GetMapping("/get")
+			public String getSession(HttpSession session) {
+				return (String) session.getAttribute("message");
+			}
+		}
+		💡 Giải thích:
+		Dữ liệu session được lưu vào Redis, giúp có thể scale ngang hệ thống mà vẫn giữ session.
+
+
+
+# 3. So sánh Stateful và Stateless trong Spring
+	
+
+
+Tiêu chí							Stateful														Stateless
+Lưu trạng thái			Có giữ dữ liệu giữa các request/session.						Không giữ trạng thái giữa các request.
+Hiệu suất				Chậm hơn do phải quản lý session/memory.						Nhanh hơn vì không lưu trạng thái.
+Khả năng mở rộng		Hạn chế (cần Redis, DB để scale tốt).							Dễ scale ngang (microservices).
+Ứng dụng				Web app có đăng nhập, giỏ hàng, multi-step forms.				REST API, Microservices, serverless.
+
+
+# 4. Khi nào nên dùng Stateful trong Spring?
+
+		✔ Hệ thống Authentication (OAuth2, Session-based Auth)
+		✔ Ứng dụng có giỏ hàng (Shopping Cart, Checkout Process)
+		✔ Hệ thống chat real-time, WebSocket
+		✔ Ứng dụng cần lưu thông tin tạm thời cho từng user (multi-step forms, wizards)
+		✔ Hệ thống ngân hàng, giao dịch tài chính (cần giữ trạng thái giao dịch tạm thời)
+		
+		🚀 Tóm lại:
+		
+		Stateful phù hợp với các hệ thống cần lưu trữ dữ liệu của người dùng trong suốt phiên làm việc.
+		Stateless phù hợp với microservices, REST API, giúp hệ thống dễ mở rộng hơn.
+		Redis là một giải pháp tốt nếu cần Stateful nhưng vẫn muốn hệ thống có thể scale ngang.
+		💡 Lời khuyên: Khi thiết kế hệ thống, ưu tiên Stateless, chỉ dùng Stateful khi thực sự cần thiết.
+	
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

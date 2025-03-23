@@ -1,0 +1,177 @@
+<html><head><title>Lession 33  CopyOnWriteArrayList //</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lession 33  CopyOnWriteArrayList //</h1><pre># Khái niệm  
+	CopyOnWriteArrayList là một trong những Implementations của List trong Java, được thiết kế đặc biệt để hỗ trợ thao tác an toàn trong môi trường đa luồng (multi-threadeding) mà không cần sử dụng cơ chế synchronization phức tạp. 
+	
+# Đặc điểm chính của CopyOnWriteArrayList 
+	## Dữ liệu được sao chép khi có thao tác ghi(write)
+		- Mỗi khi mỗi phần tử được thêm, sửa , hoặc xóa, một bản sao mới của danh sách array sẽ được tạo ra 
+		- Điều này giúp đảm bảo rằng các luồng đọc(read operations) vẫn có thể chạy mà không bị ảnh hưởng bởi luồng ghi(write operations)
+		
+	## Không cần đồng bộ hóa thủ công(synchronized)	 
+		Do cơ chế copy-on-write, các thao tác độc không cần dùng đến khóa(lock), tránh được vấn đề deadlock và perfomance bottleneck trong môi trường đa luồng. 
+		
+	## Chi phí cao khi ghi(write operations đắt đỏ)
+		Vì mỗi lần thay đổi danh sách(add, set, remove()) đều tạo  ra một bản sao mới, nên nó không phù hợp khi có nhiều thao tác ghi 
+		
+	## Duyệt phần tử an toàn mà không cần ConcurrentModificationException 
+		- Nếu bạn dùng Iterator để duyệt qua danh sách một ArrayList thông thường, mà đồng thời có một luồng khác sửa danh sách, bạn có thể gặp lỗi  ConcurrentModificationException  
+		
+		- Với CopyOnWriteArrayList, các luồng đọc không bị ảnh hưởng bởi các thay đổi trong danh danh sách vì chúng làm việc với bản sao cũ  
+
+
+#  Cách sử dụng CopyOnWriteArrayList 
+	
+	## Ví dụ 1 : DUyệt qua danh sách mà không bị ConcurrentModificationException 
+		
+	import java.util.concurrent.CopyOnWriteArrayList;
+
+		public class CopyOnWriteArrayListExample {
+			public static void main(String[] args) {
+				CopyOnWriteArrayList<String> list = new CopyOnWriteArrayList<>();
+				list.add("Java");
+				list.add("Python");
+				list.add("C++");
+		
+				// Duyệt danh sách bằng Iterator mà không gặp ConcurrentModificationException
+				for (String lang : list) {
+					System.out.println(lang);
+					list.add("JavaScript");  // Không lỗi ConcurrentModificationException
+				}
+		
+				System.out.println("Final list: " + list);
+			}
+		}
+
+		Khi for-each duyệt danh sách, CopyOnWriteArrayList sử dụng một bản sao cố định, vì vậy nó không bị lỗi ConcurrentModificationException, mặc dù chúng ta đang thêm phần tử mới trong khi duyệt.
+		
+		
+	## Ví dụ 2: So sánh 	 CopyOnWriteArrayList với ArrayList trong môi trường đa luồng 
+		Nếu dùng ArrayList trong môi trường đa luồng mà không có đồng bộ hóa, sẽ có thể xảy ra lỗi ConcurrentModificationException 
+		
+			import java.util.ArrayList;
+			import java.util.List;
+			
+			public class ArrayListMultiThreading {
+				public static void main(String[] args) {
+					List<Integer> list = new ArrayList<>();
+					list.add(1);
+					list.add(2);
+					list.add(3);
+			
+					Thread thread1 = new Thread(() -> {
+						for (int num : list) {
+							System.out.println(num);
+							list.add(4); // Lỗi ConcurrentModificationException
+						}
+					});
+			
+					thread1.start();
+				}
+			}
+
+	
+	## Ví dụ 3: Sử dụng CopyOnWriteArrayList trong môi trường đa luồng (Không Lỗi)
+		import java.util.concurrent.CopyOnWriteArrayList;
+	
+		public class CopyOnWriteArrayListMultiThreading {
+			public static void main(String[] args) {
+				CopyOnWriteArrayList<Integer> list = new CopyOnWriteArrayList<>();
+				list.add(1);
+				list.add(2);
+				list.add(3);
+		
+				Thread thread1 = new Thread(() -> {
+					for (int num : list) {
+						System.out.println(num);
+						list.add(4);  // Không lỗi
+					}
+				});
+		
+				thread1.start();
+			}
+		}
+	
+		
+		✅ Không bị lỗi ConcurrentModificationException
+💡 Lý do: Vì CopyOnWriteArrayList tạo một bản sao mới khi có thao tác ghi (write), nên Iterator vẫn duyệt danh sách cũ mà không bị lỗi.
+
+
+# Khi nào nên sử dụng  
+CopyOnWriteArrayList 
+
+	📌 Dùng khi:
+	✅ Khi có nhiều luồng đọc (read-heavy operations) nhưng ít luồng ghi
+	✅ Khi muốn tránh ConcurrentModificationException mà không cần sử dụng synchronization
+	✅ Khi cần duyệt danh sách an toàn trong môi trường đa luồng mà không cần synchronized
+	
+	🚫 Không nên dùng khi:
+	❌ Khi có nhiều thao tác ghi (add(), remove(), set()) vì mỗi lần ghi sẽ tạo một bản sao mới, tốn bộ nhớ và hiệu suất thấp.
+	❌ Khi cần danh sách thay đổi thường xuyên, ConcurrentLinkedQueue hoặc synchronized List có thể phù hợp hơn.	
+	
+	
+	
+	
+# So sánh CopyOnWriteArrayList với các Collection khác  
+	
+	
+Collection				Đa luồng?			Cơ chế đồng bộ hóa					Hiệu suất đọc			Hiệu suất ghi
+ArrayList				❌ Không			Không đồng bộ						Nhanh 🚀				Nhanh 🚀
+Vector					✅ Có				synchronized toàn bộ phương thức	Trung bình ⚡			Chậm 🐢
+CopyOnWriteArrayList	✅ Có				Copy-on-Write						Nhanh 🚀				Chậm 🐢
+ConcurrentLinkedQueue	✅ Có				Không khóa (lock-free)				Nhanh 🚀				Nhanh 🚀	
+	
+
+# Tóm tắt kiến thức dành cho Java Gold và Silver 
+✅ Điểm quan trọng cần nhớ cho kỳ thi:
+- CopyOnWriteArrayList là một danh sách an toàn trong môi trường đa luồng sử dụng cơ chế Copy-on-Write.
+- Khi có thao tác ghi (add(), set(), remove()), một bản sao mới của danh sách được tạo.
+- Không cần synchronized thủ công vì cơ chế Copy-on-Write đảm bảo an toàn cho đa luồng.
+- Hiệu suất ghi kém vì tạo bản sao mới tốn bộ nhớ và CPU, nhưng hiệu suất đọc rất cao.
+- Không bị lỗi ConcurrentModificationException khi duyệt danh sách, vì các luồng đọc không bị ảnh hưởng bởi các thay đổi trong danh sách.
+
+
+🎯 Kết luận
+Nếu chương trình của bạn có nhiều thao tác đọc, ít thao tác ghi, CopyOnWriteArrayList là một lựa chọn tuyệt vời.
+Nếu có nhiều thao tác ghi, hãy cân nhắc sử dụng ConcurrentLinkedQueue hoặc synchronized List thay vì CopyOnWriteArrayList.
+Trong kỳ thi Java Gold & Silver, hãy chú ý đến cách CopyOnWriteArrayList xử lý vòng lặp và thao tác ghi trong môi trường đa luồng.	
+	
+
+// Mối quan hệ giữa List và các Implementations của nó 
+
+java.util.List (Interface)
+│
+├── java.util.ArrayList (implements List, RandomAccess)
+│
+├── java.util.LinkedList (implements List, Deque)
+│
+├── java.util.Vector (implements List, RandomAccess)
+│   ├── java.util.Stack (extends Vector)
+│
+├── java.util.CopyOnWriteArrayList (implements List, RandomAccess)
+	
+	
+	
+// Mỗi quan hệ giữa List và RandomAccess 	
+	
+	
+            java.util.List (Interface)
+                  │
+ ┌────────────────┴────────────────┐
+ │                                 │
+ │                     java.util.LinkedList
+ │                                 ▲
+ │                                 │
+ │           ┌───────────────┬─────┴─────┐
+ │           │               │           │
+ │           │               │           │
+ ▼           ▼               ▼           ▼
+ java.util.ArrayList   java.util.Vector   java.util.CopyOnWriteArrayList
+        │                   │                   │
+        │                   ▼                   ▼
+        │          java.util.Stack          (implements RandomAccess)
+        │
+        ▼
+  (implements RandomAccess)
+	
+	
+	
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
