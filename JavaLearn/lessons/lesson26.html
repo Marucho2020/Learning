@@ -1,0 +1,144 @@
+<html><head><title>Lession 26  Delay Queue //</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px; white-space: pre-wrap; transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lession 26  Delay Queue //</h1><pre># Khái niệm  
+	DelayQueue là một BlockingQueue đặc biệt trong Java, nới các phần tử chỉ có thể được lấy ra sau một khoảng thời gian trễ nhất định. Nó rất hữu ích cho các tác vụ cần được trì hoãn như lập lịch công việc, timeout request, hoặc quản lý thời gian hết hạn của đối tượng 
+	
+# Đặc điểm chính 
+	- Các phần tử trong DelayQueue phải implements interface Delayed, trong đó định nghĩa thời gian mà phần tử có thể được lấy ra 
+	
+	- Khi gọi take() hoặc poll(), chỉ đợi những phần tử đã hết thời gian trễ mới có thể lấy ra khỏi hàng đợi 
+	- Nếu không có phần tử nào hết thời gian, phương thức take() sẽ chặn(blocking) luồng gọi nó 
+	- DelayQueue không chấp nhận giá trị null 
+	- Không giới hạn về kích thước(unbounded queue)
+	
+	
+# Cách hoạt động của DelayQueue 
+	## Cấu trúc dữ liệu 
+		- DelayQueue sử dụng min-heap(binary heap) để sắp xếp các phần tử theo thời gian trễ còn lại 
+		- Phần tử có thời gian hết hạn gần nhất sẽ nằm ở đầu hàng đợi 
+		- Khi gọi take(), nếu phần tử đầu tiên chưa hết thời gian, luồng sẽ chờ cho đến khi phần tử đó sẵn sàng 
+		
+	## Constructor 
+		// Tạo một DelayQueue rỗng 
+		DelayQueue() 
+		
+		// Tạo một DelayQueue chứa các phần tử từ một Collection có sẵn  
+		DelayQueue(Collection<? extends E>)c
+		
+# Cách sử dụng DelayQueue 
+	
+	## Bước 1 : tạo một lớp triển khai implements lại interface Delayed 
+		- Mọi phần tử được thêm vào DelayQueue phải triển khai giao diện Delayed và ghi đè hai phương thức 
+		
+			getDelay(TimeUnit unit) : Trả về khoảng thời gian còn lại trước khi phần tử này sẵn sàng 
+			
+			compareTo(Delayed o) : Hàm để so sánh xác định thứ tự trong queue(thường dựa trên thời gian trễ )
+			
+			
+			
+	## Ví dụ tạo một DelayedTask 
+		
+					import java.util.concurrent.Delayed;
+					import java.util.concurrent.TimeUnit;
+					
+					class DelayedTask implements Delayed {
+						private final long startTime;
+						private final String taskName;
+					
+						public DelayedTask(String taskName, long delayInSeconds) {
+							this.taskName = taskName;
+							this.startTime = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(delayInSeconds);
+						}
+					
+						@Override
+						public long getDelay(TimeUnit unit) {
+							long remainingTime = startTime - System.currentTimeMillis();
+							return unit.convert(remainingTime, TimeUnit.MILLISECONDS);
+						}
+					
+						@Override
+						public int compareTo(Delayed o) {
+							return Long.compare(this.getDelay(TimeUnit.MILLISECONDS), o.getDelay(TimeUnit.MILLISECONDS));
+						}
+					
+						@Override
+						public String toString() {
+							return "Task: " + taskName + ", Scheduled in: " + getDelay(TimeUnit.SECONDS) + " seconds";
+						}
+					}
+							
+
+
+
+	##	Bước 2: Thêm các phần tử vào DelayQueue và xử lý chúng 
+		
+		
+				import java.util.concurrent.DelayQueue;
+				public class DelayQueueExample {
+					public static void main(String[] args) throws InterruptedException {
+						DelayQueue<DelayedTask> queue = new DelayQueue<>();
+				
+						// Thêm các công việc vào hàng đợi với thời gian trễ khác nhau
+						queue.put(new DelayedTask("Task 1", 5));  // Sau 5 giây mới lấy được
+						queue.put(new DelayedTask("Task 2", 10)); // Sau 10 giây mới lấy được
+						queue.put(new DelayedTask("Task 3", 3));  // Sau 3 giây mới lấy được
+				
+						while (!queue.isEmpty()) {
+							DelayedTask task = queue.take(); // Chờ đến khi phần tử sẵn sàng
+							System.out.println("Processing: " + task);
+						}
+					}
+				}
+	
+	
+# Cách thức hoạt động của DelayQueue
+		
+	## Cách getDelay(Time unit) hoạt động : 
+		getDelay() sẽ trả về số thời gian còn lại trước khi phần tử có thể được lấy ra 
+		nếu giá trị trả về <=0, phần tử có thể được lấy ra khỏi hàng đợi 
+		
+	## Cách compareTo(Delayed o) hoạt động: 
+		Xác định thứ tự trong DelayQueue, phần tử nào có thời gian trễ ngắn hơn sẽ được ưu tiên 
+		Nếu hai phần tử có cùng thời gian trễ, chúng sẽ được xử lý theo thứ tự chèn vào 
+		
+		
+	
+	
+	
+# Các phương thức quan trọng trong DelayQueue 
+	
+	add(E e)  : Thêm phần tử vào Queue 
+	put(E e)  : Thêm phần tử vào queue(Vì DelayQueue )
+	poll()    : Lấy và xóa phần tử có thời gian trễ đã hết, nếu không có thì trả về null 
+	take()    : Lấy và xóa phần tử có thời gian trễ đã hết, nếu không có thì chặn luồng cho đến khi có phần tử hợp lệ 
+	peek()    : Lấy phần tử đầu tiên mà không xóa, nếu chưa hết thời gian trễ thì trả về null 
+	size()    : Trả về số lượng phần tử trong queue 
+	
+	
+# 6. Ứng dụng thực tế của DelayQueue
+		✅ Lập lịch thực thi công việc (Task Scheduler)
+		DelayQueue có thể được sử dụng để quản lý công việc theo thời gian mà không cần vòng lặp kiểm tra liên tục.
+		✅ Timeout cho request hoặc cache
+		Dùng trong hệ thống xử lý request có timeout (ví dụ: hủy bỏ request nếu quá thời gian cho phép).
+		Quản lý cache bằng cách tự động xóa các entry sau một khoảng thời gian.
+		✅ Hệ thống đấu giá trực tuyến
+		Giữ thông tin về thời gian hết hạn của các phiên đấu giá và tự động xử lý khi hết thời gian.	
+	
+	
+# 7. So sánh DelayQueue với các hàng đợi khác
+
+
+		Queue										Đặc điểm chính
+		ArrayBlockingQueue							Hàng đợi có kích thước cố định, chặn khi đầy hoặc rỗng.
+		LinkedBlockingQueue							Hàng đợi không giới hạn hoặc có thể giới hạn kích thước.
+		PriorityBlockingQueue						Hàng đợi ưu tiên, nhưng không hỗ trợ blocking khi lấy phần tử.
+		SynchronousQueue							Không lưu trữ phần tử, mỗi thao tác put() phải có take() ngay lập tức.
+		DelayQueue									Hàng đợi trì hoãn, chỉ cho phép lấy phần tử sau khi hết thời gian trễ.	
+	
+	
+	
+# Lưu ý khi thi Java Certification
+		Hiểu rõ Delayed interface và cách getDelay(TimeUnit unit) hoạt động.
+		Biết sự khác biệt giữa take(), poll() và peek().
+		Hiểu cách DelayQueue sắp xếp các phần tử bằng min-heap.
+		Nhớ rằng DelayQueue không có giới hạn kích thước và không chấp nhận null.	
+	
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';document.body.className = mode; localStorage.setItem('theme', mode);syncTheme();}function applyTheme() {let savedTheme = localStorage.getItem('theme') || 'dark-mode';document.body.className = savedTheme;syncTheme();}function syncTheme() {let preElement = document.querySelector('pre');if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {let contentHeight = document.body.scrollHeight;let windowHeight = window.innerHeight;if (contentHeight > windowHeight * 1.2) {document.getElementById('backBottom').style.display = 'block';} else {document.getElementById('backBottom').style.display = 'none';}}</script></body></html>
