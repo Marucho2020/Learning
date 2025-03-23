@@ -140,14 +140,6 @@ static void generateHtml(String outputPath, List<Lesson> lessons) throws IOExcep
     html.append("<h1>📖 Danh sách bài học</h1>");
     html.append("<button onclick='toggleTheme()'>🌙 Chuyển giao diện</button>");
     html.append("<button onclick='fixTitles()'>🔧 Sửa tiêu đề</button><ul>");
-
-    // for (Lesson lesson : lessons) {
-    //     html.append("<li><a href='").append(lesson.link).append("'>")
-    //         .append(lesson.title.replace("==========", "-").replace("==", "--"))
-    //         .append("</a></li>");
-    //     Files.write(Paths.get(lesson.link), lesson.toHtml().getBytes());
-    // }
-	
 	
 	for (Lesson lesson : lessons) {
     String lessonUrl = baseGitHubUrl + new File(lesson.link).getName(); // Chuyển sang URL GitHub
@@ -195,25 +187,58 @@ class Lesson {
     }
 
 	String toHtml() {
-		return "<html><head><title>" + title + "</title>" +
-			"<style>" +
-			"body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }" +
-			".dark-mode { background-color: #121212; color: #e0e0e0; }" +
-			".light-mode { background-color: #ffffff; color: #333333; }" +
-			"h1 { text-align: center; color: #73d9f5; }" +
-			"pre { padding: 15px; border-radius: 5px; white-space: pre-wrap; transition: background 0.3s, color 0.3s; }" +
-			".dark-mode pre { background: #1e1e1e; color: #e0e0e0; }" +
-			".light-mode pre { background: #f5f5f5; color: #333333; }" +
-			"button { background: #03dac6; color: #121212; border: none; padding: 10px 20px; font-size: 16px; cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }" +
-			".dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }" +
-			"</style></head><body onload='applyTheme(); checkPageHeight()'>" +
-			"<div class='container'>" +
-			"<a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br>" +  // Nút trên cùng
-			"<h1>" + title.replace("==========", "-").replace("==", "--") + "</h1>" +
-			"<pre>" + content + "</pre>" +
-			"<a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br>" + // Nút dưới cùng (ẩn mặc định)
-			"<button onclick='toggleTheme()'>🌙 Chuyển giao diện</button>" +
-			"</div>" +
+		//  return "<html><head><title>" + title + "</title>" +
+		// 	"<style>" +
+		// 	"body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }" +
+		// 	".dark-mode { background-color: #121212; color: #e0e0e0; }" +
+		// 	".light-mode { background-color: #ffffff; color: #333333; }" +
+		// 	"h1 { text-align: center; color: #73d9f5; }" +
+		// 	"pre { padding: 15px; border-radius: 5px; white-space: pre-wrap; transition: background 0.3s, color 0.3s; }" +
+		// 	".dark-mode pre { background: #1e1e1e; color: #e0e0e0; }" +
+		// 	".light-mode pre { background: #f5f5f5; color: #333333; }" +
+		// 	"button { background: #03dac6; color: #121212; border: none; padding: 10px 20px; font-size: 16px; cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }" +
+		// 	".dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }" +
+		// 	"</style></head><body onload='applyTheme(); checkPageHeight()'>" +
+		// 	"<div class='container'>" +
+		// 	"<a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br>" +  // Nút trên cùng
+		// 	"<h1>" + title.replace("==========", "-").replace("==", "--") + "</h1>" +
+		// 	"<pre>" + content + "</pre>" +
+		// 	"<a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br>" + // Nút dưới cùng (ẩn mặc định)
+		// 	"<button onclick='toggleTheme()'>🌙 Chuyển giao diện</button>" +
+		// 	"</div>" +
+		// 	
+			
+			    return "<html><head><title>" + title + "</title>" +
+        "<style>" +
+        "body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }" +
+        ".dark-mode { background-color: #121212; color: #e0e0e0; }" +
+        ".light-mode { background-color: #ffffff; color: #333333; }" +
+        "h1 { text-align: center; color: #73d9f5; }" +
+        "pre { padding: 15px; border-radius: 5px; white-space: pre-wrap; transition: background 0.3s, color 0.3s; }" +
+        ".dark-mode pre { background: #1e1e1e; color: #e0e0e0; }" +
+        ".light-mode pre { background: #f5f5f5; color: #333333; }" +
+        "#backTop, #backBottom { " +
+        "   font-size: 3em; padding: 20px 40px; " +
+        "   background: #bb86fc; color: white; text-decoration: none; " +
+        "   border-radius: 10px; display: inline-block; text-align: center; " +
+        "}" +
+        "#backTop:hover, #backBottom:hover { background: #9b67e2; }" +
+        "button { font-size: 2em; padding: 15px 30px; " +
+        "   background: #03dac6; color: #121212; border: none; " +
+        "   cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }" +
+        "button:hover { background: #02b8a3; }" +
+
+        ".dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }" +
+        "</style></head><body onload='applyTheme(); checkPageHeight()'>" +
+        "<div class='container'>" +
+        "<a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br>" + 
+        "<h1>" + title.replace("==========", "-").replace("==", "--") + "</h1>" +
+        "<pre>" + content + "</pre>" +
+        "<a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br>" + 
+        "<button onclick='toggleTheme()'>🌙 Chuyển giao diện</button>" +
+        "</div>" +
+        "</body></html>";
+			
 			"<script>" +
 			"function toggleTheme() {" +
 			"let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';" +
