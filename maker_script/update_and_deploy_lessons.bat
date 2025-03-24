@@ -4,15 +4,17 @@ cd /d D:\Dev\Learning-all-git-page\maker_script\transform_script
 echo 🔹 Running each Java file...
 set "error_found=0"
 
+:: Lặp qua từng file .java trong thư mục
 for %%F in (*.java) do (
     echo 🔹 Running: %%F
-    java %%F
+    java -cp gson-2.10.1.jar;. %%~nF
     if %ERRORLEVEL% NEQ 0 (
         echo ❌ ERROR: %%F failed to execute!
         set "error_found=1"
     )
 )
 
+:: Nếu có lỗi thì dừng lại, không deploy lên GitHub
 if %error_found% NEQ 0 (
     echo ❌ Errors detected. Deployment aborted!
     exit /b
