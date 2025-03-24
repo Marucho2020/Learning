@@ -2,6 +2,7 @@ import java.io.*;
 import java.nio.file.*;
 import java.util.*;
 import java.util.regex.*;
+import com.google.gson.*;
 
 public class LessonTransformBase {
 	
