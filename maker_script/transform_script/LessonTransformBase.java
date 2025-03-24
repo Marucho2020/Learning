@@ -244,7 +244,7 @@ static void generateHtml(String outputPath, List<Lesson> lessons) throws IOExcep
         .append("function fixTitles() { fetch('fix_titles').then(() => alert('✅ Tiêu đề đã được sửa!')); }")
 
         // 🔹 JavaScript cho nút Home
-        .append("function goHome() { window.location.href = '../index.html'; }")
+        .append("function goHome() { window.location.href = '../../index.html'; }")
         .append("</script>");
 
     html.append("</body></html>");
