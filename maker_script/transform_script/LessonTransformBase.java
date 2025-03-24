@@ -2,7 +2,13 @@ import java.io.*;
 import java.nio.file.*;
 import java.util.*;
 import java.util.regex.*;
-import com.google.gson.*;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class LessonTransformBase {
 	
@@ -11,46 +17,93 @@ public class LessonTransformBase {
     private static String lessonDir;
     private static String baseGitHubUrl;
 
-    public static void main(String[] args) throws IOException {
-        List<Map<String, String>> configs = loadConfig("config.json");
+//    public static void main(String[] args) throws IOException {
+//        List<Map<String, String>> configs = loadConfig("config.json");
+//
+//        for (Map<String, String> config : configs) {
+//            // Gán giá trị từ JSON vào biến
+//            filePath = config.get("filePath");
+//            outputPath = config.get("outputPath");
+//            lessonDir = config.get("lessonDir");
+//            baseGitHubUrl = config.get("baseGitHubUrl");
+//
+//            System.out.println("🔹 Processing: " + filePath);
+//            System.out.println("🔗 Base URL: " + baseGitHubUrl);
+//
+//            // 🔹 Xóa file HTML cũ
+//            deleteFile(outputPath);
+//
+//            // 🔹 Xóa thư mục bài học cũ và tạo lại
+//            deleteDirectory(lessonDir);
+//            Files.createDirectories(Paths.get(lessonDir));
+//
+//            // 🔹 Đọc và xử lý bài học
+//            List<Lesson> lessons = parseLessons(filePath, lessonDir);
+//            generateHtml(outputPath, lessons);
+//
+//            System.out.println("✅ HTML file created: " + outputPath);
+//        }
+//    }
+	
+	 public static void main(String[] args) throws IOException {
+        List<Config> configs = loadConfig("config.json");
 
-        for (Map<String, String> config : configs) {
-            // Gán giá trị từ JSON vào biến
-            filePath = config.get("filePath");
-            outputPath = config.get("outputPath");
-            lessonDir = config.get("lessonDir");
-            baseGitHubUrl = config.get("baseGitHubUrl");
-
-            System.out.println("🔹 Processing: " + filePath);
-            System.out.println("🔗 Base URL: " + baseGitHubUrl);
-
+        for (Config config : configs) {
+            System.out.println("🔹 Processing: " + config.filePath);
+            System.out.println("🔗 Base URL: " + config.baseGitHubUrl);
+			
+			 // Gán giá trị từ JSON vào biến
+            filePath = config.filePath;
+            outputPath = config.outputPath;
+            lessonDir = config.lessonDir;
+            baseGitHubUrl = config.baseGitHubUrl;
+			
             // 🔹 Xóa file HTML cũ
-            deleteFile(outputPath);
+            deleteFile(config.outputPath);
 
             // 🔹 Xóa thư mục bài học cũ và tạo lại
-            deleteDirectory(lessonDir);
-            Files.createDirectories(Paths.get(lessonDir));
+            deleteDirectory(config.lessonDir);
+            Files.createDirectories(Paths.get(config.lessonDir));
 
             // 🔹 Đọc và xử lý bài học
-            List<Lesson> lessons = parseLessons(filePath, lessonDir);
-            generateHtml(outputPath, lessons);
+            List<Lesson> lessons = parseLessons(config.filePath, config.lessonDir);
+            generateHtml(config.outputPath, lessons);
 
-            System.out.println("✅ HTML file created: " + outputPath);
+            System.out.println("✅ HTML file created: " + config.outputPath);
         }
     }
 	
-	    // 📌 Đọc file JSON và trả về danh sách cấu hình
-    private static List<Map<String, String>> loadConfig(String configFilePath) {
+	
+	
+// 📌 Đọc file JSON và parse dữ liệu thủ công (không dùng Gson)
+    private static List<Config> loadConfig(String configFilePath) {
+        List<Config> configs = new ArrayList<>();
+
         try {
+            // Đọc toàn bộ nội dung file JSON thành một chuỗi
             String json = Files.readString(Paths.get(configFilePath));
-            Gson gson = new Gson();
-            return gson.fromJson(json, List.class);
+
+            // Tìm tất cả các object trong JSON (giữa dấu { })
+            Pattern pattern = Pattern.compile("\\{\\s*\"filePath\":\\s*\"([^\"]+)\",\\s*"
+                                            + "\"outputPath\":\\s*\"([^\"]+)\",\\s*"
+                                            + "\"lessonDir\":\\s*\"([^\"]+)\",\\s*"
+                                            + "\"baseGitHubUrl\":\\s*\"([^\"]+)\"\\s*}");
+            Matcher matcher = pattern.matcher(json);
+
+            while (matcher.find()) {
+                String filePath = matcher.group(1);
+                String outputPath = matcher.group(2);
+                String lessonDir = matcher.group(3);
+                String baseGitHubUrl = matcher.group(4);
+
+                configs.add(new Config(filePath, outputPath, lessonDir, baseGitHubUrl));
+            }
         } catch (IOException e) {
             System.err.println("❌ Lỗi đọc file cấu hình: " + e.getMessage());
-            return Collections.emptyList();
         }
+
+        return configs;
     }
-	
 	
 	
 	 // 🔹 Xóa file nếu tồn tại
@@ -199,6 +252,31 @@ static void generateHtml(String outputPath, List<Lesson> lessons) throws IOExcep
 }
 
 }
+
+class Config {
+    String filePath;
+    String outputPath;
+    String lessonDir;
+    String baseGitHubUrl;
+
+    public Config(String filePath, String outputPath, String lessonDir, String baseGitHubUrl) {
+        this.filePath = filePath;
+        this.outputPath = outputPath;
+        this.lessonDir = lessonDir;
+        this.baseGitHubUrl = baseGitHubUrl;
+    }
+
+    @Override
+    public String toString() {
+        return "Config{" +
+                "filePath='" + filePath + '\'' +
+                ", outputPath='" + outputPath + '\'' +
+                ", lessonDir='" + lessonDir + '\'' +
+                ", baseGitHubUrl='" + baseGitHubUrl + '\'' +
+                '}';
+    }
+}
+
 
 // 🔹 CLASS BÀI HỌC
 class Lesson {
