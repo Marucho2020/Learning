@@ -1,0 +1,117 @@
+<html><head><title>Lession 29  String Pool //</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lession 29  String Pool //</h1><pre># Khái niệm 
+	String Pool (còn gọi là String Intern Pool) là một vùng nhớ đặc biệt trong heap memory của JVM , nơi lưu trữ các chuỗi bất biến(immutable)
+	
+	Khi bạn khai báo một chuỗi bằng string literal (Chuỗi trực tiếp trong dấu ""), Java sẽ kiểm tra xem chuỗi đó có tồn tại trong String Pool hay chưa 
+	
+		- Nếu có, nó sẽ tái sử dụng chuỗi cũ để tiết kiệm bộ nhớ 
+		- Nếu chưa, Java sẽ tạo chuỗi mới và đưa nó vào String Pool 
+		
+		
+	- Tức là khi tạo chuỗi bằng string literal(chuỗi gán trực tiếp vào biến trong dấu "") , thì lúc này chuỗi không được khởi tạo trong bộ nhớ heap giống các object bình thường mà được thêm vào một hồ bơi(pool) để có thể tái sử dụng lại cho những vị trí khác trong chương trình muốn tái sử dụng tại để tiết kiệm bộ nhớ . Lúc này nếu 2 biến string được khởi tạo bằng string literal có cùng chuỗi string thì so sánh == với chúng sẽ trả về true. Còn khi khởi tạo bằng từ khóa new String("XXX") thì nó không được thêm vào pool mà tạo như một object bình thường và không thể sử dụng == để so sánh mà phải dùng equals() 
+
+	- Hoặc có thể sử dụng phương thức str.intern() : để đưa chuỗi string này vào pool , khi đó nó sẽ được lưu ở hồ bơi string chứ k được lưu ở heap nữa 
+		
+		
+	### Ví dụ  
+	public static void main(String[] args) {
+        String s1 = "hello"; // Tạo chuỗi "hello" trong String Pool
+        String s2 = "hello"; // s2 trỏ đến cùng một chuỗi trong String Pool
+
+        System.out.println(s1 == s2); // true (Cùng tham chiếu đến một đối tượng)
+    }
+	
+	!!! Lưu ý : Khi dùng toán tử ==, Java sẽ kiểm tra xem hai biến có cùng tham chiếu đến cùng một đối tượng trong bộ nhớ hay không 
+
+# Tạo chuỗi bằng từ khóa new(Không dùng String pool) 
+	Khi dùng new String() . Java luôn luôn tạo một đối tượng mới trên heap, ngay cả khi chuỗi đã tồn tại trong String Pool 
+	
+	public class StringHeapExample {
+		public static void main(String[] args) {
+			String s1 = "hello";          // Chuỗi "hello" trong String Pool
+			String s2 = new String("hello"); // Luôn tạo đối tượng mới trên Heap
+	
+			System.out.println(s1 == s2); // false (s1 và s2 tham chiếu hai đối tượng khác nhau)
+		}
+	}
+	
+	!!! S1 trỏ đến chuỗi trong String Pool , còn s2 là một đối tượng riêng biệt trên heap 
+
+
+# str.intern() - Đưa chuỗi vào String Pool 
+		
+	## Phương thức str.intern() sẽ : 
+		Kiểm tra chuỗi đã tồn tại trong String Pool chưa 
+		
+			### Nếu có : Trả về tham chiếu đến chuỗi String Pool , Lúc này các String cùng tham chiếu đến 1 vị trí trong string pool sẽ có vùng nhớ giống nhau và so sánh == được 
+			
+			### Nếu không : Thêm chuỗi đó vào String Pool và trả về tham chiếu đó  
+			
+			
+			
+	### Ví dụ  
+	
+		public class StringInternExample {
+			public static void main(String[] args) {
+				String s1 = new String("hello");  // Tạo đối tượng mới trên heap
+				String s2 = s1.intern();          // Đưa vào String Pool
+		
+				System.out.println(s1 == s2); // false (s1 vẫn là đối tượng riêng trên heap)
+				System.out.println(s2 == "hello"); // true (s2 giờ trỏ đến String Pool)
+			}
+		}
+
+
+
+# Ứng dụng của intern() trong tối ưu bộ nhớ 
+	Nếu bạn có nhiều chuỗi giống nhau mà được tạo bằng new String(), chúng sẽ chiếm nhiều bộ nhớ không cần thiết. intern() giúp tiết kiệm bộ nhớ bằng cách chia sẻ tham chiếu trong String Pool 
+	
+	public class StringOptimization {
+		public static void main(String[] args) {
+			String[] words = new String[1000];
+	
+			for (int i = 0; i < 1000; i++) {
+				words[i] = new String("optimize").intern(); // Chỉ có 1 đối tượng trong String Pool
+			}
+	
+			System.out.println(words[0] == words[999]); // true
+		}
+	}
+	Kết quả: Tất cả 1000 chuỗi "optimize" sẽ dùng chung một vùng nhớ trong String Pool, thay vì 1000 đối tượng riêng lẻ.
+
+
+#  So sánh == vs. equals() với String
+
+			Toán tử					Chức năng									Ví dụ							Kết quả
+			==					So sánh địa chỉ bộ nhớ (tham chiếu)			"abc" == "abc"						✅ true
+			==					So sánh địa chỉ khác nhau					new String("abc") == "abc"			❌ false
+			equals()			So sánh giá trị của chuỗi					new String("abc").equals("abc")		✅ true
+
+	
+	
+	
+	
+	public class StringComparison {
+		public static void main(String[] args) {
+			String s1 = new String("Java");
+			String s2 = "Java";
+			String s3 = s1.intern();
+	
+			System.out.println(s1 == s2); // false (s1 trên heap, s2 trong String Pool)
+			System.out.println(s3 == s2); // true (s3 và s2 đều trong String Pool)
+			System.out.println(s1.equals(s2)); // true (cùng nội dung)
+		}
+	}
+
+# 	Khi nào nên dùng intern()?
+	
+✅ Nên dùng khi:
+
+Xử lý nhiều chuỗi trùng lặp để tiết kiệm bộ nhớ.
+Khi muốn kiểm tra == thay vì equals() mà không sợ sai.
+Khi dùng chuỗi làm key trong HashMap, Set, HashTable (tối ưu hiệu suất).
+❌ Không nên dùng khi:
+
+Khi không cần tối ưu bộ nhớ quá mức.
+Khi tạo nhiều chuỗi có nội dung khác nhau (vì intern() cũng tốn CPU để kiểm tra và thêm vào String Pool).
+	
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
