@@ -1413,7 +1413,7 @@ Ví dụ này minh họa cách sử dụng KNN để thực hiện hồi quy tr�
 			KNN đặc biệt hữu ích khi dữ liệu về các trường hợp bệnh lý tương tự có sẵn, giúp mô hình học từ những trường hợp trước đó để dự đoán kết quả cho trường hợp mới  
 			
 		### Dự đoán bệnh tiểu đường (Diabetes Prediction)
-			KNN có thể được sử dụng để dự đoán khả năng mắ c bệnh tiểu đường dựa trên các đặc điểm sinh học như tuổi tác, chỉ số BMI, huyết áp, và các thông số khác. Bằng cách so sánh bệnh nhân mới với các bệnh nhân đã biết tình trạng bệnh, KNN có thể ước tính xác suất mắc bệnh của họ 
+			KNN có thể được sử dụng để dự đoán khả năng mắc bệnh tiểu đường dựa trên các đặc điểm sinh học như tuổi tác, chỉ số BMI, huyết áp, và các thông số khác. Bằng cách so sánh bệnh nhân mới với các bệnh nhân đã biết tình trạng bệnh, KNN có thể ước tính xác suất mắc bệnh của họ 
 			
 			Trong ứng dụng này, KNN cần một tập dữ liệu lớn và đa dạng để đảm bảo rằng các dự đoán có độ chính xác cao, đặc biệt khi phân tích trên các nhóm có dân số khác nhau 
 
@@ -2567,19 +2567,32 @@ https://aicandy.vn/wp-content/uploads/2024/09/aicandy_RNN.png
 
 
 	##	Backpropagation Through Time (BPTT) 
-	https://aicandy.vn/recurrent-neural-network-rnn-ung-dung-va-cach-hoat-dong/
+			
+		Trong các mạng RNN, dữ liệu được xử lý tuần tự qua nhiều bước thời gian. Điều này có nghĩa là trạng thái ẩn tại thời điểm t phụ thuộc vào cả đầu vào tại thời điểm đó và trạng thái ẩn từ bước tước đó. Do đó, khi tính toán gradient, ta không chỉ lan truyền ngược qua các lớp như trong mạng nơ-ron truyền thống mà còn phải lan truyền qua các bước thời gian trước đó. Đây là lý do thuật toán BPTT được ra đời. 
+			https://aicandy.vn/wp-content/uploads/2024/09/aicandy_RNN_backpropagation.jpg
 		
+		Trong BPTT, mạng RNN được mở rộng qua thời gian, mỗi bước thời gian của RNN được coi như một lớp riêng biệt. Khi lan truyền ngược, gradient không chỉ được lan truyền qua các trọng số của các lớp trong mạng, mà còn phải lan truyền ngược qua các bước thời gian để tính toán ảnh hưởng của các trạng thái ẩn trước đó đến lỗi hiện tại 
+		
+		### Công thức tổng quát của BPTT là : 
+		
+			\frac{\partial \mathcal{L}}{\partial W} = \sum_{t=1}^{T} \frac{\partial \mathcal{L}_t}{\partial y_t} \cdot \frac{\partial y_t}{\partial h_t} \cdot \frac{\partial h_t}{\partial h_{t-1}} \cdot \frac{\partial h_{t-1}}{\partial W}
 
 
+		Trong đó : 
+			\frac{\partial \mathcal{L}_t}{\partial y_t} : là gradient của hàm mất mát tại bước thời gian t theo đầu ra yt 
+			\frac{\partial y_t}{\partial h_t}	: là gradient của đầu ra tại thời điểm t theo trạng thái ẩn ht 
+			\frac{\partial h_t}{\partial h_{t-1}}	: là gradient của trạng thái ẩn hiện tại theo trạng thái ẩn trước đó 
+			\frac{\partial h_{t-1}}{\partial W}		: là gradient của trạng thái ẩn trước theo trọng số W 
+			
+			
+	## Triển khai RNN bằng PyTorch 
+			Dưới đây là cách triển khai một mạng RNN đơn giản bằng PyTorch. Mạng sẽ dự đoán số tiếp theo của chuỗi [1, 2, 3, 4].
+			RNNByPytorch.py
 
 
+		Giải thích:	
 
-
-
-
-
-
-
+	https://aicandy.vn/recurrent-neural-network-rnn-ung-dung-va-cach-hoat-dong/
 
 
 
