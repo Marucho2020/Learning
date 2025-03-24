@@ -4,10 +4,10 @@ cd /d D:\Dev\Learning-all-git-page\maker_script\transform_script
 echo 🔹 Running each Java file...
 set "error_found=0"
 
-:: Lặp qua từng file .java trong thư mục
+:: Lặp qua từng file .java trong thư mục và chạy trực tiếp với Java 11+
 for %%F in (*.java) do (
     echo 🔹 Running: %%F
-    java -cp gson-2.10.1.jar;. %%~nF
+    java %%F
     if %ERRORLEVEL% NEQ 0 (
         echo ❌ ERROR: %%F failed to execute!
         set "error_found=1"
