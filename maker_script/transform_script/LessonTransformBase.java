@@ -143,7 +143,7 @@ public class LessonTransformBase {
         }
     }
 
-    // 🔹 CHUẨN HÓA TIÊU ĐỀ BÀI HỌC (BỎ "Lession X" CŨ, ĐÁNH SỐ LẠI)
+    // 🔹 CHUẨN HÓA TIÊU ĐỀ BÀI HỌC (BỎ "Lesson X" CŨ, ĐÁNH SỐ LẠI)
     static void normalizeLessonTitles(String filePath) throws IOException {
         List<String> lines = Files.readAllLines(Paths.get(filePath));
         List<String> updatedLines = new ArrayList<>();
@@ -151,9 +151,9 @@ public class LessonTransformBase {
 
         for (String line : lines) {
             if (line.matches("//=+.*")) { // Dòng tiêu đề bài học
-                // Loại bỏ toàn bộ "Lession X ==" cũ nếu có
+                // Loại bỏ toàn bộ "Lesson X ==" cũ nếu có
                 String lessonName = line.replaceAll("//=+", "").trim(); // Bỏ `//=`
-                lessonName = lessonName.replaceAll("Lession \\d+ == ", ""); // Bỏ "Lession X =="
+                lessonName = lessonName.replaceAll("Lesson \\d+ == ", ""); // Bỏ "Lesson X =="
                 lessonName = lessonName.replaceAll("[=/]+$", "").trim(); // Bỏ `=` và `/` cuối
 
                 // Tạo tiêu đề chuẩn mới
