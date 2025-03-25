@@ -64,6 +64,9 @@ public class LessonTransformBase {
             // 🔹 Xóa thư mục bài học cũ và tạo lại
             deleteDirectory(config.lessonDir);
             Files.createDirectories(Paths.get(config.lessonDir));
+			
+			// 🔹 Chuẩn hóa tiêu đề bài học
+			normalizeLessonTitles(filePath);
 
             // 🔹 Đọc và xử lý bài học
             List<Lesson> lessons = parseLessons(config.filePath, config.lessonDir);
