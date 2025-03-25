@@ -150,19 +150,39 @@ public class LessonTransformBase {
         int lessonIndex = 1;
 
         for (String line : lines) {
-            if (line.matches("//\\s*=+.*")) { // Dòng tiêu đề bài học
-                // Loại bỏ toàn bộ "Lesson X ==" cũ nếu có
-                String lessonName = line.replaceAll("//=+", "").trim(); // Bỏ `//=`
-                lessonName = lessonName.replaceAll("Lesson \\d+ == ", ""); // Bỏ "Lesson X =="
-				// xóa các ký tự lỗi  
-                lessonName.replaceAll("Lession \\d+ == ", ""); // Bỏ "Lession X =="
-						
-                lessonName = lessonName.replaceAll("[=/]+$", "").trim(); // Bỏ `=` và `/` cuối
-
-                // Tạo tiêu đề chuẩn mới
-                line = "//==========Lesson " + lessonIndex + " == " + lessonName + " ==========//";
-                lessonIndex++;
-            }
+        //     if (line.matches("//\\s*=+.*")) { // Dòng tiêu đề bài học
+        //         // Loại bỏ toàn bộ "Lesson X ==" cũ nếu có
+        //         String lessonName = line.replaceAll("//=+", "").trim(); // Bỏ `//=`
+        //         lessonName = lessonName.replaceAll("Lesson \\d+ == ", ""); // Bỏ "Lesson X =="
+		// 		// xóa các ký tự lỗi  
+        //         lessonName.replaceAll("Lession \\d+ == ", ""); // Bỏ "Lession X =="
+		// 				
+        //         lessonName = lessonName.replaceAll("[=/]+$", "").trim(); // Bỏ `=` và `/` cuối
+		// 
+        //         // Tạo tiêu đề chuẩn mới
+        //         line = "//==========Lesson " + lessonIndex + " == " + lessonName + " ==========//";
+        //         lessonIndex++;
+        //     }
+			
+			if (line.matches("//\\s*=+.*")) { // Dòng tiêu đề bài học
+				// Loại bỏ tiền tố `//=` và các dấu space dư thừa
+				String lessonName = line.replaceAll("//\\s*=+", "").trim();
+			
+				// Loại bỏ các cụm "Lession X ==" hoặc "Lesson X =="
+				lessonName = lessonName.replaceAll("\\b(Lession|Lesson) \\d+\\s*==\\s*", "");
+			
+				// Xóa phần `//==` nếu xuất hiện ở giữa câu
+				lessonName = lessonName.replaceAll("\\s*//==\\s*", "");
+			
+				// Xóa các ký tự `=` và `/` cuối dòng
+				lessonName = lessonName.replaceAll("[=/]+$", "").trim();
+			
+				// Tạo tiêu đề chuẩn mới
+				line = "//==========Lesson " + lessonIndex + " == " + lessonName + " ==========//";
+				lessonIndex++;
+			}
+			
+			
             updatedLines.add(line);
         }
 
@@ -190,6 +210,7 @@ public class LessonTransformBase {
 				 
 				 title = line.replaceAll("//\\s*=+", "") // Xóa tiền tố //
 				.replaceAll("\\bLession \\d+\\b", "") // Xóa các cụm "Lession X"
+				
             .trim();
             } else {
                 content.append(line).append("\n");
