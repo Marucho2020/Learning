@@ -154,10 +154,11 @@ public class LessonTransformBase {
                 // Loại bỏ toàn bộ "Lesson X ==" cũ nếu có
                 String lessonName = line.replaceAll("//=+", "").trim(); // Bỏ `//=`
                 lessonName = lessonName.replaceAll("Lesson \\d+ == ", ""); // Bỏ "Lesson X =="
+                lessionName = lessonName.replaceAll("Lession \\d+ == ", ""); // Bỏ "Lesson X =="
                 lessonName = lessonName.replaceAll("[=/]+$", "").trim(); // Bỏ `=` và `/` cuối
 
                 // Tạo tiêu đề chuẩn mới
-                line = "//==========Lession " + lessonIndex + " == " + lessonName + " ==========//";
+                line = "//==========Lesson " + lessonIndex + " == " + lessonName + " ==========//";
                 lessonIndex++;
             }
             updatedLines.add(line);
