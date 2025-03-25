@@ -179,7 +179,7 @@ public class LessonTransformBase {
         for (String line : lines) {
             if (line.startsWith("//==========Lession ")) {  // Gặp dòng tiêu đề mới
                 if (content.length() > 0) {
-                    lessons.add(new Lesson(title, content.toString(), lessonDir + "/lesson" + lessonCount + ".html"));
+                    lessons.add(new Lesson(title, content.toString(), lessonDir + "/lesson" + lessonCount + ".html" ,currentListFileName ));
                     lessonCount++;
                     content.setLength(0);
                 }
@@ -191,7 +191,7 @@ public class LessonTransformBase {
 
         // Lưu bài cuối cùng nếu có
         if (content.length() > 0) {
-            lessons.add(new Lesson(title, content.toString(), lessonDir + "/lesson" + lessonCount + ".html"));
+            lessons.add(new Lesson(title, content.toString(), lessonDir + "/lesson" + lessonCount + ".html",currentListFileName));
         }
 
         return lessons;
@@ -296,11 +296,13 @@ class Lesson {
     String title;
     String content;
     String link;
+	String currentListFileName;
 
-    Lesson(String title, String content, String link) {
+    Lesson(String title, String content, String link , String currentListFileName) {
         this.title = title;
         this.content = content;
         this.link = link;
+		this.currentListFileName = currentListFileName;
     }
 	String toHtml() {
     return "<html><head><title>" + title + "</title>" +
