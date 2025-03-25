@@ -150,13 +150,13 @@ public class LessonTransformBase {
         int lessonIndex = 1;
 
         for (String line : lines) {
-            if (line.matches("//=+.*")) { // Dòng tiêu đề bài học
+            if (line.matches("//\\s*=+.*")) { // Dòng tiêu đề bài học
                 // Loại bỏ toàn bộ "Lesson X ==" cũ nếu có
                 String lessonName = line.replaceAll("//=+", "").trim(); // Bỏ `//=`
                 lessonName = lessonName.replaceAll("Lesson \\d+ == ", ""); // Bỏ "Lesson X =="
 				// xóa các ký tự lỗi  
                 lessonName.replaceAll("Lession \\d+ == ", ""); // Bỏ "Lession X =="
-				
+						
                 lessonName = lessonName.replaceAll("[=/]+$", "").trim(); // Bỏ `=` và `/` cuối
 
                 // Tạo tiêu đề chuẩn mới
