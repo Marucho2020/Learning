@@ -16,6 +16,7 @@ public class LessonTransformBase {
     private static String outputPath;
     private static String lessonDir;
     private static String baseGitHubUrl;
+	private static String currentListFileName;
 
 //    public static void main(String[] args) throws IOException {
 //        List<Map<String, String>> configs = loadConfig("config.json");
@@ -65,6 +66,9 @@ public class LessonTransformBase {
             deleteDirectory(config.lessonDir);
             Files.createDirectories(Paths.get(config.lessonDir));
 			
+			// 🔹 Cập nhật tên bài học hiện tại 
+			currentListFileName = extractFileName(outputPath);
+			
 			// 🔹 Chuẩn hóa tiêu đề bài học
 			normalizeLessonTitles(filePath);
 
@@ -74,6 +78,12 @@ public class LessonTransformBase {
 
             System.out.println("✅ HTML file created: " + config.outputPath);
         }
+    }
+	
+	// 📌 Lấy ra tên của file từ đường dẫn 
+	   public static String extractFileName(String outputPath) {
+        Path path = Paths.get(outputPath);
+        return path.getFileName().toString();
     }
 	
 	
@@ -318,10 +328,10 @@ class Lesson {
         ".dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }" +
         "</style></head><body onload='applyTheme(); checkPageHeight()'>" +
         "<div class='container'>" +
-        "<a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br>" + 
+        "<a id='backTop' href='../"+ currentListFileName +"'>🔙 Quay lại danh sách</a><br>" + 
         "<h1>" + title.replace("==========", "-").replace("==", "--") + "</h1>" +
         "<pre>" + content + "</pre>" +
-        "<a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br>" + 
+        "<a id='backBottom' href='../"+ currentListFileName +"' style='display:none;'>🔙 Quay lại danh sách</a><br>" + 
         "<button onclick='toggleTheme()'>🌙 Chuyển giao diện</button>" +
         "</div>" +
         "<script>" +
