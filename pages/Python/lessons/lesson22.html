@@ -1,0 +1,103 @@
+<html><head><title>Lesson 21 ==  package ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../python-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 21 --  package -//</h1><pre>		
+	- sử dụng để import nhiều module trong thư mục khác 
+	- packgae là một folder chưa các module , packagecon(sub package) và bên cạnh đó là file __init__.py (tức là bắt buộc phải có __init__.py để python chạy và nhận ra được đây là package chứ k phải một thư mục thông thường)
+	- file __init__.py được chạy khi chúng ta import , chúng ta có thể đặt một vài dòng debug hoặc thông báo hoặc xử lý gì đó tại đây để dễ kiểm soát luồng import 
+	- file __init__.py có thể dùng để khởi tạo các giá trị cho package  hoặc định nghĩa các đối tượng cần import
+	
+	
+	
+	# e.g1 : ví dụ cấu trúc trong một thư mục package 
+	my_package/
+	│
+	├── __init__.py           # Tệp xác định thư mục là package
+	├── module_a.py           # Mô-đun trong package
+	└── sub_package/
+		├── __init__.py       # Tệp init cho subpackage
+		└── module_b.py       # Mô-đun trong subpackage
+	
+	
+	
+	# e.g 2 : Sử dụng import toàn bộ module hoặc pakage vào namespace hiện tại 
+	import my_package.module_a
+	my_package.module_a.some_function()			# gọi hàm bên trong module_a
+	
+	
+	# e.g 3 : Import trực tiếp hàm , biến ,  lớp 
+	
+	from my_package.module_a import some_function 
+	some_function()   				# gọi hàm trực tiếp 
+	
+	# e.g 4 : import tất cả nội dung module 
+	from my_package.module_a import * 
+	
+	
+	# e.g 5 : sử dụng alias (Biệt danh ) khi import 
+	import my_package.module_a as mod_a
+	mod_a.some_function()
+	
+	# e.g 6 : import package con(sub package )
+	from my_package.sub_package import module_b
+	module_b.some_function_in_b()
+	
+	
+	
+	# e.g 7 : import có điều kiện 
+	try : 
+		import my_package.module_a
+	except ImportError:
+		print("Module not found")
+		
+		
+		
+	# e.g 8: tìm hiểu đường dẫn tìm kiếm(Module Search Path ) , python tim các module theo sys.path 
+	import sys
+	print(sys.path)					# in ra các đường dẫn ['D:\\Dev\\Python\\Learn\\Project', 'C:\\Users\\USER\\AppData\\Local\\Programs\\Python\\Python313\\python313.zip', ....]
+	
+	
+	
+	# e.g 9 : cách import các module trong cấu trúc phức tạp 
+						my_complex_package/
+							│
+							├── __init__.py
+							├── core/
+							│   ├── __init__.py
+							│   └── utils.py
+							└── data/
+								├── __init__.py
+								└── loader.py
+
+		from my_complex_package.core import utils
+		from my_complex_package.data import loader
+		
+	
+	# e.g 10  : Cách tự tạo và cài đặt package với pip
+		tạo file setup.py cho package và dùng [pip install .] để cài đặt
+		
+	from setuptools import setup, find_package
+	
+	setup(
+		name="my_package",
+		version="0.1"
+		packages=find_packages(),
+	)
+
+# Try except   : Xử lý ngoại lệ 
+
+try :
+	# Nội dung xử lý 
+	
+except :
+	# Nội dung xử lý nếu try gặp lỗi 
+
+
+
+
+
+
+
+
+
+
+
+
+</pre><a id='backBottom' href='../python-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

@@ -1,0 +1,198 @@
+<html><head><title>Lesson 47 ==  ==  == Các kỹ thuật Java RMI nâng cao ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 47 --  --  -- Các kỹ thuật Java RMI nâng cao -//</h1><pre> 
+//------------------✅ Giao tiếp giữa các máy khác nhau trong mạng
+	# Khái niệm 
+		Java RMI cho phép các đối tượng Java chạy trên máy này có thể gọi phương thức trên đối tượng chạy ở máy khác như thể chúng đang gọi phương thức cục bộ. Điều này thực hiện được nhờ stub(client) và skeleton (server)
+		
+			✅ Các thành phần chính trong RMI:
+			Remote Interface: Định nghĩa các phương thức mà client có thể gọi từ xa.
+			Remote Object (Implementation): Cung cấp phần triển khai của remote interface.
+			Stub & Skeleton: Stub là proxy trên client, còn Skeleton (trước Java 5) nhận yêu cầu từ stub, gọi hàm và gửi kết quả về.
+			RMI Registry: Cơ sở dữ liệu lưu trữ các remote object đã đăng ký.
+			RMI Transport: Lớp trừu tượng xử lý truyền dữ liệu giữa client và server.
+			
+			✅ Cách giao tiếp giữa hai máy:
+			Server khởi động: Đăng ký remote object với RMI Registry.
+			Client tra cứu (lookup) remote object từ Registry.
+			Stub trên client gửi yêu cầu tới remote object trên server.
+			Server thực hiện phương thức và trả kết quả về client.
+			
+			
+			
+	# Ví dụ giao tiếp qua mạng 
+		// Remote Interface
+					import java.rmi.*;
+					
+					public interface RemoteInterface extends Remote {
+						String sayHello() throws RemoteException;
+					}
+					
+					// Server Implementation
+					import java.rmi.*;
+					import java.rmi.server.*;
+					
+					public class RemoteImpl extends UnicastRemoteObject implements RemoteInterface {
+						protected RemoteImpl() throws RemoteException {
+							super();
+						}
+					
+						public String sayHello() {
+							return "Hello from Server!";
+						}
+					
+						public static void main(String[] args) {
+							try {
+								RemoteImpl obj = new RemoteImpl();
+								Naming.rebind("rmi://localhost/HelloServer", obj);
+								System.out.println("Server is ready.");
+							} catch (Exception e) {
+								e.printStackTrace();
+							}
+						}
+					}
+					
+					// Client
+					import java.rmi.*;
+					
+					public class RMIClient {
+						public static void main(String[] args) {
+							try {
+								RemoteInterface obj = (RemoteInterface) Naming.lookup("rmi://localhost/HelloServer");
+								System.out.println(obj.sayHello());
+							} catch (Exception e) {
+								e.printStackTrace();
+							}
+						}
+					}
+
+
+# Các vấn đề gặp phải khi giao tiếp qua mạng . 
+
+			✅ Các vấn đề gặp phải khi giao tiếp qua mạng:
+				Firewall ngăn chặn cổng RMI.
+				Địa chỉ IP thay đổi gây lỗi java.rmi.ConnectException.
+				Security Policy hạn chế việc tải lớp từ xa.
+				Tường lửa NAT không cho phép kết nối hai chiều.
+
+
+
+//----------------------------✅ Security Policy trong RMI
+
+	# Khái niệm 
+		Java RMI chạy trên môi trường phân tán nên cần bảo mật để tránh bị khai thác 
+		
+	# Các rủi ro bảo mật 
+		
+		- Kẻ tấn công gửi mã độc đến server hoặc client 
+		- Giao tiếp giữa client-server có thể bị nghe lén  
+		- Tải code từ xa có thể bị kẻ xấu lợi  
+		
+		
+	# Security Manager & Policy File 
+		
+		## Java yêu cầu cài đặt một Security Manager để kiếm soát quyền truy cập 
+			
+			
+			### Bước 1 
+			if (System.getSecurityManager() == null) {
+				System.setSecurityManager(new SecurityManager());
+			}
+
+			### Bước 2  Ta cần một file policy để cấp quyền cho ứng dụng 
+				grant {
+					permission java.net.SocketPermission "*:1024-65535", "connect,accept";
+					permission java.io.FilePermission "/path/to/files/-", "read,write";
+					permission java.lang.RuntimePermission "createClassLoader";
+				};
+
+			### Bước 3 : Sau đó chạy java với 
+				java -Djava.security.policy=policy.txt Server
+
+	
+	# Cách hạn chế rủi ro 
+		- Không tải mã nguồn từ nguồn không đáng tin cậy 
+		- Dùng SSL/TLS để mã hóa giao tiếp RMI 
+		- Giới hạn quyền truy cập trong Security Policy 
+		- Sử dụng xác thực (Authentication) nếu cần 
+
+
+//-------------------------✅ RMI Callback (Client gọi ngược lại Server)
+	# Khái niệm 
+		Mô hình chuẩn của RMI là Client gọi server , nhưng có trường hợp Server cần gọi lại Client  
+		
+	# Cách triển khai 
+		1. Client cung cấp một Remote Interface 
+		2. Server phương thức trên Remote Interface của Client 
+		
+	# Ví du RMI Callback 
+		
+		## Bước 1 : Client tạo Remote Interface để Server gọi lại 
+		
+				import java.rmi.*;
+				public interface ClientCallback extends Remote {
+					void notify(String message) throws RemoteException;
+				}
+
+
+		## Bước 2 : Client triển khai interface 
+				import java.rmi.server.*;
+	
+				public class ClientImpl extends UnicastRemoteObject implements ClientCallback {
+					protected ClientImpl() throws RemoteException {
+						super();
+					}
+				
+					public void notify(String message) throws RemoteException {
+						System.out.println("Server callback: " + message);
+					}
+				}
+
+
+		## Bước 3 : Server giữ danh sách Client và gọi lại 
+		
+				import java.util.*;
+				import java.rmi.*;
+				
+				public class ServerImpl extends UnicastRemoteObject {
+					private List<ClientCallback> clients = new ArrayList<>();
+				
+					protected ServerImpl() throws RemoteException {}
+				
+					public void registerClient(ClientCallback client) throws RemoteException {
+						clients.add(client);
+						System.out.println("Client registered.");
+					}
+				
+					public void sendUpdates() throws RemoteException {
+						for (ClientCallback client : clients) {
+							client.notify("Server message!");
+						}
+					}
+				}
+
+
+		## Ứng dụng của RMI Callback : 
+			Thông báo sự kiện từ Server về CLient(ví dụ tin nhắn mới , giá chứng khoán thay đổi )
+			Hệ thống Push Notification trong ứng dụng Java phân tán 
+			Mô hình pub-sub (publisher-subscriber)
+
+
+//------------------------------✅ Dynamic Code Loading trong RMI
+
+	# Khái niệm 
+		Dynamic Code Loading cho phép client hoặc server tải mã(class) từ xa trong quá trình thực thi 
+		
+	# Cách hoạt động 
+		- Khi RMI nhận được đối tượng không có trong JVM hiện tại, nó tải class từ một URL bên ngoài 
+		- Điều này giúp tránh cần phải phân phối mã từ trước 
+		
+	# Cách kích hoạt Dynamic Code Loading 
+		java -Djava.rmi.server.codebase="http://myserver/classes/" Server
+
+
+	# Rủi ro bảo mật 
+		- Kẻ tấn công có thể cung cấp mã độc qua class tải từ xa 
+		-> Giải pháp : Chỉ cho phép tải code từ nguồn tin cậy bằng Security Policy 
+		
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

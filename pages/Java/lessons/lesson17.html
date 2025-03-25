@@ -1,0 +1,107 @@
+<html><head><title>Lesson 17 ==  ==  == TreeSet ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 17 --  --  -- TreeSet -//</h1><pre>TreeSet là một lớp trong Java thuộc gói java.util được sử dụng để lưu trữ các phần tử duy nhất theo thứ tự tự nhiên (natural order) hoặc theo một bộ so sánh tùy chỉnh(custom comparator). Đây là một cấu trúc dữ liệu dựa trên cây nhị phân cân bằng Red-Black Tree, giúp các thao tác như thêm, xóa, tìm kiếm diễn ra hiệu quả 
+
+#1 Đặc điểm của TreeSet  
+	## Sắp xếp tự động : 
+		- Các phần tử trong TreeSet được sắp xếp tự động theo thứ tự tự nhiên hoặc theo bộ phận so sánh mà bạn cung cấp. 
+	
+	## Không cho phép trùng lặp : 
+		Giống như HashSet , mỗi phaanfn tử trong TreeSet là duy nhất được xác định bằng phương thức compareTo() hoặc compare() 
+	
+	## Không đồng bộ (not synchronized):
+		TreeSet không an toàn trong môi trường đa luồng. Nếu cần, bạn phải đồng bộ hóa bằng cách sử dụng Collections.synchronizedSortedSet(). 
+		
+	## Hiệu suất : 
+		Dựa trên cây nhị phân cân bằng, các thao tác thêm, xóa, tìm kiếm có thời gian trung bình là O(log n)
+		
+	## Không cho phép null : 
+		TreeSet không cho phép thêm null vì cần sắp xếp các phần tử, và việc so sánh null sẽ gây lỗi 
+
+# 2 Cách sử dụng TreeSet  
+	TreeSet<Integer> treeSet = new TreeSet<>();
+	
+	treeSet.add(15);
+	treeSet.add(10);
+	treeSet.add(5);
+	
+	// duyệt 
+	for(int num : treeSet){
+		System.out.println(num);			// 5 10 15
+	}
+	
+	// lấy phần tử đầu và cuối -> phần tử lớn nhất và nhỏ nhất vì nó đã được sắp xếp  
+	treeSet.first();
+	treeSet.last();
+	
+	// Xóa phần tử theo giá trị truyền vào 
+	treeSet.remove(10);
+	
+	
+# 3 Một số phương thức quan trọng : 
+	add(E e)                         : Thêm phần tử vào TreeSet , nếu đã tồn tại sẽ không được thêm 
+	remove(Object o)                 :  Xóa phần tử o khỏi TreeSet 
+	first()                          :  Trả về phần tử nhỏ nhất trong TreeSet 
+	last()                           :  Trả về phần tử lớn nhất 
+	higher(E e)                      : Trả về phần tử nhỏ nhất lớn hơn e hoặc null nếu không có 
+	lower(E e)                       : Trả về phần tử lớn nhất nhỏ hơn e hoặc null nếu k có 
+	ceiling(E e)                     : Trả về phần tử nhỏ nhất lớn hơn hoặc bằng e hoặc null nếu không có 
+	floor(E e)                       : Trả về phần từ lớn nhất nhở hơn hoặc bằng e hoặc null nếu không có 
+	subSet(E from, E to)             : Trả về một tập con gồm các phần tử nhằm trong khoảng [from,to]
+	headSet(E to)                    : Trả về một tập con gồm các phần tử nhỏ hơn to 
+	tailSet(E from)                  : Trả về một tập con gồm các phần tử lớn hơn hoặc bằng from
+	clear()                          : Xóa tất cả các phần tử khỏi TreeSet 
+	
+	
+# 4. TreeSet với Comparator	tùy chỉnh 
+	Bạn có thể sử dụng Comparator để tùy chỉnh cách sắp xếp trong TreeSet. Điều này rất hữu ích khi bạn cần sắp xếp theo thứ tự không mặc định  
+	
+	// Sắp xếp giảm dần  
+	TreeSet<Integer> treeSet = new TreeSet<>(Comparator.reverseOrder());
+	
+		treeSet.add(10);
+        treeSet.add(5);
+        treeSet.add(15);
+        treeSet.add(20);
+
+        System.out.println("TreeSet với Comparator tùy chỉnh (giảm dần):");
+        System.out.println(treeSet);  // [20, 15, 10, 5]
+
+
+
+# 5 TreeSet với các đối tượng tùy chỉnh 
+	Khi lưu trữ các đối tượng trong TreeSet, Bạn cần triển khai giao diện Comparable hoặ cung cấp một Comparator 
+	
+	
+	# e.g Ví dụ TreeSet với đối tượng tùy chỉnh  , Các Obj sẽ được tự động sắp xếp theo tuổi 
+	
+	class Student implements Comparable<Student> {
+	....
+	@Override 
+	public int compareTo(Student other){
+		return Integer.compare(this.age , other.age); // Tự động sắp xếp theo tuổi
+	}
+	
+	}
+		
+# 6. Thêm các lưu ý : 
+	
+	## Nguyên lý hoạt động nội bộ 
+		TreeSet sử dụng một bộ NavigableMap(Thường là TreeMap) làm cấu trúc dữ liệu nội bộ 
+		Các phần tử được lưu trữ trong một cây nhị phân cân bằng(Red-Black Tree)
+		Thứ tự phần tử được duy trì bằng cách sử dụng các phương thức compareTo() hoặc compare() 
+		
+	## Khả năng điều hướng(NavigableSet)
+	TreeSet triển khai giao diện NavigableSet, cung cấp các phương thức để điều hướng qua các phần tử. 
+	
+		System.out.println(treeSet.higher(10));  // Phần tử lớn hơn 10
+		System.out.println(treeSet.lower(10));  // Phần tử nhỏ hơn 10
+# 7. Khi nào nên dùng TreeSet? 
+	- Khi cần lưu trữ các phần tử duy nhất và tự động sắp xếp chúng 
+	- Khi cần thao tác với các phần tử trong một khoảng nhất định (subSet . headSet ,  tailSet)
+	- KHi cần thao tác tìm kiếm nhanh với thứ tự được duy trì  
+
+
+
+
+		
+		
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

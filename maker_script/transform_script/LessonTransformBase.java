@@ -180,13 +180,17 @@ public class LessonTransformBase {
         int lessonCount = 1;
 
         for (String line : lines) {
-            if (line.startsWith("//==========Lession ")) {  // Gặp dòng tiêu đề mới
+            if (line.matches("//\\s*=+Lesson .*")) {  // Gặp dòng tiêu đề mới
                 if (content.length() > 0) {
                     lessons.add(new Lesson(title, content.toString(), lessonDir + "/lesson" + lessonCount + ".html" ,currentListFileName ));
                     lessonCount++;
                     content.setLength(0);
                 }
-                title = line.replace("//==========", "").replaceAll("=+", "").trim();
+                 //title = line.replaceAll("//\\s*=+", "").trim();
+				 
+				 title = line.replaceAll("//\\s*=+", "") // Xóa tiền tố //
+				.replaceAll("\\bLession \\d+\\b", "") // Xóa các cụm "Lession X"
+            .trim();
             } else {
                 content.append(line).append("\n");
             }

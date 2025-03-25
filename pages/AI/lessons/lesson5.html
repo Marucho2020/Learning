@@ -1,0 +1,412 @@
+<html><head><title>Lesson 7 ==  ==  == Hồi quy tuyến tính ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../AI-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 7 --  --  -- Hồi quy tuyến tính -//</h1><pre>
+# 1. Giới thiệu 
+	
+		Hồi quy tuyến tính là một kỹ thuật thống kê cơ bản được sử dụng rộng rãi trong phân tích dữ liệu và học máy. Mục tiêu của hồi quy tuyến tính là xây dựng một mô hình toán học để dự đoán giá trị của một biến phụ thuộc (output) dựa trên một hoặc nhiều biến độc lập(input). Mô hình hồi quy tuyến tính giả định rằng mối quan hệ giữa các biến này là tuyến tính, nghĩa là có thể biểu diễn dưới dạng một đường thẳng trong không gian số liệu. 
+		https://aicandy.vn/wp-content/uploads/2024/09/aicandy_hoiquytuyentinh.jpg
+		
+		
+		SimpleLinearRegression : Hồi quy tuyến tính đơn giản 
+		Multiple Linear Regression : Hồi quy tuyến tính đa biến 
+		
+		
+# 2.  Phân loại : 
+	## 2.1 Hồi quy tuyến tính đơn giản 
+		Hồi quy tuyến tính đơn giảm mô hình hóa mối quan hệ giữa một biến độc lập X và một biến phụ thuộc Y . Công thức của mô hình hồi quy tuyến tính đơn giản là : 
+						
+						Y = b0 + b1X + e 
+		
+		Trong đó : 
+			- Y là biến phụ thuộc (output) <mjx-c class="mjx-c1D44C TEX-I"></mjx-c>
+			- X là biến độc lập (input)		<mjx-c class="mjx-c1D44B TEX-I"></mjx-c>
+			- B0 là hằng số (intercept)  <mjx-msub><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D6FD TEX-I"></mjx-c></mjx-mi><mjx-script style="vertical-align: -0.15em;"><mjx-mn class="mjx-n" size="s"><mjx-c class="mjx-c30"></mjx-c></mjx-mn></mjx-script></mjx-msub>
+			- B1 là hệ số hồi quy (slope) , đại diện cho mức thay đổi của Y khi X thay đổi một đơn vị   <mjx-msub><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D6FD TEX-I"></mjx-c></mjx-mi><mjx-script style="vertical-align: -0.15em;"><mjx-mn class="mjx-n" size="s"><mjx-c class="mjx-c31"></mjx-c></mjx-mn></mjx-script></mjx-msub>
+			- e là sai số(error tern), biểu thị phần biến động của Y không được giải thích bởi X  <mjx-math class="MJX-TEX" aria-hidden="true"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D716 TEX-I"></mjx-c></mjx-mi></mjx-math>
+			
+		#### Trong toán học 
+			- e là phần chênh lệch giữa giá trị thực tế y và giá trị dự đoán y^ mà mô hình tính được 
+			- Nó biểu thị những yếu tố không được mô hình hóa hoặc các yếu tố ngẫu nhiên không nằm trong dữ liệu X 
+			
+		#### Trong AI 
+			- Sai số e là một thước đo để mô hình biết nó dự đoán kém chính xác ở mức nào 
+			- Mục tiêu khi huấn luyện một mô hình là làm cho tổng e hoặc một dạng khác của sai số như bình phương của e càng nhỏ càng tốt, tức là làm mô hình khớp tốt nhất với dữ liệu. 
+			
+		### Liên quan đến MachineLearning 
+			- Trong học máy, sai số này được tối ưu hóa qua các phương pháp như gradient sescent. Mô hình sẽ điều chỉnh các tham số b0, b1 để giảm sai số e 
+			- Nếu e quá lớn hoặc phân phối không ngẫu nhiên(Ví dụ có mẫu hình lặp lại), điều này cho thấy mô hình chưa phù hợp hoặc dữ liệu có vấn đề   
+	
+	## 2.2  Hồi quy tuyến tính đa biến 
+		Hồi quy tuyến tính đa biến mở rộng mô hình trên bằng cách sử dụng nhiều biến độc lập để dự đoán biến phụ thuộc. Công thức tổng quát của mô hình hồi quy tuyến tính đa biến là : 
+			
+				Y = B0 + B1.X1 + B2.X2 + ..... + Bn.Xn + e 
+				
+			- Trong đó : 
+				X1 , X2 , .... Xn là các biến độc lập 
+				B1,B2,Bn là các hệ số hồi quy tương ứng, biểu thị mức thay đổi của Y mỗi khi Xi thay đổi một đơn vị 
+				b0 : Là giá trị y khi cả x1 và x2 đều bằng 0 , đây là điểm khởi đầu trên trục y 
+				b1: là hệ số hồi quy của x1. Nó cho biết khi x1 tăng lên 1 đơn vị, y sẽ thay đổi bao nhiêu 
+				b2 : Là hệ số hồi quy của x2. Nó cho biết khi x2 tăng lên 1 đơn vị (với x1 giữ nguyên), y sẽ thay đổi bao nhiêu 
+				
+			-> Mô hình này cố gắng tìm ra mối quan hệ giữa 2 biến đầu vào (x1,x2)và một biến đầu ra(y). Nó tính toán để tìm ra một mặt phẳng trong không gian 3d sao cho mặt phẳng này phù hợp nhất với các điểm dữ liệu  
+				
+# 3 Cách tính hệ số hồi quy 
+	
+	Hệ số hồi quy B được xác định bằng cách tối hiểu hóa tổng bình phương sai số(Residual Sum of Squares - RSS ) 
+	giữa giá trị dự đoán và giá trị thực tế. Phương pháp phổ biến nhất để ước lượng các hệ số hồi quy là phương pháp bình phương tối thiểu (Ordinary Least Squares - OLS )
+	
+	## Phương pháp bình phương tối thiểu 
+		Công thức để tính hệ số hồi quy trong hồi quy tuyến tính đơn giản : 
+		### 1. B1 hệ số góc 
+			<MathJax Original Source>
+			\hat{\beta_1} = \frac{\sum_{i=1}^{n} (X_i – \bar{X})(Y_i – \bar{Y})}{\sum_{i=1}^{n} (X_i – \bar{X})^2}
+			
+			
+		- Trong đó : 
+			b1  và b0 là các giá trị ước lượng của B1 và B0. 
+			Xi  và Yi là các giá trị biến độc lập của biến phụ thuộc tại điểm dữ liệu thứ i 
+			X_ và Y_ là giá trị trung bình của X và Y 
+ 
+​	
+
+	### 2. B0 : Hệ số chặn  
+				b0 = y_ - b1 x_
+	
+		
+#4. Mô hình hồi quy tuyến tính với Python 
+	## 4.1 Thực hiện hồi quy tuyến tính đơn giản bằng Python ()
+		
+		### e.g Ví dụ về cách thực hiện hồi quy tuyến tính đơn giản bằng Python sử dụng thư viên scikit-learn để dự đoán một biến y dựa trên biến x 
+					import numpy as np
+					import matplotlib.pyplot as plt 
+					from sklearn.linear_model import LinearRegression 
+					
+					''' Ví dụ về cách thực hiện hồi quy tuyến tính đơn giản bằng Python sử dụng thư viên scikit-learn'''
+					
+					# Dữ liệu mẫu 
+					X = np.array([1,2,3,4,5]).reshape(-1,1)
+					y = np.array([1,3,3,2,5])
+					
+					# Khởi tạo mô hình 
+					model = LinearRegression()
+					
+					# Huấn luyện mô hình 
+					model.fit(X,y)
+					
+					# Dự đoán 
+					y_pred =  model.predict(X)
+					
+					# Hệ số hồi quy 
+					print(f"Hệ số hồi quy : {model.coef_[0]}")
+					print(f"Hệ số hồi quy : {model.intercept_}")
+					
+					# Vẽ đồ thị 
+					plt.scatter(X , y,color='blue')
+					plt.plot(X , y_pred , color='red')
+					plt.xlabel('X')
+					plt.ylabel('Y')
+					plt.title('Hồi quy tuyến tính đơn giản')
+					plt.show()
+
+			
+		### Giải thích 
+			1. Thư viện sử dụng 
+				numpy : Xử lý dữ liệu dưới dạng mảng số học 
+				matplotlib.pyplot:Vẽ đồ thị để trực quan hóa dữ liệu 
+				sklearn.linear_model.LinearRegression : Cung cấp mô hình hồi quy tuyến tính 
+			
+			2. Dữ liệu mẫu : 
+				X = np.array([1,2,3,4,5]).reshape(-1,1): Đây là biến độc lập X, được định dạng thành mảng cột (vì scikit-learn yêu cầu đầu vào phải có định dạng này )
+				
+				y = np.array([1,3,3,2,5]): Là biến phụ thuộc y mà bạn muốn dự đoán  
+			
+			3. Khởi tạo mô hình huấn luyện : 
+				model = LinearRegression(): Khởi tạo một mô hình hồi quy tuyến tính  
+				
+				model.fit(X,y) : Huấn luyện mô hình bằng cách tìm ra các hệ số hồi quy b0 và b1 dựa trên dữ liệu X và y 
+				
+			4. Dự đoán 
+				y_pred = model.predict(X): Dự đoán giá trị y dựa trên dữ liệu X 
+				
+			5. In các hệ số hồi quy : 
+				model.coef_ : Hệ số góc b1, cho biết mức độ thay đổi của y khi x thay đổi 
+				
+				model.intercept_ : Hệ số chặn b0, giá trị y khi x = 0 
+				
+			6. Vẽ đồ thị : 
+				plt.scatter(X , y , color = 'blue') : Vẽ các điểm dữ liệu thực tế(X , y).
+				
+				plt.plot(X , y_pred, color = 'red') : vẽ đường hồi quy tuyến tính 
+				
+				plt.xlabel  , plt.ylabel , plt.title : Đặt nhãn và tiêu đề cho đồ thị. 
+				
+			--
+			
+				
+			
+			
+	# 4.2 Thực hiện hồi quy tuyến tính đa biến bằng Python 
+		
+			import numpy as np
+			from sklearn.linear_model import LinearRegression
+			import matplotlib.pyplot as plt
+			from mpl_toolkits.mplot3d import Axes3D
+			
+			# Dữ liệu mẫu
+			X = np.array([[1, 1], [1, 2], [2, 2], [2, 3]])
+			y = np.dot(X, np.array([1, 2])) + 3
+			
+			# Khởi tạo mô hình
+			model = LinearRegression()
+			
+			# Huấn luyện mô hình
+			model.fit(X, y)
+			
+			# Dự đoán
+			y_pred = model.predict(X)
+			
+			# Hệ số hồi quy
+			print(f"Hệ số hồi quy: {model.coef_}")
+			print(f"Intercept: {model.intercept_}")
+			
+			# Vẽ đồ thị 3D
+			fig = plt.figure()
+			ax = fig.add_subplot(111, projection='3d')
+			
+			# Dữ liệu gốc (chấm xanh)
+			ax.scatter(X[:, 0], X[:, 1], y, color='blue', label='Dữ liệu thực tế')
+			
+			# Dữ liệu dự đoán (mặt phẳng hồi quy)
+			x1_range = np.linspace(X[:, 0].min(), X[:, 0].max(), 10)
+			x2_range = np.linspace(X[:, 1].min(), X[:, 1].max(), 10)
+			x1_grid, x2_grid = np.meshgrid(x1_range, x2_range)
+			y_grid = model.intercept_ + model.coef_[0] * x1_grid + model.coef_[1] * x2_grid
+			ax.plot_surface(x1_grid, x2_grid, y_grid, alpha=0.5, color='red', label='Mặt phẳng hồi quy')
+			
+			# Gán nhãn cho các trục
+			ax.set_xlabel('X1')
+			ax.set_ylabel('X2')
+			ax.set_zlabel('Y')
+			ax.set_title('Hồi quy tuyến tính đa biến')
+			ax.legend()
+			
+			plt.show()
+		
+		
+		
+		### Giải thích về các biến 
+		
+		- X : Đây là dữ liệu đầu vào biến độc lập, có 4 hàng và 2 cột : 
+			- Mỗi hàng đại diện cho một quan sát, và mỗi cột là một biến độc lập(feature)
+			
+		
+		
+		- y : Đây là dữ liệu đầu ra(Biến phụ thuộc), được tính bằng công thức  y = X .[1,2] + 3
+			
+		-  np.dot(X , np.array([1,2])) thực hiện phép ma trận giữa X và [1,2]
+		 
+		-  Sau đó cộng thêm 3 vào từng phần tử, kết quả là : 
+					y = [6,8,10,13]
+		 
+	
+		- model   = LinearRegression()  : Khởi tạo một mô hình hồi quy tuyến tính 
+		
+		- model.fit(X , y): Huấn luyện mô hình trên dữ liệu X và y. 
+			+ Mô hình học cách tìm ra các tham số b0(intercept) và b1,b2(các hệ số hồi quy sao cho):  y = b0 + b1.x1 + b2.x2 
+			+ Trong trường hợp này, mô hình sẽ tìm ra b0 = 3 , b1 = 1 và b2 = 2  
+			
+		- y_pred = model.predict(X) : Tính toán giá trị y dự đoán(giá trị mô hình ước lượng) từ dữ liệu đầu vào X 
+			+ Kết quả : Ypred = [6,8,10,13]
+			
+		
+		- Mặt phẳng hồi quy cho thấy mô hình của bạn đã học đượt quy luật : Khi x1 hoặc x2 tăng, y cũng tăng theo một tỷ lệ nhất định. 
+		
+
+#. 5 Hồi quy tuyến tính sử dụng PyTorch 
+	-> Nếu bạn muốn hồi quy tuyến tính trong môi trường học máy nâng cao, bạn có thể sử dụng PyTorch 
+	
+#5.1 Hồi quy tuyến tính đơn giản với PyTorch 
+	
+		import torch
+		import torch.nn as nn
+		import torch.optim as optim
+		import matplotlib.pyplot as plt
+		
+		# Dữ liệu mẫu
+		X = torch.tensor([[1.0], [2.0], [3.0], [4.0]])
+		y = torch.tensor([[2.0], [4.0], [6.0], [8.0]])
+		
+		# Mô hình hồi quy tuyến tính
+		model = nn.Linear(1, 1)  # 1 đầu vào, 1 đầu ra
+		
+		# Hàm mất mát và tối ưu hóa
+		criterion = nn.MSELoss()  # Sai số bình phương trung bình
+		optimizer = optim.SGD(model.parameters(), lr=0.01)  # Gradient Descent
+		
+		# Huấn luyện mô hình
+		losses = []  # Danh sách lưu giá trị loss để vẽ biểu đồ
+		
+		for epoch in range(1000):  # Huấn luyện trong 1000 epoch
+			model.train()
+		
+			# Dự đoán
+			y_pred = model(X)
+		
+			# Tính toán mất mát
+			loss = criterion(y_pred, y)
+			losses.append(loss.item())  # Lưu giá trị loss
+		
+			# Tối ưu hóa
+			optimizer.zero_grad()  # Xóa gradient cũ
+			loss.backward()  # Tính toán gradient
+			optimizer.step()  # Cập nhật trọng số
+		
+			# In thông tin mỗi 100 epoch
+			if (epoch + 1) % 100 == 0:
+				print(f'Epoch: {epoch + 1}, Loss: {loss.item()}')
+		
+		# Hệ số hồi quy và intercept
+		print(f'Hệ số hồi quy (slope): {model.weight.item()}')
+		print(f'Intercept (độ dời): {model.bias.item()}')
+		
+		# Trực quan hóa dữ liệu và đường hồi quy
+		plt.figure(figsize=(10, 5))
+		
+		# Vẽ dữ liệu gốc
+		plt.scatter(X.numpy(), y.numpy(), color='blue', label='Dữ liệu gốc')
+		
+		# Vẽ đường hồi quy
+		x_line = torch.linspace(0, 5, 100).reshape(-1, 1)  # Tạo các điểm x
+		y_line = model(x_line).detach().numpy()  # Dự đoán giá trị y
+		plt.plot(x_line.numpy(), y_line, color='red', label='Đường hồi quy')
+		
+		plt.title('Hồi quy tuyến tính đơn giản')
+		plt.xlabel('X')
+		plt.ylabel('y')
+		plt.legend()
+		plt.grid(True)
+		plt.show()
+		
+		# Vẽ biểu đồ mất mát (loss) theo epoch
+		plt.figure(figsize=(10, 5))
+		plt.plot(range(1, 1001), losses, label='Loss')
+		plt.title('Giá trị Loss theo Epoch')
+		plt.xlabel('Epoch')
+		plt.ylabel('Loss')
+		plt.grid(True)
+		plt.legend()
+		plt.show()
+
+
+	
+
+	# Giải thích code 
+	1. Dữ liệu mẫu : 
+		Tạo một tập dữ liệu đầu vào là các mảng đa chiều(tensor) mô phỏng mối quan hệ tuyến tính y = 2x 
+		
+	2. Sử dụng mô hình hồi quy tuyến tính : 
+		Sử dụng nn.Linear(1,1) để tạo một mô hình hồi quy tuyến tính đơn giản với : 
+			1 đầu vào(input feature)
+			1 đầu ra (output feature)
+	3. Hàm mất mát : 
+		nn.MSELoss() dùng để tính toán sai số bình phương trình bình MSE giữa giá trị dự đoán và thực tế. 
+	
+	4. Thuật toán tối ưu : 
+		optim.SGD(Stochastic Gradient Descent ) được sử dụng để cập nhật trọng số dựa trên gradient 
+		
+	5. Vòng lặp huấn luyện : 
+		
+		### Trong mỗi epoch 
+			- Dự đoán giá trị y_pred = model(X).
+			- Tính toán mất mát loss = criterion(y_pred , y)
+			- Tối ưu hóa trọng số 
+							optimizer.zero_grad()     //  Xóa gradient cũ 
+							loss.backward()           // Tính gradient mới 
+							optimizer.step()          // Cập nhật trọng số 
+			
+	6. Kết quả : 
+		Sau khi huấn luyện mô hình sẽ trả về hệ số hồi quy(slope) và intercept độ dời: 
+
+
+# 5.1 Hồi quy tuyến tính đa biến với PyTorch
+	
+			import torch 
+			import torch.nn as nn
+			import torch.optim as optim 
+			import matplotlib.pyplot as plt 
+			
+			#Dữ liệu mẫu 
+			# Giả sử có 2 biến độc lập và một biến phụ thuojc 
+			X = torch.tensor([ [1.0 , 2.0] , [2.0,3.0] , [3.0,4.0] , [4.0,5.0] ]) 
+			y = torch.tensor( [ [3.0] , [5.0] , [7.0] , [9.0] ])
+			
+			# Mô hình hồi quy tuyến tính đa biến 
+			model = nn.Linear(2,1)
+			
+			# Hàm mất mát và tối ưu hóa 
+			criterion = nn.MSELoss()
+			optimizer = optim.SGD(model.parameters() , lr = 0.01)
+			
+			#Lưu trữ giá trị mất mát để vẽ đồ thị 
+			losses = []
+			
+			#Huấn luyện mô hình 
+			for epoch in range(1000):
+				model.train()
+			
+				#Dự đoán 
+				y_pred = model(X)
+				#Tính toán mất mát 
+				loss = criterion(y_pred , y)
+				losses.append(loss.item())
+				# Tối ưu hóa
+				optimizer.zero_grad()
+				loss.backward()
+				optimizer.step()
+			
+				if(epoch + 1) % 100 == 0:
+					print(f'Epoch {epoch+1}, Loss: {loss.item()}')
+			
+			#Hệ số hồi quy và intercept
+			print(f'Hệ số hồi quy: {model.weight.data}')
+			print(f'Intercept: {model.bias.data}')
+			
+			# Vẽ đồ thị mất mát qua các epoch (log scale cho trục Y)
+			plt.plot(losses)
+			plt.title('Quá trình giảm mất mát (Log Scale)')
+			plt.xlabel('Epoch')
+			plt.ylabel('Loss')
+			plt.yscale('log')  # Chuyển trục Y sang dạng logarit
+			plt.grid(True, which="both", linestyle="--", linewidth=0.5)
+			plt.show()
+			#Kiểm tra dự đoán 
+			with torch.no_grad():
+				y_test = model(X)
+				print(f'Dự đoán: {y_test}')
+
+
+		### Giải thích : 
+			- Sử dụng torch.tensor để tạo dữ liệu đầu vào X và đầu ra y 
+			- Mô hình hồi quy tuyến tính đa biến được định nghĩa với 2 biến đầu vào và 1 biến đầu ra bằng cách sử dụng lớp nn.Linear 
+			- Chúng ta sử dụng hàm mất mát nn.MSELoss để tính toán sai số bình phương trung bình và tối ưu hóa mô hình bằng optim.SGD 
+			- Chúng ta huấn luyện mô hình qua nhiều epoch và in ra các hệ số hồi quy và intercept sau khi huấn luyện 
+
+
+#6. Ứng dụng của hồi quy tuyến tính trong học máy 
+Hồi quy tuyến tính có rất nhiều ứng dụng trong các lĩnh vực khác nhau, từ kinh tế, tài chính đến y học, kỹ thuật và hơn thế nữa. Dưới đây là một số ví dụ điển hình : 
+
+
+	##6.1 Dự đoán giá nhà 
+		Hồi quy tuyến tính có thể sử dụng để dự đoán giá nhà dựa trên các yếu tố như diện tích, số phòng ngủ,và vị trí. Bạn có thể xây dựng mô hình hồi quy tuyến tính để dự đoán giá nhà dựa trên các đặc điểm này 
+		
+	## 6.2  Phân tích mỗi quan hệ giữa các biến kinh tế 
+		Trong kinh tế học, hồi quy tuyến tính có thể được sử dụng để phân tích mối quan hệ giữa các chỉ số kinh tế như GDP, tỷ lệ thất nghiệp và lạm phát. Ví dụ, bạn có thể nghiên cứu ảnh hưởng của tỷ lệ thất nghiệp đến tăng trưởng GDP 
+		
+	## 6.3 Dự đoán nguy cơ bệnh tật 
+		Hồi quy tuyến tính cũng có thể được sử dụng trong y học để dự đoán nguy cơ mắc bệnh dựa trên các chỉ số sức khỏe. Ví dụ, mô hình hồi quy tuyến tính có thể được sử dụng để phân tích mối quan hệ giữa huyết áp và nguy cơ mắc bệnh tim mạch 
+		
+
+# Kết luận  
+	Hồi quy tuyến tính là một kỹ thuật cơ bản nhưng cực kỳ mạnh mẽ trong phân tích dữ liệu và học máy. Nó cung cấp một nền tảng quan trọng cho các mô hình phức tạp hơn và có nhiều ứng dụng thực tiễn trong các lĩnh vực khác nhau. Việc hiểu rõ cách thức hoạt động và ứng dụng của hồi quy tuyến tính không chỉ giúp bạn phân tích dữ liệu tốt hơn mà còn mở ra nhiều cơ hội trong phát triển các mô hình học máy hiệu quả. 
+
+	
+		
+</pre><a id='backBottom' href='../AI-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
