@@ -1,0 +1,57 @@
+<html><head><title>Lesson 6 == Tạo trạng thái chồng chập cơ bản ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../quantum-computing-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 6 -- Tạo trạng thái chồng chập cơ bản -//</h1><pre>	CreateSuperposition3Qubit.ipynb
+
+
+
+		from qiskit import QuantumCircuit, transpile
+		from qiskit_aer import Aer
+		
+		# Tạo mạch lượng tử với 3 Qubit và 3 Classical bits  
+		# Điều này có nghĩa là ta thao tác với 3 qubit và lưu trữ kết quả đo vào 3 classical bit
+		qc = QuantumCircuit(3,3)
+		
+		# Áp dụng cổng Hadamard lên từng qubit để tạo chồng chập 
+		# Sau khi cổng Hadamard được áp dụng, trạng thái của mỗi qubit sẽ là một trạng thái chồng chập với xác suất 50% cho hai trạng thái cơ bản 0 và 1 
+		qc.h([0,1,2])
+		
+		# Thêm phép đo 
+		# đo kết quả 3 qubit và lưu kết quả vào ba classical bits tương ứng 
+		qc.measure([0,1,2] , [0,1,2])
+		
+		# Hiển thị mạch 
+		print(qc.draw())
+		
+		# Mô phỏng và đo trạng thái chồng chập 
+		backend = Aer.get_backend('qasm_simulator')
+		t_qc = transpile(qc , backend)
+		result = backend.run(t_qc , shots=1024).result()
+		
+		# Lấy kết quả đo 
+		counts = result.get_counts(qc)
+		print("Kết quả đo:" , counts)
+		
+		
+		
+		## Kết quả 
+		     ┌───┐┌─┐      
+		q_0: ┤ H ├┤M├──────
+			 ├───┤└╥┘┌─┐   
+		q_1: ┤ H ├─╫─┤M├───
+			 ├───┤ ║ └╥┘┌─┐
+		q_2: ┤ H ├─╫──╫─┤M├
+			 └───┘ ║  ║ └╥┘
+		c: 3/══════╩══╩══╩═
+           0  1  2 
+		Kết quả đo: {'111': 119, '011': 123, '110': 117, '001': 116, '101': 144, '010': 126, '000': 141, '100': 138}
+
+	Các ký hiệu:
+	┌───┐ và └───┘: Biểu thị cổng lượng tử, trong trường hợp này là cổng Hadamard (H). Cổng Hadamard tạo ra trạng thái chồng chập cho các qubit, làm mỗi qubit rơi vào trạng thái chồng chập  , tức là nó sẽ có xác suất 50% để đo được 0 hoặc 1.
+	
+	┤ H ├: Áp dụng cổng Hadamard lên qubit đó.
+	
+	┤M├: Biểu thị phép đo (Measure) qubit vào một classical bit. Sau khi áp dụng cổng Hadamard, mỗi qubit được đo và kết quả được lưu vào classical bit (được chỉ định ở dưới).
+	
+	─╫─ và ╫: Kết nối các qubit với các classical bit. Khi bạn áp dụng phép đo lên qubit, kết quả của phép đo được lưu vào classical bit tương ứng.
+	
+	c: 3: Chỉ ra rằng có 3 classical bits (được kết nối với 3 qubit) để lưu kết quả đo.
+	
+</pre><a id='backBottom' href='../quantum-computing-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

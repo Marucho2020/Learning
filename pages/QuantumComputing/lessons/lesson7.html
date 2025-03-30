@@ -1,0 +1,135 @@
+<html><head><title>Lesson 7 == Ôn tập trạng thái rối lượng tử ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../quantum-computing-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 7 -- Ôn tập trạng thái rối lượng tử -//</h1><pre>
+//---------------------Trạng thái Bell - Trạng thái rối lượng tử đơn giản nhật 
+
+	# Khái niệm 
+			Trạng thái Bell là một trong những trạng thái rối lượng tử cơ bản nhất, thể hiện sự liên kết hoàn hảo giữa hai qubit. Có 4 trạng thái Bell phổ biến:
+				∣Φ+⟩=1/sqrt(2)*​(∣00⟩+∣11⟩)
+				∣Φ−⟩=1/sqrt(2)*(∣00⟩−∣11⟩)
+				∣Ψ+⟩=1/sqrt(2)*​(∣01⟩+∣10⟩)
+				∣Ψ−⟩=1/sqrt(2)*​(∣01⟩−∣10⟩)
+				
+		Trong đó: 
+			∣00⟩,∣01⟩,∣10⟩,∣11⟩ là các trạng thái của hai qubit.
+			Các trạng thái Bell có tính chất đặc biệt: khi đo một qubit, trạng thái của qubit còn lại ngay lập tức được xác định, dù hai qubit có cách xa nhau bao nhiêu
+			
+			
+			
+//--------------------- Tạo trạng thái rối lượng tử
+
+	# Khái niệm 
+		Rối lượng tử có thể được tạo bằng cách áp dụng một chuỗi cổng lượng tử lên trạng thái ban đầu 
+			∣00⟩. Cách phổ biến nhất là sử dụng:
+
+			1. Cổng Hadamard trên qubit đầu tiên để tạo trạng thái chồng chập. 
+			2. Cổng CNOT để tạo sự phụ thuộc giữa hai qubit. 
+			
+			
+	# Ví dụ: Để tạo trạng thái ∣Φ+⟩
+				from qiskit import QuantumCircuit
+				qc = QuantumCircuit(2)  # Mạch có 2 qubit
+				qc.h(0)  # Áp dụng cổng Hadamard lên qubit đầu tiên
+				qc.cx(0, 1)  # Áp dụng cổng CNOT với qubit 0 điều khiển qubit 1
+				
+				print(qc.draw())
+
+					Kết quả 
+							 ┌───┐     
+						q_0: ┤ H ├──■──
+							 └───┘┌─┴─┐
+						q_1: ─────┤ X ├
+								  └───┘
+								
+
+//--------------------- Biểu diễn ma trận của trạng thái rối 
+	
+
+	# Khái niệm 
+		Mỗi trạng thái lượng tử có thể được biểu diễn dưới dạng ma trận cột (vector cột) hoặc ma trận mật độ.
+
+		
+		
+	# trạng thái ∣Φ+⟩  dưới dạng vector: 
+
+
+			∣Φ+⟩  = 1 / (sqrt(2)) [1,0,0,1]
+			
+			
+	# Dưới dạng ma trận mật độ (dùng để tính xác suất quan sát trạng thái):) 
+			
+			p = ∣Φ+⟩  ⟨Φ+∣ = 1/2 [ [1, 0 , 0 , 1] , [0 , 0 , 0 ,0] , [0 , 0 , 0 ,0] , [1 , 0 , 0 ,1]]
+			
+			
+
+
+//---------------------  Đo lường trong hệ rối lượng tử 
+	
+# Khái niệm 
+	Khi đo một qubit trong hệ rối, trạng thái của qubit còn lại ngay lập tức bị ảnh hưởng (gọi là hiện tượng collapse).
+	
+
+# Ví dụ, nếu ta đo qubit đầu tiên trong trạng thái ∣Φ+⟩  ta sẽ thu được:
+		
+
+	- Nếu kết quả là  ∣0⟩,qubit còn lại ngay lập tức sẽ là ∣0⟩
+	- Nếu kết quả là  ∣1⟩,qubit còn lại ngay lập tức sẽ là ∣1⟩
+	
+#  Điều quan trọng: 
+Trước khi đo, trạng thái hai qubit là một hệ chồng chập lượng tử. Sau khi đo, hệ này sụp đổ về một trạng thái cụ thể.
+
+
+
+//---------------------  Ảnh hưởng của phép đo lên trạng thái lượng tử
+
+
+# Khái niệm 
+	Khi thực hiện phép đo trên một qubit của trạng thái rối, hệ sẽ mất tính chồng chập và sụp đổ về một trạng thái cổ điển.
+	
+# Ví dụ 
+	Trước khi đo: ∣Φ+⟩  =  ( ∣00⟩  + ∣11⟩ )  / sqrt(2)
+	
+		Sau khi đo qubit đầu tiên và nhận được 0, trạng thái toàn cục trở thành ∣00⟩
+		Nếu đo được 1, trạng thái toàn cục trở thành   ∣11⟩
+
+
+
+//---------------------Hiện tượng collapse (sụp đổ trạng thái) 
+	
+# Khái niệm 
+	Trong cơ học lượng tử, "collapse" là hiện tượng một trạng thái chồng chập biến thành một trạng thái cụ thể sau phép đo.
+	
+	Khi ta đo một hệ lượng tử, ta không còn trạng thái ban đầu mà chỉ nhận được một trong các trạng thái có xác suất xảy ra theo quy luật lượng tử.
+
+# Ví dụ 
+	
+	- Nếu ta có một qubit ở trạng thái ∣ψ⟩ = 1/ sqrt(2) (∣0⟩ + ∣1⟩), xác suất đo được 0 và 1 đều là 50% 
+	- Sau khi đo được 0, trạng thái của qubit không còn là chồng chập nữa, mà trở thành  ∣0⟩ 
+	
+	
+	
+//---------------------Ứng dụng của rối lượng tử 
+
+	# Truyền thông lượng tử (Quantum Teleportation) 
+		Dùng để truyền trạng thái lượng tử từ một điểm này sang điểm khác mà không cần truyền trực tiếp qubit.
+		Quá trình này sử dụng một cặp qubit rối và truyền thông cổ điển để "dịch chuyển" trạng thái lượng tử.
+		
+		
+	# Phân phối khóa lượng tử (QKD - Quantum Key Distribution) 
+		Một giao thức bảo mật lượng tử giúp hai bên chia sẻ khóa bí mật mà không thể bị nghe lén. 
+		Giao thức BB84 là một ví dụ điển hình 
+		
+	
+	# 	Thuật toán Grover và Shor
+		Thuật toán Grover: Tăng tốc tìm kiếm trong không gian dữ liệu chưa sắp xếp, sử dụng rối lượng tử để tăng xác suất tìm kiếm.
+		
+		Thuật toán Shor: Phân tích số nguyên thành thừa số nhanh hơn thuật toán cổ điển, với một phần sử dụng trạng thái rối lượng tử để tìm chu kỳ.	
+
+
+
+
+
+
+
+
+
+	
+</pre><a id='backBottom' href='../quantum-computing-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
