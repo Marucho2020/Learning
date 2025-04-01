@@ -1,4 +1,100 @@
-<html><head><title>Lesson 15 == Tăng tốc huấn luyện với phương pháp Gradient Descent ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../AI-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 15 -- Tăng tốc huấn luyện với phương pháp Gradient Descent -//</h1><pre>https://aicandy.vn/tang-toc-huan-luyen-mo-hinh-voi-phuong-phap-gradient-descent/
+<html><head><title>Lesson 15 == Tăng tốc huấn luyện với phương pháp Gradient Descent ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../AI-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 15 -- Tăng tốc huấn luyện với phương pháp Gradient Descent -//</h1><pre>
+# Khái niệm 
+	Gradient Descent (GD) là một trong những thuật toán tối ưu quan trọng và phổ biến nhất trong học máy (machine learning) và trí tuệ nhân tạo (AI). Mục tiêu chính của thuật toán này là tìm giá trị tối ưu (cực tiểu hoặc cực đại) của một hàm mất mát (loss function) để tối ưu hóa mô hình. Trong bối cảnh học máy, Gradient Descent giúp điều chỉnh các tham số của mô hình, chẳng hạn như trọng số trong mạng neural, sao cho hàm mất mát được giảm thiểu tối đa. 
+	
+	https://aicandy.vn/wp-content/uploads/2024/11/aicandy_gradient_descent.jpg 
+	
+	
+	Gradient Descent hoạt động bằng cách tính đạo hàm của hàm mất mát theo các tham số mô hình và điều chỉnh các tham số đó theo hướng ngược lại với đạo hàm (gradient). Bằng cách lặp lại quy trình này, thuật toán dần dần tiến gần đến điểm tối ưu. Có nhiều biến thể của Gradient Descent như Stochastic Gradient Descent (SGD), Mini-batch Gradient Descent, hay Batch Gradient Descent, mỗi loại phù hợp với các bài toán và dữ liệu khác nhau.
+
+
+
+# Cách Gradient Descent hoạt động 
+	Gradient Descent là một thuật toán tối ưu, giúp tìm giá trị cực tiểu của một hàm mục tiêu (thường là hàm mất mát). Nó dựa trên việc tính toán gradient (đạo hàm bậc nhất) của hàm này với các tham số cần tối ưu và điều chỉnh các tham số theo hướng ngược lại của gradient để giảm thiểu hàm mất mát.
+	
+	## Các bước thực hiện 
+		
+		
+		### Khởi tạo tham số ban đầu 
+			Bắt đầu với giá trị khởi tạo cho các tham số cần tối ưu hóa, gọi là $\theta$. Các giá trị này có thể được chọn ngẫu nhiên hoặc cố định, tùy vào phương pháp khởi tạo.
+
+			Ví dụ: trong một bài toán hồi quy tuyến tính, $\theta$ có thể là các trọng số (weights) của mô hình. 
+	
+		
+		### Tính toán giá trị của hàm mất mát 
+			Hàm mất mát $J(\theta)$ đánh giá độ sai lệch giữa dự đoán của mô hình và giá trị thực tế.
+			Ví dụ: Với bài toán hồi quy tuyến tính, hàm mất mát phổ biến là hàm sai số bình phương trung bình (Mean Squared Error – MSE): 
+			
+			J(\theta) = \frac{1}{2m} \sum_{i=1}^{m} (h_\theta(x_i) – y_i)^2 
+			Trong đó, $m$ là số lượng mẫu dữ liệu, $h_\theta(x_i)$ là giá trị dự đoán của mô hình với tham số $\theta$, và $y_i$ là giá trị thực tế. 
+			
+			
+			
+		### Tính gradient của hàm mất mát theo tham số 
+		
+			Gradient của hàm mất mát đối với các tham số là đạo hàm bậc nhất của $J(\theta)$ theo từng tham số $\theta$. Nó biểu thị độ dốc và hướng thay đổi của hàm mất mát. 
+			Gradient được ký hiệu là $\nabla_\theta J(\theta)$, với mỗi phần tử của nó tương ứng với đạo hàm riêng phần theo từng tham số của mô hình.
+			Ví dụ: Với hàm $J(\theta)$ đơn giản như $J(\theta) = \theta^2$, gradient sẽ là:
+			
+				\nabla_\theta J(\theta) = 2\theta 
+			Điều này cho biết mức độ và hướng mà $\theta$ nên thay đổi để giảm giá trị của $J(\theta)$.
+
+		### Cập nhật các tham số 
+		
+			Sau khi tính toán gradient, ta cập nhật các tham số $\theta$ theo công thức sau:
+				\theta = \theta – \alpha \nabla_\theta J(\theta) 
+				
+				
+			Ở đây, $\alpha$ là tốc độ học (learning rate), cho biết kích thước bước đi trong quá trình tối ưu hóa. Nếu $\alpha$ quá lớn, quá trình có thể bỏ qua điểm cực tiểu; nếu $\alpha$ quá nhỏ, quá trình hội tụ sẽ rất chậm. 
+			Quá trình cập nhật này được gọi là “bước gradient”, và mỗi lần thực hiện được gọi là một “epoch”.
+			
+			
+
+		### Lặp lại quá trình
+		
+			Quy trình này được lặp lại nhiều lần cho đến khi hội tụ, tức là khi gradient đủ nhỏ hoặc khi giá trị của hàm mất mát không thay đổi nhiều giữa các bước lặp.
+
+			Hội tụ thường đạt được khi gradient tiến gần đến 0, nghĩa là đã đạt đến điểm cực tiểu của hàm mất mát. 
+
+
+
+
+		### Điều kiện dừng 
+		
+			Thuật toán Gradient Descent sẽ dừng khi:
+			Số lần lặp (epoch) đạt giới hạn đã định trước.
+			Gradient trở nên rất nhỏ, gần như bằng 0, hoặc sự thay đổi trong giá trị của hàm mất mát không đáng kể.
+
+		### Ví dụ trực quan 
+			Giả sử ta có một hàm đơn giản $f(x) = x^2$ và muốn tìm giá trị $x$ sao cho $f(x)$ đạt cực tiểu (điểm cực tiểu của $f(x)$ nằm tại $x = 0$). 
+			
+			
+			
+		### 	Quy trình với Gradient Descent: 
+			
+			Bước 1: Chọn giá trị khởi tạo ban đầu $x = 4$, chọn tốc độ học $\alpha = 0.1$. 
+			Bước 2: Tính gradient $\nabla_x f(x) = 2x$:Với $x = 4$, gradient là $2 \times 4 = 8$.
+			Bước 3: Cập nhật giá trị của $x$: 
+				x_{\text{new}} = x_{\text{old}} – \alpha \times \nabla_x f(x_{\text{old}}) = 4 – 0.1 \times 8 = 3.2 
+			Bước 4: Lặp lại quy trình cho đến khi $x$ gần bằng 0.
+
+			Qua mỗi bước, giá trị của $x$ sẽ càng ngày càng nhỏ, hướng đến giá trị $0$, là điểm cực tiểu của hàm $f(x)$. 
+
+
+	## Giảm thiểu lỗi trong khi học 
+		Trong học máy, hàm mất mát đo lường sự khác biệt giữa giá trị dự đoán của mô hình và giá trị thực tế. Ví dụ, trong hồi quy tuyến tính, mục tiêu là điều chỉnh các tham số của mô hình (như trọng số) sao cho dự đoán của mô hình gần đúng với giá trị thực tế. Gradient Descent giúp tìm các giá trị tham số tối ưu bằng cách giảm thiểu giá trị của hàm mất mát. 
+		
+	## 	 Code minh họa 
+		Dưới đây là ví dụ sử dụng PyTorch để minh họa quá trình cập nhật tham số bằng Gradient Descent cho hàm mất mát đơn giản: 
+		https://aicandy.vn/tang-toc-huan-luyen-mo-hinh-voi-phuong-phap-gradient-descent/
+		
+
+
+
+
+
+
+
 	
 				
 		
