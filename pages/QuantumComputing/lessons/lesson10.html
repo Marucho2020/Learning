@@ -1,0 +1,127 @@
+<html><head><title>Lesson 10 == Thuật toán Grover - Tìm kiếm nhanh trên máy tính lượng tử ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../quantum-computing-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 10 -- Thuật toán Grover - Tìm kiếm nhanh trên máy tính lượng tử -//</h1><pre>
+
+# Khái niệm 
+	
+Thuật toán Grover là một thuật toán lượng tử giúp tìm kiếm phần tử trong một danh sách không có thứ tự với tốc độ nhanh hơn đáng kể so với thuật toán cổ điển. Nó tận dụng sự chồng chập (superposition) và nhiễu loạn lượng tử (quantum interference) để tăng xác suất tìm đúng phần tử trong O(sqrt(N)) thay vì O(N) như thuật toán cổ điển.
+
+
+
+
+# 🔹 1. Bài toán tìm kiếm và hạn chế của máy tính cổ điển 
+	
+	- Trên máy tính cổ điển, nếu danh sách không có thứ tự, bạn phải kiểm tra từng phần tử một, mất trung bình N/2 lần duyệt trong trường hợp xấu nhất là N lần duyệt.
+	
+	- Trên máy tính lượng tử với thuật toán Grover, bạn chỉ cần khoảng √N lần lặp để tìm ra phần tử đúng.
+
+
+	📌 Ví dụ:
+		Nếu danh sách có 1,000,000 phần tử, thuật toán cổ điển cần 1,000,000 phép kiểm tra trong trường hợp xấu nhất.
+		Thuật toán Grover chỉ cần khoảng 1,000 phép kiểm tra để tìm đúng phần tử!
+		⏳ Tăng tốc từ O(N) → O(√N) 🚀
+
+
+
+# 🔹 2. Cách hoạt động của thuật toán Grover 
+	
+	Thuật toán Grover gồm 4 bước chính: 
+	
+	
+	## ✅ Bước 1: Khởi tạo trạng thái lượng tử 
+		Máy tính lượng tử bắt đầu bằng cách đặt tất cả các trạng thái vào trạng thái chồng chập (superposition), nghĩa là tất cả N phần tử đều có xác suất bằng nhau để được chọn.
+
+		📌 Ý nghĩa: Máy tính cổ điển duyệt từng phần tử một, nhưng máy tính lượng tử kiểm tra tất cả phần tử cùng một lúc!	
+
+	
+	## ✅ Bước 2: Oracle – Đánh dấu phần tử đúng 
+	
+		Oracle là một hàm lượng tử đặc biệt để kiểm tra xem một phần tử có phải là kết quả đúng hay không.
+		Nếu đúng, nó đảo pha (flip phase) của trạng thái đó.
+		Nếu sai, nó giữ nguyên.
+
+		📌 Ý nghĩa: Đây là cách thuật toán tăng cường xác suất tìm phần tử đúng mà không cần duyệt từng phần tử như thuật toán cổ điển.
+
+
+
+
+	## ✅ Bước 3: Khuếch đại xác suất (Grover Diffusion Operator) 
+		Sau khi Oracle đánh dấu phần tử đúng, bước tiếp theo là khuếch đại xác suất để tăng cơ hội tìm ra phần tử đó khi đo lường.
+		Nó hoạt động bằng cách:
+		Tạo một phép biến đổi gọi là inversion about the mean, làm tăng xác suất của phần tử đúng và giảm xác suất của các phần tử sai.
+
+		📌 Ý nghĩa: Nhờ nhiễu loạn lượng tử, mỗi lần áp dụng thuật toán, phần tử đúng có xác suất xuất hiện cao hơn.
+
+
+
+	## ✅ Bước 4: Lặp lại và đo kết quả 
+	
+		Lặp lại quá trình trên khoảng √N lần.
+		Sau số lần lặp hợp lý, đo trạng thái lượng tử.
+		Phần tử đúng sẽ có xác suất rất cao để xuất hiện!
+		
+		📌 Ý nghĩa: Không cần kiểm tra từng phần tử một, máy tính lượng tử tìm ra phần tử đúng nhanh hơn đáng kể!
+
+
+
+# 🔹 3. Code triển khai thuật toán Grover bằng Qiskit (Python) 
+
+
+		from qiskit import QuantumCircuit, Aer, transpile, assemble, execute
+		from qiskit.visualization import plot_histogram
+		import numpy as np
+		
+		# Số qubit (tìm kiếm trên 2^n phần tử)
+		n = 2  # Tìm trên 4 phần tử: |00⟩, |01⟩, |10⟩, |11⟩
+		
+		# Tạo mạch lượng tử
+		qc = QuantumCircuit(n)
+		
+		# Bước 1: Khởi tạo trạng thái chồng chập
+		qc.h(range(n))
+		
+		# Bước 2: Oracle (đánh dấu trạng thái |11⟩ là kết quả đúng)
+		qc.cz(0, 1)
+		
+		# Bước 3: Khuếch đại xác suất (Grover Diffusion)
+		qc.h(range(n))
+		qc.x(range(n))
+		qc.cz(0, 1)
+		qc.x(range(n))
+		qc.h(range(n))
+		
+		# Đo kết quả
+		qc.measure_all()
+		
+		# Chạy trên máy mô phỏng
+		simulator = Aer.get_backend('qasm_simulator')
+		qobj = assemble(qc)
+		result = simulator.run(qobj).result()
+		counts = result.get_counts()
+		
+		# Hiển thị kết quả
+		plot_histogram(counts)
+		
+		
+
+	📌 Ý nghĩa: Chương trình này tìm kiếm trên 4 phần tử (2^2 = 4). Nó đánh dấu trạng thái |11⟩ là kết quả đúng, sau đó khuếch đại xác suất của nó để khi đo, ta nhận được |11⟩ với xác suất cao nhất.
+
+
+
+# 🔹 4. Ứng dụng của thuật toán Grover 
+	
+
+	🔍 1. Tìm kiếm trong cơ sở dữ liệu không có thứ tự
+		Ví dụ: Tìm một tên trong danh sách 1 triệu người.
+	
+	🔐 2. Phá mã mật khẩu (Brute-force attack)
+		Với một mật khẩu có N giá trị có thể có, máy tính cổ điển cần N lần thử, nhưng máy tính lượng tử chỉ cần √N lần thử!
+		Điều này đe dọa bảo mật mã hóa hiện nay, vì các thuật toán như AES có thể bị phá nhanh hơn.
+	
+	🔬 3. Ứng dụng trong hóa học và tối ưu hóa
+		Giúp tìm trạng thái năng lượng thấp nhất của phân tử.
+		Tối ưu hóa chuỗi cung ứng, tài chính, logistic.
+
+
+
+
+	
+</pre><a id='backBottom' href='../quantum-computing-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
