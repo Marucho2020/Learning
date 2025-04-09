@@ -53,11 +53,7 @@
 		### Lặp lại quá trình
 		
 			Quy trình này được lặp lại nhiều lần cho đến khi hội tụ, tức là khi gradient đủ nhỏ hoặc khi giá trị của hàm mất mát không thay đổi nhiều giữa các bước lặp.
-
 			Hội tụ thường đạt được khi gradient tiến gần đến 0, nghĩa là đã đạt đến điểm cực tiểu của hàm mất mát. 
-
-
-
 
 		### Điều kiện dừng 
 		
@@ -67,8 +63,6 @@
 
 		### Ví dụ trực quan 
 			Giả sử ta có một hàm đơn giản $f(x) = x^2$ và muốn tìm giá trị $x$ sao cho $f(x)$ đạt cực tiểu (điểm cực tiểu của $f(x)$ nằm tại $x = 0$). 
-			
-			
 			
 		### 	Quy trình với Gradient Descent: 
 			
@@ -104,7 +98,7 @@
 			### Một số đặc điểm của overfitting: 
 			
 				#### Mô hình quá phức tạp 
-					Overfitting thường xảy ra khi mô hình có quá nhiều tham số, chẳng hạn như các mạng nơ-ron với quá nhiều lớp hoặc quá nhiều nút trong từng lớp. Những mô hình này có thể dễ dàng khớp với các biến đổi nhỏ và nhiễu trong tập dữ liệu, nhưng lại mất khả năng tổng quát hóa khi gặp các dữ liệu mới. 
+					Overfitting thường xảy ra khi mô hình có quá nhiều tham số, chẳng hạn như các mạng nơ-ron nhiều nút trong từng lớp. Những mô hình này có thể dễ dàng khớp với các biến đổi nhỏ và nhiễu trong tập dữ liệu, nhưng lại mất khả năng tổng quát hóa khi gặp các dữ liệu mới. 
 					
 				#### Hiệu suất giảm trên dữ liệu mới 
 					Dù mô hình có thể đạt hiệu suất rất cao trên tập huấn luyện, khi áp dụng trên dữ liệu mới hoặc dữ liệu kiểm tra, kết quả có thể kém hơn đáng kể. Điều này là do mô hình đã học các mẫu không đại diện cho xu hướng chung của dữ liệu. 
@@ -162,7 +156,7 @@
 				#### Hàm mất mat tăng cao 
 					Trong một số trường hợp, learning rate lớn có thể làm cho giá trị hàm mất mát tăng thay vì giảm, co các cập nhật trọng số lớn gây ra sự thay đổi mạnh trong hướng gradient, khiến mô hình trở nên kém hiệu quả hơn 
 					
-			### Leanign rate quá nhỏ 
+			### Learning rate quá nhỏ 
 				
 				#### Quá trình huấn luyện chậm chạp 
 					Learning rate nhỏ làm cho các bước cập nhật trọng số rất nhỏ, dẫn đến tốc độ hội tụ chậm. Mô hình cần nhiều thời gian và số lần lặp để đạt đến điểm tối ưu, làm kéo dài quá trình huấn luyện, đặc biệt với các tập dữ liệu lớn và mô hình phức tạp 
@@ -199,15 +193,36 @@
 		Phương pháp Gradient Descent là một trong những thuật toán tối ưu phổ biến nhất để điều chỉnh các tham số của mô hình nhằm giảm thiểu hàm mất mát. Quá trình này được thực hiện bằng cách cập nhật các tham số của mô hình theo hướng ngược lại của gradient của hàm mất mát 
 		
 		## Gradient Descent cơ bản 
-		https://aicandy.vn/tang-toc-huan-luyen-mo-hinh-voi-phuong-phap-gradient-descent/
+			Gradient Descent cơ bản cập nhật tham số bằng cách di chuyển theo hướng ngược lại của gradient của hàm mất mát, được tính toán dựa trên toàn bộ tập dữ liệu. 
+			
+				Cập nhật tham số $\theta$ có thể được viết dưới dạng 
+					θ←θ-η∂J/∂θ
+					
+		Trong đó 
+			$\theta$: các tham số của mô hình
+			$J(\theta)$: hàm mất mát
+			$\eta$: tốc độ học (learning rate)
+			$\frac{\partial J}{\partial \theta}$: gradient của hàm mất mát đối với các tham số
+
+
+		Phương pháp này có thể chậm nếu tập dữ liệu quá lớn , vì mỗi lần tính toán gradient yêu cầu duyệt qua toàn bộ dữ liệu. 
+		Để tăng tốc, có một số biến thể của Gradient Descent đã được phát triển, mỗi phương pháp nhằm mục đích cải thiện hiệu quả huấn luyện/ 
+		
+		
+		## Stochastic Gradient Descent(SGD)
+			Thay vì tính toán gradient dựa trên toàn bộ tập dữ liệu, Stochastic Gradient Descent(SGD) cập nhật tham số dựa trên một mẫu nhỏ dữ liệu (mini-batch). Điều này giúp giảm chi phí tính toán và tăng tốc độ huấn luyện, tuy nhiên cũng có thể gây ra dao đọng lớn hơn trong quá trình hội tụ. 
+			
+			### Công thức cập nhật SGD là : 
+				θ←θ-η∂J_i/∂θ 
+				Trong đó  $J_i$ là hàm mất mát của một điểm dữ liệu ngẫu nhiên $i$.
+				
+			### Chương trình mẫu với pytorch 
+				Ví dụ cho chuỗi đầu vào là x = [[1.0], [2.0], [3.0], [4.0]], tương ứng với đầu ra là y = [[3.0], [5.0], [7.0], [9.0]]. Chương trình sẽ dự đoán khi x = [[5.0]] thì y là bao nhiêu? 
+
+				StochasticGradientDescentByPytorch.py
 
 
 
-
-
-
-
-	
 
 	
 				
