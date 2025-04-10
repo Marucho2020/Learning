@@ -1,0 +1,107 @@
+<html><head><title>Lesson 12 == Quantum Error Correction (QEC) - Sửa lỗi lượng tử ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../quantum-computing-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 12 -- Quantum Error Correction (QEC) - Sửa lỗi lượng tử -//</h1><pre>
+# Khái niệm  
+	Là một trong những chủ đề quan trọng nhất nhưng cũng ác mộng nhất của máy tính lượng tử 
+
+	❗ Tại sao cần sửa lỗi lượng tử? 
+		Khác với máy tính cổ điển (bit là 0 hoặc 1), qubit rất mỏng manh và dễ bị nhiễu do:
+			Tác động từ môi trường (nhiệt, điện từ...)
+			Sai lệch trong cổng lượng tử
+			Thời gian decoherence ngắn (trạng thái lượng tử dễ “sụp đổ” về 0 hoặc 1)
+			Không thể “sao chép” qubit để backup do No-Cloning Theorem
+			
+		➡️ Do đó, phải sửa lỗi trong khi vẫn bảo toàn thông tin lượng tử — một việc cực kỳ phức tạp.	
+
+
+# Tư duy sai lầm thường gặp 
+
+	## “Cứ đo rồi kiểm tra sai số là xong” – ❌ Sai!
+
+	## Trong thế giới lượng tử:
+		Khi bạn đo một qubit, bạn phá hủy luôn trạng thái siêu vị (superposition). 
+		Không thể clone qubit → không có "backup".
+		Sai số không chỉ là flip bit (X), mà còn có sai pha (Z) và kết hợp (Y = iXZ).
+		
+		➡️ Sai lỗi trong lượng tử = xử lý 3 loại lỗi: X, Z, Y mà không được đo trực tiếp qubit.
+		
+		
+# 	Ý tưởng cốt lõi của Quantum Error Correction 
+
+	Thay vì lưu một qubit thật, ta mã hóa nó vào nhiều qubit vật lý hơn → tạo một mã sửa lỗi lượng tử.
+
+		Một qubit logic được đại diện bởi nhiều qubit vật lý.
+		Dùng các qubit phụ (ancilla) để phát hiện lỗi mà không đo trực tiếp trạng thái.
+		Dựa vào đối xứng toán học (các phép toán tuyến tính) để sửa lại qubit bị lỗi.
+
+
+
+
+# Ví dụ đơn giản: 3-qubit bit-flip code
+	Giả sử bạn muốn bảo vệ qubit ∣ψ⟩=α∣0⟩+β∣1⟩
+	
+	## ➤ Bước 1: Encode (mã hóa)
+		Biến nó thành: 
+			∣ψL⟩=α∣000⟩+β∣111⟩
+
+
+	## ➤ Bước 2: Nếu có lỗi xảy ra...
+		Ví dụ: Xảy ra lỗi X (bit-flip) ở qubit giữa:
+			∣ψ⟩→α∣010⟩+β∣101⟩
+			
+			
+	## ➤ Bước 3: Dùng các phép đo gián tiếp (syndrome measurements)
+	
+		Dùng 2 qubit ancilla để so sánh cặp qubit (ví dụ đo xem qubit 1 và 2 có giống nhau không...)
+		Không đo chính trạng thái lượng tử, chỉ đo sự khác biệt (syndrome) để phát hiện lỗi ở đâu.
+
+	##➤ Bước 4: Sửa lỗi (correction)
+		Dựa vào kết quả đo, xác định qubit nào sai, sau đó áp dụng cổng X để đảo lại → khôi phục trạng thái ban đầu.
+		
+		
+
+# IV. Các loại lỗi và mã sửa tương ứng
+	
+
+Lỗi lượng tử					Mô tả						Loại mã chống được
+X (bit flip)														0⟩ ↔
+Z (phase flip)														+⟩ ↔
+Y (bit + phase)				Kết hợp X và Z					Mã như Steane, Shor
+
+
+✔️ Mã nổi tiếng: 
+	
+	Shor code: dùng 9 qubit để sửa được 1 lỗi bất kỳ (X, Z, Y)
+	
+	Steane code: dùng 7 qubit, sửa lỗi X, Z
+	
+	Surface code: rất mạnh, dùng trong thực tế (Google, IBM, Rigetti đều đang theo đuổi)
+
+
+
+# Bản chất toán học của QEC 
+
+		Dựa trên Lý thuyết mã hóa tuyến tính (Linear Codes) trong không gian Hilbert.
+		Sử dụng Stabilizer formalism: nhóm các toán tử (như X, Z) bảo toàn trạng thái qubit logic.
+		Một mã lượng tử thường là không gian con (subspace) của nhiều qubit vật lý mà ổn định dưới tác động của các stabilizer.
+		❗ Có thể tưởng tượng như bạn giấu thông tin trong một khu rừng (nhiều qubit), rồi gài những luật (stabilizer) để phát hiện và khôi phục dữ liệu nếu cây nào bị sâu ăn.
+
+
+
+# Tình hình thực tế hiện nay
+	
+		- Google đã thử nghiệm Surface Code trên chip Sycamore.
+		- IBM, IonQ, Rigetti cũng đang đầu tư mạnh vào QEC.
+		- Thách thức lớn: cần hàng trăm hoặc hàng ngàn qubit vật lý để có 1 qubit logic ổn định.
+		- Hiện nay gọi là Noisy Intermediate-Scale Quantum (NISQ) → chưa đủ để sửa lỗi mạnh, nhưng đang tiến gần.
+	
+	
+	
+# Kết luận tầm nhìn 
+		
+
+	Quantum Error Correction không phải là "phụ tùng" thêm vào sau này — nó là điều kiện tiên quyết để bất kỳ máy tính lượng tử thực dụng nào tồn tại.
+	Không có QEC → máy tính lượng tử = đồ chơi. Có QEC tốt → vượt giới hạn máy tính cổ điển.
+
+
+	
+
+</pre><a id='backBottom' href='../quantum-computing-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

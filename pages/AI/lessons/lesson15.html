@@ -223,8 +223,84 @@
 
 
 
-
-	
+		
+		## Momentum 
+			
+			SGD có thể gặp khó khăn trong việc hội tụ nhanh do dao động mạnh khi gradient thay đổi đột ngột. 
+			Để khắc phục điều này, phương pháp Momentum được sử dụng nhằm giảm dao động và giúp quá trình hội tụ nhanh hơn 
+			Momentum lưu giữ thông tin từ các gradient trước đó và tăng tốc theo hướng của gradient tích lũy. 
+			
+			### Công thức cập nhật với Momentum là : 
+				
+				#### Cập nhật vận tốc (velocity)
+					v_t = \gamma v_{t-1} + \eta \frac{\partial J}{\partial \theta} 
+					
+					
+				Trong đó : 
+					v_t : Vận tốc tại thời điểm t, đại diện cho tổng hợp các gradient trước đó 
+					\gamma : hệ số momen , thường nằm trong khoảng  0 <= \gamma < 1 (thường là 0.9)
+					\eta 	: Tốc độ học (learning rate)
+					\frac{\partial J}{\partial \theta}  : Gradient của hàm mất mát J(\theta) theo tham số \theta 
 				
 		
+			### Cập nhật tham số mô hình : 
+				\theta_t = \theta_{t-1} – v_t 
+				
+				Trong đó : 
+				\theta_t  : Tham số mô hình tại thời điểm t 
+				v_t     : Vận tốc đã được tính ở bước trên 
+				
+				
+		## Adam (Adaptive Moment Estimation)
+			
+			Adam là một phương pháp tối ưu hiện đại kết hợp giữa Momentum và RMSProp(Root Mean Square Propagation)
+			Phương pháp này sử dụng cả hai thông tin : moment thứ nhất (trung bình động của gradient) và moment thứ hai(trung bình động của bình phương gradient), giúp cân bằng việc điều chỉnh tốc độ học và giữ lại tính ổn định .
+			
+			### Công thức toán học : 
+				
+				#### Tính toán moment bậc nhất : 
+					m_t = \beta_1 m_{t-1} + (1 – \beta_1) \frac{\partial J}{\partial \theta} 
+					
+					
+					Trong đó : 
+					$m_t$: Moment bậc nhất tại thời điểm $t$, trung bình động của gradient.
+					$\beta_1$: Hệ số giảm bớt moment bậc nhất, thường có giá trị khoảng 0.9.
+					$\frac{\partial J}{\partial \theta}$: Gradient của hàm mất mát $J(\theta)$ theo tham số $\theta$.	
+				
+				
+				#### Tính toán moment bậc hai 
+					v_t = \beta_2 v_{t-1} + (1 – \beta_2) \left( \frac{\partial J}{\partial \theta} \right)^2 
+					
+				Trong đó 
+					$v_t$: Moment bậc hai tại thời điểm $t$, trung bình động của bình phương gradient.
+					$\beta_2$: Hệ số giảm bớt moment bậc hai, thường có giá trị khoảng 0.999.
+				
+				
+				
+				#### Hiệu chỉnh moment bậc nhất và bậc hai (bias corection)
+					\hat{m}_t = \frac{m_t}{1 – \beta_1^t} 
+					\hat{v}_t = \frac{v_t}{1 – \beta_2^t}
+					
+				
+				#### Cập nhật tham số 
+					\theta_t = \theta_{t-1} – \eta \frac{\hat{m}_t}{\sqrt{\hat{v}_t} + \epsilon} 
+					
+					
+				Trong đó 
+					$\eta$: Tốc độ học (learning rate).
+					$\epsilon$: Một giá trị rất nhỏ (thường là $10^{-8}$) để tránh chia cho 0.
+					$\theta_t$: Tham số mô hình tại thời điểm $t$.
+				
+				
+				
+				
+			###  Chương trình mẫu với pytorch 
+				https://aicandy.vn/tang-toc-huan-luyen-mo-hinh-voi-phuong-phap-gradient-descent/
+				
+				
+				
+				
+				
+				
+				
 </pre><a id='backBottom' href='../AI-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
