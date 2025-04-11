@@ -1,0 +1,94 @@
+<html><head><title>Lesson 13 == AMPLITUDE - Biên độ xác suất ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../quantum-computing-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 13 -- AMPLITUDE - Biên độ xác suất -//</h1><pre>
+# Khái niệm  
+	Là một trong những khái niệm cốt lõi trong tính toán lượng tử, qua đó ta nắm được bản chất khác biệt giữa qubit và bit cũng như tính toán cổ điển và lượng tử 
+	
+	⚠️  Không giống trong toán học thông thường 
+		## Trong tính toán cổ điển 
+			Một bit là 0 hoặc 1, xác suất của mỗi trạng thái là 0 hoặc 1 rõ ràng 
+			
+		## Trong tính toán lượng tử 
+			Một qubit không ở trạng thái 0 hoặc 1 đơn  thuần, mà là tổ hợp chập siêu vị (superposition) của cả hai 
+				
+									∣ψ⟩=α∣0⟩+β∣1⟩
+
+			Trong đó :
+				𝛼 và 𝛽 là biên độ xác suất (probability amplitudes), là số phức 
+				Điều kiện : |𝛼|^2 + |𝛽|^2 = 1  	
+				Khi đo qubit, xác suất thu được kết quả |0⟩ là |𝛼|^2 , |1⟩ là |𝛽|^2
+
+
+	⚠️  Biên độ ≠ Xác suất
+
+
+
+# Ví dụ 
+
+	## Trạng thái cơ bản  
+		∣ψ⟩ = 1/(sqrt(2))∣0⟩  +  1/(sqrt(2))∣1⟩ 
+		
+		- Đây là trạng thái sau khi áp dụng cổng Hadamard lên |0⟩ 
+		- α = 1/(sqrt(2)) , β = 1/(sqrt(2)) 
+		- Xác suất đo được  |0⟩ hoặc |1⟩ đều là: 
+						
+						| 1/(sqrt(2)) | ^ 2 = 1/2 
+						
+						
+	## Trạng thái có pha  
+		∣ψ⟩  =   1/(sqrt(2)) ∣0⟩  - 1/(sqrt(2))∣1⟩  
+		
+		- Giống xác suất trạng thái cơ bản nhưng có dấu trừ 
+		- Xác suất vẫn là 50/50. nhưng trạng thái hoàn toàn khác - vì pha bị đảo 
+		
+	--> Kết luận : Biên đọ chứa nhiều hơn chỉ xác suất , nó chứa cả thông tin về pha, tương tác, giao thoa 
+
+
+# Biên độ giao thoa lượng tử (quantum interference)	
+	
+	Đây là điểm máy tính lượng tử đánh bại máy tính cổ điển  
+		- Khi nhiều qubit tham gia tính toán, các biên độ cộng trừ nhau như sóng, tạo hiệu ứng giao thoa 
+		- Một số trạng thái được khuếch đại biên độ -> xác suất cao hơn 
+		- Một số bị triệt tiêu biên độ -> xác suất = 0 
+		
+	-> Đây là cách thuật toán Grover hoặc Shor khai thác để tăng xác suất cho kết quả đúng  
+	
+
+
+# Với nhiều qubit thì sao  
+	Với 2 qubit 
+		∣ψ⟩  = α_00∣00⟩ + α_01∣01⟩ + α_10∣10⟩ + a_11∣11⟩
+		
+		- Có 4 biên độ xác suất 
+		- Tổng bình phương của các biên độ bằng 1 
+			
+			|a_00|^2 + |a_01|^2 + |a_10|^2 + |a_11|^2  = 1
+			
+		Với n qubit -> có 2^n biên độ. Máy tính lượng tử xử lý tất cả các trạng thái đó cùng lúc -  chính là tính toán song song lượng tử 
+		
+	
+# Về mặt lập trình lượng tử 
+
+	## Trong code khi ta viết như dưới đây 
+		from qiskit import QuantumCircuit 
+		qc = QuantumCircuit(1)
+		qc.h(0) 	# Cổng hadamard 
+		# Trạng thái sau sẽ là: 1/√2 |0⟩ + 1/√2 |1⟩
+		
+			H -> chia đều biên độ 
+			X =-> đảo bit 
+			Z , S , R(θ) -> thay đổi pha biên độ 
+			CX , Toffoli -> làm thay đổi biên độ của nhiều qubit cùng lúc 
+
+
+# Tầm nhìn xa
+
+	Công việc lập trình lượng tử = điều khiển biên độ xác suất của trạng thái lượng tử bằng cách áp các cổng lượng tử thông minh.
+	Mỗi bước trong thuật toán lượng tử đều nhắm đến:
+	Khuếch đại biên độ của kết quả đúng
+	Giảm hoặc triệt tiêu biên độ của kết quả sai
+	❗ Người hiểu biên độ là người có thể tư duy như một lập trình viên lượng tử thực thụ.
+	
+
+
+
+
+</pre><a id='backBottom' href='../quantum-computing-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
