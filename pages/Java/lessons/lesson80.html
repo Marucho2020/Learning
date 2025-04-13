@@ -1,0 +1,161 @@
+<html><head><title>Lesson 80 == Docker Build ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 80 -- Docker Build -//</h1><pre>
+# Khái niệm 	
+	Code Quality: SonarQube / ESLint / PMD
+	Docker Build: chuẩn hóa build pipeline container
+		
+			
+			
+# 	🧠 PHẦN 1: Code Quality — SonarQube / ESLint / PMD 
+			
+	## 1.1 ✅ SonarQube (Java, JS, Python, etc.)
+			Tích hợp với Maven/Gradle hoặc dùng sonar-scanner.
+			Bạn cần cấu hình:
+			
+			sonar-project.properties (nếu dùng scanner)
+			
+			hoặc trong pom.xml với plugin:		
+						
+				<build>
+				<plugins>
+					<plugin>
+					<groupId>org.sonarsource.scanner.maven</groupId>
+					<artifactId>sonar-maven-plugin</artifactId>
+					<version>3.9.1.2184</version>
+					</plugin>
+				</plugins>
+				</build>
+
+			RUN -> 
+			mvn clean verify sonar:sonar \
+			-Dsonar.projectKey=my_project \
+			-Dsonar.host.url=https://sonarcloud.io \
+			-Dsonar.login=$SONAR_TOKEN
+
+			
+			
+			
+	## 1.2 ✅ ESLint (JS/TS Frontend) 
+		Bạn cần file .eslintrc.js hoặc .eslintrc.json. Ví dụ cơ bản: 
+		
+		{
+			"env": { "browser": true, "es2021": true },
+			"extends": ["eslint:recommended"],
+			"parserOptions": { "ecmaVersion": 12, "sourceType": "module" },
+			"rules": {
+				"no-unused-vars": "warn",
+				"no-console": "off"
+			}
+		}
+	
+			
+		Tích hợp ESLint vào GitHub Actions: 
+			
+		- name: ESLint check
+			run: |
+				npm ci
+				npm run lint
+	
+			
+			
+	## ✅ PMD (Java) 
+	Thêm plugin vào Maven: 
+	<plugin>
+  <groupId>org.apache.maven.plugins</groupId>
+  <artifactId>maven-pmd-plugin</artifactId>
+  <version>3.15.0</version>
+  <configuration>
+    <failOnViolation>true</failOnViolation>
+    <rulesets>
+      <ruleset>/rulesets/java/quickstart.xml</ruleset>
+    </rulesets>
+  </configuration>
+  <executions>
+    <execution>
+      <phase>verify</phase>
+      <goals><goal>check</goal></goals>
+    </execution>
+  </executions>
+</plugin>
+	PMD thường được SonarQube tích hợp luôn, bạn không cần gọi riêng trừ khi muốn strict hơn.
+
+
+
+
+
+
+# 🐳 PHẦN 2: Docker Build — Best Practice cho Pipeline 
+	Bạn là senior/architect thì không được build Docker kiểu “tùy hứng” như: 
+	
+		🎯 Mục tiêu của bạn là:
+		- Build nhanh, có cache
+		- Không chứa secrets
+		- Image nhỏ, tối ưu
+		- Dễ CI/CD + scan
+
+
+
+	## 2.1 ✅ Multi-stage Dockerfile cho Java Spring Boot 
+		# Stage 1: Build
+		FROM maven:3.9-eclipse-temurin-17 as builder
+		WORKDIR /app
+		COPY pom.xml .
+		COPY src ./src
+		RUN mvn clean package -DskipTests
+		
+		# Stage 2: Runtime
+		FROM eclipse-temurin:17-jre
+		WORKDIR /app
+		COPY --from=builder /app/target/*.jar app.jar
+		ENTRYPOINT ["java", "-jar", "app.jar"]
+
+
+	## 2.2 ✅ Build bằng BuildKit (có cache) 
+		DOCKER_BUILDKIT=1 docker build --target builder -t myapp:buildcache .
+		docker build -t myapp:latest .
+
+		Hoặc trong CI:
+		- name: Build Docker image
+		 run: |
+		 	docker build --file Dockerfile \
+		 	--tag ghcr.io/myorg/myapp:latest .
+
+
+
+
+
+	## 2.3 ✅ Push lên Registry 
+		- name: Login to GHCR
+		uses: docker/login-action@v3
+		with:
+			registry: ghcr.io
+			username: ${{ github.actor }}
+			password: ${{ secrets.GITHUB_TOKEN }}
+		
+		- name: Push image
+		run: docker push ghcr.io/myorg/myapp:latest
+		
+
+
+
+	## 2.4 ✅ Quét Image bằng Trivy (Security + CVE) 
+	- name: Run Trivy vulnerability scanner
+		uses: aquasecurity/trivy-action@master
+		with:
+		image-ref: ghcr.io/myorg/myapp:latest
+		format: 'table'
+		exit-code: '1' # Fail nếu có lỗ hổng
+
+	
+	
+🔚 TỔNG KẾT
+Thành phần				Công cụ									CI Actions
+Static Analysis		SonarQube, PMD							mvn sonar:sonar
+JS/TS Quality		ESLint									npm run lint
+Build Docker		BuildKit + Multi-stage					docker build
+Scan Image			Trivy									trivy scan
+Push Registry		GitHub Container Registry				docker push ghcr.io/...
+	
+
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
