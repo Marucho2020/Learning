@@ -103,22 +103,108 @@
 	
 # Precision 
 
+ Precision là một chỉ số đánh giá hiệu suất của mô hình phân loại, đặc biệt chú trọng đến tính chính xác của các dự đoán dương tính. Nó biểu thị tỷ lệ mẫu dương tính được dự đoán đúng trên tổng số mẫu được mô hình dự đoán là dương tính.
+
+	## Công thức Precision 
+		Công thức tính độ chính xác theo lớp dương (Precision) như sau:
+			Precision = \frac{TP}{TP + FP}
+			
+		Trong đó 
+			TP (True Positive): Số lượng dự đoán đúng cho lớp dương tính. 
+			FP (False Positive): Số lượng dự đoán sai cho lớp dương tính (âm tính bị dự đoán nhầm thành dương tính). 
+
+
+	## Ví dụ về Precision 
+		Giả sử mô hình dự đoán 30 mẫu là dương tính, trong đó có 25 mẫu đúng và 5 mẫu sai. Khi đó, độ chính xác theo lớp dương (Precision) sẽ được tính như sau: 
+				Precision = \frac{25}{25 + 5} = \frac{25}{30} = 0.83 = 83\%
+			
+			Precision đặc biệt quan trọng trong các bài toán mà việc dự đoán sai lớp dương tính (False Positive) có hậu quả nghiêm trọng. Ví dụ, trong chẩn đoán bệnh, nếu mô hình dự đoán một người bệnh khi họ thực sự không mắc bệnh, điều này có thể dẫn đến việc điều trị không cần thiết. Do đó, chỉ số Precision giúp giảm thiểu các trường hợp dự đoán sai lớp dương tính.
+
+
+		## Chương trình mẫu tính Precision với pytorch: 
+
+				import torch
+				
+				# Hàm tính Precision
+				def precision(preds, labels):
+					# Tính True Positive (TP) và False Positive (FP)
+					true_positive = ((preds == 1) & (labels == 1)).sum().item()
+					false_positive = ((preds == 1) & (labels == 0)).sum().item()
+					
+					# Tính Precision
+					if true_positive + false_positive == 0:
+						return 0
+					else:
+						prec = true_positive / (true_positive + false_positive)
+						return prec
+				
+				# Ví dụ về dự đoán và nhãn thực tế
+				predictions = torch.tensor([1, 0, 1, 1, 0])
+				labels = torch.tensor([1, 0, 1, 0, 0])
+				
+				# Tính Precision
+				prec = precision(predictions, labels)
+				print(f'Precision: {prec * 100:.2f}%')
+				
+				
+		Trong ví dụ trên, mô hình có 5 dự đoán và nhãn thực tế tương ứng. Hàm precision sẽ tính toán tỷ lệ True Positive trên tổng số mẫu được dự đoán là dương tính.
+		Kết quả đoạn chương trình mẫu trên: Precision: 66.67%
+		Precision rất quan trọng trong các bài toán mà việc dự đoán sai lớp dương tính có thể gây ra hậu quả lớn, chẳng hạn như phát hiện gian lận, chẩn đoán y tế, hoặc lọc spam.
+
+
+
+# Recall  
+	Recall, còn được gọi là Sensitivity hoặc True Positive Rate, là một chỉ số quan trọng để đánh giá khả năng của mô hình trong việc nhận diện đúng các mẫu thuộc lớp dương tính. Nó thể hiện tỷ lệ các mẫu dương tính thực sự được mô hình dự đoán đúng trên tổng số mẫu dương tính trong tập dữ liệu.
 	
+	
+	## Công thức Recall
+		 Công thức tính Recall (Độ nhạy) như sau: 
+			Recall = \frac{TP}{TP + FN} 
+			
+			
+		Trong đó: 
+			TP (True Positive): Số lượng dự đoán đúng cho lớp dương tính. 
+			FN (False Negative): Số lượng dự đoán sai cho lớp dương tính (dương tính bị dự đoán nhầm thành âm tính).
+			
+
+
+	## Ví dụ về Recall 
+		Giả sử có 50 mẫu thực sự thuộc lớp dương tính, và mô hình dự đoán đúng 40 mẫu, trong khi bỏ sót 10 mẫu (False Negative). Khi đó, Recall được tính như sau:
+				Recall = \frac{40}{40 + 10} = \frac{40}{50} = 0.8 = 80\%
+
+
+
+		Recall đặc biệt quan trọng trong các bài toán mà việc bỏ sót các trường hợp dương tính (False Negative) có hậu quả nghiêm trọng. Ví dụ, trong chẩn đoán y tế, việc bỏ sót một bệnh nhân mắc bệnh (FN) có thể gây ra những rủi ro lớn. Vì vậy, trong những trường hợp này, Recall được ưu tiên cao hơn so với Precision.
+
+
+	## Chương trình mẫu tính Recall với pytorch: 
+		
+			import torch
+			
+			# Hàm tính Recall
+			def recall(preds, labels):
+				# Tính True Positive (TP) và False Negative (FN)
+				true_positive = ((preds == 1) & (labels == 1)).sum().item()
+				false_negative = ((preds == 0) & (labels == 1)).sum().item()
+				
+				# Tính Recall
+				if true_positive + false_negative == 0:
+					return 0
+				else:
+					rec = true_positive / (true_positive + false_negative)
+					return rec
+			
+			# Ví dụ về dự đoán và nhãn thực tế
+			predictions = torch.tensor([1, 0, 1, 1, 0])
+			labels = torch.tensor([1, 0, 1, 0, 1])
+			
+			# Tính Recall
+			rec = recall(predictions, labels)
+			print(f'Recall: {rec * 100:.2f}%')
+
+
+# 6. F1-Score 
+
 https://aicandy.vn/cac-phuong-phap-danh-gia-hieu-suat-mo-hinh-machine-learning/
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 </pre><a id='backBottom' href='../AI-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
