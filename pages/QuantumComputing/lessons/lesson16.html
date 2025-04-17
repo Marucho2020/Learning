@@ -1,0 +1,103 @@
+<html><head><title>Lesson 16 == Entanglement - Rối lượng tử  và cổng CNOT ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../quantum-computing-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 16 -- Entanglement - Rối lượng tử  và cổng CNOT -//</h1><pre>
+# Khái niệm  
+	Hai qubit được gọi là rối lượng tử nếu trjang thái của một qubit không thể mô tả riêng biệt với qubit còn lại 
+	
+	- Bạn không thể nói qubit A ở 0 hoặc 1 mà không để cập đến qubitB : chúng rối rắm vướng víu với nhau 
+	- Đây là hiện tượng không tồn tại trong máy tính cổ điển. Nó là nền tảng cho teleport lượng tử, siêu mã hóa, và sức mạnh của nhiều thuật toán lượng tử như Grover, Shor 
+	
+# Ví dụ đơn giản nhất : Trạng thái Bell 
+
+	Trạng thái rối cơ bản 
+		1 / (sqrt(2)) ​(∣00⟩+∣11⟩)
+			
+			
+	## Ý nghĩa :
+		- Nếu đo qubit đầu ra 0, qubit còn lại cũng sẽ là không 
+		- Nếu đo qubit đầu ra 1, qubit kia cũng chắc chắn là 1 
+		- Nhưng trước khi đo, cả 2 vẫn đang ở trạng thái chồng chập lượng tử 
+		
+		
+
+# ⚙️ 3. Làm sao tạo ra rối lượng tử? 
+
+
+Chỉ cần 2 bước:
+	Step 1: Áp dụng cổng Hadamard (H) lên qubit A
+	Step 2: Áp dụng cổng CNOT với A là điều khiển, B là mục tiêu
+
+→ Kết quả là trạng thái rối Bell phía trên.
+
+
+
+# 🔧 4. Cổng CNOT là gì? 
+	
+	## 🎯 CNOT (Controlled-NOT) 
+		Qubit điều khiển: Nếu là 1 → lật trạng thái qubit đích. 
+		Nếu điều khiển là 0 → không làm gì.
+
+
+	Điều khiển		Mục tiêu trước			Mục tiêu sau
+	0					0						0
+	0					1						1
+	1					0						1
+	1					1						0
+
+
+
+# 🧠 5. Tạo rối trong Qiskit (code demo) 
+	
+		from qiskit import QuantumCircuit, Aer, execute
+		from qiskit.visualization import plot_histogram
+		import matplotlib.pyplot as plt
+		
+		qc = QuantumCircuit(2)
+		qc.h(0)           # Hadamard lên qubit 0
+		qc.cx(0, 1)       # CNOT: điều khiển 0, đích 1
+		qc.measure_all()
+		
+		# Chạy mô phỏng
+		simulator = Aer.get_backend('qasm_simulator')
+		result = execute(qc, backend=simulator, shots=1024).result()
+		counts = result.get_counts()
+		
+		# Vẽ histogram
+		plot_histogram(counts)
+		plt.show()
+
+
+Kết quả thường là: 
+
+	'00': 50%
+	'11': 50%
+	
+❗ Không bao giờ có '01' hay '10', vì trạng thái đã rối: nếu 1 qubit là 0, cái còn lại cũng là 0.	
+
+
+
+# 🔍 6. Tại sao rối lại quan trọng? 
+	
+
+
+Ứng dụng								Vai trò của rối
+Thuật toán lượng tử					Tăng song song lượng tử, tương tác logic phức tạp
+Quantum Teleportation				Truyền trạng thái qubit từ A đến B mà không truyền vật lý
+Quantum Cryptography				Bảo mật không thể phá vỡ bằng classical brute-force
+Quantum Error Correction			Phân bố thông tin trong trạng thái rối để phát hiện và sửa lỗi
+
+
+
+# ☠️ Sai lầm phổ biến khi học rối: 
+	
+Nghĩ "rối" là giống như “rối dây” — không phải. Đây là toán học, không phải vật lý cơ học.
+
+Nghĩ rằng rối tạo ra "thông tin siêu nhanh" — rối không truyền thông tin nhanh hơn ánh sáng.
+
+
+
+
+
+
+
+
+
+</pre><a id='backBottom' href='../quantum-computing-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
