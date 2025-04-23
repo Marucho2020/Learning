@@ -1,0 +1,85 @@
+<html><head><title>Lesson 17 == Phép đo (measurement) ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../quantum-computing-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 17 -- Phép đo (measurement) -//</h1><pre>
+# Khái niệm 
+	Phép đo trong cơ học lượng tử- và lập trình lượng tử là khái niệm trung tâm quyết định mọi kết quả quan sát được. Nó là điểm cắt giữa thế giới có thể (xác suất) và thế giới đã xảy ra(kết quả cụ thể). Nếu không hiểu rõ measurement, thì sẽ không thể hiểu được lập trình lượng tử, vì toàn bộ ý nghĩa của quantum computing nằm ở cách khai thác xác suất trước khi phép đo xảy ra 
+	
+	
+# 	🔬 1. Phép đo là gì trong lập trình lượng tử? 
+	Trong lập trình lượng tử (ví dụ với Qiskit), phép đo là hành động chuyển trạng thái lượng tử (qubit) thành một kết quả nhị phân cụ thể: 0 hoặc 1.
+	
+	
+		from qiskit import QuantumCircuit
+		from qiskit_aer import AerSimulator
+		from qiskit.visualization import plot_histogram
+		
+		qc = QuantumCircuit(1, 1)
+		qc.h(0)           # Đưa qubit vào trạng thái siêu vị (superposition)
+		qc.measure(0, 0)  # Đo qubit
+		
+		sim = AerSimulator()
+		result = sim.run(qc, shots=1000).result()
+		counts = result.get_counts()
+		plot_histogram(counts)
+
+	Kết quả là một biểu đồ histogram với ~50% 0, ~50% 1.
+	
+	
+	
+# 🎲 2. Ý nghĩa xác suất 	
+	
+	Khi chưa đo, qubit có thể đang ở trạng thái: 	
+	|ψ⟩ = α|0⟩ + β|1⟩
+	
+	
+	Trong đó α và β là số phức thỏa mãn |α|² + |β|² = 1. 
+		|α|²: xác suất đo được kết quả là 0.
+		|β|²: xác suất đo được kết quả là 1.
+	
+	Nhưng khi đã đo, trạng thái lượng tử sụp đổ (collapse) về một kết quả cụ thể.
+	⚠️ Sau khi đo, ta mất sạch thông tin về α và β. Mọi sự tính toán lượng tử chỉ có ý nghĩa trước khi đo.
+	
+	
+	
+# 	🧠 3. Tại sao xác suất lại quan trọng? 
+	
+	Bởi vì lập trình lượng tử không cho ta điều khiển trực tiếp kết quả đo.
+	→ Cái ta điều khiển là xác suất kết quả đo thông qua các cổng lượng tử (quantum gates).
+	Nói cách khác:
+	Bạn không lập trình để "in ra 1", mà bạn lập trình để "tăng xác suất in ra 1".
+	Ví dụ: thuật toán Grover tìm kiếm phần tử trong O(√N) bước, không phải vì nó “đoán” được kết quả, mà vì nó tăng xác suất đúng lên gần 1 chỉ với vài lần lặp.	
+	
+	
+	
+# ⚖️ 4. Measurement trong ngữ cảnh AI hoặc Classical Logic? 
+		
+	Measurement tương tự như:
+		Trong mạng neural, bạn sampling từ phân phối đầu ra (softmax).
+		Trong thống kê, bạn không thể đo chính xác phân phối, bạn phải thử nhiều lần → thống kê kết quả.
+	
+	→ Tư duy xác suất và sampling là trung tâm của lập trình lượng tử. Phép đo chính là nơi bạn “sample” một trạng thái cụ thể từ không gian trạng thái khổng lồ.	
+		Measurement tương tự như:
+		Trong mạng neural, bạn sampling từ phân phối đầu ra (softmax).
+		Trong thống kê, bạn không thể đo chính xác phân phối, bạn phải thử nhiều lần → thống kê kết quả.
+	
+	→ Tư duy xác suất và sampling là trung tâm của lập trình lượng tử. Phép đo chính là nơi bạn “sample” một trạng thái cụ thể từ không gian trạng thái khổng lồ.
+	
+	
+📌 Kết luận 
+		
+		Thành phần					Ý nghĩa
+		`								ψ⟩`
+		measure						Tác động làm trạng thái sụp đổ về 0 hoặc 1
+		`								α
+		shots=1000					Số lần đo để thống kê phân phối xác suất	
+	
+	
+	
+	
+	
+	
+	
+	
+
+
+
+
+</pre><a id='backBottom' href='../quantum-computing-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
