@@ -1,0 +1,97 @@
+<html><head><title>Lesson 3 == Module ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../angular-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 3 -- Module -//</h1><pre>
+# Khái niệm 
+
+	Trong AngularJS, module là nơi bạn khai báo các thành phần (controller, directive, service, filter, v.v.) của ứng dụng. Nó giống như một “hộp chứa” logic cho app.
+	
+	Ví dụ 
+		var app = angular.module("myApp" , []);
+		
+		"myApp": tên của module.
+		[]: danh sách các module phụ thuộc (dependencies). Ở đây là rỗng, vì không phụ thuộc gì.
+	
+	Nếu bạn thấy AngularJS code bắt đầu bằng angular.module(...), thì đó là phần gốc (root) của ứng dụng.
+	
+	
+	
+# 	🔹 2. Tại sao phải dùng module?
+
+	Tránh xung đột tên trong ứng dụng lớn.
+	Dễ dàng import các thư viện hoặc module khác.
+	Quản lý logic theo chức năng riêng biệt (separation of concerns).
+	Dễ test từng phần một cách độc lập.	
+	
+	
+	
+# 	🔹 3. Cách liên kết module với HTML 
+	HTML phải khai báo ng-app="myApp" để AngularJS biết đang dùng module nào.
+	
+	
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+    <script>
+      var app = angular.module("myApp", []);
+    </script>
+  </head>
+  <body ng-app="myApp">
+    <!-- Nội dung AngularJS ở đây -->
+  </body>
+</html>
+	
+	
+	
+# 🔹 4. Tổ chức controller trong module 
+
+// JS 
+	
+var app = angular.module("myApp", []);
+app.controller("myCtrl", function($scope) {
+  $scope.name = "Bảo";
+});
+
+
+
+// html 
+<div ng-controller="myCtrl">
+  Hello {{ name }}
+</div>
+	
+
+# 🔹 5. Tách module ra file riêng 
+	
+	Trong dự án thật, bạn nên tách code module và controller ra file .js riêng để tổ chức gọn:
+	
+	app.js 
+		var app = angular.module("myApp", []);
+
+		
+	controller.js 
+		app.controller("myCtrl", function($scope) {
+		$scope.name = "Bảo";
+		});
+			
+	index.html 
+		<script src="angular.min.js"></script>
+		<script src="app.js"></script>
+		<script src="controller.js"></script>
+
+	
+	
+# 	🔹 6. Import module phụ thuộc 
+	
+	Ví dụ bạn dùng module ngRoute để định tuyến:
+		var app = angular.module("myApp", ["ngRoute"]);
+	Tức là bạn đang nói với AngularJS rằng app này phụ thuộc vào module ngRoute, và nó sẽ dùng được các chức năng định tuyến như $routeProvider.
+	
+	
+| ✅  | AngularJS Module là "cái hộp" chứa toàn bộ logic của ứng dụng |
+| -- | ------------------------------------------------------------- |
+| 🎯 | Mỗi app AngularJS cần ít nhất 1 module chính (`ng-app="..."`) |
+| 📦 | Module giúp chia tách code rõ ràng, dễ bảo trì                |
+| 🔗 | Có thể khai báo các module phụ thuộc để mở rộng chức năng     |
+	
+	
+	
+
+</pre><a id='backBottom' href='../angular-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

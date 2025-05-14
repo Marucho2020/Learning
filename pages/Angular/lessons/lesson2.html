@@ -1,0 +1,72 @@
+<html><head><title>Lesson 2 == AngularJS Expression ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../angular-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 2 -- AngularJS Expression -//</h1><pre># Khái niệm 
+	AngularJS Expressions là cú pháp cho phép bạn gắn dữ liệu hoặc thực hiện phép tính ngay trong HTML bằng dấu
+		{{ ... }}. 	
+		
+	Giống như "mini-JavaScript" nhưng chạy bên trong AngularJS, và không cần viết trong script hay controller.	
+	
+	
+	
+# 	🔍 Cú pháp cơ bản: 
+	
+	<p>{{ 5 + 5 }}</p>         <!-- In ra: 10 -->
+	<p>{{ firstName + " " + lastName }}</p>   <!-- Ghép chuỗi -->
+	<p>{{ quantity * price }}</p>             <!-- Phép toán -->
+	
+	
+	
+# 	⚖️ So sánh AngularJS Expression vs JavaScript thông thường 
+	
+| So sánh        | AngularJS Expression                                 | JavaScript                      |
+| -------------- | ---------------------------------------------------- | ------------------------------- |
+| Cú pháp        | `{{ expression }}` trong HTML                        | Viết trong `<script>`           |
+| Quyền truy cập | Truy cập biến trong `$scope`                         | Truy cập biến global hoặc local |
+| Đặc tính       | Không dùng `condition`, `loop`, `function` trực tiếp | Có thể dùng tất cả              |
+| Bảo mật        | Bị giới hạn để tránh lạm dụng                        | Mạnh, nhưng dễ gây lỗi          |
+	
+➡️ Ý nghĩa: AngularJS expression chỉ dành cho xử lý đơn giản hiển thị trên View.
+
+
+# 	⚠️ Những giới hạn: 
+	
+		- Không thể khai báo biến (var, let, const)
+		- Không gọi hàm JavaScript bên ngoài nếu không có trong $scope
+		- Không thực hiện lệnh điều kiện (if, switch), chỉ biểu thức logic (&&, ||, !, ==, !=...)	
+	
+	
+# 	💡 Ví dụ phổ biến trong thực tế: 
+	<!-- Gán trong controller -->
+	$scope.firstName = "Bảo";
+	$scope.lastName = "Nguyễn";
+	
+	<!-- HTML -->
+	<p>Họ tên: {{ firstName + " " + lastName }}</p>
+	<p>Giảm giá 10%: {{ price * 0.9 }}</p>
+	<p>Có giảm giá? {{ price > 100000 }}</p> <!-- true/false -->
+	
+		
+	## Ví dụ 2 
+		$scope.name = "Bảo";
+		$scope.price = 100;
+		$scope.discounted = function() {
+		return $scope.price * 0.9;
+		};
+		
+		-> trong HTML sử dụng  
+		<p>{{ name }}</p>                <!-- Bảo -->
+		<p>{{ price * 0.9 }}</p>         <!-- 90 -->
+		<p>{{ discounted() }}</p>       <!-- 90 -->
+
+	
+	### 🛡️ Bạn không thể làm:
+	
+	{{ alert('hello') }}         ❌ không được (ngoài scope)
+	{{ window.location }}        ❌ không được
+	{{ var x = 5 }}              ❌ không được khai báo biến
+
+	
+# 📌 Kết luận:
+	{{ ... }} giống như một lối tắt gắn dữ liệu và logic đơn giản vào HTML.
+	Dễ dùng, hiệu quả, nhưng nên dùng đúng mức – khi xử lý logic phức tạp thì đưa về controller. 
+
+
+</pre><a id='backBottom' href='../angular-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

@@ -1,0 +1,115 @@
+<html><head><title>Lesson 97 == Splay Tree ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 97 -- Splay Tree -//</h1><pre># Khái niệm  
+	Splay Tree là một dạng cây nhị phân tìm kiếm tự điều chỉnh (self-adjusting binary search tree)
+	-> khi bạn truy cập (search, insert, delete) một node, cây sẽ splay (đưa node đó lên gốc) qua một chuỗi rotation thông minh  
+
+
+#🎯 2. Mục đích của Splay Tree
+	Tối ưu truy cập theo thói quen người dùng:
+	Nếu bạn truy cập một node thường xuyên, nó sẽ dần được đưa lên gốc → lần sau tìm cực nhanh (O(1)).
+	Không cần lưu thêm thông tin phụ (chiều cao, màu,...) như AVL hay Red-Black.
+	Thời gian truy cập trung bình (amortized) là O(log n) dù một số thao tác có thể tệ nhất là O(n).
+
+#⚙️ 3. Các thao tác chính
+	Thao tác	Đặc biệt gì?
+	Search		Sau khi tìm, node đó được "splay" lên root
+	Insert		Sau khi chèn, node mới cũng được đưa lên root
+	Delete		Xoá xong, cây được sắp lại qua splay để root là node gần nhất
+
+#🔁 4. Thuật toán Splay: Làm thế nào để đưa 1 node lên root?
+		Dùng các rotation kết hợp dựa vào vị trí của node với cha và ông nội (nếu có):
+		
+		##A. Zig (nằm gần gốc)
+				10
+				/
+				5    ← muốn đưa lên
+			→ Right Rotation → 5 lên root.
+		
+		
+		## B. Zig-Zig (node và cha đều trái hoặc đều phải)
+				
+					30
+					/
+					20
+					/
+				   10   ← target
+				→ Rotate 30 → 20 → 10
+				
+				Giống như:
+					Right rotate tại 30
+					Right rotate tại 20
+				
+		C. Zig-Zag (node trái - cha phải hoặc ngược lại)
+
+					30
+					/
+				10
+					\
+					20 ← target
+				→ Zig-zag:
+		
+			Left rotate tại 10
+			Right rotate tại 30
+			→ 20 lên root
+		
+		
+#📚 5. Ví dụ minh họa
+		Giả sử bạn có cây:
+		
+			50
+			/  	\
+			30    70
+			/
+			10
+		Bạn search(10)
+		→ Zig-Zig case
+		→ Kết quả:
+
+				10
+				\
+				30
+				\
+				50
+					\
+					70
+#📌 6. So sánh với Red-Black / AVL Tree
+
+|                    | Splay Tree        | Red-Black Tree | AVL Tree       |
+| ------------------ | ----------------- | -------------- | -------------- |
+| Cân bằng tuyệt đối | ❌ Không           | ✅ Gần cân bằng | ✅ Rất cân bằng |
+| Truy cập gần đây   | ✅ Cực nhanh       | ❌ Bình thường  | ❌ Bình thường  |
+| Tệ nhất            | O(n)              | O(log n)       | O(log n)       |
+| Dễ code hơn        | ✅                 | ❌ Phức tạp     | ❌ Khó nhất     |
+| Phù hợp            | Cache, UI, Router | DB index       | Realtime, DB   |
+
+
+
+# 🛠️ 7. Ứng dụng thực tế
+	Memory cache: đưa phần tử được truy cập thường xuyên lên đầu.
+	Command history: đưa thao tác lặp lại gần đây lên đầu danh sách.
+	Data router hoặc network switch: ưu tiên node được truy cập thường xuyên.
+	Tối ưu UI menu, autocomplete: chữ được gõ nhiều sẽ được đưa lên gợi ý đầu.
+
+⚠#️ 8. Lưu ý khi dùng trong dự án thực
+	Không dùng nếu cần đảm bảo thời gian worst-case (ví dụ: DB, tài chính).
+	Rất phù hợp khi phân phối truy cập không đều (nhiều truy cập vào 1 node).
+	Cây có thể bị lệch → cần kiểm soát hoặc reset nếu cần.
+	Dễ dàng implement vì không cần giữ thêm thuộc tính phụ (như height, color).
+
+🚀 9. Kiến thức cần học thêm để dùng Splay Tree thành thạo
+	Biết chắc về: Binary Search Tree (BST), rotation trái/phải
+	Biết amortized time (phân tích thời gian trung bình)
+	Biết ứng dụng trong locality-sensitive systems (cache, history)
+	Nắm rõ Zig, Zig-Zig, Zig-Zag
+	Hiểu cách debug cây qua hình vẽ hoặc Tree printer
+
+
+
+
+
+
+
+
+
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
