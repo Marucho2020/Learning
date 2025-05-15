@@ -1,0 +1,148 @@
+<html><head><title>Lesson 98 == Treap / Scapegoat Tree ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 98 -- Treap / Scapegoat Tree -//</h1><pre>
+# TREAP (Tree + Heap)
+	
+	## Khái niệm  
+		Treap = Binary Search Tree + Heap Property (ngẫu nhiên)
+
+	Mỗi node có:
+		key → đảm bảo thứ tự BST
+		priority (ngẫu nhiên) → đảm bảo thứ tự giống Max-Heap hoặc Min-Heap
+		
+	Tưởng tượng bạn xây dựng một cây BST, nhưng đồng thời cũng muốn nó không quá mất cân bằng → bạn đưa randomization vào qua priority.
+
+
+
+	## 🧠 Cấu trúc Node:
+	
+		class TreapNode {
+			int key;       // khóa chính giống BST
+			int priority;  // giá trị random
+			TreapNode left, right;
+		}
+	
+	
+	## 🎯 Mục tiêu: 
+		1. Đảm bảo BST Property:
+			left.key < node.key < right.key
+	
+		2. Đảm bảo Heap Property: 
+			node.priority > left.priority && node.priority > right.priority
+			
+			
+
+
+
+	## ⚙️ Cách hoạt động:
+	
+		### Insert:
+			Chèn giống BST
+			Sau đó "bubble up" node mới theo priority bằng cách xoay cây như heap
+			
+			
+		### Delete:
+			Sử dụng rotation để đẩy node xuống cho đến khi nó là lá → rồi xoá
+			
+			
+			
+			
+	## 	🎲 Tại sao dùng priority random?
+		→ Để cây có tính cân bằng xác suất, như randomized quicksort
+		→ Tránh worst-case như BST lệch hẳn một phía
+		
+		Có thể dùng random hoặc gán "priority = thời điểm tạo" để mô phỏng cây Cartesian hoặc cây thứ tự.
+			
+	## 	📈 Ứng dụng thực tế:	
+			
+			Khi bạn không muốn giữ chiều cao (như AVL) và không muốn dùng màu (như Red-Black)
+			Xây dựng index trong hệ thống phân tán
+			Persistent data structure nhờ cách tách và hợp Treap rất dễ			
+			
+			
+			
+			
+			
+# 🧩 PHẦN 2: SCAPEGOAT TREE	
+
+	## 📌 Khái niệm:
+		Scapegoat Tree = BST có kiểm tra chiều sâu và rebuild subtree khi mất cân bằng quá nặng
+
+
+
+	## 🎯 Mục tiêu:
+		
+		Tránh overhead của việc xoay cây liên tục như AVL
+			## Cân bằng bằng cách xây lại cả 1 subtree khi cần, thay vì từng bước
+
+	## ⚙️ Cách hoạt động: 
+		Khi chèn 1 node, nếu chiều sâu vượt mức cho phép:
+			1. Tìm tổ tiên gọi là "scapegoat" (con dê tế thần) – nơi cấu trúc mất cân bằng
+			2. Rebuild toàn bộ cây con tại node đó (như xây lại BST từ mảng đã sắp xếp)
+
+
+
+	## 📐 Định nghĩa cân bằng: 
+		Nếu cây có n node, thì chiều cao tối đa là log₃⁄₂(n)
+		Nếu vượt giới hạn → rebuild
+		Không rotation! Không thêm metadata phức tạp như height hay color!
+		
+	## 	📉 Ưu và Nhược:
+		
+| Ưu điểm                            | Nhược điểm                                       |
+| ---------------------------------- | ------------------------------------------------ |
+| Dễ triển khai                      | Rebuild toàn bộ subtree tốn kém                  |
+| Không cần lưu thêm thông tin       | Chỉ cân bằng ở insert, không cân bằng khi search |
+| Cấu trúc rõ ràng                   | Không tối ưu cho workload có pattern             |
+| Tốt cho hệ thống memory-persistent | Không bảo toàn O(log n) tại mọi bước             |
+
+
+
+	## 📈 Ứng dụng thực tế: 
+		
+		Khi bạn không muốn sử dụng rotation (phức tạp trong memory layout)
+		Dữ liệu hay được chèn ồ ạt rồi query sau (bulk-insert, batch mode)
+		
+		Embedded systems hoặc file systems cần logic đơn giản, rebuild toàn bộ nhanh hơn rotation
+		
+
+
+
+	## 🆚 So sánh nhanh:
+	
+| Tên            | Đảm bảo cân bằng        | Cách làm                   | Tốt cho                        |
+| -------------- | ----------------------- | -------------------------- | ------------------------------ |
+| Treap          | Trung bình (randomized) | Rotation dựa theo priority | Index, distributed cache       |
+| Scapegoat Tree | Cứng rắn hơn BST        | Rebuild subtree khi cần    | Embedded system, batch insert  |
+| AVL            | Luôn cân bằng           | Rotation theo chiều cao    | Realtime system, DB            |
+| Red-Black Tree | Tốt                     | Rotation + color logic     | Java TreeMap, Filesystem index |
+
+
+
+#🧠 Kỹ năng cần có để hiểu và dùng tốt Treap / Scapegoat Tree:
+	Nắm chắc:
+		Binary Search Tree
+		Rotation
+		Phân tích độ phức tạp theo xác suất (amortized analysis)
+		Đệ quy và cấu trúc con trỏ
+	
+	Biết cách:
+		Cân bằng trade-off giữa chi phí insert/delete vs. query
+		Phân tích workload của hệ thống trước khi chọn tree phù hợp
+		Hiểu ứng dụng của Split, Merge trong Treap
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
