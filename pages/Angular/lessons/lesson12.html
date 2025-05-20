@@ -1,0 +1,67 @@
+<html><head><title>Lesson 12 == Tables ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../angular-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 12 -- Tables -//</h1><pre>
+# Khái niệm  
+	📋 Tổng quan: AngularJS Tables 
+	
+	
+		Hiển thị dữ liệu dạng bảng (HTML <table>) 
+		Lặp qua dữ liệu bằng ng-repeat 
+		Kết hợp với $http để lấy dữ liệu từ server
+
+
+# 🔹 1. Cấu trúc bảng cơ bản dùng ng-repeat 
+	
+<table>
+  <tr ng-repeat="x in names">
+    <td>{{ x.Name }}</td>
+    <td>{{ x.Country }}</td>
+  </tr>
+</table>
+
+	ng-repeat="x in names" → lặp qua từng phần tử trong mảng names
+	{{ x.Name }} và {{ x.Country }} → hiển thị giá trị từng dòng
+
+	##🔸 Dữ liệu mẫu:  
+
+	$scope.names = [
+	{Name: 'Jani', Country: 'Norway'},
+	{Name: 'Carl', Country: 'Sweden'},
+	{Name: 'Margareth', Country: 'England'}
+	];
+
+# 🔹 2. Kết hợp với $http để load bảng từ API
+
+
+	$http.get("https://example.com/api/users")
+	.then(function (response) {
+		$scope.names = response.data;
+	});
+	📌 Khi dữ liệu được lấy về từ server (AJAX), ng-repeat vẫn hoạt động như cũ — cực kỳ tiện lợi.
+
+
+
+# 💡 Phân tích theo góc nhìn dự án Nhật 
+✅ Những điều cần quan tâm khi thực tế làm bảng:
+
+| Mục                             | Có thể gặp vấn đề                                                               |   |          |
+| ------------------------------- | ------------------------------------------------------------------------------- | - | -------- |
+| 1. Không có dữ liệu             | Cần hiển thị dòng “Không có kết quả”                                            |   |          |
+| 2. Dữ liệu null/undefined       | Phải kiểm tra \`{{ x.Name                                                       |   | '-' }}\` |
+| 3. Dữ liệu lớn                  | Có thể gây chậm, cần phân trang                                                 |   |          |
+| 4. Sort/filter                  | AngularJS có hỗ trợ sẵn `$filter`, nhưng nên dùng custom logic cho dễ kiểm soát |   |          |
+| 5. Nhấn vào row để chuyển trang | Đây là 結合試験, cần test kỹ logic điều hướng                                       |   |          |
+
+
+# 📦 Kết luận 
+
+
+| Học được gì?     | Ứng dụng thực tế                      |
+| ---------------- | ------------------------------------- |
+| `ng-repeat`      | Duyệt danh sách và render bảng        |
+| Kết hợp `$http`  | Load bảng từ API động                 |
+| Kiểm soát UI tốt | Hiển thị khi data trống, dữ liệu null |
+| Kiểm thử được    | Dễ viết Unit test và Integration test |
+| Chuẩn hóa logic  | Kết hợp tốt với Service + Controller  |
+
+
+
+</pre><a id='backBottom' href='../angular-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

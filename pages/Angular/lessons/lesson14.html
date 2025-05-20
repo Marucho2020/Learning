@@ -1,0 +1,76 @@
+<html><head><title>Lesson 14 == SQL ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../angular-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 14 -- SQL -//</h1><pre># Khái niệm  
+	Nhưng cần lưu ý: AngularJS không truy cập trực tiếp được vào SQL database. Trong thực tế (và trong dự án ở Nhật), AngularJS chỉ là frontend — việc truy cập cơ sở dữ liệu phải đi qua backend như Node.js, Java Spring, PHP, v.v.
+	
+# 🎯 Mục tiêu bài này	
+	
+	 AngularJS lấy dữ liệu từ server đã xử lý SQL, chứ không truy cập SQL trực tiếp.
+
+# 	🔹 Kiến trúc đúng
+	AngularJS (Frontend)  <--HTTP-->  PHP/Node/Java (Backend)  <-->  SQL Database
+	
+	📌  giả lập:
+		$http.get("customers_mysql.php")
+		.then(function(response) {
+			$scope.names = response.data.records;
+		});
+		
+		customers_mysql.php: là một file PHP xử lý câu lệnh SQL và trả JSON về
+		response.data.records: là mảng kết quả dữ liệu từ MySQL
+	
+	
+	
+	
+# 	🔍 Ví dụ backend PHP 
+	
+	$conn = new mysqli("localhost", "user", "pass", "db");
+	$sql = "SELECT name FROM customers";
+	$result = $conn->query($sql);
+	
+	$outp = array();
+	while($rs = $result->fetch_array(MYSQLI_ASSOC)) {
+	$outp[] = $rs;
+	}
+	
+	echo json_encode(['records' => $outp]);
+	
+	
+		📌 Giải thích:
+			PHP kết nối MySQL, thực hiện SELECT
+			Chuyển kết quả thành JSON cho AngularJS gọi được
+			Trả JSON dạng { records: [...] } để client Angular sử dụng	
+
+# 🧠 Góc nhìn dự án thực tế ở Nhật
+
+	✅ Bạn cần hiểu rõ vai trò từng phần:
+	| Thành phần                   | Vai trò                       |
+| ---------------------------- | ----------------------------- |
+| AngularJS                    | Gửi request, hiển thị dữ liệu |
+| Backend (PHP, Java, Node...) | Gửi câu SQL, lấy kết quả      |
+| DB (MySQL, Oracle...)        | Lưu trữ dữ liệu thực tế       |
+
+	
+
+# ⚠️ Lưu ý quan trọng 
+
+	❌ KHÔNG được truy cập trực tiếp DB từ AngularJS
+		Lỗ hổng bảo mật cực lớn
+		Không thể quản lý role, log, ACL
+		Dễ bị SQL injection nếu người dùng sửa request
+	✅ Luôn phải có API layer (REST API, GraphQL, v.v.)
+
+
+# 📌 Kết luận 
+| Học được gì          | Ý nghĩa thực tế                      |
+| -------------------- | ------------------------------------ |
+| Angular chỉ gọi API  | Không truy cập DB trực tiếp          |
+| PHP xử lý SQL        | Có thể thay PHP bằng Java, Node, v.v |
+| `$http.get()` → JSON | Phổ biến trong tất cả web hiện đại   |
+| Kiểm thử theo tầng   | Unit → Integration → E2E             |
+
+
+
+https://www.w3schools.com/angular/angular_htmldom.asp
+
+
+
+</pre><a id='backBottom' href='../angular-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

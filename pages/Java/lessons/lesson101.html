@@ -1,0 +1,133 @@
+<html><head><title>Lesson 101 == Persistent Tree ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 101 -- Persistent Tree -//</h1><pre># Khái niệm 
+	Persistent Tree là một dạng cây dữ liệu mà mỗi khi cập nhật, nó không ghi đè (mutate) cấu trúc cũ, mà tạo ra một phiên bản mới, nhờ vậy ta có thể:
+	
+		- Truy xuất lại các trạng thái trước đó của cây. 
+		- Song song đọc các phiên bản cũ mà không bị xung đột với việc ghi (no read-write conflict). 
+		- Triển khai Undo/Redo, Snapshot, Time-travel debugging, hoặc immutability trong lập trình hàm.
+	
+	
+	
+# 	🔍 Cốt lõi của Persistent Tree
+	##  🧠 Nguyên tắc:
+	“Không sửa – chỉ tạo bản sao các phần bị thay đổi” 
+	Giống như Git vậy: bạn commit một thay đổi nhỏ, nhưng cả project không bị copy toàn bộ – chỉ những file thay đổi.
+	
+	
+	##	⚙️ Có 2 loại chính: 
+	| Loại                    | Giải thích                                                          |
+| ----------------------- | ------------------------------------------------------------------- |
+| **Partial Persistence** | Có thể **đọc** phiên bản cũ, nhưng chỉ **ghi** ở phiên bản mới nhất |
+| **Full Persistence**    | Có thể **đọc và ghi** trên **bất kỳ phiên bản nào**                 |
+	
+	
+# 📦 Ví dụ: Persistent Binary Search Tree (BST)	
+	
+	Giả sử bạn có cây BST T0 như sau:
+     10
+    /  \
+   5   15
+		
+	Bạn muốn insert(7) → tạo T1. 
+	Ý tưởng: không tạo lại toàn bộ cây → chỉ tạo một bản sao của các node trên đường đi từ root đến nơi chèn.
+	
+	## Tạo T1 (insert 7): 
+		Copy root 10 → gán T1 
+		Copy left child 5 → chèn 7 vào bên phải 
+		
+		T1 → 10'
+		10'.left → 5'
+		5'.right → 7
+	
+	✅ Kết quả:
+		T0: không thay đổi
+		
+		T1: là phiên bản mới, chia sẻ phần lớn dữ liệu với T0
+	
+	
+# 	🏗️ Ứng dụng thực tế
+| Use case                      | Mô tả                                                              |
+| ----------------------------- | ------------------------------------------------------------------ |
+| **Undo/Redo**                 | Mỗi thay đổi là một phiên bản mới → quay lui/thực hiện lại dễ dàng |
+| **Time-travel Debugger**      | Debug qua các version cây đã bị thay đổi                           |
+| **Concurrency without locks** | Reader đọc version cũ trong khi writer tạo version mới             |
+| **Functional Programming**    | Tree là immutable → an toàn hơn trong code phức tạp                |
+
+
+
+# 🧠 So sánh: Persistent Tree vs Copy 
+		
+| Tiêu chí          | Copy toàn bộ | Persistent Tree  |
+| ----------------- | ------------ | ---------------- |
+| Bộ nhớ            | Tốn nhiều    | Tối ưu nhờ reuse |
+| Thời gian tạo     | Lâu          | Nhanh hơn nhiều  |
+| Chia sẻ dữ liệu   | Không        | Có               |
+| Truy vết thay đổi | Không dễ     | Có sẵn version   |
+	
+	
+# 	🔬 Java: Làm sao để triển khai? 
+	Java không hỗ trợ persistent tree mặc định. Nhưng bạn có thể tự viết hoặc dùng thư viện.
+	
+	✅ Cách đơn giản: 
+		Không sửa trực tiếp node. 
+		Dùng class Node bất biến (immutable), ví dụ:
+	
+class Node {
+    final int key;
+    final Node left;
+    final Node right;
+
+    Node(int key, Node left, Node right) {
+        this.key = key;
+        this.left = left;
+        this.right = right;
+    }
+}
+
+✅ Hàm insert:
+Node insert(Node root, int key) {
+    if (root == null) return new Node(key, null, null);
+    if (key < root.key)
+        return new Node(root.key, insert(root.left, key), root.right);
+    else
+        return new Node(root.key, root.left, insert(root.right, key));
+}
+→ Mỗi lần insert: tạo cây mới, chia sẻ các node không thay đổi.
+
+# 📚 Kiến thức cần học để triển khai tốt Persistent Tree
+
+| Kiến thức                              | Ghi chú                                       |
+| -------------------------------------- | --------------------------------------------- |
+| Immutable Data Structures              | Đặc biệt trong Java, Scala, Clojure           |
+| Persistent Segment Tree / Fenwick Tree | Tối ưu hiệu năng cho range query              |
+| Copy-on-Write logic                    | Làm sao để clone 1 phần và giữ phần còn lại   |
+| Garbage Collection impact              | Biết được khi nào nên giữ/làm rác các version |
+| Functional Programming Patterns        | Cách tư duy bất biến hoá toàn bộ hệ thống     |
+
+🧠 Bonus: Persistent Segment Tree
+
+	Trong thuật toán (competitive programming), bạn có thể triển khai Persistent Segment Tree để:
+	
+		Truy xuất trạng thái dữ liệu trong quá khứ
+		Truy vấn “prefix sum đến thời điểm version K”
+		So sánh snapshot của dữ liệu tại 2 thời điểm
+	
+	Đây là nền tảng cho hệ thống như:
+	
+		Versioned Key-Value Store
+		Time-series Database
+		Immutable Indexing Structures
+
+
+# ✅ Tổng kết
+
+| Mục tiêu         | Ý nghĩa                                    |
+| ---------------- | ------------------------------------------ |
+| Truy vết version | Quản lý lịch sử cấu trúc dữ liệu           |
+| Tránh mutation   | Tránh bug và race condition                |
+| Cấu trúc chia sẻ | Tối ưu RAM và hiệu năng                    |
+| Tư duy bất biến  | Gốc rễ của Functional & Concurrent Systems |
+
+
+	
+	
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
