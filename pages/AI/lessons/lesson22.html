@@ -1,11 +1,41 @@
-<html><head><title>Lesson 22 == MobileNet: Mô hình hiệu quả trên thiết bị di động ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../AI-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 22 -- MobileNet: Mô hình hiệu quả trên thiết bị di động -//</h1><pre> https://aicandy.vn/mobilenet-mo-hinh-hieu-qua-tren-thiet-bi-di-dong/
+<html><head><title>Lesson 22 == MobileNet: Mô hình hiệu quả trên thiết bị di động ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../AI-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 22 -- MobileNet: Mô hình hiệu quả trên thiết bị di động -//</h1><pre># Giới thiệu 
+	Trí tuệ nhân tạo (AI) đã và đang thay đổi cách chúng ta tương tác với thế giới xung quanh, từ nhận diện khuôn mặt đến lái xe tự động. Tuy nhiên, sự bùng nổ của AI cũng đi kèm với những thách thức đáng kể, đặc biệt là vấn đề triển khai các mô hình AI trên các thiết bị di động với tài nguyên hạn chế.	
 	
-
-
-
-
-
-
-
+	Trong bối cảnh đó, MobileNet xuất hiện như một giải pháp đột phá, mang đến sự cân bằng giữa độ chính xác và hiệu quả tính toán, mở ra cơ hội mới cho các ứng dụng AI trên các thiết bị di động và các hệ thống nhúng.
+https://aicandy.vn/wp-content/uploads/2024/11/aicandy_mibilenet.jpg
+# 2. Kiến trúc 
+	https://aicandy.vn/wp-content/uploads/2024/08/aicandy_MobileNet_3.png
 	
+	## 2.1. Depthwise Separable Convolutions 
+		Một trong những cải tiến chính của MobileNet là kỹ thuật Depthwise Separable Convolutions, giúp giảm đáng kể số lượng phép tính cần thiết trong quá trình huấn luyện và suy diễn. Thay vì áp dụng các bộ lọc (filter) lên toàn bộ các kênh của đầu vào như trong CNN truyền thống, MobileNet tách quá trình này thành hai bước:
+		
+		### Depthwise Convolution:  Mỗi filter chỉ áp dụng cho một kênh của đầu vào. Nếu có 32 kênh đầu vào, thì sẽ có 32 filter độc lập, mỗi filter áp dụng lên một kênh duy nhất. Điều này giúp giảm đáng kể chi phí tính toán 
+				https://aicandy.vn/wp-content/uploads/2024/08/aicandy_MobileNet_1-768x245.png
+				
+		### Pointwise Convolution:  Sau bước Depthwise, MobileNet áp dụng convolution 1×1 (tức là mỗi filter có kích thước 1×1) để kết hợp các kênh lại với nhau, tạo ra kênh đầu ra mới.
+			https://aicandy.vn/wp-content/uploads/2024/08/aicandy_MobileNet_2-768x233.png
+			
+		Việc tách riêng Depthwise và Pointwise không chỉ giảm số lượng phép tính mà còn giúp giảm số lượng tham số trong mô hình. Theo thống kê, việc sử dụng Depthwise Separable Convolutions có thể giảm số lượng phép tính xuống còn khoảng 8 đến 9 lần so với mô hình CNN truyền thống với cùng kích thước đầu vào và số lượng lớp.
+
+
+	## 2.2. Width Multiplier (α) 
+		Width Multiplier là một tham số được MobileNet giới thiệu để điều chỉnh độ rộng của mạng, tức là số lượng kênh đầu ra tại mỗi lớp. Thay vì sử dụng số lượng kênh chuẩn (ví dụ: 32, 64, 128, v.v.), MobileNet cho phép điều chỉnh số lượng kênh này bằng cách nhân với một hệ số α\alphaα (0 < α ≤ 1). Điều này giúp giảm số lượng tham số và phép tính cần thiết mà không ảnh hưởng quá nhiều đến độ chính xác của mô hình.
+			
+		Ví dụ, với α = 0.75, số lượng phép tính giảm khoảng 50% nhưng độ chính xác của mô hình chỉ giảm nhẹ so với α = 1. Điều này tạo điều kiện thuận lợi cho việc triển khai trên các thiết bị di động với tài nguyên hạn chế.
+		
+		
+		
+	## 	2.3. Resolution Multiplier (ρ) 
+	Resolution Multiplier cho phép giảm độ phân giải của ảnh đầu vào trước khi đưa vào mạng. Mặc dù điều này có thể làm giảm độ chính xác của mô hình, nhưng nó lại tăng tốc độ suy diễn, phù hợp cho các ứng dụng yêu cầu thời gian thực. Ví dụ, với ρ = 0.5, độ phân giải của ảnh đầu vào giảm một nửa (ví dụ từ 224×224 xuống 112×112), từ đó giảm đáng kể số lượng phép tính cần thiết.
+	
+	
+	## 2.4. Inverted Residual Block và Linear Bottleneck 
+		MobileNetV2 giới thiệu Inverted Residual Block với linear bottleneck, một cải tiến quan trọng giúp tối ưu hóa hiệu suất. Khác với các khối Residual truyền thống (như trong ResNet), Inverted Residual Block mở rộng không gian đặc trưng (feature space) và sau đó nén lại thông qua một bottleneck tuyến tính. Điều này giúp giảm thiểu sự mất mát thông tin và cải thiện độ chính xác tổng thể của mạng.
+		
+		
+# 3. Phiên bản 
+	https://aicandy.vn/mobilenet-mo-hinh-hieu-qua-tren-thiet-bi-di-dong/	
+		
+		
+		
 </pre><a id='backBottom' href='../AI-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
