@@ -1,0 +1,102 @@
+<html><head><title>Lesson 23 == AngualarJS Routing ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../angular-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 23 -- AngualarJS Routing -//</h1><pre># Khái niệm 
+	là kỹ thuật điều hướng nhiều trang trong một file  
+	Bình thường, khi bạn muốn chuyển trang (VD: từ /home sang /about), trình duyệt sẽ load lại toàn bộ trang HTML mới.
+	Với AngularJS SPA, bạn không cần load lại, mà chỉ thay đổi một phần giao diện bằng cách thay đổi route → UX mượt mà hơn, nhanh hơn.
+	
+# 📦 Giải pháp: dùng ngRoute 
+	AngularJS hỗ trợ routing thông qua module ngRoute (không được include mặc định, phải thêm tay). 
+	
+# ✅ Bước 1: Thêm angular-route.js
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular-route.js"></script>
+	
+# ✅ Bước 2: Khai báo module phụ thuộc ngRoute 
+var app = angular.module("myApp", ["ngRoute"]);
+
+# ✅ Bước 3: Cấu hình router với $routeProvider
+
+app.config(function($routeProvider) {
+  $routeProvider
+    .when("/home", {
+      templateUrl: "home.html"
+    })
+    .when("/about", {
+      templateUrl: "about.html"
+    })
+    .otherwise({
+      redirectTo: "/home"
+    });
+});
+
+	Mỗi .when() định nghĩa một route (giống path trong Vue/React).
+	templateUrl trỏ tới file HTML chứa phần nội dung cần hiển thị.
+	otherwise() là fallback nếu không khớp route nào.
+
+# ✅ Bước 4: Thêm <ng-view> vào HTML
+
+	Đây là nơi Angular sẽ load nội dung của các route vào.
+	<div ng-view></div>
+
+	
+
+🔁 Ví dụ tổng hợp:
+📄 index.html
+
+<!DOCTYPE html>
+<html ng-app="myApp">
+  <head>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular-route.js"></script>
+    <script src="app.js"></script>
+  </head>
+  <body>
+    <a href="#!/home">Home</a>
+    <a href="#!/about">About</a>
+
+    <div ng-view></div>
+  </body>
+</html>
+
+📄 app.js
+var app = angular.module("myApp", ["ngRoute"]);
+
+app.config(function($routeProvider) {
+  $routeProvider
+    .when("/home", {
+      templateUrl: "home.html"
+    })
+    .when("/about", {
+      templateUrl: "about.html"
+    })
+    .otherwise({
+      redirectTo: "/home"
+    });
+});
+
+
+📄 home.html
+<h2>Trang chủ</h2>
+<p>Chào mừng đến với home page</p>
+
+
+📄 about.html 
+<h2>Giới thiệu</h2>
+<p>Đây là trang giới thiệu</p>
+
+
+# 🧠 Mẹo kỹ thuật:
+	AngularJS routing dùng hashbang (#!) trong URL → không cần cấu hình server: 
+http://localhost/index.html#!/about
+
+Nếu bạn muốn URL sạch (không có #!), phải dùng thêm HTML5 mode + cấu hình server, phức tạp hơn → KHÔNG CẦN cho AngularJS cũ
+
+# ✅ Kết luận:
+
+| Điều cần nhớ                                              | Ghi chú                                |
+| --------------------------------------------------------- | -------------------------------------- |
+| AngularJS routing là client-side                          | Không reload trang                     |
+| Dùng `ngRoute` + `$routeProvider` để định nghĩa đường dẫn | Rất giống routing của Vue, React       |
+| Dữ liệu nội dung sẽ được load vào `<ng-view>`             | Mỗi route gắn với một `templateUrl`    |
+| Rất phù hợp khi làm SPA đơn giản                          | Blog, dashboard, tool nội bộ, mini app |
+
+	
+</pre><a id='backBottom' href='../angular-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

@@ -1,0 +1,80 @@
+<html><head><title>Lesson 22 == Animations ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../angular-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 22 -- Animations -//</h1><pre># Khái niệm 
+	cách tạo hiệu ứng chuyển động (animations) khi có sự thay đổi trong DOM bằng AngularJS. 
+	AngularJS không hỗ trợ animation một cách native (tự nhiên) như React hoặc Angular 2+, mà phải kết hợp thêm thư viện ngAnimate.
+	
+	
+# 🧩 Bước 1: Thêm ngAnimate 
+	Đầu tiên, bạn phải import thư viện angular-animate.js: 
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular-animate.js"></script>
+		
+	Và thêm vào module: 
+	var app = angular.module('myApp', ['ngAnimate']);
+
+
+# 🎯 Bước 2: Gắn class CSS để tạo hiệu ứng
+	Ví dụ dùng với ng-show: 
+	
+>> html 
+<div ng-show="isVisible" class="fade">
+  Nội dung có animation fade in/out
+</div>
+
+>> Kèm CSS: 
+.fade.ng-hide {
+  opacity: 0;
+}
+.fade.ng-hide-remove,
+.fade.ng-hide-add {
+  transition: opacity 0.5s linear;
+}
+
+	📌 Giải thích: 
+		ng-hide được AngularJS gắn tự động khi ng-show là false
+		ng-hide-remove được thêm vào khi element hiện ra
+		ng-hide-add được thêm vào khi element ẩn đi
+
+
+
+# 🔁 Dùng animation với ng-repeat
+
+>> html 
+<ul>
+  <li ng-repeat="item in items" class="repeat-item">
+    {{item}}
+  </li>
+</ul>
+
+
+>> css 
+.repeat-item.ng-enter {
+  transition: 0.5s linear;
+  opacity: 0;
+}
+.repeat-item.ng-enter-active {
+  opacity: 1;
+}
+
+
+# 🧠 Tổng hợp các class animation có thể dùng: 
+| Directive             | Class khi bắt đầu               | Class trong quá trình                         |
+| --------------------- | ------------------------------- | --------------------------------------------- |
+| `ng-show` / `ng-hide` | `ng-hide-add`, `ng-hide-remove` | `ng-hide-add-active`, `ng-hide-remove-active` |
+| `ng-if`, `ng-repeat`  | `ng-enter`, `ng-leave`          | `ng-enter-active`, `ng-leave-active`          |
+
+
+# ⚠️ Lưu ý
+	Chỉ có tác dụng khi bạn dùng đúng các directive của AngularJS như ng-show, ng-hide, ng-if, ng-repeat.
+	Tên class CSS phải đúng với convention của AngularJS (ví dụ: .ng-enter, .ng-leave, .ng-hide-add...).
+	Chỉ hoạt động nếu có import ngAnimate và dùng trong module.
+	Không dùng JavaScript để điều khiển animation – mà dùng class CSS.
+
+# ✅ Kết luận:
+	Đây là cách AngularJS cổ điển xử lý animation bằng cách thêm/tự động gỡ class trên element DOM khi trạng thái thay đổi.
+	Không hiện đại bằng React, Vue hay Angular mới – nhưng vẫn đủ dùng với giao diện đơn giản.
+	Phù hợp nếu bạn muốn làm hiệu ứng nhẹ nhàng như fade, slide, show/hide.
+
+
+
+
+
+</pre><a id='backBottom' href='../angular-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

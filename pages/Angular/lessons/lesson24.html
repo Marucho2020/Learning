@@ -1,0 +1,104 @@
+<html><head><title>Lesson 24 == Application ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../angular-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 24 -- Application -//</h1><pre># Khái niệm 
+	💡 Ý tưởng chính: tách biệt HTML, controller, và data 
+	AngularJS giúp bạn:
+
+		Gắn data vào view (HTML)
+		Điều khiển logic qua controller
+		Tách dữ liệu ra riêng để quản lý tốt hơn
+
+# 📁 Cấu trúc file mẫu 
+/MyApp
+  ├── index.html
+  ├── app.js
+  └── customers.php (hoặc JSON file nếu không có backend)
+
+📄 index.html — HTML chính (View)
+
+<!DOCTYPE html>
+<html ng-app="myApp">
+<head>
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+  <script src="app.js"></script>
+</head>
+<body>
+
+<div ng-controller="customersCtrl">
+  <ul>
+    <li ng-repeat="x in names">
+      {{ x.Name + ', ' + x.Country }}
+    </li>
+  </ul>
+</div>
+
+</body>
+</html>
+
+
+🔍 Điểm chính: 
+
+	ng-app="myApp" khởi tạo app AngularJS.
+	ng-controller="customersCtrl" gán controller xử lý data.
+	ng-repeat="x in names" để lặp qua danh sách.
+	{{ x.Name }} là binding dữ liệu.
+
+📄 app.js — Khai báo module + controller (Logic)
+
+var app = angular.module('myApp', []);
+app.controller('customersCtrl', function($scope, $http) {
+  $http.get("customers.php")
+  .then(function (response) {
+    $scope.names = response.data.records;
+  });
+});
+
+
+📌 Giải thích:
+
+	Khởi tạo app myApp
+	Controller customersCtrl inject $scope và $http
+	Gọi HTTP GET để lấy dữ liệu từ customers.php
+	Gán dữ liệu vào $scope.names để Angular hiển thị
+
+
+📄 customers.php (giống như API backend trả về JSON)
+
+{
+  "records": [
+    { "Name": "Alfreds Futterkiste", "Country": "Germany" },
+    { "Name": "Berglunds snabbköp", "Country": "Sweden" },
+    { "Name": "Centro comercial Moctezuma", "Country": "Mexico" }
+  ]
+}
+
+
+
+# 💡 Tổng kết flow:
+
+	HTML gọi ng-controller và hiển thị danh sách.
+	Controller lấy dữ liệu qua $http.get() → gán vào $scope.
+	View tự động update qua binding ng-repeat + {{ x.Name }}.
+
+
+# 💡 Kỹ thuật nâng cao (nếu muốn):
+
+| Kỹ thuật           | Mục đích                          |
+| ------------------ | --------------------------------- |
+| `$http.post()`     | Gửi form, thêm mới                |
+| `ng-show`, `ng-if` | Ẩn hiện tùy theo điều kiện        |
+| `filter`           | Tìm kiếm trong danh sách          |
+| `orderBy`          | Sắp xếp                           |
+| `ng-include`       | Tách file HTML nhỏ để tái sử dụng |
+| `routing`          | Chia trang mà không reload        |
+
+
+# ✅ Kết luận 
+
+| Điều cần nhớ                                       | Chi tiết                               |
+| -------------------------------------------------- | -------------------------------------- |
+| AngularJS = mô hình MVC (Model-View-Controller)    | Tách dữ liệu, view, và logic rõ ràng   |
+| Ứng dụng AngularJS không cần reload                | Tạo cảm giác như app native            |
+| Dễ viết các dashboard nội bộ, app quản lý đơn giản | Phù hợp với tool backend hoặc mini SPA |
+
+
+https://www.w3schools.com/angular/angular_examples.asp
+</pre><a id='backBottom' href='../angular-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
