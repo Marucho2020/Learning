@@ -1,0 +1,187 @@
+<html><head><title>Lesson 2 == Vue Directives ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../vue-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 2 -- Vue Directives -//</h1><pre># Khái niệm 
+	Directives là các thuộc tính đặc biệt trong Vue.js, bắt đầu bằng tiền tố v-, được sử dụng trong HTML để thêm các hành vi động (như hiển thị dữ liệu, xử lý sự kiện, hoặc lặp qua danh sách). Chúng là cách Vue kết nối dữ liệu (data) với giao diện (DOM) và xử lý các tương tác của người dùng. 
+	
+# Đặc điểm:
+
+	Directives được viết trực tiếp trong HTML, ví dụ: v-bind, v-if, v-on.
+	Chúng giúp Vue tự động cập nhật DOM khi dữ liệu thay đổi (tính reactivity).
+	Vue cung cấp nhiều directive, mỗi cái có chức năng riêng.
+
+	Bài học trên W3Schools giới thiệu các directive phổ biến nhất, bao gồm:
+	
+	v-bind
+	v-on
+	v-model
+	v-if
+	v-for
+	
+# 2. Các Directives chính và giải thích
+ 
+# a. v-bind - Liên kết dữ liệu với thuộc tính HTML 
+		Chức năng: Liên kết một thuộc tính HTML (như src, class, style) với dữ liệu trong Vue. 
+		Cú pháp: v-bind:thuộc-tính="biểu-thức".
+		Viết tắt: :thuộc-tính (bỏ v-bind).
+
+<div id="app">
+  <img v-bind:src="imageUrl" alt="My Image">
+</div>
+
+<script>
+const app = Vue.createApp({
+  data() {
+    return {
+      imageUrl: 'https://example.com/image.jpg'
+    }
+  }
+})
+app.mount('#app')
+</script>		
+
+		
+	## Giải thích 
+		- v-bind:src="imageUrl" liên kết thuộc tính src của thẻ <img> với giá trị imageUrl trong data. 
+		- Nếu imageUrl thay đổi, Vue tự động cập nhật thuộc tính src của hình ảnh.
+		- Viết tắt: <img :src="imageUrl">.
+	Ứng dụng thực tế: Dùng v-bind để động hóa các thuộc tính như href (link), class (để thay đổi kiểu CSS), hoặc style.
+	
+# v-on - Xử lý sự kiện
+	Chức năng: Gắn một sự kiện (như click, input, mouseover) với một hàm trong Vue. 
+	Cú pháp: v-on:sự-kiện="hàm".
+	Viết tắt: @sự-kiện.
+
+<div id="app">
+  <button v-on:click="increment">Click me</button>
+  <p>Count: {{ counter }}</p>
+</div>
+
+<script>
+const app = Vue.createApp({
+  data() {
+    return {
+      counter: 0
+    }
+  },
+  methods: {
+    increment() {
+      this.counter++;
+    }
+  }
+})
+app.mount('#app')
+</script>
+
+
+	## Giải thích 
+		v-on:click="increment" gọi hàm increment khi nút được nhấn.
+		Hàm increment tăng giá trị counter, và Vue tự động cập nhật giao diện để hiển thị giá trị mới.
+		Viết tắt: <button @click="increment">.
+
+	ng dụng thực tế: Dùng v-on để xử lý các sự kiện như nhấn nút, nhập dữ liệu, hoặc di chuột
+	
+	
+	
+# c. v-model - Hai chiều dữ liệu (Two-way Data Binding)
+	Chức năng: Tạo liên kết hai chiều giữa dữ liệu trong Vue và các phần tử nhập liệu (như input, textarea, select).
+	Cú pháp: v-model="biến"
+	
+	
+	## Ví dụ: 
+<div id="app">
+  <input v-model="message">
+  <p>Message: {{ message }}</p>
+</div>
+
+<script>
+const app = Vue.createApp({
+  data() {
+    return {
+      message: 'Hello Vue!'
+    }
+  }
+})
+app.mount('#app')
+</script>
+
+
+	## 	Giải thích: 
+		- v-model="message" liên kết giá trị của <input> với biến message trong data.
+		- Khi người dùng nhập vào ô input, message được cập nhật, và ngược lại, nếu message thay đổi trong code, ô input cũng cập nhật.
+		- Kết quả: Gõ vào input sẽ cập nhật nội dung thẻ <p> theo thời gian thực.
+
+	Ứng dụng thực tế: Dùng v-model để xử lý form, lấy dữ liệu người dùng nhập, hoặc tạo các giao diện tương tác.
+	
+
+# d. v-if - Hiển thị có điều kiện
+
+	Chức năng: Hiển thị hoặc ẩn một phần tử dựa trên một điều kiện.
+	Cú pháp: v-if="biểu-thức".
+	Các biến thể 
+		v-else: Hiển thị khi điều kiện v-if sai.
+		v-else-if: Kiểm tra các điều kiện khác.
+<div id="app">
+  <p v-if="show">This is shown!</p>
+  <p v-else>This is hidden!</p>
+  <button @click="show = !show">Toggle</button>
+</div>
+
+<script>
+const app = Vue.createApp({
+  data() {
+    return {
+      show: true
+    }
+  }
+})
+app.mount('#app')
+</script>
+
+
+	## Giải thích 
+	v-if="show" chỉ hiển thị thẻ <p> đầu tiên nếu show là true.
+	Nếu show là false, thẻ <p> với v-else sẽ hiển thị.
+	Nút Toggle thay đổi giá trị show, làm ẩn/hiện các thẻ <p>.
+
+	Ứng dụng thực tế: Dùng v-if để hiển thị thông báo, nội dung tùy thuộc vào trạng thái (đăng nhập, lỗi, v.v.).
+
+# e. v-for - Lặp qua danh sách
+
+	Chức năng: Lặp qua một mảng hoặc đối tượng để hiển thị danh sách phần tử.
+	Cú pháp: v-for="item in items".
+	
+<div id="app">
+  <ul>
+    <li v-for="item in items">{{ item }}</li>
+  </ul>
+</div>
+
+<script>
+const app = Vue.createApp({
+  data() {
+    return {
+      items: ['Apple', 'Banana', 'Orange']
+    }
+  }
+})
+app.mount('#app')
+</script>
+	
+
+	## Giải thích 
+		v-for="item in items" lặp qua mảng items và hiển thị mỗi phần tử trong thẻ <li>.
+		Kết quả: Một danh sách <ul> chứa các mục: Apple, Banana, Orange.
+		Lưu ý: Nên thêm :key khi dùng v-for để tối ưu hiệu suất:
+
+		<li v-for="(item, index) in items" :key="index">{{ item }}</li>
+	Ứng dụng thực tế: Dùng v-for để hiển thị danh sách sản phẩm, bài viết, hoặc bất kỳ dữ liệu dạng mảng.
+
+# 3. Tóm tắt các Directives
+
+
+Directive	Chức năng	Viết tắt	Ví dụ
+v-bind	Liên kết dữ liệu với thuộc tính HTML	:thuộc-tính	:src="imageUrl"
+v-on	Xử lý sự kiện	@sự-kiện	@click="increment"
+v-model	Liên kết hai chiều với input	Không có	<input v-model="message">
+v-if	Hiển thị có điều kiện	Không có	<p v-if="show">Text</p>
+v-for	Lặp qua danh sách	Không có	<li v-for="item in items">
+	
+</pre><a id='backBottom' href='../vue-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

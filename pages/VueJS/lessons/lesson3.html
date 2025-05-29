@@ -1,0 +1,83 @@
+<html><head><title>Lesson 3 == hàm data() ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../vue-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 3 -- hàm data() -//</h1><pre>
+# Khái niệm 
+	Trong Vue.js, hàm data() là một hàm đặc biệt được sử dụng để khai báo dữ liệu phản hồi (reactive data) cho một instance hoặc component của Vue.
+	Hàm data() không phải là constructor, nhưng nó có vai trò đặc biệt trong Vue.js
+	Nó khởi tạo trạng thái ban đầu (initial state) của Vue instance hoặc component.
+	Nó trả về một đối tượng chứa các thuộc tính reactive (như bgColor).
+	Vue sử dụng đối tượng này để tạo một hệ thống theo dõi (reactive system), đảm bảo bất kỳ thay đổi nào đến các thuộc tính đều được phản ánh trên giao diện.
+	
+
+	Khi bạn định nghĩa:
+data() {
+  return {
+    bgColor: 'lightblue'
+  }
+}	
+
+
+	Vue.js lấy đối tượng được trả về từ data() (ở đây là { bgColor: 'lightblue' }) và biến nó thành reactive. Điều này có nghĩa là:
+	Vue theo dõi mọi thay đổi của các thuộc tính trong đối tượng data (như bgColor).
+	Bất kỳ thay đổi nào đối với bgColor sẽ tự động cập nhật giao diện (DOM) nơi bgColor được sử dụng (như trong :style="{ backgroundColor: bgColor }").
+	
+	Không phải biến local hay global: Biến bgColor không phải là biến local (chỉ tồn tại trong hàm data()) hay global (khai báo ngoài scope). Thay vào đó, nó trở thành một thuộc tính reactive của Vue instance hoặc component. Vue.js quản lý các thuộc tính này trong một reactive proxy (trong Vue 3) hoặc một đối tượng reactive (trong Vue 2).
+
+		
+	
+# Đặc điểm của data()	
+	Phải là một hàm (không phải đối tượng trực tiếp) để đảm bảo mỗi instance/component có bản sao dữ liệu riêng, tránh chia sẻ dữ liệu giữa các instance.
+	
+	
+// Đúng
+data() {
+  return { bgColor: 'lightblue' };
+}
+
+// Sai (gây lỗi khi dùng trong component)
+data: {
+  bgColor: 'lightblue'
+}	
+	
+	Hàm data() được gọi khi Vue tạo instance hoặc component, và đối tượng trả về được Vue biến thành reactive.
+	
+# 	b. So sánh với constructor
+	
+	## Giống nhau 
+	
+		Cả data() và constructor đều được dùng để khởi tạo trạng thái ban đầu.
+		Trong constructor của một lớp JavaScript, bạn thường khởi tạo các thuộc tính của đối tượng
+class MyClass {
+  constructor() {
+    this.bgColor = 'lightblue';
+  }
+}
+	
+	## Khác nhau
+		###  Mục đích 
+			Constructor trong JavaScript dùng để tạo và khởi tạo đối tượng, có thể chứa bất kỳ logic nào.
+			data() chỉ dùng để trả về một đối tượng chứa dữ liệu reactive, không nên chứa logic phức tạp.
+	
+	
+	
+	## Reactive 
+		Thuộc tính trong constructor là các thuộc tính JavaScript thông thường, không tự động cập nhật giao diện.
+		Thuộc tính trong data() được Vue biến thành reactive, tự động cập nhật DOM khi thay đổi.
+	
+	
+	## Scope
+		Constructor là một phần của lớp trong JavaScript, còn data() là một hàm đặc biệt trong cấu trúc của Vue instance/component.
+	
+	
+	## Cách sử dụng 
+		Constructor có thể khởi tạo bất kỳ loại dữ liệu nào, trong khi data() phải trả về một đối tượng (hoặc null trong một số trường hợp hiếm).
+		Vue gọi data() một lần khi khởi tạo instance và sử dụng kết quả để quản lý trạng thái.
+	
+	Kết luận: data() không phải là constructor, nhưng có vai trò tương tự trong việc khởi tạo trạng thái ban đầu. Tuy nhiên, nó được thiết kế đặc biệt cho hệ thống reactive của Vue, khác với constructor thông thường trong JavaScript.
+	
+	
+	
+	
+	
+	
+	
+
+</pre><a id='backBottom' href='../vue-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

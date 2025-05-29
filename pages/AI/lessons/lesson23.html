@@ -1,10 +1,51 @@
 <html><head><title>Lesson 23 == Mô hình ResNet: Đột phá trong nhận diện hình ảnh ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../AI-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 23 -- Mô hình ResNet: Đột phá trong nhận diện hình ảnh -//</h1><pre>https://aicandy.vn/mo-hinh-resnet-dot-pha-trong-nhan-dien-hinh-anh/
 
+# Giới thiệu 
+	Trong lĩnh vực trí tuệ nhân tạo (AI) và học sâu (Deep Learning), việc phát triển các mô hình mạng nơ-ron với độ sâu lớn thường đối mặt với nhiều thách thức. Một trong những thách thức lớn nhất là degradation problem – vấn đề suy giảm hiệu suất khi mô hình trở nên quá sâu. Để giải quyết vấn đề này, mô hình ResNet (Residual Network) đã được giới thiệu và nhanh chóng trở thành một công cụ mạnh mẽ trong việc nhận diện hình ảnh và nhiều ứng dụng khác.
 
 
+# ResNet 
+	Mô hình resnet được giới thiệu bởi Kaiming He và các cộng sự trong bài báo nổi tiếng “Deep Residual Learning for Image Recognition” vào năm 2015. Ý tưởng đột phá của ResNet là sử dụng skip connections hoặc residual connections giữa các lớp để giải quyết vấn đề suy giảm độ chính xác khi mô hình trở nên sâu hơn. Điều này cho phép thông tin được truyền qua các lớp của mạng mà không bị suy giảm, giúp mô hình có thể học được các đặc trưng (features) phức tạp từ dữ liệu.
+	
+	
+# 2. Cấu trúc và hoạt động 
+	## 2.1 Cấu trúc 
+		Cấu trúc của ResNet được xây dựng dựa trên việc chia nhỏ mạng thành các khối residual (Residual Blocks), trong đó mỗi khối bao gồm một số lớp tích chập (convolutional layers) cùng với một kết nối tắt trực tiếp từ đầu vào đến đầu ra của khối. Ý tưởng chính là việc học một hàm residual F(x) thay vì học trực tiếp một hàm mục tiêu H(x) . Điều này giúp duy trì tính ổn định và độ chính xác khi mạng có nhiều tầng.
+		https://aicandy.vn/wp-content/uploads/2024/09/aicandy_resnet_arch.png
+		
+	## Khối residual cơ bản 
+		https://aicandy.vn/wp-content/uploads/2024/09/aicandy_resnet_RN.png
+		
+	Một khối residual cơ bản trong ResNet có cấu trúc như sau: 
+	y = F(x, \{W_i\}) + x
 
-
-
-
+	trong đó: 
+		x là đầu vào của khối. 
+		y là đầu ra của khối. 
+		F(x, \{W_i\}) là hàm residual, thường được biểu diễn bằng một chuỗi các lớp tích chập với trọng số Wi 
+		
+		
+	## 		2.2. Nguyên lý hoạt động 
+		Nguyên lý hoạt động của ResNet dựa trên việc thay vì học trực tiếp hàm H(x)	 mô hình sẽ học một hàm residual F(x) = H(x) – x . Sau đó, đầu ra của mô hình sẽ là: H(x) = F(x) + x 
+		Cách tiếp cận này dựa trên giả định rằng việc học một hàm sai khác F(x) sẽ dễ dàng hơn so với việc học trực tiếp hàm H(x) 
+		Khi mô hình học được F(x) , nó thực chất đang học cách “điều chỉnh” đầu vào x để đạt được đầu ra mong muốn H(x) . Nhờ vào các kết nối tắt (skip connections), các tín hiệu thông tin có thể dễ dàng được truyền qua mạng mà không bị suy giảm hoặc mất mát, đặc biệt khi mạng trở nên rất sâu.
+		Các kết nối tắt trong ResNet mang lại nhiều lợi ích, bao gồm:
+		
+		### Giảm thiểu vanishing gradient 
+			Khi mạng trở nên rất sâu, các giá trị gradient có thể bị giảm mạnh (vanishing) hoặc tăng mạnh (exploding), gây khó khăn trong quá trình huấn luyện. Kết nối tắt giúp giữ lại các giá trị gradient, giảm thiểu hiện tượng này. 
+		
+		## Dễ dàng học các đặc trưng 
+			Việc học một hàm residual F(x) thường đơn giản hơn so với việc học một hàm ánh xạ hoàn toàn mới H(x) , do đó mô hình có thể nhanh chóng đạt được độ chính xác cao hơn. 
+			
+		## 	Tăng độ sâu mà không giảm hiệu suất
+			Với các kết nối tắt, ResNet có thể được mở rộng đến hàng trăm hoặc hàng ngàn tầng mà không gặp phải vấn đề suy giảm hiệu suất.
+		
+# 	3. Các phiên bản của ResNet	
+		https://aicandy.vn/mo-hinh-resnet-dot-pha-trong-nhan-dien-hinh-anh/
+		
+		
+		
+		
+		
 	
 </pre><a id='backBottom' href='../AI-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
