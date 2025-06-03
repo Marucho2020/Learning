@@ -1,0 +1,167 @@
+<html><head><title>Lesson 12 == vue-form ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../vue-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 12 -- vue-form -//</h1><pre>
+# Khái niệm 			
+	Forms và v-model trong Vue.js
+		v-model: Directive tạo liên kết hai chiều (two-way data binding) giữa dữ liệu trong Vue (data) và các phần tử nhập liệu như <input>, <textarea>, <select>.
+		
+		Mục đích: Đồng bộ giá trị của form với dữ liệu reactive, tự động cập nhật khi người dùng nhập hoặc dữ liệu thay đổi.
+		
+		Cú pháp: v-model="biến".
+
+
+Ví dụ cơ bản: 
+<div id="app">
+  <input v-model="message" placeholder="Type here">
+  <p>Message: {{ message }}</p>
+</div>
+
+<script>
+const app = Vue.createApp({
+  data() {
+    return {
+      message: ''
+    }
+  }
+})
+app.mount('#app')
+</script>
+
+
+# 2. Các loại phần tử form với v-model
+
+	##a. Text Input
+		Dùng v-model với <input type="text"> hoặc <textarea>. Ví dụ:
+		
+<div id="app">
+  <textarea v-model="description"></textarea>
+  <p>{{ description }}</p>
+</div>
+
+<script>
+const app = Vue.createApp({
+  data() {
+    return {
+      description: ''
+    }
+  }
+})
+app.mount('#app')
+</script>
+
+
+	## b. Checkbox 
+		v-model với <input type="checkbox"> quản lý trạng thái true/false hoặc mảng (cho nhiều checkbox). Ví dụ: 
+		
+<div id="app">
+  <input type="checkbox" v-model="isChecked">
+  <p>Checked: {{ isChecked }}</p>
+</div>
+
+<script>
+const app = Vue.createApp({
+  data() {
+    return {
+      isChecked: false
+    }
+  }
+})
+app.mount('#app')
+</script>		
+
+
+>> Mảng checkbox:
+
+<div id="app">
+  <input type="checkbox" value="Apple" v-model="fruits">
+  <input type="checkbox" value="Banana" v-model="fruits">
+  <p>Selected: {{ fruits }}</p>
+</div>
+
+<script>
+const app = Vue.createApp({
+  data() {
+    return {
+      fruits: []
+    }
+  }
+})
+app.mount('#app')
+</script>
+fruits là mảng chứa các giá trị được chọn (như ['Apple', 'Banana']).
+	
+	
+	## c. Radio Buttons
+v-model liên kết với một giá trị duy nhất. Ví dụ:
+
+<div id="app">
+  <input type="radio" value="Yes" v-model="answer">
+  <input type="radio" value="No" v-model="answer">
+  <p>Answer: {{ answer }}</p>
+</div>
+
+<script>
+const app = Vue.createApp({
+  data() {
+    return {
+      answer: ''
+    }
+  }
+})
+app.mount('#app')
+</script>
+
+
+	## d. Select
+		v-model quản lý giá trị được chọn trong <select>. Ví dụ:
+		
+<div id="app">
+  <select v-model="selected">
+    <option>Apple</option>
+    <option>Banana</option>
+    <option>Orange</option>
+  </select>
+  <p>Selected: {{ selected }}</p>
+</div>
+
+<script>
+const app = Vue.createApp({
+  data() {
+    return {
+      selected: ''
+    }
+  }
+})
+app.mount('#app')
+</script>		
+
+
+
+
+# 3. Kết hợp với v-on và Form Submission
+
+	## Dùng @submit.prevent để xử lý gửi form mà không tải lại trang. Ví dụ: 
+<div id="app">
+  <form @submit.prevent="submitForm">
+    <input v-model="name" placeholder="Enter name">
+    <button type="submit">Submit</button>
+  </form>
+  <p>{{ name }}</p>
+</div>
+
+<script>
+const app = Vue.createApp({
+  data() {
+    return {
+      name: ''
+    }
+  },
+  methods: {
+    submitForm() {
+      alert('Submitted: ' + this.name);
+    }
+  }
+})
+app.mount('#app')
+</script>
+
+
+</pre><a id='backBottom' href='../vue-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

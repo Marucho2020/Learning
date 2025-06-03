@@ -1,0 +1,124 @@
+<html><head><title>Lesson 13 == v-model ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../vue-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 13 -- v-model -//</h1><pre># Khái niệm 
+	CSS binding cho phép áp dụng lớp CSS hoặc kiểu CSS động dựa trên dữ liệu trong Vue, sử dụng v-bind với :class hoặc :style.	
+	Mục đích: Tạo giao diện thay đổi linh hoạt theo trạng thái hoặc điều kiện, ví dụ: thay đổi màu nền, kích thước chữ, hoặc lớp CSS.
+
+
+# 2. Liên kết với Class (:class)
+
+	Dùng :class để áp dụng lớp CSS động, với hai cú pháp chính
+		Object syntax: { className: condition }.
+		Array syntax: [class1, class2, ...].
+		
+		
+<div id="app">
+  <div :class="{ active: isActive }">Dynamic Class</div>
+  <button @click="isActive = !isActive">Toggle Class</button>
+</div>
+
+<script>
+const app = Vue.createApp({
+  data() {
+    return {
+      isActive: false
+    }
+  }
+})
+app.mount('#app')
+</script>
+
+<style>
+.active {
+  background-color: lightgreen;
+}
+</style>		
+		
+		
+		
+	## 	Giải thích 
+		:class="{ active: isActive }": Áp dụng lớp active khi isActive là true.
+		Nút toggle thay đổi isActive, làm <div> đổi màu nền.
+		
+		
+			
+	## 	Ví dụ với Array Syntax:
+<div id="app">
+  <div :class="[isActive ? 'active' : '', 'static-class']">Dynamic Class</div>
+</div>
+
+<script>
+const app = Vue.createApp({
+  data() {
+    return {
+      isActive: true
+    }
+  }
+})
+app.mount('#app')
+</script>
+
+<style>
+.active {
+  background-color: lightgreen;
+}
+.static-class {
+  border: 1px solid black;
+}
+</style>
+
+		-> :class="[isActive ? 'active' : '', 'static-class']": Áp dụng lớp active nếu isActive là true, và luôn áp dụng static-class.
+
+
+
+# 3. Liên kết với Style (:style)
+
+	Dùng :style để áp dụng kiểu CSS động, với:
+		Object syntax: { property: value }.
+		Array syntax: Gộp nhiều đối tượng style.
+		
+		
+		
+
+	## Ví dụ với Object Syntax: 
+
+<div id="app" :style="{ backgroundColor: bgColor, fontSize: fontSize + 'px' }">
+  Dynamic Style
+</div>
+
+<script>
+const app = Vue.createApp({
+  data() {
+    return {
+      bgColor: 'lightblue',
+      fontSize: 16
+    }
+  }
+})
+app.mount('#app')
+</script>
+
+
+
+
+	## Ví dụ với Array Syntax: 
+		
+<div id="app" :style="[styleObj1, styleObj2]">
+  Dynamic Style
+</div>
+
+<script>
+const app = Vue.createApp({
+  data() {
+    return {
+      styleObj1: { backgroundColor: 'lightblue' },
+      styleObj2: { fontSize: '20px' }
+    }
+  }
+})
+app.mount('#app')
+</script>
+
+	:style="[styleObj1, styleObj2]": Gộp các kiểu từ hai đối tượng.
+
+
+
+</pre><a id='backBottom' href='../vue-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
