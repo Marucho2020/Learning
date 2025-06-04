@@ -1,0 +1,113 @@
+<html><head><title>Lesson 24 == Noise model + decoherence ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../quantum-computing-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 24 -- Noise model + decoherence -//</h1><pre>
+# Khái niệm 
+	Trong lý thuyết, qubit hoạt động lý tưởng. Trong thực tế, mọi hệ lượng tử đầu nhiều. 
+	Hai nguồn gốc chính : 
+		1. Noise(nhiễu) : do môi trường tương tác với hệ lượng tử 
+		2. Decoherence(khử đồng bộ ) :	 Trạng thái lượng tử mất dần tính chồng chất & rối lượng tử
+		
+		
+# Decoherence 
+	🤯 Trạng thái lượng tử là fragile 
+		Qubit có thể ở dạng chồng chất: ∣ψ⟩=α∣0⟩+β∣1⟩
+		Nhưng nếu môi trường tác động → nó sụp đổ về trạng thái cổ điển (0 hoặc 1), mất tính chồng chất.
+		
+	🧪 Hiện tượng: 	
+		Giống như kéo bức màn che đi trạng thái lượng tử → chuyển sang mixed state.
+		Ví dụ trạng thái rối sẽ bị phân rã thành trạng thái cổ điển tách rời.
+		
+
+# 2. 🛠 Noise Model – Mô hình hóa nhiễu 
+	3 loại phổ biến nhất: 
+		
+| Loại Noise       | Ký hiệu                | Mô tả                                                    |                        |           |
+| ---------------- | ---------------------- | -------------------------------------------------------- | ---------------------- | --------- |
+| **Bit-flip**     | $X$ noise              | Lật giá trị từ 0 → 1 hoặc 1 → 0                          |                        |           |
+| **Phase-flip**   | $Z$ noise              | Đổi dấu pha: (                                           | 1\rangle \rightarrow - | 1\rangle) |
+| **Depolarizing** | $\rho \rightarrow I/2$ | Làm mất mọi thông tin trạng thái, thành ma trận đồng đều |                        |           |
+
+
+# 3. 🧮 Mô hình hóa bằng toán học (Kraus Operators)
+
+Các noise được mô tả bằng Kraus operators {E_i},áp dụng lên trạng thái: 
+
+			ρ′\=i∑​Ei​ρEi†​
+
+
+
+
+
+	Ví dụ : Bit-flip noise 
+			ρ′\=i∑​Ei​ρEi†​
+
+
+import numpy as np
+
+I = np.eye(2)
+X = np.array([[0, 1], [1, 0]])
+
+p = 0.2  # Xác suất bị lật bit
+
+E0 = np.sqrt(1 - p) * I
+E1 = np.sqrt(p) * X
+
+# trạng thái ban đầu |0⟩
+ket0 = np.array([[1], [0]])
+rho = ket0 @ ket0.T.conj()
+
+# Áp dụng noise: rho' = E0 ρ E0† + E1 ρ E1†
+rho_prime = E0 @ rho @ E0.T.conj() + E1 @ rho @ E1.T.conj()
+print("After Bit-flip noise:\n", rho_prime)
+
+
+# 4. 📉 Decoherence time: T1 và T2
+
+| Thời gian | Mô tả                                       |       |     |
+| --------- | ------------------------------------------- | ----- | --- |
+| **T1**    | *Relaxation time* – mất năng lượng (        | 1⟩ về | 0⟩) |
+| **T2**    | *Dephasing time* – mất chồng chất (pha giữa | 0⟩ và | 1⟩) |
+
+Thường:
+	T2​≤2T1
+	
+	
+
+# 5. 🧬 Mô phỏng Noise trong Qiskit
+from qiskit.providers.aer.noise import NoiseModel, depolarizing_error
+from qiskit import QuantumCircuit, Aer, transpile, execute
+
+# Mạch đơn giản
+qc = QuantumCircuit(1, 1)
+qc.h(0)
+qc.measure(0, 0)
+
+# Tạo noise model: 5% depolarizing noise sau H gate
+noise_model = NoiseModel()
+error = depolarizing_error(0.05, 1)
+noise_model.add_all_qubit_quantum_error(error, ['h'])
+
+# Run simulation
+backend = Aer.get_backend('qasm_simulator')
+job = execute(qc, backend, noise_model=noise_model, shots=1000)
+result = job.result()
+print(result.get_counts())
+
+
+
+# 6. 🧠 Ý nghĩa thực tế
+
+	Mọi thuật toán lượng tử trong đời thực đều phải tính đến decoherence & noise.
+	Đây là lý do khiến máy tính lượng tử hiện tại khó vượt classical – lỗi xảy ra quá nhanh.
+	→ Dẫn đến nhu cầu Quantum Error Correction (QEC).
+
+
+
+
+# 7. 🧰 Tổng kết nhanh
+| Thuật ngữ           | Ý nghĩa                               |
+| ------------------- | ------------------------------------- |
+| **Noise**           | Nhiễu môi trường tác động qubit       |
+| **Decoherence**     | Mất tính lượng tử (chồng chất, rối)   |
+| **Bit/Phase-flip**  | Các kiểu lỗi phổ biến                 |
+| **Kraus Operators** | Mô hình hóa nhiễu toán học            |
+| **T1/T2 time**      | Thời gian qubit “sống sót” dưới nhiễu |
+</pre><a id='backBottom' href='../quantum-computing-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

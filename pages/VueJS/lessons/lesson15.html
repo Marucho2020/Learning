@@ -1,0 +1,113 @@
+<html><head><title>Lesson 15 == vue-watchers ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../vue-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 15 -- vue-watchers -//</h1><pre>
+# Khái niệm 
+
+	Watchers là các hàm được định nghĩa trong đối tượng watch, theo dõi sự thay đổi của một thuộc tính reactive (trong data hoặc computed) và thực hiện hành động khi giá trị thay đổi.
+	Mục đích: Xử lý logic phức tạp hoặc tác vụ bất đồng bộ (như gọi API) khi dữ liệu thay đổi.
+	Cú pháp: Định nghĩa trong watch: {} với tên thuộc tính là key và hàm xử lý là value.
+	
+<div id="app">
+  <input v-model="message">
+  <p>{{ message }}</p>
+</div>
+
+<script>
+const app = Vue.createApp({
+  data() {
+    return {
+      message: ''
+    }
+  },
+  watch: {
+    message(newValue, oldValue) {
+      console.log(`Message changed from ${oldValue} to ${newValue}`);
+    }
+  }
+})
+app.mount('#app')
+</script>	
+	
+	
+		watch: { message(newValue, oldValue) {...} }: Theo dõi message, chạy hàm mỗi khi message thay đổi.
+		Hàm nhận newValue (giá trị mới) và oldValue (giá trị cũ).
+		
+	
+	
+	
+# 2. Đặc điểm của Watchers 
+	
+	## a. Theo dõi dữ liệu reactive 
+	
+	Watchers chỉ hoạt động với thuộc tính trong data hoặc computed properties.
+	Có thể theo dõi cả thuộc tính sâu (deep) như đối tượng hoặc mảng bằng tùy chọn deep: true.
+	
+	
+	## b. So với Computed Properties
+		Computed: Tính toán giá trị trả về, có cache, phù hợp cho dữ liệu hiển thị.
+		Watchers: Xử lý logic bất đồng bộ hoặc tác vụ phụ (side effects), không trả về giá trị trực tiếp.
+		
+		
+	Ví dụ so sánh: 
+<div id="app">
+  <input v-model="searchQuery">
+  <p>Filtered: {{ filteredItems }}</p>
+</div>
+
+<script>
+const app = Vue.createApp({
+  data() {
+    return {
+      searchQuery: '',
+      items: ['Apple', 'Banana', 'Orange']
+    }
+  },
+  computed: {
+    filteredItems() {
+      return this.items.filter(item => item.includes(this.searchQuery));
+    }
+  },
+  watch: {
+    searchQuery(newValue) {
+      console.log(`Search query changed to: ${newValue}`);
+    }
+  }
+})
+app.mount('#app')
+</script>
+
+
+	filteredItems (computed) tính toán danh sách lọc.
+	watch: searchQuery ghi log khi searchQuery thay đổi.
+
+
+
+
+	## c. Deep Watching 
+		Dùng deep: true để theo dõi các thay đổi trong đối tượng hoặc mảng. Ví dụ:
+		
+
+<div id="app">
+  <input v-model="user.name">
+</div>
+
+<script>
+
+const app = Vue.createApp({
+  data() {
+    return {
+      user: { name: 'John' }
+    }
+  },
+  watch: {
+    user: {
+      handler(newValue) {
+        console.log('User changed:', newValue);
+      },
+      deep: true
+    }
+  }
+})
+app.mount('#app')
+</script>
+
+
+</pre><a id='backBottom' href='../vue-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

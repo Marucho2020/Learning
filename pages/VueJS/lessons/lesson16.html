@@ -1,0 +1,103 @@
+<html><head><title>Lesson 16 == Vue templates ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../vue-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 16 -- Vue templates -//</h1><pre># Khái niệm 
+	Templates là cú pháp HTML được Vue.js sử dụng để hiển thị dữ liệu động, kết hợp với directives (v-bind, v-if, v-for, v.v.) và biểu thức JavaScript.
+	- Mục đích: Tạo giao diện tương tác, đồng bộ với dữ liệu reactive trong data, computed, hoặc props.
+	- Vị trí: Template được định nghĩa trong thẻ HTML (phần tử mount) hoặc trong tùy chọn template của component.
+	
+<div id="app">
+  <p>{{ message }}</p>
+  <button @click="changeMessage">Change</button>
+</div>
+
+<script>
+const app = Vue.createApp({
+  data() {
+    return {
+      message: 'Hello Vue!'
+    }
+  },
+  methods: {
+    changeMessage() {
+      this.message = 'Vue is awesome!';
+    }
+  }
+})
+app.mount('#app')
+</script>
+
+
+		Giải thích:
+		{{ message }}: Hiển thị giá trị của message từ data.
+		@click="changeMessage": Gọi hàm changeMessage để cập nhật message.
+		
+		
+# 	2. Các thành phần chính của Templates
+		
+		
+	## 	a. Interpolation ({{ }})
+		Hiển thị dữ liệu từ data, computed, hoặc biểu thức JavaScript. Ví dụ:
+		
+<div id="app">
+  <p>{{ count + 1 }}</p>
+</div>
+
+<script>
+const app = Vue.createApp({
+  data() {
+    return {
+      count: 5
+    }
+  }
+})
+app.mount('#app')
+</script>
+
+
+
+
+	## 	b. Directives	
+		
+		Sử dụng các directive như v-bind, v-if, v-for, v-on để thêm tính năng động. Ví dụ:
+		
+<div id="app">
+  <p v-if="show">{{ message }}</p>
+  <ul>
+    <li v-for="item in items" :key="item">{{ item }}</li>
+  </ul>
+</div>
+
+<script>
+const app = Vue.createApp({
+  data() {
+    return {
+      show: true,
+      message: 'Hello',
+      items: ['Apple', 'Banana']
+    }
+  }
+})
+app.mount('#app')
+</script>		
+		
+		
+	## 	c. Template trong Component
+		Có thể định nghĩa template trong tùy chọn template của component thay vì HTML trực tiếp. Ví dụ:
+		
+<div id="app">
+  <my-component></my-component>
+</div>
+
+<script>
+const app = Vue.createApp({})
+app.component('my-component', {
+  template: `<p>{{ message }}</p>`,
+  data() {
+    return {
+      message: 'Component Template'
+    }
+  }
+})
+app.mount('#app')
+</script>	
+		
+
+</pre><a id='backBottom' href='../vue-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
