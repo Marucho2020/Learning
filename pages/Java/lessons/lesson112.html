@@ -1,0 +1,109 @@
+<html><head><title>Lesson 112 == Segment Tree Beats ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 112 -- Segment Tree Beats -//</h1><pre># Khái niệm 
+	Segment Tree Beats là một dạng cải tiến cao cấp của SegmentTree, được thiết kế để xử lý các truy vấn phức tạp mà các dạng Lazy Propagation truyền thống không xử lý được hiệu quả
+	
+	
+# 🔥 Khi nào cần Segment Tree Beats? 
+Khi bạn có những truy vấn phức tạp như sau: 
+| Truy vấn kiểu                                      | Lazy Segment Tree có xử lý tốt không? | Segment Tree Beats thì sao? |
+| -------------------------------------------------- | ------------------------------------- | --------------------------- |
+| Cập nhật tất cả `A[i] := x` trong đoạn \[L, R]     | ✅ Có                                  | ✅ Có                        |
+| Cập nhật `A[i] := min(A[i], x)` trong đoạn \[L, R] | ❌ Không hiệu quả                      | ✅ Rất hiệu quả              |
+| Truy vấn tổng / min / max trong đoạn \[L, R]       | ✅ Có                                  | ✅ Có                        |
+| Truy vấn số lần `A[i] == max` trong đoạn \[L, R]   | ❌ Không làm được                      | ✅ Làm được nếu Beats        |
+
+	📌 Ví dụ thực tế:
+Bạn có mảng điểm số người chơi, và muốn giảm điểm những người có điểm quá cao (ví dụ, tất cả A[i] > 90 thì A[i] := min(A[i], 90)) → rất giống "đánh bầm" cây, làm yếu dần phần tử mạnh nhất → Segment Tree Beats.
+
+# 🧠 Ý tưởng chính – “Beating” logic 
+Mỗi node trong Segment Tree Beats lưu:
+
+- max1: phần tử lớn nhất trong đoạn
+- max2: phần tử lớn thứ 2 trong đoạn
+- cntMax: số lần max1 xuất hiện
+- sum: tổng giá trị đoạn
+
+	##💥 Khi ta cập nhật min(A[i], x) trong đoạn, nếu x ≥ max1:
+		→ Không làm gì (vì mọi phần tử đều ≤ x)
+		Nhưng nếu x < max1 và x ≥ max2:
+		→ Chỉ cần giảm max1 về x, update lại sum, không đụng gì khác.
+		Nếu x < max2 → không thể cập nhật node hiện tại, phải đệ quy xuống 2 con.
+
+
+# 🛠️ Ví dụ code xử lý min(A[i], x) (Beating step): 
+
+void applyMin(int node, int l, int r, int x) {
+    if (max1[node] <= x) return; // không cần làm gì
+    if (max2[node] < x) {
+        // có thể cập nhật toàn bộ đoạn
+        long delta = (long)(x - max1[node]) * cntMax[node];
+        sum[node] += delta;
+        max1[node] = x;
+        // không cần update max2 nếu không cần truy vấn khác
+        return;
+    }
+    // không thể cập nhật đoạn, đệ quy xuống
+    pushDown(node);
+    applyMin(leftChild, l, mid, x);
+    applyMin(rightChild, mid+1, r, x);
+    pullUp(node);
+}
+
+
+# 🔍 Lưu gì trong mỗi node?
+
+| Trường dữ liệu                    | Ý nghĩa                     |
+| --------------------------------- | --------------------------- |
+| `max1`                            | Phần tử lớn nhất trong đoạn |
+| `max2`                            | Phần tử lớn thứ 2           |
+| `cntMax`                          | Số lần max1 xuất hiện       |
+| `sum`                             | Tổng giá trị đoạn           |
+| (option) `min1`, `min2`, `cntMin` | Nếu cần làm `max(A[i], x)`  |
+
+
+# 📈 Độ phức tạp:
+	✅ Mỗi lần update min(A[i], x) hoặc max(A[i], x) mất: O(log n) trong trường hợp tốt
+	❌ Trường hợp xấu nhất: phải đệ quy nhiều → O(log² n)
+	Nhưng vẫn tốt hơn rất nhiều so với cách naive hoặc lazy propagation thông thường (vì không phải update từng phần tử trong đoạn).
+
+
+# 📌 Ứng dụng thực tiễn: 
+
+| Vấn đề                                       | Có thể dùng Segment Tree Beats không? |
+| -------------------------------------------- | ------------------------------------- |
+| Game server: giảm chỉ số các user > 99 về 99 | ✅                                     |
+| Truy vấn số người có HP tối đa               | ✅                                     |
+| Truy vấn tổng HP trong đoạn                  | ✅                                     |
+| Truy vấn số lần max HP xuất hiện trong đoạn  | ✅                                     |
+| Update tăng/giảm từng phần tử                | ✅ kết hợp Lazy                        |
+
+# 🧠 So sánh với các cấu trúc khác:
+
+| Cấu trúc                | Mạnh ở đâu                                    | Yếu ở đâu                                           |
+| ----------------------- | --------------------------------------------- | --------------------------------------------------- |
+| Segment Tree (classic)  | Tổng, min/max, update 1 giá trị               | Không làm tốt các truy vấn dạng min/max điều kiện   |
+| Lazy Segment Tree       | Cập nhật đoạn, tổng, cộng/trừ                 | Không handle được `min(A[i], x)` hay `max(A[i], x)` |
+| Segment Tree Beats      | Truy vấn phức tạp có điều kiện, min/max limit | Rất phức tạp để implement, nhiều nhánh edge         |
+| Persistent Segment Tree | Quản lý snapshot, undo/redo                   | Không hỗ trợ truy vấn `min(A[i], x)` tốt            |
+| Merge Sort Tree         | Truy vấn rank / count / ≤ x                   | Không update động tốt                               |
+
+# 🔚 Kết luận:
+	Segment Tree Beats là kỹ thuật chuyên sâu dùng cho:
+
+		Truy vấn phức tạp
+		Cập nhật có điều kiện
+		Khi Lazy Segment Tree không đủ
+		Nó có độ phức tạp logic cao, nhưng khi triển khai đúng sẽ cực kỳ hiệu quả cho những bài toán kiểu reduce/max/min conditional update.
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
