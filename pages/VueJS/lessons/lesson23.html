@@ -1,0 +1,144 @@
+<html><head><title>Lesson 23 == Vue Fallthrough Attributes ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../vue-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 23 -- Vue Fallthrough Attributes -//</h1><pre>	
+# Mục đích 
+	Trong Vue.js, khi bạn truyền các thuộc tính (attributes) hoặc sự kiện (event listeners) vào một component, chúng sẽ tự động được áp dụng lên phần tử gốc (root element) của component con nếu không được khai báo trong props hoặc emits.
+	Đây được gọi là fallthrough attributes (thuộc tính xuyên suốt), giúp tiết kiệm thời gian khi muốn áp dụng các thuộc tính HTML hoặc sự kiện mà không cần xử lý thủ công.
+	
+# 2. Cách hoạt động 
+	Khi bạn thêm thuộc tính (như class, style, id, hoặc sự kiện như @click) vào một component, Vue sẽ kiểm tra:
+		Nếu thuộc tính đó không được khai báo trong props hoặc emits của component con, nó sẽ được áp dụng trực tiếp lên phần tử gốc của template trong component con.
+		Nếu component con có nhiều phần tử gốc, bạn cần chỉ định phần tử nào nhận fallthrough attributes bằng cách sử dụng thuộc tính inheritAttrs.
+		
+	
+# 3. Ví dụ cụ thể 
+	Giả sử bạn có một component con MyButton.
+
+	## Bước 1: Tạo Component Con 
+<script>
+Vue.component('my-button', {
+  template: `
+    <button>
+      <slot></slot>
+    </button>
+  `
+});
+</script>		
+	
+		Component my-button có phần tử gốc là <button> và sử dụng <slot> để hiển thị nội dung từ component cha.
+		
+		
+	## Bước 2: Sử dụng trong Component Cha
+<div id="app">
+  <my-button class="btn" style="color: blue;" @click="handleClick">
+    Click Me
+  </my-button>
+</div>
+
+<script>
+new Vue({
+  el: '#app',
+  methods: {
+    handleClick() {
+      alert('Button clicked!');
+    }
+  }
+});
+</script>	
+
+	Kết quả : 
+		Các thuộc tính class="btn", style="color: blue;", và sự kiện @click="handleClick" được truyền vào my-button sẽ tự động áp dụng lên thẻ <button> trong template của component con.
+	
+		Kết quả HTML sẽ là:
+<button class="btn" style="color: blue;">
+  Click Me
+</button>
+	Khi nhấp vào nút, hàm handleClick trong component cha sẽ được gọi.
+	
+# 4. Kiểm soát Fallthrough Attributes	
+
+	Tắt fallthrough attributes: Nếu bạn không muốn các thuộc tính tự động áp dụng lên phần tử gốc, thêm inheritAttrs: false vào component con.	
+	
+Vue.component('my-button', {
+  inheritAttrs: false,
+  template: `
+    <button :class="$attrs.class" :style="$attrs.style" @click="$attrs.onClick">
+      <slot></slot>
+    </button>
+  `
+});	
+	$attrs chứa tất cả các thuộc tính fallthrough (bao gồm cả sự kiện như onClick).
+	Bạn có thể tự quyết định cách sử dụng $attrs trong template (ví dụ, chỉ áp dụng class hoặc style).
+	Nhiều phần tử gốc: Nếu component con có nhiều phần tử gốc (trong Vue 3), bạn cần chỉ định phần tử nào nhận fallthrough attributes bằng cách sử dụng v-bind="$attrs":
+
+<template>
+  <div>
+    <button v-bind="$attrs">
+      <slot></slot>
+    </button>
+  </div>
+</template>
+
+
+# 5. Lưu ý quan trọng 
+	Không ảnh hưởng đến props: Nếu một thuộc tính được khai báo trong props của component con, nó sẽ không được coi là fallthrough attribute.
+	Nếu truyền custom-class="btn", nó sẽ được xử lý qua props, không phải fallthrough.
+
+	Sự kiện cũng là fallthrough: Các sự kiện như @click, @input cũng được truyền xuống phần tử gốc nếu không được khai báo trong emits.
+	
+	Kết hợp với class và style:
+		Vue tự động hợp nhất class và style từ component cha với các giá trị trong component con.
+		Ví dụ: Nếu component con đã có class="default", và cha truyền class="btn", kết quả sẽ là class="default btn".
+
+	Vue 2 vs Vue 3:
+		Vue 2 sử dụng $attrs và $listeners riêng biệt.
+		Vue 3 hợp nhất cả thuộc tính và sự kiện vào $attrs.
+
+
+# 6. Ví dụ nâng cao
+	Truyền nhiều thuộc tính và kiểm soát chúng:
+		
+<script>
+Vue.component('my-input', {
+  inheritAttrs: false,
+  template: `
+    <div>
+      <label>Input: </label>
+      <input v-bind="$attrs" type="text">
+    </div>
+  `
+});
+</script>
+
+<div id="app">
+  <my-input placeholder="Enter text" @input="handleInput"></my-input>
+</div>
+
+<script>
+new Vue({
+  el: '#app',
+  methods: {
+    handleInput(event) {
+      console.log('Input value:', event.target.value);
+    }
+  }
+});
+</script>
+
+	inheritAttrs: false ngăn các thuộc tính tự động áp dụng lên <div> gốc.
+	v-bind="$attrs" áp dụng placeholder và sự kiện @input lên thẻ <input>.
+
+
+# 7. Ứng dụng thực tế
+	Tái sử dụng các component giao diện (như button, input, card) mà không cần khai báo props cho mọi thuộc tính HTML.
+	Tạo các component "wrapper" (như form, modal) và truyền các thuộc tính xuống các phần tử con cụ thể.
+	Xây dựng thư viện component linh hoạt, dễ tùy chỉnh.
+
+# 8. Tóm tắt
+	Fallthrough attributes là các thuộc tính/sự kiện được truyền từ component cha xuống phần tử gốc của component con nếu không được khai báo trong props hoặc emits.
+	Sử dụng $attrs và inheritAttrs: false để kiểm soát cách áp dụng thuộc tính.
+	Tự động hợp nhất class và style, hỗ trợ cả sự kiện.
+	Giúp component trở nên linh hoạt và tái sử dụng hơn.
+	Nếu bạn cần thêm ví dụ hoặc giải thích chi tiết hơn về một phần cụ thể, hãy cho tôi biết! 
+
+
+
+</pre><a id='backBottom' href='../vue-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

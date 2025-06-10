@@ -1,0 +1,78 @@
+<html><head><title>Lesson 26 == Quantum Error Correction ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../quantum-computing-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 26 -- Quantum Error Correction -//</h1><pre># Khái niệm 
+	❗Vấn đề: Quantum rất dễ lỗi
+	
+
+So sánh Classical vs Quantum
+| | Classical Bit (0 or 1) | Qubit (|ψ⟩ = α|0⟩ + β|1⟩) |
+|-----------------------|-------------------------------|------------------------------|
+| Noise | Bit-flip (0 ↔ 1) | Bit-flip, Phase-flip, Decoherence |
+| Backup / Copy | Copy tự do (x = y) | Không thể copy qubit (No-Cloning Theorem) |
+| Error Detection | Dễ với parity, CRC... | Rất khó, vì đo qubit sẽ phá vỡ trạng thái |
+| Error Correction | Dễ, sửa bit | Phức tạp, cần kỹ thuật lượng tử |
+
+Máy tính lượng tử dễ gặp lỗi, nhưng ta không được phép đo trực tiếp qubit để kiểm tra lỗi – vì đo là phá hủy trạng thái lượng tử.
+
+
+
+# 🧠 Giải pháp: Quantum Error Correction (QEC) 
+	Ý tưởng chính:
+		Không sửa lỗi cho từng qubit, mà mã hóa 1 qubit logic vào nhiều qubit vật lý để “ẩn giấu” thông tin.
+		
+	Giống như cách bạn bảo vệ dữ liệu bằng RAID hay mã hóa Hamming – nhưng theo phong cách lượng tử.	
+
+#📘 Ví dụ: 3-Qubit Bit Flip Code (QEC cơ bản nhất) 
+ 
+Mã hóa:
+	Giả sử bạn có một qubit logic:
+		|ψ⟩ = α|0⟩ + β|1⟩
+
+	Ta mã hóa nó thành:
+		|ψ_L⟩ = α|000⟩ + β|111⟩
+			(Như là “triplication” nhưng theo cơ học lượng tử)
+
+	# Nếu 1 qubit bị bit-flip (X error):
+		Giả sử qubit giữa bị lật:
+		
+		|ψ_error⟩ = α|010⟩ + β|101⟩
+
+
+	#	Phát hiện lỗi:
+		Ta đo syndrome (các giá trị kiểm tra lỗi) bằng cách dùng các ancilla qubit và các cổng logic mà không làm sập trạng thái lượng tử.
+		Sau khi đo syndrome (mà không phá hủy trạng thái), ta biết qubit nào bị lỗi → dùng cổng X để đảo lại.
+		
+		
+		
+# 🧩 Có mấy loại lỗi cần sửa? 
+	Quantum có nhiều loại lỗi hơn classical, ví dụ:
+	
+| Lỗi             | Ký hiệu | Ý nghĩa                |        |    |
+| --------------- | ------- | ---------------------- | ------ | -- |
+| Bit-flip        | X       | Đổi                    | 0⟩ ↔   | 1⟩ |
+| Phase-flip      | Z       | Đổi dấu                | 1⟩ → - | 1⟩ |
+| Bit + Phase (Y) | Y       | = iXZ, cả hai loại lỗi |        |    |
+
+	
+	
+# 🔒 Một số mã nổi tiếng:	
+	
+| Mã QEC       | Quá trình sửa lỗi         | Ghi chú                                                   |
+| ------------ | ------------------------- | --------------------------------------------------------- |
+| Shor code    | 9 qubit                   | Sửa cả X và Z lỗi đầu tiên                                |
+| Steane code  | 7 qubit                   | Cơ sở cho nhiều hệ thống hiện đại                         |
+| Surface code | 1000+ qubit, mô hình lưới | Cực kỳ quan trọng cho máy lượng tử thực tế như Google/IBM |
+	
+	
+	
+# 🔁 Tóm tắt tư duy QEC: 
+Không được đo trực tiếp → Phải dùng đo “gián tiếp” qua syndrome.
+Không thể copy → Phải “mã hóa” trạng thái vào nhiều qubit.
+Phải sửa cả X, Z, Y lỗi → Dùng code đủ mạnh như Shor, Steane, Surface.
+Nền tảng cho máy lượng tử thực tế → Không có QEC = không có scale	
+	
+	
+	
+Học về Stabilizer Code (cách mô tả các trạng thái mã hóa lỗi).
+Dùng Qiskit để mô phỏng 3-qubit code.
+	
+	
+</pre><a id='backBottom' href='../quantum-computing-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

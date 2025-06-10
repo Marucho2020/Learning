@@ -1,0 +1,133 @@
+<html><head><title>Lesson 25 == $attrs ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../vue-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 25 -- $attrs -//</h1><pre># Khái niệm 
+	Trong Vue.js, $attrs là một object chứa tất cả các thuộc tính và sự kiện được truyền từ component cha đến component con, nhưng không được khai báo trong props hoặc emits của component con.
+
+	Ví dụ: Nếu component cha truyền placeholder="Enter text" và @input="handleInput", nhưng component con không khai báo chúng trong props, thì chúng sẽ nằm trong $attrs.
+
+	Nội dung của $attrs : 
+	
+		Thuộc tính HTML: class, style, placeholder, id, v.v.
+		Sự kiện: onInput (tương ứng với @input), onClick (tương ứng với @click), v.v.
+		Thuộc tính tùy chỉnh: bất kỳ attribute nào không phải props/emits.
+
+
+
+# 	2. v-bind="$attrs" là gì?
+
+	v-bind="$attrs" là cách gắn toàn bộ các thuộc tính/sự kiện trong $attrs lên một phần tử cụ thể trong template của component con.
+	Thay vì gắn từng thuộc tính riêng lẻ (như :placeholder="$attrs.placeholder", @input="$attrs.onInput"), v-bind="$attrs" gắn tất cả cùng lúc.
+	
+	Cú pháp:
+		<input v-bind="$attrs">
+		Điều này tương đương với việc áp dụng mọi thuộc tính và sự kiện trong $attrs (như placeholder, onInput) lên thẻ <input>.
+
+
+# 3. Tại sao v-bind="$attrs" áp dụng placeholder và @input lên <input>?
+<script>
+Vue.component('my-input', {
+  inheritAttrs: false,
+  template: `
+    <div>
+      <label>Input: </label>
+      <input v-bind="$attrs" type="text">
+    </div>
+  `
+});
+</script>
+
+<div id="app">
+  <my-input placeholder="Enter text" @input="handleInput"></my-input>
+</div>
+
+
+
+	## Bước 1: Component cha truyền thuộc tính và sự kiện 
+		Component cha truyền:
+			placeholder="Enter text": Một thuộc tính HTML. 
+			@input="handleInput": Một sự kiện (tương ứng với onInput trong $attrs).
+
+		Vì component con (my-input) không khai báo placeholder hoặc input trong props/emits, chúng được lưu vào $attrs.
+		
+
+	## Bước 2: $attrs chứa gì?
+		$attrs trong component my-input sẽ là một object như:
+	
+$attrs = {
+  placeholder: "Enter text",
+  onInput: function(event) { /* gọi handleInput */ }
+};	
+	
+	## Bước 3: v-bind="$attrs" hoạt động
+		Khi sử dụng <input v-bind="$attrs">, Vue sẽ gắn toàn bộ các thuộc tính/sự kiện trong $attrs lên thẻ <input>.
+
+		Cụ thể: 
+			placeholder="Enter text" được áp dụng làm thuộc tính HTML của <input>.
+			onInput (tương ứng với @input) được gắn làm sự kiện, nên khi người dùng nhập vào <input>, hàm handleInput trong component cha sẽ được gọi.
+
+
+
+		## Kết quả HTML: 
+			Thẻ <input> sẽ trở thành:
+			<input type="text" placeholder="Enter text">
+			
+			Sự kiện @input được gắn vào <input>, nên khi nhập dữ liệu, handleInput trong component cha sẽ chạy.
+
+	
+
+# 4. Tại sao cần inheritAttrs: false? 
+
+	Mặc định, nếu không có inheritAttrs: false, các thuộc tính trong $attrs sẽ tự động được áp dụng lên phần tử gốc của component con (ở đây là <div>).
+	
+	Với inheritAttrs: false, bạn ngăn điều này xảy ra, và có thể tự quyết định áp dụng $attrs lên phần tử nào (như <input> thông qua v-bind="$attrs").
+	
+	Không có inheritAttrs: false
+		placeholder và @input sẽ được áp dụng lên <div> (phần tử gốc), gây lỗi vì <div> không hỗ trợ placeholder và sự kiện @input không hoạt động đúng.
+
+	Có inheritAttrs: false và v-bind="$attrs"
+		Bạn kiểm soát được $attrs chỉ áp dụng lên <input>, nơi chúng có ý nghĩa.
+		
+		
+		
+# 5. Tại sao v-bind="$attrs" tiện lợi? 
+	Tự động hóa: Thay vì viết thủ công từng thuộc tính/sự kiện (như :placeholder="$attrs.placeholder", @input="$attrs.onInput"), v-bind="$attrs" xử lý tất cả cùng lúc.
+
+	Linh hoạt: Component con không cần biết trước thuộc tính/sự kiện nào sẽ được truyền, giúp component dễ tái sử dụng.
+		
+	Bảo trì dễ: Nếu component cha truyền thêm thuộc tính (như disabled, value), chúng sẽ tự động được áp dụng lên <input> mà không cần sửa component con.
+
+
+	
+# 6. Ví dụ minh họa thêm 
+Nếu component cha truyền thêm thuộc tính:	
+
+<my-input placeholder="Enter text" @input="handleInput" disabled value="Test"></my-input>
+
+
+	##  $attrs sẽ chứa:
+$attrs = {
+  placeholder: "Enter text",
+  onInput: function(event) { /* gọi handleInput */ },
+  disabled: true,
+  value: "Test"
+};
+
+	## Với <input v-bind="$attrs">, thẻ <input> sẽ là
+	<input type="text" placeholder="Enter text" disabled value="Test">
+	Sự kiện @input vẫn hoạt động, gọi handleInput khi người dùng nhập.
+
+# 7. Tóm tắt
+	$attrs: Chứa các thuộc tính/sự kiện từ component cha mà component con không khai báo trong props/emits.
+	v-bind="$attrs": Gắn toàn bộ nội dung của $attrs (như placeholder, onInput) lên phần tử được chỉ định (ở đây là <input>).
+	
+	
+	## Tại sao áp dụng được:
+	placeholder là thuộc tính HTML, được áp dụng trực tiếp.
+	onInput (tương ứng @input) là sự kiện, được gắn để kích hoạt hàm trong component cha.
+	inheritAttrs: false: Ngăn $attrs tự áp dụng lên phần tử gốc, cho phép bạn kiểm soát nơi áp dụng (như <input>).
+
+
+
+https://www.w3schools.com/vue/vue_scoped-styling.php
+
+
+
+</pre><a id='backBottom' href='../vue-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
