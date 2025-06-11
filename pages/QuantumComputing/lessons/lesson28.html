@@ -1,0 +1,94 @@
+<html><head><title>Lesson 28 == Stabilizer Formalism ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../quantum-computing-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 28 -- Stabilizer Formalism -//</h1><pre># Khái niệm  
+	 Nếu muốn thật sự hiểu Surface Code, Shor code, hay bất kỳ Quantum Error-Correcting Code (QECC) hiện đại nào, thì bạn bắt buộc phải nắm được Stabilizer Formalism.
+
+	Đây là ngôn ngữ toán học chuyên dùng để mô tả và thao tác với các mã lượng tử mà không cần xử lý từng trạng thái lượng tử cụ thể (vốn cực kỳ phức tạp).	
+	
+	Stabilizer Formalism là một cách biểu diễn trạng thái lượng tử thông qua nhóm các toán tử ổn định (stabilizer group) thay vì viết ra toàn bộ vector trạng thái.
+	
+# 1. ❓ Tại sao dùng Stabilizer?
+	Trạng thái lượng tử của n qubit có kích thước vector là   2^n không thể thao tác được khi n lớn. 
+	Nhưng nhiều mã lượng tử chỉ sử dụng một tập con đặc biệt các trạng thái lượng tử: các trạng thái ổn định bởi các toán tử Pauli.
+	Thay vì lưu trạng thái ∣ψ⟩, ta chỉ cần lưu các toán tử Pauli sao cho:
+	“Si​∣ψ⟩\=∣ψ⟩với mỗi Si​∈Stabilizer Group”
+
+
+# 2. 🧰 Nhóm Pauli (Pauli Group)
+	Đây là nhóm các toán tử lượng tử cơ bản nhất:
+| Tên         | Ký hiệu | Ma trận                                       |
+| ----------- | ------- | --------------------------------------------- |
+| Identity    | $I$     | $\begin{bmatrix}1 & 0 \\ 0 & 1\end{bmatrix}$  |
+| Bit-flip    | $X$     | $\begin{bmatrix}0 & 1 \\ 1 & 0\end{bmatrix}$  |
+| Phase-flip  | $Z$     | $\begin{bmatrix}1 & 0 \\ 0 & -1\end{bmatrix}$ |
+| Bit + Phase | $Y$     | $\begin{bmatrix}0 & -i \\ i & 0\end{bmatrix}$ |
+
+
+Pauli Group trên n qubit là tập hợp tất cả tensor product của các I,X,Y,Z, nhân với ±1, ±i.
+
+# 3. 🏗️ Stabilizer Group
+
+	Một stabilizer state là trạng thái được ổn định (invariant) bởi một nhóm các toán tử Pauli.
+	
+	Ví dụ: trạng thái Bell:∣Φ+⟩\=2​1​(∣00⟩+∣11⟩) 
+	được ổn định bởi hai toán tử:
+		Z⊗Z 
+		X⊗X
+	Nghĩa là:
+		(Z⊗Z)∣Φ+⟩\=∣Φ+⟩
+		(X⊗X)∣Φ+⟩\=∣Φ+⟩
+		
+	Tập các toán tử như thế này gọi là stabilizer generators – chúng sinh ra toàn bộ stabilizer group.
+	
+# 4. 📦 Mã lượng tử trong stabilizer formalism 
+	Một mã QECC là:
+		Một không gian con (subspace) trong Hilbert space của nhiều qubit.
+		Được định nghĩa bởi một stabilizer group 𝑆.
+		Các trạng thái hợp lệ của mã là những trạng thái bị ổn định bởi mọi phần tử trong 𝑆.		
+
+	Cụ thể: 
+		Với n qubit, ta chọn 𝑛−𝑘 stabilizer generators → mã hóa k logical qubit. 
+		Mỗi lỗi lượng tử là một Pauli 𝐸
+			- Nếu 𝐸 commute với tất cả phần tử của 𝑆 → không thể phát hiện lỗi.
+			- Nếu 𝐸 anticommute với ít nhất 1 phần tử của 𝑆 → phát hiện được lỗi.
+		→ Việc đo lỗi (syndrome measurement) là đo các phần tử của 𝑆 Kết quả cho biết loại lỗi đã xảy ra.
+
+
+# 5. 🧠 Ưu điểm của stabilizer formalism
+
+	- Mô tả gọn nhẹ: Chỉ cần lưu các toán tử sinh thay vì vector dài 2^n 
+	- Tính toán hiệu quả: Có thuật toán efficient để tính kết quả đo, apply lỗi, v.v.
+	- Chính là nền tảng của Surface Code: Toàn bộ surface code chỉ là một hệ thống stabilizer lớn dạng lưới. 
+	
+# 6. 🌐 Ví dụ: mã Steane code (7-qubit)
+	Có 6 stabilizer generators (Pauli strings như XXXXXXX, ZZZZZZZ, v.v.).
+	Các lỗi được phát hiện bằng cách đo các stabilizer generators.
+	Logical 𝑋_L,Z_L là các toán tử đặc biệt commute với tất cả stabilizer nhưng không thuộc stabilizer group.
+	→ Cách mô tả này tách biệt phần bảo vệ lỗi (stabilizer) và phần mã hóa thông tin (logical operators) rất rõ ràng.
+
+
+# 🎯 Tổng kết 
+	
+| Mục       | Nội dung                                                        |
+| --------- | --------------------------------------------------------------- |
+| Vấn đề    | Không thể mô phỏng toàn bộ trạng thái lượng tử khi qubit > 20   |
+| Giải pháp | Mô tả thông qua các **toán tử ổn định** (stabilizer generators) |
+| Ưu điểm   | Gọn, nhanh, hiệu quả, đặc biệt cho mô phỏng QEC                 |
+| Ứng dụng  | Surface Code, Shor Code, Steane Code, tất cả các mã stabilizer  |
+
+
+
+# 👉 Bước tiếp theo:
+
+	Viết mã Python mô phỏng Bell state bằng stabilizer
+	Xây dựng mã 3-qubit bit flip bằng stabilizer generators
+	Mã hóa & giải mã logical qubit bằng stabilizer
+	Đi sâu surface code stabilizer mạng lưới 2D
+
+
+
+
+
+
+
+
+
+</pre><a id='backBottom' href='../quantum-computing-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

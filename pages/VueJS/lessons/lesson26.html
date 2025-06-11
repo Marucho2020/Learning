@@ -1,0 +1,168 @@
+<html><head><title>Lesson 26 == Scoped Styling ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../vue-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 26 -- Scoped Styling -//</h1><pre># Khái niệm 
+	thuộc tính scoped trong thẻ <style> của Vue.js để giới hạn CSS chỉ áp dụng cho component hiện tại, tránh ảnh hưởng đến các component khác. 
+	
+# 1. Mục đích của Scoped Styling 
+	Scoped styling đảm bảo rằng các quy tắc CSS được viết trong một component chỉ áp dụng cho các phần tử trong template của component đó.
+
+	Điều này giúp : 
+		- Tránh xung đột CSS giữa các component.
+		- Tăng tính tái sử dụng và dễ bảo trì của component. 
+		- Giữ mã CSS gọn gàng, không "rò rỉ" ra ngoài. 
+		
+# 2. Cách hoạt động		
+	Khi thêm thuộc tính scoped vào thẻ <style> trong một component (thường trong Single File Component - .vue), Vue tự động thêm một thuộc tính dữ liệu duy nhất (data attribute) vào các phần tử HTML trong template của component.
+
+	Các quy tắc CSS trong thẻ <style scoped> sẽ chỉ áp dụng cho các phần tử có thuộc tính dữ liệu này.
+		
+	Ví dụ : 
+<template>
+  <div class="example">Hello Vue</div>
+</template>
+
+<style scoped>
+.example {
+  color: blue;
+}
+</style>		
+		
+	Vue sẽ tự động thêm một thuộc tính như data-v-123456 vào <div class="example">, và CSS sẽ được biến đổi thành:
+	
+.example[data-v-123456] {
+  color: blue;
+}
+
+	Kết quả: Chỉ <div class="example"> trong component này có màu xanh, các phần tử .example ở component khác không bị ảnh hưởng.
+
+	
+# 3. Ví dụ cụ thể	
+	
+	Giả sử bạn có hai component với cùng class .example, nhưng muốn mỗi component có style riêng.
+	
+	## Component 1: MyComponent.vue 
+		
+<template>
+  <div class="example">Component 1</div>
+</template>
+
+<style scoped>
+.example {
+  color: blue;
+  font-size: 20px;
+}
+</style>	
+	
+	
+	
+	## Component 2: AnotherComponent.vue 
+		
+<template>
+  <div class="example">Component 2</div>
+</template>
+
+<style scoped>
+.example {
+  color: red;
+  font-size: 16px;
+}
+</style>	
+	
+	
+	## Sử dụng trong ứng dụng
+
+<template>
+  <div>
+    <my-component></my-component>
+    <another-component></another-component>
+  </div>
+</template>
+
+	## Kết quả HTML
+		Vue sẽ tạo các thuộc tính dữ liệu duy nhất
+<div class="example" data-v-123456>Component 1</div> <!-- Màu xanh, font 20px -->
+<div class="example" data-v-789abc>Component 2</div> <!-- Màu đỏ, font 16px -->		
+	
+		CSS được biến đổi: 
+.example[data-v-123456] { color: blue; font-size: 20px; }
+.example[data-v-789abc] { color: red; font-size: 16px; }
+
+
+
+# 4. Lưu ý quan trọng
+	Chỉ áp dụng trong component: Scoped CSS chỉ ảnh hưởng đến các phần tử trong template của component hiện tại. Các phần tử con trong slot hoặc component con không bị ảnh hưởng trừ khi bạn dùng deep selector.
+	
+	
+# 	Deep selector (CSS xuyên sâu):
+	Nếu muốn style áp dụng cho component con hoặc nội dung slot, sử dụng ::v-deep hoặc :deep():
+	
+<style scoped>
+.parent :deep(.child) {
+  color: green;
+}
+</style>	
+
+	Style này sẽ áp dụng cho class .child trong component con, dù nó nằm ngoài phạm vi scoped.
+	Không ảnh hưởng đến CSS toàn cục: Nếu bạn có <style> không có scoped, nó sẽ áp dụng toàn cục, có thể gây xung đột.
+	Hiệu suất: Scoped CSS tăng nhẹ kích thước file CSS do thêm thuộc tính data-v-*, nhưng đảm bảo tính độc lập.
+
+# 5. **So sánh <style> và <style scoped>
+
+	## <style> (không scoped) 
+		- CSS áp dụng cho toàn bộ ứng dụng
+		- Dễ gây xung đột nếu nhiều component dùng cùng class.
+		
+		Ví dụ : 
+		
+<style>
+.example { color: blue; }
+</style>
+
+		- Áp dụng cho mọi .example trong ứng dụng. 
+
+
+
+	## <style scoped>: 
+		- CSS chỉ áp dụng trong component hiện tại. 
+		- An toàn, tránh xung đột. 
+		- Vue tự động thêm thuộc tính data-v-* để giới hạn phạm vi. 
+
+
+# 6. Ví dụ nâng cao
+
+Kết hợp với slot và deep selector:
+<!-- ParentComponent.vue -->
+<template>
+  <child-component>
+    <div class="content">Content from parent</div>
+  </child-component>
+</template>
+
+<!-- ChildComponent.vue -->
+<template>
+  <div class="wrapper">
+    <slot></slot>
+  </div>
+</template>
+
+<style scoped>
+.wrapper {
+  border: 1px solid black;
+}
+:deep(.content) {
+  color: purple;
+}
+</style>
+
+	Giải thích:
+.wrapper chỉ áp dụng cho <div class="wrapper"> trong ChildComponent.
+:deep(.content) áp dụng style color: purple cho <div class="content"> từ parent, dù nó nằm trong slot.
+
+
+
+
+# 7. Ứng dụng thực tế
+	Xây dựng các component giao diện (button, card, modal) với style độc lập. 
+	Tránh xung đột CSS trong ứng dụng lớn có nhiều component.
+	Tùy chỉnh giao diện component con từ component cha bằng :deep.
+	
+
+</pre><a id='backBottom' href='../vue-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
