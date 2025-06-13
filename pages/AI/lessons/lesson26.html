@@ -1,12 +1,60 @@
-<html><head><title>Lesson 26 == Densely Connected Convolutional Networks (mạng DenseNet) ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../AI-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 26 -- Densely Connected Convolutional Networks (mạng DenseNet) -//</h1><pre>	https://aicandy.vn/densely-connected-convolutional-networks-mang-densenet/
+<html><head><title>Lesson 26 == Densely Connected Convolutional Networks (mạng DenseNet) ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../AI-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 26 -- Densely Connected Convolutional Networks (mạng DenseNet) -//</h1><pre># 1. Giới thiệu 	
 	
+	Trí tuệ nhân tạo (AI) và học sâu (Deep Learning) đã trở thành những công cụ đắc lực trong nhiều lĩnh vực như nhận dạng hình ảnh, xử lý ngôn ngữ tự nhiên, dự báo tài chính, y học, và nhiều ứng dụng khác.
+
+	Trong số các kiến trúc mạng nơ-ron nhân tạo, DenseNet (Dense Convolutional Network) nổi bật lên như một giải pháp tiên tiến và hiệu quả cho nhiều vấn đề phức tạp, đặc biệt là trong nhận dạng và phân loại hình ảnh.
+
+	Được giới thiệu vào năm 2017 bởi Gao Huang cùng các cộng sự trong bài báo “Densely Connected Convolutional Networks”, DenseNet đã mở ra một hướng đi mới trong việc thiết kế các mạng nơ-ron sâu với kết nối dày đặc.
 	
+		
+# 2. Cấu trúc và nguyên lý hoạt động		
+	Cấu trúc của DenseNet dựa trên một ý tưởng đơn giản nhưng mạnh mẽ: tăng cường kết nối giữa các lớp trong mạng nơ-ron. Trong các kiến trúc mạng nơ-ron truyền thống, mỗi lớp chỉ nhận đầu vào từ lớp liền trước và gửi đầu ra đến lớp liền sau. Tuy nhiên, trong DenseNet, mỗi lớp nhận đầu vào từ tất cả các lớp trước đó và gửi đầu ra đến tất cả các lớp tiếp theo. Điều này tạo ra một mạng lưới dày đặc, nơi mà các đặc trưng được chia sẻ và tái sử dụng liên tục giữa các lớp.
+
+	Mạng DenseNet được xây dựng từ các khối Dense (Dense Blocks) và các lớp chuyển tiếp (Transition Layers).
+		https://aicandy.vn/wp-content/uploads/2024/08/aicandy_densenet_1.png
+		https://aicandy.vn/wp-content/uploads/2024/08/aicandy_densenet_2-768x113.png
+		
+		
+	## 2.1. Dense Block 
+		Mỗi Dense Block gồm nhiều lớp kết nối dày đặc với nhau. Đặc trưng của mỗi lớp trong một Dense Block là việc nhận đầu vào từ tất cả các lớp trước đó, sau đó xuất đầu ra để sử dụng cho các lớp sau. Mỗi lớp trong một Dense Block thường bao gồm một lớp chuẩn hóa theo batch (Batch Normalization), một lớp kích hoạt ReLU, và một lớp tích chập (Convolutional Layer).
+		Các Dense Block giúp giảm độ phức tạp của mô hình mà vẫn giữ được độ chính xác cao nhờ vào việc tái sử dụng các đặc trưng đã học.
 	
+	## 2.2. Transition Layer
+		Giữa các Dense Block, có các lớp chuyển tiếp giúp giảm kích thước của bản đồ đặc trưng (feature map) bằng cách sử dụng các lớp tích chập 1×1 và phép gộp trung bình (Average Pooling). Transition Layer đóng vai trò quan trọng trong việc kiểm soát kích thước và độ phức tạp của mô hình, ngăn chặn sự phình to của số lượng đặc trưng khi mạng trở nên quá sâu.
+		
+		
+#  3. Ưu điểm  
+	DenseNet có nhiều ưu điểm nổi bật so với các kiến trúc mạng nơ-ron khác, chẳng hạn như ResNet, GoogleNet hay VGGNet:
 	
+	## 3.1. Tái sử dụng đặc trưng 
+		Trong các mạng thông thường, mỗi lớp học các đặc trưng mới dựa trên đầu ra của lớp trước đó. Trong DenseNet, các đặc trưng học được từ các lớp trước đó được tái sử dụng ở các lớp tiếp theo, giúp mô hình học tập hiệu quả hơn và giảm thiểu sự dư thừa không cần thiết. Điều này cũng giúp DenseNet đạt được hiệu suất cao với số lượng tham số ít hơn.
+		
+	## 3.2. Tránh vấn đề Vanishing Gradient 
+		Nhờ vào kết nối dày đặc, gradient trong quá trình huấn luyện được truyền thông qua toàn bộ mạng một cách dễ dàng hơn, giảm nguy cơ vanishing gradient thường gặp trong các mạng nơ-ron sâu. Điều này đặc biệt hữu ích khi mạng có rất nhiều lớp.
+		
+	## 3.3. Hiệu quả sử dụng bộ nhớ
+		Một ưu điểm quan trọng khác của DenseNet là khả năng sử dụng bộ nhớ một cách hiệu quả hơn. Mặc dù DenseNet có nhiều kết nối hơn, nhưng số lượng tham số thực tế ít hơn so với các mô hình khác có cùng độ sâu. Điều này làm cho DenseNet trở thành một lựa chọn tốt trong các ứng dụng cần tối ưu hóa bộ nhớ, chẳng hạn như các hệ thống nhúng hoặc trên thiết bị di động.
+		
+	## 3.4. Giảm thiểu Overfitting
+		Việc tái sử dụng đặc trưng và cấu trúc kết nối đặc biệt của DenseNet giúp giảm nguy cơ overfitting, ngay cả khi dữ liệu huấn luyện bị giới hạn. Đây là một lợi thế lớn khi làm việc với các tập dữ liệu nhỏ hoặc trong các môi trường học tập có tài nguyên hạn chế.
+		
+		
+		
+# 4. So sánh DenseNet với các kiến trúc khác
+	DenseNet đã chứng minh được hiệu quả vượt trội của mình qua nhiều bài toán thực nghiệm, đặc biệt là trong các cuộc thi như ImageNet và CIFAR-10. Khi so sánh với các kiến trúc khác:
 	
-	
-	
-	
+	## 4.1. So với ResNet 
+		ResNet sử dụng các kết nối tắt (shortcut connections) để truyền tải đầu ra của các lớp trước đến các lớp sau, nhưng chỉ theo cách nối tiếp. DenseNet lại mở rộng ý tưởng này bằng cách kết nối tất cả các lớp với nhau. Điều này giúp DenseNet có khả năng học các đặc trưng phức tạp hơn mà không gặp vấn đề gradient giảm dần.
+		
+	## 4.2. So với VGGNet
+		VGGNet là một trong những mạng nơ-ron đầu tiên sử dụng các lớp tích chập nhỏ 3×3 sâu. Tuy nhiên, DenseNet với các Dense Block có khả năng học tập hiệu quả hơn và sử dụng ít tham số hơn VGGNet, giúp giảm thiểu sự phình to của mô hình.
+		
+	## 4.3. So với Inception và GoogleNet 
+		GoogleNet và các biến thể của nó như InceptionV3 sử dụng các khối Inception để nắm bắt các đặc trưng ở nhiều kích thước khác nhau. Mặc dù hiệu quả, nhưng các mô hình này phức tạp hơn nhiều so với DenseNet. DenseNet đạt được kết quả tương đương hoặc tốt hơn với kiến trúc đơn giản hơn, nhờ vào kết nối dày đặc và khả năng tái sử dụng đặc trưng.
+		
+# 5. Các biến thể
+https://aicandy.vn/densely-connected-convolutional-networks-mang-densenet/
+
 	
 	
 	

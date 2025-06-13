@@ -1,0 +1,94 @@
+<html><head><title>Lesson 116 == DAA &  Lambda expressions và closures ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 116 -- DAA &  Lambda expressions và closures -//</h1><pre>
+# khái niệm 
+	Trong Java, lambda và anonymous inner classes có thể captured biến từ scope bên ngoài — nhưng chỉ với điều kiện:
+	❗ Biến phải là "effectively final"
+
+
+
+# 📌 2. "Effectively Final" là gì?
+	Thuật ngữ này xuất hiện từ Java 8 (JLS §4.12.4). Một biến effectively final nếu:
+		Nó chỉ được gán đúng một lần
+		Không cần khai báo final, miễn compiler có thể chứng minh không có gán lại sau lần đầu.
+
+	Java lambda là closure dạng capture-by-value (not reference).
+		Nghĩa là:
+			Biến được copy vào runtime object của lambda.
+			Nếu cho phép gán lại sau khi lambda tạo ra, tính toàn vẹn bị phá vỡ → dẫn đến bug không thể debug nổi.
+			
+
+
+		
+	## ✅ Ví dụ: 
+int x = 10; // effectively final
+Runnable r = () -> System.out.println(x); // OK
+
+
+	## ❌ Vi phạm: 
+	
+int x = 10;
+x = 20; // now it's not effectively final
+Runnable r = () -> System.out.println(x); // ❌ Compile-time error
+	
+
+
+# 📘 3. LIÊN QUAN ĐẾN DAA 
+	## Tình huống: sử dụng biến local trong lambda 
+	Compiler sẽ áp dụng DAA để đảm bảo biến đó đã được khởi tạo rõ ràng, và không thay đổi sau khi capture.
+	
+void test(boolean flag) {
+    int x;
+    if (flag) x = 1;
+    Runnable r = () -> System.out.println(x); // ❌ compile-time error
+}
+
+Dù không trực tiếp gọi x trước khi gán, lambda có thể được thực thi sau → phải đảm bảo x được "definitely assigned" trước mọi use-case tiềm năng.
+
+
+# ⚠️ 4. BẪY KHI KẾT HỢP DAA + CLOSURE
+
+❌ Gán lại biến sau khi capture
+int x = 5;
+Runnable r = () -> System.out.println(x);
+x = 10; // ❌ Compile error — x không còn effectively final
+➡️ Khi x bị gán lại, nó không còn "effectively final" nữa → lambda không được phép sử dụng nó.
+
+
+
+List<Runnable> jobs = new ArrayList<>();
+for (int i = 0; i < 3; i++) {
+    jobs.add(() -> System.out.println(i)); // ❌ i không effectively final
+}
+
+➡️ Cách đúng:
+for (int i = 0; i < 3; i++) {
+    int j = i; // tạo biến trung gian "effectively final"
+    jobs.add(() -> System.out.println(j)); // ✅
+}
+
+
+# 3.  DAA + CLOSURE = LUỒNG PHÂN TÍCH ĐỘC LẬP
+	Khi compiler phân tích lambda:
+	Nó tạo một CFG riêng biệt cho lambda (như một hàm con),
+	Sau đó kiểm tra các biến từ outer-scope theo kiểu “đóng băng trạng thái”.
+
+
+Ví dụ nâng cao với array: 
+void foo() {
+    int[] arr = new int[]{1};
+    Runnable r = () -> arr[0] = 42; // ✅ OK – arr là effectively final, ta không gán lại arr
+}
+
+
+
+# 🧵 7. LIÊN QUAN ĐẾN THREAD, CONCURRENCY
+void startThread() {
+    int counter = 0;
+    new Thread(() -> {
+        System.out.println(counter); // ❌ compile error – counter không effectively final
+    }).start();
+}
+
+Giải pháp:
+	Dùng AtomicInteger nếu cần thay đổi
+	Dùng int[] hoặc wrapper class như Holder
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
