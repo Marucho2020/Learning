@@ -1,0 +1,123 @@
+<html><head><title>Lesson 117 == Atomic Integer ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 117 -- Atomic Integer -//</h1><pre># Khái niệm 
+	## Vấn đề gốc: Vì sao cần AtomicInteger? 
+		Trong Java, các phép toán trên int không nguyên tử (non-atomic).
+		
+			int counter = 0;
+			counter++; // NOT atomic
+
+		Phép counter++ thực chất là 3 bước: 
+			load counter → tăng → lưu lại
+
+
+		→ Nếu nhiều thread cùng chạy counter++, thì kết quả có thể bị mất cập nhật (race condition).
+		
+# ✅ 2. AtomicInteger giải quyết gì? 
+			
+	AtomicInteger cung cấp các phép toán nguyên tử (atomic) trên int mà không cần dùng synchronized.
+
+		AtomicInteger counter = new AtomicInteger(0);
+		counter.incrementAndGet(); // ++counter, atomic
+		→ Không cần lock, vẫn thread-safe.
+
+
+# ✅ 3. Cơ chế bên trong (rất quan trọng)
+
+
+	## 🔧 AtomicInteger dùng hardware-level CAS (Compare-And-Swap) thông qua Unsafe API của JVM.
+		Ví dụ (đơn giản hóa):
+
+while (true) {
+    int old = value;
+    int newVal = old + 1;
+    if (compareAndSwap(old, newVal)) break;
+}
+
+		→ Nếu value bị thay đổi bởi thread khác, CAS sẽ thất bại và thử lại (spin loop).
+
+	🔹 compareAndSwap là atomic hardware instruction (trên CPU như LOCK CMPXCHG x86)
+
+
+# ✅ 4. Các phương thức quan trọng
+
+| Method                          | Mô tả                                                            |
+| ------------------------------- | ---------------------------------------------------------------- |
+| `get()`                         | Trả về giá trị hiện tại                                          |
+| `set(int newValue)`             | Gán giá trị (không đảm bảo memory visibility nếu ko có volatile) |
+| `getAndIncrement()`             | Trả về rồi ++ (postfix)                                          |
+| `incrementAndGet()`             | ++ rồi trả về (prefix)                                           |
+| `compareAndSet(expect, update)` | Nếu giá trị hiện tại == `expect`, thì gán `update` (atomic)      |
+| `getAndUpdate(UnaryOperator)`   | Apply hàm custom (nhưng vẫn atomic)                              |
+
+
+# ✅ 5. Ưu điểm 
+
+	Hiệu năng cao hơn synchronized, vì không block
+	Tránh context switch
+	Phù hợp cho các biến đếm (counter, ID generator, lượt truy cập…)
+
+
+
+# ⚠️ 6. Cạm bẫy & hiểu sai phổ biến 
+
+	## ❌ Dùng AtomicInteger nhưng vẫn gặp race condition?
+	
+	## ❌ Ví dụ sai: 
+if (atomic.get() < LIMIT) {
+    atomic.incrementAndGet(); // ❌ không đồng bộ với điều kiện
+}
+
+	→ TOÀN BỘ điều kiện + hành động phải atomic, chứ không chỉ riêng increment
+
+
+
+	## ✅ Đúng: 
+	while (true) {
+    int val = atomic.get();
+    if (val >= LIMIT) break;
+    if (atomic.compareAndSet(val, val + 1)) break;
+}
+
+
+
+
+	## ❌ Dùng AtomicInteger để thay thế mọi synchronized logic → design anti-pattern
+	Bạn chỉ nên dùng AtomicInteger cho các biến độc lập, không dùng nó như giải pháp cho toàn bộ shared state.
+	
+	## ❌ Hiểu nhầm rằng AtomicInteger "lock-free" = "fast" 
+			CAS thất bại quá nhiều sẽ khiến chương trình spin vô hạn (live-lock) → còn tệ hơn synchronized.
+
+		→ Khi contention cao, có khi synchronized hiệu quả hơn Atomic*.
+
+
+
+# ✅ 7. Khi nào nên dùng AtomicInteger 
+	
+
+| Trường hợp                          | Có nên dùng?                                                           |
+| ----------------------------------- | ---------------------------------------------------------------------- |
+| Đếm số lượt truy cập                | ✅ Rất phù hợp                                                          |
+| Sinh ID duy nhất (concurrent)       | ✅                                                                      |
+| Kiểm soát số lượng thread đang chạy | ✅                                                                      |
+| Thay thế lock cho object phức tạp   | ❌ Không – nên dùng `ReentrantLock`                                     |
+| Cập nhật nhiều biến cùng lúc        | ❌ Không dùng `Atomic*` riêng lẻ – nên dùng `AtomicReference` hoặc lock |
+
+
+# ✅ 8. Bonus: LongAdder vs AtomicInteger 
+	Trong các ứng dụng high-throughput như metric logging (e.g., Micrometer), AtomicInteger vẫn có thể gây bottleneck, vì tất cả thread ghi vào 1 biến → false sharing. 
+	
+	LongAdder (Java 8+) sinh ra để giải quyết: 
+		Dùng nhiều cell bên dưới → giảm contention
+		Cộng dồn lại khi sum()
+
+
+
+# ✅ Kết luận 
+
+	AtomicInteger là công cụ cực mạnh nếu bạn biết giới hạn của nó
+	Đừng lạm dụng CAS. Chỉ dùng khi:
+		Dữ liệu đơn giản
+		Không có liên kết phức tạp giữa nhiều biến
+		
+	Nếu cần logic phức tạp: dùng StampedLock, ReentrantLock, hoặc VarHandle (Java 9+)
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

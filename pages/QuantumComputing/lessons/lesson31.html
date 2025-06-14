@@ -1,0 +1,91 @@
+<html><head><title>Lesson 31 == Post-selection & Rejection Sampling ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../quantum-computing-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 31 -- Post-selection & Rejection Sampling -//</h1><pre>
+# Khái niệm 
+	| Thuật ngữ              | Nghĩa                                                       |
+| ---------------------- | ----------------------------------------------------------- |
+| **Post-selection**     | Chọn **chỉ những kết quả đo phù hợp**, bỏ phần còn lại      |
+| **Rejection sampling** | Lặp lại quá trình đo cho đến khi kết quả **thoả điều kiện** |
+
+
+# 🧠 Tại sao cần? 
+	Trong thế giới lượng tử:
+		Kết quả đo là ngẫu nhiên, nhưng nhiều khi chỉ một số kết quả là hữu ích.
+		→ Ta cần lọc các run đúng điều kiện.
+	Ví dụ: trong quantum teleportation, chỉ khi ancilla đo được giá trị cụ thể, thì ta mới có trạng thái mong muốn ở đầu kia.
+
+
+# 🔍 I. Post-selection là gì? 
+	Giả sử bạn tạo trạng thái Bell:	
+|ψ⟩ = (|00⟩ + |11⟩)/√2
+
+Nếu đo 1 qubit và thấy kết quả là 0, thì trạng thái còn lại là |0⟩ → OK. Nhưng nếu kết quả là 1, trạng thái còn lại là |1⟩.
+
+Bạn chỉ quan tâm tới run mà đo được 0, thì gọi là post-selection on outcome 0.
+
+
+# 🔁 II. Rejection Sampling
+	Khi simulator/thiết bị lượng tử trả về kết quả:
+		Bạn kiểm tra điều kiện
+		Nếu đúng: giữ lại
+		Nếu sai: vứt đi, chạy lại	
+
+	Cứ lặp lại cho đến khi có đủ mẫu đúng.
+
+
+# ⚗️ Demo code: Post-select trạng thái Bell chỉ khi đo qubit 0 = 0
+from qiskit import QuantumCircuit, Aer, execute
+from qiskit.visualization import plot_histogram
+
+shots = 1024
+
+qc = QuantumCircuit(2, 2)
+qc.h(0)
+qc.cx(0, 1)
+
+# Đo 2 qubit
+qc.measure([0, 1], [0, 1])
+
+backend = Aer.get_backend('qasm_simulator')
+job = execute(qc, backend, shots=shots)
+counts = job.result().get_counts()
+
+# Post-select: chỉ giữ kết quả qubit 0 = 0 (tức key[0] == '0')
+post_selected = {k: v for k, v in counts.items() if k[1] == '0'}
+
+plot_histogram(post_selected)
+
+
+
+# 🧠 Ý nghĩa: 
+	Bạn đang lọc ra trạng thái phụ bằng cách ép kết quả đo vào điều kiện mong muốn.
+
+	Trong thực nghiệm, điều này là bắt buộc nếu không có cách nào deterministic để đưa hệ vào trạng thái mong muốn.
+
+
+
+
+# 🔬 Ứng dụng 
+
+| Bài toán                                  | Vai trò của Post-selection                                |
+| ----------------------------------------- | --------------------------------------------------------- |
+| **Quantum teleportation**                 | Xác định trạng thái đến có chính xác không                |
+| **State preparation (ex: GHZ, W)**        | Chỉ chọn những run đo ancilla trả về trạng thái mong muốn |
+| **Quantum error correction**              | Chỉ giữ lại run đo syndrome hợp lệ                        |
+| **Variational Quantum Eigensolver (VQE)** | Loại trừ các sample đo sai hoặc nhiễu                     |
+
+
+# ⚠️ Cảnh báo
+
+	Post-selection giảm tỷ lệ mẫu hiệu quả → nếu xác suất thấp, cần nhiều run để thu được đủ số liệu.
+	Trên máy lượng tử thật, điều này tốn tài nguyên và thời gian.
+	Không phải mọi thuật toán có thể dùng post-selection mà vẫn đúng về mặt thống kê.
+
+
+# 🧩 Cách hiểu đơn giản:
+	Giống như bạn tung xúc xắc nhiều lần, nhưng chỉ giữ lại những lần tung ra số 6.
+Muốn nhiều kết quả? → phải tung rất nhiều lần.
+
+
+
+
+
+</pre><a id='backBottom' href='../quantum-computing-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
