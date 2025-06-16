@@ -1,4 +1,65 @@
-<html><head><title>Lesson 27 == Tìm hiểu mô hình YOLOv5: Hiệu quả trong nhận diện đối tượng ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../AI-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 27 -- Tìm hiểu mô hình YOLOv5: Hiệu quả trong nhận diện đối tượng -//</h1><pre>https://aicandy.vn/tim-hieu-mo-hinh-yolov5-hieu-qua-trong-nhan-dien-doi-tuong/
+<html><head><title>Lesson 27 == Tìm hiểu mô hình YOLOv5: Hiệu quả trong nhận diện đối tượng ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../AI-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 27 -- Tìm hiểu mô hình YOLOv5: Hiệu quả trong nhận diện đối tượng -//</h1><pre># 1. Giới thiệu 
+	YOLOv5 (You Only Look Once version 5) là một trong những mô hình phát hiện đối tượng tiên tiến và hiệu quả hiện nay, được phát triển để nhận diện và định vị các đối tượng trong ảnh với tốc độ cực nhanh và độ chính xác cao. YOLOv5 là sự tiếp nối của các phiên bản trước của mô hình YOLO, nhưng được cải thiện về cả kiến trúc và khả năng tối ưu hóa, giúp việc triển khai trở nên dễ dàng hơn và hiệu quả hơn trong các ứng dụng thực tế.
 
+	YOLOv5 chia ảnh đầu vào thành các lưới (grid), sau đó dự đoán bounding box và lớp của các đối tượng nằm trong từng ô lưới đó. Điều đặc biệt ở YOLO là mô hình chỉ cần một lần duyệt qua toàn bộ ảnh (single forward pass) để dự đoán tất cả các bounding box và nhãn của chúng, giúp giảm đáng kể thời gian tính toán so với các mô hình khác.
+		https://aicandy.vn/wp-content/uploads/2024/11/aicandy_yolo5.jpg
+		
+		
+		
+# 2. Kiến trúc
+	Kiến trúc của YOLOv5 có thể được chia thành ba phần chính: Backbone, Neck và Head. Đây là một thiết kế phổ biến trong các mô hình phát hiện đối tượng hiện đại nhằm đảm bảo khả năng trích xuất đặc trưng mạnh mẽ, xử lý nhiều kích thước đối tượng và cuối cùng là dự đoán chính xác bounding box và nhãn.		
+	
+	
+	
+	## 2.1. Backbone 
+		Backbone là phần mạng nơ-ron chịu trách nhiệm trích xuất các đặc trưng cơ bản từ hình ảnh đầu vào. YOLOv5 sử dụng CSPDarknet53 (Cross Stage Partial Network), một phiên bản cải tiến của Darknet53 được giới thiệu từ YOLOv4. CSPDarknet53 giúp tăng hiệu quả tính toán và giảm bớt chi phí tính toán bằng cách chia nhỏ quá trình tính toán trong các stage (giai đoạn) của mạng.
+		
+		Backbone bao gồm nhiều lớp convolution và batch normalization nhằm trích xuất các đặc trưng quan trọng từ ảnh đầu vào. Cụ thể:
+		
+			
+			- Convolution Layers: Các lớp convolution đóng vai trò trích xuất các đặc trưng như cạnh, hình dạng và các chi tiết nhỏ của đối tượng.
+			
+			- Batch Normalization: Lớp này giúp chuẩn hóa các đặc trưng trong quá trình huấn luyện, tăng tốc độ huấn luyện và giúp mạng hội tụ nhanh hơn.
+			
+			- Activation Function (Mish): YOLOv5 sử dụng hàm kích hoạt Mish thay vì ReLU hoặc Leaky ReLU thông thường. Mish giúp duy trì thông tin quan trọng trong mạng và cải thiện độ chính xác của mô hình.
+	
+	
+	## 2.2. Neck 
+		Neck của YOLOv5 sử dụng hai kỹ thuật nổi bật là Feature Pyramid Network (FPN) và Path Aggregation Network (PANet). Mục tiêu của Neck là kết hợp các đặc trưng từ nhiều cấp độ khác nhau trong Backbone, giúp mô hình dự đoán các đối tượng có kích thước khác nhau (nhỏ, trung bình, lớn).
+		
+		### Feature Pyramid Network (FPN) 
+			FPN giúp tăng cường khả năng phát hiện các đối tượng nhỏ bằng cách kết hợp các đặc trưng từ nhiều lớp khác nhau. Quá trình này giúp thông tin từ các lớp sâu của mạng (các lớp có đặc trưng trừu tượng) được kết hợp với thông tin từ các lớp nông (các lớp chứa đặc trưng chi tiết).
+			
+		### Path Aggregation Network (PANet) 
+			ANet cải thiện việc truyền thông tin qua lại giữa các lớp khác nhau của Backbone, giúp mô hình học được nhiều thông tin hơn về mối quan hệ giữa các đặc trưng. PANet chủ yếu được sử dụng để cải thiện việc phát hiện các đối tượng ở mức độ chi tiết và tăng hiệu suất của mô hình.
+			
+	## 2.3. Head 
+		Phần Head của YOLOv5 chịu trách nhiệm dự đoán bounding box, xác suất của đối tượng và nhãn phân loại. Tại mỗi bước trong head, mô hình sẽ trả về các thông tin sau:
+		
+		### Bounding Box 
+			Tọa độ của các hộp bao quanh (bounding box) chứa đối tượng trong ảnh. YOLOv5 sử dụng anchor box để dự đoán bounding box.
+			
+		### Objectness Score 
+			Giá trị dự đoán xác suất có đối tượng trong bounding box.
+			
+		### Class Prediction 
+			Xác suất dự đoán đối tượng thuộc về các lớp đã được định nghĩa trước (ví dụ như người, xe hơi, chó, v.v.).
+			Head của YOLOv5 hoạt động dựa trên các dự đoán tại mỗi ô lưới (grid cell) được chia từ hình ảnh đầu vào. Mỗi ô lưới sẽ dự đoán bounding box và xác suất của các lớp tương ứng.
+	
+# 3. Nguyên lý hoạt động	
+	https://aicandy.vn/tim-hieu-mo-hinh-yolov5-hieu-qua-trong-nhan-dien-doi-tuong/
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 
 </pre><a id='backBottom' href='../AI-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
