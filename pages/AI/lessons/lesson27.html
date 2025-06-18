@@ -47,19 +47,68 @@
 			Head của YOLOv5 hoạt động dựa trên các dự đoán tại mỗi ô lưới (grid cell) được chia từ hình ảnh đầu vào. Mỗi ô lưới sẽ dự đoán bounding box và xác suất của các lớp tương ứng.
 	
 # 3. Nguyên lý hoạt động	
-	https://aicandy.vn/tim-hieu-mo-hinh-yolov5-hieu-qua-trong-nhan-dien-doi-tuong/
+	Hình ảnh đầu vào được chia thành nhiều ô lưới, mỗi ô lưới tương ứng với một vị trí trong ảnh và dự đoán các bounding box cho các đối tượng trong ô lưới đó. YOLOv5 sử dụng anchor boxes để dự đoán các bounding box, và quá trình này được thực hiện song song với việc dự đoán xác suất của các lớp.
+		
+	Quá trình này có thể được mô tả bằng công thức:
+		P(c | x, y, w, h) = \sigma(s_c) \cdot \text{IoU}(\text{bbox}_\text{pred}, \text{bbox}_\text{truth})
+		
+	Trong đó: 
+		P(c | x, y, w, h)  :  Xác suất đối tượng thuộc lớp c với bounding box có tọa độ x,y chiều rộng  w  và chiều cao  h 
+		
+		s_c : Điểm tin cậy (confidence score) của đối tượng trong ô lưới. 
+		\text{IoU}  :  Intersection over Union, đánh giá mức độ trùng khớp giữa bounding box dự đoán và bounding box thực tế. 
+		
+		
+	## 3.1. Intersection over Union (IoU) 
+		Intersection over Union (IoU) là một trong những thước đo quan trọng trong các mô hình phát hiện đối tượng như YOLOv5. IoU đo lường mức độ trùng khớp giữa các hộp giới hạn (bounding boxes) dự đoán và hộp giới hạn thực tế của đối tượng. IoU được tính bằng cách lấy phần giao nhau giữa hai hộp (phần diện tích mà hai hộp cùng bao phủ) chia cho phần hợp lại của chúng (tổng diện tích mà hai hộp bao phủ).
+	
+		Công thức toán học của IoU được biểu diễn như sau: 
+			\text{IoU} = \frac{ \text{Area of Overlap} }{ \text{Area of Union} }
 	
 	
+		Trong đó: 
+			Area of Overlap: Diện tích giao nhau giữa hộp giới hạn dự đoán và hộp giới hạn thực tế.
+			Area of Union: Tổng diện tích của cả hai hộp giới hạn, trừ đi phần giao nhau (nếu có).
+			
+		Giá trị IoU luôn nằm trong khoảng từ 0 đến 1: 
+			IoU = 0: Nghĩa là không có sự trùng khớp nào giữa hai hộp.
+			IoU = 1: Hai hộp hoàn toàn trùng khớp với nhau.
 	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
+	## 3.2. Anchor boxes
+		Trong ảnh có thể chứa nhiều đối tượng với kích thước và hình dạng khác nhau, từ những vật thể nhỏ đến lớn. Thay vì để mô hình tự học cách dự đoán bounding box cho mọi đối tượng từ đầu, ta định nghĩa sẵn các anchor boxes có kích thước khác nhau và cho mô hình dự đoán sự điều chỉnh dựa trên các anchor này. Việc này giúp mô hình dự đoán bounding box nhanh và chính xác hơn.
+			https://aicandy.vn/wp-content/uploads/2024/09/aicandy_yolov5_anchorbox-300x226.png 
+			
+		Các anchor boxes được xác định từ trước và cố định trong quá trình huấn luyện. Chúng bao phủ nhiều kích thước và tỷ lệ khung hình để tương thích với các đối tượng có kích thước đa dạng. Mỗi vị trí trên ảnh được gán với một hoặc nhiều anchor boxes, và nhiệm vụ của mô hình là dự đoán độ dời (offset) để điều chỉnh anchor boxes sao cho phù hợp với đối tượng thực tế.
+
+		### Ví dụ về Anchor Boxes 
+			Giả sử ta có một anchor box với kích thước là (w_a, h_a) ở một vị trí xác định trong ảnh. Mô hình sẽ dự đoán các giá trị độ dời (offset) theo công thức sau: 
+			\text{Bounding Box Predicted} = \text{Anchor Box} + \text{Offset} 
+			
+		Trong đó: : 
+		
+				Anchor Box : Kích thước và vị trí của anchor box ban đầu. 
+				Offset    :  Các giá trị điều chỉnh được mô hình dự đoán để điều chỉnh kích thước và vị trí của anchor box sao cho phù hợp với đối tượng thực tế.
+
+
+
+	## 3.3. Non-Maximum Suppression (NMS) 
+		Sau khi dự đoán, mô hình thường tạo ra nhiều bounding box cho cùng một đối tượng, do sử dụng nhiều anchor boxes tại cùng một vị trí. Để xử lý điều này, YOLOv5 áp dụng thuật toán Non-Maximum Suppression (NMS) để giữ lại bounding box tốt nhất và loại bỏ các box dư thừa. NMS sử dụng chỉ số Intersection over Union (IoU) để chọn ra bounding box có độ chồng lấp thấp nhất với các bounding box còn lại. 
+		https://aicandy.vn/wp-content/uploads/2024/09/aicandy_yolo_nms.png
+		
+		
+		
+	## 3.4. Loss Function 
+		Hàm mất mát tổng quát của YOLOv5 được biểu diễn như sau: 
+			\text{Loss} = \lambda_{\text{box}} \cdot \text{MSE}(\text{bbox}_{\text{pred}}, \text{bbox}_{\text{true}}) + \lambda_{\text{obj}} \cdot \text{BCE}(\hat{o}, o) + \lambda_{\text{cls}} \cdot \text{BCE}(\hat{p}, p) 
+			
+		Trong đó: 
+			MSE : Mean Squared Error, dùng để đo lường lỗi dự đoán vị trí bounding box. 
+			BCE : Binary Cross Entropy, dùng để tính lỗi giữa xác suất dự đoán và giá trị thực tế cho các lớp và đối tượng. 
+			\lambda_{\text{box}}, \lambda_{\text{obj}}, \lambda_{\text{cls}} : Các hệ số điều chỉnh trọng số của các thành phần khác nhau trong hàm mất mát. 
+
+# 4. Các phiên bản của YOLOv5 
+https://aicandy.vn/tim-hieu-mo-hinh-yolov5-hieu-qua-trong-nhan-dien-doi-tuong/
+
+
 
 </pre><a id='backBottom' href='../AI-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

@@ -1,0 +1,285 @@
+<html><head><title>Lesson 35 == Vue Lifecycle Hooks ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../vue-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 35 -- Vue Lifecycle Hooks -//</h1><pre>
+# Khái niệm 
+	Mỗi component trong Vue.js trải qua một chuỗi các giai đoạn từ khi được tạo đến khi bị hủy. Những giai đoạn này được gọi là vòng đời (lifecycle) của component.
+	Vue cung cấp các lifecycle hooks, là các hàm đặc biệt mà bạn có thể định nghĩa để chạy mã tại các thời điểm cụ thể trong vòng đời, như khi component được tạo, render, hoặc hủy.
+	
+# 2. Các Lifecycle Hooks chính 
+	Bài hướng dẫn liệt kê các lifecycle hooks phổ biến trong Vue.js (áp dụng cho cả Vue 2 và Vue 3 với Options API, và Vue 3 có thêm hỗ trợ trong Composition API). Dưới đây là các hook chính, ý nghĩa và cách sử dụng:
+
+	## a. beforeCreate 
+	
+		- Thời điểm: Gọi ngay sau khi instance của component được khởi tạo, nhưng trước khi data, computed, hoặc methods được thiết lập.
+		
+		- Ứng dụng: Hiếm khi dùng, nhưng có thể dùng để thực hiện logic trước khi component được thiết lập đầy đủ.
+		
+		- Lưu ý: Không thể truy cập data hoặc refs tại đây vì chúng chưa được khởi tạo.
+	
+beforeCreate() {
+  console.log('Component is about to be created');
+}
+	
+	
+	
+	## b. created
+	- Thời điểm: Gọi sau khi instance được tạo, data, computed, và methods đã được thiết lập, nhưng DOM chưa được render.
+	
+	- Ứng dụng: Thường dùng để gọi API, thiết lập dữ liệu ban đầu, hoặc thực hiện các tác vụ không cần DOM.
+
+	- Lưu ý: Không thể truy cập DOM ($refs) vì chưa render.
+	
+created() {
+  console.log('Component created, data is:', this.myData);
+  // Gọi API
+  this.fetchData();
+}	
+	
+	
+	
+	
+	## c. beforeMount 
+	
+	- Thời điểm: Gọi ngay trước khi component được gắn (mount) vào DOM, template đã được biên dịch nhưng chưa render.
+	
+	- Ứng dụng: Hiếm dùng, nhưng có thể dùng để điều chỉnh logic trước khi DOM được tạo.
+	
+	- Lưu ý: Vẫn chưa truy cập được DOM.	
+	
+beforeMount() {
+  console.log('Component is about to be mounted');
+}	
+	
+	
+	## d. mounted
+	- Thời điểm: Gọi sau khi component được gắn vào DOM, template đã được render.
+	
+	- Ứng dụng: Lý tưởng để tương tác với DOM (như focus input, đo kích thước), khởi tạo thư viện bên thứ ba (như Chart.js), hoặc gọi API cần DOM.
+	
+	- Lưu ý: Có thể truy cập $refs và DOM.	
+
+
+mounted() {
+  console.log('Component mounted, DOM is ready');
+  this.$refs.myInput.focus(); // Focus input
+}
+
+
+
+	## e. beforeUpdate 
+	- Thời điểm: Gọi ngay trước khi component được cập nhật do thay đổi dữ liệu reactive (như data hoặc computed).
+	
+	- Ứng dụng: Dùng để lưu trạng thái hiện tại hoặc thực hiện logic trước khi DOM re-render.
+	
+	- Lưu ý: DOM chưa được cập nhật tại thời điểm này.
+
+beforeUpdate() {
+  console.log('Component is about to update');
+}
+
+
+
+	## f. updated
+	- Thời điểm: Gọi sau khi component được cập nhật và DOM đã được re-render.
+	
+	- Ứng dụng: Dùng để thực hiện logic sau khi DOM thay đổi (như cập nhật thư viện bên thứ ba).
+	
+	- Lưu ý: Tránh thay đổi dữ liệu reactive trong updated để tránh vòng lặp vô hạn.
+
+updated() {
+  console.log('Component updated, DOM is refreshed');
+}
+
+
+
+	## g. beforeUnmount (Vue 3) / beforeDestroy (Vue 2) 
+	
+	- Thời điểm: Gọi ngay trước khi component bị hủy (unmount), nhưng instance vẫn còn hoạt động.
+	
+	- Ứng dụng: Dùng để dọn dẹp (như hủy timer, gỡ event listener, hoặc hủy subscription).
+	
+	- Lưu ý: Vẫn có thể truy cập data, methods, và DOM.
+
+beforeUnmount() {
+  console.log('Component is about to be unmounted');
+  clearInterval(this.timer); // Dọn dẹp timer
+}
+
+
+
+
+	## h. unmounted (Vue 3) / destroyed (Vue 2) 
+	- Thời điểm: Gọi sau khi component bị hủy hoàn toàn, không còn trong DOM.
+	
+	- Ứng dụng: Dùng để xác nhận dọn dẹp hoặc ghi log.
+	
+	- Lưu ý: Không thể truy cập DOM hoặc instance tại đây.
+
+unmounted() {
+  console.log('Component has been unmounted');
+}
+
+
+
+
+
+
+
+# 3. Lifecycle Hooks trong Composition API (Vue 3) 
+
+	Trong Composition API, bạn sử dụng các lifecycle hooks bằng cách import từ vue và gọi chúng trong setup(). Tên hook tương tự Options API nhưng bắt đầu bằng on (trừ beforeCreate và created không cần).
+
+	## Ví dụ Composition API 
+		
+<template>
+  <div>
+    <p>{{ message }}</p>
+    <button @click="updateMessage">Update</button>
+  </div>
+</template>
+
+<script>
+import { ref, onMounted, onUpdated, onUnmounted } from 'vue';
+
+export default {
+  setup() {
+    const message = ref('Hello Vue!');
+
+    // Mounted hook
+    onMounted(() => {
+      console.log('Component mounted');
+    });
+
+    // Updated hook
+    onUpdated(() => {
+      console.log('Component updated');
+    });
+
+    // Unmounted hook
+    onUnmounted(() => {
+      console.log('Component unmounted');
+    });
+
+    const updateMessage = () => {
+      message.value = 'Updated!';
+    };
+
+    return {
+      message,
+      updateMessage
+    };
+  }
+};
+</script>
+
+
+	## Giải thích 
+	
+	- onMounted: Thay cho mounted, chạy khi component được gắn vào DOM.
+	- onUpdated: Thay cho updated, chạy sau khi DOM cập nhật.
+	- onUnmounted: Thay cho unmounted, chạy khi component bị hủy.
+	- Không có beforeCreate và created: Vì setup() thay thế vai trò của chúng, bạn có thể viết logic trực tiếp trong setup().
+
+
+
+# 4. Ví dụ thực tế
+
+	## Gọi API khi component được tạo 
+	
+<template>
+  <div>
+    <ul>
+      <li v-for="user in users" :key="user.id">{{ user.name }}</li>
+    </ul>
+  </div>
+</template>
+
+<script>
+import axios from 'axios';
+import { ref, onMounted } from 'vue';
+
+export default {
+  setup() {
+    const users = ref([]);
+
+    onMounted(async () => {
+      try {
+        const response = await axios.get('https://jsonplaceholder.typicode.com/users');
+        users.value = response.data;
+      } catch (error) {
+        console.error('Error fetching users:', error);
+      }
+    });
+
+    return { users };
+  }
+};
+</script>
+
+	Giải thích: Gọi API trong onMounted để lấy danh sách người dùng và cập nhật users.
+
+
+
+
+	## Dọn dẹp Timer 
+<template>
+  <div>
+    <p>Time: {{ time }}</p>
+  </div>
+</template>
+
+<script>
+import { ref, onMounted, onUnmounted } from 'vue';
+
+export default {
+  setup() {
+    const time = ref(0);
+    let timer;
+
+    onMounted(() => {
+      timer = setInterval(() => {
+        time.value++;
+      }, 1000);
+    });
+
+    onUnmounted(() => {
+      clearInterval(timer); // Dọn dẹp timer
+    });
+
+    return { time };
+  }
+};
+</script>	
+
+	Giải thích: Tạo timer trong onMounted và dọn dẹp trong onUnmounted để tránh memory leak.
+
+
+
+# 5. Lưu ý quan trọng 
+
+	## Tránh lạm dụng hooks: 
+		Chỉ sử dụng hook khi cần, ví dụ mounted cho DOM, unmounted cho dọn dẹp.
+		Logic đơn giản nên đặt trong setup() hoặc methods.
+
+
+	## Vòng lặp vô hạn 
+		Tránh thay đổi dữ liệu reactive trong updated để không gây re-render liên tục. 
+		
+	## 	Vue 2 vs Vue 3 
+	
+		Vue 2 dùng beforeDestroy và destroyed, Vue 3 dùng beforeUnmount và unmounted.
+		Composition API (Vue 3) dùng on* hooks thay vì định nghĩa trực tiếp trong Options API.
+
+	## Async trong hooks: 
+		Có thể dùng async/await trong hooks như onMounted, nhưng đảm bảo xử lý lỗi.
+		
+	## 	Thứ tự hooks: 
+		Các hooks chạy theo thứ tự vòng đời: beforeCreate → created → beforeMount → mounted → (thay đổi dữ liệu) → beforeUpdate → updated → (hủy) → beforeUnmount → unmounted.
+
+# 6. Ứng dụng thực tế
+	
+	- Khởi tạo: Gọi API, thiết lập dữ liệu (created, onMounted).
+	- Tương tác DOM: Focus input, khởi tạo thư viện UI (mounted).
+	- Dọn dẹp: Hủy timer, gỡ event listener, hủy subscription (beforeUnmount, unmounted).
+	- Theo dõi cập nhật: Đồng bộ hóa với thư viện bên thứ ba sau khi DOM thay đổi (updated).
+
+
+</pre><a id='backBottom' href='../vue-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
