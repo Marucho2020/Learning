@@ -1,0 +1,66 @@
+<html><head><title>Lesson 33 == Error Mitigation (giảm lỗi) ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../quantum-computing-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 33 -- Error Mitigation (giảm lỗi) -//</h1><pre># Khái niệm 
+	 là kỹ thuật giảm ảnh hưởng của lỗi trong máy tính lượng tử mà không cần sửa lỗi hoàn toàn (QEC). Đây là bước trung gian quan trọng khi làm việc trên NISQ devices (Noisy Intermediate-Scale Quantum), ví dụ IBM Quantum hiện tại.
+	
+# 🧠 Tổng quan về Error Mitigation trên Qiskit 	
+
+	Qiskit cung cấp module:
+		qiskit_ibm_runtime.QEM
+
+	và khung error mitigation mới nhất nằm trong qiskit-ibm-runtime, cụ thể là:
+		Twirling & Clifford Sampling
+		Measurement Error Mitigation (MEM)
+		Zero-Noise Extrapolation (ZNE)
+		Probabilistic Error Cancellation (PEC)
+
+# 📌 1. Measurement Error Mitigation (MEM) 
+	
+	## ✳️ Ý tưởng: 
+		Đo sai xảy ra: ví dụ đo qubit là |1⟩ nhưng máy trả về 0.
+		→ Ta đo nhiều lần trạng thái đã biết trước (|0⟩, |1⟩, ...), xây "calibration matrix", rồi dùng để đảo ngược sai số khi đo thực tế.
+
+		MEMbyQiskit
+
+
+
+# 📌 2. Zero Noise Extrapolation (ZNE) 
+	##  ✳️ Ý tưởng: 
+		Chạy circuit ở nhiễu nhân tạo cao hơn, rồi ngoại suy trở lại kết quả của circuit không có nhiễu.
+		
+	## ✅ Tool:
+		from mitiq import zne
+
+
+	⚠️ Nhưng: mitiq không phải core của Qiskit → cần cài riêng:
+		pip install mitiq
+		
+		
+		
+# 📌 3. Probabilistic Error Cancellation (PEC) 
+			
+	Đây là kỹ thuật tiên tiến: xây lại cổng lượng tử lý tưởng bằng tổ hợp tuyến tính có trọng số âm của các cổng nhiễu.
+	→ Cần full characterization của noise model (gọi là noise inversion), tốn tài nguyên.
+	Qiskit chưa fully support PEC trừ khi dùng với các framework chuyên sâu hơn.	
+		
+		
+		
+# 🧠 Kết luận – Nên dùng gì? 
+| Mục tiêu                  | Cách nên dùng                  | Ghi chú                                  |
+| ------------------------- | ------------------------------ | ---------------------------------------- |
+| Đo sai                    | Measurement Error Mitigation   | Đơn giản, hiệu quả                       |
+| Gate noise (CNOT, H, etc) | Zero Noise Extrapolation (ZNE) | Dùng được trên giả lập hoặc backends IBM |
+| Nghiên cứu sâu            | PEC                            | Không nên dùng nếu chưa quen             |
+			
+		
+		
+🚀 Gợi ý học tiếp:		
+		
+Làm bài toán đơn giản (Bell state, GHZ...) rồi thêm noise → dùng MEM & ZNE để thấy hiệu quả.
+Học cách build NoiseModel từ real device (dùng IBMQ).
+Khi làm dự án thật → luôn chạy calibration để giảm error đo.	
+		
+		
+		
+		
+		
+
+</pre><a id='backBottom' href='../quantum-computing-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

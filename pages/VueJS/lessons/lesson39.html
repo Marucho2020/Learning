@@ -1,0 +1,331 @@
+<html><head><title>Lesson 39 == Vue Routing ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../vue-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 39 -- Vue Routing -//</h1><pre>
+# Khái niệm 
+	một thư viện chính thức của Vue.js, để triển khai client-side routing trong các ứng dụng Single Page Application (SPA). Routing cho phép điều hướng giữa các "trang" trong ứng dụng Vue mà không cần tải lại toàn bộ trang, mang lại trải nghiệm người dùng mượt mà và nhanh chóng. Dưới đây là giải thích chi tiết, dễ hiểu và súc tích, tiếp nối các giải thích trước của bạn.
+	
+	Routing trong Vue là cơ chế điều hướng trong ứng dụng, ánh xạ các URL (đường dẫn) đến các component cụ thể. Điều này cho phép hiển thị nội dung khác nhau dựa trên URL mà không cần tải lại trang.
+	
+	Vue Router: Là thư viện chính thức của Vue.js để quản lý routing trong SPA. Nó tích hợp chặt chẽ với Vue, cho phép:
+		
+		- Điều hướng bằng URL (ví dụ: /home, /about).
+		- Hiển thị component tương ứng với URL thông qua <router-view>.
+		- Tạo liên kết điều hướng bằng <router-link>.
+	
+	Client-side Routing: Thay vì gửi yêu cầu đến server để tải trang mới, Vue Router xử lý điều hướng trong trình duyệt, chỉ cập nhật phần nội dung cần thiết.
+	
+	
+	
+# 	2. Các thành phần chính của Vue Router 
+	
+	## a. <router-link> 
+		### Chức năng: Tạo liên kết điều hướng, thay thế thẻ <a> truyền thống. Nó đảm bảo điều hướng mà không tải lại trang.
+	
+		### Cú pháp : 
+			<router-link to="/home">Go to Home</router-link> 
+	
+		### Kết quả: Render thành thẻ <a> với href="/home", nhưng Vue Router chặn hành vi tải lại trang và chuyển sang component tương ứng. 
+	
+		### Thuộc tính phổ biến: 
+			to: Đường dẫn đích (ví dụ: to="/home" hoặc to="{ path: '/home' }".
+			tag: Chỉ định thẻ HTML để render (mặc định là <a>).
+			active-class: Class áp dụng khi liên kết đang hoạt động (mặc định: router-link-active).
+		
+	
+	### b. <router-view> 
+		Chức năng: Là placeholder (điểm neo) nơi component tương ứng với URL hiện tại sẽ được render.
+		
+		Cú pháp: <router-view></router-view>
+		
+		Cách hoạt động: Khi URL thay đổi (ví dụ: /home), Vue Router tìm component khớp với đường dẫn và render nó tại vị trí của <router-view>.
+		
+		
+	###  c. Router Instance
+	
+		### Chức năng: Đối tượng Vue Router được tạo để quản lý các route (đường dẫn) và tích hợp với ứng dụng Vue.
+		
+		### Cú pháp cơ bản: 
+import { createRouter, createWebHistory } from 'vue-router';
+const router = createRouter({
+  history: createWebHistory(),
+  routes: [
+    { path: '/home', component: Home },
+    { path: '/about', component: About }
+  ]
+});			
+		
+		
+	### 	d. Routes 
+		
+		#### Chức năng: Danh sách các ánh xạ giữa đường dẫn (path) và component. 
+		#### Cấu trúc: 
+	
+const routes = [
+  { path: '/home', component: Home },
+  { path: '/about', component: About },
+  { path: '/', redirect: '/home' } // Chuyển hướng
+];	
+	
+	
+#3. Cách thiết lập Vue Router 
+
+	## Bước 1: Cài đặt Vue Router 
+		Cài đặt thông qua npm/yarn:
+		npm install vue-router@4
+		
+		Vue Router 4 chỉ tương thích với Vue 3.
+
+
+	## Bước 2: Tạo file Router
+		Tạo file router/index.js để định nghĩa router:
+		
+import { createRouter, createWebHistory } from 'vue-router';
+import Home from '../components/Home.vue';
+import About from '../components/About.vue';
+
+const routes = [
+  { path: '/home', component: Home },
+  { path: '/about', component: About },
+  { path: '/', redirect: '/home' }
+];
+
+const router = createRouter({
+  history: createWebHistory(),
+  routes
+});
+
+export default router;		
+		
+	
+
+	### Bước 3: Tích hợp Router vào ứng dụng 
+		Trong file main.js, gắn router vào ứng dụng Vue:
+		
+import { createApp } from 'vue';
+import App from './App.vue';
+import router from './router';
+
+const app = createApp(App);
+app.use(router);
+app.mount('#app');		
+		
+		
+	### Bước 4: Sử dụng trong Component 
+		Trong App.vue, sử dụng <router-link> và <router-view>
+<template>
+  <div>
+    <nav>
+      <router-link to="/home">Home</router-link> |
+      <router-link to="/about">About</router-link>
+    </nav>
+    <router-view></router-view>
+  </div>
+</template>		
+		
+		
+		
+		
+	### 	Bước 5: Tạo Component cho Route 
+	
+			Tạo các component như Home.vue và About.vue
+<!-- Home.vue -->
+<template>
+  <h1>Home Page</h1>
+</template>		
+		
+<!-- About.vue -->
+<template>
+  <h1>About Page</h1>
+</template>		
+		
+		
+		
+# 4. Vue Router trong Vue 2 so với Vue 3 
+
+
+	## Vue 2
+	
+		### Thư viện: Sử dụng vue-router@3. 
+		
+		### Cú pháp: 
+import Vue from 'vue';
+import VueRouter from 'vue-router';
+Vue.use(VueRouter);
+const router = new VueRouter({
+  routes: [
+    { path: '/home', component: Home }
+  ]
+});
+new Vue({
+  router,
+  render: h => h(App)
+}).$mount('#app');		
+
+	Không có <script setup>: Vue 2 không hỗ trợ Composition API hoặc <script setup>.
+	
+	
+	
+	
+	## Vue 3 
+		
+		### Thư viện: Sử dụng vue-router@4. 
+		### Cú pháp: Như ví dụ ở trên, dùng createRouter và tích hợp qua app.use(router). 
+		### Hỗ trợ Composition API: Vue Router 4 tích hợp tốt với Composition API, cung cấp các composables như useRouter() và useRoute(). 
+
+
+# 5. Các tính năng nâng cao của Vue Router
+
+	##  a. Dynamic Routes
+	
+		Cho phép truyền tham số qua URL (ví dụ: /user/:id).
+
+
+		Ví dụ : 
+			
+const routes = [
+  { path: '/user/:id', component: User }
+];
+
+<!-- User.vue -->
+<template>
+  <h1>User ID: {{ $route.params.id }}</h1>
+</template>
+
+
+		## Trong Composition API 
+import { useRoute } from 'vue-router';
+const route = useRoute();
+console.log(route.params.id); // Lấy ID		
+
+
+
+	## b. Nested Routes
+		Cho phép lồng các route con trong route cha.
+
+		## Ví dụ: 
+const routes = [
+  {
+    path: '/dashboard',
+    component: Dashboard,
+    children: [
+      { path: 'profile', component: Profile }
+    ]
+  }
+];
+
+<!-- Dashboard.vue -->
+<template>
+  <div>
+    <h1>Dashboard</h1>
+    <router-view></router-view> <!-- Render route con -->
+  </div>
+</template>
+
+
+
+	## c. Programmatic Navigation
+		Điều hướng bằng code thay vì <router-link>
+
+import { useRouter } from 'vue-router';
+const router = useRouter();
+router.push('/home'); // Điều hướng đến /home
+
+
+	## d. Lazy Loading
+		Tải component chỉ khi cần, cải thiện hiệu suất
+
+const routes = [
+  { path: '/home', component: () => import('../components/Home.vue') }
+];
+
+
+	## e. Navigation Guards 
+		Kiểm soát điều hướng (ví dụ: kiểm tra đăng nhập):
+		
+router.beforeEach((to, from, next) => {
+  if (to.path === '/admin' && !isAuthenticated) {
+    next('/login');
+  } else {
+    next();
+  }
+});		
+
+
+
+# 6. So sánh với Dynamic Components
+
+	## Dynamic Components 
+	
+<template>
+  <component :is="currentComponent"></component>
+  <button @click="currentComponent = 'Home'">Home</button>
+  <button @click="currentComponent = 'About'">About</button>
+</template>
+<script>
+import Home from './Home.vue';
+import About from './About.vue';
+export default {
+  data() {
+    return { currentComponent: 'Home' };
+  },
+  components: { Home, About }
+};
+</script>
+
+	Ưu điểm: 
+	Đơn giản, không cần thư viện.
+	Nhược điểm: Không quản lý URL, không hỗ trợ lịch sử trình duyệt (back/forward).
+
+	## Vue Router:
+		Hỗ trợ URL, lịch sử trình duyệt, và các tính năng nâng cao.
+		Phù hợp cho SPA phức tạp.
+
+
+
+# 7. Lưu ý quan trọng
+	
+
+	## History Mode 
+		Vue Router hỗ trợ hai chế độ:
+			createWebHistory: Sử dụng HTML5 History API (URL sạch, ví dụ: /home).
+			createWebHashHistory: Sử dụng hash (ví dụ: /#/home), không cần cấu hình server.
+			
+		Với createWebHistory, server phải được cấu hình để trả về index.html cho mọi đường dẫn. 
+
+	## Tính reactive 
+		Trong Composition API, sử dụng useRoute() để lấy thông tin route hiện tại (như route.params, route.query).
+
+	## Hiệu suất:
+		Sử dụng lazy loading cho các route lớn.
+		Tránh lạm dụng navigation guards để không làm chậm ứng dụng.
+
+	# Ứng dụng thực tế:
+		- Xây dựng SPA với nhiều trang (home, about, profile, v.v.).
+		- Quản lý trạng thái đăng nhập (chuyển hướng đến login nếu chưa đăng nhập).
+		- Tạo các dashboard với route lồng nhau.
+		
+# 8. Tóm tắt
+	## Vue Routing: Cho phép điều hướng trong SPA mà không tải lại trang, sử dụng Vue Router.
+	## Thành phần chính:
+	
+		- <router-link>: Tạo liên kết điều hướng.
+		- <router-view>: Render component theo URL.
+		- Router instance và routes: Quản lý ánh xạ URL-component.
+	## Vue 2 vs Vue 3:
+		- Vue 2 dùng vue-router@3 với new VueRouter.
+		- Vue 3 dùng vue-router@4 với createRouter, hỗ trợ Composition API.
+		
+	## So với Dynamic Components: Vue Router mạnh mẽ hơn, hỗ trợ URL và lịch sử trình duyệt.
+	## Tính năng nâng cao: Dynamic routes, nested routes, lazy loading, navigation guards.		
+		
+		
+	
+>>> HỌC KIẾN THỨC CHUYÊN SÂU HƠN CHO ROUTER VÀ COMPOSITION API 
+Cảm ơn bạn đã đặt câu hỏi chi tiết về Vue Router, cụ thể là về Vue.use(VueRouter), biến routes, và các hàm useRouter(), useRoute() cùng khái niệm composables trong Vue 3. Tôi sẽ giải thích từng phần một cách dễ hiểu, súc tích và rõ ràng để bạn nắm vững.
+	https://grok.com/chat/28a1640f-292d-4bf5-b913-4e21e18c8027
+		
+https://www.w3schools.com/vue/vue_form-inputs.php		
+		
+		
+		
+		
+		
+</pre><a id='backBottom' href='../vue-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
