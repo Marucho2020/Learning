@@ -1,0 +1,347 @@
+<html><head><title>Lesson 42 == Vue Form Inputs ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../vue-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 42 -- Vue Form Inputs -//</h1><pre># Khái niệm 
+	
+	
+	## Form Inputs trong Vue.js là các phần tử HTML như <input>, <textarea>, <select>, v.v., được sử dụng để thu thập dữ liệu từ người dùng.
+	
+	## Vue sử dụng v-model để tạo two-way data binding (ràng buộc dữ liệu hai chiều) giữa các phần tử input và dữ liệu reactive trong component (như data trong Options API hoặc ref trong Composition API).
+	
+	## Two-way data binding:
+		- Khi người dùng nhập dữ liệu vào input, dữ liệu reactive trong component được cập nhật.
+		- Khi dữ liệu reactive thay đổi (bằng code), giá trị của input cũng tự động cập nhật.
+
+
+#2. Cách sử dụng v-model 
+	v-model là chỉ thị chính để liên kết dữ liệu hai chiều. Nó hoạt động với hầu hết các loại input HTML.
+	
+	## Cú pháp cơ bản
+		<input v-model="variable" />
+		
+			variable là một biến reactive (trong data của Options API hoặc ref trong Composition API).
+
+
+	## Cách hoạt động của v-model 
+	
+		Dưới hood, v-model là sự kết hợp của:
+		
+			- Binding giá trị: :value="variable" để hiển thị giá trị từ biến.
+			- Lắng nghe sự kiện: @input="variable = $event.target.value" để cập nhật biến khi người dùng nhập.
+
+		Ví dụ: <input v-model="name" /> tương đương với
+		
+<input :value="name" @input="name = $event.target.value" />		
+		
+		
+		
+# 	3. Xử lý các loại Input trong Vue 
+		
+	## a. Text Input 
+		Liên kết một ô input text với một biến reactive.
+		Ví dụ Options API (Vue 2/Vue 3):
+<template>
+  <div>
+    <input v-model="name" type="text" />
+    <p>You entered: {{ name }}</p>
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      name: ''
+    };
+  }
+};
+</script>		
+		
+		
+		
+	## Ví dụ Composition API (Vue 3) 
+<template>
+  <div>
+    <input v-model="name" type="text" />
+    <p>You entered: {{ name }}</p>
+  </div>
+</template>
+
+<script setup>
+import { ref } from 'vue';
+
+const name = ref('');
+</script>	
+		
+		
+		
+	Giải thích:
+		name là biến reactive (data hoặc ref).
+		Khi người dùng nhập vào input, name được cập nhật.
+		Khi name thay đổi (ví dụ: name.value = 'John'), input tự động hiển thị giá trị mới.	
+		
+	
+
+# b. Textarea 
+	Tương tự text input, v-model hoạt động với <textarea>.
+	
+	Ví dụ 
+<template>
+  <div>
+    <textarea v-model="message"></textarea>
+    <p>Message: {{ message }}</p>
+  </div>
+</template>
+
+<script setup>
+import { ref } from 'vue';
+
+const message = ref('');
+</script>		
+
+	Lưu ý: v-model thay thế cho việc dùng :value và @input thủ công.
+
+
+# c. Checkbox
+	Checkbox liên kết với một biến boolean (cho một checkbox) hoặc một mảng (cho nhiều checkbox).
+
+	Checkbox đơn : 
+<template>
+  <div>
+    <input type="checkbox" v-model="isChecked" />
+    <p>Checked: {{ isChecked }}</p>
+  </div>
+</template>
+
+<script setup>
+import { ref } from 'vue';
+
+const isChecked = ref(false);
+</script>	
+		
+	isChecked là true khi checkbox được chọn, false khi không chọn.	
+		
+
+
+	## Nhiều checkbox 
+<template>
+  <div>
+    <input type="checkbox" v-model="fruits" value="apple" />
+    <label>Apple</label>
+    <input type="checkbox" v-model="fruits" value="banana" />
+    <label>Banana</label>
+    <p>Selected fruits: {{ fruits }}</p>
+  </div>
+</template>
+
+<script setup>
+import { ref } from 'vue';
+
+const fruits = ref([]); // Mảng chứa các giá trị được chọn
+</script>		
+
+	fruits là mảng chứa các giá trị value của checkbox được chọn (ví dụ: ['apple', 'banana']).
+	
+	
+	## d. Radio Buttons
+		Radio buttons liên kết với một biến lưu giá trị của radio được chọn.
+<template>
+  <div>
+    <input type="radio" v-model="gender" value="male" />
+    <label>Male</label>
+    <input type="radio" v-model="gender" value="female" />
+    <label>Female</label>
+    <p>Selected: {{ gender }}</p>
+  </div>
+</template>
+
+<script setup>
+import { ref } from 'vue';
+
+const gender = ref('');
+</script>
+
+	gender lưu giá trị value của radio được chọn (ví dụ: 'male' hoặc 'female').
+
+
+	## Select (Dropdown)
+	<select> liên kết với một biến lưu giá trị của option được chọn. Có thể là single select hoặc multiple select.
+
+<template>
+  <div>
+    <select v-model="selectedCity">
+      <option value="">Select a city</option>
+      <option value="newyork">New York</option>
+      <option value="london">London</option>
+    </select>
+    <p>Selected: {{ selectedCity }}</p>
+  </div>
+</template>
+
+<script setup>
+import { ref } from 'vue';
+
+const selectedCity = ref('');
+</script>
+		selectedCity lưu giá trị value của option được chọn (ví dụ: 'newyork').
+
+
+
+	## Multiple Select
+<template>
+  <div>
+    <select v-model="selectedCities" multiple>
+      <option value="newyork">New York</option>
+      <option value="london">London</option>
+      <option value="paris">Paris</option>
+    </select>
+    <p>Selected: {{ selectedCities }}</p>
+  </div>
+</template>
+
+<script setup>
+import { ref } from 'vue';
+
+const selectedCities = ref([]);
+</script>	
+
+	selectedCities là mảng chứa các giá trị value của các option được chọn (ví dụ: ['newyork', 'london']).
+
+
+
+# 4. Modifiers cho v-model
+	Vue cung cấp các modifier để tùy chỉnh hành vi của v-model.
+	
+	##   .lazy:
+			Cập nhật dữ liệu chỉ khi input mất focus hoặc sự kiện change xảy ra, thay vì mỗi lần gõ phím (input).
+			<input v-model.lazy="name" type="text" />
+			name chỉ cập nhật khi người dùng rời khỏi input.
+
+
+
+	##   .number 
+			Chuyển giá trị input thành số (nếu có thể).
+			<input v-model.number="age" type="text" />
+			Nếu người dùng nhập "42", age sẽ là 42 (số), không phải '42' (chuỗi).
+
+
+
+	##    .trim
+				Loại bỏ khoảng trắng ở đầu và cuối giá trị input.
+				Ví dụ : 
+					<input v-model.trim="name" type="text" />		
+
+				Nếu nhập " John ", name sẽ là "John".
+
+
+
+# 5. Xử lý Form Submission
+	Thông thường, form được xử lý với sự kiện @submit để gửi dữ liệu.
+<template>
+  <form @submit.prevent="submitForm">
+    <input v-model="name" type="text" placeholder="Enter name" />
+    <button type="submit">Submit</button>
+  </form>
+  <p>Submitted: {{ submittedName }}</p>
+</template>
+
+<script setup>
+import { ref } from 'vue';
+
+const name = ref('');
+const submittedName = ref('');
+
+const submitForm = () => {
+  submittedName.value = name.value;
+  name.value = ''; // Reset input
+};
+</script>
+
+		Giải thích:
+			@submit.prevent: Ngăn hành vi mặc định của form (tải lại trang).
+			submitForm: Xử lý dữ liệu form (lưu name vào submittedName và reset input).
+
+
+
+
+#  6. Form Inputs trong Vue 2 so với Vue 3 
+
+
+	## Vue 2 (Options API) 
+		Sử dụng data để lưu trữ biến reactive.
+		v-model hoạt động tương tự, nhưng không có <script setup>.
+
+<template>
+  <input v-model="name" type="text" />
+  <p>Name: {{ name }}</p>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      name: ''
+    };
+  }
+};
+</script>
+
+
+
+	## Vue 3 (Composition API)
+		- Sử dụng ref hoặc reactive để lưu trữ biến reactive.
+		- Hỗ trợ <script setup> để mã ngắn gọn hơn.
+		- v-model hoạt động giống Vue 2, nhưng tích hợp tốt với Composition API.
+	## Khác biệt chính
+		- Reactivity: Vue 2 tự động reactive với data; Vue 3 yêu cầu ref hoặc reactive.
+		- Cú pháp: Vue 3 có <script setup> giúp giảm boilerplate.
+		- Hiệu suất: Vue 3 tối ưu hơn với Composition API, nhưng cách xử lý form inputs không khác nhiều.
+
+
+# 7. Lưu ý quan trọng
+	## v-model với Components
+		v-model có thể dùng với custom components, yêu cầu component phát ra sự kiện update:modelValue và nhận prop modelValue.
+
+<!-- CustomInput.vue -->
+<template>
+  <input :value="modelValue" @input="$emit('update:modelValue', $event.target.value)" />
+</template>
+
+<script>
+export default {
+  props: ['modelValue'],
+  emits: ['update:modelValue']
+};
+</script>
+
+
+		Sử dụng: 
+			<custom-input v-model="name" />
+
+
+
+
+	## Validation: 
+		Vue không tích hợp validation, nhưng bạn có thể dùng thư viện như VeeValidate hoặc Vuelidate.
+	
+		Ví dụ thủ công:
+	
+		
+<template>
+  <input v-model="name" type="text" />
+  <p v-if="name.length < 3">Name must be at least 3 characters</p>
+</template>	
+	
+	
+	## Hiệu suất: 
+		v-model hiệu quả với dữ liệu reactive nhỏ. Với form lớn, cân nhắc dùng reactive thay vì nhiều ref.
+	
+	
+	## Ứng dụng thực tế:
+		- Xây dựng form đăng nhập/đăng ký.
+		- Tạo bộ lọc (filter) với checkbox hoặc select.
+		- Xử lý form với API (gửi dữ liệu qua fetch hoặc axios
+
+
+
+
+
+https://www.w3schools.com/vue/vue_animations.php
+</pre><a id='backBottom' href='../vue-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
