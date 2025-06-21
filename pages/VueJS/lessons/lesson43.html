@@ -1,0 +1,427 @@
+<html><head><title>Lesson 43 == Vue Animation ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../vue-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 43 -- Vue Animation -//</h1><pre>
+# Khái niệm 
+	
+	Vue.js cung cấp các công cụ tích hợp để thêm hiệu ứng chuyển động (transitions) và hoạt hình (animations) vào giao diện người dùng, giúp các thay đổi như thêm, xóa, hoặc cập nhật phần tử trở nên mượt mà và sinh động hơn. Bài hướng dẫn trên W3Schools tập trung vào cách sử dụng các tính năng này thông qua thẻ <transition> và <transition-group>.
+	
+		- Transitions: Dùng cho các hiệu ứng đơn giản (như mờ dần, trượt, thu phóng).
+		- Animations: Dùng cho các hiệu ứng phức tạp hơn, thường kết hợp với CSS keyframes hoặc thư viện bên ngoài.
+
+
+# 1. Transitions trong Vue 
+	Vue sử dụng thẻ <transition> để áp dụng hiệu ứng khi một phần tử được thêm vào hoặc loại bỏ khỏi DOM, thường kết hợp với các chỉ thị như v-if, v-show, hoặc các thành phần động.
+	
+<transition name="fade">
+  <div v-if="show">Nội dung</div>
+</transition>
+	
+
+Cách hoạt động:
+	- Khi show chuyển từ false sang true: Phần tử xuất hiện với hiệu ứng "enter".
+	- Khi show chuyển từ true sang false: Phần tử biến mất với hiệu ứng "leave".
+
+Các class CSS được Vue tự động thêm:
+	- Enter: fade-enter, fade-enter-active, fade-enter-to.
+	- Leave: fade-leave, fade-leave-active, fade-leave-to.
+
+
+# Ví dụ CSS cho hiệu ứng mờ dần (fade) 
+
+.fade-enter, .fade-leave-to {
+  opacity: 0;
+}
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.5s;
+}
+.fade-enter-to, .fade-leave {
+  opacity: 1;
+}
+
+
+		Giải thích:
+			- Enter: Phần tử bắt đầu với opacity: 0 và chuyển dần sang opacity: 1 trong 0.5 giây.
+			- Leave: Phần tử bắt đầu với opacity: 1 và chuyển dần sang opacity: 0.
+			
+			
+			
+	## 	Các thuộc tính của <transition> 
+		
+		name: Tiền tố của class CSS (ví dụ: fade trong name="fade").
+		appear: Áp dụng hiệu ứng ngay khi phần tử được render lần đầu (thêm appear vào thẻ <transition>).
+		mode: Điều chỉnh thứ tự hiệu ứng:
+			- out-in: Phần tử cũ biến mất trước, phần tử mới xuất hiện sau.
+			- in-out: Phần tử mới xuất hiện trước, phần tử cũ biến mất sau.	
+			
+			
+			
+# 2. Animations với CSS Keyframes 
+		Để tạo hiệu ứng phức tạp hơn, bạn có thể dùng CSS animations với @keyframes, vẫn kết hợp với các class của <transition>.		
+			
+			
+		## 	Ví dụ hiệu ứng nảy (bounce) 
+<transition name="bounce">
+  <div v-if="show">Nảy vào</div>
+</transition>	
+			
+			
+.bounce-enter-active {
+  animation: bounce-in 0.5s;
+}
+.bounce-leave-active {
+  animation: bounce-out 0.5s;
+}
+@keyframes bounce-in {
+  0% { transform: scale(0); }
+  50% { transform: scale(1.5); }
+  100% { transform: scale(1); }
+}
+@keyframes bounce-out {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.5); }
+  100% { transform: scale(0); }
+}			
+			
+			
+		## 	Giải thích:
+			- Khi xuất hiện: Phần tử nảy từ kích thước 0 lên 1.5 rồi về 1.
+			- Khi biến mất: Phần tử nảy từ kích thước 1 lên 1.5 rồi về 0.	
+			
+			
+		
+# 3. Sử dụng <transition-group> cho danh sách
+	Thẻ <transition-group> được dùng để áp dụng hiệu ứng cho các phần tử trong danh sách (thường với v-for), hỗ trợ thêm, xóa, hoặc di chuyển phần tử.
+
+<transition-group name="list" tag="ul">
+  <li v-for="item in items" :key="item">{{ item }}</li>
+</transition-group>
+
+.list-enter-active, .list-leave-active {
+  transition: all 0.5s;
+}
+.list-enter, .list-leave-to {
+  opacity: 0;
+  transform: translateX(30px);
+}
+
+	Giải thích:
+		Thêm phần tử: Slide từ phải sang trái, opacity từ 0 đến 1.
+		Xóa phần tử: Slide sang phải, opacity từ 1 về 0.
+	Khác biệt với <transition>:
+		Render thành một thẻ HTML (như <ul> thông qua tag).
+		Hỗ trợ hiệu ứng di chuyển khi thứ tự phần tử thay đổi.		
+			
+
+
+# 4. JavaScript Hooks
+	Bạn có thể dùng JavaScript hooks để tùy chỉnh hiệu ứng hoặc tích hợp với thư viện bên ngoài.
+	
+
+<transition
+  @before-enter="beforeEnter"
+  @enter="enter"
+  @after-enter="afterEnter"
+>
+  <div v-if="show">Nội dung</div>
+</transition>
+
+export default {
+  methods: {
+    beforeEnter(el) {
+      el.style.opacity = 0;
+    },
+    enter(el, done) {
+      el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 500 });
+      done(); // Gọi khi animation hoàn tất
+    },
+    afterEnter(el) {
+      console.log('Hoàn tất hiệu ứng xuất hiện');
+    }
+  }
+};
+
+		Các hooks phổ biến:
+			- before-enter, enter, after-enter.
+			- before-leave, leave, after-leave.
+
+# 5. Tích hợp thư viện bên thứ ba
+	Vue dễ dàng tích hợp với các thư viện như Animate.css.
+	
+<transition
+  name="custom-classes"
+  enter-active-class="animated fadeIn"
+  leave-active-class="animated fadeOut"
+>
+  <div v-if="show">Nội dung</div>
+</transition>
+
+	Giải thích: Sử dụng class từ Animate.css để áp dụng hiệu ứng mờ dần.
+	
+	
+	
+# 6. Lưu ý quan trọng 
+	
+	CSS Transitions vs Animations:
+		- Transitions: Dùng cho thay đổi đơn giản (opacity, transform).
+		- Animations: Dùng cho hiệu ứng phức tạp với @keyframes.
+	Hiệu suất: Ưu tiên dùng transform và opacity để tránh làm trình duyệt tính toán lại layout (reflow).
+	Vue 2 vs Vue 3: Cú pháp giống nhau, nhưng Vue 3 dùng <Transition> (viết hoa) thay vì <transition> (tuy nhiên cả hai đều hoạt động).
+
+# 7. Ứng dụng thực tế
+
+	- Modal: Hiệu ứng mờ dần khi mở/đóng.
+	- Danh sách: Slide khi thêm/xóa phần tử.
+	- Thông báo: Bounce khi xuất hiện.
+			
+	
+///============ Animation with v-for ========
+
+
+# 1. Tổng quan về Animations với v-for
+
+	Khi sử dụng v-for để render danh sách (như danh sách các mục <li>), bạn thường muốn thêm hiệu ứng khi:
+		- Thêm phần tử mới vào danh sách.
+		- Xóa phần tử khỏi danh sách.
+		- Di chuyển phần tử khi danh sách được sắp xếp lại.
+
+	Vue cung cấp thẻ <transition-group> để xử lý các hiệu ứng này, khác với thẻ <transition> chỉ áp dụng cho một phần tử duy nhất.
+
+	Khác biệt chính giữa <transition> và <transition-group>:
+		<transition>: Dùng cho một phần tử đơn (ví dụ: một <div> với v-if).
+		<transition-group>: Dùng cho danh sách phần tử (thường với v-for), hỗ trợ thêm, xóa, và di chuyển.
+
+	
+# 2. Cách sử dụng <transition-group> với v-for
+	
+	Cú pháp cơ bản:
+	
+<transition-group name="list" tag="ul">
+  <li v-for="item in items" :key="item.id">{{ item.name }}</li>
+</transition-group>
+	
+	Giải thích:
+		- name="list": Tiền tố cho các class CSS của hiệu ứng (như list-enter, list-leave).
+		- tag="ul": Chỉ định thẻ HTML mà <transition-group> sẽ render (ở đây là <ul>).
+		- v-for="item in items": Render danh sách các phần tử <li> dựa trên mảng items.
+		- :key="item.id": Bắt buộc để Vue theo dõi từng phần tử riêng biệt, đảm bảo hiệu ứng chính xác khi danh sách thay đổi.
+	
+	
+	CSS cho hiệu ứng:
+	
+.list-enter-active, .list-leave-active {
+  transition: all 0.5s ease;
+}
+.list-enter, .list-leave-to {
+  opacity: 0;
+  transform: translateX(30px);
+}
+.list-move {
+  transition: transform 0.5s ease;
+}	
+	
+	
+	Giải thích:
+		.list-enter / .list-leave-to: Trạng thái bắt đầu của phần tử khi thêm (opacity 0, lệch 30px) hoặc trạng thái kết thúc khi xóa.
+		.list-enter-active / .list-leave-active: Áp dụng transition trong 0.5 giây.
+		.list-move: Hiệu ứng khi phần tử di chuyển (ví dụ, khi sắp xếp danh sách).
+	
+	
+	
+# Ví dụ cụ thể ?
+<template>
+  <div>
+    <input v-model="newItem" placeholder="Add item" @keyup.enter="addItem" />
+    <button @click="removeItem">Remove Last Item</button>
+    <transition-group name="list" tag="ul">
+      <li v-for="item in items" :key="item.id">{{ item.name }}</li>
+    </transition-group>
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      newItem: '',
+      items: [
+        { id: 1, name: 'Item 1' },
+        { id: 2, name: 'Item 2' },
+        { id: 3, name: 'Item 3' }
+      ],
+      nextId: 4
+    };
+  },
+  methods: {
+    addItem() {
+      if (this.newItem) {
+        this.items.push({ id: this.nextId++, name: this.newItem });
+        this.newItem = '';
+      }
+    },
+    removeItem() {
+      this.items.pop();
+    }
+  }
+};
+</script>
+
+<style>
+.list-enter-active, .list-leave-active {
+  transition: all 0.5s ease;
+}
+.list-enter, .list-leave-to {
+  opacity: 0;
+  transform: translateX(30px);
+}
+.list-move {
+  transition: transform 0.5s ease;
+}
+</style>
+
+
+	
+	Giải thích
+	Template:
+		- <input v-model="newItem">: Nhập tên mục mới.
+		- @keyup.enter="addItem": Thêm mục khi nhấn Enter.
+		- <button @click="removeItem">: Xóa mục cuối cùng.
+		- <transition-group name="list" tag="ul">: Bao bọc danh sách <li> để áp dụng hiệu ứng.
+	Script:
+		- items: Mảng chứa các mục, mỗi mục có id (dùng làm :key) và name.
+		- addItem: Thêm mục mới vào items.
+		- removeItem: Xóa mục cuối cùng.
+	CSS:
+		- Khi thêm mục: Mục mới slide từ phải sang trái (từ translateX(30px) về 0) và mờ dần từ opacity: 0 đến 1.
+		- Khi xóa mục: Mục slide sang phải và mờ dần về opacity: 0.
+		- Khi sắp xếp (nếu có): Các mục di chuyển mượt mà nhờ .list-move.
+	
+	
+# Composition API (Vue 3) 
+		
+Dùng <script setup>:	
+	
+	
+<template>
+  <div>
+    <input v-model="newItem" placeholder="Add item" @keyup.enter="addItem" />
+    <button @click="removeItem">Remove Last Item</button>
+    <transition-group name="list" tag="ul">
+      <li v-for="item in items" :key="item.id">{{ item.name }}</li>
+    </transition-group>
+  </div>
+</template>
+
+<script setup>
+import { ref } from 'vue';
+
+const newItem = ref('');
+const items = ref([
+  { id: 1, name: 'Item 1' },
+  { id: 2, name: 'Item 2' },
+  { id: 3, name: 'Item 3' }
+]);
+const nextId = ref(4);
+
+const addItem = () => {
+  if (newItem.value) {
+    items.value.push({ id: nextId.value++, name: newItem.value });
+    newItem.value = '';
+  }
+};
+
+const removeItem = () => {
+  items.value.pop();
+};
+</script>
+
+<style>
+.list-enter-active, .list-leave-active {
+  transition: all 0.5s ease;
+}
+.list-enter, .list-leave-to {
+  opacity: 0;
+  transform: translateX(30px);
+}
+.list-move {
+  transition: transform 0.5s ease;
+}
+</style>	
+	
+	Khác biệt: Sử dụng ref thay vì data, và cú pháp ngắn gọn với <script setup>.
+	
+	
+	
+# 	4. Tại sao cần :key trong v-for với <transition-group>?
+	- :key là bắt buộc trong <transition-group> để Vue có thể:
+	- Theo dõi từng phần tử riêng biệt trong danh sách.
+	- Xác định phần tử nào được thêm, xóa, hoặc di chuyển để áp dụng hiệu ứng chính xác.
+	- Nếu thiếu :key, Vue không thể quản lý danh sách động, dẫn đến lỗi hoặc hiệu ứng không đúng.
+	
+	
+	
+# 	5. Hiệu ứng di chuyển (Move Transitions)
+	Khi danh sách thay đổi thứ tự (ví dụ: sắp xếp), <transition-group> tự động thêm class .list-move để tạo hiệu ứng mượt mà.
+	
+	## Ví dụ sắp xếp: 
+		
+<button @click="shuffleItems">Shuffle</button>
+<transition-group name="list" tag="ul">
+  <li v-for="item in items" :key="item.id">{{ item.name }}</li>
+</transition-group>	
+	
+>>> javascript 	
+methods: {
+  shuffleItems() {
+    this.items.sort(() => Math.random() - 0.5);
+  }
+}	
+	
+	Class .list-move đảm bảo các phần tử di chuyển mượt mà đến vị trí mới.
+	
+	
+# 6. Sử dụng thư viện bên thứ ba	
+	
+<transition-group
+  name="custom"
+  tag="ul"
+  enter-active-class="animated fadeIn"
+  leave-active-class="animated fadeOut"
+>
+  <li v-for="item in items" :key="item.id">{{ item.name }}</li>
+</transition-group>	
+	
+	Giải thích: Sử dụng class từ Animate.css để áp dụng hiệu ứng mà không cần viết CSS tùy chỉnh.
+	
+	
+	
+	
+# 	7. Vue 2 vs Vue 3
+	Vue 2: 
+		Sử dụng <transition-group> với Options API, tương tự ví dụ trên nhưng dùng data và methods.
+	
+	Vue 3:
+		- Hỗ trợ <TransitionGroup> (viết hoa, nhưng <transition-group> vẫn hoạt động).
+		- Tích hợp tốt với Composition API (<script setup>).
+		- Cơ chế hiệu ứng giống nhau, nhưng Vue 3 tối ưu hơn về hiệu suất.
+	
+	
+	
+# 	8. Lưu ý quan trọng
+	
+	- Key bắt buộc: Luôn cung cấp :key độc nhất cho mỗi phần tử trong v-for.
+	- Hiệu suất: Sử dụng transform và opacity để tránh reflow (tính toán lại layout).
+	- CSS vs JavaScript:
+		- CSS: Dễ dùng, hiệu quả cho hiệu ứng đơn giản.
+		- JavaScript: Dùng hooks (@before-enter, @enter, v.v.) cho hiệu ứng phức tạp hoặc tích hợp thư viện.
+	- Ứng dụng thực tế:
+		- Danh sách todo: Thêm/xóa mục với hiệu ứng slide.
+		- Sắp xếp bảng: Di chuyển mượt mà khi thay đổi thứ tự.
+		- Hiển thị thông báo: Hiệu ứng mờ dần khi thêm/xóa.
+	
+	
+	
+	
+	
+https://www.w3schools.com/vue/vue_build.php	
+	
+	
+	
+</pre><a id='backBottom' href='../vue-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

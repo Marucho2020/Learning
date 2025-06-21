@@ -1,0 +1,171 @@
+<html><head><title>Lesson 122 == ReentrantLock, ReentrantReadWriteLock  Lock độc quyền (exclusive) ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 122 -- ReentrantLock, ReentrantReadWriteLock  Lock độc quyền (exclusive) -//</h1><pre># Khái niệm 
+	ReentrantLock là một mutex lock (giống synchronized) nhưng có tính năng mở rộng:
+		Reentrancy: 1 thread có thể lock nhiều lần mà không bị block chính nó
+		Thử lock (tryLock()), hỗ trợ timeout
+		Interruptible lock acquisition
+		Condition objects (wait/notify nhưng tốt hơn)	
+
+
+	📌 Ví dụ cơ bản
+	
+ReentrantLock lock = new ReentrantLock();
+lock.lock(); // acquire
+try {
+    // critical section
+} finally {
+    lock.unlock(); // always unlock
+}
+	
+
+# ✅ Reentrant là gì? 
+	lock.lock();
+try {
+    lock.lock(); // ✅ same thread re-locks without deadlock
+    try {
+        // nested logic
+    } finally {
+        lock.unlock();
+    }
+} finally {
+    lock.unlock();
+}
+
+
+	ReentrantLock đếm số lần lock của thread hiện tại
+	unlock() phải được gọi đúng số lần
+
+# ⚙️ Một số API quan trọng
+
+| Method                   | Ý nghĩa                                       |
+| ------------------------ | --------------------------------------------- |
+| `lock()`                 | Chặn cho tới khi lock được                    |
+| `tryLock()`              | Không block – trả về `false` nếu đang bị lock |
+| `tryLock(timeout, unit)` | Chờ trong timeout                             |
+| `lockInterruptibly()`    | Bị `interrupt()` thì thoát                    |
+| `newCondition()`         | Tạo điều kiện để chờ (`await()`, `signal()`)  |
+
+
+# 🔄 2. ReentrantReadWriteLock – Tối ưu hóa khi nhiều đọc ít ghi
+
+	## ✅ Mục tiêu:
+		Tách lock thành:
+		Read Lock: chia sẻ giữa nhiều thread đọc (non-exclusive)
+		Write Lock: độc quyền (exclusive)
+
+
+	## Dùng trong:
+		Cache
+		Data structure nhiều đọc – ít ghi
+		Concurrent map, shared config
+
+
+ReentrantReadWriteLock rwLock = new ReentrantReadWriteLock();
+Lock readLock = rwLock.readLock();
+Lock writeLock = rwLock.writeLock();
+
+// Đọc
+readLock.lock();
+try {
+    // đọc dữ liệu
+} finally {
+    readLock.unlock();
+}
+
+// Ghi
+writeLock.lock();
+try {
+    // thay đổi dữ liệu
+} finally {
+    writeLock.unlock();
+}
+
+
+
+# ⚠️ Lưu ý: 
+	
+| Tình huống                                                | Kết quả                                |
+| --------------------------------------------------------- | -------------------------------------- |
+| 2 thread đọc → `readLock()`                               | ✅ Đồng thời                            |
+| 1 thread đọc, 1 thread ghi → `readLock()` & `writeLock()` | ❌ Ghi phải chờ đọc xong                |
+| Nhiều ghi → `writeLock()`                                 | ❌ Chặn nhau                            |
+| Đọc → Ghi (nâng cấp)                                      | ❌ Không hỗ trợ trực tiếp (dễ deadlock) |
+
+
+
+
+
+# 🧠 3. So sánh ReentrantLock vs ReentrantReadWriteLock 
+
+| Tính năng                | `ReentrantLock` | `ReentrantReadWriteLock`      |
+| ------------------------ | --------------- | ----------------------------- |
+| Loại lock                | Exclusive       | Shared Read + Exclusive Write |
+| Reentrant                | ✅               | ✅                             |
+| Chia sẻ đọc              | ❌               | ✅                             |
+| Tối ưu nhiều đọc         | ❌               | ✅                             |
+| Upgrade read → write     | ❌ Không hỗ trợ  | ❌ Có nhưng nguy hiểm          |
+| Condition support        | ✅ (1)           | ✅ (2 conditions: read, write) |
+| Performance (read-heavy) | ❌               | ✅                             |
+
+
+# 🧨 4. Sai lầm thường gặp (production-level) 
+	❌ Quên unlock() → Deadlock
+→ Không bao giờ được lock() mà không unlock() trong finally
+
+❌ Lock upgrade (read → write) trong ReentrantReadWriteLock
+readLock.lock();
+writeLock.lock(); // 💥 DEADLOCK
+
+
+➡ Phải unlockRead() trước, rồi mới lockWrite() – dễ race
+
+❌ Lạm dụng tryLock() mà không kiểm tra kỹ
+if (lock.tryLock()) {
+    // nhưng quên else → race condition
+}
+
+
+
+# 🔬 5. Khi nào dùng? 
+	
+| Use-case                               | `ReentrantLock` | `ReentrantReadWriteLock` |
+| -------------------------------------- | --------------- | ------------------------ |
+| Nhiều thread ghi, cạnh tranh cao       | ✅               | ❌                        |
+| Nhiều thread chỉ đọc                   | ❌               | ✅                        |
+| Thao tác đơn giản, nested lock ít      | ✅               | ✅                        |
+| Data structure chia sẻ dữ liệu như map | ❌               | ✅                        |
+
+
+# 🔧 6. Bonus: Condition – chờ và đánh thức có kiểm soát
+
+
+Condition notEmpty = lock.newCondition();
+
+lock.lock();
+try {
+    while (queue.isEmpty()) {
+        notEmpty.await(); // giống wait()
+    }
+    // xử lý
+} finally {
+    lock.unlock();
+}
+
+→ signal() hoặc signalAll() sẽ đánh thức thread đang chờ
+→ Tương đương wait() / notify() nhưng không phải global monitor
+
+
+
+# ✅ Tổng kết 
+	
+| Feature            | ReentrantLock                       | ReentrantReadWriteLock             |
+| ------------------ | ----------------------------------- | ---------------------------------- |
+| Exclusive Lock     | ✅                                   | ✅                                  |
+| Shared Read        | ❌                                   | ✅                                  |
+| Optimized for Read | ❌                                   | ✅                                  |
+| Reentrancy         | ✅                                   | ✅                                  |
+| Upgrade Lock       | ⚠️ Không an toàn                    | ❌ Cần tránh                        |
+| Use Case           | Logic ghi nhiều, kiểm soát phức tạp | Nhiều đọc ít ghi, cấu trúc dữ liệu |
+
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
