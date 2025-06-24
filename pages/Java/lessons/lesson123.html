@@ -1,0 +1,142 @@
+<html><head><title>Lesson 123 == VarHandle ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 123 -- VarHandle -//</h1><pre># Khái niệm 
+	VarHandle là API được giới thiệu trong Java 9 (JEP 193) để thay thế cho sun.misc.Unsafe.
+	VarHandle – một trong những API thấp cấp, mạnh mẽ, và hiện đại nhất trong Java để thao tác với memory, tương tự Unsafe, nhưng an toàn hơn, được chuẩn hóa hơn, và dùng trong các hệ thống yêu cầu hiệu năng và kiểm soát memory cực cao (concurrent structure, lock-free algorithm, JVM-level tuning).
+	Tư tưởng: giống như MethodHandle dành cho method, thì VarHandle là cho field/array/memory variable.
+
+
+	Nó cho phép:
+
+		- Truy cập field, array, hoặc ByteBuffer kiểu low-level
+		- Thao tác atomic (CAS, getAndSet, etc)
+		- Điều khiển memory visibility (acquire, release, opaque, volatile..
+		
+
+# 🧠 2. Vì sao cần VarHandle? 
+
+	Trước Java 9:
+	Muốn làm lock-free algorithm, bạn phải dùng Unsafe
+		→ Không chuẩn, dễ gây crash JVM
+	
+	Từ Java 9: 
+		VarHandle được chuẩn hóa để thay thế:
+			- Atomic operations (getAndSet, compareAndSet)
+			- Visibility control (volatile/acquire/release/opaque)
+			- Array/memory address access
+
+		➡ Dùng trong cấu trúc như ConcurrentHashMap, Atomic*, ForkJoinPool,...
+
+# 🧪 3. Ví dụ đơn giản
+
+class Counter {
+    volatile int value = 0;
+}
+
+VarHandle handle = MethodHandles
+    .lookup()
+    .in(Counter.class)
+    .findVarHandle(Counter.class, "value", int.class);
+
+Counter c = new Counter();
+
+// Ghi atomically
+handle.setVolatile(c, 10);
+
+// Đọc atomically
+int current = (int) handle.getVolatile(c);
+
+// CAS
+boolean success = handle.compareAndSet(c, 10, 20);
+
+// getAndAdd
+int prev = (int) handle.getAndAdd(c, 5);
+
+
+	➡ Không cần AtomicInteger nữa – bạn kiểm soát trực tiếp field đó như một atomic handle.
+
+# 📦 4. Có thể dùng VarHandle với?
+
+| Loại biến       | Hỗ trợ? | Ghi chú                                       |
+| --------------- | ------- | --------------------------------------------- |
+| Field static    | ✅       | Phải lấy qua `staticFieldVarHandle()`         |
+| Field instance  | ✅       | Dùng `findVarHandle()`                        |
+| Array           | ✅       | Dùng `arrayElementVarHandle()`                |
+| ByteBuffer      | ✅       | Dùng `memorySegmentViewHandle()` trong Panama |
+| Off-heap memory | ✅       | Nếu dùng `Foreign Memory Access API`          |
+
+
+# ⚙️ 5. Các mode truy cập (memory semantics)
+
+| Method                            | Semantics            | Giống gì?                         |
+| --------------------------------- | -------------------- | --------------------------------- |
+| `get()` / `set()`                 | Plain (no guarantee) | không volatile                    |
+| `getOpaque()` / `setOpaque()`     | Weak order           | `lazySet()`                       |
+| `getAcquire()` / `setRelease()`   | Half fence           | Java memory model acquire/release |
+| `getVolatile()` / `setVolatile()` | Full fence           | volatile field                    |
+| `compareAndSet()`                 | Atomic CAS           | giống AtomicInteger               |
+| `getAndAdd()` / `getAndSet()`     | Atomic + update      | giống `Atomic*`                   |
+
+
+
+# 🔧 7. Tạo VarHandle cụ thể 
+	
+	## a. Cho instance field 
+		VarHandle vh = MethodHandles
+		.lookup()
+		.findVarHandle(MyClass.class, "myField", int.class);
+
+	## b. Cho static field
+
+		VarHandle vh = MethodHandles
+			.lookup()
+			.findStaticVarHandle(MyClass.class, "staticField", long.class);
+
+
+	## c. Cho phần tử mảng
+		VarHandle arrayHandle = MethodHandles
+			.arrayElementVarHandle(int[].class);
+		
+		int[] arr = new int[10];
+		arrayHandle.set(arr, 2, 99);
+		
+
+# 🧠 8. Use-case thực chiến 
+
+
+	1. Cấu trúc dữ liệu lock-free
+		Stack, Queue, RingBuffer
+		CAS, setOpaque → hạn chế contention
+	
+	2. Off-heap memory management
+		Kết hợp với Panama (MemorySegment)
+		Truy cập memory như C/C++
+	
+	3. High-performance logging/metrics
+		Avoid AtomicLong object allocation → dùng VarHandle vào primitive field
+
+# 🧨 9. Cạm bẫy nguy hiểm
+
+
+	- Không kiểm soát memory order → race condition (nếu dùng get() thay vì getVolatile())
+	- Sai type → ClassCastException
+	- Dùng sai handle trên object sai class → ClassCastException
+	- Không reentrant (nó không “biết” bạn đang trong critical section)
+
+✅ Tổng kết
+
+| Đặc điểm                                            | Giá trị |
+| --------------------------------------------------- | ------- |
+| Truy cập thấp cấp an toàn                           | ✅       |
+| Thay thế `Unsafe` cho field/memory                  | ✅       |
+| Tùy chọn memory order giống C++11                   | ✅       |
+| Dùng cho concurrent structure hiệu năng cao         | ✅       |
+| API khó dùng, dễ sai nếu không hiểu rõ memory model | ⚠️       |
+| Không phù hợp cho beginner                          | ❌       |
+
+
+# 🔚 Bạn nên dùng VarHandle khi: 
+
+	- Viết lock-free concurrent structure
+	- Tránh dùng Atomic* class do overhead
+	- Làm việc với off-heap / native memory
+	- Tối ưu hóa hệ thống realtime/high-concurrency
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
