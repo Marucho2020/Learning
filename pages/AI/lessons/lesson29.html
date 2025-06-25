@@ -1,4 +1,43 @@
-<html><head><title>Lesson 29 == Mạng Retinanet: cái tiến mạnh mẽ với Focal Loss ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../AI-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 29 -- Mạng Retinanet: cái tiến mạnh mẽ với Focal Loss -//</h1><pre>https://aicandy.vn/mang-retinanet-cai-tien-manh-me-voi-focal-loss/
+<html><head><title>Lesson 29 == Mạng Retinanet: cải tiến mạnh mẽ với Focal Loss ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../AI-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 29 -- Mạng Retinanet: cải tiến mạnh mẽ với Focal Loss -//</h1><pre>
+# 1. Giới thiệu 
+	## 1.1. Phát hiện đối tượng và thị giác máy tính 
+		Trong những thập kỷ gần đây, thị giác máy tính (Computer Vision) đã có những bước tiến vượt bậc, trở thành một trong những lĩnh vực nổi bật nhất trong trí tuệ nhân tạo (AI). Thị giác máy tính tập trung vào việc giúp máy tính “nhìn thấy” và “hiểu” hình ảnh hoặc video, từ đó đưa ra những phản hồi tương tự như cách mà con người xử lý thông tin hình ảnh. Một trong những bài toán quan trọng và đầy thách thức trong lĩnh vực này là phát hiện đối tượng (object detection).
+		
+		Phát hiện đối tượng là quá trình xác định vị trí của các đối tượng cụ thể trong một hình ảnh hoặc một chuỗi video và phân loại chúng thành các danh mục xác định. Chẳng hạn, trong một hình ảnh đường phố, một hệ thống phát hiện đối tượng có thể xác định và phân loại các đối tượng như xe hơi, người đi bộ, biển báo giao thông, cây cối, v.v. Đây là một nhiệm vụ phức tạp, vì các đối tượng có thể xuất hiện với các kích thước, hình dạng, và vị trí khác nhau, thậm chí có thể bị che khuất một phần hoặc lẫn lộn trong môi trường xung quanh.
+		
+		
+	## 	1.2. Các phương pháp phát hiện đối tượng truyền thống 
+		Trước khi các mô hình học sâu (deep learning) như RetinaNet ra đời, phát hiện đối tượng chủ yếu dựa vào các phương pháp truyền thống như HOG (Histograms of Oriented Gradients), SIFT (Scale-Invariant Feature Transform), và các mô hình như DPM (Deformable Part Models). Những phương pháp này chủ yếu dựa vào việc trích xuất các đặc trưng cứng nhắc từ hình ảnh và sau đó áp dụng các bộ phân loại như SVM (Support Vector Machine) để phát hiện và phân loại các đối tượng.
+		
+		Mặc dù các phương pháp truyền thống đã đạt được một số thành tựu nhất định, nhưng chúng có nhiều hạn chế, đặc biệt là khi làm việc với các đối tượng có độ biến đổi cao về hình dáng, màu sắc, và kích thước. Hơn nữa, các phương pháp này thường yêu cầu rất nhiều công sức để thiết kế đặc trưng và điều chỉnh thủ công, dẫn đến hiệu suất không cao và khó mở rộng cho các tập dữ liệu lớn.
+		
+		
+	## 1.3. Sự ra đời của các mạng phát hiện đối tượng mạnh mẽ
+		Sự ra đời của học sâu và đặc biệt là mạng nơ-ron tích chập (Convolutional Neural Networks – CNNs) đã thay đổi hoàn toàn cục diện của thị giác máy tính. Các mạng như AlexNet, VGGNet, và ResNet không chỉ đưa ra các phương pháp trích xuất đặc trưng tự động từ dữ liệu, mà còn đạt được những kết quả vượt trội so với các phương pháp truyền thống.
+
+		Trong lĩnh vực phát hiện đối tượng, các mô hình CNN tiên tiến như R-CNN, Fast R-CNN, và Faster R-CNN đã tạo nên những cột mốc quan trọng. Các mô hình này sử dụng CNN để trích xuất các đặc trưng từ hình ảnh và áp dụng thêm các lớp phát hiện để xác định vị trí và phân loại các đối tượng. Tuy nhiên, mặc dù độ chính xác cao, các mô hình này thường đòi hỏi thời gian tính toán lớn và không thích hợp cho các ứng dụng thời gian thực
+
+	
+
+	## 1.4. Mạng RetinaNet  
+		https://aicandy.vn/wp-content/uploads/2024/11/aicandy_retinanet.jpg 
+		Được giới thiệu vào năm 2017, RetinaNet là một bước đột phá quan trọng trong lĩnh vực phát hiện đối tượng. Mạng này được phát triển bởi Tsung-Yi Lin và các đồng nghiệp tại Facebook AI Research (FAIR), với mục tiêu giải quyết vấn đề mất cân bằng trong dữ liệu và tối ưu hóa sự cân bằng giữa độ chính xác và tốc độ trong phát hiện đối tượng.
+		
+		
+# 2. Kiến trúc của RetinaNet		
+	https://aicandy.vn/mang-retinanet-cai-tien-manh-me-voi-focal-loss/
+	
+
+
+
+
+
+
+
+
+
+
+
 
 
 
