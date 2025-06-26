@@ -1,0 +1,151 @@
+<html><head><title>Lesson 125 == Graph → Social Network ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 125 -- Graph → Social Network -//</h1><pre># Khái niệm  
+	Mạng xã hội về bản chất chính là một đồ thị (graph):
+	
+		Node (đỉnh): user, page, group, content...
+		Edge (cạnh): các mối quan hệ như friend, follow, like, share, comment, mention...
+
+
+	## Ví dụ đơn giản: 
+		UserA ↔ UserB  (friendship: undirected)
+		UserC → UserD  (follow: directed)
+		UserE → PostX  (like: directed)
+
+
+	
+#🧭 II. Tại sao phải dùng Graph? 
+
+| Mục tiêu            | Vì sao Graph?               |
+| ------------------- | --------------------------- |
+| Kết nối người dùng  | Model trực quan các quan hệ |
+| Gợi ý bạn bè        | Dựa vào kết nối 2–3 bậc     |
+| Phân tích cộng đồng | Dùng clustering algorithm   |
+| Lan truyền nội dung | Dựa vào traversal           |
+| Tìm influencer      | Dựa vào centrality score    |
+
+
+# ⚙️ III. Các loại quan hệ thường thấy 
+
+
+| Loại Edge            | Hướng      | Ý nghĩa           |
+| -------------------- | ---------- | ----------------- |
+| `friend`             | undirected | A ↔ B             |
+| `follow`             | directed   | A → B             |
+| `like/comment/share` | directed   | A → Post          |
+| `membership`         | directed   | User → Group      |
+| `mention/tag`        | directed   | A → B (in post P) |
+
+# 🧩 IV. Các kiểu Graph trong Social Network
+
+	## 1. Unipartite Graph 
+	
+		- Tất cả các node cùng loại (user-user)
+		- Ví dụ: Facebook friend network
+
+	## 2. Bipartite Graph 
+		
+		- 2 loại node khác nhau: user ↔ content
+		- Ví dụ: User ↔ Post, User ↔ Interest
+
+	## 3. Attributed Graph 
+	
+		- Node và edge có thêm thuộc tính (timestamp, type, weight)
+		- Ví dụ: Edge(UserA → UserB) có weight là số lần tương tác
+
+	## 4. Temporal Graph
+		- Biến đổi theo thời gian
+		- Ví dụ: mạng bạn bè tại thời điểm T1 ≠ T2
+	
+	
+# 🧠 V. Thuật toán graph áp dụng trong social network	
+| Thuật toán                       | Ứng dụng                         |
+| -------------------------------- | -------------------------------- |
+| **BFS/DFS**                      | Tìm friend-of-friend (bạn chung) |
+| **PageRank / EigenCentrality**   | Tìm influencer                   |
+| **Label Propagation / Louvain**  | Tìm cộng đồng                    |
+| **Shortest Path (Dijkstra)**     | Tìm kết nối giữa hai người       |
+| **SimRank / Jaccard Similarity** | Gợi ý bạn bè                     |
+	
+	
+	
+# 	🧠 VI. Kiến trúc hệ thống Graph-based Social Network (cấp độ hệ thống) 
+	
+	## 1. Graph Store Layer 
+		- Dùng Neo4j, Amazon Neptune, TigerGraph, JanusGraph
+		- Hoặc build riêng (adjacency list trên Redis, RocksDB...)	
+	
+	## 2. Graph Traversal API 
+		- Giao diện truy vấn graph: Cypher (Neo4j), Gremlin (Apache TinkerPop), SPARQL (RDF)
+		
+	## 	3. Recommendation Engine 
+		- Chạy job offline (Spark, Flink)
+		- Gợi ý user hoặc content
+		- Có thể tích hợp Graph ML	
+
+	## 4. Graph Indexing & Cache
+	
+		- Cache các neighborhood 1–2 level (friend-of-friend)
+		- Dùng để tránh truy vấn sâu và lặp	
+	
+	
+	
+	
+# 🔥 VII. Case Study: Facebook Social Graph 
+
+	## 	Mô hình:
+		- Node: user, post, group, event
+		- Edge: friend, follow, like, attend...
+	
+	
+	## Đặc điểm: 
+		
+		- Đồ thị cực kỳ lớn, nhiều tỉ đỉnh/cạnh
+		- Scale distributed graph → sử dụng TAO (Facebook's graph API layer)
+		- Sử dụng sharding theo user ID
+		- Kết hợp caching + materialized views	
+	
+# 💡 VIII. Các kỹ thuật cao cấp cho senior	
+	
+		
+	## 1. Neighborhood-aware caching 
+		- Cache tập bạn bè cấp 1–2 của user
+		- Tránh truy vấn ngược lên graph database	
+	
+	## 2. Approximate graph processing 
+		- Dùng sketching (HyperLogLog, Bloom filter) để estimate degree
+	
+	## 3. Edge Sampling + Community Detection
+		- Để phân cụm người dùng (group, sở thích, hành vi)
+		
+	## 4. Graph Embedding (DeepWalk, Node2Vec)
+	
+		- Biến node thành vector để dùng cho ML/Recommend
+		- Dùng trong TikTok, Pinterest, LinkedIn...	
+	
+
+# 🧠 IX. Các vấn đề cần xử lý
+
+| Vấn đề                     | Cách xử lý                              |
+| -------------------------- | --------------------------------------- |
+| Scale đồ thị lớn           | Partition graph theo userID hoặc domain |
+| Truy vấn sâu (trên 3 hops) | Hạn chế số bậc, precompute gợi ý        |
+| Update real-time           | Dùng Event Sourcing + Materialized View |
+| Consistency                | Dùng eventual consistency hoặc CRDT     |
+
+
+# ✅ Tổng kết
+
+| Khía cạnh  | Chi tiết                                          |
+| ---------- | ------------------------------------------------- |
+| Biểu diễn  | Node + edge → quan hệ giữa user-content           |
+| Thuật toán | BFS, PageRank, Community detection                |
+| Kiến trúc  | Graph DB, traversal API, caching, ML layer        |
+| Scale      | Graph sharding, edge replication, materialized    |
+| Ứng dụng   | Gợi ý bạn bè, tìm influencer, phân cụm người dùng |
+
+
+
+
+
+
+	
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

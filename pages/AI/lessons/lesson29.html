@@ -25,21 +25,48 @@
 		
 		
 # 2. Kiến trúc của RetinaNet		
-	https://aicandy.vn/mang-retinanet-cai-tien-manh-me-voi-focal-loss/
+		Kiến trúc của RetinaNet là sự kết hợp của nhiều cải tiến từ các mạng trước đó, đồng thời đưa ra những ý tưởng mới để cải thiện hiệu suất.
+		https://aicandy.vn/wp-content/uploads/2024/08/aicandy_retinanet_arc.png
+		
+	Kiến trúc của RetinaNet có thể được chia thành ba phần chính:
+
+	## 	2.1. Backbone (Xương sống)
+		
+	Backbone là phần chính của mạng, nơi mà các đặc trưng hình ảnh được trích xuất. Trong RetinaNet, các mạng CNN sâu như ResNet-50 hoặc ResNet-101 thường được sử dụng làm backbone. Những mạng này đã được huấn luyện trước trên các tập dữ liệu lớn như ImageNet, cho phép chúng có khả năng trích xuất các đặc trưng phong phú và đa dạng từ hình ảnh.
+
+	ResNet là một mạng sâu với nhiều lớp tích chập (convolutional layers) được sắp xếp theo cách mà các kết nối từ các lớp trước đó có thể bỏ qua (skip) một hoặc nhiều lớp trung gian, nhờ vào các kết nối residual. Điều này giúp giảm thiểu vấn đề biến mất gradient (vanishing gradient) trong quá trình huấn luyện và cho phép xây dựng các mạng sâu hơn mà vẫn duy trì hiệu suất cao
+
+
+
+	## 2.2. Feature Pyramid Network (FPN) 
+		https://aicandy.vn/wp-content/uploads/2024/08/aicandy_retina_2.png
+		 Một cải tiến quan trọng trong RetinaNet là việc sử dụng mạng kim tự tháp đặc trưng (Feature Pyramid Network – FPN). FPN giúp kết hợp thông tin từ các cấp độ khác nhau trong mạng backbone. Điều này rất quan trọng vì các đối tượng trong hình ảnh thường xuất hiện với nhiều kích thước khác nhau. Một đối tượng lớn có thể được nhận diện dễ dàng ở các cấp độ cao của mạng (các lớp sau), trong khi các đối tượng nhỏ hơn lại yêu cầu thông tin từ các cấp độ thấp hơn (các lớp đầu).
+
+		FPN tạo ra một hệ thống kim tự tháp, nơi mà các đặc trưng từ các tầng khác nhau được kết hợp lại, giúp mạng có thể nhận diện các đối tượng ở nhiều kích thước và tỷ lệ khác nhau một cách hiệu quả.
+
+
+	## 2.3. Đầu ra phát hiện (Detection Head)
+
+		RetinaNet sử dụng hai loại đầu ra chính: một đầu ra để phân loại các đối tượng và một đầu ra để dự đoán các hộp giới hạn (bounding boxes) cho các đối tượng. Cả hai đầu ra này đều được áp dụng trên mỗi cấp độ của FPN, giúp mạng có khả năng phát hiện các đối tượng ở nhiều tỷ lệ khác nhau.
 	
+		Cụ thể, mỗi điểm trong các đặc trưng của FPN sẽ được gán với một hộp giới hạn cố định (anchor boxes) với các tỷ lệ và kích thước khác nhau. Mỗi anchor sẽ được kiểm tra để xác định xem nó có chứa đối tượng hay không và nếu có, loại đối tượng đó là gì. Điều này cho phép RetinaNet có thể phát hiện các đối tượng với độ chính xác cao trong một khoảng thời gian ngắn.
 
 
 
+	## 2.4. Focal Loss 
+		Một trong những thách thức lớn nhất trong phát hiện đối tượng là việc xử lý các tập dữ liệu mất cân bằng, nơi mà số lượng các mẫu nền (background) chiếm ưu thế so với số lượng các đối tượng cần phát hiện. Điều này dẫn đến các mô hình truyền thống như Faster R-CNN hoặc SSD thường bỏ qua các đối tượng nhỏ hoặc hiếm gặp, do chúng chiếm tỷ lệ nhỏ trong toàn bộ tập dữ liệu.
+		
+		Để giải quyết vấn đề này, RetinaNet giới thiệu một hàm mất mát mới gọi là Focal Loss. Focal Loss được thiết kế để làm giảm ảnh hưởng của các mẫu dễ (như nền) và tập trung vào việc học các mẫu khó (như các đối tượng nhỏ hoặc hiếm gặp).
+		
+		Focal Loss là một biến thể của hàm Cross-Entropy Loss truyền thống, với một trọng số thêm vào để làm giảm ảnh hưởng của các mẫu dễ dàng phân loại. Hàm mất mát này có thể được biểu diễn như sau:
+			https://aicandy.vn/wp-content/uploads/2024/08/aicandy_retinanet_loss.png
 
+		https://aicandy.vn/wp-content/uploads/2024/08/aicandy_retinanet_loss.png
 
+		Focal Loss giúp giảm thiểu vấn đề mất cân bằng dữ liệu bằng cách tập trung vào các mẫu khó hơn, từ đó cải thiện hiệu suất của mạng trong việc phát hiện các đối tượng nhỏ hoặc ít xuất hiện.
 
-
-
-
-
-
-
-
+# 3. Hiệu suất của RetinaNet 
+https://aicandy.vn/mang-retinanet-cai-tien-manh-me-voi-focal-loss/
 
 
 
