@@ -1,0 +1,82 @@
+<html><head><title>Lesson 49 == $root ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../vue-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 49 -- $root -//</h1><pre># $root là gì? 
+	$root là một tham chiếu chỉ đọc (read-only) đến instance của component gốc (root component) trong ứng dụng Vue, tức là component được tạo khi khởi tạo ứng dụng bằng createApp.
+	Nó cho phép bất kỳ component con nào trong cây component truy cập trực tiếp đến instance gốc, bất kể vị trí của component trong hệ thống phân cấp.
+
+# Cách hoạt động
+
+	$root luôn trỏ đến instance của component cao nhất (thường là component được gắn vào DOM thông qua app.mount()).
+	Thông qua $root, bạn có thể truy cập các thuộc tính, phương thức, hoặc dữ liệu được định nghĩa trong component gốc.
+	$root đặc biệt hữu ích trong các ứng dụng nhỏ hoặc khi cần truy cập trạng thái toàn cục mà không dùng các giải pháp như Vuex hoặc Composition API.
+
+
+
+# Ví dụ 
+	## Component gốc (App.vue)
+<template>
+  <div>
+    <ChildComponent />
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      rootMessage: 'Hello from root!'
+    };
+  },
+  methods: {
+    rootMethod() {
+      console.log('Method from root');
+    }
+  }
+};
+</script>	
+	
+	
+	## Component con (ChildComponent.vue)
+<template>
+  <div>{{ $root.rootMessage }}</div>
+</template>
+
+<script>
+export default {
+  mounted() {
+    console.log(this.$root); // Instance của App.vue
+    console.log(this.$root.rootMessage); // 'Hello from root!'
+    this.$root.rootMethod(); // Gọi phương thức từ root
+  }
+};
+</script>	
+
+
+# Lưu ý 
+	Không khuyến khích lạm dụng: Sử dụng $root có thể làm mã phụ thuộc chặt chẽ vào component gốc, gây khó khăn khi bảo trì hoặc tái cấu trúc.
+	
+	Thay thế tốt hơn:
+		- Sử dụng provide/inject để chia sẻ dữ liệu giữa component gốc và các component con.
+		- Sử dụng state management (như Vuex hoặc Pinia) cho trạng thái toàn cục.
+		- Trong Composition API, sử dụng các composable để quản lý logic chung.
+		
+	Vue 3: $root vẫn được hỗ trợ trong Options API. Trong Composition API, bạn có thể truy cập $root qua getCurrentInstance().proxy.$root.
+	
+	Hạn chế trong SSR: $root có thể không hoạt động như mong đợi trong Server-Side Rendering (SSR) do sự khác biệt trong cách render.
+	
+	$root và $parent: $root trỏ đến component gốc, trong khi $parent trỏ đến component cha trực tiếp. Nếu component là root, thì $root === this.
+	
+
+# Kết luận 
+	$root cung cấp cách truy cập instance của component gốc từ bất kỳ component con nào, hữu ích trong các trường hợp cần tương tác với trạng thái hoặc phương thức toàn cục. Tuy nhiên, nên hạn chế sử dụng $root và ưu tiên các giải pháp như provide/inject hoặc state management để đảm bảo mã rõ ràng và dễ mở rộng.
+
+
+
+
+
+https://www.w3schools.com/vue/vue_ref_directives.php 	
+	
+	
+	
+	
+	
+	
+</pre><a id='backBottom' href='../vue-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
