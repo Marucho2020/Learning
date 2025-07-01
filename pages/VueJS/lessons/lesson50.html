@@ -1,0 +1,54 @@
+<html><head><title>Lesson 50 == v-cloak ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../vue-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 50 -- v-cloak -//</h1><pre>
+# Khái niệm 
+	Thuộc tính v-cloak trong Vue.js (bao gồm Vue 3) là một directive được sử dụng để ẩn một phần tử DOM cho đến khi instance Vue hoàn tất việc biên dịch (compile) template, nhằm tránh hiện tượng nhấp nháy nội dung chưa được render (FOUC - Flash of Uncompiled Content).
+	
+	
+# 	Cách hoạt động 
+	
+	v-cloak được thêm vào phần tử trong template.
+	
+	Vue tự động thêm CSS [v-cloak] { display: none; } để ẩn phần tử cho đến khi quá trình biên dịch hoàn tất.
+	
+	Khi Vue hoàn tất render, directive v-cloak được gỡ bỏ, và phần tử trở nên hiển thị.
+	
+	
+# 	Ví dụ 
+<style>
+[v-cloak] {
+  display: none;
+}
+</style>
+
+<div v-cloak>
+  {{ message }}
+</div>
+
+<script>
+export default {
+  data() {
+    return {
+      message: 'Hello Vue!'
+    };
+  }
+};
+</script>	
+	
+	Giải thích: <div> sẽ bị ẩn cho đến khi Vue render xong {{ message }}, tránh hiển thị nội dung thô như {{ message }} trong lúc tải.
+	
+	## Lưu ý 
+		CSS bắt buộc: v-cloak chỉ hoạt động nếu có CSS [v-cloak] { display: none; }.
+		
+		Chủ yếu cho SPA: Hữu ích trong các ứng dụng một trang (SPA) hoặc khi tải JavaScript chậm.
+		
+		Vue 3: v-cloak hoạt động tương tự như Vue 2, không có thay đổi lớn.
+		
+		Thay thế: Trong SSR (Server-Side Rendering) hoặc các ứng dụng lớn, các kỹ thuật như pre-rendering hoặc skeleton loading thường được ưu tiên.
+	
+	
+
+# Kết luận 
+	v-cloak là một cách đơn giản để ngăn chặn FOUC bằng cách ẩn nội dung chưa được biên dịch, phù hợp cho các ứng dụng Vue đơn giản. Nó yêu cầu CSS đi kèm và thường được sử dụng trong các trường hợp tải ban đầu.
+	
+	
+	
+</pre><a id='backBottom' href='../vue-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

@@ -1,0 +1,65 @@
+<html><head><title>Lesson 52 == v-memo ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../vue-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 52 -- v-memo -//</h1><pre># Khái niệm  
+	Trong Vue 3, directive v-memo là một tính năng mới được giới thiệu để tối ưu hóa hiệu suất bằng cách ghi nhớ (memoize) việc render của một phần template, chỉ cập nhật khi các giá trị phụ thuộc thay đổi.
+
+	v-memo là một directive cho phép bạn chỉ định rằng một phần tử hoặc khối template chỉ được render lại khi các giá trị trong mảng phụ thuộc (dependency array) thay đổi.
+	
+	Nó tương tự như memo trong React, giúp giảm thiểu việc render không cần thiết, cải thiện hiệu suất trong các ứng dụng có giao diện phức tạp.
+
+
+# Cách hoạt động
+
+	- v-memo nhận một mảng các giá trị phụ thuộc (dependencies) thông qua v-memo="[dep1, dep2, ...]".
+	- Vue sẽ so sánh các giá trị trong mảng này với lần render trước. Nếu không có thay đổi, Vue bỏ qua việc render lại phần tử hoặc khối template liên quan.
+	- Nếu bất kỳ giá trị nào trong mảng thay đổi, phần tử sẽ được render lại.
+
+	
+# Ví dụ
+
+<template>
+  <div v-memo="[value]">
+    <p>Expensive computation: {{ expensiveComputation(value) }}</p>
+  </div>
+  <button @click="value++">Increment</button>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      value: 1
+    };
+  },
+  methods: {
+    expensiveComputation(val) {
+      console.log('Computing...');
+      return val * 2; // Giả lập tính toán nặng
+    }
+  }
+};
+</script>
+
+
+	## Giải thích: 
+		
+	- Phần tử <div> chỉ được render lại khi value thay đổi (do v-memo="[value]").
+	- Khi nhấn nút "Increment", value thay đổi, dẫn đến gọi lại expensiveComputation và cập nhật DOM.
+	- Nếu không có thay đổi trong value, Vue sẽ bỏ qua việc render lại <div>, tiết kiệm tài nguyên.
+
+
+
+# Lưu ý 
+
+	- Chỉ dùng khi cần tối ưu: v-memo phù hợp cho các phần tử hoặc khối template có tính toán nặng hoặc render phức tạp.
+	- Mảng phụ thuộc: Phải liệt kê đầy đủ các giá trị phụ thuộc trong mảng của v-memo. Nếu bỏ sót, giao diện có thể không cập nhật đúng.
+	- Hạn chế: v-memo không áp dụng cho các component con bên trong, chỉ áp dụng cho phần tử hoặc khối template trực tiếp sử dụng directive.
+	- Vue 3 độc quyền: v-memo chỉ có trong Vue 3, không tồn tại trong Vue 2.
+	- Cẩn thận với side effects: Đảm bảo logic trong khối v-memo không phụ thuộc vào các trạng thái ngoài mảng phụ thuộc.
+
+
+# Kết luận
+	v-memo là một công cụ mạnh mẽ trong Vue 3 để tối ưu hóa hiệu suất bằng cách ngăn chặn render không cần thiết, đặc biệt hữu ích cho các giao diện phức tạp hoặc tính toán nặng. Sử dụng cẩn thận với mảng phụ thuộc chính xác để đảm bảo giao diện cập nhật đúng.
+
+
+v-model
+https://www.w3schools.com/vue/vue_ref_directives.php
+</pre><a id='backBottom' href='../vue-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
