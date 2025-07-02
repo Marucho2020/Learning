@@ -1,7 +1,16 @@
 <html><head><title>Lesson 9 == Event v-on ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../vue-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 9 -- Event v-on -//</h1><pre># Khái niệm 
+
+	v-on là một directive dùng để lắng nghe các sự kiện DOM (như click, input, submit) hoặc sự kiện tùy chỉnh từ component con.
 	v-on gắn sự kiện HTML (như click, input, mouseover) với một hàm trong Vue.	
-	Cú pháp: v-on:sự-kiện="hàm".
-	Viết tắt: @sự-kiện="hàm".
+	
+# 	Cách hoạt động
+
+	Cú pháp: v-on:eventName="handler" hoặc dạng ngắn gọn @eventName="handler".
+	eventName: Tên sự kiện (ví dụ: click, input, keyup).
+	handler: Có thể là tên phương thức, biểu thức inline, hoặc hàm trực tiếp.
+	v-on cũng hỗ trợ modifier (như .prevent, .stop) để điều chỉnh hành vi sự kiện.
+	
+	
 	
 # 	Ví dụ cơ bản:
 	
@@ -63,14 +72,14 @@ app.mount('#app')
 
 
 
-
-
-
-
 	## c. Event Modifiers 
 		Vue cung cấp các modifier để đơn giản hóa xử lý sự kiện, ví dụ
 			- .prevent: Ngăn hành vi mặc định (như submit form). 
 			- .stop: Ngăn sự kiện lan truyền (event propagation). Ví dụ:
+			- .once: Chỉ kích hoạt sự kiện một lần.
+		
+		Ví dụ: <button @click.prevent="submit">Submit</button> ngăn trình duyệt reload khi submit form.
+
 
 <form @submit.prevent="onSubmit">
   <button type="submit">Submit</button>
@@ -86,6 +95,23 @@ const app = Vue.createApp({
 })
 app.mount('#app')
 </script>
+
+
+
+# Sự kiện trên component
+
+	Khi dùng v-on trên component, nó lắng nghe các sự kiện tùy chỉnh được phát ra bởi $emit từ component con.
+	
+	Ví dụ : 
+		<ChildComponent @custom-event="handleCustomEvent" />
+
+# Lưu ý
+
+
+	- Vue 3: v-on hoạt động tương tự Vue 2, nhưng các sự kiện tùy chỉnh được khai báo rõ ràng hơn qua emits trong component con.
+	- Hiệu suất: Sử dụng v-on với các phương thức thay vì biểu thức inline phức tạp để mã dễ bảo trì.
+	- Bảo mật: Đảm bảo các phương thức xử lý sự kiện không gây ra lỗi hoặc side effects không mong muốn.
+	- Composition API: Trong Composition API, v-on vẫn được dùng như bình thường, nhưng logic xử lý sự kiện thường được định nghĩa trong setup hoặc composable.
 
 
 
