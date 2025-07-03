@@ -132,5 +132,124 @@ new Vue({
 	Component con user-form phát sự kiện user-submitted với một object chứa name và email.
 	Component cha nhận object này và cập nhật userInfo.
 	
+
+# Sử dụng emit trong Vue3 
+
+	## Component con (ChildComponent.vue) 
+<template>
+  <button @click="sendMessage">Send Message</button>
+</template>
+
+<script>
+export default {
+  // Khai báo sự kiện tùy chỉnh
+  emits: ['custom-event'],
+  methods: {
+    sendMessage() {
+      // Phát sự kiện với dữ liệu
+      this.$emit('custom-event', 'Hello from child!');
+    }
+  }
+};
+</script>		
+
+
+	## Component cha (Parent.vue) 
+		
+<template>
+  <div>
+    <ChildComponent @custom-event="handleCustomEvent" />
+    <p>Message from child: {{ message }}</p>
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      message: ''
+    };
+  },
+  methods: {
+    handleCustomEvent(payload) {
+      this.message = payload; // Nhận dữ liệu từ child
+    }
+  }
+};
+</script>
+
+
+# Lưu ý
+	- Khai báo emits: Trong Vue 3, việc khai báo sự kiện trong emits là tùy chọn nhưng được khuyến khích để cải thiện khả năng đọc và debug.
+	- Dữ liệu kèm theo: $emit có thể gửi nhiều tham số, ví dụ: this.$emit('custom-event', param1, param2).
+	- Bảo mật: Đảm bảo dữ liệu gửi qua $emit được xử lý an toàn trong component cha.
+	- Composition API: Trong Composition API, $emit được truy cập qua defineEmits:
+	- defineEmits chỉ được gọi một lần: Trong <script setup>, defineEmits là một macro chỉ được gọi một lần duy nhất để định nghĩa tất cả các sự kiện mà component con có thể phát ra. Bạn không thể gọi defineEmits nhiều lần để tạo các biến emit1, emit2 riêng biệt.
+	- Cú pháp đúng: Tất cả các sự kiện cần được liệt kê trong một mảng duy nhất khi gọi defineEmits. Sau đó, một hàm emit được trả về để phát các sự kiện đã khai báo.
+
+<script setup>
+const emit = defineEmits(['custom-event']);
+function sendMessage() {
+  emit('custom-event', 'Hello from child!');
+}
+</script>
+
+	## Cú pháp đúng trong Composition API 
+	
+	
+		### Component con (ChildComponent.vue)
+		
+<script setup>
+const emit = defineEmits(['custom-event-1', 'custom-event-2']);
+
+function triggerEvent1() {
+  emit('custom-event-1', 'Hello from event 1!');
+}
+
+function triggerEvent2() {
+  emit('custom-event-2', 'Hello from event 2!');
+}
+</script>
+
+<template>
+  <div>
+    <button @click="triggerEvent1">Send Event 1</button>
+    <button @click="triggerEvent2">Send Event 2</button>
+  </div>
+</template>		
+		
+
+
+		### Component cha (Parent.vue)
+		
+<script setup>
+import { ref } from 'vue';
+import ChildComponent from './ChildComponent.vue';
+
+const message1 = ref('');
+const message2 = ref('');
+
+function handleEvent1(payload) {
+  message1.value = payload;
+}
+
+function handleEvent2(payload) {
+  message2.value = payload;
+}
+</script>
+
+<template>
+  <div>
+    <ChildComponent 
+      @custom-event-1="handleEvent1" 
+      @custom-event-2="handleEvent2" 
+    />
+    <p>Event 1: {{ message1 }}</p>
+    <p>Event 2: {{ message2 }}</p>
+  </div>
+</template>
+
+
+
 	
 </pre><a id='backBottom' href='../vue-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
