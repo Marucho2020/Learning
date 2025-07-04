@@ -118,9 +118,271 @@ unmounted() {
 }
 
 
+	## errorCaptured  / onErrorCaptured(Vue 3)
+		là một hook được sử dụng trong Options API để bắt và xử lý lỗi xảy ra trong cây component con (bao gồm lỗi trong lifecycle, phương thức, hoặc render của component con).
+		Kích hoạt: Gọi khi một lỗi được ném ra từ bất kỳ component con nào trong cây component của component hiện tại.
+	
+		Tham số: Nhận 3 tham số : 
+			- err: Lỗi được ném (Error object).
+			- instance: Component instance nơi lỗi xảy ra.
+			- info: Chuỗi mô tả nguồn gốc lỗi (ví dụ: render, watcher).
+
+		Trả về: Trả về false để ngăn lỗi lan truyền lên component cha hoặc global error handler.
+
+<script>
+export default {
+  errorCaptured(err, instance, info) {
+    console.log('Error:', err);
+    console.log('Component:', instance);
+    console.log('Info:', info);
+    return false; // Ngăn lỗi lan truyền
+  }
+};
+</script>
+
+			Vue 3: Hỗ trợ trong Options API. Trong Composition API, sử dụng onErrorCaptured:
+
+import { onErrorCaptured } from 'vue';
+onErrorCaptured((err, instance, info) => {
+  console.log(err, instance, info);
+  return false;
+});
+
+		Ứng dụng: Dùng để ghi log lỗi, hiển thị thông báo lỗi, hoặc ngăn lỗi phá hủy ứng dụng.
+		Hạn chế: Không thay thế global error handling (như app.config.errorHandler).
 
 
 
+
+	
+	## renderTracked 
+		là một hook trong Composition API được sử dụng để theo dõi các phụ thuộc (dependencies) được thu thập trong quá trình render của component. Nó giúp debug bằng cách ghi lại khi nào và tại sao một component được render lại.
+		
+		Gọi mỗi khi component thu thập một phụ thuộc phản hồi (reactive dependency) trong quá trình render, chẳng hạn như ref, reactive, hoặc computed.
+		
+		Tham số: Nhận một object chứa thông tin về phụ thuộc:
+			
+				- key: Tên hoặc chỉ số của phụ thuộc.
+				- target: Đối tượng phản hồi (reactive object) chứa phụ thuộc.
+				- type: Loại hành động (ví dụ: get khi truy cập giá trị).
+		Mục đích: Chủ yếu dùng để debug, giúp xác định phụ thuộc nào gây ra việc render lại.
+		
+<script setup>
+import { ref, onRenderTracked } from 'vue';
+
+const count = ref(0);
+
+onRenderTracked(({ key, target, type }) => {
+  console.log('Tracked:', { key, target, type });
+});
+</script>
+
+<template>
+  <div>{{ count }}</div>
+  <button @click="count++">Increment</button>
+</template>		
+		
+	Mỗi khi count được truy cập trong template, onRenderTracked ghi lại thông tin phụ thuộc (ví dụ: { key: 'value', target: RefImpl, type: 'get' }).
+	Khi nhấn nút, count thay đổi, component render lại, và onRenderTracked báo cáo các phụ thuộc được thu thập.	
+
+
+		- Chỉ trong Composition API: renderTracked không có trong Options API (khác với errorCaptured).
+		- Debug: Chủ yếu dùng để phân tích hiệu suất và tối ưu render, không nên dùng trong production.
+		- Hạn chế: Chỉ theo dõi phụ thuộc trong quá trình render, không bao gồm các tác vụ khác như watchers.
+		- Kết hợp với onRenderTriggered: Thường dùng cùng onRenderTriggered để debug lý do render lại.
+
+
+
+	## renderTriggered 
+		lifecycle hook renderTriggered trong Composition API được sử dụng để theo dõi nguyên nhân khiến component render lại. Nó giúp debug bằng cách ghi lại khi một phụ thuộc phản hồi (reactive dependency) thay đổi và gây ra việc render lại.
+		Gọi mỗi khi một phụ thuộc phản hồi (như ref, reactive, hoặc computed) thay đổi, dẫn đến việc component render lại.
+		
+		Tham số: Nhận một object chứa thông tin về sự kiện kích hoạt
+
+			- key: Tên hoặc chỉ số của phụ thuộc thay đổi.
+			- target: Đối tượng phản hồi chứa phụ thuộc.
+			- type: Loại hành động (ví dụ: set khi giá trị thay đổi).
+			- newValue: Giá trị mới của phụ thuộc.
+			- oldValue: Giá trị cũ của phụ thuộc.
+		Mục đích: Chủ yếu dùng để debug, giúp xác định phụ thuộc nào gây ra việc render lại.
+		
+<script setup>
+import { ref, onRenderTriggered } from 'vue';
+
+const count = ref(0);
+
+onRenderTriggered(({ key, target, type, newValue, oldValue }) => {
+  console.log('Triggered:', { key, target, type, newValue, oldValue });
+});
+</script>
+
+<template>
+  <div>{{ count }}</div>
+  <button @click="count++">Increment</button>
+</template>		
+
+		Khi nhấn nút, count thay đổi (ví dụ: từ 0 thành 1), onRenderTriggered ghi lại thông tin: { key: 'value', target: RefImpl, type: 'set', newValue: 1, oldValue: 0 }.
+		Hook này giúp xác định chính xác phụ thuộc nào (count) gây ra việc render lại.
+
+
+
+		- Chỉ trong Composition API: renderTriggered không có trong Options API.
+		- Debug: Dùng để phân tích nguyên nhân render, không nên dùng trong production.
+		- Kết hợp với onRenderTracked: onRenderTracked theo dõi phụ thuộc được thu thập, còn onRenderTriggered xác định phụ thuộc nào gây render lại.
+		- Hạn chế: Chỉ ghi lại các thay đổi dẫn đến render, không bao gồm các tác vụ khác như watchers.
+
+
+
+
+	## activated 
+		lifecycle hook activated là một hook được sử dụng để xử lý logic khi một component được kích hoạt (trở lại trạng thái hoạt động) trong một <KeepAlive> component. Dưới đây là giải thích cô đọng về activated trong Composition API:
+		
+		Gọi khi component được lưu trữ trong bộ nhớ cache bởi <KeepAlive> được đưa trở lại DOM (ví dụ: khi chuyển đổi giữa các route hoặc tab).
+		
+		Mục đích: Thực hiện các tác vụ như cập nhật dữ liệu hoặc khởi tạo lại trạng thái khi component được kích hoạt lại.
+		
+		Trong Composition API, sử dụng onActivated để đăng ký hook activated.
+		
+		Hook này chỉ hoạt động khi component nằm trong <KeepAlive>, đảm bảo component không bị hủy mà được lưu trữ và tái sử dụng.
+		
+<script setup>
+import { ref, onActivated } from 'vue';
+
+const count = ref(0);
+
+onActivated(() => {
+  console.log('Component activated');
+  count.value++; // Tăng count mỗi khi component được kích hoạt
+});
+</script>
+
+<template>
+  <div>Count: {{ count }}</div>
+</template>		
+		
+		
+		Component được bao bọc bởi <KeepAlive> (trong component cha).
+		Mỗi khi component được kích hoạt lại (ví dụ: chuyển từ route khác về), onActivated chạy và tăng count.
+
+	
+
+		### Component cha (Parent.vue) 
+
+<script setup>
+import { ref } from 'vue';
+import ChildComponent from './ChildComponent.vue';
+
+const show = ref(true);
+</script>
+
+<template>
+  <button @click="show = !show">Toggle</button>
+  <KeepAlive>
+    <ChildComponent v-if="show" />
+  </KeepAlive>
+</template>
+
+
+		## deactivated 
+			lifecycle hook deactivated trong Composition API được sử dụng để xử lý logic khi một component trong <KeepAlive> bị vô hiệu hóa (tạm thời không hiển thị nhưng vẫn được lưu trữ trong bộ nhớ cache).
+			
+			Kích hoạt: Gọi khi component trong <KeepAlive> bị loại khỏi DOM nhưng vẫn được giữ trong cache, không bị hủy.
+			
+			Mục đích: Thực hiện các tác vụ như lưu trạng thái, dừng các tác vụ nền (như interval), hoặc ghi log khi component không còn hiển thị.
+			
+			Trong Composition API, sử dụng onDeactivated để đăng ký hook deactivated.
+			Hook này chỉ hoạt động khi component nằm trong <KeepAlive>.
+			
+			
+<script setup>
+import { ref, onDeactivated } from 'vue';
+
+const count = ref(0);
+
+onDeactivated(() => {
+  console.log('Component deactivated');
+  // Ví dụ: Lưu trạng thái hoặc dừng interval
+});
+</script>
+
+<template>
+  <div>Count: {{ count }}</div>
+</template>			
+			
+Component cha (Parent.vue):
+
+<script setup>
+import { ref } from 'vue';
+import ChildComponent from './ChildComponent.vue';
+
+const show = ref(true);
+</script>
+
+<template>
+  <button @click="show = !show">Toggle</button>
+  <KeepAlive>
+    <ChildComponent v-if="show" />
+  </KeepAlive>
+</template>
+			
+			
+		Khi show chuyển thành false, ChildComponent bị vô hiệu hóa (không hiển thị), onDeactivated chạy và ghi log "Component deactivated".
+		Component vẫn được lưu trong cache, không bị hủy.	
+			
+		### Lưu ý	
+			
+			- Chỉ trong <KeepAlive>: onDeactivated chỉ hoạt động khi component được quản lý bởi <KeepAlive>.
+			- Composition API: Sử dụng onDeactivated thay vì deactivated (trong Options API).
+			- Kết hợp với onActivated: Thường dùng cùng onActivated để xử lý trạng thái kích hoạt/vô hiệu hóa.
+			- Ứng dụng: Dùng để dừng các tác vụ (như timers, listeners) hoặc lưu trạng thái khi component không còn hiển thị.			
+			
+			
+			
+		
+
+		## serverPrefetch 
+		lifecycle hook serverPrefetch là một hook trong Options API và Composition API được sử dụng để thực hiện tải trước dữ liệu (prefetching) trên phía server trong các ứng dụng Server-Side Rendering (SSR). Dưới đây là giải thích cô đọng về serverPrefetch trong Composition API:
+		
+		Kích hoạt: Gọi trên server trước khi component được render trong quá trình SSR, cho phép tải dữ liệu trước khi gửi HTML về client.
+		
+		Mục đích: Tối ưu hiệu suất bằng cách lấy dữ liệu cần thiết (như API calls) trước khi render, đảm bảo HTML được gửi về client đã có dữ liệu.
+		
+		Trong Composition API, sử dụng onServerPrefetch để đăng ký hook serverPrefetch.
+		Hook này trả về một Promise, cho phép xử lý bất đồng bộ (async) và chờ dữ liệu hoàn tất trước khi render.
+		
+		
+<script setup>
+import { ref, onServerPrefetch } from 'vue';
+
+const data = ref(null);
+
+onServerPrefetch(async () => {
+  // Giả lập gọi API
+  data.value = await fetchDataFromAPI();
+});
+
+async function fetchDataFromAPI() {
+  return new Promise((resolve) => {
+    setTimeout(() => resolve('Data from server'), 1000);
+  });
+}
+</script>
+
+<template>
+  <div>{{ data }}</div>
+</template>		
+		
+		
+		onServerPrefetch chạy trên server, gọi fetchDataFromAPI để lấy dữ liệu và gán vào data.
+		HTML được render với dữ liệu đã tải, gửi về client mà không cần client phải gọi lại API.
+		
+		Chỉ trong SSR: onServerPrefetch chỉ hoạt động trong môi trường SSR, không chạy trên client-side rendering.
+		Composition API: Sử dụng onServerPrefetch thay vì serverPrefetch (trong Options API).
+		Bất đồng bộ: Hook phải trả về Promise để Vue chờ dữ liệu hoàn tất trước khi render.
+		Ứng dụng: Lý tưởng cho việc tải dữ liệu từ API, cơ sở dữ liệu, hoặc các nguồn khác trong SSR để cải thiện tốc độ và SEO.
+		Hạn chế: Không chạy trong các ứng dụng SPA thông thường, chỉ áp dụng khi dùng framework như Nuxt.js hoặc Vue SSR.		
+			
+			
 
 
 # 3. Lifecycle Hooks trong Composition API (Vue 3) 
