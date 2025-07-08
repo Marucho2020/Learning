@@ -1,0 +1,139 @@
+<html><head><title>Lesson 129 == HandlerAdapter ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 129 -- HandlerAdapter -//</h1><pre>
+# 🔍 1. HandlerAdapter là gì? 
+	Là một interface trung gian trong Spring MVC. Nó đứng giữa DispatcherServlet và các loại “handler” (controller) khác nhau. 
+	Nó không xử lý request trực tiếp. Nó làm nhiệm vụ: 
+		Adapter pattern – chuyển một loại controller cụ thể thành một xử lý có thể được thực thi thống nhất.
+		
+		
+		
+		
+# 	🧠 2. Tại sao cần HandlerAdapter? 	
+
+	Vì trong Spring MVC, controller không chỉ có một loại.
+		Ta có:
+			@Controller dùng annotation → RequestMappingHandlerAdapter xử lý
+			Controller kiểu cũ (implements org.springframework.web.servlet.mvc.Controller) → SimpleControllerHandlerAdapter xử lý
+			Handler custom (ví dụ class của bạn tự định nghĩa) → cần adapter riêng
+			
+				
+		➡️ DispatcherServlet không thể biết trước controller của bạn thuộc loại gì
+		➡️ Nó chỉ biết: "Tôi cần một HandlerAdapter tương thích với handler đó để xử lý request"
+
+
+
+
+# 🏗️ 3. Kiến trúc hoạt động 
+	
+	Client → DispatcherServlet
+           ↓
+    HandlerMapping (xác định handler object)
+           ↓
+    HandlerAdapter (xử lý handler đó)
+           ↓
+       Handler (controller logic)
+           ↓
+     ModelAndView → ViewResolver → render HTML
+
+
+# 🔩 4. Interface HandlerAdapter có 3 phương thức:
+
+public interface HandlerAdapter {
+
+    boolean supports(Object handler);
+
+    ModelAndView handle(HttpServletRequest request,
+                        HttpServletResponse response,
+                        Object handler) throws Exception;
+
+    long getLastModified(HttpServletRequest request, Object handler);
+}
+
+
+
+	## 1. supports(Object handler) 
+		→ Kiểm tra xem adapter này có xử lý được kiểu handler đó không
+				Ví dụ: RequestMappingHandlerAdapter chỉ xử lý handler là @RequestMapping
+
+
+	## 2. handle(...) 
+		→ Xử lý actual request
+		→ Gọi handler logic, trả về ModelAndView
+
+
+
+	## 3. getLastModified(...) 
+		→ Ít dùng, phục vụ cache, trả về thời gian last-modified để tối ưu HTTP caching
+
+
+
+
+
+# 🧪 5. Ví dụ thực tế:
+
+public class MyCustomHandlerAdapter implements HandlerAdapter {
+
+    @Override
+    public boolean supports(Object handler) {
+        return handler instanceof MyCustomHandler;
+    }
+
+    @Override
+    public ModelAndView handle(HttpServletRequest request,
+                               HttpServletResponse response,
+                               Object handler) throws Exception {
+        MyCustomHandler myHandler = (MyCustomHandler) handler;
+        return myHandler.handleCustomRequest(request, response);
+    }
+
+    @Override
+    public long getLastModified(HttpServletRequest request, Object handler) {
+        return -1;
+    }
+}
+
+	Bạn cần đăng ký adapter này vào Spring context để DispatcherServlet có thể sử dụng.
+
+# 🚨 6. Khi nào cần viết HandlerAdapter?
+
+
+	- Khi bạn muốn tự định nghĩa một loại "controller" riêng biệt (không dùng annotation)
+	- Khi bạn muốn giảm phụ thuộc vào Spring Annotation, và dùng một cấu trúc khác
+	- Khi bạn muốn dùng Spring MVC làm framework nền cho một ngôn ngữ mô tả (DSL) hoặc định tuyến khác
+
+
+# 🧠 7. Tầm quan trọng ở level senior
+| Điều cần biết                                  | Vì sao                                                           |
+| ---------------------------------------------- | ---------------------------------------------------------------- |
+| `HandlerAdapter` là một điểm mở rộng kiến trúc | Cho phép thêm kiểu controller mới mà không sửa DispatcherServlet |
+| Là phần ứng dụng của **Adapter Pattern**       | Biến nhiều loại controller thành một interface thống nhất        |
+| Có thể dùng để **ghi đè xử lý logic**          | Ví dụ log, validate trước khi vào controller                     |
+| Gắn chặt với `HandlerMapping`                  | Một handler mapping sẽ trả về một handler, adapter sẽ xử lý nó   |
+
+
+
+# 🧠 Phân biệt với các thành phần khác:
+
+
+| Thành phần         | Vai trò                                    |
+| ------------------ | ------------------------------------------ |
+| DispatcherServlet  | Entry point chính                          |
+| HandlerMapping     | Tìm ra handler tương ứng với URL           |
+| HandlerAdapter     | Xử lý tương ứng handler đó                 |
+| Controller         | Viết logic                                 |
+| ViewResolver       | Tìm view để render                         |
+| HandlerInterceptor | Xử lý trước/sau handler (giống middleware) |
+
+
+# ✅ Tổng kết
+
+
+	HandlerAdapter giúp Spring MVC mở rộng và trừu tượng hóa các loại controller khác nhau
+	Là hiện thân của Adapter pattern để tránh DispatcherServlet phải biết chi tiết từng loại handler
+	Ở level senior, bạn phải hiểu khả năng mở rộng của Spring nằm ở đây: HandlerAdapter, HandlerMapping, ViewResolver, Interceptor...
+
+
+
+
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

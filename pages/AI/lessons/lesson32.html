@@ -1,5 +1,80 @@
 <html><head><title>Lesson 32 == Tìm hiểu mô hình FaceNet cho bài toán nhận diện khuôn mặt ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../AI-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 32 -- Tìm hiểu mô hình FaceNet cho bài toán nhận diện khuôn mặt -//</h1><pre>
+# 1. Giới thiệu
+	## FaceNet và đặc trưng ánh xạ không gian
+		
+		FaceNet là một mô hình học sâu (Deep Learning) được phát triển bởi Google vào năm 2015. Điểm nổi bật của FaceNet là nó không chỉ đơn giản là nhận diện khuôn mặt mà còn ánh xạ mỗi khuôn mặt vào một không gian đặc trưng (embedding space) sao cho khoảng cách Euclidean giữa hai vector đặc trưng đại diện cho hai khuôn mặt tương tự nhau sẽ nhỏ, trong khi khoảng cách giữa hai vector đại diện cho hai khuôn mặt khác nhau sẽ lớn.
+		
+		
+	## 	Mạng nơ-ron tích chập và Triplet Loss trong FaceNet 
+		FaceNet sử dụng một mạng nơ-ron tích chập (Convolutional Neural Network – CNN) để học các đặc trưng của khuôn mặt. Sau khi qua mạng, mỗi khuôn mặt sẽ được ánh xạ thành một vector có độ dài cố định, thường là 128 chiều, gọi là face embedding. Vector này có thể được sử dụng cho các nhiệm vụ như xác thực khuôn mặt, tìm kiếm khuôn mặt, và nhóm khuôn mặt.
+		
+		Một trong những đặc điểm chính của FaceNet là khả năng tạo ra các vector đặc trưng có tính phân biệt cao. Điều này đạt được nhờ việc sử dụng một hàm mất mát đặc biệt gọi là Triplet Loss, cùng với một kỹ thuật huấn luyện tinh vi.
+		
+		
+# 2. Cấu trúc mạng FaceNet 		
+		https://aicandy.vn/wp-content/uploads/2024/09/aicandy_facenet_arc.png
+		Mô hình FaceNet có một cấu trúc phức tạp với nhiều thành phần khác nhau, mỗi phần đóng một vai trò quan trọng trong việc trích xuất và ánh xạ đặc trưng khuôn mặt. Cấu trúc chính của FaceNet bao gồm các phần sau:
+		
+
+	## 2.1. Mạng nơ-ron tích chập (CNN) để trích xuất đặc trưng
+		Phần đầu tiên của FaceNet là một mạng nơ-ron tích chập (CNN) được thiết kế để trích xuất các đặc trưng từ hình ảnh khuôn mặt. Mạng này bao gồm nhiều lớp tích chập (convolutional layers) và lớp gộp (pooling layers) để học các đặc trưng hình học và phong cách của khuôn mặt.
+		
+	Cấu trúc điển hình của mạng CNN trong FaceNet có thể bao gồm:
+	
+		Lớp tích chập (Convolutional Layer): Các lớp này giúp phát hiện các đặc trưng cơ bản của hình ảnh, như cạnh và kết cấu. Ví dụ, lớp tích chập đầu tiên có thể có 64 kênh đầu ra với kích thước kernel là 7×7.
+		
+		Lớp Gộp (Pooling Layer): Các lớp này giảm kích thước không gian của hình ảnh đầu vào, giúp giảm số lượng tham số và tính toán, đồng thời giữ lại các đặc trưng quan trọng. Lớp gộp thường sử dụng phương pháp gộp tối đa (max pooling) với kích thước kernel là 3×3.
+	
+		Lớp Batch Normalization: Lớp này giúp chuẩn hóa đầu ra của các lớp tích chập, giảm thiểu sự thay đổi phân phối trong quá trình huấn luyện.
+		
+		Lớp kích hoạt (Activation Layer): Lớp ReLU (Rectified Linear Unit) thường được sử dụng để thêm tính phi tuyến vào mô hình, giúp mô hình học các đặc trưng phức tạp hơn.
+		
+		
+		### Ví dụ về cấu trúc mạng CNN có thể như sau: 
+			\text{Input Image} \rightarrow \text{Conv1 (64 filters, 7×7)} \rightarrow \text{ReLU} \rightarrow \text{MaxPool (3×3)} \rightarrow \text{Conv2 (128 filters, 3×3)} \rightarrow \text{ReLU} \rightarrow \text{MaxPool (3×3)}
+			
+			
+
+	## 2.2. Lớp Fully Connected (FC) để ánh xạ đặc trưng 
+		Sau khi các đặc trưng được trích xuất bởi các lớp CNN, chúng được đưa qua các lớp fully connected (FC) để ánh xạ các đặc trưng này thành vector embedding có độ dài cố định. Các lớp FC thường được thiết kế để giảm dần số lượng kích thước đặc trưng từ các lớp tích chập xuống một kích thước nhỏ hơn, thường là 128 hoặc 512 chiều cho vector embedding.
+		
+		Cấu trúc của các lớp FC có thể như sau:
+			\text{Flatten} \rightarrow \text{FC1 (1024 units)} \rightarrow \text{ReLU} \rightarrow \text{FC2 (Embedding Dim)}
+			
+			Trong đó, Embedding Dim là kích thước của vector đặc trưng, thường là 128.
+
+	## 2.3. Hàm mất mát Triplet Loss 
+		Triplet Loss là một trong những hàm mất mát quan trọng nhất trong mô hình FaceNet. Mục tiêu của Triplet Loss là đảm bảo rằng khoảng cách giữa vector đặc trưng của một khuôn mặt (gọi là Anchor) và một khuôn mặt khác của cùng một người (gọi là Positive) phải nhỏ hơn khoảng cách giữa vector đặc trưng của khuôn mặt đó và khuôn mặt của một người khác (gọi là Negative).
+		
+		Định nghĩa:
+			\mathcal{L} = \sum_{i=1}^{N} \left[ \|f(x_i^A) – f(x_i^P)\|_2^2 – \|f(x_i^A) – f(x_i^N)\|_2^2 + \alpha \right]_+
+		
+		Trong đó:
+			
+			x_i^A: Hình ảnh Anchor (mỏ neo)
+			x_i^P: Hình ảnh Positive (tích cực, cùng một người với Anchor)		
+			x_i^N: Hình ảnh Negative (tiêu cực, người khác với Anchor) 
+			f(x): Hàm ánh xạ hình ảnh x thành vector đặc trưng (embedding) 
+			\alpha: Một siêu tham số gọi là margin, giúp kiểm soát khoảng cách tối thiểu giữa Positive và Negative
+
+
+		Hàm mất mát này yêu cầu rằng khoảng cách giữa Anchor và Positive nhỏ hơn khoảng cách giữa Anchor và Negative ít nhất là một lượng bằng a. Điều này giúp mô hình học cách phân biệt rõ ràng giữa các khuôn mặt khác nhau.
+
+
+
+
+	###  Hoạt động:
 https://aicandy.vn/tim-hieu-mo-hinh-facenet-cho-bai-toan-nhan-dien-khuon-mat/
+
+
+
+
+
+
+
+
+
+
 
 
 
