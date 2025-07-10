@@ -1,0 +1,149 @@
+<html><head><title>Lesson 8 == Enum ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../type-script-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 8 -- Enum -//</h1><pre>
+# 1. Enums trong TypeScript là gì?
+	Enums (Enumerations) là một kiểu dữ liệu đặc biệt trong TypeScript, cho phép định nghĩa một tập hợp các giá trị có tên, thường là các hằng số cố định. Enums giúp thay thế các giá trị "vô hồn" (như số hoặc chuỗi) bằng các tên có ý nghĩa, tăng tính rõ ràng và giảm lỗi.
+	
+# 	2. Khai báo Enums 
+	
+	## Cú pháp: 
+enum TênEnum {
+  GiáTrị1,
+  GiáTrị2,
+  GiáTrị3
+}		
+
+	## Ví dụ:
+
+enum Color {
+  Red,
+  Green,
+  Blue
+}
+let c: Color = Color.Green; // c = 1
+	Mỗi giá trị trong enum mặc định được gán một số nguyên, bắt đầu từ 0 (Red = 0, Green = 1, Blue = 2).
+
+
+
+#  3. Các loại Enums
+
+	## a. Numeric Enums (Enums số) 
+		Mô tả: Giá trị là số, tự động tăng từ 0 nếu không gán giá trị cụ thể.
+enum Direction {
+  Up,    // 0
+  Down,  // 1
+  Left,  // 2
+  Right  // 3
+}
+let dir: Direction = Direction.Up; // dir = 0
+	
+		### Gán giá trị cụ thể:
+enum Direction {
+  Up = 1,
+  Down = 3,
+  Left = 5,
+  Right = 7
+}
+let dir: Direction = Direction.Down; // dir = 3	
+	
+
+	## b. String Enums 
+		Mô tả: Giá trị là chuỗi thay vì số, giúp tăng tính rõ ràng khi giá trị cần mang ý nghĩa cụ thể.
+
+enum Status {
+  Success = "SUCCESS",
+  Failure = "FAILURE",
+  Pending = "PENDING"
+}
+let s: Status = Status.Success; // s = "SUCCESS"
+		Lưu ý: String enums không tự động tăng giá trị như numeric enums.
+
+
+
+
+	## c. Heterogeneous Enums (Enums hỗn hợp)
+		Mô tả: Kết hợp cả số và chuỗi (ít được khuyến nghị vì làm code phức tạp).
+
+enum Mixed {
+  No = 0,
+  Yes = "YES"
+}
+
+
+
+# 4. Sử dụng Enums
+	Truy cập giá trị:
+
+enum Color {
+  Red,
+  Green,
+  Blue
+}
+let colorName: string = Color[1]; // "Green" (truy cập ngược từ giá trị)
+let colorValue: Color = Color.Green; // 1
+
+
+# 5. Const Enums
+	Mô tả: Sử dụng const enum để tối ưu hóa code. Const enums được biên dịch thành giá trị trực tiếp, không tạo object enum trong JavaScript.
+
+
+const enum Role {
+  Admin,
+  User,
+  Guest
+}
+let role: Role = Role.Admin; // Biên dịch thành: let role = 0;
+
+
+	Lưu ý: Const enums không thể truy cập ngược (như Role[0]), chỉ dùng khi bạn cần tối ưu hiệu suất.
+
+
+
+# 6. Tại sao Enums quan trọng?
+	- Tăng tính rõ ràng: Thay vì dùng số (0, 1, 2) hoặc chuỗi thô ("SUCCESS"), enums cung cấp tên có ý nghĩa.
+	- Giảm lỗi: TypeScript đảm bảo chỉ các giá trị trong enum được sử dụng.
+	- Dễ bảo trì: Khi cần thay đổi giá trị, chỉ cần chỉnh sửa trong enum.
+
+
+#	7. Ví dụ tổng hợp 
+// Numeric Enum
+enum Direction {
+  Up = 1,
+  Down,
+  Left,
+  Right
+}
+let move: Direction = Direction.Up; // 1
+console.log(Direction[2]); // "Down"
+
+// String Enum
+enum Status {
+  Success = "OK",
+  Error = "ERROR"
+}
+let status: Status = Status.Success; // "OK"
+
+// Const Enum
+const enum Priority {
+  Low,
+  Medium,
+  High
+}
+let taskPriority: Priority = Priority.High; // Biên dịch thành: let taskPriority = 2;
+
+// Sử dụng trong hàm
+function getStatus(status: Status): string {
+  return `Status: ${status}`;
+}
+console.log(getStatus(Status.Success)); // Status: OK
+
+
+
+# 8. Lưu ý thực tế
+
+	-Numeric vs String Enums: Dùng string enums khi giá trị cần dễ đọc (ví dụ: trong API trả về chuỗi). Dùng numeric enums khi làm việc với số (như mã trạng thái).
+	-Const Enums: Dùng để giảm kích thước file JavaScript, nhưng tránh nếu cần truy cập ngược (enum[key]).
+	-Khi nào dùng Enums?: Thích hợp cho các tập hợp giá trị cố định (trạng thái, vai trò, hướng, v.v.). Nếu cần cấu trúc phức tạp hơn, cân nhắc dùng Type Alias hoặc Interface.
+	-Hạn chế: Enums không phù hợp với dữ liệu động (như dữ liệu từ người dùng).
+
+
+
+</pre><a id='backBottom' href='../type-script-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

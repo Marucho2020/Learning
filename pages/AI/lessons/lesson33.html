@@ -1,2 +1,103 @@
-<html><head><title>Lesson 33 == Imbalanced Dataset: Thách thức và giải pháp trong Machine Learning ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../AI-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 33 -- Imbalanced Dataset: Thách thức và giải pháp trong Machine Learning -//</h1><pre>https://aicandy.vn/imbalanced-dataset-thach-thuc-va-giai-phap-trong-ml/
+<html><head><title>Lesson 33 == Imbalanced Dataset: Thách thức và giải pháp trong Machine Learning ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../AI-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 33 -- Imbalanced Dataset: Thách thức và giải pháp trong Machine Learning -//</h1><pre># 1. Giới thiệu 
+	Trong lĩnh vực Machine Learning, một trong những thách thức phổ biến mà các nhà khoa học dữ liệu gặp phải là vấn đề Imbalanced Dataset (Dữ liệu mất cân bằng). Điều này thường xuất hiện trong các ứng dụng thực tế, nơi mà một hoặc nhiều lớp của tập dữ liệu có số lượng mẫu lớn hơn nhiều so với các lớp còn lại.
+	
+	Ví dụ, trong các bài toán phân loại y tế, số lượng bệnh nhân mắc bệnh cụ thể có thể ít hơn rất nhiều so với số lượng người khỏe mạnh.
+	
+	Trong bài toán phân loại email, nếu có 10.000 email mà chỉ 500 trong số đó là spam, chúng ta có một tập dữ liệu mất cân bằng. Tỷ lệ mẫu giữa các lớp có thể không đồng đều, và điều này thường gây ra vấn đề lớn trong việc huấn luyện mô hình Machine Learning.
+
+# 2. Tác động của Imbalanced Dataset đến mô hình Machine Learning
+
+	https://aicandy.vn/wp-content/uploads/2024/11/aicandy_imbalanced_dataset_2.jpg
+	
+	Khi làm việc với Imbalanced Dataset, mô hình Machine Learning có thể gặp phải một số vấn đề nghiêm trọng. Các vấn đề chính bao gồm:
+
+	## 2.1. Thiên vị dự đoán 
+		Mô hình có thể học cách dự đoán lớp chiếm đa số một cách thường xuyên, dẫn đến việc bỏ qua hoặc sai sót khi dự đoán các mẫu thuộc lớp chiếm thiểu số.
+		
+	## 2.2. Hiệu suất đánh giá không chính xác 
+		Chỉ số độ chính xác (Accuracy) có thể bị đánh lừa, ví dụ: nếu mô hình dự đoán tất cả các mẫu thuộc lớp chiếm đa số, nó có thể đạt được độ chính xác cao mặc dù không thực sự hiệu quả trong việc phân loại.
+		
+	## 2.3. Mất khả năng tổng quát hóa 
+		Mô hình có thể không học được các đặc trưng quan trọng để phân biệt các lớp, đặc biệt là lớp chiếm thiểu số, do đó khả năng tổng quát hóa của mô hình sẽ bị ảnh hưởng nghiêm trọng. 
+		
+		
+	## 2.4. Ảnh hưởng của Imbalanced Dataset
+		Giả sử chúng ta có một tập dữ liệu phân loại nhị phân với 95% thuộc lớp A và 5% thuộc lớp B. Nếu một mô hình chỉ đơn giản dự đoán tất cả các mẫu thuộc lớp A, nó sẽ có độ chính xác 95%, nhưng nó hoàn toàn không hữu ích vì không thể nhận diện được các mẫu thuộc lớp B.
+		
+#  3. Các phương pháp đánh giá mô hình với Imbalanced Dataset 
+	Khi làm việc với Imbalanced Dataset, việc sử dụng các phương pháp đánh giá thông thường như độ chính xác (Accuracy) có thể gây hiểu nhầm về hiệu suất thực sự của mô hình. Do đó, cần sử dụng các chỉ số khác phù hợp hơn với đặc thù của dữ liệu mất cân bằng để đánh giá hiệu quả của mô hình. Dưới đây là những phương pháp đánh giá quan trọng khi làm việc với Imbalanced Dataset.
+	
+	## 3.1. Confusion Matrix 
+		https://aicandy.vn/wp-content/uploads/2024/09/aicandy_confusion.png 
+		
+		
+		Confusion Matrix là một công cụ quan trọng để phân tích chi tiết các dự đoán của mô hình. Nó cung cấp thông tin về số lượng dự đoán đúng và sai của mô hình trên từng lớp, giúp bạn hiểu rõ hơn về các lỗi của mô hình. Confusion Matrix bao gồm các thành phần sau:
+		
+		True Positives (TP): Số mẫu được dự đoán đúng thuộc lớp dương tính.
+		False Positives (FP): Số mẫu được dự đoán là dương tính nhưng thực tế thuộc lớp âm tính.
+		True Negatives (TN): Số mẫu được dự đoán đúng thuộc lớp âm tính.
+		False Negatives (FN): Số mẫu được dự đoán là âm tính nhưng thực tế thuộc lớp dương tính.
+		
+		Confusion Matrix bạn có thể tính toán các chỉ số như Precision, Recall, và F1-score, những chỉ số này sẽ giúp đánh giá mô hình tốt hơn trong trường hợp dữ liệu mất cân bằng.
+		
+	
+	## 3.2. Precision và Recall 
+		Precision và Recall là hai chỉ số đánh giá quan trọng, đặc biệt khi dữ liệu bị mất cân bằng.
+			Precision: Được tính bằng tỷ lệ số mẫu dương tính thực sự trong tổng số mẫu được dự đoán là dương tính. Precision đặc biệt quan trọng trong các bài toán mà việc dự đoán sai lớp dương tính (False Positives) có thể gây ra hậu quả nghiêm trọng.
+				Precision = \frac{TP}{TP + FP}
+
+		
+			Recall (Sensitivity, True Positive Rate): Được tính bằng tỷ lệ số mẫu dương tính thực sự được mô hình dự đoán đúng so với tổng số mẫu dương tính trong dữ liệu. Recall rất quan trọng trong các bài toán mà việc bỏ sót các mẫu dương tính thực sự (False Negatives) là vấn đề lớn.
+			
+				Recall = \frac{TP}{TP + FN}
+
+			Trong một số tình huống, Precision và Recall có thể có mối quan hệ trái ngược, do đó cần phải cân nhắc giữa chúng khi đánh giá mô hình. Một cách tiếp cận là sử dụng F1-score, một chỉ số tổng hợp cả Precision và Recall.
+
+
+	## 3.3. F1-score 
+		F1-score là trung bình hài hòa giữa Precision và Recall, giúp cân bằng giữa việc tối ưu hóa hai chỉ số này. Khi Precision và Recall có giá trị chênh lệch lớn, F1-score là chỉ số hữu ích để cung cấp một cái nhìn tổng quát hơn về hiệu suất của mô hình.
+		
+		F1-score: 
+			F1 = 2 \times \frac{Precision \times Recall}{Precision + Recall}
+			
+			F1-score đặc biệt hữu ích trong các bài toán mà cả Precision và Recall đều quan trọng, và chúng ta cần một chỉ số duy nhất để so sánh các mô hình hoặc điều chỉnh các siêu tham số.
+			
+
+
+
+	## 3.4. ROC Curve và AUC (Area Under the Curve) 
+		`ROC Curve (Receiver Operating Characteristic Curve) và AUC (Area Under the Curve) là các công cụ đánh giá khác được sử dụng rộng rãi trong các bài toán phân loại nhị phân, đặc biệt khi dữ liệu mất cân bằng. ROC Curve là đồ thị thể hiện mối quan hệ giữa True Positive Rate (TPR) và False Positive Rate (FPR) ở các ngưỡng phân loại khác nhau.
+		
+		True Positive Rate (TPR): Còn được gọi là Recall, đo lường tỷ lệ các mẫu dương tính thực sự được dự đoán đúng. 
+			TPR = \frac{TP}{TP + FN}
+			
+			
+		False Positive Rate (FPR): Đo lường tỷ lệ các mẫu âm tính thực sự nhưng được dự đoán sai là dương tính.
+			FPR = \frac{FP}{FP + TN}
+
+
+		ROC Curve giúp bạn đánh giá khả năng phân biệt giữa các lớp của mô hình ở nhiều ngưỡng khác nhau. AUC, diện tích dưới đường cong ROC, là một giá trị duy nhất tóm tắt hiệu suất của mô hình; AUC càng gần 1, mô hình càng tốt. AUC là chỉ số đặc biệt hữu ích khi làm việc với Imbalanced Dataset vì nó không phụ thuộc vào tỷ lệ giữa các lớp.
+
+
+	
+	## 3.5. Precision-Recall Curve 
+		Precision-Recall Curve là một công cụ khác giúp đánh giá mô hình khi dữ liệu mất cân bằng. Đây là đồ thị thể hiện mối quan hệ giữa Precision và Recall ở các ngưỡng khác nhau. Khi dữ liệu bị mất cân bằng nghiêm trọng (ví dụ: khi một lớp rất hiếm), Precision-Recall Curve thường là một công cụ đánh giá tốt hơn so với ROC Curve.
+		
+		Một cách để tóm tắt hiệu suất của mô hình từ Precision-Recall Curve là tính Average Precision (AP), tương tự như AUC nhưng áp dụng cho Precision-Recall Curve. AP cao thể hiện mô hình có khả năng giữ Precision cao đồng thời tăng Recall.
+	
+	
+	
+# 4. Giải pháp cho vấn đề Imbalanced Dataset 	
+	
+	https://aicandy.vn/imbalanced-dataset-thach-thuc-va-giai-phap-trong-ml/
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 </pre><a id='backBottom' href='../AI-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
