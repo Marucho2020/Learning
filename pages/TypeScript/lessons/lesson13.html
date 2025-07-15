@@ -1,0 +1,234 @@
+<html><head><title>Lesson 13 == Classes ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../type-script-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 13 -- Classes -//</h1><pre>
+# 1. TypeScript Classes là gì?
+
+	Classes trong TypeScript là cách định nghĩa các bản thiết kế (blueprint) để tạo ra các đối tượng với thuộc tính (properties) và phương thức (methods). Classes trong TypeScript kế thừa từ JavaScript (ES6) nhưng bổ sung các tính năng kiểm tra kiểu mạnh mẽ, giúp mã an toàn hơn và dễ bảo trì hơn.
+
+	Classes là nền tảng của lập trình hướng đối tượng (OOP) trong TypeScript, hỗ trợ các khái niệm như kế thừa (inheritance), truy cập (access modifiers), và tính trừu tượng (abstraction).
+
+
+# 2. Cú pháp cơ bản
+
+	Một class trong TypeScript được định nghĩa bằng từ khóa class, theo sau là tên class và nội dung bên trong {}:
+
+class Person {
+  name: string;
+  age: number;
+
+  constructor(name: string, age: number) {
+    this.name = name;
+    this.age = age;
+  }
+
+  greet(): string {
+    return `Hello, my name is ${this.name} and I am ${this.age} years old.`;
+  }
+}
+
+let person1 = new Person("Alice", 25);
+console.log(person1.greet()); // Output: Hello, my name is Alice and I am 25 years old.
+
+
+	- Thuộc tính: name và age là các thuộc tính của class, có kiểu được khai báo rõ ràng (string, number).
+	- Constructor: Hàm đặc biệt khởi tạo đối tượng, gán giá trị cho các thuộc tính.
+	- Phương thức: greet() là một hàm trong class, trả về chuỗi mô tả đối tượng.
+
+
+# 3. Các tính năng chính của Classes trong TypeScript
+
+	## a. Access Modifiers (Kiểm soát truy cập) 
+
+class Person {
+  public name: string;
+
+  constructor(name: string) {
+    this.name = name;
+  }
+}
+
+let person = new Person("Alice");
+console.log(person.name); // Output: Alice
+
+
+
+		### private: Chỉ cho phép truy cập bên trong class.
+
+class Person {
+  private name: string;
+
+  constructor(name: string) {
+    this.name = name;
+  }
+
+  getName(): string {
+    return this.name; // OK
+  }
+}
+
+let person = new Person("Alice");
+console.log(person.name); // Lỗi: Property 'name' is private
+console.log(person.getName()); // Output: Alice
+
+
+		### protected: Cho phép truy cập trong class và các class con (kế thừa).
+
+class Person {
+  protected name: string;
+
+  constructor(name: string) {
+    this.name = name;
+  }
+}
+
+class Employee extends Person {
+  constructor(name: string) {
+    super(name);
+    console.log(this.name); // OK
+  }
+}
+
+let emp = new Employee("Alice");
+console.log(emp.name); // Lỗi: Property 'name' is protected
+
+
+
+	## b. Parameter Properties (Thuộc tính tham số)
+		TypeScript cho phép khai báo và khởi tạo thuộc tính ngay trong constructor bằng cách thêm access modifier:
+
+class Person {
+  constructor(public name: string, private age: number) {}
+}
+
+let person = new Person("Alice", 25);
+console.log(person.name); // Output: Alice
+console.log(person.age); // Lỗi: Property 'age' is private
+
+	public name và private age tự động trở thành thuộc tính của class mà không cần khai báo riêng.
+
+
+	## c. Inheritance (Kế thừa)
+		Class có thể kế thừa từ class khác bằng từ khóa extends. Class con có thể sử dụng hoặc ghi đè (override) thuộc tính/phương thức của class cha.
+	
+
+class Animal {
+  constructor(public name: string) {}
+
+  move(): string {
+    return `${this.name} is moving.`;
+  }
+}
+
+class Dog extends Animal {
+  bark(): string {
+    return `${this.name} is barking!`;
+  }
+}
+
+let dog = new Dog("Buddy");
+console.log(dog.move()); // Output: Buddy is moving.
+console.log(dog.bark()); // Output: Buddy is barking!
+
+
+		### super: Gọi constructor hoặc phương thức của class cha.
+class Dog extends Animal {
+  constructor(name: string) {
+    super(name); // Gọi constructor của Animal
+  }
+
+  move(): string {
+    return super.move() + " (like a dog)"; // Gọi phương thức move của Animal
+  }
+}
+
+let dog = new Dog("Buddy");
+console.log(dog.move()); // Output: Buddy is moving. (like a dog)
+
+
+
+	## d. Readonly Modifier
+		Thuộc tính với readonly chỉ có thể được gán giá trị trong constructor và không thể thay đổi sau đó.
+	
+class Person {
+  readonly name: string;
+
+  constructor(name: string) {
+    this.name = name;
+  }
+}
+
+let person = new Person("Alice");
+person.name = "Bob"; // Lỗi: Cannot assign to 'name' because it is a read-only property	
+	
+	
+	
+	## e. Abstract Classes (Lớp trừu tượng)	
+		Lớp trừu tượng (abstract) không thể khởi tạo trực tiếp, chỉ dùng làm lớp cha để các lớp khác kế thừa.
+	
+abstract class Animal {
+  abstract makeSound(): string; // Phương thức trừu tượng, lớp con phải triển khai
+
+  move(): string {
+    return "Moving...";
+  }
+}
+
+class Dog extends Animal {
+  makeSound(): string {
+    return "Woof!";
+  }
+}
+
+let dog = new Dog();
+console.log(dog.makeSound()); // Output: Woof!
+console.log(dog.move()); // Output: Moving...
+// let animal = new Animal(); // Lỗi: Cannot create an instance of an abstract class	
+	
+
+
+
+# 4. Hiểu sâu hơn về Classes
+	Để hiểu sâu về classes trong TypeScript, hãy nghĩ về chúng như một cách tổ chức mã theo mô hình OOP, với sự hỗ trợ mạnh mẽ từ hệ thống kiểu:
+		
+
+		- Kiểm tra kiểu tĩnh: TypeScript đảm bảo các thuộc tính/phương thức được sử dụng đúng kiểu, giúp phát hiện lỗi sớm trong quá trình biên dịch.
+		- So sánh với JavaScript: Classes trong JavaScript (ES6) không có access modifier (private, protected) hay readonly. TypeScript thêm các tính năng này để tăng tính an toàn và rõ ràng.
+		- Tính linh hoạt với any và unknown: Nếu bạn không chắc về kiểu của một thuộc tính, có thể dùng any hoặc unknown, nhưng nên hạn chế để tận dụng lợi ích của TypeScript.
+		- Mô hình thực tế: Classes rất hữu ích khi mô phỏng các thực thể trong thế giới thực (như Person, Car, Employee) hoặc khi xây dựng các hệ thống phức tạp cần kế thừa và tái sử dụng mã.
+
+# 5. Cảnh báo khi sử dụng Classes
+		- Tránh lạm dụng kế thừa: Kế thừa có thể làm mã phức tạp. Hãy cân nhắc sử dụng composition (kết hợp các đối tượng) thay vì kế thừa trong một số trường hợp.
+		
+		- Hiểu rõ access modifiers: Sử dụng sai private hoặc protected có thể dẫn đến lỗi truy cập hoặc mã khó bảo trì.
+		
+		- Kiểm tra runtime: TypeScript chỉ kiểm tra kiểu khi biên dịch. Hãy đảm bảo logic trong constructor và phương thức không gây lỗi khi chạy.
+
+
+# 6. Mẹo sử dụng Classes hiệu quả
+	Dùng interface để định nghĩa hình dạng của class: Nếu bạn muốn class tuân theo một cấu trúc cụ thể, hãy triển khai interface:
+
+interface Greetable {
+  greet(): string;
+}
+
+class Person implements Greetable {
+  constructor(public name: string) {}
+  greet(): string {
+    return `Hello, ${this.name}`;
+  }
+}
+
+		- Tận dụng Parameter Properties: Giảm thiểu mã lặp bằng cách khai báo thuộc tính trực tiếp trong constructor.
+		- Sử dụng abstract class cho các hệ thống lớn: Khi xây dựng các hệ thống với nhiều class liên quan, abstract class giúp định nghĩa các phương thức bắt buộc mà lớp con phải triển khai.
+		- Kiểm tra lỗi biên dịch: Luôn chạy tsc (TypeScript Compiler) để phát hiện lỗi kiểu trước khi chạy mã.
+
+
+# 7. Kết luận
+		- Classes trong TypeScript là công cụ mạnh mẽ để tổ chức mã theo mô hình OOP, với các tính năng như access modifiers, kế thừa, và abstract classes.
+		
+		- TypeScript nâng cao classes của JavaScript bằng kiểm tra kiểu tĩnh, giúp mã an toàn và dễ bảo trì hơn.
+		
+		- Hiểu rõ cách sử dụng public, private, protected, readonly, và kế thừa sẽ giúp bạn viết mã TypeScript hiệu quả.
+
+
+
+https://www.w3schools.com/typescript/typescript_basic_generics.php
+</pre><a id='backBottom' href='../type-script-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
