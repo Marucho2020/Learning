@@ -93,5 +93,286 @@
 					
 					
 # 3. Khái niệm cơ bản trong PyTorch 
+	
+	##	3.1. Tensors: Nền tảng của PyTorch
+	Tensors là gì? 
+		Tensor là một cấu trúc dữ liệu cơ bản trong PyTorch, tương tự như mảng (array) trong NumPy nhưng được thiết kế để chạy hiệu quả trên cả CPU và GPU. Tensor có thể có nhiều chiều, từ scalar (0 chiều) đến tensor nhiều chiều.
+		
+		
+	## 3.2. Tạo và thao tác với Tensors
+	
+		### Tạo tensor từ dữ liệu
+		
+import torch
+
+# Tạo tensor từ list
+data = [[1, 2], [3, 4]]
+x_data = torch.tensor(data)
+
+
+		## Tạo tensor ngẫu nhiên
+
+# Tensor với giá trị ngẫu nhiên
+rand_tensor = torch.rand(2, 3)
+
+# Tensor với giá trị bằng 0
+zero_tensor = torch.zeros(2, 3)
+
+# Tensor với giá trị bằng 1
+one_tensor = torch.ones(2, 3)
+
+
+
+
+	## Các thao tác cơ bản 
+
+# Cộng hai tensor
+y1 = x_data + x_data
+
+# Nhân hai tensor
+y2 = x_data * x_data
+
+# Ma trận nhân
+y3 = x_data @ x_data.T
+
+
+
+
+	## Chuyển tensor sang GPU 
+	
+if torch.cuda.is_available():
+    x_data = x_data.to('cuda')
+
+
+
+
+
+	## 3.2. Autograd: Tự động tính toán gradient 
+		
+
+		## Autograd là gì? 
+			`autograd` là một tính năng mạnh mẽ trong PyTorch cho phép tự động tính toán gradient của các tensor. Điều này đặc biệt hữu ích trong việc huấn luyện mô hình học sâu bằng cách tự động hóa quá trình lan truyền ngược (backpropagation).
+			
+			
+
+		## Sử dụng Autograd 
+			Khai báo tensor với gradient
+			
+				x = torch.ones(2, 2, requires_grad=True)
+
+			Thực hiện các phép tính
+
+y = x + 2
+z = y * y * 3
+out = z.mean()
+
+
+			Tính toán gradient 
+				out.backward()
+				print(x.grad)
+
+
+
+
+# 3.3. Neural Networks: Xây dựng mạng nơ-ron với nn.Module
+
+	## Giới thiệu về nn.Module 
+	`torch.nn` là một module trong PyTorch cung cấp các công cụ để xây dựng và huấn luyện các mô hình học sâu. `nn.Module` là lớp cơ bản cho tất cả các mô hình mạng nơ-ron trong PyTorch.
+
+
+	## Xây dựng mô hình đơn giản 
+		
+import torch.nn as nn
+
+class SimpleNN(nn.Module):
+    def __init__(self):
+        super(SimpleNN, self).__init__()
+        self.linear = nn.Linear(10, 1)
+    
+    def forward(self, x):
+        out = self.linear(x)
+        return out
+
+model = SimpleNN()
+
+
+
+	## Sử dụng mô hình
+
+input = torch.randn(1, 10)
+output = model(input)
+print(output)
+
+
+
+	## Các lớp phổ biến trong nn.Module
+	
+	
+– nn.Linear: Lớp kết nối đầy đủ (fully connected).
+– nn.Conv2d: Lớp tích chập 2D.
+– nn.ReLU: Hàm kích hoạt ReLU.
+– nn.Softmax: Hàm kích hoạt Softmax.
+– nn.Sequential: Kết hợp các lớp theo thứ tự.
+	
+	
+	## Ví dụ: Mạng phân loại hình ảnh đơn giản
+	
+	
+class ImageClassifier(nn.Module):
+    def __init__(self):
+        super(ImageClassifier, self).__init__()
+        self.model = nn.Sequential(
+            nn.Conv2d(3, 16, kernel_size=3, stride=1, padding=1),
+            nn.ReLU(),
+            nn.MaxPool2d(2, 2),
+            nn.Flatten(),
+            nn.Linear(16 * 16 * 16, 10),
+            nn.Softmax(dim=1)
+        )
+    
+    def forward(self, x):
+        return self.model(x)
+
+model = ImageClassifier()	
+	
+	Với hiểu biết về Tensors, Autograd và cách xây dựng mạng nơ-ron bằng `nn.Module`, bạn đã có nền tảng vững chắc để bắt đầu xây dựng và huấn luyện các mô hình học máy với PyTorch.
+	
+	
+#  4. Xử lý dữ liệu với PyTorch 
+
+	Trong học máy, dữ liệu đóng vai trò quan trọng và việc xử lý dữ liệu một cách hiệu quả là bước không thể thiếu. PyTorch cung cấp các công cụ mạnh mẽ để tải và xử lý dữ liệu thông qua `Dataset` và `DataLoader`.
+
+	## 4.1. Dataset và DataLoader 
+	
+		Dataset 
+			torch.utils.data.Dataset là một lớp trừu tượng đại diện cho tập dữ liệu. Bạn có thể tạo một lớp kế thừa từ `Dataset` và triển khai các phương thức để truy cập dữ liệu của bạn.
+
+
+
+		Ví dụ: Tạo một Dataset tùy chỉnh
+import torch
+from torch.utils.data import Dataset
+
+class CustomDataset(Dataset):
+    def __init__(self, data, labels):
+        self.data = data
+        self.labels = labels
+    
+    def __len__(self):
+        return len(self.labels)
+    
+    def __getitem__(self, idx):
+        x = self.data[idx]
+        y = self.labels[idx]
+        return x, y
+
+# Dữ liệu mẫu
+data = torch.randn(100, 10)
+labels = torch.randint(0, 2, (100,))
+
+dataset = CustomDataset(data, labels)
+
+
+
+	## DataLoader
+		`torch.utils.data.DataLoader` cung cấp một cách thuận tiện để lặp qua tập dữ liệu, hỗ trợ chia batch, xáo trộn dữ liệu và sử dụng đa luồng để tăng tốc độ tải dữ liệu.
+
+
+	## Sử dụng DataLoader 
+		
+from torch.utils.data import DataLoader
+
+dataloader = DataLoader(dataset, batch_size=16, shuffle=True, num_workers=2)
+
+for batch_data, batch_labels in dataloader:
+    # Huấn luyện mô hình với batch_data và batch_labels
+    pass
+
+
+	## Sử dụng các Dataset có sẵn
+		PyTorch cung cấp nhiều tập dữ liệu phổ biến thông qua `torchvision.datasets`.
+
+
+	Ví dụ: Sử dụng MNIST dataset 
+
+import torchvision
+from torchvision import datasets, transforms
+
+transform = transforms.Compose([
+    transforms.ToTensor(),
+    transforms.Normalize((0.5,), (0.5,))
+])
+
+mnist_train = datasets.MNIST(root='./data', train=True, download=True, transform=transform)
+mnist_test = datasets.MNIST(root='./data', train=False, download=True, transform=transform)
+
+train_loader = DataLoader(mnist_train, batch_size=64, shuffle=True)
+test_loader = DataLoader(mnist_test, batch_size=64, shuffle=False)
+
+
+
+	## 4.2. Biến đổi dữ liệu với torchvision.transforms
+		torchvision.transforms cung cấp các công cụ để biến đổi và tiền xử lý dữ liệu hình ảnh.
+
+
+		### Các biến đổi phổ biến 
+			
+			– transforms.ToTensor(): Chuyển đổi hình ảnh PIL hoặc NumPy array thành tensor.
+			– transforms.Normalize(mean, std): Chuẩn hóa tensor hình ảnh với giá trị trung bình và độ lệch chuẩn.
+			– transforms.Resize(size): Thay đổi kích thước hình ảnh.
+			– transforms.RandomCrop(size): Cắt ngẫu nhiên một phần của hình ảnh.
+			– transforms.RandomHorizontalFlip(): Lật ngang hình ảnh một cách ngẫu nhiên.
+
+
+		### Ví dụ: Chuẩn bị chuỗi biến đổi cho dữ liệu hình ảnh
+
+			transform = transforms.Compose([
+				transforms.Resize((64, 64)),
+				transforms.RandomHorizontalFlip(),
+				transforms.ToTensor(),
+				transforms.Normalize(mean=[0.5, 0.5, 0.5],
+									std=[0.5, 0.5, 0.5])
+			])
+
+
+
+			Áp dụng biến đổi cho Dataset 
+				dataset = datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
+				dataloader = DataLoader(dataset, batch_size=32, shuffle=True)
+
+
+
+		
+
+		### Tạo biến đổi tùy chỉnh
+			Bạn cũng có thể tạo các biến đổi tùy chỉnh bằng cách kế thừa từ `torchvision.transforms` hoặc sử dụng các hàm lambda. 
+			
+			
+		
+		
+		### 
+class ToGrayScale:
+    def __call__(self, sample):
+        image = sample.convert('L')
+        return image
+
+transform = transforms.Compose([
+    ToGrayScale(),
+    transforms.ToTensor()
+])		
+
+Với hiểu biết về `Dataset`, `DataLoader` và `transforms`, bạn có thể dễ dàng tải, tiền xử lý và quản lý dữ liệu cho các dự án học máy của mình, đảm bảo quá trình huấn luyện diễn ra hiệu quả và thuận lợi.
+
+
+
+## 5. Xây dựng mô hình học máy đơn giản
+
+
 https://aicandy.vn/pytorch-trong-hoc-may-cho-nguoi-moi-bat-dau/
+
+
+
+
+
+
 </pre><a id='backBottom' href='../AI-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
