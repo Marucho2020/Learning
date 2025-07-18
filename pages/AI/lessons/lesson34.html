@@ -375,5 +375,182 @@ Với hiểu biết về `Dataset`, `DataLoader` và `transforms`, bạn có th�
 
 ## 6. Các kỹ thuật tối ưu hóa trong PyTorch
 
-https://aicandy.vn/pytorch-trong-hoc-may-cho-nguoi-moi-bat-dau/
+	Để cải thiện hiệu suất và tốc độ hội tụ của mô hình, PyTorch cung cấp nhiều kỹ thuật tối ưu hóa như sử dụng các optimizer khác nhau và điều chỉnh learning rate.
+	
+	## 6.1. Optimizers
+		### Giới thiệu về Optimizer
+		
+		Optimizer là thuật toán được sử dụng để cập nhật trọng số của mô hình nhằm giảm thiểu hàm mất mát. PyTorch cung cấp nhiều optimizer khác nhau trong module `torch.optim`.
+	
+		### Các optimizer phổ biến 
+			– SGD (Stochastic Gradient Descent):
+optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
+			
+			– Adam: 
+optimizer = optim.Adam(model.parameters(), lr=0.001)
+
+			- – RMSprop:		
+optimizer = optim.RMSprop(model.parameters(), lr=0.001)			
+	
+		### So sánh các optimizer 
+			– SGD: Đơn giản và hiệu quả cho nhiều bài toán, nhưng có thể chậm hội tụ.
+			– Adam: Kết hợp giữa Momentum và RMSprop, thường hội tụ nhanh hơn và phù hợp cho nhiều loại mô hình.
+			– RMSprop: Tốt cho các bài toán với gradient không ổn định.		
+	
+	
+	
+		### Thay đổi optimizer trong mô hình
+			# Chuyển từ SGD sang Adam
+				optimizer = optim.Adam(model.parameters(), lr=0.001)		
+		
+		
+		
+		
+		
+	## 	6.2. Learning rate schedulers 
+		Giới thiệu về Learning Rate Scheduler 
+		
+		Learning rate scheduler được sử dụng để điều chỉnh learning rate trong quá trình huấn luyện, giúp mô hình hội tụ tốt hơn và tránh mắc kẹt trong các điểm tối ưu cục bộ.
+		
+		### 	Các scheduler phổ biến 
+			– StepLR: Giảm learning rate sau mỗi vài epoch.
+				scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
+		
+			- – ReduceLROnPlateau: Giảm learning rate khi metric không cải thiện.
+				scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min')
+			
+			- – ExponentialLR: Giảm learning rate theo hàm mũ. 
+				scheduler = optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.95)
+
+
+		### Sử dụng scheduler trong quá trình huấn luyện 
+for epoch in range(1, num_epochs + 1):
+    train(model, device, train_loader, optimizer, criterion, epoch)
+    scheduler.step()		
+
+# 7. Lưu và tải mô hình
+	Việc lưu trữ và tải lại mô hình là một phần quan trọng trong quá trình phát triển và triển khai mô hình học máy. PyTorch cung cấp các phương thức đơn giản và hiệu quả để thực hiện điều này.
+
+	## 7.1. Lưu trữ mô hình đã huấn luyện 
+		
+		### Lưu state_dict của mô hình 
+	state_dict là một từ điển chứa tất cả các tham số học được (weights và biases) của mô hình.		
+
+		 #### Lưu state_dict		
+			torch.save(model.state_dict(), 'model.pth')
+		
+			Ưu điểm:
+				– Linh hoạt: Dễ dàng tải vào các mô hình có cấu trúc tương tự.
+				– Kích thước nhỏ hơn so với lưu toàn bộ mô hình.		
+		
+		#### Lưu toàn bộ mô hình 
+			torch.save(model, 'model_complete.pth')
+			
+			Ưu điểm:
+				– Dễ sử dụng: Bao gồm cả cấu trúc và tham số của mô hình.
+				– Tiện lợi khi triển khai mô hình mà không cần định nghĩa lại kiến trúc.
+		
+		
+		#### Lưu trữ optimizer state_dict 
+			Để tiếp tục quá trình huấn luyện từ điểm dừng, bạn cũng nên lưu state_dict của optimizer.
+			
+torch.save({
+    'epoch': epoch,
+    'model_state_dict': model.state_dict(),
+    'optimizer_state_dict': optimizer.state_dict(),
+    'loss': loss,
+}, 'checkpoint.pth')			
+			
+		
+		
+	## 	7.2. Tải mô hình để sử dụng
+		Tải state_dict vào mô hình
+		
+		### Định nghĩa lại mô hình và tải state_dict
+	
+model = SimpleNet()
+model.load_state_dict(torch.load('model.pth'))
+model.eval()  # Đặt mô hình vào chế độ đánh giá
+	
+	
+		### Tải checkpoint 
+checkpoint = torch.load('checkpoint.pth')
+model.load_state_dict(checkpoint['model_state_dict'])
+optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+epoch = checkpoint['epoch']
+loss = checkpoint['loss']		
+	
+	
+		### Tải toàn bộ mô hình
+model = torch.load('model_complete.pth')
+model.eval()		
+		
+		
+		
+		### Sử dụng mô hình đã lưu để dự đoán 
+			
+		
+	Ví dụ: Dự đoán với dữ liệu mới	
+# Giả sử bạn có một ảnh đầu vào mới
+input_image = ...  # Tiền xử lý ảnh tương tự như khi huấn luyện
+input_tensor = transform(input_image).unsqueeze(0)  # Thêm batch dimension
+
+# Dự đoán
+with torch.no_grad():
+    output = model(input_tensor)
+    predicted_class = output.argmax(dim=1).item()
+    print(f'Predicted class: {predicted_class}')		
+		
+		
+		
+		### Lưu và tải mô hình trên GPU và CPU 
+		### Lưu mô hình trên GPU và tải trên CPU 
+
+Khi lưu mô hình được huấn luyện trên GPU và muốn tải trên CPU:
+		
+		Lưu trên GPU
+			torch.save(model.state_dict(), 'model.pth')
+		
+		Tải trên CPU 
+device = torch.device('cpu')
+model = SimpleNet()
+model.load_state_dict(torch.load('model.pth', map_location=device))
+
+		
+		Tải trên GPU
+device = torch.device('cuda')
+model = SimpleNet().to(device)
+model.load_state_dict(torch.load('model.pth'))		
+		
+		
+		
+		
+# 8. Kết luận 		
+	Trong bài viết này, chúng ta đã đi qua một hướng dẫn toàn diện về các khía cạnh cơ bản của PyTorch, từ cài đặt, hiểu biết về tensors, autograd, xây dựng mô hình mạng nơ-ron, xử lý dữ liệu, huấn luyện, đánh giá, đến các kỹ thuật tối ưu hóa và cách lưu trữ mô hình. Với kiến thức này, bạn đã có một nền tảng vững chắc để bắt đầu hành trình trong lĩnh vực học máy và học sâu bằng PyTorch.	
+		
+		
+	## 	Những điểm chính đã học được: 
+		
+– PyTorch là một framework mạnh mẽ và linh hoạt cho việc phát triển các mô hình học sâu, với cú pháp thân thiện và hỗ trợ tính toán trên GPU.
+
+– Tensors là nền tảng của PyTorch, cung cấp cấu trúc dữ liệu hiệu quả cho các tính toán số học và ma trận.
+
+– Autograd giúp tự động hóa quá trình tính toán gradient, làm cho việc triển khai các thuật toán học máy trở nên dễ dàng hơn.
+
+– Module nn cung cấp các công cụ để xây dựng các mô hình mạng nơ-ron từ đơn giản đến phức tạp.
+
+– Dataset và DataLoader giúp quản lý và xử lý dữ liệu một cách hiệu quả, hỗ trợ quá trình huấn luyện mô hình.
+
+– Các kỹ thuật tối ưu hóa như sử dụng optimizer và learning rate scheduler cải thiện hiệu suất và tốc độ hội tụ của mô hình.
+
+– Việc lưu trữ và tải mô hình là quan trọng để triển khai và tiếp tục huấn luyện trong tương lai.		
+		
+		
+		
+		
+		
+		
+		
+		
+	
 </pre><a id='backBottom' href='../AI-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
