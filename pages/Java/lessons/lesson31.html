@@ -1,91 +1,85 @@
-<html><head><title>Lesson 31 == Time Unit ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 31 -- Time Unit -//</h1><pre>Time Unit là một enum trong Java thuộc gói java.util.concurrent. Nó được giới thiệu từ Java 5 để hỗ trợ việc xử lý thời gian một cách tiện lợi và nhất quan trong các ứng dụng đa luồng 
+<html><head><title>Lesson 31 == Priority Queue ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 31 -- Priority Queue -//</h1><pre># 0 Khái niệm  : 
+	Priority trong Java là một trong những lớp thuộc thư viện Collections Framework và được sử dụng để quản lý các phần tử theo một thứ tự ưu tiên. Đây là cấu trúc dữ liệu dạng hàng đợi ưu tiên (priority queue), trong đó các phần tử có thể được xử lý không dựa trên thứ tự chèn mà dựa trên độ ưu tiên của chúng. 
 
 
-# Khai báo và các hằng số trong TimeUnit 
-	
-	public enum TimeUnit {
-    NANOSECONDS,    // Nano giây (10^-9 giây)
-    MICROSECONDS,   // Micro giây (10^-6 giây)
-    MILLISECONDS,   // Mili giây (10^-3 giây)
-    SECONDS,        // Giây
-    MINUTES,        // Phút
-    HOURS,          // Giờ
-    DAYS            // Ngày
-}
-
-
-
-# Chuyển đổi giữa các đơn vị thời gian  
-	Lớp TimeUnit cung cấp các phowng thức để chuyển đổi giữa các đơn vị thời gian mà không cần phải tính toán thủ công  . 
-	
-		Ví dụ, chuyển đổi từ giây sang mili giây:	
+# Đặc điểm chính của PriorityQueue 
+	## 1. Thứ tự ưu tiên : 
+		- Các phần tử trong hàng đợi không được sắp xếp theo thứ tự chèn  
+		- Phần tử có độ ưu tiên cao hơn (theo thứ tự tự nhiên hoặc them Comparator được chỉ định) sẽ được truy cập trước 
 		
-		long millis = TimeUnit.SECONDS.toMillis(5)		// 5 giây = 5000 mili giấy 
+	## 2. Cấu trúc bên dưới : 
+		- PriorityQueue dựa trên heap(cụ thể là Min-Heap theo mặc định)  
+		- Min-Heap : phần tử nhỏ nhất(theo thứ tự tự nhiên ) luôn được dưa lên đầu hàng đợi 
+		
+	## Không cho phép null : 
+		- PriorityQueue không chấp nhận giá trị null làm phần tử vì không thể so sánh null với các phần tử khác. 
+		
+	## Không đồng bộ : 
+		PriorityQueue không an toàn trong môi trường đa luồng. Nếu cần sử dụng trong môi trường đa luồng, hãy sử dụng PriorityBlockingQueue 
+		
+	## Dung lượng lưu động : 
+		- Kích thước của phần tử Priority Queue có thể thay đổi linh hoạt khi thêm hoặc xóa phần tử 
 		
 		
+# Cách sử dụng PriorityQueue 
 	
-	## Các phương thức chuyển đổi phổ biến  
-	
-			toNanos(long duration): Chuyển duration sang nano giây.
-			toMicros(long duration): Chuyển duration sang micro giây.
-			toMillis(long duration): Chuyển duration sang mili giây.
-			toSeconds(long duration): Chuyển duration sang giây.
-			toMinutes(long duration): Chuyển duration sang phút.
-			toHours(long duration): Chuyển duration sang giờ.
-			toDays(long duration): Chuyển duration sang ngày.
+	## Ví dụ khởi tạo 
+		// PriorityQueue mặc định(được sắp xếp lại theo thứ tự tự nhiên - Min-Heap)
+		PriorityQueue<Integer> pq = new PriorityQueue<>();
+		
+		// PriorityQueue với Comparator tùy chỉnh(Max-Heap) 
+		PriorityQueue<Integer> maxHeap = new PriorityQueue<>((a,b) -> b - a);
+		
+		//PriorityQueue với String(thứ tự tự nhiên - Alphabet)
+		PriorityQueue<Stirng> pdString = new PriorityQueue<>();
+		
+		pd.add(10);
+		pd.add(5);
+		pd.add(20);
+		pq.add(1);
+		
+		// In ra [1, 5, 20, 10] (Min-Heap)
+		System.out.println("Hàng đợi: " + pq); 
+		
+		// Lấy phần tử có độ ưu tiên cao nhất // In ra 1
+		System.out.println("Phần tử ưu tiên cao nhất: " + pq.peek()); 
 
-
-# Sử dụng TimeUnit để trì hoãn(delay) luồng
-
-
-	Một ứng dụng thực tế của TimeUnit là sử dụng nó để tạm dừng luồng(Thread.sleep())
-	
-		// Thông thường  
-		try {
-			Thread.sleep(5000); // Ngủ 5 giây
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-	
-	
-		// Sử dụng Time Unit 
-		try {
-			TimeUnit.SECONDS.sleep(5); // Ngủ 5 giây
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-
-
-# Ví dụ thực tế sử dụng TimeUnit 
-
-			import java.util.concurrent.TimeUnit;
-			
-			public class TimeUnitExample {
-				public static void main(String[] args) {
-					System.out.println("Bắt đầu đếm ngược...");
-			
-					for (int i = 5; i > 0; i--) {
-						System.out.println(i);
-						try {
-							TimeUnit.SECONDS.sleep(1); // Dừng 1 giây giữa mỗi lần in
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-						}
-					}
-			
-					System.out.println("Hết giờ!");
-				}
-			}
-
-	
-
-# Lưu ý khi sử dụng TimeUnit 
-	Chuyển đổi số lớn có thể gây tràn số: Ví dụ nếu chuyển Long.MAX_VALUE từ nano giây sang giây , kết quả có thể bị lỗi do vượt qua giới hạn của kiểu long 
-	
-	Không hỗ trợ thời gian âm : Nếu truyền số âm vào TimeUnit, hành vi có thể không được như mong muốn  
-	
-	Không hỗ trợ múi giờ(Time ZOne ) : Time Unit chỉ làm việc với đơn vị thời gian, không liên quan đến múi giờ  
-	
-	
+		// Lấy và xóa phần tử ưu tiên cao nhất
+		System.out.println("Lấy và xóa: " + pq.poll()); // In ra 1
+		
+		
+		//# Tùy chỉnh với Comparator (Max-heap )
+		PriorityQueue<Integer> maxHeap = new PriorityQueue<>((a,b) -> b - a)
+		maxHeap.add(10);
+        maxHeap.add(5);
+        maxHeap.add(20);
+        maxHeap.add(1);
+		
+		// In ra [20, 10, 5, 1] (Max-Heap)
+	    System.out.println("Hàng đợi: " + maxHeap); 
+		
+		
+	## Thao tác cơ bản 
+		
+		add(element)          : Thêm phần tử vào hàng đợi. offer() là lựa chọn an toàn hơn vì không ném ngoại lệ nếu hàng đợi đầy 
+		offer(element)        : Thêm phần tử vào hàng đợi. offer() là lựa chọn an toàn hơn vì không ném ngoại lệ nếu hàng đợi đầy 
+		poll()                : Lấy và xóa phần tử có độ ưu tiên cao nhất. Trả về null nếu hàng đợi rỗng 
+		peek()                : Lấy phần tử có độ ưu tiên cao nhất nhưng không xóa, trả về null nếu hàng đợi rỗng 
+		remove(element)       : Xóa phần tử cụ thể nếu nó tồn tại trong hàng đợi 
+		size()                : Trả về số phần tử hiện tại trong hàng đợi 
+		
+		
+# Một số lưu ý quan trọng 
+	## 1. Ưu tiên không đồng nghĩa với thứ tự duyệt : !!!CHÚ Ý!!! 
+		PriorityQueue không đảm bảo sắp xếp các phần tử khi quyệt qua bằng iterator. Thứ tự duyệt có thể không giống thứ tự ưu tiên. 
+		
+	## Ứng dụng : 
+		- Xây dựng bộ lập lịch ưu tiên(CPU Scheduling)
+		- Xử lý sự kiện trong hệ thống(Event-driven programming)
+		- Triển khai thuật toán như Dijktra hoặc Huffman Coding 
+	## So sánh với TreeSet : 
+		- PriorityQueue chỉ tập trung vào phần tử đầu tiên(ưu tiên )
+		- TreeSet Lưu các phần tử theo thứ tự sắp xếp toàn bộ  
+		
 
 </pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

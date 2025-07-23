@@ -1,165 +1,128 @@
-<html><head><title>Lesson 121 == StampedLock ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 121 -- StampedLock -//</h1><pre>
+<html><head><title>Lesson 121 == Lazy Propagation ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 121 -- Lazy Propagation -//</h1><pre>
 # Khái niệm 
-	StampedLock – một trong những cơ chế đồng bộ hiện đại nhất trong Java kể từ Java 8, được thiết kế tối ưu cho hệ thống đa luồng tốc độ cao, với mục tiêu thay thế ReentrantReadWriteLock.
 
-
-# 🔧 1. Vấn đề với ReentrantReadWriteLock 
+Lazy Propagation là một kỹ thuật tối ưu hóa cho các cấu trúc dữ liệu phân đoạn (như Segment Tree, Interval Tree…), giúp trì hoãn (delay) cập nhật đến khi thật sự cần thiết
+	💡 Thay vì cập nhật ngay tất cả các node bị ảnh hưởng bởi một thao tác, ta đánh dấu rằng nó sẽ cần cập nhật sau — và chỉ thực hiện khi phải truy vấn chính xác vào vùng đó.
 	
-	ReentrantReadWriteLock chia khóa làm hai loại:
-		- Read lock (chia sẻ): nhiều thread cùng đọc
-		- Write lock (độc quyền): chỉ 1 thread ghi
-
-
-	## Nhược điểm: 
-		- Chi phí lớn để lấy lock
-		- Khi nhiều thread đọc + 1 thread ghi, lock upgrade rất tốn kém
-		- Không hỗ trợ lock-free optimistic read
-		- Không hỗ trợ downgrade thông minh
-
-
-# ✅ 2. StampedLock – thiết kế hiện đại, high-performance
-
-	Không chỉ có read/write lock, mà còn có:
 	
-		✔️ Optimistic read (không block, không lock)
-		✔️ Precise validation sau khi đọc
-		✔️ Stamp (long token) để theo dõi trạng thái
-		✔️ Support lock upgrade/downgrade thủ công
-
-
-
-# 🧱 3. Cấu trúc và cách hoạt động 
-
-StampedLock lock = new StampedLock();
-long stamp = lock.tryOptimisticRead();
-
-if (lock.validate(stamp)) {
-    // dữ liệu không bị ghi trong lúc đọc
-} else {
-    // fallback: lock.readLock()
-}
-
-
-
-	## Các loại lock: 
-| Lock                  | Blocking?      | Shared? | Khi dùng                                         |
-| --------------------- | -------------- | ------- | ------------------------------------------------ |
-| `writeLock()`         | ✅ block        | ❌       | Khi update dữ liệu                               |
-| `readLock()`          | ✅ block        | ✅       | Khi đọc dữ liệu và cần đảm bảo không thay đổi    |
-| `tryOptimisticRead()` | ❌ non-blocking | ✅       | Đọc nhanh và kiểm tra sau                        |
-| `validate(stamp)`     | ❌              | ❌       | Kiểm tra xem dữ liệu có bị ghi sau khi đọc không |
 	
+# 🔥 2. Tại sao phải dùng Lazy Propagation? 
+
+	Bài toán ví dụ: Cập nhật cộng thêm 5 vào đoạn [l, r] và sau đó query tổng đoạn [a, b].
+	Nếu dùng Segment Tree thường, bạn phải cập nhật O(log n) node và các node con bên dưới nữa → tốn công dù chưa chắc cần dùng đến. 
+	Với Lazy Propagation, bạn đánh dấu node nào “nợ” cập nhật, và chỉ xử lý thật sự khi buộc phải đi sâu xuống truy vấn.
+	✅ Giảm độ phức tạp từ O(n) về O(log n) trong các trường hợp update đoạn lớn mà query nhỏ.
+	
+	
+	
+# 🧠 3. Áp dụng ở đâu?
+
+	Memory-efficient real-time systems.
+	Analytics engine ghi log theo thời gian (query nhanh, update chậm).
+	Hệ thống có cập nhật hàng loạt (batch update) và truy vấn cục bộ.
+	Distributed computing (chậm propagation giữa node vì tối ưu traffic).
 
 
-# 🎯 4. Ví dụ dùng StampedLock chuẩn hóa
+# ⚙️ 4. Nguyên lý hoạt động 
+	
+	Khi cập nhật một khoảng [l, r]:
+	Nếu node hiện tại nằm hoàn toàn trong [l, r] → cập nhật node hiện tại và đánh dấu các con là "dirty" (nợ cập nhật).
+	Nếu chỉ giao một phần → Đẩy lazy update từ cha xuống con (propagate) trước khi tiếp tục.
+	Nếu nằm ngoài đoạn → bỏ qua.
 
-class Point {
-    private double x, y;
-    private final StampedLock sl = new StampedLock();
 
-    // Ghi
-    void move(double deltaX, double deltaY) {
-        long stamp = sl.writeLock();
-        try {
-            x += deltaX;
-            y += deltaY;
-        } finally {
-            sl.unlockWrite(stamp);
-        }
+# 📐 5. Cấu trúc Segment Tree với Lazy Propagation 
+
+class SegmentTree {
+    int[] tree;
+    int[] lazy;
+    int n;
+
+    public SegmentTree(int size) {
+        n = size;
+        tree = new int[4 * n];
+        lazy = new int[4 * n];
     }
 
-    // Đọc với optimistic lock
-    double distanceFromOrigin() {
-        long stamp = sl.tryOptimisticRead();
-        double currentX = x, currentY = y;
-        if (!sl.validate(stamp)) {
-            stamp = sl.readLock();
-            try {
-                currentX = x;
-                currentY = y;
-            } finally {
-                sl.unlockRead(stamp);
+    void updateRange(int l, int r, int val) {
+        update(1, 0, n - 1, l, r, val);
+    }
+
+    int queryRange(int l, int r) {
+        return query(1, 0, n - 1, l, r);
+    }
+
+    private void propagate(int node, int start, int end) {
+        if (lazy[node] != 0) {
+            tree[node] += (end - start + 1) * lazy[node]; // Cập nhật giá trị
+            if (start != end) {
+                lazy[node * 2] += lazy[node];     // Gán lazy cho con trái
+                lazy[node * 2 + 1] += lazy[node]; // Gán lazy cho con phải
             }
+            lazy[node] = 0; // Clear lazy
         }
-        return Math.sqrt(currentX * currentX + currentY * currentY);
+    }
+
+    private void update(int node, int start, int end, int l, int r, int val) {
+        propagate(node, start, end);
+        if (r < start || end < l) return;
+
+        if (l <= start && end <= r) {
+            lazy[node] += val;
+            propagate(node, start, end);
+            return;
+        }
+
+        int mid = (start + end) / 2;
+        update(node * 2, start, mid, l, r, val);
+        update(node * 2 + 1, mid + 1, end, l, r, val);
+        tree[node] = tree[node * 2] + tree[node * 2 + 1];
+    }
+
+    private int query(int node, int start, int end, int l, int r) {
+        propagate(node, start, end);
+        if (r < start || end < l) return 0;
+
+        if (l <= start && end <= r) return tree[node];
+
+        int mid = (start + end) / 2;
+        return query(node * 2, start, mid, l, r) +
+               query(node * 2 + 1, mid + 1, end, l, r);
     }
 }
 
-	➡ Nếu không có ghi xảy ra → tránh được chi phí lock
-	➡ Nếu ghi xảy ra → fallback sang read lock
 
-
-# 🧠 5. Khác biệt với ReentrantReadWriteLock
-
-| Tính năng              | `StampedLock`                                | `ReentrantReadWriteLock`      |
-| ---------------------- | -------------------------------------------- | ----------------------------- |
-| Optimistic read        | ✅ Có                                         | ❌ Không                       |
-| Downgrade write → read | ✅ Có (manual)                                | ✅                             |
-| Upgrade read → write   | ⚠️ Không trực tiếp (phải release & lock lại) | ✅ Có                          |
-| Lock reentrancy        | ❌ Không reentrant                            | ✅ Có                          |
-| Performance            | ✅ Cao hơn                                    | ❌ Chậm hơn khi contention lớn |
-| API phức tạp           | ⚠️ Cao                                       | Trung bình                    |
+# 📊 6. Phân tích thời gian
+| Operation     | With Lazy Propagation |
+| ------------- | --------------------- |
+| `updateRange` | O(log n)              |
+| `queryRange`  | O(log n)              |
+| `build tree`  | O(n)                  |
 
 
 
-# ⚠️ 6. Lưu ý quan trọng (cạm bẫy senior)
-
-	##❌ Không reentrant:
-	
-long s1 = lock.writeLock();
-long s2 = lock.writeLock(); // 💥 Deadlock – không tự động reentrant như `ReentrantLock`
-
-	## ⚠️ Phải luôn quản lý stamp thủ công:
-
-	Nếu bạn quên unlockRead(stamp) hoặc dùng sai stamp, hậu quả là:
-
-		- Deadlock
-		- Lost lock
-		- Race condition không rõ nguyên nhân
-
-	❌ Không dùng StampedLock cho các use-case đơn giản:
-	→ Nó phức tạp, nên chỉ phù hợp cho các hệ thống yêu cầu cực cao về hiệu năng và concurrency
+# 🧩 7. Mở rộng & kết hợp thực tế 
 
 
-
-# 🧪 7. Khi nào nên dùng StampedLock? 
-| Use case                                      | Có dùng `StampedLock`?                                       |
-| --------------------------------------------- | ------------------------------------------------------------ |
-| Cache nhiều thread đọc, ít thread ghi         | ✅ Rất phù hợp                                                |
-| Đếm, đo, log, mà muốn tránh lock              | ✅ Dùng optimistic read                                       |
-| Bài toán cần upgrade lock (đọc → ghi)         | ⚠️ Cân nhắc – không dễ dùng                                  |
-| Logic phức tạp, cần nhiều thread nesting lock | ❌ Không – dùng `ReentrantReadWriteLock` hoặc `ReentrantLock` |
-| Dùng trong cấu trúc dữ liệu custom concurrent | ✅ (ví dụ như ConcurrentLinkedTree)                           |
+| Mô hình ứng dụng        | Lazy Propagation biến thể                                        |
+| ----------------------- | ---------------------------------------------------------------- |
+| Game map update         | Cập nhật sức mạnh vùng AOE nhưng chỉ khi quái vào vùng đó        |
+| Event sourcing          | Cập nhật trạng thái theo batch, chỉ xử lý khi user truy cập      |
+| Inverted Index (search) | Update từ khóa theo nhóm document, query thì mới ghi ngược xuống |
+| Distributed simulation  | Trì hoãn đồng bộ trạng thái giữa các node                        |
 
 
-# 🔧 8. Bonus: Mẫu nâng cấp lock đúng cách
+# 🧠 8. Kiến thức nền tảng cần học để hiểu & tối ưu Lazy Propagation
 
-long stamp = lock.readLock();
-try {
-    if (needWrite()) {
-        long ws = lock.tryConvertToWriteLock(stamp);
-        if (ws != 0L) {
-            stamp = ws;
-            // now it's write lock
-        } else {
-            lock.unlockRead(stamp);
-            stamp = lock.writeLock(); // slow path
-        }
-    }
-    // do stuff
-} finally {
-    lock.unlock(stamp);
-}
+| Chủ đề                       | Lý do                                                      |
+| ---------------------------- | ---------------------------------------------------------- |
+| Segment Tree / Interval Tree | Cấu trúc nền tảng                                          |
+| Recursion nâng cao           | Gọi hàm đệ quy không stack overflow                        |
+| Java memory model            | Đảm bảo consistency nếu dùng trong multi-thread env        |
+| Persistent data structures   | Lazy Propagation kết hợp với snapshot để rollback          |
+| Concurrency (advanced)       | Nếu tree là shared resource trong multi-thread environment |
 
 
-
-# ✅ Tổng kết
-
-	- StampedLock = hiện đại, hiệu năng cực cao, tối ưu cho tình huống read nhiều, write ít
-	- Nó đưa ra một level điều khiển lock thấp hơn, phù hợp cho hệ thống real-time, low-latency
-	- Phải quản lý logic và lifecycle thủ công
-	- Không phù hợp với beginner hoặc code đơn giản
-	- Nếu dùng đúng cách → outperform mọi lock trong Java
 
 
 </pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

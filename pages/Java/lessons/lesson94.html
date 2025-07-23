@@ -1,152 +1,93 @@
-<html><head><title>Lesson 94 == Binary Search Tree (BST) ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 94 -- Binary Search Tree (BST) -//</h1><pre>
-# Khái niệm 
-	BST là một cây nhị phân có tính chất : 
-		- Mỗi node có tối đa 2 con 
-		- Với mỗi node N : 
-			- Tất cả các giá trị bên trái < N 
-			- Tất cả các giá trị bên phải > N 
+<html><head><title>Lesson 94 == Build tool( BuildKit / Kaniko / Jib) ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 94 -- Build tool( BuildKit / Kaniko / Jib) -//</h1><pre> # Khái niệm 
+ 🐳 BuildKit / Kaniko / Jib — Giải pháp build container image 
 	
-	
-						  8
-						/   \
-						3     10
-					  / \       \
-					  1   6     14
+	## ❓Vì sao không dùng docker build nữa?
 
+		docker build mặc định:
+		Chậm, không cache tốt
+		Không chạy được trong môi trường non-root (CI/CD)
+		Phải cài Docker Daemon (gây rắc rối trong GitHub Actions, GitLab CI...)
+		==> Sinh ra các công cụ build hiện đại hơn:
+
+
+# 🔧 1. BuildKit (cho Docker) 
+
+	BuildKit là engine build mới của Docker. Tích hợp sâu trong Docker từ v19+.
+		Build nhanh hơn, hỗ trợ layer caching thông minh
+		Cho phép remote cache + export cache
+		Hỗ trợ --secret, --ssh, mount=type=cache	
 	
-	BST là cơ sở cho nhiều cấu trúc dữ liệu hệ thống như :
-		- TreeMap, TreeSet (Java) 
-		- Database Index (B-Tree là biến thể) 
-		- Memory Allocators (buddy allocator)
-		- Autocomplete Engines, Prefix Searching 
 		
+		Cách dùng: 
+			DOCKER_BUILDKIT=1 docker build \
+			--build-arg BUILDKIT_INLINE_CACHE=1 \
+			-t myapp:latest .
+	
+		Trong GitHub Actions:
 		
-		
-# Các thao tác cơ bản  
-		
-		
-Thao tác  		| Mục đích 			          | Độ phức tạp (avg)   | Độ phức tạp (worst)
-insert()  		| Chèn node mới 	          | O(log n) 			| O(n) nếu cây bị lệch
-search()  		| Tìm giá trị 		          | O(log n) 			| O(n)
-delete()  		| Xoá node			          | O(log n) 			| O(n)
-inOrder() 		| Duyệt theo thứ tự tăng dần  | O(n)	 			| O(n)	
+		- name: Enable Docker BuildKit
+	
+	run: echo '{"features":{"buildkit": true}}' | sudo tee /etc/docker/daemon.json
 	
 	
+
+# 🔧 2. Kaniko (Google) 
+
+	Kaniko = Docker build không cần Docker daemon.
 	
-# 	🧠 III. Tư duy hệ thống (vượt khỏi lý thuyết) 
+	Thường dùng khi bạn chạy CI trong môi trường như Kubernetes hoặc GitLab CI runner.
+		- Build image trong container
+		- Không cần quyền root
+		- Phù hợp với Kubernetes CI pipeline
+	Trong GitLab CI:
 
-	## ❗ Vấn đề lớn nhất: Cây mất cân bằng 
-	BST gốc có thể thoái hoá thành Linked List nếu dữ liệu không phân bố đều: 
+		kaniko-build:
+		image: gcr.io/kaniko-project/executor:latest
+		script:
+			- /kaniko/executor --context $CI_PROJECT_DIR --dockerfile Dockerfile --destination $CI_REGISTRY_IMAGE:latest
+
+
+
+# 🔧 3. Jib (cho Java) 
+	Jib = Build Docker image cho Java mà KHÔNG cần Dockerfile. 
 	
-    1
-     \
-      2
-       \
-        3
-         \
-          4
+	Google tạo Jib cho Maven/Gradle. Nó tự phân tích các dependency và tạo multi-layer image hiệu quả.
+
+
+
+	## Cài Jib cho Maven: 
+		<plugin>
+		<groupId>com.google.cloud.tools</groupId>
+		<artifactId>jib-maven-plugin</artifactId>
+		<version>3.4.0</version>
+		</plugin>
+
 	
+	## Build: 
+		mvn compile jib:dockerBuild
+
+
+	## Push image: 
+		mvn compile jib:build \
+		-Dimage=ghcr.io/myorg/myapp
+
+
+
+
+
+
+# ✅ Khi nào dùng cái nào? 
 	
-	Khi đó 
-		search() từ O(log n) → O(n) 
-		Tệ hơn cả ArrayList 
-		
-	💡 Giải pháp: Dùng Balanced BST như: 
-		
-	
-		AVL Tree
-		Red-Black Tree (Java TreeMap, TreeSet dùng cái này)
-		Splay Tree (cho các truy cập thường xuyên)
-		Treap / Scapegoat Tree nếu yêu cầu khác biệt	
-	
-	
-# IV. Triển khai thực tế trong Java 
-	## Custom BST 
-	class Node {
-		int value;
-		Node left, right;
-	
-		Node(int value) { this.value = value; }
-	}
-
-	public Node insert(Node root, int val) {
-		if (root == null) return new Node(val);
-		if (val < root.value) root.left = insert(root.left, val);
-		else if (val > root.value) root.right = insert(root.right, val);
-		return root;
-	}
-	
-
-
-	## 2. TreeSet / TreeMap trong Java 
-		TreeMap<Integer, String> map = new TreeMap<>();
-		map.put(5, "five");
-		map.put(1, "one");
-		map.put(10, "ten");
-		
-		System.out.println(map.firstKey());  // 1
-		System.out.println(map.lastKey());   // 10
-	Dưới hood, TreeMap là Red-Black Tree, một loại BST tự cân bằng.
+Tool			Môi trường phù hợp									Ưu điểm nổi bật
+BuildKit	Local dev, Docker-based CI						Hiệu năng cao, tích hợp tốt
+Kaniko		CI/CD trong Kubernetes, GitLab CI				Không cần Docker daemon
+Jib			Dự án Java, Spring Boot							Không cần Dockerfile, build cực nhanh
 
 
 
-# 🧰 V. BST dùng làm gì trong hệ thống lớn? 
-
-Use-case 										| BST làm gì ở đây?
-Database Index (MySQL, PostgreSQL) 				| Dùng biến thể B-Tree để tìm dữ liệu nhanh
-Memory Allocator				   				| Cấp phát memory block theo size – cần tìm block nhỏ nhất >= X
-Compiler 						   				| Dùng để xây Abstract Syntax Tree
-Autocomplete / Search Engine	   				| Cây prefix (Ternary BST) để lưu từ điển
-Time Series Engine				   				| BST lưu các mốc thời gian, dễ tìm range	
 
 
 
-# 📏 VI. Khi nào KHÔNG dùng BST? 
-	
-Tình huống												 | Tại sao
-Truy cập key trực tiếp thường xuyên 				    | Dùng HashMap tốt hơn (O(1))
-Dữ liệu không thể so sánh (không có thứ tự rõ ràng)     | BST yêu cầu dữ liệu so sánh được
-Dữ liệu thay đổi liên tục, dễ gây mất cân bằng		    | Phải dùng AVL/Red-Black Tree
-
-
-
-# ⚖️ VII. So sánh BST vs các cấu trúc khác 
-
-Cấu trúc	  | Truy cập 		| Sắp xếp 	| Tìm gần đúng 					| Ghi nhớ thứ tự
-HashMap 	  | ✅ O(1) 	   | ❌  			| ❌ 							| ❌
-TreeMap (BST) | ⚠️ O(log n)    | ✅			| ✅ (ceilingKey, floorKey)     | ✅
-ArrayList     | ✅ O(1) 	   | ❌ 			| ❌ 							| ✅
-LinkedList    | ❌ 			   | ❌ 			| ❌ 							| ✅
-
-
-# 📚 VIII. Các chủ đề liên quan cần học để master BST 
-
-Chủ đề 					| Giải thích
-AVL Tree			 | BST tự cân bằng, mỗi node giữ balance factor
-Red-Black Tree		 | Cân bằng màu sắc, bảo đảm O(log n)
-B-Tree / B+ Tree 	 | Dùng trong database / hệ thống file
-Treap / Splay Tree   | BST dùng cho cache hoặc dữ liệu thiên lệch
-Augmented BST        | BST với extra data (ex: count, size, sum)
-
-
-# 🧨 Nếu scale lên hàng triệu node? 
-
-	- Không dùng pointer tree đơn thuần.
-	- Dùng external memory tree (như B+ Tree), tránh RAM overload.
-	- Cần serialize tree hoặc dùng disk-based storage.
-	- Kết hợp caching (Redis, memcached) cho node truy cập nhiều.
-	- Không xây từ scratch – dùng thư viện (Guava TreeMultiset, Apache Commons Tree).
-
-
-# 🎯 Tóm lại
-
-	Binary Search Tree không phải để "lưu trữ dữ liệu" cho vui.
-	Nó là một tư duy cực kỳ hiệu quả khi bạn cần giữ dữ liệu có thứ tự, tìm kiếm gần đúng, và thao tác với range query.
-	
-	Hiểu BST là hiểu cốt lõi của nhiều hệ thống backend.
-	Không cần reinvent bánh xe → nhưng phải hiểu tại sao thư viện chọn Red-Black Tree thay vì AVL.
-	
-	Muốn đi xa hơn: học thêm Segment Tree, Interval Tree, Fenwick Tree nếu làm realtime analytics, hoặc engine chơi game AI.
 
 
 </pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

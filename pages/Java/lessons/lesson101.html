@@ -1,131 +1,160 @@
-<html><head><title>Lesson 101 == Persistent Tree ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 101 -- Persistent Tree -//</h1><pre># Khái niệm 
-	Persistent Tree là một dạng cây dữ liệu mà mỗi khi cập nhật, nó không ghi đè (mutate) cấu trúc cũ, mà tạo ra một phiên bản mới, nhờ vậy ta có thể:
+<html><head><title>Lesson 101 == Redis ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 101 -- Redis -//</h1><pre># Khái niệm  
+	Redis không chỉ là 1 cache - đó là một nền tảng dữ liệu in-memory đa năng cực kỳ quan trọng trong các hệ thống scale lớn, latency thấp và real-tome. 
 	
-		- Truy xuất lại các trạng thái trước đó của cây. 
-		- Song song đọc các phiên bản cũ mà không bị xung đột với việc ghi (no read-write conflict). 
-		- Triển khai Undo/Redo, Snapshot, Time-travel debugging, hoặc immutability trong lập trình hàm.
+	Redis = Remote Dictionary Server 
+	-> Là data structure store chạy trên RAM hỗ trợ  
+	 
+		- Key-Value 
+		- Hash, List, Set, Sorted Set
+		- Stream, Bitmap, HyperLogLog
+		- Pub/Sub
+		- Lua scripting
+		- TTL (Time To Live)
+		- Transaction, Cluster, Replication,Persistence
+
+
+# Các use-case sử dụng Redis thực tế 
 	
-	
-	
-# 	🔍 Cốt lõi của Persistent Tree
-	##  🧠 Nguyên tắc:
-	“Không sửa – chỉ tạo bản sao các phần bị thay đổi” 
-	Giống như Git vậy: bạn commit một thay đổi nhỏ, nhưng cả project không bị copy toàn bộ – chỉ những file thay đổi.
-	
-	
-	##	⚙️ Có 2 loại chính: 
-	| Loại                    | Giải thích                                                          |
-| ----------------------- | ------------------------------------------------------------------- |
-| **Partial Persistence** | Có thể **đọc** phiên bản cũ, nhưng chỉ **ghi** ở phiên bản mới nhất |
-| **Full Persistence**    | Có thể **đọc và ghi** trên **bất kỳ phiên bản nào**                 |
-	
-	
-# 📦 Ví dụ: Persistent Binary Search Tree (BST)	
-	
-	Giả sử bạn có cây BST T0 như sau:
-     10
-    /  \
-   5   15
+Use Case 					 | Giải thích 											| Mô hình
+✅ Caching 		 	 		 | Tăng tốc API, DB query, AI model response 		| Read-through, Write-through
+✅ Session Store	 		 | Lưu thông tin phiên user (SSO, JWT metadata) 	| Cookie → Redis
+✅ Pub/Sub		 	 		 | Microservice events hoặc notification 			| Redis Pub/Sub
+✅ Queue / Task	 	 		 | Dùng Redis List làm job queue					| Celery, RQ
+✅ Rate Limiting 	 		 | Chống spam, brute-force 							| Counter với TTL
+✅ Leaderboard 		 		 | Game, app xếp hạng 								| Sorted Set
+✅ Feature flag				 | Kích hoạt tạm thời 1 tính năng 					| Key TTL
+✅ Stream / Log ingestion 	 | Ingest real-time stream → ML 					| Redis Streams
+
+
+
+# Triển khai Redis đúng cách trong dự án 
+
+	## Triển khai Redis cache cho Spring Boot 
+		- Dùng @Cacheable, @CacheEvict, cấu hình TTL 
+		- Tích hợp với RedisTemplate hoặc Lecttuce 
 		
-	Bạn muốn insert(7) → tạo T1. 
-	Ý tưởng: không tạo lại toàn bộ cây → chỉ tạo một bản sao của các node trên đường đi từ root đến nơi chèn.
-	
-	## Tạo T1 (insert 7): 
-		Copy root 10 → gán T1 
-		Copy left child 5 → chèn 7 vào bên phải 
+		@Cacheable(value = "products", key = "#id", unless="#result == null")
+		public Product getProduct(String id) { ... }
 		
-		T1 → 10'
-		10'.left → 5'
-		5'.right → 7
-	
-	✅ Kết quả:
-		T0: không thay đổi
+		🧠 Chú ý: Phải clear cache khi ghi DB (@CacheEvict), không thì stale data.
+
+
+
+
+	## Redis là Stateful service ->  Không nên dùng theo kiểu just install 
+		- Dùng Redis Sentinel để failover(HA)
+		- Dùng Redis Cluster để scale horizontal(shard)
+		- Dùng Persistent (RDB, AOF) nếu cần khôi phục Data 
 		
-		T1: là phiên bản mới, chia sẻ phần lớn dữ liệu với T0
+
+
+# Redis Architecture 
+
+	
+	## Redis Single Node 
+		- RAM only 
+		- Rất nhanh  (~sub-millisecond)
+		- Nhưng : không scale, không HA 
+	
+	## Redis Replication 
+		-Master → Replica
+		-Replica chỉ read
+		-Tốt cho read-heavy system
+
+
+	## Redis Sentinel 
+		-Theo dõi master
+		-Tự động failover
+		-Client phải hỗ trợ discovery Sentinel
+
+	## Redis Cluster 
+		- Nhiều node, shard key theo hash slot (16384 slot)
+		- Scale tốt
+		- Nhưng yêu cầu client cluster-aware
+			[Client] → [Redis Cluster]
+				├── Slot 0-5460 → Node A
+				├── Slot 5461-10922 → Node B
+				└── Slot 10923-16384 → Node C
+
+
+
+# Những kỹ thuật nâng cao cần nắm để làm chủ Redis 
+
+
+Kỹ thuật 								| Ý nghĩa 										| Gợi ý học
+🔁 TTL / Expiry							| Hạn chế memory leak 						| EXPIRE, SETEX, @Cacheable(ttl=...)
+🔒 Distributed Lock 					| Để tránh race-condition					| SETNX + EXPIRE, Redlock algorithm
+🔄 Read-through / Write-through cache 	| Sync với DB 								| Tự viết code xử lý
+🧪 Cache Invalidation 					| Tricky, quan trọng 						| @CacheEvict, versioning
+🔁 Pub/Sub & Streams 					| Giao tiếp giữa service 					| Dùng như Kafka mini
+📈 Monitoring & Metrics 				| Phát hiện memory full, eviction			| RedisInsight, Prometheus exporter
+🚨 Eviction Policy 						| Chọn chiến lược khi full RAM 				| volatile-lru, allkeys-lru, noeviction, ...
+🔐 Security 							| Password auth, TLS, ACL					| Cần đặc biệt chú ý nếu multi-tenant
+📦 Persistence							| RDB vs AOF, hybrid						| Cân nhắc trade-off tốc độ vs durability
+
+
+
+
+# 📚 VI. Những kiến thức liên quan cần học để thành thạo Redis 
 	
 	
-# 	🏗️ Ứng dụng thực tế
-| Use case                      | Mô tả                                                              |
-| ----------------------------- | ------------------------------------------------------------------ |
-| **Undo/Redo**                 | Mỗi thay đổi là một phiên bản mới → quay lui/thực hiện lại dễ dàng |
-| **Time-travel Debugger**      | Debug qua các version cây đã bị thay đổi                           |
-| **Concurrency without locks** | Reader đọc version cũ trong khi writer tạo version mới             |
-| **Functional Programming**    | Tree là immutable → an toàn hơn trong code phức tạp                |
+	## 🔥 1. Redis core commands (CRUD, TTL, Hash, Set, ZSet, List) 
+		SET, GET, HSET, LPUSH, ZADD, EXPIRE, DEL 
 
 
-
-# 🧠 So sánh: Persistent Tree vs Copy 
-		
-| Tiêu chí          | Copy toàn bộ | Persistent Tree  |
-| ----------------- | ------------ | ---------------- |
-| Bộ nhớ            | Tốn nhiều    | Tối ưu nhờ reuse |
-| Thời gian tạo     | Lâu          | Nhanh hơn nhiều  |
-| Chia sẻ dữ liệu   | Không        | Có               |
-| Truy vết thay đổi | Không dễ     | Có sẵn version   |
+	## ⚙️ 2. Cách tổ chức data trong Redis (key design)
+	
+			-Có nên dùng user:1234:cart hay cart:1234?
+			-Tránh key explosion
+			-TTL cho mỗi namespace	
 	
 	
-# 	🔬 Java: Làm sao để triển khai? 
-	Java không hỗ trợ persistent tree mặc định. Nhưng bạn có thể tự viết hoặc dùng thư viện.
+	## 🧠 3. Redlock algorithm 
+			- Dùng Redis để tạo distributed mutex
+			- Cần hiểu rõ để tránh deadlock hoặc inconsistency		
 	
-	✅ Cách đơn giản: 
-		Không sửa trực tiếp node. 
-		Dùng class Node bất biến (immutable), ví dụ:
 	
-class Node {
-    final int key;
-    final Node left;
-    final Node right;
-
-    Node(int key, Node left, Node right) {
-        this.key = key;
-        this.left = left;
-        this.right = right;
-    }
-}
-
-✅ Hàm insert:
-Node insert(Node root, int key) {
-    if (root == null) return new Node(key, null, null);
-    if (key < root.key)
-        return new Node(root.key, insert(root.left, key), root.right);
-    else
-        return new Node(root.key, root.left, insert(root.right, key));
-}
-→ Mỗi lần insert: tạo cây mới, chia sẻ các node không thay đổi.
-
-# 📚 Kiến thức cần học để triển khai tốt Persistent Tree
-
-| Kiến thức                              | Ghi chú                                       |
-| -------------------------------------- | --------------------------------------------- |
-| Immutable Data Structures              | Đặc biệt trong Java, Scala, Clojure           |
-| Persistent Segment Tree / Fenwick Tree | Tối ưu hiệu năng cho range query              |
-| Copy-on-Write logic                    | Làm sao để clone 1 phần và giữ phần còn lại   |
-| Garbage Collection impact              | Biết được khi nào nên giữ/làm rác các version |
-| Functional Programming Patterns        | Cách tư duy bất biến hoá toàn bộ hệ thống     |
-
-🧠 Bonus: Persistent Segment Tree
-
-	Trong thuật toán (competitive programming), bạn có thể triển khai Persistent Segment Tree để:
+	## 🕸 4. Redis Cluster vs Sentinel
 	
-		Truy xuất trạng thái dữ liệu trong quá khứ
-		Truy vấn “prefix sum đến thời điểm version K”
-		So sánh snapshot của dữ liệu tại 2 thời điểm
+			- Khi nào dùng cluster?
+			- Khi nào chỉ cần HA?
 	
-	Đây là nền tảng cho hệ thống như:
 	
-		Versioned Key-Value Store
-		Time-series Database
-		Immutable Indexing Structures
+	
+	## 🧪 5. Redis Testing, Fault tolerance
+	
+			- Giả lập Redis down
+			- Redis delay → service behave thế nào?	
+	
+	
+	## 📈 6. Monitoring (Redis Exporter, Grafana, Slowlog)
+	
+			- Phát hiện slow commands
+			- Track memory usage theo key	
+	
+	## 📖 7. Lua scripting
+	
+			- Dùng EVAL chạy batch logic atomic
+			- Ví dụ: gộp 3 command thành 1 block, tránh race
 
 
-# ✅ Tổng kết
+	## 🔐 8. Redis Security
+			
+			- Không expose Redis ra public IP
+			- Bắt buộc config ACL, password, network restriction
 
-| Mục tiêu         | Ý nghĩa                                    |
-| ---------------- | ------------------------------------------ |
-| Truy vết version | Quản lý lịch sử cấu trúc dữ liệu           |
-| Tránh mutation   | Tránh bug và race condition                |
-| Cấu trúc chia sẻ | Tối ưu RAM và hiệu năng                    |
-| Tư duy bất biến  | Gốc rễ của Functional & Concurrent Systems |
+
+
+# 🚀  Redis trong kiến trúc Microservices
+
+
+Thành phần					Redis ứng dụng
+API Cache					@Cacheable
+Event Queue					List hoặc Stream
+Config Sync					Pub/Sub
+Lock/Mutex					Redlock
+Session						Redis hash
+Leaderboard					Sorted Set
 
 
 

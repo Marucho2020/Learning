@@ -1,168 +1,145 @@
-<html><head><title>Lesson 34 == Iterator và Iteration ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 34 -- Iterator và Iteration -//</h1><pre>
+<html><head><title>Lesson 34 == ArrayBlockingQueue ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 34 -- ArrayBlockingQueue -//</h1><pre># 1. Khái niệm  
+	Array BlockingQueue là một trong những cài đặt phổ biến của BlockingQueue trong Java. Nó rất quan trọng trong việc quản lý luồng dữ liệu trong các ứng dụng đa luồng, đặc biệt khi làm việc với bài toán Producer-Comsumer(Nhà sản xuất và người tiêu dùng )
+	
+	ArrayBlockingQueue là một hàn đợi(queue) tuần tự, có kích thước cố định được cài đặt dựa trên mảng array. Khi bạn tạo một đối tượng ArrayBlockingQueue, bạn phải chỉ định dung lượng tối đa của nó ngay từ đầu. Điều này có nghĩa là nó không thể mở rộng hoặc thu hẹp kích thước sau khi đã được khởi tạo. 
+	
+# 2. Đặc điểm của ArrayBlockingQueue 
+	## 1. Kích thước cố định : 
+	Dung lượng của hàng đợi được xác định khi tạo, và không thể thay đổi sau đó. 
+	
+	#Hỗ trợ đồng bộ hóa 
+		- Hàng đợi sử dụng cơ chế khóa(lock) để đảm bảo an toàn khi truy cập trong môi trường đa luồng 
+		- Khi một luồng thực hiện thao tác thêm(put) hoặc lấy (take), các luồng khác sẽ bị chặn cho đến khi thao tác hoàn tất. 
+		
+	## FIFO 
+		- Các phần tử được xử lý theo thứ tự chúng được thêm vào hàng đợi 
+		
+	# Hai khóa : (Two-lock queue)
+		ArrayBlockingQueue sử dụng hai loại khóa để đông bộ hóa:
+			Một cho thao tác thêm phần tử(enqueue)
+			Một cho thao tác lấy phần tử(dequeue)
+	# Hỗ trợ chặn (Blocking )
+		- Nếu hàng đợi đầy, các luồng cố gắng thêm phần tử sẽ bị chặn cho đến khi có không gian trống. 
+		- Nếu hàng đợi rỗng, các luồng cố gắng lấy phần tử sẽ bị chặn cho đến khi có phần tử được thêm vào 
 
-# Khái niệm  
 
-	## Iteration (Duyệt qua phần tử)
-		Là quá trình lặp qua các phần tử của một tập hợp Collection như List, Set, Map 
-		
-	## Iterator (Design Pattern)	
-		Là một thiết kế mẫu (Design Pattern) giúp duyệt các phần tử trong một Collection mà không cần biết chi tiết cấu trúc chi tiết bên trong  
-		
-	-> Java cung cấp Iterator như một Interface trong java.util, giúp duyệt phần tử của Collection một cách an toàn và có thể loại bỏ phần tử khi đang duyệt 
-	
-	
-	## Các bài toán thường hay sử dụng Iterator 
-		Thường được sử dụng trong các bài toán thao tác với tập hợp dữ liệu lớn, yêu cầu truy cập tuần tự, và có thể cần xóa hoặc sửa dữ liệu khi duyệt. Dưới đây là những bài toán phổ biến thường sử dụng Iterator trong java 
-		
-			- Xóa phần tử thỏa mãn điều kiện (Remove Elements While Iterating)
-				
-			- Duyệt danh sách liên kết (LinkedList Traversal)
-			
-			- Duyệt Map (Key-Value Traversal)
-			....
-	Bài toán						Loại Iterator nên dùng								Điểm nổi bật
-	Xóa phần tử khi duyệt			Iterator									Tránh ConcurrentModificationException
-	Duyệt LinkedList				Iterator									Hiệu suất cao hơn for loop
-	Duyệt Map						Iterator<Map.Entry<K,V>>					Truy cập key-value dễ dàng
-	Duyệt ngược List				ListIterator								Hỗ trợ duyệt 2 chiều
-	Custom Iterable					Iterable<T>									Hỗ trợ for-each cho class tùy chỉnh
-	Duyệt song song					Spliterator									Tối ưu hiệu suất
-	Tách từ trong chuỗi				StringTokenizer								Nhanh hơn split()
-	
-	
-# Sử dụng Iterator trong Java 
-		
-		### Ví dụ sử dụng Iterator cơ bản  
-		import java.util.*;
-		public class IteratorExample {
-			public static void main(String[] args) {
-				List<String> list = new ArrayList<>(Arrays.asList("A", "B", "C", "D"));
-		
-				Iterator<String> iterator = list.iterator(); // Lấy Iterator từ list
-		
-				while (iterator.hasNext()) { // Kiểm tra còn phần tử không
-					String item = iterator.next(); // Lấy phần tử tiếp theo
-					System.out.println(item);
-				}
-			}
-		}
-		
-		remove() có thể xóa phần tử khỏi Collection trong khi duyệt.
-	
-	
+# 3.Các phương thức quan trọng của ArrayBlockingQueue 
 
-	## Xóa phần tử trong khi duyệt (Iterator với for-each)
-		Thông thường khi duyệt qua danh sách phần tử mà thêm xóa phần tử sẽ gây ra lỗi vì đang duyệt mà -> ConcurrentModificationException 
-		
-		### Ví dụ gây ra lỗi ConcurrentModificationException 
-			import java.util.*;
-			public class IteratorRemoveExample {
-				public static void main(String[] args) {
-					List<String> list = new ArrayList<>(Arrays.asList("A", "B", "C", "D"));
-			
-					for (String item : list) { // Sử dụng for-each
-						if (item.equals("B")) {
-							list.remove(item); // Gây ConcurrentModificationException
+	offer(E e)               : Cố gắng thêm phần tử vào hàng đợi, nếu thành công trả về true, false nếu hàng đợi đã đầy 
+	put(E e)                 : Thêm phần tử vào hàng đợi, Nếu hàng đợi đầy, luồng sẽ bị chặn cho đến khi có không gian trống 
+	poll()                   : Lấy phần tử đầu tiên ra khỏi hàng đợi, nhưng không chặn , trả về null nếu hàng đợi rỗng 
+	take                     : Lấy phần tử đầu tiên ra khỏi hàng đợi, nếu hàng đợi rỗng, luồng sẽ bị chặn cho đến khi có phần tử 
+	remainingCapacity()      : Trả về số lượng phần tử kiểu int có thể thêm vào hàng đợi 
+	contais(Object o)        : Kiểm tra xem một phần tử có tồn tại trong hàng đợi hay không 
+	
+	
+# 4. Ví dụ sử dụng ArrayBlockingQueue 
+	1. Bài toán Producer-Comsumer Example 
+					import java.util.concurrent.ArrayBlockingQueue;
+					import java.util.concurrent.BlockingQueue;
+					
+					// Nhà sản xuất
+					class Producer implements Runnable {
+						private BlockingQueue<Integer> queue;
+					
+						public Producer(BlockingQueue<Integer> queue) {
+							this.queue = queue;
+						}
+					
+						@Override
+						public void run() {
+							try {
+								for (int i = 1; i <= 10; i++) {
+									System.out.println("Producer: Producing item " + i);
+									queue.put(i); // Thêm phần tử vào hàng đợi (chặn nếu đầy)
+									Thread.sleep(500); // Giả lập thời gian sản xuất
+								}
+							} catch (InterruptedException e) {
+								Thread.currentThread().interrupt();
+							}
 						}
 					}
-				}
-			}
+					
+					// Người tiêu dùng
+					class Consumer implements Runnable {
+						private BlockingQueue<Integer> queue;
+					
+						public Consumer(BlockingQueue<Integer> queue) {
+							this.queue = queue;
+						}
+					
+						@Override
+						public void run() {
+							try {
+								while (true) {
+									Integer item = queue.take(); // Lấy phần tử từ hàng đợi (chặn nếu rỗng)
+									System.out.println("Consumer: Consuming item " + item);
+									Thread.sleep(1000); // Giả lập thời gian tiêu thụ
+								}
+							} catch (InterruptedException e) {
+								Thread.currentThread().interrupt();
+							}
+						}
+					}
+					
+					public class ArrayBlockingQueueExample {
+						public static void main(String[] args) {
+							// Tạo hàng đợi có kích thước tối đa là 5
+							BlockingQueue<Integer> queue = new ArrayBlockingQueue<>(5);
+					
+							Thread producerThread = new Thread(new Producer(queue));
+							Thread consumerThread = new Thread(new Consumer(queue));
+					
+							producerThread.start();
+							consumerThread.start();
+						}
+					}
 
-		
-		-> Lý do lỗi xảy ra: for-each sử dụng Iterator ngầm, nhưng remove() từ Collection trực tiếp làm thay đổi cấu trúc list, gây ra ConcurrentModificationException 
-		
-		--> Ta sử dụng Iterator.remove() sẽ giải quyết được lỗi này 
-		
-		## Ví dụ sử dụng Iterator.remove() an toàn vì nó cập nhật trạng thái bên trong của Iterator 
-			Iterator<String> iterator = list.iterator();
-			while (iterator.hasNext()) {
-				if (iterator.next().equals("B")) {
-					iterator.remove(); // Xóa phần tử an toàn
-				}
-			}
+			// Giải thích ví dụ:
+				Hàng đợi có kích thước cố định là 5:
+				
+				Nếu nhà sản xuất cố gắng thêm phần tử vào hàng đợi khi đầy, nó sẽ bị chặn.
+				Nếu người tiêu dùng cố gắng lấy phần tử khi hàng đợi rỗng, nó sẽ bị chặn.
+				Sự đồng bộ hóa tự động:
+				
+				ArrayBlockingQueue quản lý việc đồng bộ hóa giữa nhà sản xuất và người tiêu dùng, nên bạn không cần phải sử dụng từ khóa synchronized thủ công.
+				Kết quả đầu ra:
+				
+				Nhà sản xuất thêm phần tử vào hàng đợi, người tiêu dùng lấy phần tử từ hàng đợi theo thứ tự FIFO.
 
+
+# Ưu điểm của ArrayBlockingQueue 
+	#1. An toàn trong môi trường đa luồng : 
+		Không cần xử lý thử công việc đồng bộ hóa giữa các luồng 
+	# Đồng bộ hóa hiệu quả 
+		Sử dụng cơ chế khóa tối ưu hóa giúp giảm chi phí đồng bộ 
 	
-	
-# ListIterator - Iterator nâng cao 
-	## Nếu bạn cần duyệt theo cả 2 chiều(forward & backward) trong List hãy dùng ListIterator : 
+	# Đơn giản và dễ sử dụng :
+		API rõ ràng và phù hợp cho nhiều bài toán trong lập trình đa luồng 
+
+	# Hạn chế tài nguyên 
+		Giới hạn dung lượng giúp tránh các vấn đề như sử dụng quá nhiều bộ nhớ 
 		
-		import java.util.*;
-		public class ListIteratorExample {
-			public static void main(String[] args) {
-				List<String> list = new ArrayList<>(Arrays.asList("A", "B", "C", "D"));
-				ListIterator<String> listIterator = list.listIterator();
 		
-				// Duyệt xuôi
-				while (listIterator.hasNext()) {
-					System.out.print(listIterator.next() + " "); // Output: A B C D
-				}
+Bài tập thực hành
+
+Bài tập 1:
+Tạo một ArrayBlockingQueue với kích thước là 3.
+Viết chương trình để thêm 10 số nguyên vào hàng đợi bằng một luồng và lấy chúng ra bằng một luồng khác.
+
+Bài tập 2:
+Thay đổi chương trình ví dụ trên để nhà sản xuất và người tiêu dùng có tốc độ khác nhau. Quan sát kết quả và giải thích tại sao việc đồng bộ hóa vẫn đảm bảo đúng thứ tự.
+
+Bài tập 3:
+Sử dụng ArrayBlockingQueue để quản lý các yêu cầu đến một máy chủ (như HTTP requests) và phân phối chúng cho một nhóm luồng xử lý (thread pool).		
 		
-				System.out.println();
 		
-				// Duyệt ngược
-				while (listIterator.hasPrevious()) {
-					System.out.print(listIterator.previous() + " "); // Output: D C B A
-				}
-			}
+		public static void main(String[] args){
+			System.out.print(args.length);
 		}
-
-	## ListIterator có thể : 
-		- Duyệt xuôi(next()) và ngược(previois)
-		- Thêm phần tử (add())
-		- Sửa phần tử(set())
-		- Xóa phần tử(remove()) an toàn  
 		
-# Iterabale Interface - tùy chỉnh Iterator 
-	
-	Nếu bạn muốn một class có thể sử dụng trong for-each, hãy triển khai Iterable<T>
-	-> Tức là ta biến một Class thành một dạng Danh sách để duyệt được ấy 
-	Iterable giúp class có thể dùng for-each loop mà không cần gọi iterator() thủ công 
 		
-		### Ví dụ  
-		import java.util.*;
-		class CustomCollection implements Iterable<String> {
-			private List<String> data = Arrays.asList("X", "Y", "Z");
 		
-			@Override
-			public Iterator<String> iterator() {
-				return data.iterator(); // Trả về Iterator của List
-			}
-		}
 		
-		public class IterableExample {
-			public static void main(String[] args) {
-				CustomCollection collection = new CustomCollection();
 		
-				for (String item : collection) { // for-each có thể dùng vì đã implement Iterable
-					System.out.println(item);
-				}
-			}
-		}
-
-# Spliterator - Iterator tối ưu cho Stream  
-	Java 8 giới thiệu Spliterator<T> như một cách mạnh mẽ hơn để duyệt dữ liệu song song  
-	Spliterator hỗ trợ duyệt song song (parallel processing ) giúp tôi ưu hiệu suất khi xử lý dữ liệu lớn  
-	
-	
-		import java.util.*;
-		public class SpliteratorExample {
-			public static void main(String[] args) {
-				List<String> list = Arrays.asList("A", "B", "C", "D");
-		
-				Spliterator<String> spliterator = list.spliterator();
-				spliterator.forEachRemaining(System.out::println);
-			}
-		}
-
-# So sánh cách duyệt Collection  	
-	
-Cách			Duyệt					Có thể xóa?							Hỗ trợ duyệt ngược?				Hỗ trợ song song?
-for-each		Dễ dùng					❌ Không							❌ Không							❌ Không
-Iterator		Cơ bản					✅ Có (remove())					❌ Không							❌ Không
-ListIterator	Nâng cao				✅ Có (remove(), set(), add())		✅ Có								❌ Không
-Spliterator		Hiệu suất cao			❌ Không							❌ Không							✅ Có
-
-
-
-
 </pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

@@ -1,68 +1,148 @@
-<html><head><title>Lesson 131 == Java interface ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 131 -- Java interface -//</h1><pre>
-# 🎯 1. Tại sao phải tạo lambda cho method trong interface? 
-
-	Vì trong Java, interface không thể tự khởi tạo (vì nó không có implementation). Khi bạn viết:
-	InterDemo i = x -> { return; };
-
-	Bạn đang cung cấp implementation cho method msg(String msg) thông qua lambda. Đây là cách Java cho phép bạn khởi tạo một đối tượng interface, chỉ khi interface đó có đúng 1 method abstract → gọi là Functional Interface.
-
-# 🧠 2. Functional Interface là gì?
-
-	Functional Interface là interface có chỉ một phương thức trừu tượng (abstract). Ví dụ:
-
-interface InterDemo {
-    void msg(String msg);
-}
-	Chỉ có 1 method: void msg(String) → hợp lệ → có thể dùng lambda.
-
-
-# 🧬 3. Vậy tại sao phải gán lambda?
-
-	Vì bản chất Java không khởi tạo interface như class. Bạn phải đưa ra cách hiện thực (implementation) cho method msg(String msg).
-	Lambda expression chính là:
-		Một cách rút gọn để cung cấp implementation cho một functional interface 
-
+<html><head><title>Lesson 131 == LongAccumulator ==============\ ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 131 -- LongAccumulator -----\ -//</h1><pre>
+# ✅ 1. Tóm tắt nhanh
+	LongAccumulator là phiên bản tổng quát hơn của LongAdder. 
+		LongAdder: chỉ hỗ trợ phép cộng (+)
+		LongAccumulator: cho phép bạn định nghĩa cách tích lũy tuỳ ý – max, min, product, bitwiseOr,...
+		
+		
+	## Cú pháp cơ bản: 
 	
-	Khi bạn viết: 
-		InterDemo i = x -> { return; }; 
-		
-	Java ngầm hiểu bạn đang làm: 
-		InterDemo i = new InterDemo() {
-			@Override
-			public void msg(String x) {
-				return;
-			}
-		};
-		
-
-	## ❓Vậy nếu KHÔNG gán lambda thì sao? 
-		InterDemo i; // Khai báo interface
-		i.msg("abc"); // ❌ Compilation error! Vì i = null, không có implementation
-
-		Nếu bạn không gán implementation (lambda hoặc class implements), bạn đang gọi một method chưa có thân hàm, và Java không thể thực thi nó. Kết quả: compiler lỗi.
-
-# ✅ Tổng kết'
-
-| Câu hỏi                                             | Giải thích                                                                                                      |
-| --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| Tại sao phải gán lambda cho interface khi khởi tạo? | Vì interface không có sẵn implementation — bạn phải cung cấp logic thực thi                                     |
-| Tại sao lambda hoạt động được?                      | Vì bạn dùng functional interface (1 method abstract) nên Java cho phép dùng lambda như cách rút gọn để override |
-| Nếu không dùng lambda thì sao?                      | Bạn phải dùng class hoặc anonymous inner class để implement interface đó                                        |
+LongAccumulator acc = new LongAccumulator(Long::max, Long.MIN_VALUE);
+acc.accumulate(10);
+acc.accumulate(5);
+System.out.println(acc.get()); // 10
 
 
 
-# 📌 Code đúng (có nội dung xử lý):
+# ✅ 2. Cơ chế nội tại (nội tạng thực sự bên dưới)
 
-interface InterDemo {
-    void msg(String msg);
+	Giống LongAdder, LongAccumulator kế thừa từ lớp ẩn danh bên dưới: Striped64.
+	
+base: long                // giá trị gốc nếu không contention
+cells: Cell[]             // mảng các Cell nếu contention xảy ra
+function: LongBinaryOperator  // hàm tích lũy
+identity: long            // giá trị khởi đầu khi reset
+	
+	
+
+	## Hoạt động như sau: 
+		Nếu ít contention → áp dụng function.applyAsLong(base, x)
+		Nếu có contention → thread hash tới 1 Cell → áp dụng function trên Cell đó
+		get() hoặc getThenReset() sẽ cộng dồn base + cells[] bằng cùng function
+		➡ Không có đồng bộ hóa (synchronized), không có lock – hoàn toàn lock-free, CAS-based
+
+
+
+
+
+# ✅ 3. Tại sao cần LongAccumulator? 
+	Vì không phải mọi phép toán đều là cộng (+).
+	
+
+Một số ví dụ: 
+| Use case          | Operation                   | Function           |
+| ----------------- | --------------------------- | ------------------ |
+| Tìm số lớn nhất   | max                         | `Long::max`        |
+| Tìm số nhỏ nhất   | min                         | `Long::min`        |
+| Phép nhân         | product                     | `(a, b) -> a * b`  |
+| Bitwise AND       | and                         | `(a, b) -> a & b`  |
+| Bitwise OR        | or                          | `(a, b) -> a \| b` |
+| Tổng trọng số log | `(a, b) -> log(a) + log(b)` | custom             |
+➡ Trong các tình huống cần logic phức tạp hơn cộng đơn giản, LongAdder không đủ.
+
+
+# ✅ 4. Các phương thức quan trọng 
+
+| Method               | Ý nghĩa                                   |
+| -------------------- | ----------------------------------------- |
+| `accumulate(long x)` | Áp dụng hàm tích lũy                      |
+| `get()`              | Lấy tổng (hoặc max/min tùy function)      |
+| `getThenReset()`     | Lấy rồi reset                             |
+| `reset()`            | Reset về identity                         |
+| `longValue()`        | Alias của `get()` (do implement `Number`) |
+
+
+# ✅ 5. Hiệu năng thực tế
+
+| Threads | `LongAdder` (sum) | `LongAccumulator` (max) |
+| ------- | ----------------- | ----------------------- |
+| 1       | Rất nhanh (\~20M) | Tương đương             |
+| 4       | \~70M             | \~65M                   |
+| 16      | \~160M            | \~150M                  |
+| 64      | \~200M            | \~180M                  |
+
+➡ Không thua kém LongAdder là bao, vì cùng chia sẻ cơ sở hạ tầng Striped64
+
+
+# ✅ 6. Ưu điểm và nhược điểm
+
+	## ✅ Ưu điểm 
+	
+		- Tùy biến logic tích lũy → bạn định nghĩa cách cộng dồn
+		- Rất tối ưu hóa cho high-concurrency
+		- Cấu trúc lock-free, dùng CAS
+		- Không đồng bộ, không block
+
+	## ❌ Nhược điểm
+
+		Không dùng được trong các tình huống cần get/set chính xác tại thời điểm (giống như AtomicLong)
+		Không thread-safe theo nghĩa strict của snapshot: get() không phải là atomic snapshot
+
+
+# ✅ 7. Khi nào dùng LongAccumulator?
+
+| Tình huống                                    | Dùng `LongAccumulator`? |
+| --------------------------------------------- | ----------------------- |
+| Tìm max/min liên tục trong high concurrency   | ✅ Tuyệt vời             |
+| Đếm số lượng log nhưng cần phép cộng đơn giản | ❌ Dùng `LongAdder`      |
+| Sinh ID tăng dần, cần chính xác tuyệt đối     | ❌ Dùng `AtomicLong`     |
+| Tính tích, tổng điểm có trọng số, custom rule | ✅ Dùng tốt              |
+| Ghi đè giá trị hoặc rollback                  | ❌ Không phù hợp         |
+
+
+# ✅ 8. Code ví dụ: thống kê điểm số lớn nhất từ nhiều thread
+LongAccumulator maxScore = new LongAccumulator(Long::max, Long.MIN_VALUE);
+
+// Mỗi thread nạp điểm
+Runnable task = () -> {
+    long score = Math.round(Math.random() * 100);
+    maxScore.accumulate(score);
+};
+
+ExecutorService pool = Executors.newFixedThreadPool(10);
+for (int i = 0; i < 1000; i++) {
+    pool.execute(task);
 }
 
-public class Test {
-    public static void main(String[] args) {
-        InterDemo i = x -> System.out.println("Received: " + x);
-        i.msg("Test Msg"); // ✅ Kết quả: Received: Test Msg
-    }
-}
+pool.shutdown();
+pool.awaitTermination(1, TimeUnit.SECONDS);
+System.out.println("Max score: " + maxScore.get());
+
+
+
+
+# ✅ 9. Mở rộng: so sánh 4 class phổ biến 
+
+
+| Class                            | Dùng khi                             | Ghi     | Đọc        | Contention |
+| -------------------------------- | ------------------------------------ | ------- | ---------- | ---------- |
+| `AtomicLong`                     | Ghi ít, đọc nhiều, cần chính xác     | ❌ chậm  | ✅ nhanh    | ❌          |
+| `LongAdder`                      | Cộng dồn nhiều, đo lường log         | ✅ nhanh | ⚠ hơi chậm | ✅          |
+| `LongAccumulator`                | Phép tích lũy đặc biệt (max/min/etc) | ✅ nhanh | ⚠          | ✅          |
+| `LongAccumulator` (custom logic) | Phức tạp cần tích lũy logic riêng    | ✅       | ⚠          | ✅          |
+
+
+# ✅ Tổng kết
+
+| Điểm                                         | Giá trị |
+| -------------------------------------------- | ------- |
+| Tùy biến cao                                 | ✅       |
+| Hiệu năng tốt                                | ✅       |
+| Không cần synchronized                       | ✅       |
+| Không chính xác tức thời                     | ⚠       |
+| Không dùng cho business logic yêu cầu atomic | ❌       |
+
+
 
 
 </pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

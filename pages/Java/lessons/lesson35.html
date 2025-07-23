@@ -1,143 +1,135 @@
-<html><head><title>Lesson 35 == Cloneable ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 35 -- Cloneable -//</h1><pre>
-# Khái niệm  
-	Cloneable là một Interface trong Java, giúp các đối tượng của lớp implement interface này có thể được sao chép(clone) thông qua phương thức clone() của lớp Object. Khi lớp implements Cloneable, các đối tượng của lớp đó có thể được sao chép để tạo ra các bản sao giống hệt với đối tượng gốc. 
-	
-# Cloneable Interface 
-	Cloneable không có phương thức nào được định nghĩa trong đó. Nhiệm vụ chính của nó là đánh dấu rằng một lớp cho phép sao chép đối tượng của nó. Nếu bạn cố gắng sao chép (clone) một đối tượng của lớp không implement Cloneable, phương thức clone() sẽ ném ra một CloneNotSupportedException 
-	
-		public interface Cloneable {
-		}
+<html><head><title>Lesson 35 == ArrayBlockingQueue ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 35 -- ArrayBlockingQueue -//</h1><pre># 1. Khái niệm 
+	LinkedBlockingQueue là một blocking Queue được triển khai dựa trên danh sách liên kết(linked list)
+	Đây là một phần của gói java.util.concurrent, được thiết kế để sử dụng trong môi trường đa luồng, nơi các luồng có thể thêm(enqueue) và lấy(dequeue) phần tử một cách an toàn mà không cần khóa thủ công 
 
-# Phương thức clone() trong lớp Object  
-	Mỗi đối tượng trong Java đều kế thừa từ lớp Object. Lớp Object cung cấp phương thức clone() 
-		protected Object clone() throws CloneNotSupportedException
-
-	Phươc thức này tạo ra một bản sao(shallow copy) của đối tượng. Tuy nhiên, phương thức này là protected, vì vậy phải override phương thức clone() để sử dụng trong mã của mình  
+# 2. Các đặc điểm chính của LinkedBlockingQueue
 	
-	
+	## 1. Hỗ trợ giới hạn kích thước 
+		Bạn có thể tạo một LinkedBlockingQueue với một kích thước cố định hoặc không giới hạn(mặc định là không giới hạn)
 		
-# Shallow Copy vs Deep Copy 
-
-	## Shallow Copy(Sao chép nông) : Khi bạn sao chép một đối tượng, các thuộc tính nguyên thủy của đối tượng gốc sẽ được sao chép vào đối tượng mới, nhưng nếu đối tượng gốc chứa các tham chiếu(reference) đến các đối tượng khác, các tham chiếu đó sẽ được sao chép. Điều này có nghĩa là cả đối tượng gốc và bản sao sẽ chia sẻ cùng một tham chiếu đến các đối tượng con  
-	
-			class Person implements Cloneable {
-			String name;
-			int age;
+		Khi đạt đến trạng thái kích thước tối đa, các luồng sẽ bị chặn(blocked) khi cố gắng thêm phần tử mới cho đến khi có không gian trống 
 		
-			Person(String name, int age) {
-				this.name = name;
-				this.age = age;
-			}
+	## An toàn trong môi trường đa luồng 
+		Việc thêm (put) và lấy(take) phần tử được đồng bộ hóa, đảm bảo rằng không có luồng nào có thể làm sai lệch dữ liệu 
 		
-			@Override
-			public Person clone() {
-				try {
-					return (Person) super.clone();  // Shallow copy
-				} catch (CloneNotSupportedException e) {
-					return null;
-				}
-			}
-		}
-
-		
-
-	## Deep Copy (Copy sâu) : La sao chép hoàn toàn đối tượng, bao gồm cả các đối tượng mà các thuộc tính tham chiếu trỏ đến. Điều này yêu cầu lập trình viên phải sao chép thủ công các đối tượng con trong phương thức clone() 
-	
-			class Person implements Cloneable {
-			String name;
-			Address address;
-		
-			Person(String name, Address address) {
-				this.name = name;
-				this.address = address;
-			}
-		
-			@Override
-			public Person clone() {
-				try {
-					Person cloned = (Person) super.clone();
-					cloned.address = new Address(this.address.city, this.address.street);  // Deep copy
-					return cloned;
-				} catch (CloneNotSupportedException e) {
-					return null;
-				}
-			}
-		}
-		
-		class Address {
-			String city;
-			String street;
-		
-			Address(String city, String street) {
-				this.city = city;
-				this.street = street;
-			}
-		}
-
-# Cách sử dụng Cloneable trong Java 
-		Khi bạn muốn sao chép một đối tượng, bạn cần thực hiện theo các bước sau : 
-			1/. Implements Cloneable : Lớp cần implement interface Cloneable để chỉ ra rằng đối tượng của lớp này có thể được sao chép 
+	## Hai khóa tách biệt 
+		LinkedBlockingQueue sử dụng hai khóa tách biệt(lock splitting) để cải thiện hiệu suất: 
+			- một khóa cho hành động thêm(enqueue)
+			- Một khóa cho hành động lấy(dequeue)
 			
-			2/. Override phương thức Clone() : Lớp cần override phương thức clone() để xử lý sao chép đối tượng, thường gọi là super.clone() của lớp cha(lớp Object)
+		Điều này cho phép các luồng thêm và lấy phần tử đồng thời mà không gây cản trở lẫn nhau. 
+		
+	## Hỗ trợ các thao tác blocking 
+		Các phương thức như put()  và take() sẽ chặn(block) luồng gọi nếu queue đầy hoặc rỗng, giúp quản lý luồng dễ dàng hơn 
+		
+	## Dựa trên danh sách liên kết 
+		Nội bộ LinkedBlockingQueue được triển khai trên một danh sách liên kết, không giống như ArrayBlockingQueue vốn dựa trên mảng. 
+		
+# Cách sử dụng LinkedBlockingQueue 
+		
+	## Khởi tạo LinkedBlockingQueue 
+					// Queue không giới hạn kích thước
+					LinkedBlockingQueue<Integer> unboundedQueue = new LinkedBlockingQueue<>();
+					
+					// Queue với kích thước cố định
+					LinkedBlockingQueue<Integer> boundedQueue = new LinkedBlockingQueue<>(5);
 			
+					// Thêm phần tử vào queue
+					boundedQueue.put(1); // Chặn nếu đầy
+					boundedQueue.offer(2); // Không chặn, trả về false nếu đầy
+		
+		
+# Các phương thức quan trọng 
 			
-				public class Main {
-				public static void main(String[] args) {
-					try {
-						Person person1 = new Person("John", new Address("New York", "5th Avenue"));
-						Person person2 = person1.clone();  // Sử dụng phương thức clone() để tạo bản sao
-			
-						System.out.println("Person1 Name: " + person1.name);
-						System.out.println("Person2 Name: " + person2.name);
-			
-						// Xác minh các thuộc tính có được sao chép đúng cách không
-						person2.name = "Jane";
-						person2.address.city = "Los Angeles";
-			
-						System.out.println("After modifying person2:");
-						System.out.println("Person1 Name: " + person1.name);
-						System.out.println("Person1 Address: " + person1.address.city);  // Tham chiếu giống nhau trong shallow copy
-						System.out.println("Person2 Name: " + person2.name);
-						System.out.println("Person2 Address: " + person2.address.city);
-			
-					} catch (CloneNotSupportedException e) {
-						e.printStackTrace();
+	## Thêm phần tử 
+		.add(E e)                             : Thêm phần tử, ném ngoại lệ nếu queue đầy 
+		.offer(E e)                           : Thêm phần tử, trả về false nếu queue đầy 
+		.offer(E e, timeout, TimeUnit unit)   : Thử thêm phần tử trong khoảng thời gian nhất định, chặn nếu đầy 
+		.put(E e)                             : Thêm phần tử vào cuối queue,  Chặn luồng cho đến khi có không gian trống trong queue để thêm phần tử 
+		
+	## Xóa phần tử 
+		.poll()                          : Lấy và xóa phần tử đầu tiên, trả về null nếu queue rỗng 
+		.poll(timeout, TimeUnit unit )   : Lấy và xóa phần tử đầu tiên, chờ trong khoảng thời gian nhất định nếu queue rỗng 
+		.take()                          : Chặn luồng cho đến khi có phần tử để lấy 
+		.peek()                          : Xem phần tử đầu tiên nhưng không xóa, trả về null nếu queue rỗng 
+		
+	## Các phương thức khác 
+		.size()                : Trả về số lượng phần tử hiện tại trong queue
+		.remainingCapacity()   : Trả về không gian trống còn lại trong queue
+		.clear()               : Xóa tất cả phần tử trong queue
+		.contains(Object o)    : Kiểm tra xem queue có chứa phần tử o hay không 
+		
+		
+		
+		
+# Ví dụ thực tế: Sử dụng LinkedBlockingQueue để quản lý tác vụ 	và bài toán người tiêu dùng nhà sản xuất 	
+		
+					import java.util.concurrent.LinkedBlockingQueue;
+					
+					class Producer implements Runnable {
+						private LinkedBlockingQueue<Integer> queue;
+					
+						public Producer(LinkedBlockingQueue<Integer> queue) {
+							this.queue = queue;
+						}
+					
+						@Override
+						public void run() {
+							try {
+								for (int i = 1; i <= 5; i++) {
+									System.out.println("Produced: " + i);
+									queue.put(i); // Chặn nếu queue đầy
+									Thread.sleep(100); // Giả lập thời gian sản xuất
+								}
+							} catch (InterruptedException e) {
+								Thread.currentThread().interrupt();
+							}
+						}
 					}
-				}
-			}
+					
+					class Consumer implements Runnable {
+						private LinkedBlockingQueue<Integer> queue;
+					
+						public Consumer(LinkedBlockingQueue<Integer> queue) {
+							this.queue = queue;
+						}
+					
+						@Override
+						public void run() {
+							try {
+								while (true) {
+									Integer item = queue.take(); // Chặn nếu queue rỗng
+									System.out.println("Consumed: " + item);
+									Thread.sleep(200); // Giả lập thời gian tiêu thụ
+								}
+							} catch (InterruptedException e) {
+								Thread.currentThread().interrupt();
+							}
+						}
+					}
+					
+					public class LinkedBlockingQueueExample {
+						public static void main(String[] args) {
+							LinkedBlockingQueue<Integer> queue = new LinkedBlockingQueue<>(3);
+					
+							Thread producer = new Thread(new Producer(queue));
+							Thread consumer = new Thread(new Consumer(queue));
+					
+							producer.start();
+							consumer.start();
+						}
+					}
+		
+		
+# So sánh LinkedBlockingQueue và ArrayBlockingQueue
 
+Đặc điểm						LinkedBlockingQueue							ArrayBlockingQueue
 
-		## Output (Shallow Copy):
-		Person1 Name: John
-		Person2 Name: John
-		After modifying person2:
-		Person1 Name: John
-		Person1 Address: Los Angeles
-		Person2 Name: Jane
-		Person2 Address: Los Angeles
-
-# Khi nào sử dụng Cloneable? 
-
-	- Khi bạn cần sao chép đối tượng: Thực tế, việc sử dụng clone() trong Java không phổ biến, vì việc tạo bản sao có thể dễ dàng được thay thế bằng các cách khác như constructor sao chép hoặc Builder Pattern.
-	
-	- Khi bạn muốn tạo các bản sao đối tượng mà không cần phải khởi tạo lại toàn bộ trạng thái của đối tượng.	
-
-
-# Vấn đề với Cloneable 
-	- Kỹ thuật Clone không được khuyến khích trong một số trường hợp do các vấn đề liên quan đến sao chép đối tượng trong những tình huống phức tạp (ví dụ, với các đối tượng có vòng lặp hoặc các tham chiếu đến tài nguyên hệ thống).
-	
-	- clone() không sao chép những thuộc tính static hoặc transient. Vì vậy, nếu bạn có các thuộc tính như vậy, bạn cần phải xử lý thủ công.
-	
-	
-# Tóm tắt  
-	- Cloneable là một interface được sử dụng để chỉ ra rằng lớp có thể được sao chép bằng phương thức clone().
-	
-	- clone() trong lớp Object thực hiện sao chép nông (shallow copy), và bạn cần override phương thức này trong lớp của mình để thực hiện sao chép.
-	
-	- Sao chép sâu (deep copy) là việc sao chép hoàn toàn các đối tượng con mà không dùng chung tham chiếu.
-	
-	- Clone không được sử dụng rộng rãi trong Java hiện đại vì các vấn đề mà nó gây ra trong việc sao chép đối tượng, nhưng vẫn có thể hữu ích trong một số tình huống.
-	
-
-
+Cấu trúc nội bộ					Danh sách liên kết							Mảng
+Kích thước						Tùy chọn: có thể giới hạn hoặc không		Phải có kích thước cố định
+Hiệu suất						Tốt hơn khi thêm và lấy đồng thời			Chậm hơn do sử dụng một khóa chung
+Sử dụng tài nguyên				Tiêu tốn nhiều bộ nhớ hơn (do node)			Sử dụng ít bộ nhớ hơn			
+		
+		
+		
 </pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

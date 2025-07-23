@@ -1,117 +1,107 @@
-<html><head><title>Lesson 29 == String Pool ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 29 -- String Pool -//</h1><pre># Khái niệm 
-	String Pool (còn gọi là String Intern Pool) là một vùng nhớ đặc biệt trong heap memory của JVM , nơi lưu trữ các chuỗi bất biến(immutable)
-	
-	Khi bạn khai báo một chuỗi bằng string literal (Chuỗi trực tiếp trong dấu ""), Java sẽ kiểm tra xem chuỗi đó có tồn tại trong String Pool hay chưa 
-	
-		- Nếu có, nó sẽ tái sử dụng chuỗi cũ để tiết kiệm bộ nhớ 
-		- Nếu chưa, Java sẽ tạo chuỗi mới và đưa nó vào String Pool 
-		
-		
-	- Tức là khi tạo chuỗi bằng string literal(chuỗi gán trực tiếp vào biến trong dấu "") , thì lúc này chuỗi không được khởi tạo trong bộ nhớ heap giống các object bình thường mà được thêm vào một hồ bơi(pool) để có thể tái sử dụng lại cho những vị trí khác trong chương trình muốn tái sử dụng tại để tiết kiệm bộ nhớ . Lúc này nếu 2 biến string được khởi tạo bằng string literal có cùng chuỗi string thì so sánh == với chúng sẽ trả về true. Còn khi khởi tạo bằng từ khóa new String("XXX") thì nó không được thêm vào pool mà tạo như một object bình thường và không thể sử dụng == để so sánh mà phải dùng equals() 
+<html><head><title>Lesson 29 == TreeSet ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 29 -- TreeSet -//</h1><pre>TreeSet là một lớp trong Java thuộc gói java.util được sử dụng để lưu trữ các phần tử duy nhất theo thứ tự tự nhiên (natural order) hoặc theo một bộ so sánh tùy chỉnh(custom comparator). Đây là một cấu trúc dữ liệu dựa trên cây nhị phân cân bằng Red-Black Tree, giúp các thao tác như thêm, xóa, tìm kiếm diễn ra hiệu quả 
 
-	- Hoặc có thể sử dụng phương thức str.intern() : để đưa chuỗi string này vào pool , khi đó nó sẽ được lưu ở hồ bơi string chứ k được lưu ở heap nữa 
+#1 Đặc điểm của TreeSet  
+	## Sắp xếp tự động : 
+		- Các phần tử trong TreeSet được sắp xếp tự động theo thứ tự tự nhiên hoặc theo bộ phận so sánh mà bạn cung cấp. 
+	
+	## Không cho phép trùng lặp : 
+		Giống như HashSet , mỗi phaanfn tử trong TreeSet là duy nhất được xác định bằng phương thức compareTo() hoặc compare() 
+	
+	## Không đồng bộ (not synchronized):
+		TreeSet không an toàn trong môi trường đa luồng. Nếu cần, bạn phải đồng bộ hóa bằng cách sử dụng Collections.synchronizedSortedSet(). 
 		
+	## Hiệu suất : 
+		Dựa trên cây nhị phân cân bằng, các thao tác thêm, xóa, tìm kiếm có thời gian trung bình là O(log n)
 		
-	### Ví dụ  
-	public static void main(String[] args) {
-        String s1 = "hello"; // Tạo chuỗi "hello" trong String Pool
-        String s2 = "hello"; // s2 trỏ đến cùng một chuỗi trong String Pool
+	## Không cho phép null : 
+		TreeSet không cho phép thêm null vì cần sắp xếp các phần tử, và việc so sánh null sẽ gây lỗi 
 
-        System.out.println(s1 == s2); // true (Cùng tham chiếu đến một đối tượng)
-    }
+# 2 Cách sử dụng TreeSet  
+	TreeSet<Integer> treeSet = new TreeSet<>();
 	
-	!!! Lưu ý : Khi dùng toán tử ==, Java sẽ kiểm tra xem hai biến có cùng tham chiếu đến cùng một đối tượng trong bộ nhớ hay không 
-
-# Tạo chuỗi bằng từ khóa new(Không dùng String pool) 
-	Khi dùng new String() . Java luôn luôn tạo một đối tượng mới trên heap, ngay cả khi chuỗi đã tồn tại trong String Pool 
+	treeSet.add(15);
+	treeSet.add(10);
+	treeSet.add(5);
 	
-	public class StringHeapExample {
-		public static void main(String[] args) {
-			String s1 = "hello";          // Chuỗi "hello" trong String Pool
-			String s2 = new String("hello"); // Luôn tạo đối tượng mới trên Heap
-	
-			System.out.println(s1 == s2); // false (s1 và s2 tham chiếu hai đối tượng khác nhau)
-		}
+	// duyệt 
+	for(int num : treeSet){
+		System.out.println(num);			// 5 10 15
 	}
 	
-	!!! S1 trỏ đến chuỗi trong String Pool , còn s2 là một đối tượng riêng biệt trên heap 
-
-
-# str.intern() - Đưa chuỗi vào String Pool 
-		
-	## Phương thức str.intern() sẽ : 
-		Kiểm tra chuỗi đã tồn tại trong String Pool chưa 
-		
-			### Nếu có : Trả về tham chiếu đến chuỗi String Pool , Lúc này các String cùng tham chiếu đến 1 vị trí trong string pool sẽ có vùng nhớ giống nhau và so sánh == được 
-			
-			### Nếu không : Thêm chuỗi đó vào String Pool và trả về tham chiếu đó  
-			
-			
-			
-	### Ví dụ  
+	// lấy phần tử đầu và cuối -> phần tử lớn nhất và nhỏ nhất vì nó đã được sắp xếp  
+	treeSet.first();
+	treeSet.last();
 	
-		public class StringInternExample {
-			public static void main(String[] args) {
-				String s1 = new String("hello");  // Tạo đối tượng mới trên heap
-				String s2 = s1.intern();          // Đưa vào String Pool
-		
-				System.out.println(s1 == s2); // false (s1 vẫn là đối tượng riêng trên heap)
-				System.out.println(s2 == "hello"); // true (s2 giờ trỏ đến String Pool)
-			}
-		}
+	// Xóa phần tử theo giá trị truyền vào 
+	treeSet.remove(10);
+	
+	
+# 3 Một số phương thức quan trọng : 
+	add(E e)                         : Thêm phần tử vào TreeSet , nếu đã tồn tại sẽ không được thêm 
+	remove(Object o)                 :  Xóa phần tử o khỏi TreeSet 
+	first()                          :  Trả về phần tử nhỏ nhất trong TreeSet 
+	last()                           :  Trả về phần tử lớn nhất 
+	higher(E e)                      : Trả về phần tử nhỏ nhất lớn hơn e hoặc null nếu không có 
+	lower(E e)                       : Trả về phần tử lớn nhất nhỏ hơn e hoặc null nếu k có 
+	ceiling(E e)                     : Trả về phần tử nhỏ nhất lớn hơn hoặc bằng e hoặc null nếu không có 
+	floor(E e)                       : Trả về phần từ lớn nhất nhở hơn hoặc bằng e hoặc null nếu không có 
+	subSet(E from, E to)             : Trả về một tập con gồm các phần tử nhằm trong khoảng [from,to]
+	headSet(E to)                    : Trả về một tập con gồm các phần tử nhỏ hơn to 
+	tailSet(E from)                  : Trả về một tập con gồm các phần tử lớn hơn hoặc bằng from
+	clear()                          : Xóa tất cả các phần tử khỏi TreeSet 
+	
+	
+# 4. TreeSet với Comparator	tùy chỉnh 
+	Bạn có thể sử dụng Comparator để tùy chỉnh cách sắp xếp trong TreeSet. Điều này rất hữu ích khi bạn cần sắp xếp theo thứ tự không mặc định  
+	
+	// Sắp xếp giảm dần  
+	TreeSet<Integer> treeSet = new TreeSet<>(Comparator.reverseOrder());
+	
+		treeSet.add(10);
+        treeSet.add(5);
+        treeSet.add(15);
+        treeSet.add(20);
+
+        System.out.println("TreeSet với Comparator tùy chỉnh (giảm dần):");
+        System.out.println(treeSet);  // [20, 15, 10, 5]
 
 
 
-# Ứng dụng của intern() trong tối ưu bộ nhớ 
-	Nếu bạn có nhiều chuỗi giống nhau mà được tạo bằng new String(), chúng sẽ chiếm nhiều bộ nhớ không cần thiết. intern() giúp tiết kiệm bộ nhớ bằng cách chia sẻ tham chiếu trong String Pool 
+# 5 TreeSet với các đối tượng tùy chỉnh 
+	Khi lưu trữ các đối tượng trong TreeSet, Bạn cần triển khai giao diện Comparable hoặ cung cấp một Comparator 
 	
-	public class StringOptimization {
-		public static void main(String[] args) {
-			String[] words = new String[1000];
 	
-			for (int i = 0; i < 1000; i++) {
-				words[i] = new String("optimize").intern(); // Chỉ có 1 đối tượng trong String Pool
-			}
+	# e.g Ví dụ TreeSet với đối tượng tùy chỉnh  , Các Obj sẽ được tự động sắp xếp theo tuổi 
 	
-			System.out.println(words[0] == words[999]); // true
-		}
+	class Student implements Comparable<Student> {
+	....
+	@Override 
+	public int compareTo(Student other){
+		return Integer.compare(this.age , other.age); // Tự động sắp xếp theo tuổi
 	}
-	Kết quả: Tất cả 1000 chuỗi "optimize" sẽ dùng chung một vùng nhớ trong String Pool, thay vì 1000 đối tượng riêng lẻ.
-
-
-#  So sánh == vs. equals() với String
-
-			Toán tử					Chức năng									Ví dụ							Kết quả
-			==					So sánh địa chỉ bộ nhớ (tham chiếu)			"abc" == "abc"						✅ true
-			==					So sánh địa chỉ khác nhau					new String("abc") == "abc"			❌ false
-			equals()			So sánh giá trị của chuỗi					new String("abc").equals("abc")		✅ true
-
 	
-	
-	
-	
-	public class StringComparison {
-		public static void main(String[] args) {
-			String s1 = new String("Java");
-			String s2 = "Java";
-			String s3 = s1.intern();
-	
-			System.out.println(s1 == s2); // false (s1 trên heap, s2 trong String Pool)
-			System.out.println(s3 == s2); // true (s3 và s2 đều trong String Pool)
-			System.out.println(s1.equals(s2)); // true (cùng nội dung)
-		}
 	}
-
-# 	Khi nào nên dùng intern()?
+		
+# 6. Thêm các lưu ý : 
 	
-✅ Nên dùng khi:
-
-Xử lý nhiều chuỗi trùng lặp để tiết kiệm bộ nhớ.
-Khi muốn kiểm tra == thay vì equals() mà không sợ sai.
-Khi dùng chuỗi làm key trong HashMap, Set, HashTable (tối ưu hiệu suất).
-❌ Không nên dùng khi:
-
-Khi không cần tối ưu bộ nhớ quá mức.
-Khi tạo nhiều chuỗi có nội dung khác nhau (vì intern() cũng tốn CPU để kiểm tra và thêm vào String Pool).
+	## Nguyên lý hoạt động nội bộ 
+		TreeSet sử dụng một bộ NavigableMap(Thường là TreeMap) làm cấu trúc dữ liệu nội bộ 
+		Các phần tử được lưu trữ trong một cây nhị phân cân bằng(Red-Black Tree)
+		Thứ tự phần tử được duy trì bằng cách sử dụng các phương thức compareTo() hoặc compare() 
+		
+	## Khả năng điều hướng(NavigableSet)
+	TreeSet triển khai giao diện NavigableSet, cung cấp các phương thức để điều hướng qua các phần tử. 
 	
+		System.out.println(treeSet.higher(10));  // Phần tử lớn hơn 10
+		System.out.println(treeSet.lower(10));  // Phần tử nhỏ hơn 10
+# 7. Khi nào nên dùng TreeSet? 
+	- Khi cần lưu trữ các phần tử duy nhất và tự động sắp xếp chúng 
+	- Khi cần thao tác với các phần tử trong một khoảng nhất định (subSet . headSet ,  tailSet)
+	- KHi cần thao tác tìm kiếm nhanh với thứ tự được duy trì  
+
+
+
+
+		
+		
 </pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

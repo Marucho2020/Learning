@@ -1,192 +1,165 @@
-<html><head><title>Lesson 133 == Proxy Pattern ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 133 -- Proxy Pattern -//</h1><pre># 🧠 1. Proxy Pattern là gì?
-	Proxy là mẫu thiết kế cấu trúc cho phép thay mặt đối tượng khác để kiểm soát truy cập, thêm logic phụ trợ, mà không thay đổi logic chính.
-
-	## Cách hiểu: 
-		Bạn không gọi vào "đối tượng gốc", mà gọi vào đối tượng trung gian (Proxy) → proxy quyết định có nên gọi tiếp, làm thêm gì, hoặc trả lời giả.
-		
-		Nó giống như bảo vệ đứng trước cửa, hoặc cửa sổ ảo (virtual proxy) — bạn không biết thật hay giả, bạn chỉ giao tiếp với proxy.
+<html><head><title>Lesson 133 == StampedLock ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 133 -- StampedLock -//</h1><pre>
+# Khái niệm 
+	StampedLock – một trong những cơ chế đồng bộ hiện đại nhất trong Java kể từ Java 8, được thiết kế tối ưu cho hệ thống đa luồng tốc độ cao, với mục tiêu thay thế ReentrantReadWriteLock.
 
 
+# 🔧 1. Vấn đề với ReentrantReadWriteLock 
+	
+	ReentrantReadWriteLock chia khóa làm hai loại:
+		- Read lock (chia sẻ): nhiều thread cùng đọc
+		- Write lock (độc quyền): chỉ 1 thread ghi
 
-# 📦 2. Các loại Proxy 
-| Loại                 | Mục đích chính        | Ví dụ thực tế            |
-| -------------------- | --------------------- | ------------------------ |
-| **Remote Proxy**     | Gọi từ xa (RMI, gRPC) | Java RMI, REST client    |
-| **Virtual Proxy**    | Trì hoãn khởi tạo     | Hibernate lazy loading   |
-| **Protection Proxy** | Kiểm soát quyền       | Spring Security          |
-| **Caching Proxy**    | Cache dữ liệu         | Redis cache layer        |
-| **Smart Proxy**      | Logging, transaction  | Spring AOP               |
-| **Firewall Proxy**   | Chặn truy cập         | Proxy filter in firewall |
+
+	## Nhược điểm: 
+		- Chi phí lớn để lấy lock
+		- Khi nhiều thread đọc + 1 thread ghi, lock upgrade rất tốn kém
+		- Không hỗ trợ lock-free optimistic read
+		- Không hỗ trợ downgrade thông minh
+
+
+# ✅ 2. StampedLock – thiết kế hiện đại, high-performance
+
+	Không chỉ có read/write lock, mà còn có:
+	
+		✔️ Optimistic read (không block, không lock)
+		✔️ Precise validation sau khi đọc
+		✔️ Stamp (long token) để theo dõi trạng thái
+		✔️ Support lock upgrade/downgrade thủ công
+
+
+
+# 🧱 3. Cấu trúc và cách hoạt động 
+
+StampedLock lock = new StampedLock();
+long stamp = lock.tryOptimisticRead();
+
+if (lock.validate(stamp)) {
+    // dữ liệu không bị ghi trong lúc đọc
+} else {
+    // fallback: lock.readLock()
+}
+
+
+
+	## Các loại lock: 
+| Lock                  | Blocking?      | Shared? | Khi dùng                                         |
+| --------------------- | -------------- | ------- | ------------------------------------------------ |
+| `writeLock()`         | ✅ block        | ❌       | Khi update dữ liệu                               |
+| `readLock()`          | ✅ block        | ✅       | Khi đọc dữ liệu và cần đảm bảo không thay đổi    |
+| `tryOptimisticRead()` | ❌ non-blocking | ✅       | Đọc nhanh và kiểm tra sau                        |
+| `validate(stamp)`     | ❌              | ❌       | Kiểm tra xem dữ liệu có bị ghi sau khi đọc không |
 	
 
-# 🔧 3. Static Proxy – Khởi đầu
 
-// Interface
-interface Service {
-    void doWork();
-}
+# 🎯 4. Ví dụ dùng StampedLock chuẩn hóa
 
-// Real class
-class RealService implements Service {
-    public void doWork() {
-        System.out.println("RealService: doing work");
+class Point {
+    private double x, y;
+    private final StampedLock sl = new StampedLock();
+
+    // Ghi
+    void move(double deltaX, double deltaY) {
+        long stamp = sl.writeLock();
+        try {
+            x += deltaX;
+            y += deltaY;
+        } finally {
+            sl.unlockWrite(stamp);
+        }
+    }
+
+    // Đọc với optimistic lock
+    double distanceFromOrigin() {
+        long stamp = sl.tryOptimisticRead();
+        double currentX = x, currentY = y;
+        if (!sl.validate(stamp)) {
+            stamp = sl.readLock();
+            try {
+                currentX = x;
+                currentY = y;
+            } finally {
+                sl.unlockRead(stamp);
+            }
+        }
+        return Math.sqrt(currentX * currentX + currentY * currentY);
     }
 }
 
-// Proxy
-class ServiceProxy implements Service {
-    private RealService real;
+	➡ Nếu không có ghi xảy ra → tránh được chi phí lock
+	➡ Nếu ghi xảy ra → fallback sang read lock
 
-    public ServiceProxy(RealService real) {
-        this.real = real;
+
+# 🧠 5. Khác biệt với ReentrantReadWriteLock
+
+| Tính năng              | `StampedLock`                                | `ReentrantReadWriteLock`      |
+| ---------------------- | -------------------------------------------- | ----------------------------- |
+| Optimistic read        | ✅ Có                                         | ❌ Không                       |
+| Downgrade write → read | ✅ Có (manual)                                | ✅                             |
+| Upgrade read → write   | ⚠️ Không trực tiếp (phải release & lock lại) | ✅ Có                          |
+| Lock reentrancy        | ❌ Không reentrant                            | ✅ Có                          |
+| Performance            | ✅ Cao hơn                                    | ❌ Chậm hơn khi contention lớn |
+| API phức tạp           | ⚠️ Cao                                       | Trung bình                    |
+
+
+
+# ⚠️ 6. Lưu ý quan trọng (cạm bẫy senior)
+
+	##❌ Không reentrant:
+	
+long s1 = lock.writeLock();
+long s2 = lock.writeLock(); // 💥 Deadlock – không tự động reentrant như `ReentrantLock`
+
+	## ⚠️ Phải luôn quản lý stamp thủ công:
+
+	Nếu bạn quên unlockRead(stamp) hoặc dùng sai stamp, hậu quả là:
+
+		- Deadlock
+		- Lost lock
+		- Race condition không rõ nguyên nhân
+
+	❌ Không dùng StampedLock cho các use-case đơn giản:
+	→ Nó phức tạp, nên chỉ phù hợp cho các hệ thống yêu cầu cực cao về hiệu năng và concurrency
+
+
+
+# 🧪 7. Khi nào nên dùng StampedLock? 
+| Use case                                      | Có dùng `StampedLock`?                                       |
+| --------------------------------------------- | ------------------------------------------------------------ |
+| Cache nhiều thread đọc, ít thread ghi         | ✅ Rất phù hợp                                                |
+| Đếm, đo, log, mà muốn tránh lock              | ✅ Dùng optimistic read                                       |
+| Bài toán cần upgrade lock (đọc → ghi)         | ⚠️ Cân nhắc – không dễ dùng                                  |
+| Logic phức tạp, cần nhiều thread nesting lock | ❌ Không – dùng `ReentrantReadWriteLock` hoặc `ReentrantLock` |
+| Dùng trong cấu trúc dữ liệu custom concurrent | ✅ (ví dụ như ConcurrentLinkedTree)                           |
+
+
+# 🔧 8. Bonus: Mẫu nâng cấp lock đúng cách
+
+long stamp = lock.readLock();
+try {
+    if (needWrite()) {
+        long ws = lock.tryConvertToWriteLock(stamp);
+        if (ws != 0L) {
+            stamp = ws;
+            // now it's write lock
+        } else {
+            lock.unlockRead(stamp);
+            stamp = lock.writeLock(); // slow path
+        }
     }
-
-    public void doWork() {
-        System.out.println("Proxy: before");
-        real.doWork();
-        System.out.println("Proxy: after");
-    }
-}
-
-	Nhược điểm:
-		Cứng nhắc, mỗi class cần 1 proxy tay
-		Không scale với nhiều method/class
-
-
-# 🔄 4. Dynamic Proxy (Java Reflection)
-	Java hỗ trợ proxy runtime cho interface-based objects thông qua java.lang.reflect.Proxy.
-
-
-	## Cách hoạt động: 
-		
-		- Java tạo 1 class proxy tại runtime
-		- Nó implement các interface bạn chỉ định
-		- Nó chuyển tất cả method calls vào 1 InvocationHandler
-
-import java.lang.reflect.*;
-
-interface Service {
-    void doWork();
-}
-
-class RealService implements Service {
-    public void doWork() {
-        System.out.println("Real: doing work");
-    }
-}
-
-class LoggingHandler implements InvocationHandler {
-    private Object target;
-
-    public LoggingHandler(Object target) {
-        this.target = target;
-    }
-
-    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-        System.out.println("Before: " + method.getName());
-        Object result = method.invoke(target, args);
-        System.out.println("After: " + method.getName());
-        return result;
-    }
-}
-
-public class Test {
-    public static void main(String[] args) {
-        Service real = new RealService();
-        Service proxy = (Service) Proxy.newProxyInstance(
-            real.getClass().getClassLoader(),
-            new Class[]{Service.class},
-            new LoggingHandler(real)
-        );
-
-        proxy.doWork();
-    }
+    // do stuff
+} finally {
+    lock.unlock(stamp);
 }
 
 
 
-# ⚡ 5. CGLIB – Proxy cho class (không cần interface)
+# ✅ Tổng kết
 
-	Dynamic Proxy chỉ áp dụng với interface. Nếu bạn muốn proxy 1 class (không implement interface) → dùng CGLIB (Code Generation Library).
-
-	Spring dùng CGLIB khi không có interface.	
-
-
-public class RealService {
-    public void run() {
-        System.out.println("Running...");
-    }
-}
-
-// Enhancer (CGLIB)
-Enhancer enhancer = new Enhancer();
-enhancer.setSuperclass(RealService.class);
-enhancer.setCallback(new MethodInterceptor() {
-    public Object intercept(Object obj, Method method, Object[] args, MethodProxy proxy) throws Throwable {
-        System.out.println("Before");
-        Object result = proxy.invokeSuper(obj, args);
-        System.out.println("After");
-        return result;
-    }
-});
-
-RealService proxy = (RealService) enhancer.create();
-proxy.run();
-
-
-
-# 💡 6. Proxy trong Spring (AOP, Transaction, Security...)
-
-| Thành phần                  | Cách hoạt động                                               |
-| --------------------------- | ------------------------------------------------------------ |
-| `@Transactional`            | Spring tạo proxy cho bean → thêm logic mở/commit transaction |
-| `@Secured`, `@PreAuthorize` | Proxy kiểm tra quyền trước khi gọi method                    |
-| `@Cacheable`                | Proxy chặn method, kiểm tra cache → trả về kết quả nếu đã có |
-| `@Async`                    | Proxy đẩy method call sang thread khác                       |
-| `@Aspect`                   | Spring AOP proxy method call → xử lý logic trước/sau/around  |
-
-
-
-	Spring Proxy default theo 2 chiến lược:
-		- Nếu có interface → dùng JDK Dynamic Proxy
-		- Nếu không → dùng CGLIB (class-based proxy)
-
-
-
-# 📉 7. Rủi ro & cảnh báo
-
-| Vấn đề                                                   | Mô tả                                                     |
-| -------------------------------------------------------- | --------------------------------------------------------- |
-| Không hỗ trợ final class / final method                  | Proxy không thể override                                  |
-| Gọi nội bộ (internal self-invocation) không bị intercept | `this.someMethod()` không qua proxy                       |
-| Dễ làm rối debug                                         | Stack trace chứa proxy class, khó trace lỗi               |
-| Lạm dụng → Anti-pattern                                  | Đôi khi dev dùng proxy để "trát xi măng" cho thiết kế tồi |
-
-
-
-# 🧠 8. Phân biệt Proxy với các Pattern khác
-
-
-| Pattern       | Mục tiêu chính                                |
-| ------------- | --------------------------------------------- |
-| **Proxy**     | Kiểm soát truy cập, xử lý logic phụ trước/sau |
-| **Decorator** | Thêm hành vi mà không thay đổi interface      |
-| **Adapter**   | Biến đổi interface này thành interface khác   |
-| **Facade**    | Ẩn đi logic phức tạp đằng sau API đơn giản    |
-
-	Proxy tập trung vào trung gian kiểm soát, còn Decorator tập trung vào mở rộng chức năng.
-
-# ✅ Tổng kết — Proxy ở level senior là gì?
-
-
-| Khía cạnh            | Nội dung                                                                          |
-| -------------------- | --------------------------------------------------------------------------------- |
-| Mục tiêu             | Trung gian xử lý gọi hàm, có thể kiểm soát, log, cache, validate...               |
-| Cách dùng trong Java | Static proxy, Dynamic proxy (interface), CGLIB (class)                            |
-| Framework ứng dụng   | Spring AOP, Transaction, Security, Caching, Async                                 |
-| Kỹ năng cần có       | Biết tạo InvocationHandler, viết interceptor logic rõ ràng, hiểu hiệu năng, debug |
-| Tư duy thiết kế      | Separation of concerns, Open/Closed, Middleware pipeline                          |
-
+	- StampedLock = hiện đại, hiệu năng cực cao, tối ưu cho tình huống read nhiều, write ít
+	- Nó đưa ra một level điều khiển lock thấp hơn, phù hợp cho hệ thống real-time, low-latency
+	- Phải quản lý logic và lifecycle thủ công
+	- Không phù hợp với beginner hoặc code đơn giản
+	- Nếu dùng đúng cách → outperform mọi lock trong Java
 
 
 </pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

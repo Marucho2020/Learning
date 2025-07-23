@@ -1,146 +1,108 @@
-<html><head><title>Lesson 120 == Striped64 ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 120 -- Striped64 -//</h1><pre>
-# Khái niệm 
-	Striped64 là một lớp abstract nội bộ trong java.util.concurrent.atomic, được thiết kế để cung cấp:
-
-		- Counter lock-free hiệu năng cao
-		- Scale tốt trong môi trường đa luồng
-		- Là cơ sở cho LongAdder, DoubleAdder, LongAccumulator,...
-		- Từ Java 8+, nó thay thế cho AtomicLong trong hầu hết trường hợp đo lường/logging hiệu năng.
-
-# ✅ 2. Ý tưởng cốt lõi: “striped counters” 
-	Tăng hiệu năng ghi dữ liệu bằng cách chia vùng ghi (striping):
-
-
-	## 🔁 Vấn đề của AtomicLong:
-		AtomicLong counter = new AtomicLong(0);
-		Khi 1000 thread cùng gọi counter.incrementAndGet() → tất cả tranh nhau cùng 1 giá trị → contention cực lớn, dùng CAS (compareAndSet) liên tục, rất tốn tài nguyên CPU.
-		
-	## 	✅ Giải pháp Striped64: chia nhỏ counter thành nhiều cell
-		Instead of:
-    One counter → All threads write to it
-
-Now:
-    Array[Cell0, Cell1, ..., CellN]
-    Each thread hashes to one cell → updates its own cell
-
-		
-	Khi lấy tổng (sum()): cộng tất cả giá trị trong từng cell.
-	➡ Ý tưởng giống concurrent hash map: chia nhỏ để tránh contention.
+<html><head><title>Lesson 120 == ConcurrentNavigableMap ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 120 -- ConcurrentNavigableMap -//</h1><pre>
+# Khái niệm  
 	
-	
-# ✅ 3. Cấu trúc lớp Striped64 
-	
-abstract class Striped64 extends Number {
-    transient volatile Cell[] cells;  // mảng các cell (nếu bị contention)
-    transient volatile long base;     // giá trị gốc nếu chưa tạo cells
-    transient volatile int cellsBusy; // giống 1 mutex bitlock (0/1) để tránh race khi resize cells
-}
-	
-	
-		- base: dùng khi chưa có contention, tất cả thread ghi chung
-		- cells: nếu bắt đầu có contention → tạo cells[] để mỗi thread ghi riêng
-		- cellsBusy: dùng để điều phối việc khởi tạo hoặc resize cells[]
-	
-# 	✅ 4. Class Cell: đơn vị dữ liệu nhỏ
-	
-static final class Cell {
-    volatile long value;
-
-    Cell(long x) { value = x; }
-
-    final boolean cas(long cmp, long val) {
-        return UNSAFE.compareAndSwapLong(this, valueOffset, cmp, val);
-    }
-}
-		
-		Mỗi Cell là 1 ô chứa số long → dùng CAS để update
-		Có @Contended (nếu bật VM option -XX:-RestrictContended) để tránh false sharing giữa cache line	
-		
+	Bản chất và vai trò trong hệ thống đa luồng.
+	Cách hoạt động bên dưới (implementation).
+	Khi nào nên dùng / khi không nên dùng.
+	So sánh với các map khác: ConcurrentHashMap, TreeMap, NavigableMap, SkipListMap.
+	Các chiến lược tối ưu hiệu suất và memory.
 
 
-
-# ✅ 5. Cách hoạt động chi tiết khi add(x) hoặc accumulate(x)
-
-1. Nếu chưa có cells[]:
-    → thử cộng vào base (CAS)
-    → nếu CAS thất bại → bắt đầu contention → khởi tạo cells[]
-
-2. Nếu có cells[]:
-    → thread hash vào cell nào đó
-    → CAS vào cell.value
-
-3. Nếu vẫn contention (CAS fail quá nhiều):
-    → mở rộng cells[] (resize gấp đôi)
-
-
-	Mọi thứ được thiết kế để:
-		- Tránh synchronized
-		- Scale tuyến tính với số core
-		- Giảm tối đa false sharing/cache contention
-
-
-# ✅ 6. Thuật toán mở rộng cells[]
-
-	- Bắt đầu từ mảng kích thước nhỏ (2)
-	- Khi CAS vào Cell[i] thất bại quá nhiều (nhiều thread cùng đụng vào 1 cell)
-	- → resize mảng lên gấp đôi
-	- Chỉ 1 thread được phép resize (controlled bằng cellsBusy giống mutex ảo)
-	- ➡ Resize giống như rehash trong HashMap nhưng đơn giản hơn.
-
-
-
-# ✅ 7. Tối ưu performance theo kiến trúc CPU
-
-	- @sun.misc.Contended / padding để tránh false sharing
-	- Không dùng synchronized
-	- Chỉ sử dụng CAS, volatile, spin
-	- Cấu trúc theo đúng cache line alignment
-	- ➡ Mọi tối ưu đều nhằm đạt được performance tốt hơn AtomicLong
-
-
-#  ✅ 8. Ưu và nhược 
+	Là một interface trong Java, mở rộng ConcurrentMap + NavigableMap. Điều này có nghĩa:
+	Concurrent: Hỗ trợ an toàn trong môi trường đa luồng (thread-safe).
+	Navigable: Hỗ trợ truy xuất theo thứ tự, như ceilingEntry, floorEntry, subMap, v.v.
+	🔧 Implementation chính: ConcurrentSkipListMap<K, V>
 	
 
-	## ✅ Ưu điểm: 
-		
-		- Lock-free, scalable, hiệu năng cực cao
-		- Chịu được lượng thread tăng mạnh
-		- Cấu trúc tinh gọn nhưng mạnh mẽ
-		- Dễ mở rộng (cơ sở cho LongAdder, LongAccumulator...)
+# 🏗️ 2. Cấu trúc triển khai bên dưới: Skip List
+	- ConcurrentNavigableMap duy nhất được Java implement chính thức là ConcurrentSkipListMap, dùng Skip List:
+	- Skip List là một cấu trúc đa lớp (multiple levels) để tìm kiếm nhanh hơn O(log n) mà không dùng rotation như tree.
+	- Được thiết kế tốt cho môi trường đa luồng, dễ chia nhỏ vùng cập nhật (fine-grained locking hoặc lock-free).
+	
+	
+	## ⏱️ Time Complexity: 
+| Operation        | Time Complexity |
+| ---------------- | --------------- |
+| get/put          | O(log n)        |
+| remove           | O(log n)        |
+| firstKey/lastKey | O(1)            |
+| subMap, headMap  | O(log n)        |
 
 
-	## ❌ Nhược điểm:
+# 🔒 3. Đồng bộ hóa (Concurrency) 
+	ConcurrentSkipListMap không dùng synchronized toàn cục như Collections.synchronizedMap, mà: 
 	
-		- get() hoặc sum() không phải atomic snapshot: giá trị có thể "bị xé lẻ"
-		- Không phù hợp khi cần chính xác tuyệt đối tại từng thời điểm (như sinh ID tăng dần)
-		- Phức tạp khi debug vì quá trừu tượng
-	
-	
-# ✅ 9. Cấu trúc thừa kế thực tế
+	- Dùng lock chia nhỏ (fine-grained locks) hoặc CAS (Compare-and-Swap),
+	- Mỗi tầng trong SkipList hoạt động độc lập -> không bị bottleneck khi truy cập đồng thời,
+	- Một số thao tác như putIfAbsent, computeIfAbsent rất phù hợp cho concurrent map.
 
-            Number
-               ↑
-         ┌──────────────┐
-         │              │
-   Striped64 (abstract) │
-         ↑              ↑
- LongAdder       LongAccumulator
- 
-	LongAdder → chỉ dùng phép cộng
-	LongAccumulator → tích lũy tuỳ chỉnh
+# 🧪 4. Khi nào dùng ConcurrentNavigableMap? 
 	
+
+| Trường hợp thực tế                              | Lợi ích khi dùng                                                          |
+| ----------------------------------------------- | ------------------------------------------------------------------------- |
+| Hệ thống cần duy trì thứ tự key khi truy cập    | Giữ thứ tự sắp xếp theo key (natural hoặc comparator)                     |
+| Cần chia nhỏ vùng dữ liệu (sharding, paging...) | Dùng `subMap`, `tailMap`, `headMap` hiệu quả                              |
+| Ghi / đọc đồng thời (đa luồng)                  | Không cần tự lock                                                         |
+| Tạo hàng đợi ưu tiên nhiều thread xử lý         | Dễ implement với `pollFirstEntry`                                         |
+| Cần xử lý nhiều phiên bản dữ liệu (timestamped) | Key là timestamp, value là dữ liệu, `tailMap(ts)` trả các giá trị mới hơn |
+
+
+
+# 🔥 5. So sánh với các Map khác
+| Feature                          | HashMap | TreeMap  | ConcurrentHashMap | ConcurrentSkipListMap |
+| -------------------------------- | ------- | -------- | ----------------- | --------------------- |
+| Ordered                          | ❌       | ✅        | ❌                 | ✅                     |
+| Thread-safe                      | ❌       | ❌        | ✅                 | ✅                     |
+| Navigable (subMap, ceiling...)   | ❌       | ✅        | ❌                 | ✅                     |
+| Performance                      | ⭐⭐⭐⭐⭐   | ⭐⭐⭐      | ⭐⭐⭐⭐              | ⭐⭐⭐                   |
+| Memory overhead (extra pointers) | ⭐⭐⭐⭐⭐   | ⭐⭐       | ⭐⭐⭐⭐              | ⭐⭐                    |
+| Insert performance               | O(1)    | O(log n) | O(1)              | O(log n)              |
+
+# ⚙️ 6. Ví dụ thực tế
+
+
+Ví dụ 1: Hệ thống giá cổ phiếu real-time 
 	
-# ✅ 10. So sánh với AtomicLong	
-	
-| Tính năng           | `AtomicLong`  | `Striped64` (LongAdder, etc.) |
-| ------------------- | ------------- | ----------------------------- |
-| CAS                 | ✅             | ✅                             |
-| Lock-free           | ✅             | ✅                             |
-| Scale trên 16+ core | ❌ yếu         | ✅ rất tốt                     |
-| Tốc độ `increment`  | Trung bình    | Rất cao                       |
-| Tốc độ `get()`      | Rất chính xác | Không guaranteed snapshot     |
-| Gỡ lỗi dễ           | ✅             | ❌ Khó đọc                     |
-| Tùy chỉnh tích lũy  | ❌             | ✅ (qua `LongAccumulator`)     |
+ConcurrentNavigableMap<Long, Double> stockPrices = new ConcurrentSkipListMap<>();
+
+// Nhiều thread ghi giá theo timestamp
+stockPrices.put(System.currentTimeMillis(), 123.45);
+
+// Truy xuất giá sau 9:30 sáng
+long openTime = 9_30_00_000L;
+NavigableMap<Long, Double> pricesAfterOpen = stockPrices.tailMap(openTime);
+
+
+
+Ví dụ 2: Time-based cache / expiring data
+// Lưu dữ liệu theo timestamp
+ConcurrentNavigableMap<Long, MyData> cache = new ConcurrentSkipListMap<>();
+
+// Periodic cleanup thread:
+long cutoff = System.currentTimeMillis() - 5 * 60 * 1000;
+cache.headMap(cutoff).clear(); // clear các item đã hết hạn
+
+
+
+
+# 🚧 7. Cần lưu ý gì khi dùng? 
+
+	- Không phù hợp cho insert-heavy system với key ngẫu nhiên nếu chỉ cần hash-access.
+	- Nếu không cần thứ tự → Dùng ConcurrentHashMap nhanh hơn, tốn ít bộ nhớ hơn.
+	- Không nên lạm dụng subMap() nếu thao tác rất nhiều thread → có thể bị contention nếu vùng overlap nhau.
+
+
+# 🧠 8. Kiến thức cần để làm chủ ConcurrentNavigableMap
+
+| Kiến thức             | Mục tiêu                                                   |
+| --------------------- | ---------------------------------------------------------- |
+| Java Memory Model     | Hiểu volatile, happens-before, visibility giữa threads     |
+| Lock-free Programming | CAS, atomic variables, contention                          |
+| Skip List             | Cấu trúc, ưu nhược điểm, so sánh với BST                   |
+| NavigableMap API      | Sử dụng hiệu quả các hàm `subMap`, `tailMap`, `ceilingKey` |
+| Benchmark/Profiling   | So sánh thực tế với các concurrent map khác                |
+
 
 
 </pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

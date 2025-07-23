@@ -1,132 +1,74 @@
-<html><head><title>Lesson 99 == Tree Rotation ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 99 -- Tree Rotation -//</h1><pre>
-# Khái niệm 
-	Tree rotation là thao tác tái cấu trúc một phần của cây nhị phân (binary tree) để:
-		- Duy trì tính chất BST
-		- Giữ cây ở trạng thái cân bằng tốt hơn 
-		
-	Rotation không thay đổi thứ tự các node theo in-order traversal (duyệt LNR vẫn đúng thứ tự).
+<html><head><title>Lesson 99 == Data Lineage ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 99 -- Data Lineage -//</h1><pre># Khái niệm 
+	Data Lineage = Dòng chảy của dữ liệu: từ nguồn gốc, qua các bước xử lý, đến nơi sử dụng cuối cùng. 
 	
-	
-# ⚙️ Có mấy loại rotation?
+	## 🧠 Tưởng tượng: 
+		CSV file -> Load vào DB -> ETL -> Clean -> Join -> Model AI -> Dashboard
  
-Có 4 loại cơ bản:		
+	## Bạn cần biết:
+		Dữ liệu từ đâu ra?
+		Ai/chức năng nào đã xử lý nó?
+		Nó được biến đổi thế nào?
+		Đầu ra hiện tại có thể tin được không? 
+
+# 🔎 Tại sao cần Data Lineage? 
 	
-| Loại rotation            | Dùng khi                          | Hướng xử lý     |
-| ------------------------ | --------------------------------- | --------------- |
-| Left Rotation            | Cây nghiêng về phải (right-heavy) | Xoay trái       |
-| Right Rotation           | Cây nghiêng về trái (left-heavy)  | Xoay phải       |
-| Left-Right Rotation (LR) | Con trái nghiêng phải             | Right-then-left |
-| Right-Left Rotation (RL) | Con phải nghiêng trái             | Left-then-right |
+Lý do									 | Mô tả
+✅ Debug dữ liệu			 		| Nếu output sai → trace ngược lại để biết chỗ hỏng
+✅ Audit tuân thủ 			 		| Phải chứng minh "dữ liệu bệnh nhân đến từ đâu", "ai chỉnh sửa", v.v.
+✅ Data Quality				 		| Phát hiện pipeline lỗi / thiếu bước
+✅ Phát hiện tác động		 		| Nếu schema DB thay đổi → biết ảnh hưởng đến đâu
+✅ Giải thích AI		     		| Explainable AI → biết model học từ dữ liệu nào
 
 
 
-# 🎯 Mục tiêu: Giữ chiều cao cây ở mức gần log(n)
-
-Nếu cây quá lệch một phía, thao tác tìm kiếm sẽ thành O(n). Rotation giúp đưa về log(n) bằng cách phân bố lại node theo chiều sâu đều hơn.
-
-
-# 🔄 LEFT ROTATION – Minh họa đơn giản
-
-    A
-     \
-      B
-       \
-        C
-
-	Gọi leftRotate(A)
-	      B
-         / \
-        A   C
-
-	📌 Gốc chuyển từ A → B 
-	
-Node leftRotate(Node A) {
-    Node B = A.right;
-    A.right = B.left;
-    B.left = A;
-    return B;
-}
-	
-
-# 🔄 RIGHT ROTATION – Đối xứng
-		   C
-		 /
-		B
-	   /
-	  A
-	
-
-
-	Gọi rightRotate(C)
-	
-      B
-     / \
-    A   C
-
-
-Node rightRotate(Node C) {
-    Node B = C.left;
-    C.left = B.right;
-    B.right = C;
-    return B;
-}
 
 
 
-# 🔁 COMPOSITE: Left-Right Rotation (LR)
+# 🛠️ Cách xây dựng hệ thống có Data Lineage? 
 
-	Xảy ra khi cây lệch trái nhưng node con lại lệch phải. Cần 2 bước:
-	
-		leftRotate(con trái)
-		rightRotate(chính nó)
-
-			30
-		    /
-		    10
-			\
-			20
-
-
-		Sau LR Rotation:
-		
-				 20
-				/  \
-			   10   30
-		
-
-# 🔁 Right-Left Rotation (RL)
-
-	Tương tự nhưng ngược chiều.
-	
-
-
-# 📐 Khi nào dùng?
-
-| Cấu trúc           | Mục tiêu rotation                                  |
-| ------------------ | -------------------------------------------------- |
-| **AVL Tree**       | Giữ `balance factor ∈ {-1, 0, +1}`                 |
-| **Red-Black Tree** | Sau khi chèn hoặc xóa, restore lại “color + shape” |
-| **Splay Tree**     | Xoay để đưa node về root (Zig/Zig-Zag/Zig-Zig)     |
-| **Treap**          | Dựa vào priority, nếu vi phạm heap → xoay          |
-| **Scapegoat Tree** | Không dùng rotation, dùng rebuild toàn subtree     |
-
-
-# 🧠 Góc nhìn kiến trúc hệ thống 
-
-Rotation là công cụ cho:
-
-	Cây tự cân bằng (self-balancing tree) → đảm bảo hiệu năng O(log n)
-	Hệ thống lưu trữ key-value nội bộ như Java TreeMap, ConcurrentSkipListMap, LevelDB
-	Tối ưu độ sâu hệ thống (index, prefix tree,...)
-
-# ✅ Tổng kết cốt lõi:
-| Đặc điểm                | Ý nghĩa                           |
-| ----------------------- | --------------------------------- |
-| Không thay đổi in-order | Tính chất BST giữ nguyên          |
-| Là phép local           | Chỉ ảnh hưởng 1–3 node, rất nhanh |
-| Có thể lồng nhau        | Zig-Zag = hai rotation            |
-| Dùng trong cân bằng     | AVL, RBT, Treap, Splay...         |
-	
-
+	##  1. Metadata Collection (track từ đầu đến cuối) 
 			
+		Mỗi lần load data → log lại:
+			- Nguồn gốc (source file, API)
+			- Thời gian
+			- Job ID
+			- Schema version
+
+		ETL / DAG tool phải có tracking step
+
+
+
+
+
+
+	## 2. Tool hỗ trợ Data Lineage 
+		
+
+		Tool 								| Mô tả
+		OpenLineage 					 | Open standard cho lineage tracking
+		Apache Atlas					 | Dùng nhiều trong Hadoop ecosystem
+		Amundsen						 | Metadata search engine từ Lyft
+		DataHub							 | Từ LinkedIn, hỗ trợ Lineage, Schema registry
+		dbt								 | Nếu dùng dbt (SQL transformation), có builtin lineage
+		Airflow + OpenLineage plugin 	 | Track dữ liệu xuyên DAG
+
+
+
+#📉 Ví dụ trực quan: 
+
+			📁 orders.csv
+				↓
+			[ETL Job #1]
+				↓
+			🧮 Cleaned Orders Table
+				↓
+			[ETL Job #2]
+				↓
+			📊 Monthly Revenue Dashboard
+			
+		→ Data Lineage graph sẽ vẽ được cây dependency như vậy
+
+
+
+
 </pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

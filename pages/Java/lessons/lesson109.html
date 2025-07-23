@@ -1,126 +1,106 @@
-<html><head><title>Lesson 109 == Lazy Propagation ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 109 -- Lazy Propagation -//</h1><pre>
-# Khái niệm 
-
-Lazy Propagation là một kỹ thuật tối ưu hóa cho các cấu trúc dữ liệu phân đoạn (như Segment Tree, Interval Tree…), giúp trì hoãn (delay) cập nhật đến khi thật sự cần thiết
-	💡 Thay vì cập nhật ngay tất cả các node bị ảnh hưởng bởi một thao tác, ta đánh dấu rằng nó sẽ cần cập nhật sau — và chỉ thực hiện khi phải truy vấn chính xác vào vùng đó.
-	
-	
-	
-# 🔥 2. Tại sao phải dùng Lazy Propagation? 
-
-	Bài toán ví dụ: Cập nhật cộng thêm 5 vào đoạn [l, r] và sau đó query tổng đoạn [a, b].
-	Nếu dùng Segment Tree thường, bạn phải cập nhật O(log n) node và các node con bên dưới nữa → tốn công dù chưa chắc cần dùng đến. 
-	Với Lazy Propagation, bạn đánh dấu node nào “nợ” cập nhật, và chỉ xử lý thật sự khi buộc phải đi sâu xuống truy vấn.
-	✅ Giảm độ phức tạp từ O(n) về O(log n) trong các trường hợp update đoạn lớn mà query nhỏ.
-	
-	
-	
-# 🧠 3. Áp dụng ở đâu?
-
-	Memory-efficient real-time systems.
-	Analytics engine ghi log theo thời gian (query nhanh, update chậm).
-	Hệ thống có cập nhật hàng loạt (batch update) và truy vấn cục bộ.
-	Distributed computing (chậm propagation giữa node vì tối ưu traffic).
+<html><head><title>Lesson 109 == Splay Tree ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 109 -- Splay Tree -//</h1><pre># Khái niệm  
+	Splay Tree là một dạng cây nhị phân tìm kiếm tự điều chỉnh (self-adjusting binary search tree)
+	-> khi bạn truy cập (search, insert, delete) một node, cây sẽ splay (đưa node đó lên gốc) qua một chuỗi rotation thông minh  
 
 
-# ⚙️ 4. Nguyên lý hoạt động 
-	
-	Khi cập nhật một khoảng [l, r]:
-	Nếu node hiện tại nằm hoàn toàn trong [l, r] → cập nhật node hiện tại và đánh dấu các con là "dirty" (nợ cập nhật).
-	Nếu chỉ giao một phần → Đẩy lazy update từ cha xuống con (propagate) trước khi tiếp tục.
-	Nếu nằm ngoài đoạn → bỏ qua.
+#🎯 2. Mục đích của Splay Tree
+	Tối ưu truy cập theo thói quen người dùng:
+	Nếu bạn truy cập một node thường xuyên, nó sẽ dần được đưa lên gốc → lần sau tìm cực nhanh (O(1)).
+	Không cần lưu thêm thông tin phụ (chiều cao, màu,...) như AVL hay Red-Black.
+	Thời gian truy cập trung bình (amortized) là O(log n) dù một số thao tác có thể tệ nhất là O(n).
 
+#⚙️ 3. Các thao tác chính
+	Thao tác	Đặc biệt gì?
+	Search		Sau khi tìm, node đó được "splay" lên root
+	Insert		Sau khi chèn, node mới cũng được đưa lên root
+	Delete		Xoá xong, cây được sắp lại qua splay để root là node gần nhất
 
-# 📐 5. Cấu trúc Segment Tree với Lazy Propagation 
+#🔁 4. Thuật toán Splay: Làm thế nào để đưa 1 node lên root?
+		Dùng các rotation kết hợp dựa vào vị trí của node với cha và ông nội (nếu có):
+		
+		##A. Zig (nằm gần gốc)
+				10
+				/
+				5    ← muốn đưa lên
+			→ Right Rotation → 5 lên root.
+		
+		
+		## B. Zig-Zig (node và cha đều trái hoặc đều phải)
+				
+					30
+					/
+					20
+					/
+				   10   ← target
+				→ Rotate 30 → 20 → 10
+				
+				Giống như:
+					Right rotate tại 30
+					Right rotate tại 20
+				
+		C. Zig-Zag (node trái - cha phải hoặc ngược lại)
 
-class SegmentTree {
-    int[] tree;
-    int[] lazy;
-    int n;
+					30
+					/
+				10
+					\
+					20 ← target
+				→ Zig-zag:
+		
+			Left rotate tại 10
+			Right rotate tại 30
+			→ 20 lên root
+		
+		
+#📚 5. Ví dụ minh họa
+		Giả sử bạn có cây:
+		
+			50
+			/  	\
+			30    70
+			/
+			10
+		Bạn search(10)
+		→ Zig-Zig case
+		→ Kết quả:
 
-    public SegmentTree(int size) {
-        n = size;
-        tree = new int[4 * n];
-        lazy = new int[4 * n];
-    }
+				10
+				\
+				30
+				\
+				50
+					\
+					70
+#📌 6. So sánh với Red-Black / AVL Tree
 
-    void updateRange(int l, int r, int val) {
-        update(1, 0, n - 1, l, r, val);
-    }
-
-    int queryRange(int l, int r) {
-        return query(1, 0, n - 1, l, r);
-    }
-
-    private void propagate(int node, int start, int end) {
-        if (lazy[node] != 0) {
-            tree[node] += (end - start + 1) * lazy[node]; // Cập nhật giá trị
-            if (start != end) {
-                lazy[node * 2] += lazy[node];     // Gán lazy cho con trái
-                lazy[node * 2 + 1] += lazy[node]; // Gán lazy cho con phải
-            }
-            lazy[node] = 0; // Clear lazy
-        }
-    }
-
-    private void update(int node, int start, int end, int l, int r, int val) {
-        propagate(node, start, end);
-        if (r < start || end < l) return;
-
-        if (l <= start && end <= r) {
-            lazy[node] += val;
-            propagate(node, start, end);
-            return;
-        }
-
-        int mid = (start + end) / 2;
-        update(node * 2, start, mid, l, r, val);
-        update(node * 2 + 1, mid + 1, end, l, r, val);
-        tree[node] = tree[node * 2] + tree[node * 2 + 1];
-    }
-
-    private int query(int node, int start, int end, int l, int r) {
-        propagate(node, start, end);
-        if (r < start || end < l) return 0;
-
-        if (l <= start && end <= r) return tree[node];
-
-        int mid = (start + end) / 2;
-        return query(node * 2, start, mid, l, r) +
-               query(node * 2 + 1, mid + 1, end, l, r);
-    }
-}
-
-
-# 📊 6. Phân tích thời gian
-| Operation     | With Lazy Propagation |
-| ------------- | --------------------- |
-| `updateRange` | O(log n)              |
-| `queryRange`  | O(log n)              |
-| `build tree`  | O(n)                  |
+|                    | Splay Tree        | Red-Black Tree | AVL Tree       |
+| ------------------ | ----------------- | -------------- | -------------- |
+| Cân bằng tuyệt đối | ❌ Không           | ✅ Gần cân bằng | ✅ Rất cân bằng |
+| Truy cập gần đây   | ✅ Cực nhanh       | ❌ Bình thường  | ❌ Bình thường  |
+| Tệ nhất            | O(n)              | O(log n)       | O(log n)       |
+| Dễ code hơn        | ✅                 | ❌ Phức tạp     | ❌ Khó nhất     |
+| Phù hợp            | Cache, UI, Router | DB index       | Realtime, DB   |
 
 
 
-# 🧩 7. Mở rộng & kết hợp thực tế 
+# 🛠️ 7. Ứng dụng thực tế
+	Memory cache: đưa phần tử được truy cập thường xuyên lên đầu.
+	Command history: đưa thao tác lặp lại gần đây lên đầu danh sách.
+	Data router hoặc network switch: ưu tiên node được truy cập thường xuyên.
+	Tối ưu UI menu, autocomplete: chữ được gõ nhiều sẽ được đưa lên gợi ý đầu.
 
+⚠#️ 8. Lưu ý khi dùng trong dự án thực
+	Không dùng nếu cần đảm bảo thời gian worst-case (ví dụ: DB, tài chính).
+	Rất phù hợp khi phân phối truy cập không đều (nhiều truy cập vào 1 node).
+	Cây có thể bị lệch → cần kiểm soát hoặc reset nếu cần.
+	Dễ dàng implement vì không cần giữ thêm thuộc tính phụ (như height, color).
 
-| Mô hình ứng dụng        | Lazy Propagation biến thể                                        |
-| ----------------------- | ---------------------------------------------------------------- |
-| Game map update         | Cập nhật sức mạnh vùng AOE nhưng chỉ khi quái vào vùng đó        |
-| Event sourcing          | Cập nhật trạng thái theo batch, chỉ xử lý khi user truy cập      |
-| Inverted Index (search) | Update từ khóa theo nhóm document, query thì mới ghi ngược xuống |
-| Distributed simulation  | Trì hoãn đồng bộ trạng thái giữa các node                        |
-
-
-# 🧠 8. Kiến thức nền tảng cần học để hiểu & tối ưu Lazy Propagation
-
-| Chủ đề                       | Lý do                                                      |
-| ---------------------------- | ---------------------------------------------------------- |
-| Segment Tree / Interval Tree | Cấu trúc nền tảng                                          |
-| Recursion nâng cao           | Gọi hàm đệ quy không stack overflow                        |
-| Java memory model            | Đảm bảo consistency nếu dùng trong multi-thread env        |
-| Persistent data structures   | Lazy Propagation kết hợp với snapshot để rollback          |
-| Concurrency (advanced)       | Nếu tree là shared resource trong multi-thread environment |
+🚀 9. Kiến thức cần học thêm để dùng Splay Tree thành thạo
+	Biết chắc về: Binary Search Tree (BST), rotation trái/phải
+	Biết amortized time (phân tích thời gian trung bình)
+	Biết ứng dụng trong locality-sensitive systems (cache, history)
+	Nắm rõ Zig, Zig-Zig, Zig-Zag
+	Hiểu cách debug cây qua hình vẽ hoặc Tree printer
 
 
 

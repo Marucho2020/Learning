@@ -1,203 +1,168 @@
-<html><head><title>Lesson 46 == Marshalling & Unmarshalling ============================= (marshal : sắp xếp thành hàng ) ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 46 -- Marshalling & Unmarshalling ----------= (marshal : sắp xếp thành hàng ) -//</h1><pre>
-# Khái niệm  	
-	Marshalling và Unmarshalling là hai quá trình quan trọng trong Java RMI, giúp truyền đối tượng từ Client đến server và ngược lại 
-		Marshalling : Chuyển đổi Object thành byte-stream để gửi qua mạng. 
-		Unmarshalling : Chuyển đổi byte-stream thành Object trên máy nhận . 
+<html><head><title>Lesson 46 == Iterator và Iteration ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 46 -- Iterator và Iteration -//</h1><pre>
+
+# Khái niệm  
+
+	## Iteration (Duyệt qua phần tử)
+		Là quá trình lặp qua các phần tử của một tập hợp Collection như List, Set, Map 
 		
-# 📌 Các Java RMI sử dụng Marshalling và Unmarshalling  
-	
-	## Java RMI sử dụng Stub (Client Proxy) & Skeleton (Server Proxy) để thực hiện Marshalling & Unmarshalling: 
-		Stub (Client Proxy): Đóng vai trò như một proxy trên Client, giúp gửi dữ liệu đến Server.
+	## Iterator (Design Pattern)	
+		Là một thiết kế mẫu (Design Pattern) giúp duyệt các phần tử trong một Collection mà không cần biết chi tiết cấu trúc chi tiết bên trong  
 		
-		Skeleton (Server Proxy): Trên Server, nhận dữ liệu, giải mã và gọi phương thức thực tế. (Java 5 trở đi không còn Skeleton, thay vào đó dùng RemoteObject trực tiếp).
+	-> Java cung cấp Iterator như một Interface trong java.util, giúp duyệt phần tử của Collection một cách an toàn và có thể loại bỏ phần tử khi đang duyệt 
 	
 	
-	## Các thành phần quan trọng 
-		Thành phần									Vai trò
-		ObjectOutputStream					Marshalling (Chuyển Object thành byte-stream).
-		ObjectInputStream					Unmarshalling (Giải byte-stream thành Object).
-		Remote Interface					Định nghĩa API từ xa.
-		Stub								Proxy giúp gửi yêu cầu từ Client đến Server.
-		Skeleton (trước Java 5)				Nhận yêu cầu trên Server.
-		RMIRegistry							Đăng ký và tìm kiếm Object từ xa.
-	
-# 	📌 Ví dụ cơ bản : Marshalling & Unmarshalling trong Java RMI 
-
-	## Bước 1 : Tạo Remote Interface
+	## Các bài toán thường hay sử dụng Iterator 
+		Thường được sử dụng trong các bài toán thao tác với tập hợp dữ liệu lớn, yêu cầu truy cập tuần tự, và có thể cần xóa hoặc sửa dữ liệu khi duyệt. Dưới đây là những bài toán phổ biến thường sử dụng Iterator trong java 
 		
-		import java.rmi.Remote;
-		import java.rmi.RemoteException;
-		
-		// Remote Interface
-		public interface AIService extends Remote {
-			String analyzeText(String text) throws RemoteException;
-		}
-
-		### 📌 Giải thích:
-			✅ extends Remote → Đánh dấu Interface là một dịch vụ từ xa.
-			✅ throws RemoteException → Bắt buộc để xử lý lỗi mạng.
-
-
-
-	
-	
-	## Bước 2: Implement Remote Object (Server)
-	
-			import java.rmi.server.UnicastRemoteObject;
-			import java.rmi.RemoteException;
+			- Xóa phần tử thỏa mãn điều kiện (Remove Elements While Iterating)
+				
+			- Duyệt danh sách liên kết (LinkedList Traversal)
 			
-			public class AIServiceImpl extends UnicastRemoteObject implements AIService {
-				protected AIServiceImpl() throws RemoteException {
-					super();
-				}
-			
-				@Override
-				public String analyzeText(String text) {
-					return "AI Analysis Result for: " + text.toUpperCase();
+			- Duyệt Map (Key-Value Traversal)
+			....
+	Bài toán						Loại Iterator nên dùng								Điểm nổi bật
+	Xóa phần tử khi duyệt			Iterator									Tránh ConcurrentModificationException
+	Duyệt LinkedList				Iterator									Hiệu suất cao hơn for loop
+	Duyệt Map						Iterator<Map.Entry<K,V>>					Truy cập key-value dễ dàng
+	Duyệt ngược List				ListIterator								Hỗ trợ duyệt 2 chiều
+	Custom Iterable					Iterable<T>									Hỗ trợ for-each cho class tùy chỉnh
+	Duyệt song song					Spliterator									Tối ưu hiệu suất
+	Tách từ trong chuỗi				StringTokenizer								Nhanh hơn split()
+	
+	
+# Sử dụng Iterator trong Java 
+		
+		### Ví dụ sử dụng Iterator cơ bản  
+		import java.util.*;
+		public class IteratorExample {
+			public static void main(String[] args) {
+				List<String> list = new ArrayList<>(Arrays.asList("A", "B", "C", "D"));
+		
+				Iterator<String> iterator = list.iterator(); // Lấy Iterator từ list
+		
+				while (iterator.hasNext()) { // Kiểm tra còn phần tử không
+					String item = iterator.next(); // Lấy phần tử tiếp theo
+					System.out.println(item);
 				}
 			}
-	
+		}
 		
-	
-			### 📌 Marshalling & Unmarshalling xảy ra ở đây:
-			✅ Khi Client gọi analyzeText(), dữ liệu được marshal thành byte-stream.
-			✅ Trên Server, dữ liệu unmarshal về Object, xử lý xong trả kết quả về.	
+		remove() có thể xóa phần tử khỏi Collection trong khi duyệt.
 	
 	
-	
-	
-	## Bước 3 : Đăng ký Object với RMI Registry 
-	
-				import java.rmi.registry.LocateRegistry;
-				import java.rmi.registry.Registry;
-				
-				public class Server {
-					public static void main(String[] args) {
-						try {
-							AIService service = new AIServiceImpl();
-							Registry registry = LocateRegistry.createRegistry(1099);
-							registry.rebind("AIService", service);
-				
-							System.out.println("Server is running...");
-						} catch (Exception e) {
-							e.printStackTrace();
+
+	## Xóa phần tử trong khi duyệt (Iterator với for-each)
+		Thông thường khi duyệt qua danh sách phần tử mà thêm xóa phần tử sẽ gây ra lỗi vì đang duyệt mà -> ConcurrentModificationException 
+		
+		### Ví dụ gây ra lỗi ConcurrentModificationException 
+			import java.util.*;
+			public class IteratorRemoveExample {
+				public static void main(String[] args) {
+					List<String> list = new ArrayList<>(Arrays.asList("A", "B", "C", "D"));
+			
+					for (String item : list) { // Sử dụng for-each
+						if (item.equals("B")) {
+							list.remove(item); // Gây ConcurrentModificationException
 						}
 					}
 				}
+			}
 
-		### 📌 Giải thích:
-			✅ LocateRegistry.createRegistry(1099) → Mở cổng để Client kết nối.
-			✅ registry.rebind("AIService", service) → Đăng ký dịch vụ AIService.
-
-
-	
-	
-	## Bước 4: Gọi Remote Object từ Client 
-		import java.rmi.registry.LocateRegistry;
-		import java.rmi.registry.Registry;
 		
-		public class Client {
+		-> Lý do lỗi xảy ra: for-each sử dụng Iterator ngầm, nhưng remove() từ Collection trực tiếp làm thay đổi cấu trúc list, gây ra ConcurrentModificationException 
+		
+		--> Ta sử dụng Iterator.remove() sẽ giải quyết được lỗi này 
+		
+		## Ví dụ sử dụng Iterator.remove() an toàn vì nó cập nhật trạng thái bên trong của Iterator 
+			Iterator<String> iterator = list.iterator();
+			while (iterator.hasNext()) {
+				if (iterator.next().equals("B")) {
+					iterator.remove(); // Xóa phần tử an toàn
+				}
+			}
+
+	
+	
+# ListIterator - Iterator nâng cao 
+	## Nếu bạn cần duyệt theo cả 2 chiều(forward & backward) trong List hãy dùng ListIterator : 
+		
+		import java.util.*;
+		public class ListIteratorExample {
 			public static void main(String[] args) {
-				try {
-					Registry registry = LocateRegistry.getRegistry("localhost", 1099);
-					AIService service = (AIService) registry.lookup("AIService");
+				List<String> list = new ArrayList<>(Arrays.asList("A", "B", "C", "D"));
+				ListIterator<String> listIterator = list.listIterator();
 		
-					String result = service.analyzeText("hello world");
-					System.out.println("Server Response: " + result);
-				} catch (Exception e) {
-					e.printStackTrace();
+				// Duyệt xuôi
+				while (listIterator.hasNext()) {
+					System.out.print(listIterator.next() + " "); // Output: A B C D
+				}
+		
+				System.out.println();
+		
+				// Duyệt ngược
+				while (listIterator.hasPrevious()) {
+					System.out.print(listIterator.previous() + " "); // Output: D C B A
 				}
 			}
 		}
 
-		### 📌 Marshalling & Unmarshalling trong Client:
-			✅ Client gửi analyzeText("hello world") → Marshalling thành byte-stream.
-			✅ Server nhận byte-stream, Unmarshalling → Chuyển thành Object và xử lý.
-			✅ Kết quả được gửi về Client qua quá trình Marshalling/Unmarshalling ngược lại.
-	
-	
-	
-	
-	
-# 	📌 Ví dụ Nâng Cao: Truyền Object Qua RMI (Custom Object) 
-
-		Ngoài kiểu dữ liệu cơ bản, ta có thể gửi Object tự định nghĩa qua RMI.
-		!!! Bất kỳ trường hợp nào cũng thế, khi xử lý chuyển object thành stream thì phải implement Serializable 
+	## ListIterator có thể : 
+		- Duyệt xuôi(next()) và ngược(previois)
+		- Thêm phần tử (add())
+		- Sửa phần tử(set())
+		- Xóa phần tử(remove()) an toàn  
 		
+# Iterabale Interface - tùy chỉnh Iterator 
+	
+	Nếu bạn muốn một class có thể sử dụng trong for-each, hãy triển khai Iterable<T>
+	-> Tức là ta biến một Class thành một dạng Danh sách để duyệt được ấy 
+	Iterable giúp class có thể dùng for-each loop mà không cần gọi iterator() thủ công 
 		
-	
-		## Bước 1: Định nghĩa Object truyền qua mạng 
+		### Ví dụ  
+		import java.util.*;
+		class CustomCollection implements Iterable<String> {
+			private List<String> data = Arrays.asList("X", "Y", "Z");
 		
-				import java.io.Serializable;
-			
-				public class AIModel implements Serializable {
-					private static final long serialVersionUID = 1L;
-					private String name;
-					private double accuracy;
-				
-					public AIModel(String name, double accuracy) {
-						this.name = name;
-						this.accuracy = accuracy;
-					}
-				
-					@Override
-					public String toString() {
-						return "AIModel{name='" + name + "', accuracy=" + accuracy + "}";
-					}
-				}
-					
-	
-	
-			## 📌 Lưu ý:
-				✅ implements Serializable → Bắt buộc để Marshalling/Unmarshalling Object.
-				✅ serialVersionUID → Đảm bảo tương thích giữa các phiên bản class.
-	
-	
-	
-		## Bước 2: Truyền Object qua RMI 
-			
-		📌Cập nhật Remote Interface
-	
-			public interface AIService extends Remote {
-				AIModel getModelInfo() throws RemoteException;
+			@Override
+			public Iterator<String> iterator() {
+				return data.iterator(); // Trả về Iterator của List
 			}
-
-	
-		📌Cập nhật Server 
+		}
 		
-			public class AIServiceImpl extends UnicastRemoteObject implements AIService {
-				protected AIServiceImpl() throws RemoteException {
-					super();
-				}
-			
-				@Override
-				public AIModel getModelInfo() {
-					return new AIModel("GPT-4", 99.5);
+		public class IterableExample {
+			public static void main(String[] args) {
+				CustomCollection collection = new CustomCollection();
+		
+				for (String item : collection) { // for-each có thể dùng vì đã implement Iterable
+					System.out.println(item);
 				}
 			}
+		}
 
+# Spliterator - Iterator tối ưu cho Stream  
+	Java 8 giới thiệu Spliterator<T> như một cách mạnh mẽ hơn để duyệt dữ liệu song song  
+	Spliterator hỗ trợ duyệt song song (parallel processing ) giúp tôi ưu hiệu suất khi xử lý dữ liệu lớn  
 	
 	
-		📌 Client Nhận Object 
-			public class Client {
-				public static void main(String[] args) {
-					try {
-						Registry registry = LocateRegistry.getRegistry("localhost", 1099);
-						AIService service = (AIService) registry.lookup("AIService");
-			
-						AIModel model = service.getModelInfo();
-						System.out.println("Received Model: " + model);
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-				}
+		import java.util.*;
+		public class SpliteratorExample {
+			public static void main(String[] args) {
+				List<String> list = Arrays.asList("A", "B", "C", "D");
+		
+				Spliterator<String> spliterator = list.spliterator();
+				spliterator.forEachRemaining(System.out::println);
 			}
+		}
 
-		
-		
-		###📌 Quá trình Marshalling & Unmarshalling:
-			✅ Object AIModel được serialize (Marshalling) trên Server.
-			✅ Client nhận dữ liệu, Unmarshalling thành Object AIModel.
-				
+# So sánh cách duyệt Collection  	
 	
+Cách			Duyệt					Có thể xóa?							Hỗ trợ duyệt ngược?				Hỗ trợ song song?
+for-each		Dễ dùng					❌ Không							❌ Không							❌ Không
+Iterator		Cơ bản					✅ Có (remove())					❌ Không							❌ Không
+ListIterator	Nâng cao				✅ Có (remove(), set(), add())		✅ Có								❌ Không
+Spliterator		Hiệu suất cao			❌ Không							❌ Không							✅ Có
+
+
+
+
 </pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

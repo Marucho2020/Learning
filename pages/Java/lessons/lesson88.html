@@ -1,83 +1,55 @@
-<html><head><title>Lesson 88 == Audit Trail ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 88 -- Audit Trail -//</h1><pre>
+<html><head><title>Lesson 88 == Canary Deployment ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 88 -- Canary Deployment -//</h1><pre>
 # Khái niệm 
-	Audit Trail = Nhật ký hành động chi tiết: ai đã làm gì, khi nào, vào đâu.
-	Khác với lineage (theo dõi dữ liệu), audit trail theo dõi hành vi người dùng hoặc hệ thống.
+	Canary Deployment là một chiến lược triển khai phần mềm trong môi trường sản xuất, giúp giảm thiểu rủi ro khi cập nhật phần mềm bằng cách phát hành các phiên bản mới một cách từ từ. Cách thức này mô phỏng theo việc thả "chim hoàng yến" (canary) vào mỏ hầm để xem xét các yếu tố nguy hiểm (ví dụ: khí độc), và nếu có vấn đề gì, chỉ một phần người dùng sẽ bị ảnh hưởng, thay vì toàn bộ hệ thống. 
 	
-	## Ví dụ: 
-			Thời gian		 	| Người dùng			 | Hành động
-			2025-04-10 12:00 	| admin 				| Đăng nhập
-			2025-04-10 12:05 	| admin 				| Cập nhật config API
-			2025-04-10 12:07 	| system 				| Trigger deploy
-
-
-
-# 📌 Mục tiêu của Audit Trail 
 	
-		Mục tiêu 							| Giải thích
-		✅ Bảo mật					  	 | Nếu hệ thống bị tấn công → cần biết ai làm gì
-		✅ Tuân thủ 				  	 | Nhiều ngành yêu cầu lưu log hành động (GDPR, HIPAA)
-		✅ Khắc phục sự cố 				 | Biết người dùng nào xóa nhầm, v.v.
-		✅ Accountability				 | Không ai có thể nói "tôi không biết"
 
-
-
-# 🧰 Công cụ triển khai Audit Trail 
-
-		## Trong application: 
+# Quy trình Canary Deployment: 
+	
+	## 1.Chia nhỏ lượng người dùng:  
+		Bạn triển khai phiên bản mới của hệ thống cho một nhóm người dùng nhỏ đầu tiên, thay vì phát hành cho tất cả người dùng. Thường nhóm này chiếm khoảng 1-5% tổng số người dùng. 
 		
-			Log mọi hành động quan trọng (create/update/delete) 
+	## 2. Giám sát hiệu suất và sự cố:
+		Sau khi triển khai, bạn theo dõi các chỉ số hệ thống như độ ổn định, hiệu suất và các lỗi xảy ra. Nếu không có vấn đề gì nghiêm trọng, bạn tiếp tục triển khai cho các nhóm người dùng lớn hơn. 
+		
+		
+	## 3. Mở rộng dần: 
+		Sau khi đảm bảo hệ thống hoạt động ổn định với nhóm nhỏ, bạn tiếp tục mở rộng việc triển khai cho nhóm người dùng lớn hơn cho đến khi toàn bộ người dùng được cập nhật. 
+		
+	## 4. Rollback nếu có lỗi:  
+			Nếu phát hiện lỗi nghiêm trọng trong quá trình triển khai, bạn có thể nhanh chóng rollback (quay lại phiên bản cũ) mà không ảnh hưởng đến toàn bộ hệ thống.
 			
-			Ghi log thành structured logs (JSON)
 			
-					{
-					"timestamp": "2025-04-10T12:05:00Z",
-					"user": "admin",
-					"action": "update_api_config",
-					"resource": "/api/config",
-					"ip": "192.168.1.10"
-					}
-		
-		
-		
-		## Trong kubernetes/system level:
-		
-				Dùng Falco để audit hành vi pod/container
-				Dùng OPA Gatekeeper để enforce policy
-				Dùng audit webhook trong K8s để ghi log
-
-		
-
-
-
-
-
-		## Trong cloud: 
-			Cloud 			| Tool
-			AWS 			| CloudTrail
-			GCP 			| Cloud Audit Logs
-			Azure 			| Monitor Logs
-
-
-
-# 💥 Senior-Level Best Practices 
+# Ứng dụng trong phát triển phần mềm: 
 	
+	Canary Deployment là một phương pháp phổ biến trong môi trường microservices, nơi bạn có thể thử nghiệm một dịch vụ mới mà không ảnh hưởng đến toàn bộ hệ thống. 
+	
+	Trong CI/CD (Continuous Integration / Continuous Deployment), Canary Deployment giúp giảm thiểu nguy cơ của các thay đổi không mong muốn, nhờ vào việc triển khai dần dần.
+	
+	Các công cụ như Kubernetes và Docker Swarm hỗ trợ việc triển khai Canary rất tốt thông qua các cấu hình tự động và cân bằng tải.
+	
+	
+# Lợi ích: 
 
-Thực hành tốt															| Mục tiêu
-✅ Mọi dữ liệu nhạy cảm đều có Lineage 							 		| Để trace nếu lỗi phát sinh
-✅ Mọi API quan trọng có Audit log										| Để phát hiện abuse, debugging
-✅ Tách biệt log Audit và App log 										| Audit cần lưu dài hạn, bảo mật
-✅ Không chỉ log user, mà còn log hệ thống (cron, scheduler, agent)   	| Để tránh blame nhầm
-✅ Encrypt & phân quyền access log 									  	| Tránh dev đọc log chứa token
+	## Giảm thiểu rủi ro:
+		Chỉ một phần nhỏ người dùng bị ảnh hưởng khi có lỗi xảy ra.
+		
+	## Tiết kiệm thời gian:  
+		 Nếu có lỗi, việc rollback hoặc sửa lỗi sẽ nhanh chóng hơn vì chỉ có một phần nhỏ của hệ thống bị ảnh hưởng.
+ 
+	## Tăng độ ổn định: 
+		 Bạn có thể kiểm tra phiên bản mới trong môi trường thực tế trước khi phát hành cho tất cả người dùng.
+		 
+		 
 
-
-
-# 🧠 Kết luận 
-
-So sánh 				| Data Lineage 								| Audit Trail
-Ghi gì? 				| Dòng chảy dữ liệu 						| Hành vi người dùng / hệ thống
-Mục tiêu 				| Debug pipeline, data trust				| Tuân thủ, bảo mật, accountability
-Người đọc 				| Data engineer, AI/ML 						| Security, DevOps, Compliance
-Dữ liệu đầu vào 		| Job metadata, schema, pipeline config 	| HTTP logs, user actions, system logs
+# Nhược điểm và lưu ý: 
+	
+	
+	## Tăng độ phức tạp: 
+		Cần có hệ thống giám sát mạnh mẽ để theo dõi và xử lý các vấn đề trong quá trình triển khai. 
+		
+	## Đồng bộ hóa vấn đề: 
+		Cần đảm bảo rằng người dùng trong các nhóm khác nhau có trải nghiệm đồng nhất, tránh tình trạng một số người dùng gặp lỗi trong khi những người khác lại không.
 
 
 

@@ -1,147 +1,96 @@
-<html><head><title>Lesson 128 == cơ số (radix) ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 128 -- cơ số (radix) -//</h1><pre># Khái niệm 
-	là cách xử lý cơ số(radix) trong java
+<html><head><title>Lesson 128 == DAA &  Lambda expressions và closures ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 128 -- DAA &  Lambda expressions và closures -//</h1><pre>
+# khái niệm 
+	Trong Java, lambda và anonymous inner classes có thể captured biến từ scope bên ngoài — nhưng chỉ với điều kiện:
+	❗ Biến phải là "effectively final"
 
 
 
-# Java hỗ trợ ép string sang số truyền thêm radix để chỉ định đầu ra :
+# 📌 2. "Effectively Final" là gì?
+	Thuật ngữ này xuất hiện từ Java 8 (JLS §4.12.4). Một biến effectively final nếu:
+		Nó chỉ được gán đúng một lần
+		Không cần khai báo final, miễn compiler có thể chứng minh không có gán lại sau lần đầu.
 
-	Integer.parseInt(str, radix);
+	Java lambda là closure dạng capture-by-value (not reference).
+		Nghĩa là:
+			Biến được copy vào runtime object của lambda.
+			Nếu cho phép gán lại sau khi lambda tạo ra, tính toàn vẹn bị phá vỡ → dẫn đến bug không thể debug nổi.
+			
+
+
+		
+	## ✅ Ví dụ: 
+int x = 10; // effectively final
+Runnable r = () -> System.out.println(x); // OK
+
+
+	## ❌ Vi phạm: 
 	
-	Trong đó: radix ∈ [2, 36]
-
-	## Ví dụ 
-		Integer.parseInt("10", 0xf); // = Integer.parseInt("10", 15); 
-			→ Giải mã "10" trong hệ cơ số 15
-			→ 10 trong hệ 15 = 1 × 15¹ + 0 × 15⁰ = 15 (decimal)
-
-
-
-# 🔥 III. Tất cả các radix (cơ số) hợp lệ bạn có thể dùng hiện nay 
-
-| Radix | Tên gọi | Chữ số sử dụng |
-| ----- | ------- | -------------- |
-| 2     | binary  | 0, 1           |
-| 8     | octal   | 0–7            |
-| 10    | decimal | 0–9            |
-| 16    | hex     | 0–9, a–f       |
-| 36    | base36  | 0–9, a–z       |
-
-
-
-Ngoài 16 bạn có thể dùng các radix thú vị như:
-| Radix | Ví dụ                               | Ý nghĩa |
-| ----- | ----------------------------------- | ------- |
-| 3     | `"102"` → `1×3² + 0×3¹ + 2×3⁰ = 11` |         |
-| 12    | `"a1"` → `10×12 + 1 = 121`          |         |
-| 36    | `"z"` → `35`                        |         |
-
-
-
-# 🧪 IV. Một vài ví dụ thú vị 
-
-
-System.out.println(Integer.parseInt("1010", 2));  // 10
-System.out.println(Integer.parseInt("20", 8));    // 16
-System.out.println(Integer.parseInt("a", 16));    // 10
-System.out.println(Integer.parseInt("zz", 36));   // 1295
-System.out.println(Integer.parseInt("10", 15));   // 15
-System.out.println(Integer.parseInt("ba", 16));   // 186
-
-
-
-
-
-# ❗ V. Lưu ý khi dùng parseInt
-
-	1. Không vượt quá radix – "z" không hợp lệ ở radix 16
-		→ Integer.parseInt("z", 16) → NumberFormatException
-	
-	2. Radix phải từ 2 đến 36
-		→ nhỏ hơn 2 hoặc lớn hơn 36 sẽ ném IllegalArgumentException
-
-
-
-# ✅ VI. Tổng kết 
-
-| Ý                             | Giải thích                  |
-| ----------------------------- | --------------------------- |
-| `0xf`                         | Là literal số 15 ở dạng hex |
-| `"10"` trong radix 15         | Là số 15 thập phân          |
-| `Integer.parseInt("10", 0xf)` | = `15`                      |
-
-
-
-## 🔷 I. Số nguyên (Integer literals)
-
-
-
-| Loại                            | Cú pháp                    | Ghi chú                                     |
-| ------------------------------- | -------------------------- | ------------------------------------------- |
-| **Thập phân (Decimal)**         | `42`, `1000000`            | Mặc định là `int`                           |
-| **Thập lục phân (Hexadecimal)** | `0x1A`, `0XFF`             | Bắt đầu bằng `0x` hoặc `0X`                 |
-| **Bát phân (Octal)**            | `012`, `0777`              | Bắt đầu bằng `0` (không phải `0o`)          |
-| **Nhị phân (Binary)**           | `0b1010`, `0B1101`         | Bắt đầu bằng `0b` hoặc `0B` (từ Java 7+)    |
-| **Dấu phân cách `_`**           | `1_000_000`, `0b1010_0101` | Hợp lệ giữa các chữ số (Java 7+)            |
-| **Long literal**                | `123L`, `0xFFL`, `0b1011L` | `L` hoặc `l` (chữ thường không khuyến nghị) |
-
-
-## 🔷 II. Số thực (Floating-point literals) 
-	
-| Loại                            | Cú pháp              | Ghi chú                               |
-| ------------------------------- | -------------------- | ------------------------------------- |
-| **Thập phân**                   | `3.14`, `0.5`, `.25` | Mặc định là `double`                  |
-| **Ký hiệu khoa học (Exponent)** | `1.0e10`, `2E-3`     | Dùng `e` hoặc `E`                     |
-| **Float literal**               | `3.14f`, `2.5F`      | Kết thúc bằng `f` hoặc `F`            |
-| **Double literal**              | `1.2d`, `1.2D`       | Không bắt buộc `d`, nhưng có thể dùng |
-
-
-
-
-# 🔷 III. Ký tự (Character literal)
-
-| Loại             | Ví dụ                          | Ghi chú                      |
-| ---------------- | ------------------------------ | ---------------------------- |
-| **Ký tự đơn**    | `'A'`, `'9'`, `'#'`            | Dùng dấu nháy đơn `'`        |
-| **Ký tự escape** | `'\n'`, `'\t'`, `'\\'`, `'\''` | Escape sequences             |
-| **Unicode**      | `'\u0041'`                     | → `'A'`                      |
-| **Octal escape** | `'\141'`                       | (ít dùng, tương đương `'a'`) |
-
-
-
-## 🔹1. 0xf trong mã Java là một numeric literal 
-
-	int x = 0xf;
-		Java compiler ngay lập tức hiểu đây là một hexadecimal literal vì:
-			0x hoặc 0X prefix ⇒ hex literal ⇒ parse trực tiếp thành số int/long
-
-
-	✅ 0xf là cú pháp đặc biệt của compiler, không liên quan đến parseInt().
-
-
-
-
-## 🔹2. Integer.parseInt("0xf", radix) lại là xử lý runtime
-
-Integer.parseInt("0xf", 16); // ❌ Exception
-Integer.parseInt("f", 16);   // ✅ 15
-
-	parseInt() KHÔNG hiểu prefix "0x" → nó parse từng ký tự 0, x, f theo radix.
-	Integer.parseInt("0xf", 36); // ✅ = 15
+int x = 10;
+x = 20; // now it's not effectively final
+Runnable r = () -> System.out.println(x); // ❌ Compile-time error
 	
 
-Vì trong hệ cơ số 36, '0' = 0, 'x' = 33, 'f' = 15
-⇒ "0xf" = 0×36² + 33×36¹ + 15 = 0 + 1188 + 15 = 1203
+
+# 📘 3. LIÊN QUAN ĐẾN DAA 
+	## Tình huống: sử dụng biến local trong lambda 
+	Compiler sẽ áp dụng DAA để đảm bảo biến đó đã được khởi tạo rõ ràng, và không thay đổi sau khi capture.
+	
+void test(boolean flag) {
+    int x;
+    if (flag) x = 1;
+    Runnable r = () -> System.out.println(x); // ❌ compile-time error
+}
+
+Dù không trực tiếp gọi x trước khi gán, lambda có thể được thực thi sau → phải đảm bảo x được "definitely assigned" trước mọi use-case tiềm năng.
 
 
-Hệ 10 (Decimal): 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15
-Hệ 16 (Hex):     0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F 
+# ⚠️ 4. BẪY KHI KẾT HỢP DAA + CLOSURE
+
+❌ Gán lại biến sau khi capture
+int x = 5;
+Runnable r = () -> System.out.println(x);
+x = 10; // ❌ Compile error — x không còn effectively final
+➡️ Khi x bị gán lại, nó không còn "effectively final" nữa → lambda không được phép sử dụng nó.
 
 
-0x0 = 0
-0xA = 10
-0xE = 14 ← đây là cái bạn đang hỏi
-0xF = 15
-0x10 = 16 (chứ không phải mười, mà là mười sáu vì sang hàng mới rồi, giống như 10 trong hệ thập phân là sang hàng chục)
+
+List<Runnable> jobs = new ArrayList<>();
+for (int i = 0; i < 3; i++) {
+    jobs.add(() -> System.out.println(i)); // ❌ i không effectively final
+}
+
+➡️ Cách đúng:
+for (int i = 0; i < 3; i++) {
+    int j = i; // tạo biến trung gian "effectively final"
+    jobs.add(() -> System.out.println(j)); // ✅
+}
+
+
+# 3.  DAA + CLOSURE = LUỒNG PHÂN TÍCH ĐỘC LẬP
+	Khi compiler phân tích lambda:
+	Nó tạo một CFG riêng biệt cho lambda (như một hàm con),
+	Sau đó kiểm tra các biến từ outer-scope theo kiểu “đóng băng trạng thái”.
+
+
+Ví dụ nâng cao với array: 
+void foo() {
+    int[] arr = new int[]{1};
+    Runnable r = () -> arr[0] = 42; // ✅ OK – arr là effectively final, ta không gán lại arr
+}
+
+
+
+# 🧵 7. LIÊN QUAN ĐẾN THREAD, CONCURRENCY
+void startThread() {
+    int counter = 0;
+    new Thread(() -> {
+        System.out.println(counter); // ❌ compile error – counter không effectively final
+    }).start();
+}
+
+Giải pháp:
+	Dùng AtomicInteger nếu cần thay đổi
+	Dùng int[] hoặc wrapper class như Holder
 
 
 </pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

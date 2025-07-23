@@ -1,147 +1,113 @@
-<html><head><title>Lesson 119 == LongAccumulator ==============\ ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 119 -- LongAccumulator -----\ -//</h1><pre>
-# ✅ 1. Tóm tắt nhanh
-	LongAccumulator là phiên bản tổng quát hơn của LongAdder. 
-		LongAdder: chỉ hỗ trợ phép cộng (+)
-		LongAccumulator: cho phép bạn định nghĩa cách tích lũy tuỳ ý – max, min, product, bitwiseOr,...
+<html><head><title>Lesson 119 == Functional Red-Black Tree ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 119 -- Functional Red-Black Tree -//</h1><pre># Khái niệm 
+	Muốn phân tích Functional Red-Black Tree (FRBT) ở trình độ senior, ta phải hiểu nó là sự kết hợp giữa:
+	Red-Black Tree (RBT) — cây nhị phân cân bằng theo quy tắc màu sắc,
+	và Functional programming — dữ liệu bất biến (immutable), không sửa đổi trực tiếp cấu trúc gốc mà tạo ra bản sao mới theo nguyên tắc “persistent data structure”.
+
+# 1. Bản chất Functional Red-Black Tree là gì?
+	Functional Red-Black Tree là phiên bản bất biến (immutable) của Red-Black Tree truyền thống, được thiết kế theo phong cách functional để:
+
+		- Không thay đổi cây ban đầu (không dùng các thao tác mutate),
+		- Mỗi thao tác insert, delete trả về cây mới,
+		- Các phần không thay đổi được tái sử dụng (structural sharing),
+		- Hỗ trợ persistent data structure: giữ lại được mọi phiên bản lịch sử của cây.
+
+
+# 2. Tại sao phải dùng Functional Red-Black Tree? 
+	## 2.1 Immutable & thread-safe 
+	
+		- Trong môi trường functional hoặc đa luồng, việc mutate dữ liệu gây ra race condition hoặc bugs khó debug.
+		- Immutable giúp dễ reasoning, debugging, và concurrency không cần lock phức tạp.
+
+	## 2.2 Persistent data structure (versioning)
+		Mỗi insert/delete trả về cây mới, ta có thể giữ lại phiên bản cũ dùng cho undo/redo hoặc snapshots. 
 		
+	## 2.3 Hiệu quả bộ nhớ
+	
+		Không sao chép toàn bộ cây, chỉ thay đổi phần node cần update,
+		Các node không đổi sẽ được tái sử dụng, tránh duplicate memory.
+
+
+# 3. Cấu trúc dữ liệu và thao tác trong FRBT 
+
+	## 3.1 Node trong FRBT 
+		Node bất biến: final fields (key, value, color, left, right),
+		Không có setter, mọi thay đổi tạo node mới.
 		
-	## Cú pháp cơ bản: 
-	
-LongAccumulator acc = new LongAccumulator(Long::max, Long.MIN_VALUE);
-acc.accumulate(10);
-acc.accumulate(5);
-System.out.println(acc.get()); // 10
+class Node<K, V> {
+    final K key;
+    final V value;
+    final Color color; // RED or BLACK
+    final Node<K, V> left, right;
 
-
-
-# ✅ 2. Cơ chế nội tại (nội tạng thực sự bên dưới)
-
-	Giống LongAdder, LongAccumulator kế thừa từ lớp ẩn danh bên dưới: Striped64.
-	
-base: long                // giá trị gốc nếu không contention
-cells: Cell[]             // mảng các Cell nếu contention xảy ra
-function: LongBinaryOperator  // hàm tích lũy
-identity: long            // giá trị khởi đầu khi reset
-	
-	
-
-	## Hoạt động như sau: 
-		Nếu ít contention → áp dụng function.applyAsLong(base, x)
-		Nếu có contention → thread hash tới 1 Cell → áp dụng function trên Cell đó
-		get() hoặc getThenReset() sẽ cộng dồn base + cells[] bằng cùng function
-		➡ Không có đồng bộ hóa (synchronized), không có lock – hoàn toàn lock-free, CAS-based
-
-
-
-
-
-# ✅ 3. Tại sao cần LongAccumulator? 
-	Vì không phải mọi phép toán đều là cộng (+).
-	
-
-Một số ví dụ: 
-| Use case          | Operation                   | Function           |
-| ----------------- | --------------------------- | ------------------ |
-| Tìm số lớn nhất   | max                         | `Long::max`        |
-| Tìm số nhỏ nhất   | min                         | `Long::min`        |
-| Phép nhân         | product                     | `(a, b) -> a * b`  |
-| Bitwise AND       | and                         | `(a, b) -> a & b`  |
-| Bitwise OR        | or                          | `(a, b) -> a \| b` |
-| Tổng trọng số log | `(a, b) -> log(a) + log(b)` | custom             |
-➡ Trong các tình huống cần logic phức tạp hơn cộng đơn giản, LongAdder không đủ.
-
-
-# ✅ 4. Các phương thức quan trọng 
-
-| Method               | Ý nghĩa                                   |
-| -------------------- | ----------------------------------------- |
-| `accumulate(long x)` | Áp dụng hàm tích lũy                      |
-| `get()`              | Lấy tổng (hoặc max/min tùy function)      |
-| `getThenReset()`     | Lấy rồi reset                             |
-| `reset()`            | Reset về identity                         |
-| `longValue()`        | Alias của `get()` (do implement `Number`) |
-
-
-# ✅ 5. Hiệu năng thực tế
-
-| Threads | `LongAdder` (sum) | `LongAccumulator` (max) |
-| ------- | ----------------- | ----------------------- |
-| 1       | Rất nhanh (\~20M) | Tương đương             |
-| 4       | \~70M             | \~65M                   |
-| 16      | \~160M            | \~150M                  |
-| 64      | \~200M            | \~180M                  |
-
-➡ Không thua kém LongAdder là bao, vì cùng chia sẻ cơ sở hạ tầng Striped64
-
-
-# ✅ 6. Ưu điểm và nhược điểm
-
-	## ✅ Ưu điểm 
-	
-		- Tùy biến logic tích lũy → bạn định nghĩa cách cộng dồn
-		- Rất tối ưu hóa cho high-concurrency
-		- Cấu trúc lock-free, dùng CAS
-		- Không đồng bộ, không block
-
-	## ❌ Nhược điểm
-
-		Không dùng được trong các tình huống cần get/set chính xác tại thời điểm (giống như AtomicLong)
-		Không thread-safe theo nghĩa strict của snapshot: get() không phải là atomic snapshot
-
-
-# ✅ 7. Khi nào dùng LongAccumulator?
-
-| Tình huống                                    | Dùng `LongAccumulator`? |
-| --------------------------------------------- | ----------------------- |
-| Tìm max/min liên tục trong high concurrency   | ✅ Tuyệt vời             |
-| Đếm số lượng log nhưng cần phép cộng đơn giản | ❌ Dùng `LongAdder`      |
-| Sinh ID tăng dần, cần chính xác tuyệt đối     | ❌ Dùng `AtomicLong`     |
-| Tính tích, tổng điểm có trọng số, custom rule | ✅ Dùng tốt              |
-| Ghi đè giá trị hoặc rollback                  | ❌ Không phù hợp         |
-
-
-# ✅ 8. Code ví dụ: thống kê điểm số lớn nhất từ nhiều thread
-LongAccumulator maxScore = new LongAccumulator(Long::max, Long.MIN_VALUE);
-
-// Mỗi thread nạp điểm
-Runnable task = () -> {
-    long score = Math.round(Math.random() * 100);
-    maxScore.accumulate(score);
-};
-
-ExecutorService pool = Executors.newFixedThreadPool(10);
-for (int i = 0; i < 1000; i++) {
-    pool.execute(task);
+    Node(K key, V value, Color color, Node<K, V> left, Node<K, V> right) {
+        this.key = key;
+        this.value = value;
+        this.color = color;
+        this.left = left;
+        this.right = right;
+    }
 }
-
-pool.shutdown();
-pool.awaitTermination(1, TimeUnit.SECONDS);
-System.out.println("Max score: " + maxScore.get());
+		
 
 
+	## 3.2 Insert/Delete 
+	
+		- Cấu trúc tự động tái tạo cây mới qua các thao tác đệ quy,
+		- Áp dụng quy tắc cân bằng của Red-Black Tree (rotate, recolor),
+		- Sau khi thao tác xong, trả về node mới (được cân bằng),
+		- Các phần cây không thay đổi được giữ nguyên.
 
 
-# ✅ 9. Mở rộng: so sánh 4 class phổ biến 
+
+	## 3.3 Structural sharing (chia sẻ cấu trúc)
 
 
-| Class                            | Dùng khi                             | Ghi     | Đọc        | Contention |
-| -------------------------------- | ------------------------------------ | ------- | ---------- | ---------- |
-| `AtomicLong`                     | Ghi ít, đọc nhiều, cần chính xác     | ❌ chậm  | ✅ nhanh    | ❌          |
-| `LongAdder`                      | Cộng dồn nhiều, đo lường log         | ✅ nhanh | ⚠ hơi chậm | ✅          |
-| `LongAccumulator`                | Phép tích lũy đặc biệt (max/min/etc) | ✅ nhanh | ⚠          | ✅          |
-| `LongAccumulator` (custom logic) | Phức tạp cần tích lũy logic riêng    | ✅       | ⚠          | ✅          |
+	Ví dụ:
+		Cây ban đầu:
+		       20(B)
+			  /     \
+		  10(R)   30(B)
+	
+
+	Khi insert 25, ta tạo mới các node trên đường đi:
+	
+       20'(B)
+      /       \
+   10(R)     30'(B)
+               /
+            25(R)
 
 
-# ✅ Tổng kết
+	Các node 10(R) không đổi, tái sử dụng,
+	Node 20 và 30 bị tạo mới, giữ immutable.
 
-| Điểm                                         | Giá trị |
-| -------------------------------------------- | ------- |
-| Tùy biến cao                                 | ✅       |
-| Hiệu năng tốt                                | ✅       |
-| Không cần synchronized                       | ✅       |
-| Không chính xác tức thời                     | ⚠       |
-| Không dùng cho business logic yêu cầu atomic | ❌       |
 
+
+# 4. Ưu điểm Functional Red-Black Tree 
+| Ưu điểm                                  | Giải thích                                                  |
+| ---------------------------------------- | ----------------------------------------------------------- |
+| Immutable                                | An toàn khi đa luồng, dễ reasoning                          |
+| Persistent                               | Giữ lại các phiên bản trước dễ dàng                         |
+| Hiệu quả bộ nhớ                          | Structural sharing tránh copy toàn bộ cây                   |
+| Tính toán không gây side-effect          | Phù hợp functional programming paradigm (Haskell, Scala...) |
+| Thích hợp hệ thống versioning, undo/redo | Dễ dàng lưu lại trạng thái cây trước và sau thao tác        |
+
+
+
+# 5. Nhược điểm và thách thức
+
+	Tốc độ insert/delete chậm hơn Red-Black Tree mutable do tạo node mới,
+	Bộ nhớ tiêu thụ có thể tăng nếu không tối ưu structural sharing tốt,
+	Triển khai phức tạp hơn do đòi hỏi tái cấu trúc node bất biến,
+	Debug khó khăn hơn do nhiều phiên bản cây tồn tại.
+
+
+# 6. Ứng dụng thực tế
+
+	Các thư viện functional data structures: Clojure Persistent TreeMap, Scala's immutable.TreeMap đều dùng FRBT hoặc tương tự,
+	Hệ thống undo/redo trong editor,
+	Version control systems, compiler symbol tables immutable,
+	Multithreaded systems không lock nhưng cần thao tác dữ liệu an toàn
 
 
 

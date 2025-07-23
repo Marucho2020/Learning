@@ -1,120 +1,132 @@
-<html><head><title>Lesson 111 == Merge Sort Tree ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 111 -- Merge Sort Tree -//</h1><pre># Khái niệm  
-	Merge Sort Tree là một cấu trúc dữ liệu nâng cao, kết hợp giữa : 
-		- Segment Tree(phân đoạn vùng dữ liệu )
-		- và Merge Sort (chia để trị, trộn mảng con đã sắp xếp )
+<html><head><title>Lesson 111 == Tree Rotation ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 111 -- Tree Rotation -//</h1><pre>
+# Khái niệm 
+	Tree rotation là thao tác tái cấu trúc một phần của cây nhị phân (binary tree) để:
+		- Duy trì tính chất BST
+		- Giữ cây ở trạng thái cân bằng tốt hơn 
 		
-	📌 Mục đích chính: 
-		Trả lời các truy vấn có điều kiện thứ hạng trên đoạn [L, R] một cách nhanh chóng. 
-
-
-# 🧠 VẤN ĐỀ CẦN GIẢI:
-
-	Cho mảng A[1..n]. Có thể bạn sẽ phải trả lời truy vấn kiểu:
-	count(L, R, x): trong đoạn A[L..R], có bao nhiêu phần tử ≤ x?
-	kth(L, R, k): phần tử nhỏ thứ k trong đoạn A[L..R] là gì?
-	🔁 Nếu bạn dùng sort mỗi lần, thì độ phức tạp sẽ là O(n log n) mỗi truy vấn. Không tối ưu.
-
-
-
-
-# ✅ CẤU TRÚC MERGE SORT TREE: 
-
-	Mỗi node đại diện cho một đoạn [l..r] của mảng.
-	Dữ liệu lưu tại node: là một mảng con đã được sắp xếp từ A[l..r]. 
-	
-	→ Giống y như cách Merge Sort tách mảng rồi trộn lại, nhưng ta lưu toàn bộ mảng đã sort ở từng node.
+	Rotation không thay đổi thứ tự các node theo in-order traversal (duyệt LNR vẫn đúng thứ tự).
 	
 	
-# 	🏗️ CẤU TRÚC: 
+# ⚙️ Có mấy loại rotation?
+ 
+Có 4 loại cơ bản:		
+	
+| Loại rotation            | Dùng khi                          | Hướng xử lý     |
+| ------------------------ | --------------------------------- | --------------- |
+| Left Rotation            | Cây nghiêng về phải (right-heavy) | Xoay trái       |
+| Right Rotation           | Cây nghiêng về trái (left-heavy)  | Xoay phải       |
+| Left-Right Rotation (LR) | Con trái nghiêng phải             | Right-then-left |
+| Right-Left Rotation (RL) | Con phải nghiêng trái             | Left-then-right |
 
 
-class MergeSortTree {
-    int n;
-    ArrayList<Integer>[] tree;
 
-    MergeSortTree(int[] arr) {
-        n = arr.length;
-        tree = new ArrayList[4 * n];
-        build(1, 0, n - 1, arr);
-    }
+# 🎯 Mục tiêu: Giữ chiều cao cây ở mức gần log(n)
 
-    void build(int node, int l, int r, int[] arr) {
-        tree[node] = new ArrayList<>();
-        if (l == r) {
-            tree[node].add(arr[l]);
-            return;
-        }
-        int mid = (l + r) / 2;
-        build(2 * node, l, mid, arr);
-        build(2 * node + 1, mid + 1, r, arr);
-        tree[node] = merge(tree[2 * node], tree[2 * node + 1]);
-    }
+Nếu cây quá lệch một phía, thao tác tìm kiếm sẽ thành O(n). Rotation giúp đưa về log(n) bằng cách phân bố lại node theo chiều sâu đều hơn.
 
-    ArrayList<Integer> merge(List<Integer> left, List<Integer> right) {
-        ArrayList<Integer> result = new ArrayList<>();
-        int i = 0, j = 0;
-        while (i < left.size() && j < right.size()) {
-            if (left.get(i) < right.get(j))
-                result.add(left.get(i++));
-            else
-                result.add(right.get(j++));
-        }
-        while (i < left.size()) result.add(left.get(i++));
-        while (j < right.size()) result.add(right.get(j++));
-        return result;
-    }
+
+# 🔄 LEFT ROTATION – Minh họa đơn giản
+
+    A
+     \
+      B
+       \
+        C
+
+	Gọi leftRotate(A)
+	      B
+         / \
+        A   C
+
+	📌 Gốc chuyển từ A → B 
+	
+Node leftRotate(Node A) {
+    Node B = A.right;
+    A.right = B.left;
+    B.left = A;
+    return B;
 }
+	
+
+# 🔄 RIGHT ROTATION – Đối xứng
+		   C
+		 /
+		B
+	   /
+	  A
+	
 
 
-# 🔍 QUERY ĐẾM PHẦN TỬ ≤ X TRONG [L, R]
-int query(int node, int l, int r, int ql, int qr, int x) {
-    if (qr < l || ql > r) return 0;  // không giao
-    if (ql <= l && r <= qr) {
-        // Tại node này chứa mảng đã sort -> binary search
-        return upperBound(tree[node], x);
-    }
-    int mid = (l + r) / 2;
-    return query(2 * node, l, mid, ql, qr, x) +
-           query(2 * node + 1, mid + 1, r, ql, qr, x);
-}
+	Gọi rightRotate(C)
+	
+      B
+     / \
+    A   C
 
-int upperBound(List<Integer> list, int x) {
-    int low = 0, high = list.size();
-    while (low < high) {
-        int mid = (low + high) / 2;
-        if (list.get(mid) <= x) low = mid + 1;
-        else high = mid;
-    }
-    return low; // số phần tử ≤ x
+
+Node rightRotate(Node C) {
+    Node B = C.left;
+    C.left = B.right;
+    B.right = C;
+    return B;
 }
 
 
 
-# 📈 ĐỘ PHỨC TẠP: 
-	Xây dựng: O(n log n log n) → vì tại mỗi node merge mất O(n log n).
-	Query: O(log^2 n) → mỗi level là O(log n) node, mỗi node O(log n) cho binary search.
-	Nhanh hơn rất nhiều nếu bạn dùng cho truy vấn có điều kiện so sánh.
+# 🔁 COMPOSITE: Left-Right Rotation (LR)
+
+	Xảy ra khi cây lệch trái nhưng node con lại lệch phải. Cần 2 bước:
+	
+		leftRotate(con trái)
+		rightRotate(chính nó)
+
+			30
+		    /
+		    10
+			\
+			20
 
 
-# ✅ ỨNG DỤNG THỰC TẾ: 
-| Tình huống                                | Giải pháp Merge Sort Tree                     |
-| ----------------------------------------- | --------------------------------------------- |
-| Game: Tìm số người có điểm < X trong vùng | Tính toán nhanh số lượng điểm nằm trong range |
-| Analytics: Top-k / rank queries           | Truy vấn phần tử nhỏ thứ k trong đoạn         |
-| Hệ thống log, realtime data               | Truy vấn tập hợp dữ liệu có điều kiện lọc     |
-| Kết hợp Lazy Propagation (khó hơn)        | Cần mở rộng MergeSortTree lazy-aware          |
+		Sau LR Rotation:
+		
+				 20
+				/  \
+			   10   30
+		
+
+# 🔁 Right-Left Rotation (RL)
+
+	Tương tự nhưng ngược chiều.
+	
 
 
+# 📐 Khi nào dùng?
+
+| Cấu trúc           | Mục tiêu rotation                                  |
+| ------------------ | -------------------------------------------------- |
+| **AVL Tree**       | Giữ `balance factor ∈ {-1, 0, +1}`                 |
+| **Red-Black Tree** | Sau khi chèn hoặc xóa, restore lại “color + shape” |
+| **Splay Tree**     | Xoay để đưa node về root (Zig/Zig-Zag/Zig-Zig)     |
+| **Treap**          | Dựa vào priority, nếu vi phạm heap → xoay          |
+| **Scapegoat Tree** | Không dùng rotation, dùng rebuild toàn subtree     |
 
 
-# 🧠 CÁC CẤU TRÚC LIÊN QUAN NÊN HỌC:
-| Tên cấu trúc            | Mục tiêu                              |
-| ----------------------- | ------------------------------------- |
-| Segment Tree            | Truy vấn tổng, min/max, update        |
-| Binary Indexed Tree     | Nhẹ hơn Segment Tree (prefix sum)     |
-| Persistent Segment Tree | Lưu lịch sử thay đổi                  |
-| Wavelet Tree            | Truy vấn rank/k-th + tần suất phần tử |
-| Merge Sort Tree         | Đếm phần tử thỏa điều kiện (≤ x)      |
+# 🧠 Góc nhìn kiến trúc hệ thống 
 
+Rotation là công cụ cho:
 
+	Cây tự cân bằng (self-balancing tree) → đảm bảo hiệu năng O(log n)
+	Hệ thống lưu trữ key-value nội bộ như Java TreeMap, ConcurrentSkipListMap, LevelDB
+	Tối ưu độ sâu hệ thống (index, prefix tree,...)
+
+# ✅ Tổng kết cốt lõi:
+| Đặc điểm                | Ý nghĩa                           |
+| ----------------------- | --------------------------------- |
+| Không thay đổi in-order | Tính chất BST giữ nguyên          |
+| Là phép local           | Chỉ ảnh hưởng 1–3 node, rất nhanh |
+| Có thể lồng nhau        | Zig-Zag = hai rotation            |
+| Dùng trong cân bằng     | AVL, RBT, Treap, Splay...         |
+	
+
+			
 </pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

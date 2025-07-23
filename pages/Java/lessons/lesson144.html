@@ -1,0 +1,151 @@
+<html><head><title>Lesson 144 == Adapter Pattern ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 144 -- Adapter Pattern -//</h1><pre># Khái niệm 
+	Adapter Pattern là một design pattern thuộc nhóm cấu trúc (Structural), cho phép kết nối 2 interface không tương thích mà không sửa mã nguồn của chúng.
+	
+	Nói cách khác: 
+		"Không thể đổi phích cắm hoặc ổ điện – nhưng vẫn phải cắm cho được" 
+		
+		
+# 🧱 2. Thành phần cấu trúc
+
+	Giả sử: 
+		- Target = Interface bạn muốn dùng
+		- Adaptee = Class đã tồn tại, nhưng không tương thích với Target
+		- Adapter = Cầu nối, giúp Adaptee có thể dùng như Target		
+
+
+// Target
+interface MediaPlayer {
+    void play(String audioType, String fileName);
+}
+
+// Adaptee
+class AdvancedMediaPlayer {
+    void playMp4(String fileName) { ... }
+}
+
+// Adapter
+class MediaAdapter implements MediaPlayer {
+    private AdvancedMediaPlayer advanced;
+
+    MediaAdapter() {
+        advanced = new AdvancedMediaPlayer();
+    }
+
+    public void play(String audioType, String fileName) {
+        if ("mp4".equals(audioType)) {
+            advanced.playMp4(fileName);
+        }
+    }
+}
+
+
+# 📍 3. Mục đích cốt lõi
+
+| Mục tiêu thật sự                                                        | Vì sao quan trọng ở level senior                        |
+| ----------------------------------------------------------------------- | ------------------------------------------------------- |
+| Tách biệt interface với implementation                                  | Để không buộc hệ thống phải refactor khi logic thay đổi |
+| Tái sử dụng code cũ (legacy) mà không động vào nó                       | Legacy không đụng được, nhưng phải tích hợp             |
+| Thêm khả năng "hòa hợp hệ thống" mà không vi phạm Open/Closed principle | Hệ thống mở rộng mà không sửa cái đã ổn định            |
+
+
+
+
+# ⚙️ 4. Có mấy loại Adapter?
+
+| Loại               | Mô tả                                                                                  |
+| ------------------ | -------------------------------------------------------------------------------------- |
+| **Object Adapter** | Adapter giữ reference đến Adaptee (ưu tiên dùng, dễ mở rộng)                           |
+| **Class Adapter**  | Adapter **kế thừa** Adaptee (Java không hỗ trợ đa kế thừa interface + class ⇒ ít dùng) |
+
+
+# 🔥 5. Khi nào nên dùng Adapter?
+
+	Bạn có class cũ không thể sửa (ví dụ mã từ bên thứ ba) nhưng cần tích hợp vào hệ thống mới
+	Bạn cần thay đổi API nhưng không muốn đụng logic bên trong
+	Bạn đang viết framework hoặc library cần hỗ trợ nhiều backend API nhưng giữ một interface thống nhất
+
+
+# ❌ Khi KHÔNG nên dùng
+
+	- Nếu bạn có thể refactor lại interface gốc thì nên làm – adapter chỉ là giải pháp "cứu cánh"
+	- Nếu adapter của bạn làm quá nhiều việc, bạn đang gộp cả Business Logic vào Adapter → sai hoàn toàn
+	- Nếu bạn dùng Adapter để "trát xi măng" cho 2 hệ thống không ăn nhập gì, hãy xét lại kiến trúc
+
+
+# 🧠 6. Adapter trong hệ sinh thái Java
+
+	## A. Spring MVC 
+		
+| Thành phần      | Adapter                          |
+| --------------- | -------------------------------- |
+| `@Controller`   | `RequestMappingHandlerAdapter`   |
+| `Controller` cũ | `SimpleControllerHandlerAdapter` |
+DispatcherServlet không biết controller bạn viết kiểu gì, nhưng nó sẽ chọn adapter phù hợp để xử lý – đây chính là adapter pattern thực thi theo runtime.
+
+
+
+	## B. Java IO 
+OutputStream os = new FileOutputStream("file.txt");
+Writer writer = new OutputStreamWriter(os); // ✅ Adapter từ byte stream → char stream
+
+		OutputStreamWriter là adapter, chuyển một Writer (char) dùng được trên nền OutputStream (byte).
+		
+		
+		
+	## 	C. JDBC 
+DataSource ds = new BasicDataSource(); // Apache Commons
+Connection con = ds.getConnection();   // ✅ Giao diện chuẩn, implementation custom
+		
+	Bạn viết code theo javax.sql.DataSource, nhưng backend có thể là Oracle, MySQL, HikariCP...
+	→ Mỗi implementation là adapter để phù hợp với chuẩn DataSource.	
+		
+		
+		
+		
+	## D. Java Concurrency 
+
+Runnable task = () -> doSomething();
+ExecutorService executor = Executors.newFixedThreadPool(2);
+executor.submit(task);
+
+
+Runnable và Callable có adapter nội tại để mapping lẫn nhau, vì ExecutorService chấp nhận cả hai. Nhiều trường hợp Executors.callable(...) chính là một adapter method.
+
+
+
+
+# 🧠 7. Liên hệ SOLID (cho level senior)
+	
+✔ Open/Closed Principle:
+	- Adapter cho phép mở rộng hệ thống mà không sửa code cũ
+	- Bạn chỉ thêm một lớp adapter mới
+
+✔ Single Responsibility Principle:
+	Adapter chỉ làm nhiệm vụ chuyển đổi interface, không nhúng thêm logic xử lý.
+
+
+
+# ⚔️ 8. Adapter vs Decorator vs Proxy vs Facade 
+
+| Pattern   | Mục tiêu chính                                                |
+| --------- | ------------------------------------------------------------- |
+| Adapter   | **Chuyển interface A thành B**                                |
+| Decorator | **Thêm chức năng mà không thay đổi cấu trúc gốc**             |
+| Proxy     | **Thay mặt** cho đối tượng khác để kiểm soát, cache, security |
+| Facade    | **Ẩn đi sự phức tạp** của hệ thống con                        |
+
+→ Không nhầm lẫn! Adapter dùng khi interface không tương thích – còn Decorator dùng khi bạn muốn gói thêm chức năng vào interface đã tương thích.
+
+
+# ✅ Tổng kết
+
+
+| Điều cần nhớ                                                   | Ý nghĩa ở level senior                                            |
+| -------------------------------------------------------------- | ----------------------------------------------------------------- |
+| Adapter là cầu nối interface                                   | Tách abstraction và implementation một cách an toàn               |
+| Dùng khi hệ thống cần tích hợp nhưng không thể thay đổi gốc    | Đặc biệt hữu dụng khi làm việc với legacy hoặc thư viện bên ngoài |
+| Giữ nguyên code hiện tại, mở rộng interface mới                | Tuân thủ Open/Closed Principle                                    |
+| Có thể dùng trong Spring MVC, Java IO, JDBC, Thread pool, v.v. | Phải nhận ra khi nào đang dùng pattern mà không biết              |
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

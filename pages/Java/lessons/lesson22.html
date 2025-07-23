@@ -1,145 +1,100 @@
-<html><head><title>Lesson 22 == ArrayBlockingQueue ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 22 -- ArrayBlockingQueue -//</h1><pre># 1. Khái niệm  
-	Array BlockingQueue là một trong những cài đặt phổ biến của BlockingQueue trong Java. Nó rất quan trọng trong việc quản lý luồng dữ liệu trong các ứng dụng đa luồng, đặc biệt khi làm việc với bài toán Producer-Comsumer(Nhà sản xuất và người tiêu dùng )
-	
-	ArrayBlockingQueue là một hàn đợi(queue) tuần tự, có kích thước cố định được cài đặt dựa trên mảng array. Khi bạn tạo một đối tượng ArrayBlockingQueue, bạn phải chỉ định dung lượng tối đa của nó ngay từ đầu. Điều này có nghĩa là nó không thể mở rộng hoặc thu hẹp kích thước sau khi đã được khởi tạo. 
-	
-# 2. Đặc điểm của ArrayBlockingQueue 
-	## 1. Kích thước cố định : 
-	Dung lượng của hàng đợi được xác định khi tạo, và không thể thay đổi sau đó. 
-	
-	#Hỗ trợ đồng bộ hóa 
-		- Hàng đợi sử dụng cơ chế khóa(lock) để đảm bảo an toàn khi truy cập trong môi trường đa luồng 
-		- Khi một luồng thực hiện thao tác thêm(put) hoặc lấy (take), các luồng khác sẽ bị chặn cho đến khi thao tác hoàn tất. 
+<html><head><title>Lesson 22 == Vector ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 22 -- Vector -//</h1><pre> Vector trong Java là một lớp trong gói java.util, cung cấp một cấu trúc dữ liệu dạng danh sách động tương tự như ArrayList . Tuy nhiên. Vector có một số đặc điểm riêng biệt khiến nó nổi bật và khác biệt. Sau đây là phần giải thích đầy đủ và nâng cao  
+ 
+ 
+# Đặc điểm cơ bản của Vector 
+	## Thuộc tính  
+		- Là một lớp kế thừa từ AbstractList và triển khai các interface List, RandomAccess, Cloneable và Serializable 
+		- Là một danh sách động, nghĩa là kích thước của Vector có thể thay đổi tự động khi thêm hoặc xóa phần tử 
+		- Các phần tử được lưu trữ trong một mảng nội bộ. 
 		
-	## FIFO 
-		- Các phần tử được xử lý theo thứ tự chúng được thêm vào hàng đợi 
+	## Đồng bộ hóa(Thread Safety ) 
+		- Vertor là thread-safe (an toàn cho các luồng). Tất cả các phương thức của nó đều được đồng bộ hóa(synchronized).
+		- Vì lý do này, Vector thường chậm hơn ArrayList trong các ứng dụng đơn luồng  
+		- Nếu không cần đồng bộ hóa, ArrayList là lựa chọn tốt hơn  
 		
-	# Hai khóa : (Two-lock queue)
-		ArrayBlockingQueue sử dụng hai loại khóa để đông bộ hóa:
-			Một cho thao tác thêm phần tử(enqueue)
-			Một cho thao tác lấy phần tử(dequeue)
-	# Hỗ trợ chặn (Blocking )
-		- Nếu hàng đợi đầy, các luồng cố gắng thêm phần tử sẽ bị chặn cho đến khi có không gian trống. 
-		- Nếu hàng đợi rỗng, các luồng cố gắng lấy phần tử sẽ bị chặn cho đến khi có phần tử được thêm vào 
-
-
-# 3.Các phương thức quan trọng của ArrayBlockingQueue 
-
-	offer(E e)               : Cố gắng thêm phần tử vào hàng đợi, nếu thành công trả về true, false nếu hàng đợi đã đầy 
-	put(E e)                 : Thêm phần tử vào hàng đợi, Nếu hàng đợi đầy, luồng sẽ bị chặn cho đến khi có không gian trống 
-	poll()                   : Lấy phần tử đầu tiên ra khỏi hàng đợi, nhưng không chặn , trả về null nếu hàng đợi rỗng 
-	take                     : Lấy phần tử đầu tiên ra khỏi hàng đợi, nếu hàng đợi rỗng, luồng sẽ bị chặn cho đến khi có phần tử 
-	remainingCapacity()      : Trả về số lượng phần tử kiểu int có thể thêm vào hàng đợi 
-	contais(Object o)        : Kiểm tra xem một phần tử có tồn tại trong hàng đợi hay không 
+		
+		
+# Cấu trúc dữ liệu của Vector 		
 	
-	
-# 4. Ví dụ sử dụng ArrayBlockingQueue 
-	1. Bài toán Producer-Comsumer Example 
-					import java.util.concurrent.ArrayBlockingQueue;
-					import java.util.concurrent.BlockingQueue;
+	## Kích thước ban đầu và khả năng tự mở rộng 
+		- Khi tạo một đối tượng Vector, bạn có thể xác định kích thước ban đầu(initial capacity ) và nhân tố mở rộng (capacity increment).
+		- Nếu không chỉ định capacity increment, Vector sẽ tự động tăng gấp đôi dụng lượng mỗi khi cần mở rộng 
+			Vector<Integer> vector = new Vector<>(5,3);		// initial capacity = 5, capacity increment  =  3
+			
+		- Khi số phần tử vượt quá dung lượng hiện tại, kích thước của Vector sẽ tăng thêm capacity increment. Nếu không được chỉ định, nó sẽ tăng gấp đôi 
+		
+		
+# Phương thức quan trọng của Vector 
+			
+	## Các phương thức cơ bản (Basic methods )
+		
+		### Thêm phần tử : 
+			add(E e )                            :  Thêm Element e vào cuối danh sách 
+			add(int index , E element)           : Thêm Element e vào vị trí chỉ định trong danh sách và báo lỗi nếu vị trí k hợp lệ  
 					
-					// Nhà sản xuất
-					class Producer implements Runnable {
-						private BlockingQueue<Integer> queue;
-					
-						public Producer(BlockingQueue<Integer> queue) {
-							this.queue = queue;
-						}
-					
-						@Override
-						public void run() {
-							try {
-								for (int i = 1; i <= 10; i++) {
-									System.out.println("Producer: Producing item " + i);
-									queue.put(i); // Thêm phần tử vào hàng đợi (chặn nếu đầy)
-									Thread.sleep(500); // Giả lập thời gian sản xuất
-								}
-							} catch (InterruptedException e) {
-								Thread.currentThread().interrupt();
-							}
-						}
-					}
-					
-					// Người tiêu dùng
-					class Consumer implements Runnable {
-						private BlockingQueue<Integer> queue;
-					
-						public Consumer(BlockingQueue<Integer> queue) {
-							this.queue = queue;
-						}
-					
-						@Override
-						public void run() {
-							try {
-								while (true) {
-									Integer item = queue.take(); // Lấy phần tử từ hàng đợi (chặn nếu rỗng)
-									System.out.println("Consumer: Consuming item " + item);
-									Thread.sleep(1000); // Giả lập thời gian tiêu thụ
-								}
-							} catch (InterruptedException e) {
-								Thread.currentThread().interrupt();
-							}
-						}
-					}
-					
-					public class ArrayBlockingQueueExample {
-						public static void main(String[] args) {
-							// Tạo hàng đợi có kích thước tối đa là 5
-							BlockingQueue<Integer> queue = new ArrayBlockingQueue<>(5);
-					
-							Thread producerThread = new Thread(new Producer(queue));
-							Thread consumerThread = new Thread(new Consumer(queue));
-					
-							producerThread.start();
-							consumerThread.start();
-						}
-					}
-
-			// Giải thích ví dụ:
-				Hàng đợi có kích thước cố định là 5:
+								#!!# e.g  
+								vector.add(10)
+								vector.add(1 , 20)
+		
+		### Xóa phần tử : 
+			remove(Object o)                      : Xóa phần tử đầu tiên khớp với đối tượng được cung cấp 
+			remove(int index )                    : xóa phần tử tại index chỉ định  
+			
+			
+								#!!# e.g 
+								vector.remove(1);
+								vector.remove(Integer.valueOf(10));
+			
+		### Lấy phần tử : 
+			get(int index) 						:	 Lấy phần tử tại vị trí chỉ định  
 				
-				Nếu nhà sản xuất cố gắng thêm phần tử vào hàng đợi khi đầy, nó sẽ bị chặn.
-				Nếu người tiêu dùng cố gắng lấy phần tử khi hàng đợi rỗng, nó sẽ bị chặn.
-				Sự đồng bộ hóa tự động:
-				
-				ArrayBlockingQueue quản lý việc đồng bộ hóa giữa nhà sản xuất và người tiêu dùng, nên bạn không cần phải sử dụng từ khóa synchronized thủ công.
-				Kết quả đầu ra:
-				
-				Nhà sản xuất thêm phần tử vào hàng đợi, người tiêu dùng lấy phần tử từ hàng đợi theo thứ tự FIFO.
+								
+								#!!# e.g 
+									int value = vector.get(0);
+		
+		
 
-
-# Ưu điểm của ArrayBlockingQueue 
-	#1. An toàn trong môi trường đa luồng : 
-		Không cần xử lý thử công việc đồng bộ hóa giữa các luồng 
-	# Đồng bộ hóa hiệu quả 
-		Sử dụng cơ chế khóa tối ưu hóa giúp giảm chi phí đồng bộ 
+		
+		
+		
+	## Các phương thức nâng cao (Advanced Methods)	
 	
-	# Đơn giản và dễ sử dụng :
-		API rõ ràng và phù hợp cho nhiều bài toán trong lập trình đa luồng 
-
-	# Hạn chế tài nguyên 
-		Giới hạn dung lượng giúp tránh các vấn đề như sử dụng quá nhiều bộ nhớ 
+		### Tìm kiếm 
+			contains(Object o)                      : Kiểm tra xem vector có chứa phần tử o không 
+			indexOf(Object o)                       : Trả về chỉ số của phần tử đầu tiên khớp(hoặc -1 nếu không tìm thấy )
+			lastIndexOf(Object o)                   : trả về chỉ số của phần tử khớp ở cuối list 
+			
+			
+		
+		### Kích thước và dung lượng : 
+		
+			size()                                  : trả về số lượng phần tử hiện tại 
+			capacity()                              : trả về dung lượng hiện tại của Vector 
+			
+		### Chuyển đổi sang mảng : 
+			toArray() 								: Chuyển Vector thành một mảng  
+			
+		
+		### Duyệt qua các phần tử : 
+			- Enumaration<E> - Giao diện cũ để duyệt qua các phần tử của Vector 
+			- Hiện nay sử dụng vòng lặp for-each hoặc Itearator là cách phổ biến hơn  .
+				Enumeration<Integer> enumeration = vector.elements();
+				while(enumeration.hasMoreElements()){
+					System.out.println(enumeration.nextElement());
+				}
+				
+					
+		
+# . So sánh với các cấu trúc khác
+					Thuộc tính						Vector											ArrayList
+					Đồng bộ hóa						Có												Không
+					Hiệu suất 						(Performance)	Chậm hơn (do đồng bộ)			Nhanh hơn (không đồng bộ)
+					Tăng kích thước					Gấp đôi											50%
 		
 		
-Bài tập thực hành
-
-Bài tập 1:
-Tạo một ArrayBlockingQueue với kích thước là 3.
-Viết chương trình để thêm 10 số nguyên vào hàng đợi bằng một luồng và lấy chúng ra bằng một luồng khác.
-
-Bài tập 2:
-Thay đổi chương trình ví dụ trên để nhà sản xuất và người tiêu dùng có tốc độ khác nhau. Quan sát kết quả và giải thích tại sao việc đồng bộ hóa vẫn đảm bảo đúng thứ tự.
-
-Bài tập 3:
-Sử dụng ArrayBlockingQueue để quản lý các yêu cầu đến một máy chủ (như HTTP requests) và phân phối chúng cho một nhóm luồng xử lý (thread pool).		
-		
-		
-		public static void main(String[] args){
-			System.out.print(args.length);
-		}
-		
-		
-		
+			
+		- Vector thường không được khuyến khích sử dụng trong các ứng dụng hiện đại. Trừ khi cần một cấu trúc thread-safe 
+		- Trong các ứng dụng đa luồng, bạn có thể sử dụng CopyOnWriteArrayList(thuộc java.util.concurrent) thay vì Vector 
 		
 		
 </pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

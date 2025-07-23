@@ -1,34 +1,69 @@
-<html><head><title>Lesson 71 == RBAC ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 71 -- RBAC -//</h1><pre>
-# Khái niệm  
-	RBAC : Role - Based Access Control : Phân quyền theo vai trò 
-	 
-	RBAC là mô hình kiểm soát truy cập dựa trên role(vai trò). Mỗi user có một hoặc nhiều vai trò, và vai trò đó quyết định quyền hạn của họ 
+<html><head><title>Lesson 71 == InternalResourceViewResolver ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 71 -- InternalResourceViewResolver -//</h1><pre>
+# Khái niệm 
 	
-# Cách hoạt động 
-	1. User A có role Admin -> Được quyền xóa user 
-	2. User B có role User -> chỉ có quyền đọc dữ liệu 
+	InternalResourceViewResolver là một ViewResolver trong Spring MVC, giúp ánh xạ tên view thành file thực tế trong hệ thống (JSP, HTML).
+
+# Cách hoạt động của InternalResourceViewResolver 
+	1. Controller trả về tên view (không phải đường dẫn cụ thể). 
+	2. InternalResourceViewResolver tìm file JSP/HTML tương ứng dựa trên prefix (/WEB-INF/views/) và suffix (.jsp). 
+	3. Trả về response cho client.
+
+ 
+# 📌 Ví dụ InternalResourceViewResolver 
 	
-# Mô hình RBAC phổ biến  
-
-
-Role			Quyền
-Admin			Create, Read, Update, Delete (CRUD)
-User			Read, Update (Chỉ chỉnh sửa dữ liệu của mình)
-Guest			Read-only (Chỉ có quyền xem)
-
-
-
-# Triển khai trong thực tế : 
-	## Spring Security + RBAC 
+	
+	## 1. Cấu hình InternalResourceViewResolver
+		@Bean
+		public InternalResourceViewResolver viewResolver() {
+			InternalResourceViewResolver resolver = new InternalResourceViewResolver();
+			resolver.setPrefix("/WEB-INF/views/");
+			resolver.setSuffix(".jsp");
+			resolver.setViewClass(JstlView.class); // Hỗ trợ JSTL
+			return resolver;
+		}
 		
-		@PreAuthorize("hasRole('ADMIN')")
-		public void deleteUser(Long id) { ... }
-
-
-
-	## Keycloak : Quản lý Role & Permission cho microservices 
+		📌 setPrefix("/WEB-INF/views/"): Tất cả view sẽ nằm trong thư mục /WEB-INF/views/.
+		📌 setSuffix(".jsp"): Tự động thêm .jsp vào tên view.
+		📌 setViewClass(JstlView.class): Hỗ trợ các thẻ JSTL trong JSP.
+		
+		
+ 
+# 📌 Ví dụ Controller trả về view 
 	
-	## Envoy Proxy + RBAC Policy : Chặn Requets dựa trên role của user 
+	## 1.Controller 
+	
+		@Controller
+		@RequestMapping("/home")
+		public class HomeController {
+		
+			@GetMapping
+			public String homePage(Model model) {
+				model.addAttribute("message", "Welcome to Spring MVC");
+				return "index"; // Chỉ trả về tên view (không có .jsp)
+			}
+		}
+
+	
+	## 2. File index.jsp 
+		<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+		<html>
+		<body>
+			<h1>${message}</h1>
+		</body>
+		</html>
+
+
+	## 3. Khi client truy cập /home, Spring sẽ: 
+			- Controller trả về "index".
+
+			- InternalResourceViewResolver biến nó thành /WEB-INF/views/index.jsp.
+
+			- JSP được render ra HTML và trả về client.
+
+
+# ✅ Ứng dụng: 
+	Dùng để render JSP, Thymeleaf hoặc FreeMarker. 
+	Hỗ trợ caching view để tăng hiệu suất. 
 	
 	
 	

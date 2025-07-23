@@ -1,167 +1,112 @@
-<html><head><title>Lesson 93 == Double Linked List ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 93 -- Double Linked List -//</h1><pre>
-# Khái niệm 
-	Là một cấu trúc dữ liệu tuyến tính, gồm các node, mỗi node chứa: 
-		1. Giá trị (data), 
-		2. Con trỏ đến node trước (prev), 
-		3. Con trỏ đến node sau (next). 
+<html><head><title>Lesson 93 == Cache ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 93 -- Cache -//</h1><pre>
+# Khái niệm  
+	
+		Cache = Lưu trữ tạm thời dữ liệu đã xử lý, nhằm tránh xử lý lại.
+		Nếu bạn gọi API hoặc truy vấn DB và kết quả không thay đổi trong 5 phút → không cần làm lại. Cache nó.
+
+
+# Mục tiêu 
+	
+Mục tiêu									Ý nghĩa thực tế
+Giảm latency							Truy vấn dữ liệu nhanh hơn → phản hồi nhanh hơn cho user
+Giảm tải backend						API/DB không phải tính lại → tiết kiệm CPU/RAM
+Tiết kiệm chi phí						Tránh gọi API trả phí (GPT, Cloud API...)
+Tăng khả năng chịu tải					Dễ scale vì cache hoạt động như buffer chống sốc
+Tăng độ ổn định							Khi service backend lỗi → có thể fallback từ cache
+
+
+# 💡 VÍ DỤ THỰC TẾ TRONG DỰ ÁN
+
+	## 1. Frontend / Client-side Cache 
+		- Trình duyệt cache ảnh, JS, CSS (cache-control headers)
+		- SWR/React Query cache kết quả API: tránh gọi lại mỗi lần load lại tab
+		- Service Worker Cache (PWA): để chạy offline
+
+
+	## 2. Backend API Cache (Controller level) 
+		### Với Spring Boot: 
 		
-		NULL <- [1] <-> [2] <-> [3] <-> [4] -> NULL
-
-
-# 🧠 II. Cấu trúc bên trong node 
-	
-class Node {
-    int data;
-    Node prev;
-    Node next;
-
-    Node(int data) {
-        this.data = data;
-    }
-}
-
-		Mỗi node đều có 2 chiều: đi tới (next) và quay lại (prev) → hỗ trợ truy cập 2 chiều và xoá/chèn linh hoạt hơn so với Singly Linked List.
-
-
-
-# 🧰 III. Các thao tác cơ bản 
-
-Operation		 	| Mục đích 				| Phức tạp 						| Tư duy
-insertHead()	 	| Chèn đầu 				| O(1)							| Gắn prev/next, cập nhật head
-insertTail() 	 	| Chèn cuối 			| O(1) (tail), O(n) or not 		| Truy cập tail, cập nhật con trỏ
-deleteNode(Node n)  | Xóa node cụ thể 		| O(1) 							| Cập nhật n.prev.next và n.next.prev
-traverseForward()	| Duyệt xuôi 			| O(n) 							| Đi từ head → next
-traverseBackward()  | Duyệt ngược 			| O(n) 							| Đi từ tail → prev
-
-
-
-# 🧠 IV. Ưu điểm thực sự của Doubly Linked List 
-
-Ưu điểm 									| Vì sao quan trọng trong hệ thống lớn
-Truy cập 2 chiều 							| Quản lý undo/redo, back/forward (browser)
-Xóa/chèn O(1) nếu có con trỏ 				| Scheduler, task queue với loại bỏ linh hoạt
-Không cần duyệt toàn bộ để xóa phần tử 		| Tốt hơn ArrayList trong các thao tác insert/delete giữa danh sách
-Có thể cắt nối / merge danh sách dễ dàng 	| Dùng trong cấu trúc LRU Cache, Media playlist, Job Queue
-
-
-
-# ⚖️ V. So sánh với các cấu trúc khác 
-	
-
-Cấu trúc 		| Truy cập ngẫu nhiên	 | Thêm/Xoá đầu/cuối 		| Truy cập 2 chiều
-ArrayList 			| ✅ (O(1))   		 | ❌ (chậm ở đầu) 				| ❌
-Singly Linked List  | ❌ (chậm)   		 | ✅ (đầu nhanh) 				| ❌
-Doubly Linked List  | ❌ 			 	 | ✅ 							| ✅
-
-
-
-# 🛠️ VI. Ứng dụng thực tế ở cấp độ kiến trúc 
-	
-
-	## LRU Cache
-	
-		Khi cần xóa phần tử ít dùng nhất, ta dùng DLL + HashMap.
-		DLL giữ thứ tự truy cập, HashMap giúp truy cập node O(1).
+			@Cacheable(value = "products", key = "#id")
+			public Product getProduct(Long id) { ... }
+		→ Lần đầu gọi, truy vấn DB. Sau đó, trả kết quả từ cache (ví dụ Redis). 
 		
-		LinkedHashMap<K, V> // Java đã cài đặt sẵn bằng DLL
-
-	## Undo/Redo Stack 
+	## 	3. Database Query Cache 
 	
-		Undo: đi về phía prev
-		Redo: đi về phía next
+		-   Hibernate cache (L1, L2)
+		-   Query result cache với Redis
+		-   Tăng tốc truy vấn phức tạp (JOIN, AGGREGATE...)
+			
 
-
-	##  Web Browser History 
-		Dữ liệu cần di chuyển qua lại (Back/Forward). 
+	## 4 . HTTP/API Gateway Cache 
+		API Gateway (Kong, Nginx, Cloudflare...) có thể cache response 
 		
-	##  Media Playlist 
-		Dễ dàng điều hướng và xoá bài giữa danh sách. 
+		Ví dụ: 
+			/weather/tokyo cache trong 10s
+			/exchange-rate cache 5 phút
+
+
+
+	## 5. Distributed Cache (dùng trong Microservices)
+	
+		Dùng Redis, Memcached như layer trung gian dữ liệu giữa services
+		Ví dụ: auth service cache access token, user info để các service khác không cần query DB
+
+
+
+# ⚙️ CÁC LOẠI CACHE PHỔ BIẾN 
+	
+Loại cache				Mô tả ngắn										Công cụ phổ biến
+In-memory				Nằm trong RAM app								Guava Cache, Caffeine
+Distributed				Dùng giữa nhiều server/service					Redis, Memcached
+HTTP cache				Cache response theo URL + headers				Nginx, Cloudflare, Varnish
+File cache				Lưu data tính toán (VD: image, model)			Local disk, CDN
+Build cache				Cache kết quả build/test để tăng tốc CI			GitHub Cache, Docker layer
+
+
+
+# 🧪 CÁC TRƯỜNG HỢP SỬ DỤNG CACHE CỤ THỂ 
+	
+
+Tình huống																	Giải pháp cache
+Gọi OpenAI API 1000 lần/ngày								Cache kết quả prompt trong Redis/SQLite
+Truy vấn getUserById(id) 10 lần/giây						@Cacheable với key = userId
+Trang sản phẩm truy cập nhiều								CDN + API Gateway Cache + Redis
+Thống kê realtime nhưng update mỗi phút						Cache query trong 30s → update async sau
+CI/CD chạy Maven build mất 5 phút							Cache .m2/ và Docker layers
+Mobile app load dữ liệu từ API								Cache offline (Room DB, localStorage, PWA SW)
+
+
+
+# 🔥 NHỮNG SAI LẦM CHẾT NGƯỜI KHI DÙNG CACHE 
+	
+
+			Không có chiến lược invalidation (xóa cache)
+			→ Dữ liệu stale, sai, hoặc bị leak thông tin
+			
+			Dùng cache cho dữ liệu thay đổi liên tục (stock, balance...)
+			→ Cache không phù hợp → gây lỗi nghiêm trọng
+			
+			Không có TTL (time-to-live)
+			→ Cache sống mãi, không dọn → memory leak hoặc dữ liệu lỗi thời
+			
+			Quên phân biệt cache theo user/session/region
+			→ Trả nhầm kết quả của người khác
+
+
+# 🧠 STRATEGY(chiến lược) CHO SENIOR/ARCHITECT 
+	
+	## 🔄 Cache Invalidation: 
+	
+		Cache không chỉ set là xong, mấu chốt là khi nào xóa hoặc làm mới (refresh).
+		TTL (time to live): hết hạn tự xóa
+		Manual invalidate: khi update data, gọi cache.evict(...)
+		Write-through, Read-through, Cache-aside: chiến lược phổ biến
+
+
+	## 🏗 Thiết kế Cache Layer: 
+		User → CDN → API Gateway (cache) → Backend → Redis → DB
 		
-		
-	##  Job Dispatcher / Task Queue 
-		Duy trì một danh sách có thể thêm, xóa ở cả hai đầu → Double-ended Queue (Deque). 
-		
-		
-# 	🧪 VII. Cài đặt custom Doubly Linked List (senior-friendly) 
-	
-class DoublyLinkedList {
-    private Node head;
-    private Node tail;
+	Cache theo tầng, mỗi tầng có TTL khác nhau
+	Tầng trên fail → dùng tầng dưới fallback
 
-    public void insertAtFront(int data) {
-        Node newNode = new Node(data);
-        newNode.next = head;
-        if (head != null)
-            head.prev = newNode;
-        else
-            tail = newNode; // danh sách rỗng
-        head = newNode;
-    }
-
-    public void delete(Node node) {
-        if (node == null) return;
-
-        if (node.prev != null)
-            node.prev.next = node.next;
-        else
-            head = node.next;
-
-        if (node.next != null)
-            node.next.prev = node.prev;
-        else
-            tail = node.prev;
-    }
-
-    public void traverseForward() {
-        Node curr = head;
-        while (curr != null) {
-            System.out.print(curr.data + " ");
-            curr = curr.next;
-        }
-        System.out.println();
-    }
-
-    public void traverseBackward() {
-        Node curr = tail;
-        while (curr != null) {
-            System.out.print(curr.data + " ");
-            curr = curr.prev;
-        }
-        System.out.println();
-    }
-}
-
-
-
-
-
-# 	🧠 VIII. Khi nào KHÔNG dùng Doubly Linked List? 
-
-Tình huống 									| Lý do
-Cần truy cập ngẫu nhiên 					| Array/ArrayList tốt hơn
-Bộ nhớ giới hạn 							| DLL dùng gấp đôi bộ nhớ mỗi node
-Không cần thao tác chèn/xoá giữa danh sách  | Không cần thiết dùng DLL	
-	
-	
-	
-# 	📚 IX. Các khái niệm liên quan bạn nên nắm (để chuyên sâu):
-
-Chủ đề											 | Mô tả
-LinkedHashMap 					| Cấu trúc bên trong là DLL để giữ thứ tự
-Deque 							| Double Ended Queue có thể dùng DLL
-Cursor-based LinkedList			| Trong C hoặc hệ thống nơi không dùng con trỏ thật
-Lock-free Linked List			| Dùng CAS, atomic operation cho concurrent
-Persistent List					| Danh sách bất biến (immutable) trong functional programming
-
-# 🎯 Tóm lại
-	Doubly Linked List là cấu trúc cực kỳ quan trọng nếu bạn làm các hệ thống cần quản lý dữ liệu theo thứ tự thay đổi, cần thêm/xoá nhanh mà không cần giữ kích thước cố định như array.
-	
-		Đơn giản nhưng hiệu quả.
-		Cơ sở của nhiều cấu trúc: Deque, LRU Cache, History Stack.
-		Là một kỹ năng "bắt buộc phải thành thạo" nếu bạn làm việc gần hệ thống (System Engineer, Java Backend).
-	
-	
-	
-	
-	
 </pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

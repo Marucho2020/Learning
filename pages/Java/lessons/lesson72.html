@@ -1,215 +1,60 @@
-<html><head><title>Lesson 72 == Service Discovery ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 72 -- Service Discovery -//</h1><pre>
-# Khái niệm  
-	Service Discovery là trái tim của kiến trúc microservices, giúp các dịch vụ tìm thấy nhau mà không cần biết trước đị chỉ IP. 
+<html><head><title>Lesson 72 == AsyncSupportConfigurer ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 72 -- AsyncSupportConfigurer -//</h1><pre>
+# Khái niệm 
+	AsyncSupportConfigurer được dùng để bật hỗ trợ xử lý bất đồng bộ (Asynchronous processing) trong Spring MVC. 
 	
-	🔹 Khi hệ thống có nhiều microservices, mỗi services chạy trên các instance khác nhau (VM , container , Kubernetes pod )
-	🔹 Các instance này có thể thay đổi địa chỉ IP liên tục do scale up/down, container bị di chuyển, hoặc hệ thống gặp lỗi và khởi động lại 
-	🔹Vấn đề : làm thế nào để service A tìm được địa chỉ của service B 
-	✅Giải pháp : Dùng Service Discovery để quản lý danh sách các service một cách tự động  
+	## 📌 Tại sao cần AsyncSupportConfigurer? 
 	
+		- Khi một request HTTP cần thời gian xử lý dài (như gọi API bên ngoài, xử lý file lớn).
+		- Nếu không dùng async, thread bị block, gây ảnh hưởng hiệu suất.
+		- Với async, Spring giải phóng thread chính, giúp server chịu tải tốt hơn.
+		
+		
+# 	📌 Cấu hình AsyncSupportConfigurer 	
+		
+		
+	@Configuration
+	public class AsyncConfig implements WebMvcConfigurer {
 	
-	## Hai mô hình Service Discovery chính 
-			A . Client-side  Service Discovery 
-			B. Server-side Service Discovery (Proxy-based Discovery)
+		@Override
+		public void configureAsyncSupport(AsyncSupportConfigurer configurer) {
+			configurer.setDefaultTimeout(5000); // Timeout 5 giây
+			configurer.setTaskExecutor(new SimpleAsyncTaskExecutor()); // Dùng thread pool
+		}
+	}
 
-# A . Client-side  Service Discovery 
-		
-		
-	## Cách hoạt động 
-		- Client chịu trách nhiệm tìm địa chỉ của service cần gọi 
-		- Client gửi yêu cầu đến Service Registry, nhận danh sách các instance 
-		- Client chọn một instance và gửi request 
-		
-	## Thành phần chính : 
-		
-		### 1. Service Registry (Đăng ký dịch vụ )
-			- Lưu danh sách các service đang hoạt động 
-			- Các service tự động đăng ký, xóa đăng ký khi khởi động hoặc shutdown 
-			- Ví dụ : Consul, Eureka, Etcd , ZooKeeper 
-			
-		### 2. Client-side Load Balancer 
-			- Client quyết định gửi request đến instance nào 
-			- Ví dụ : Ribbon(Spring Cloud Netflix) , gRPC LoadBalancer 
-			
-	## Ưu điểm  
-		- Không  có bottleneck vì client tự quản lý service discovery 
-		- Giảm tải cho hệ thống (không cần proxy trung gian)
-		- TÍch hợp tốt với các ứng dụng gRPC 
-		
-	## Nhược điểm 
-		- Mỗi client phải có logic xử lý service discovery 
-		- Không phù hợp với các hệ thống phức tạp (hàng ngàn service )
-		
-	## Công nghệ phổ biến  
-		✅ Eureka(Spring Cloud Netflix)
-		✅ Consul (HashiCorp)
-		✅ Etcd(Kubernetes, CoreDNS)
-		
-	
-# B. Server-side Service Discovery (Proxy-based Discovery)	
-
-	
-	## Cách hoạt động 
-		- Client gửi request đến một proxy trung gian (Load Balancer hoặc API Gateway)
-		- Proxy này sẽ lookup trong Service Registry và chuyển tiếp request đến service phù hợp 
-		
-	## Thành phần chính : 
-
-		### Service Registry 
-			- Lưu danh sách các service đang hoạt động 
-			- Các service tự động đăng ký, xóa đăng ký khi khởi động hoặc shutdown 
-			- Ví dụ : Consul, Eureka, Etcd , ZooKeeper 
-			
-		### Service Proxy (API Gateway hoặc Load Balancer)	
-			- Proxy sẽ kiểm tra Service Registry, chọn instance phù hợp 
-			- Ví dụ Envoy, Nginx, HAProxy, Istio, Kong API Gateway. 
-			
-	
-	
-
-	## Ưu điểm 
-		✅ Client không cần logic service discovery → đơn giản hơn.
-		✅ Tích hợp tốt với Service Mesh.
-		✅ Hỗ trợ load balancing, retries, circuit breaking.
-	
-	## Nhược điểm  
-		❌ Proxy có thể trở thành bottleneck.
-		❌ Tốn thêm tài nguyên để chạy proxy. 
-
-	## Công nghệ phổ biến  
-	
-		✅ Istio + Envoy (Kubernetes)
-		✅ Nginx + Consul
-		✅ Kong API Gateway
+	📌 setDefaultTimeout(5000): Timeout mặc định cho request async.
+	📌 setTaskExecutor(new SimpleAsyncTaskExecutor()): Dùng thread pool để chạy request bất đồng bộ.
 
 
-# Ứng dụng Service Discovery trong thực tế (Use Cases ) 
 
-	## 1. Service Discovery với Spring Cloud(Netflix Eureka)
+# 📌 Ví dụ Controller dùng Async 
+
+		@RestController
+		@RequestMapping("/async")
+		public class AsyncController {
 		
-		Nếu bạn thiết kế hệ thống bằng Spring Boot, Eureka là một lựa chọn phổ biến.
-		
-	📌 Cấu trúc:
-		- Eureka Server → Service Registry. 
-		- Eureka Client → Các microservices đăng ký vào Eureka. 
-		- Ribbon / Feign Client → Load Balancer phía client.
-		
-		
-	📌 Cách triển khai: 
-	
-		### Khai báo Eureka Server:
-		
-		
-			@SpringBootApplication
-			@EnableEurekaServer
-			public class EurekaServerApplication {
-				public static void main(String[] args) {
-					SpringApplication.run(EurekaServerApplication.class, args);
-				}
+			@GetMapping("/process")
+			public Callable<String> asyncProcess() {
+				return () -> {
+					Thread.sleep(3000); // Giả lập xử lý lâu 3 giây
+					return "Process Completed!";
+				};
 			}
-
-		###   Khai báo Eureka Client:
-		
-				@SpringBootApplication
-				@EnableEurekaClient
-				public class ServiceAApplication {
-					public static void main(String[] args) {
-						SpringApplication.run(ServiceAApplication.class, args);
-					}
-				}
-
-		 
-		###  Gọi API của một service khác (Feign Client): 
-		
-		
-			@FeignClient(name = "service-b")
-			public interface ServiceBClient {
-				@GetMapping("/api/data")
-				String getData();
-			}
-
-		 
-	## 📌 Ưu điểm của Eureka: 	 
-		 
-		✅ Tích hợp tốt với Spring Boot.
-		✅ Hỗ trợ self-preservation (cơ chế bảo vệ khi mất kết nối).
-		✅ Load balancing bằng Ribbon.	 
-		 
-	## 	 📌 Nhược điểm: 
-	
-		❌ Netflix đã ngừng hỗ trợ (deprecated).
-		❌ Không phù hợp với Kubernetes (dùng DNS tốt hơn).
-		 
-		 
-		 
-# 	Service Discovery trong Kubernetes (K8s) 
-	
-	📌 Mô hình trong Kubernetes 
-		Kubernetes tích hợp sẵn Service Discovery thông qua CoreDNS và Kube-Proxy.
-		
-		
-	🔹 DNS-based Service Discovery: 
-		Kubernetes tự động tạo DNS name cho mỗi service. 
-		Client chỉ cần gọi http://service-name.namespace.svc.cluster.local
-		
-		Ví dụ:
-			curl http://service-b.default.svc.cluster.local
-
-	
-
-	🔹 Service Mesh (Istio + Envoy) 
-		Istio quản lý Service Discovery bằng Sidecar Proxy (Envoy). 
-		Hỗ trợ mTLS, Circuit Breaking, Rate Limiting.
-		
-		Ví dụ:
-				apiVersion: networking.istio.io/v1alpha3
-				kind: VirtualService
-				metadata:
-				name: service-b
-				spec:
-				hosts:
-					- service-b
-				http:
-					- route:
-						- destination:
-							host: service-b
-							subset: v1
-	
-
-	# 📌 Ưu điểm của Kubernetes Service Discovery:
-		✅ Không cần service registry riêng biệt (dùng CoreDNS).
-		✅ Hỗ trợ auto-scaling.
-		✅ Kết hợp với Istio để quản lý observability, tracing, security.
-		
-	# 📌 Nhược điểm:
-	
-		❌ Không linh hoạt với hệ thống ngoài Kubernetes.
-		❌ Không hỗ trợ weighted load balancing mặc định (cần Istio).
-
-
-
-# 🚀 4. Khi nào chọn mô hình nào? 
-	
+		}
 	
 
 
-Tiêu chí			Client-side (Eureka, Consul)		Server-side (Envoy, Istio)			DNS-based (K8s)
-Tốc độ					🟢 Nhanh hơn					🟡 Có thêm latency do proxy				🟢 Nhanh
-Quy mô lớn				🔴 Khó scale					🟢 Dễ mở rộng							🟢 Dễ mở rộng
-Bảo mật (mTLS)			🔴 Không hỗ trợ					🟢 Hỗ trợ tốt (Istio)					🟡 Cần cấu hình
-Microservices			🟢 Tốt							🟢 Tốt									🟢 Tốt
-Hệ thống ngoài K8s		🟢 Hỗ trợ						🟢 Hỗ trợ								🔴 Không hỗ trợ
+	## 📌 Khi client gọi /async/process: 
+	
+		- Callable<String> được Spring xử lý bất đồng bộ.
+		- Thread chính được giải phóng ngay lập tức.
+		- Khi xử lý xong, Spring trả về response cho client.
 
-
-
-# ✅ Kết luận 
-
-
-🔹 Nếu dùng Spring Boot, chọn Eureka/Consul.
-🔹 Nếu hệ thống chạy trên Kubernetes, dùng CoreDNS hoặc Istio.
-🔹 Nếu hệ thống yêu cầu bảo mật cao, dùng Istio + Envoy Proxy.
-🔹 Nếu hệ thống có scale lớn, dùng API Gateway (Kong, Nginx) hoặc Service Mesh.
-
-
+# ✅ Ứng dụng: 
+	
+	Xử lý API chậm, gọi microservice, xử lý file lớn. 
+	Tăng throughput, giúp hệ thống chịu tải cao.
+	
+	
 
 </pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

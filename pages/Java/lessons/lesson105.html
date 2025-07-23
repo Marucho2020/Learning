@@ -1,152 +1,167 @@
-<html><head><title>Lesson 105 == Concurrent Tree ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 105 -- Concurrent Tree -//</h1><pre>
+<html><head><title>Lesson 105 == Double Linked List ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 105 -- Double Linked List -//</h1><pre>
 # Khái niệm 
-	Concurrent Tree là một nhánh nâng cao trong thiết kế cấu trúc dữ liệu dùng cho đa luồng (multi-threading), nơi mà các cây như Binary Search Tree, AVL, Red-Black Tree, B-Tree... được thiết kế để hỗ trợ truy cập và cập nhật song song mà vẫn đảm bảo đúng logic và không xảy ra race condition.
+	Là một cấu trúc dữ liệu tuyến tính, gồm các node, mỗi node chứa: 
+		1. Giá trị (data), 
+		2. Con trỏ đến node trước (prev), 
+		3. Con trỏ đến node sau (next). 
+		
+		NULL <- [1] <-> [2] <-> [3] <-> [4] -> NULL
+
+
+# 🧠 II. Cấu trúc bên trong node 
 	
-	Tại level senior system architect, bạn cần hiểu:
+class Node {
+    int data;
+    Node prev;
+    Node next;
 
-		Tại sao Concurrent Tree lại khó.
-		Các kỹ thuật đồng bộ hóa và tối ưu được dùng để giải quyết.
-		Cách triển khai một cây dữ liệu có thể chịu được tải cao trong môi trường đa luồng.
-		Những trade-off giữa hiệu năng và tính đồng bộ
-
-
-# 🧠 VẤN ĐỀ CỐT LÕI KHI DÙNG TREE TRONG MULTITHREADING
-
-	❌ Vấn đề: 
-		Race condition: 2 thread chạm cùng 1 node hoặc subtree.
-		Deadlock: nếu locking không đúng thứ tự.
-		Starvation: thread bị đói tài nguyên
-		Cache coherence và false sharing ảnh hưởng hiệu năng.
-		
-		
-# 	✅ YÊU CẦU CỦA 1 CONCURRENT TREE 
-| Yêu cầu                     | Diễn giải                                |
-| --------------------------- | ---------------------------------------- |
-| **Thread-safe**             | Đảm bảo truy cập đúng khi có nhiều luồng |
-| **Non-blocking (tùy chọn)** | Có thể dùng lock-free nếu cần            |
-| **Hiệu năng cao**           | Scale với số thread                      |
-| **Consistency**             | Cây luôn giữ đúng trạng thái             |
-
-
-# 🔧 CÁC CHIẾN LƯỢC ĐỒNG BỘ (LOCKING STRATEGIES)
-
-
-	## 1 . Global Lock
-		Lock toàn bộ cây mỗi lần truy cập 
-		Đơn giản, hiệu năng thấp → bottleneck 
-		
-	## 	2. Fine-Grained Locking 
-		Mỗi node có lock riêng (ReentrantLock) 
-		
-node.lock();
-try {
-   if (key < node.key)
-       go left;
-   else
-       go right;
-} finally {
-   node.unlock();
+    Node(int data) {
+        this.data = data;
+    }
 }
 
-	Cho phép truy cập song song ở các nhánh khác nhau
-	Dễ deadlock nếu không cẩn thận với thứ tự lock
+		Mỗi node đều có 2 chiều: đi tới (next) và quay lại (prev) → hỗ trợ truy cập 2 chiều và xoá/chèn linh hoạt hơn so với Singly Linked List.
+
+
+
+# 🧰 III. Các thao tác cơ bản 
+
+Operation		 	| Mục đích 				| Phức tạp 						| Tư duy
+insertHead()	 	| Chèn đầu 				| O(1)							| Gắn prev/next, cập nhật head
+insertTail() 	 	| Chèn cuối 			| O(1) (tail), O(n) or not 		| Truy cập tail, cập nhật con trỏ
+deleteNode(Node n)  | Xóa node cụ thể 		| O(1) 							| Cập nhật n.prev.next và n.next.prev
+traverseForward()	| Duyệt xuôi 			| O(n) 							| Đi từ head → next
+traverseBackward()  | Duyệt ngược 			| O(n) 							| Đi từ tail → prev
+
+
+
+# 🧠 IV. Ưu điểm thực sự của Doubly Linked List 
+
+Ưu điểm 									| Vì sao quan trọng trong hệ thống lớn
+Truy cập 2 chiều 							| Quản lý undo/redo, back/forward (browser)
+Xóa/chèn O(1) nếu có con trỏ 				| Scheduler, task queue với loại bỏ linh hoạt
+Không cần duyệt toàn bộ để xóa phần tử 		| Tốt hơn ArrayList trong các thao tác insert/delete giữa danh sách
+Có thể cắt nối / merge danh sách dễ dàng 	| Dùng trong cấu trúc LRU Cache, Media playlist, Job Queue
+
+
+
+# ⚖️ V. So sánh với các cấu trúc khác 
 	
 
-	## 3. Hand-over-hand locking (Lock Coupling)
-		Lock node hiện tại → lock node tiếp theo → rồi mới unlock node hiện tại 
+Cấu trúc 		| Truy cập ngẫu nhiên	 | Thêm/Xoá đầu/cuối 		| Truy cập 2 chiều
+ArrayList 			| ✅ (O(1))   		 | ❌ (chậm ở đầu) 				| ❌
+Singly Linked List  | ❌ (chậm)   		 | ✅ (đầu nhanh) 				| ❌
+Doubly Linked List  | ❌ 			 	 | ✅ 							| ✅
+
+
+
+# 🛠️ VI. Ứng dụng thực tế ở cấp độ kiến trúc 
+	
+
+	## LRU Cache
+	
+		Khi cần xóa phần tử ít dùng nhất, ta dùng DLL + HashMap.
+		DLL giữ thứ tự truy cập, HashMap giúp truy cập node O(1).
 		
-		-> Giữ tính nhất quán khi duyệt
-		-> Tốt hơn fine-grained nhưng vẫn blocking 
+		LinkedHashMap<K, V> // Java đã cài đặt sẵn bằng DLL
 
-
-
-
-## 🔥 LOCK-FREE TREE (ADVANCED) 
-	✨ Không dùng lock (dùng CAS – Compare and Swap) 
-			- Dựa vào AtomicReference, VarHandle, Unsafe 
-			- Dùng versioned pointers, logical deletion, marking flags
-			- Rất khó debug, chỉ dùng trong hệ thống cực kỳ yêu cầu hiệu suất 
-			
-		Ví dụ: Concurrent Skip List trong Java (ConcurrentSkipListMap) là lock-free tree-based structure.
-
-
-
-# 🌳 LOẠI CÂY PHÙ HỢP MULTITHREADING 
-| Cây                    | Có dùng concurrent version không?        | Ghi chú                            |
-| ---------------------- | ---------------------------------------- | ---------------------------------- |
-| BST                    | Có (tùy chỉnh locking)                   | Khó cân bằng                       |
-| AVL                    | Có (phức tạp do rotation)                | Cần phối hợp lock xoay cây         |
-| Red-Black Tree         | Có, nhưng rotation phức tạp              | Chỉ dùng nếu cần sorted map        |
-| Treap                  | Có, đơn giản rotation                    | Randomized balance giảm tranh chấp |
-| Skip List              | ✅ Dễ lock-free                           | Java dùng cho ConcurrentMap        |
-| B-Tree / B+Tree        | ✅ Dùng trong database (RocksDB, LevelDB) | Hỗ trợ concurrent insert/scan      |
-| Segment Tree / Fenwick | Hiếm (ít use case concurrent)            | Chủ yếu đọc nhiều, ít ghi          |
-
-
-
-# 📦 JAVA EXAMPLE: Concurrent Skip List
-Java có sẵn ConcurrentSkipListMap<K, V> là 1 lock-free sorted map:
-
-ConcurrentSkipListMap<Integer, String> map = new ConcurrentSkipListMap<>();
-map.put(10, "A");
-map.put(20, "B");
-map.remove(10);
-
-
-	Được dùng trong ConcurrentHashMap, ConcurrentNavigableMap
-	Cho phép insert/search/delete đồng thời
+	## Undo/Redo Stack 
 	
-	
-	
-# 	🔬 EXAMPLE: Concurrent Red-Black Tree (Khó)
-	
-	Bạn phải:
-	
-		Lock theo từng node (fine-grain)
-		Trong xoay cây (rotation), lock 2-3 node cùng lúc
-		Ghi nhớ việc đổi màu và giữ cây balanced
-	
-	Pseudo-code Lock Coupling (insert) 
-	
-parent.lock();
-Node curr = parent.left;
+		Undo: đi về phía prev
+		Redo: đi về phía next
 
-while (curr != null) {
-    curr.lock();
-    parent.unlock();
-    parent = curr;
-    curr = (key < curr.key) ? curr.left : curr.right;
+
+	##  Web Browser History 
+		Dữ liệu cần di chuyển qua lại (Back/Forward). 
+		
+	##  Media Playlist 
+		Dễ dàng điều hướng và xoá bài giữa danh sách. 
+		
+		
+	##  Job Dispatcher / Task Queue 
+		Duy trì một danh sách có thể thêm, xóa ở cả hai đầu → Double-ended Queue (Deque). 
+		
+		
+# 	🧪 VII. Cài đặt custom Doubly Linked List (senior-friendly) 
+	
+class DoublyLinkedList {
+    private Node head;
+    private Node tail;
+
+    public void insertAtFront(int data) {
+        Node newNode = new Node(data);
+        newNode.next = head;
+        if (head != null)
+            head.prev = newNode;
+        else
+            tail = newNode; // danh sách rỗng
+        head = newNode;
+    }
+
+    public void delete(Node node) {
+        if (node == null) return;
+
+        if (node.prev != null)
+            node.prev.next = node.next;
+        else
+            head = node.next;
+
+        if (node.next != null)
+            node.next.prev = node.prev;
+        else
+            tail = node.prev;
+    }
+
+    public void traverseForward() {
+        Node curr = head;
+        while (curr != null) {
+            System.out.print(curr.data + " ");
+            curr = curr.next;
+        }
+        System.out.println();
+    }
+
+    public void traverseBackward() {
+        Node curr = tail;
+        while (curr != null) {
+            System.out.print(curr.data + " ");
+            curr = curr.prev;
+        }
+        System.out.println();
+    }
 }
-insert node;
-parent.unlock();
+
+
+
+
+
+# 	🧠 VIII. Khi nào KHÔNG dùng Doubly Linked List? 
+
+Tình huống 									| Lý do
+Cần truy cập ngẫu nhiên 					| Array/ArrayList tốt hơn
+Bộ nhớ giới hạn 							| DLL dùng gấp đôi bộ nhớ mỗi node
+Không cần thao tác chèn/xoá giữa danh sách  | Không cần thiết dùng DLL	
 	
-# 	⚖️ TRADE-OFF KHI DÙNG CONCURRENT TREE
-	
-| Ưu điểm                        | Nhược điểm                              |
-| ------------------------------ | --------------------------------------- |
-| Hỗ trợ truy cập song song      | Phức tạp về locking                     |
-| Dữ liệu luôn đúng              | Dễ deadlock hoặc starvation             |
-| Tốt hơn Hashtable (nếu sorted) | Tốn bộ nhớ (extra lock fields)          |
-| Có thể lock-free (SkipList)    | Không phù hợp cho update-heavy workload |
 	
 	
-# 	📘 KIẾN THỨC CẦN NẮM VỮNG ĐỂ LÀM CHỦ CONCURRENT TREE 
-| Kiến thức                  | Mục tiêu                                               |
-| -------------------------- | ------------------------------------------------------ |
-| Tree Rotation, Balance     | Hiểu logic tự cân bằng khi có nhiều thread             |
-| Concurrency in Java        | Lock, volatile, atomic, `ReentrantLock`, `StampedLock` |
-| CAS operation              | Dùng `AtomicReference`, `compareAndSet()`              |
-| Memory model               | Happens-before, visibility                             |
-| Lock-free data structure   | SkipList, Treiber Stack, Michael-Scott Queue           |
-| Thread-safe design pattern | Copy-on-write, immutable tree                          |
+# 	📚 IX. Các khái niệm liên quan bạn nên nắm (để chuyên sâu):
 
+Chủ đề											 | Mô tả
+LinkedHashMap 					| Cấu trúc bên trong là DLL để giữ thứ tự
+Deque 							| Double Ended Queue có thể dùng DLL
+Cursor-based LinkedList			| Trong C hoặc hệ thống nơi không dùng con trỏ thật
+Lock-free Linked List			| Dùng CAS, atomic operation cho concurrent
+Persistent List					| Danh sách bất biến (immutable) trong functional programming
 
-# 🎯 ỨNG DỤNG THỰC TẾ
-
-	Database: RocksDB, LevelDB dùng concurrent B+Tree
-	Search engine: Lucene sử dụng concurrent tree structures
-	In-memory cache: Sorted LRU caches cần concurrent AVL / RBT
-	Realtime analytics: Dữ liệu streaming cần update/scan song song
-
-
+# 🎯 Tóm lại
+	Doubly Linked List là cấu trúc cực kỳ quan trọng nếu bạn làm các hệ thống cần quản lý dữ liệu theo thứ tự thay đổi, cần thêm/xoá nhanh mà không cần giữ kích thước cố định như array.
+	
+		Đơn giản nhưng hiệu quả.
+		Cơ sở của nhiều cấu trúc: Deque, LRU Cache, History Stack.
+		Là một kỹ năng "bắt buộc phải thành thạo" nếu bạn làm việc gần hệ thống (System Engineer, Java Backend).
+	
+	
+	
+	
+	
 </pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
