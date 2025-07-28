@@ -1,0 +1,118 @@
+<html><head><title>Lesson 152 == Stream performance tuning ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 152 -- Stream performance tuning -//</h1><pre>
+	Trong hệ thống lớn, Stream API của Java là một công cụ rất mạnh để xử lý dữ liệu, nhưng cũng có thể là nguyên nhân gây ra bottleneck nếu không được tinh chỉnh đúng cách. Dưới đây là phân tích chi tiết cấp độ senior về Stream performance tuning kèm theo các góc nhìn thực chiến:
+
+
+# ⚙️ 1. Hiểu rõ bản chất của Stream
+
+	Stream không lưu trữ dữ liệu → chỉ là một pipeline của các phép biến đổi (map, filter, flatMap, v.v.)
+	
+	Stream là lazy → các operations trung gian không thực hiện cho đến khi có terminal operation (collect, reduce, count, forEach,...).
+	
+	→ Điều này rất quan trọng: nếu không có terminal operation → Stream không làm gì cả.
+
+
+# 🚧 2. Tránh các lỗi hiệu năng phổ biến 
+
+	## ❌ Sử dụng Stream sai ngữ cảnh 
+List<String> result = list.stream()
+    .filter(s -> s.length() > 3)
+    .map(String::toUpperCase)
+    .collect(Collectors.toList());
+
+
+		Nếu danh sách rất lớn → memory pressure tăng nhanh nếu không có short-circuiting.
+		Nếu list là một LinkedList, việc stream hóa sẽ chậm hơn ArrayList do random access yếu.
+		
+
+	## ✅ Khuyến nghị:
+
+		Chỉ dùng Stream khi thực sự cần: dữ liệu lớn + cần pipeline hóa logic rõ ràng.
+		Tránh dùng Stream trong loop hoặc khi cần logic phức tạp lồng nhau nhiều tầng.
+
+
+
+# 🧠 3. Sử dụng parallelStream một cách thông minh
+	parallelStream() có thể tăng hiệu năng… hoặc giết chết performance nếu dùng sai.
+	
+	## Khi nên dùng parallelStream(): 
+		- Dữ liệu lớn (>10,000 phần tử).
+		- Mỗi phép biến đổi đắt đỏ (CPU-intensive).
+		- Máy có nhiều core (đa luồng hiệu quả).
+
+
+	## Khi không nên dùng:
+
+		Dữ liệu nhỏ.
+		Có thao tác I/O blocking.
+		Mỗi phần tử cần truy cập vào shared state (sẽ gây contention).
+
+		⚠️ "Parallel is not always faster." – Benchmark kỹ từng tình huống trước khi tin tưởng nó.
+
+
+# 📚 4. Dùng Collector custom để giảm allocation
+	Collector<T, ?, Map<K, List<T>>> customCollector = 
+    Collectors.groupingBy(...);
+
+	Những Collector mặc định như groupingBy, partitioningBy có thể gây ra allocation thừa hoặc boxing.
+
+	## ✅ Tạo custom Collector nếu: 
+		Cần pooling / reuse container.
+		Muốn optimize memory footprint.
+
+
+
+# 🔄 5. Tránh các map() thừa hoặc .stream().stream() lồng nhau
+
+	Ví dụ tệ:
+
+list.stream()
+    .map(obj -> obj.getSubList().stream())
+    .collect(Collectors.toList());
+
+→ Không tạo được pipeline đúng, hoặc gây ra vấn đề boxing/unboxing khi xử lý primitive.
+
+	✅ Dùng flatMap nếu muốn flatten:
+	
+list.stream()
+    .flatMap(obj -> obj.getSubList().stream())
+    .collect(Collectors.toList());
+
+
+# 🧩 6. Ưu tiên primitive streams khi có thể
+
+IntStream.range(0, 1000000).sum();
+
+Stream<Integer>.range(...).reduce(...)
+
+	→ Tránh boxing/unboxing → giảm GC pressure.
+
+
+
+# 🧵 7. Cẩn trọng với stateful lambda và side effect
+
+List<String> logs = new ArrayList<>();
+list.stream()
+    .filter(x -> {
+        logs.add(x.toString());  // side effect
+        return true;
+    })
+    .collect(Collectors.toList());
+
+
+	→ Vừa sai với functional style, vừa gây race condition nếu dùng parallel stream.
+
+
+
+# ✅ Tổng kết: Những nguyên tắc Tuning cấp độ Senior 
+
+
+| Kỹ thuật                                         | Mục tiêu                             | Lưu ý                                  |
+| ------------------------------------------------ | ------------------------------------ | -------------------------------------- |
+| Dùng đúng loại `Stream` (sequential vs parallel) | Tối ưu performance theo workload     | Benchmark cẩn thận                     |
+| Tránh boxing                                     | Giảm GC & CPU overhead               | Dùng `IntStream`, `LongStream`...      |
+| Ưu tiên `flatMap` thay cho stream lồng           | Giảm nesting, dễ đọc                 | Tránh `stream().stream()`              |
+| Custom Collector                                 | Giảm allocation, tăng tính linh hoạt | Yêu cầu hiểu sâu `Collector` interface |
+| Tránh `stateful lambda`                          | Đảm bảo purity                       | Dễ gây race condition                  |
+| Không lạm dụng stream                            | Khi logic đơn giản                   | `for` loop vẫn rất hiệu quả            |
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
