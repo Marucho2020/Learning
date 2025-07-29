@@ -115,4 +115,173 @@ list.stream()
 | Tránh `stateful lambda`                          | Đảm bảo purity                       | Dễ gây race condition                  |
 | Không lạm dụng stream                            | Khi logic đơn giản                   | `for` loop vẫn rất hiệu quả            |
 
+
+
+/===================== Reactive Streams (Project Reactor, RxJava) ===============
+
+# 🧠 I. Reactive Streams là gì?
+	Reactive Streams là một chuẩn giao tiếp bất đồng bộ, không chặn (non-blocking), backpressure-aware để xử lý dòng dữ liệu (stream) không đồng bộ giữa các thành phần.
+	
+# 	⚙️ 1. Mục tiêu của Reactive Streams:
+	
+	- Asynchronous: xử lý dữ liệu không đồng bộ.
+	- Non-blocking: không giữ thread chờ dữ liệu.
+	- Backpressure: kiểm soát tốc độ tiêu thụ dữ liệu, tránh tràn bộ nhớ.
+
+
+# 📦 II. Reactive Streams API chuẩn
+	
+public interface Publisher<T> {
+    void subscribe(Subscriber<? super T> s);
+}
+
+public interface Subscriber<T> {
+    void onSubscribe(Subscription s);
+    void onNext(T t);
+    void onError(Throwable t);
+    void onComplete();
+}
+
+public interface Subscription {
+    void request(long n);
+    void cancel();
+}
+
+public interface Processor<T, R> extends Subscriber<T>, Publisher<R> {}
+
+
+Đây là specification gốc. Project Reactor, RxJava, Akka Streams, Spring WebFlux... đều tuân thủ chuẩn này.
+
+
+# ⚙️ III. Project Reactor vs RxJava
+
+| Khía cạnh              | Project Reactor         | RxJava                                      |
+| ---------------------- | ----------------------- | ------------------------------------------- |
+| Được phát triển bởi    | Pivotal / Spring Team   | Netflix                                     |
+| Phù hợp với            | Spring WebFlux, Java 8+ | Android, general reactive                   |
+| API chính              | `Mono<T>`, `Flux<T>`    | `Single<T>`, `Observable<T>`, `Flowable<T>` |
+| Backpressure           | Native                  | `Observable` không hỗ trợ, `Flowable` có    |
+| Chuẩn Reactive Streams | ✅                       | ✅ (chỉ `Flowable`)                          |
+| Sử dụng phổ biến       | Backend, microservices  | Android, backend                            |
+
+# 🚀 IV. Cấu trúc cơ bản
+
+Flux<String> flux = Flux.just("A", "B", "C")
+    .map(s -> s.toLowerCase())
+    .filter(s -> !s.equals("b"))
+    .doOnNext(System.out::println)
+    .subscribe();
+
+Flux<T> = stream nhiều phần tử.
+
+Mono<T> = stream duy nhất 1 phần tử (hoặc không có gì).
+
+
+
+	## RxJava: 
+		
+Observable<String> obs = Observable.just("A", "B", "C")
+    .map(String::toLowerCase)
+    .filter(s -> !s.equals("b"))
+    .subscribe(System.out::println);
+
+
+# 🧩 V. Các khái niệm Senior cần nắm vững
+
+	##1. Backpressure 
+		Khi nguồn phát (Publisher) tạo dữ liệu quá nhanh, làm nghẽn subscriber → cần kiểm soát.
+
+
+		### RxJava: 
+			Observable không hỗ trợ → dễ OOM.
+			Flowable hỗ trợ → dùng chiến lược như BUFFER, DROP, LATEST, ERROR.
+			
+Flowable.interval(1, TimeUnit.MILLISECONDS)
+    .onBackpressureDrop()
+    .observeOn(Schedulers.io())
+    .subscribe(...);
+
+		### Reactor: 
+			Flux luôn backpressure-aware.
+			Subscriber dùng request(n) để lấy số lượng dữ liệu mong muốn.
+
+
+
+
+	## 2. Operators – Functional Style
+	
+	| Nhóm           | Ví dụ                                 |
+| -------------- | ------------------------------------- |
+| Transform      | `map`, `flatMap`, `concatMap`         |
+| Filter         | `filter`, `take`, `skip`, `distinct`  |
+| Combine        | `merge`, `zip`, `combineLatest`       |
+| Error handling | `onErrorResume`, `retry`, `doOnError` |
+| Terminal       | `subscribe`, `block`, `collectList`   |
+
+		flatMap có thể phát tán bất đồng bộ, concatMap duy trì thứ tự.
+	
+# 	3. Schedulers & Threading
+	Bạn phải kiểm soát luồng trong Reactive để tránh race condition.
+	
+Flux.just(1,2,3)
+    .subscribeOn(Schedulers.boundedElastic())  // nơi emit
+    .publishOn(Schedulers.parallel())          // nơi xử lý
+    .map(i -> i * 2)
+    .subscribe(System.out::println);
+	
+	subscribeOn: định nghĩa thread bắt đầu stream
+	publishOn: chuyển luồng ở giữa pipeline
+	
+	
+# 🧵 VI. Reactive trong hệ thống lớn
+
+	##  ⚡ Reactive vs Imperative 
+
+| Imperative             | Reactive                               |
+| ---------------------- | -------------------------------------- |
+| Blocking               | Non-blocking                           |
+| Nhiều thread, chờ đợi  | Ít thread, CPU hiệu quả                |
+| Dễ hiểu                | Khó debug, cần thiết kế lại            |
+| Tốt cho logic đơn giản | Tốt cho API gateway, stream, websocket |
+
+
+
+# ☠️ Những lỗi chết người trong hệ thống reactive:
+
+| Lỗi                               | Hậu quả                        |
+| --------------------------------- | ------------------------------ |
+| Quên xử lý backpressure           | Tràn bộ nhớ, crash             |
+| Gọi `.block()` trong WebFlux      | Chặn event loop → mất reactive |
+| Side-effect trong `map()`         | Dễ gây bug khó trace           |
+| Dùng `parallel()` không kiểm soát | Race condition, kết quả sai    |
+| Không monitor timeout/cancel      | Leak kết nối, queue đầy        |
+
+
+
+# 🛠️ VII. Spring WebFlux (dùng Reactor)
+
+@GetMapping("/users/{id}")
+public Mono<User> getUser(@PathVariable String id) {
+    return userService.getUserById(id); // Mono<User>
+}
+
+	WebFlux = non-blocking HTTP layer dựa trên Project Reactor
+	Không cần container threadpool như Tomcat truyền thống
+
+
+# ✅ Tổng kết – Senior checklist về Reactive
+
+| Cần hiểu rõ                               | Giải thích                                   |
+| ----------------------------------------- | -------------------------------------------- |
+| `Publisher`, `Subscriber`, `Subscription` | Foundation của reactive spec                 |
+| `Mono`, `Flux`, `Flowable`, `Observable`  | Tính chất, ưu nhược, khi nào dùng            |
+| Backpressure mechanics                    | Kiểm soát tốc độ xử lý dữ liệu               |
+| Hot vs Cold Publisher                     | Phân biệt stream dạng nóng/lạnh              |
+| Error propagation                         | `onErrorResume`, `retry`, `fallback`         |
+| Scheduling model                          | Threading + Performance tuning               |
+| Reactive vs Blocking                      | Tư duy mới về hệ thống không thread-blocking |
+
+
+
+
 </pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
