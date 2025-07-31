@@ -1,0 +1,135 @@
+<html><head><title>Lesson 154 == Stream ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 154 -- Stream -//</h1><pre>
+# 1. ✅ Stream là gì trong Java?
+
+Trong Java, “stream” là khái niệm chỉ luồng dữ liệu (data flow) giữa nguồn (source) và đích (destination). Có hai hệ thống stream tách biệt:
+
+
+| Stream Type           | Dùng để xử lý             | Interface Gốc                 |
+| --------------------- | ------------------------- | ----------------------------- |
+| **Byte Streams**      | Dữ liệu nhị phân (binary) | `InputStream`, `OutputStream` |
+| **Character Streams** | Dữ liệu text (Unicode)    | `Reader`, `Writer`            |
+
+
+
+# 2. 📦 Byte Stream là gì?
+
+	
+	Byte Stream đọc/ghi dữ liệu theo từng byte (8 bit). Phù hợp với:
+	
+		- File nhị phân (ảnh, audio, PDF…)
+		- Mạng, socket, file truyền tải không có encoding
+
+
+	🔧 Các lớp phổ biến: 
+	
+| Direction  | Class                                                                                    |
+| ---------- | ---------------------------------------------------------------------------------------- |
+| Input      | `InputStream` (abstract)                                                                 |
+| Output     | `OutputStream` (abstract)                                                                |
+| Subclasses | `FileInputStream`, `BufferedInputStream`, `DataInputStream`, `ByteArrayInputStream`, ... |
+	
+	
+try (InputStream in = new FileInputStream("file.bin")) {
+    int b;
+    while ((b = in.read()) != -1) {
+        // Xử lý từng byte
+    }
+}
+	
+	
+	
+	
+#3. 🧾 Character Stream là gì?
+	
+	Xử lý dữ liệu text (Unicode) theo từng char (16-bit).
+	Dựa vào encoding (UTF-8, UTF-16...) để ánh xạ byte thành ký tự.
+	
+| Direction  | Class                                                                |
+| ---------- | -------------------------------------------------------------------- |
+| Input      | `Reader`                                                             |
+| Output     | `Writer`                                                             |
+| Subclasses | `FileReader`, `BufferedReader`, `CharArrayReader`, `StringReader`... |
+	
+	Ví dụ: Đọc file văn bản
+	
+try (Reader reader = new FileReader("file.txt")) {
+    int ch;
+    while ((ch = reader.read()) != -1) {
+        System.out.print((char) ch);
+    }
+}
+
+
+# 4. 🎯 Các kiểu Stream phân loại theo tính năng
+| Loại Stream            | Mục đích                                                |
+| ---------------------- | ------------------------------------------------------- |
+| `BufferedInputStream`  | Buffer dữ liệu để giảm số lần truy xuất I/O vật lý      |
+| `DataInputStream`      | Đọc kiểu dữ liệu nguyên thủy (int, float, long, UTF...) |
+| `ObjectInputStream`    | Đọc/ghi object đã được serialize                        |
+| `ByteArrayInputStream` | Đọc từ mảng byte như thể là stream                      |
+| `PipedInputStream`     | Dùng cho thread-to-thread communication nội bộ          |
+| `PrintStream`          | Ghi dữ liệu tiện lợi như `System.out` với format đẹp    |
+
+
+	
+	
+	
+# 5. 🧠 Khác biệt cốt lõi Byte vs Character Stream
+
+| Feature            | Byte Stream                   | Character Stream           |
+| ------------------ | ----------------------------- | -------------------------- |
+| Đơn vị dữ liệu     | Byte (8-bit)                  | Character (16-bit Unicode) |
+| Giao diện gốc      | `InputStream`, `OutputStream` | `Reader`, `Writer`         |
+| Phù hợp xử lý      | File nhị phân, mạng, ảnh      | Text, XML, JSON            |
+| Cần xử lý encoding | ❌ Không                       | ✅ Có                       |
+
+
+→ Senior note: Khi xử lý dữ liệu text từ mạng hoặc file binary có encoding, luôn phải explicit encoding với InputStreamReader.
+
+Reader reader = new InputStreamReader(
+    new FileInputStream("file.txt"), StandardCharsets.UTF_8);
+
+
+# 6. 🛠️ Stream chaining (Decorator Pattern)
+Java sử dụng Decorator Pattern để mở rộng tính năng stream:
+
+InputStream in = new BufferedInputStream(
+                    new FileInputStream("file.dat"));
+
+
+
+# 7. 🔬 Stream trong Java 8 (Functional API) vs I/O Stream
+
+| Java 8 Stream API                                                       | Java I/O Stream                |
+| ----------------------------------------------------------------------- | ------------------------------ |
+| Dòng các phần tử (element pipeline)                                     | Dòng byte hoặc ký tự           |
+| Functional (map, filter, reduce)                                        | Imperative (read/write)        |
+| Không liên quan đến I/O (trừ `Files.lines()`, `BufferedReader.lines()`) | Gốc rễ cho I/O file, socket... |
+
+
+Đừng nhầm lẫn Stream<T> của Java 8 với InputStream, chúng hoàn toàn khác nhau.
+
+
+
+# 8. ⚠️ Các lỗi thường gặp (Senior chú ý)
+
+	- Không đóng stream (gây leak resource)
+	- Encoding sai lệch: Đọc ghi text sai UTF-8, mất tiếng Việt/kanji
+	- Read toàn bộ file vào bộ nhớ → OOM
+	- Không dùng Buffered gây slowdown do gọi I/O vật lý nhiều lần
+
+
+
+# 9. 📌 Kết luận – Khi nào dùng loại nào?
+
+
+| Nhu cầu                          | Lựa chọn Stream                              |
+| -------------------------------- | -------------------------------------------- |
+| File nhị phân (ảnh, zip, mp3...) | `FileInputStream` / `BufferedInputStream`    |
+| File văn bản UTF-8               | `BufferedReader(new InputStreamReader(...))` |
+| Truyền dữ liệu giữa thread       | `PipedInputStream`, `PipedOutputStream`      |
+| Đọc dữ liệu nguyên thủy          | `DataInputStream`                            |
+| Serialize/Deserialize object     | `ObjectInputStream` / `ObjectOutputStream`   |
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

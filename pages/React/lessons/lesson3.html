@@ -1,0 +1,251 @@
+<html><head><title>Lesson 3 == React ES6 ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../react-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 3 -- React ES6 -//</h1><pre>
+# 1. Tổng quan về ES6 và vai trò trong React
+	Tóm tắt: ES6 (ECMAScript 2015) là một bản cập nhật lớn cho JavaScript, giới thiệu nhiều tính năng hiện đại giúp mã nguồn ngắn gọn, dễ đọc và mạnh mẽ hơn. Trong React, ES6 được sử dụng rộng rãi để viết các component, quản lý trạng thái, và xử lý logic, vì nó giúp đơn giản hóa cú pháp và cải thiện hiệu suất phát triển.
+
+	Tóm tắt: ES6 (ECMAScript 2015) là một bản cập nhật lớn cho JavaScript, giới thiệu nhiều tính năng hiện đại giúp mã nguồn ngắn gọn, dễ đọc và mạnh mẽ hơn. Trong React, ES6 được sử dụng rộng rãi để viết các component, quản lý trạng thái, và xử lý logic, vì nó giúp đơn giản hóa cú pháp và cải thiện hiệu suất phát triển.
+
+	## Tại sao ES6 quan trọng trong React?
+		React được xây dựng với tư duy hiện đại, tận dụng các tính năng ES6 để viết component ngắn gọn và dễ bảo trì.
+		Các công cụ như create-react-app tự động tích hợp Babel, chuyển mã ES6 thành mã tương thích với các trình duyệt cũ, nên bạn có thể yên tâm sử dụng ES6 mà không lo vấn đề tương thích.
+		Hầu hết các thư viện và tài liệu React hiện nay đều sử dụng cú pháp ES6, nên việc nắm vững ES6 là điều kiện tiên quyết để học React hiệu quả.
+		
+	
+# 2. Các tính năng ES6 chính trong React 
+	
+
+	## 2.1. Arrow Functions 
+
+// Trước ES6
+function add(a, b) {
+  return a + b;
+}
+
+// ES6 Arrow Function
+const add = (a, b) => a + b;
+
+		Arrow functions (=>) là cách viết hàm ngắn gọn, thường được sử dụng trong React để định nghĩa các hàm xử lý sự kiện hoặc callback.
+	
+		Không ràng buộc this: Trong các hàm thông thường, this có thể thay đổi tùy ngữ cảnh, gây lỗi trong React. Arrow functions giữ this từ ngữ cảnh xung quanh, rất hữu ích trong các component.	
+	
+function MyComponent() {
+  const handleClick = () => {
+    console.log('Button clicked!');
+  };
+
+  return <button onClick={handleClick}>Click me</button>;
+}	
+
+	Ở đây, handleClick là một arrow function, đảm bảo this trong component không bị thay đổi.
+
+
+	Tránh lạm dụng arrow functions trong các phương thức render vì chúng tạo ra hàm mới mỗi lần render, có thể ảnh hưởng hiệu suất. Nếu cần, sử dụng arrow function trong constructor hoặc định nghĩa hàm ngoài component.
+
+
+
+
+
+	## 2.2. Destructuring Assignment
+
+// Trước ES6
+const person = { name: 'John', age: 30 };
+const name = person.name;
+const age = person.age;
+
+// ES6 Destructuring
+const { name, age } = person;
+
+
+		### 
+
+		Destructuring cho phép trích xuất các giá trị từ object hoặc array một cách ngắn gọn.
+		Trong React, nó thường được dùng để:
+			- Lấy props trong functional components.
+			- Trích xuất state hoặc các giá trị từ object.
+
+function UserProfile({ name, age }) {
+  return (
+    <div>
+      <h1>{name}</h1>
+      <p>Age: {age}</p>
+    </div>
+  );
+}
+
+		Thay vì viết props.name và props.age, bạn destructuring trực tiếp { name, age } trong tham số, giúp mã sạch hơn.
+		
+		Destructuring cũng hoạt động với array: const [first, second] = [1, 2].
+		Có thể đặt tên bí danh (alias): const { name: userName } = person.			
+		
+		
+		
+	# 	2.3. Modules (Import/Export)
+		
+// export.js
+export const greeting = 'Hello';
+export default function sayHi() {
+  return 'Hi!';
+}
+
+// import.js
+import sayHi, { greeting } from './export';
+
+
+		ES6 giới thiệu hệ thống modules để tổ chức mã nguồn, thay thế cho các phương pháp cũ như CommonJS (require).
+		Trong React, modules được sử dụng để nhập/xuất component, hàm, hoặc hằng số.
+
+// App.js
+import React from 'react';
+import MyComponent from './MyComponent';
+
+function App() {
+  return <MyComponent />;
+}
+export default App;
+
+// MyComponent.js
+function MyComponent() {
+  return <h1>Hello from MyComponent!</h1>;
+}
+export default MyComponent;
+
+
+
+		
+		Có hai loại export:
+			Default export: export default ... – chỉ một mục duy nhất mỗi file.
+			Named export: export const ... – nhiều mục trong cùng file.	
+		
+		
+		Sử dụng modules giúp mã dễ tái sử dụng, dễ bảo trì, và tránh xung đột biến toàn cục.
+		
+		
+		
+		
+		
+	## 	2.4. Spread Operator 
+const arr1 = [1, 2];
+const arr2 = [...arr1, 3, 4]; // [1, 2, 3, 4]
+
+const obj1 = { a: 1 };
+const obj2 = { ...obj1, b: 2 }; // { a: 1, b: 2 }
+
+
+		Spread operator (...) sao chép hoặc hợp nhất các phần tử của array/object.
+			
+		Trong React, nó thường dùng để:
+
+		Truyền nhiều props cho component: <MyComponent {...props} />.
+		Cập nhật state mà không làm thay đổi bản gốc: setState({ ...state, newKey: newValue }).		
+		
+function MyComponent({ name, ...otherProps }) {
+  return <div {...otherProps}>Hello, {name}</div>;
+}
+
+// Sử dụng
+<MyComponent name="John" className="card" id="user1" />
+		
+		
+	Ở đây, ...otherProps truyền tất cả props còn lại (className, id) vào thẻ <div>.	
+		
+		
+		
+	## 	2.5. Template Literals
+	
+// Trước ES6
+const name = 'John';
+const greeting = 'Hello ' + name;
+
+// ES6 Template Literals
+const greeting = `Hello ${name}`;
+
+	Template literals dùng dấu backtick (`) để tạo chuỗi, hỗ trợ chèn biến hoặc biểu thức bằng ${}.
+	Trong React, nó hữu ích để tạo nội dung động hoặc xử lý chuỗi.
+
+function Welcome({ user }) {
+  return <h1>{`Hello, ${user}!`}</h1>;
+}
+
+
+
+
+	## 2.6. Classes (Optional)
+	
+class Person {
+  constructor(name) {
+    this.name = name;
+  }
+  sayHi() {
+    return `Hi, I'm ${this.name}`;
+  }
+}
+
+	ES6 giới thiệu cú pháp class để định nghĩa đối tượng theo hướng đối tượng (OOP).
+	Trong React, class được sử dụng trong class components (dù hiện nay functional components phổ biến hơn).
+
+import React from 'react';
+class MyComponent extends React.Component {
+  render() {
+    return <h1>Hello from Class Component</h1>;
+  }
+}
+export default MyComponent;
+
+	Functional components với Hooks (như useState, useEffect) dần thay thế class components vì cú pháp đơn giản hơn.
+	Tuy nhiên, hiểu cú pháp class vẫn hữu ích khi làm việc với các dự án cũ.
+
+	
+# 3. Ứng dụng thực tế trong React
+	
+	
+import React from 'react';
+
+// Named export
+export const user = { name: 'John', age: 30 };
+
+// Default export
+function UserProfile({ name, age, ...rest }) {
+  // Destructuring props
+  const handleClick = () => {
+    // Arrow function
+    console.log(`User: ${name}, Age: ${age}`); // Template literals
+  };
+
+  // Spread operator
+  const userDetails = { ...user, city: 'New York' };
+
+  return (
+    <div {...rest}>
+      <h1>{`Welcome, ${name}!`}</h1>
+      <p>Age: {age}</p>
+      <p>City: {userDetails.city}</p>
+      <button onClick={handleClick}>Log Details</button>
+    </div>
+  );
+}
+
+export default UserProfile;	
+	
+	
+	Modules: Sử dụng import/export để tổ chức mã.
+	Destructuring: Trích xuất name, age, và sử dụng ...rest cho các props khác.
+	Arrow function: handleClick đảm bảo this không bị thay đổi.
+	Template literals: Tạo chuỗi động cho nội dung.
+	Spread operator: Sao chép và mở rộng object user.
+	
+	
+	
+	
+# 	4. Bài học rút ra
+	
+	- ES6 trong React: Các tính năng như arrow functions, destructuring, modules, spread operator, và template literals là cốt lõi để viết mã React hiện đại.
+	- Lợi ích: ES6 giúp mã ngắn gọn, dễ đọc, và tránh các lỗi phổ biến (như vấn đề this).
+	- Thực hành: Sử dụng ES6 trong mọi component để làm quen với cú pháp.
+	- Chú ý: Functional components với Hooks hiện là xu hướng, nhưng hiểu class components vẫn cần thiết cho dự án cũ.	
+	
+	
+	
+	
+https://www.w3schools.com/react/react_render.asp	
+	
+	
+</pre><a id='backBottom' href='../react-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
