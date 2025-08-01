@@ -1,0 +1,176 @@
+<html><head><title>Lesson 4 == React Render HTML ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../react-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 4 -- React Render HTML -//</h1><pre>
+# 1. Tổng quan về Render trong React 
+	Tóm tắt: Mục tiêu chính của React là hiển thị HTML trên trang web. Để làm điều này, React sử dụng hàm createRoot() để xác định vị trí hiển thị và phương thức render() để chỉ định nội dung (component hoặc JSX) cần hiển thị. Quá trình này gắn kết mã React với một phần tử HTML trong file index.html.
+
+	## Giải thích sâu sắc: 
+		Render là gì?: Trong React, "render" là quá trình chuyển đổi mã JSX (giống HTML nhưng viết trong JavaScript) thành các phần tử HTML thực sự trên trình duyệt. React quản lý việc cập nhật giao diện một cách hiệu quả, chỉ thay đổi những phần cần thiết.
+		
+		Tại sao quan trọng?: Hiểu cách render giúp bạn biết cách đưa giao diện từ mã React lên màn hình và cách tổ chức ứng dụng React. Đây là nền tảng để xây dựng các ứng dụng phức tạp hơn.
+		
+		Cơ chế: React không trực tiếp thao tác với DOM như JavaScript truyền thống. Thay vào đó, nó sử dụng Virtual DOM để tính toán các thay đổi, sau đó cập nhật DOM thật một cách tối ưu.
+
+	Mục tiêu bài học: Làm quen với cách sử dụng createRoot() và render(), hiểu vai trò của "root node" trong ứng dụng React, và cách viết JSX cơ bản để hiển thị HTML.
+
+
+
+# 2. Hàm createRoot() 
+	Hàm createRoot() nhận một phần tử HTML làm đối số, xác định nơi React sẽ hiển thị nội dung (gọi là "root node").
+
+	## Giải thích chi tiết: 
+		const container = document.getElementById('root');
+		const root = ReactDOM.createRoot(container);
+
+		document.getElementById('root'): Lấy phần tử HTML có id="root" (thường là một <div> trong file public/index.html).
+		ReactDOM.createRoot(container): Tạo một "root" cho React, nơi quản lý toàn bộ giao diện của ứng dụng.
+
+	## Vai trò: 
+		createRoot() là điểm khởi đầu để React gắn kết với DOM. Nó cho phép React sử dụng các tính năng đồng thời (concurrent features) của React 18, như ưu tiên cập nhật giao diện hoặc xử lý tác vụ nặng mà không làm giao diện bị đơ.
+		
+	## Lưu ý: 
+		createRoot là API mới trong React 18, thay thế cho ReactDOM.render cũ (React 17 và trước đó).
+		Phần tử HTML không bắt buộc phải có id="root", nhưng đây là quy ước tiêu chuẩn trong các dự án React.
+
+		Concurrent Rendering: createRoot hỗ trợ các tính năng như Suspense hoặc Transitions, giúp React tạm dừng hoặc ưu tiên các cập nhật để cải thiện trải nghiệm người dùng.
+		
+		Tính linh hoạt: Bạn có thể dùng bất kỳ phần tử HTML nào làm root node (ví dụ: <header>, <section>), miễn là nó tồn tại trong DOM.
+
+
+
+
+# 3. Phương thức render()
+
+	Phương thức render() được gọi trên đối tượng root để chỉ định nội dung (component hoặc JSX) cần hiển thị.
+
+
+	## Cú pháp 
+		root.render(<p>Hello</p>);
+			root: Đối tượng được tạo từ createRoot.
+			<p>Hello</p>: Mã JSX, mô tả nội dung sẽ hiển thị (ở đây là một thẻ <p> chứa chữ "Hello").
+
+		
+	## Vai trò: 
+		render() chuyển JSX thành HTML và gắn nó vào root node trong DOM. Nếu có thay đổi sau này, React sẽ so sánh Virtual DOM với DOM thật để chỉ cập nhật những phần khác biệt.
+
+
+	## Ví dụ trong bài: 
+const container = document.getElementById('root');
+const root = ReactDOM.createRoot(container);
+root.render(<p>Hello</p>);
+		
+		Kết quả: Thẻ <p>Hello</p> được hiển thị trong <div id="root"> của file index.html.
+		
+		
+	## 	JSX:
+		JSX trông giống HTML nhưng thực chất là cú pháp JavaScript. React chuyển JSX thành các lệnh gọi React.createElement(), ví dụ: <p>Hello</p> trở thành React.createElement('p', null, 'Hello').
+		
+		
+	## Single Root: 
+		render() chỉ chấp nhận một phần tử JSX duy nhất làm đối số. Nếu muốn hiển thị nhiều phần tử, bạn phải bọc chúng trong một phần tử cha (hoặc dùng <></> – React Fragment).
+		
+		
+# 	4. Root Node và File index.html	
+	Tóm tắt từ bài học: Root node là phần tử HTML (thường là <div id="root"> trong public/index.html) nơi React hiển thị nội dung. Nó đóng vai trò như một "container" cho ứng dụng React.	
+			
+	Cấu trúc index.html: 
+	
+<body>
+  <div id="root"></div>
+</body>
+
+
+<div id="root">: Phần tử này là nơi React sẽ "gắn" toàn bộ giao diện của ứng dụng.
+Khi chạy ứng dụng (npm start), nội dung của <div id="root"> sẽ được thay thế bằng giao diện do React render.
+
+
+
+	## Tính linh hoạt
+
+<header id="sandy"></header>
+
+const container = document.getElementById('sandy');
+const root = ReactDOM.createRoot(container);
+root.render(<p>Hallo</p>);
+
+Kết quả: <p>Hallo</p> được hiển thị trong <header id="sandy">.
+
+
+
+	## Sâu sắc hơn: 
+	
+		Quy ước root: Dù có thể dùng bất kỳ id nào, root là chuẩn chung vì nó dễ nhận biết và được sử dụng mặc định trong create-react-app.
+		Single Entry Point: Trong một ứng dụng React tiêu chuẩn, thường chỉ có một root node để quản lý toàn bộ giao diện, giúp React kiểm soát DOM hiệu quả.	
+
+
+# 5. JSX trong Render
+	
+	const myelement = (
+  <table>
+    <tr>
+      <th>Name</th>
+    </tr>
+    <tr>
+      <td>John</td>
+    </tr>
+    <tr>
+      <td>Elsa</td>
+    </tr>
+  </table>
+);
+
+const container = document.getElementById('root');
+const root = ReactDOM.createRoot(container);
+root.render(myelement);
+	
+	myelement: Một biến chứa mã JSX, mô tả một bảng HTML với hai dòng dữ liệu.
+	root.render(myelement): Hiển thị bảng này trong root node.
+
+
+	JSX là gì?: JSX là cách viết giao diện trong React, kết hợp cú pháp HTML với JavaScript. Nó không phải HTML thật, mà là cú pháp được Babel chuyển thành các lệnh JavaScript để React hiểu.
+	
+	## Lợi ích: 
+		Dễ đọc, giống HTML, giúp lập trình viên quen thuộc với cú pháp.
+		Cho phép chèn JavaScript (bằng {}), ví dụ: {2 + 2} hoặc {user.name}.	
+	
+	Lưu ý : 
+		JSX yêu cầu một phần tử cha duy nhất. Ví dụ, không thể render:
+			root.render(<p>First</p><p>Second</p>); // Lỗi
+	
+		Phải bọc trong một phần tử hoặc Fragment: 
+			root.render(<><p>First</p><p>Second</p></>);
+	
+	
+	Babel: Trong dự án React, Babel chuyển JSX thành các lệnh React.createElement(), đảm bảo mã chạy được trên trình duyệt.
+	
+	Tái sử dụng: Bạn có thể lưu JSX vào biến (như myelement) để tái sử dụng, giúp mã dễ quản lý.
+	
+	
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+
+const myelement = (
+  <div>
+    <h1>Welcome to React</h1>
+    <p>This is rendered using JSX!</p>
+    <ul>
+      <li>Item 1</li>
+      <li>Item 2</li>
+    </ul>
+  </div>
+);
+
+const container = document.getElementById('app');
+const root = ReactDOM.createRoot(container);
+root.render(myelement);
+	
+
+
+https://www.w3schools.com/react/react_jsx.asp	
+	
+	
+	
+	
+	
+	
+	
+	
+</pre><a id='backBottom' href='../react-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
