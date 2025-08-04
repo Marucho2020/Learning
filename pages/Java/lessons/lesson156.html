@@ -1,0 +1,120 @@
+<html><head><title>Lesson 156 == Comparable và Comparator ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 156 -- Comparable và Comparator -//</h1><pre>
+# 🔍 1. Khác biệt tổng thể giữa Comparable vs Comparator
+| Đặc điểm               | `Comparable<T>`                                        | `Comparator<T>`                                        |
+| ---------------------- | ------------------------------------------------------ | ------------------------------------------------------ |
+| Mục đích               | So sánh **chính bản thân class**                       | So sánh **từ bên ngoài** (không can thiệp class)       |
+| Cách dùng              | Class implement `Comparable` và override `compareTo()` | Viết class/instance `Comparator` và truyền vào khi cần |
+| Thay đổi logic so sánh | Khó: chỉ có một cách sắp xếp duy nhất                  | Dễ: có thể tạo nhiều `Comparator` khác nhau            |
+| Ví dụ dùng             | `Collections.sort(list)` nếu phần tử `Comparable`      | `Collections.sort(list, comparator)`                   |
+
+
+# 🔧 2. Comparable<T> – Nội tại của đối tượng
+
+public class User implements Comparable<User> {
+    private String name;
+    private int age;
+
+    @Override
+    public int compareTo(User other) {
+        return Integer.compare(this.age, other.age); // sắp xếp theo tuổi
+    }
+}
+
+
+	## Ý nghĩa: 
+	Bạn đang ép User phải có thứ tự tự nhiên.
+	Khi bạn đưa User vào TreeSet, PriorityQueue, Collections.sort() => Java sẽ dùng compareTo().
+
+	## Hạn chế: 
+		Chỉ có một cách so sánh duy nhất. Muốn thay đổi phải sửa class.
+
+
+# ⚙️ 3. Comparator<T> – So sánh từ bên ngoài
+
+	## Cách dùng:
+	Comparator<User> nameComparator = Comparator.comparing(User::getName);
+	Collections.sort(userList, nameComparator);
+
+
+	## Hoặc custom complex logic: 
+Comparator<User> ageThenName = (u1, u2) -> {
+    int cmp = Integer.compare(u1.getAge(), u2.getAge());
+    if (cmp != 0) return cmp;
+    return u1.getName().compareTo(u2.getName());
+};
+
+
+	## Ưu điểm:
+		Không cần sửa class
+		Có thể tạo nhiều logic so sánh khác nhau tùy ngữ cảnh
+
+
+# 💥 4. Ứng dụng thực chiến – ví dụ bạn dùng trong hệ thống lớn
+
+| Use case                                            | So sánh nào phù hợp? | Giải thích                                         |
+| --------------------------------------------------- | -------------------- | -------------------------------------------------- |
+| Dùng `TreeMap<User, Data>` để lưu user theo tuổi    | `Comparable<User>`   | Vì `TreeMap` sẽ sắp theo key                       |
+| Dùng `PriorityQueue<User>` để lấy ra người trẻ nhất | `Comparator<User>`   | Truyền comparator vào constructor                  |
+| Lọc danh sách User theo nhiều tiêu chí              | `Comparator.chain()` | Dùng `.thenComparing(...)` để viết logic đa tầng   |
+| Không được sửa class (code bên thứ ba)              | `Comparator`         | Không thể dùng `Comparable` nếu không sở hữu class |
+
+
+
+
+# 🔄 5. Kết hợp Comparable + Comparator đúng cách
+
+	Collections.sort(users); // sẽ gọi user.compareTo()
+	Collections.sort(users, Comparator.comparing(User::getName)); // override cách mặc định
+
+
+	Trong TreeSet:
+	Set<User> set = new TreeSet<>(); // dùng compareTo()
+	Set<User> set = new TreeSet<>(Comparator.comparing(User::getName)); // custom comparator
+
+# 🔐 6. Nguyên tắc thiết kế: compareTo & compare phải consistent với equals()
+
+	Nếu bạn violate nguyên tắc này, TreeSet, HashSet, hoặc Map sẽ có hành vi bất ngờ.
+	
+	Ví dụ: nếu equals() trả về true nhưng compareTo() lại != 0, thì:
+	
+Set<User> set = new TreeSet<>();
+set.add(user1);
+set.add(user2); // nếu equals true nhưng compareTo != 0 => sẽ vẫn được thêm vào!
+
+
+
+# 🧠 7. Functional Style Comparator (Java 8+)
+
+	Khi bạn kết hợp với lambda, stream:
+
+users.sort(
+    Comparator.comparing(User::getAge)
+              .thenComparing(User::getName)
+              .reversed()
+);
+
+
+	Hoặc:
+users.stream()
+     .sorted(Comparator.comparing(User::getAge))
+     .collect(Collectors.toList());
+	
+
+
+# 🔥 8. Câu hỏi thường gặp trong phỏng vấn senior:
+
+1. Có thể vừa implements Comparable, vừa truyền Comparator không?
+	→ Có. Khi truyền Comparator thì Comparator sẽ được ưu tiên, không dùng compareTo() nữa.
+
+2. TreeMap hoạt động như thế nào khi key không implement Comparable?
+	→ Bạn phải truyền Comparator vào constructor, nếu không sẽ ClassCastException.
+
+3. Comparator có thể thay đổi khi runtime không? 
+	→ Có. Bạn có thể inject Comparator khác vào runtime, rất hữu ích cho config-driven sorting.
+
+
+
+
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

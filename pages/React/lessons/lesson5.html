@@ -1,0 +1,240 @@
+<html><head><title>Lesson 5 == JSX ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../react-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 5 -- JSX -//</h1><pre>
+# 1. JSX là gì? 
+	Tóm tắt: JSX (JavaScript XML) là một cú pháp mở rộng của JavaScript, cho phép viết các phần tử HTML ngay trong mã JavaScript. JSX giúp việc xây dựng giao diện trong React trở nên dễ dàng, trực quan và không cần sử dụng các phương thức như createElement() hoặc appendChild().
+	
+	## Giải thích sâu sắc: 
+		Bản chất JSX: JSX trông giống HTML nhưng thực chất là JavaScript. Nó được Babel chuyển đổi thành các lệnh gọi React.createElement() để React hiểu và render thành HTML thực sự trên trình duyệt.
+		
+	## Tại sao dùng JSX? 
+		- Dễ đọc: Cú pháp giống HTML, giúp lập trình viên dễ hình dung giao diện.
+		- Tích hợp JavaScript: Cho phép chèn các biểu thức JavaScript (như biến, hàm) trực tiếp vào HTML.
+		- Hiệu quả: JSX loại bỏ sự phức tạp của việc thao tác DOM thủ công như trong JavaScript truyền thống.
+
+
+	## Không bắt buộc: 
+		Bạn có thể viết React mà không dùng JSX (bằng React.createElement), nhưng JSX là cách phổ biến và được khuyến khích vì tính tiện lợi.
+	
+	## Sâu sắc hơn:
+	
+		JSX là một phần của hệ sinh thái React, được hỗ trợ bởi Babel trong các dự án như create-react-app. Babel chuyển JSX thành JavaScript thuần, đảm bảo tương thích với mọi trình duyệt.
+		JSX không phải HTML thật, nên có một số quy tắc riêng (như className thay vì class).
+		
+
+# Ví dụ so sánh:
+
+
+	## Có JSX 
+const myElement = <h1>I Love JSX!</h1>;
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(myElement);		
+
+	Kết quả: Hiển thị <h1>I Love JSX!</h1> trên trang.
+
+
+
+	## Không có JSX:
+
+const myElement = React.createElement('h1', {}, 'I do not use JSX!');
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(myElement);
+
+
+
+# 2. Cách viết JSX
+
+	Tóm tắt: JSX cho phép viết HTML trực tiếp trong JavaScript, nhưng tuân theo một số quy tắc như đóng thẻ, chỉ có một phần tử cấp cao nhất, và sử dụng className thay cho class.
+
+
+	## 2.1. Viết HTML trong JavaScript 
+		JSX cho phép bạn viết các thẻ HTML (như <div>, <h1>, <ul>) trực tiếp trong mã JavaScript mà không cần các API DOM phức tạp.
+
+	const myElement = <h1>Hello World</h1>;
+	JSX này sẽ được chuyển thành:
+	
+const myElement = React.createElement('h1', null, 'Hello World');
+
+
+
+	## 2.2. Quy tắc chính của JSX
+		Chỉ một phần tử cấp cao nhất: JSX yêu cầu mọi nội dung phải được bọc trong một phần tử cha duy nhất. Ví dụ:
+		
+const myElement = (
+  <div>
+    <p>I am a paragraph.</p>
+    <p>I am a paragraph too.</p>
+  </div>
+);		
+	
+		Nếu không bọc, sẽ xảy ra lỗi:
+const myElement = (
+  <p>I am a paragraph.</p>
+  <p>I am a paragraph too.</p>
+); // Lỗi: Adjacent JSX elements must be wrapped in an enclosing tag		
+	
+	
+	Giải pháp: Sử dụng React Fragment (<></>) để bọc mà không thêm phần tử thừa vào DOM:	
+const myElement = (
+  <>
+    <p>I am a paragraph.</p>
+    <p>I am a paragraph too.</p>
+  </>
+);	
+	
+	
+	
+	## Phải đóng thẻ: JSX tuân theo quy tắc XML, nên mọi thẻ phải được đóng, kể cả thẻ tự đóng (self-closing tags). Ví dụ: 
+	
+const myElement = <input type="text" />; // Đúng
+const myElement = <input type="text">; // Sai		
+
+
+	## Sử dụng className
+			thay cho class: Vì class là từ khóa trong JavaScript, JSX dùng className để đặt thuộc tính lớp CSS: 
+
+		const myElement = <h1 className="myclass">Hello World</h1>;
+		Khi render, className sẽ được chuyển thành thuộc tính class trong HTML.
+
+
+	## Sâu sắc hơn:
+		JSX không chỉ giới hạn ở HTML. Bạn có thể sử dụng các component React như thẻ:
+
+		const myElement = <MyComponent />;
+
+		Các thuộc tính trong JSX (như className, onClick) được chuyển thành thuộc tính HTML hoặc sự kiện tương ứng khi render.
+
+
+#3. Biểu thức trong JSX 
+	Tóm tắt: JSX cho phép chèn các biểu thức JavaScript (như biến, phép tính, hoặc hàm) vào bên trong bằng dấu {}.
+
+
+	## Cú pháp: Bọc biểu thức JavaScript trong {}. Ví dụ 
+
+const myElement = <h1>React is {5 + 5} times better with JSX</h1>;
+
+	Kết quả: <h1>React is 10 times better with JSX</h1>
+
+		Loại biểu thức:
+		
+		Biến: {name}
+		Phép tính: {2 + 2}
+		Gọi hàm: {myFunction()}
+		Thuộc tính object: {user.name}
+
+
+	## Ví dụ thực tế
+const name = "John";
+const myElement = <h1>Hello, {name}!</h1>;
+	
+
+	## Không hỗ trợ câu lệnh: 
+		Bạn không thể viết các câu lệnh như if, for trực tiếp trong {}. Thay vào đó, sử dụng biểu thức hoặc xử lý logic bên ngoài JSX:
+
+const number = 5;
+const myElement = <h1>{number > 0 ? "Positive" : "Negative"}</h1>;
+
+
+	## Chống XSS: 
+		JSX tự động thoát các giá trị trong {} để ngăn chặn các cuộc tấn công Cross-Site Scripting (XSS). Ví dụ, nếu {userInput} chứa mã HTML, nó sẽ được hiển thị dưới dạng văn bản thuần, không phải HTML.
+
+
+
+# 4. HTML đa dòng
+	Tóm tắt: Để viết HTML trên nhiều dòng, bọc mã trong dấu ngoặc () để JSX dễ đọc và rõ ràng hơn.
+
+	Giải thích chi tiết:
+const myElement = (
+  <ul>
+    <li>Apples</li>
+    <li>Bananas</li>
+    <li>Cherries</li>
+  </ul>
+);
+
+	Dấu ngoặc () giúp mã dễ đọc, đặc biệt khi JSX có nhiều dòng.
+	Kết quả: Hiển thị một danh sách HTML với ba mục.
+	Lợi ích: Cấu trúc rõ ràng, dễ bảo trì, đặc biệt khi làm việc với giao diện phức tạp.		
+	Khi JSX phức tạp (như lồng nhiều thẻ), việc sử dụng () và thụt lề đúng cách giúp tránh lỗi cú pháp.
+	Bạn có thể lưu JSX vào biến để tái sử dụng ở nhiều nơi trong ứng dụng.
+
+
+# 5. Câu lệnh điều kiện trong JSX
+	Tóm tắt: JSX không hỗ trợ câu lệnh if trực tiếp bên trong {}. Bạn có thể xử lý điều kiện ngoài JSX hoặc sử dụng biểu thức ternary (toán tử ba ngôi).
+
+
+	## Cách 1: Xử lý logic ngoài JSX 
+const x = 5;
+let text = "Goodbye";
+if (x < 10) {
+  text = "Hello";
+}
+const myElement = <h1>{text}</h1>;		
+
+	Logic điều kiện được xử lý trước, sau đó kết quả (text) được chèn vào JSX.
+	Kết quả: <h1>Hello</h1> (vì x < 10).
+
+
+	## Cách 2: Sử dụng toán tử ternary: 
+const x = 5;
+const myElement = <h1>{x < 10 ? "Hello" : "Goodbye"}</h1>;
+	
+	Toán tử ternary (?:) là cách ngắn gọn để viết điều kiện trong JSX.
+	Kết quả: <h1>Hello</h1>.
+	
+	
+	
+	## Toán tử logic: 
+const isLoggedIn = true;
+const myElement = <div>{isLoggedIn && <p>Welcome back!</p>}</div>;		
+	
+	Hạn chế: JSX không hỗ trợ các khối mã phức tạp (như vòng lặp for). Để xử lý vòng lặp, bạn cần dùng .map() hoặc xử lý logic ngoài JSX.
+	
+	
+# 6. Ví dụ thực tế	
+	
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+
+const user = { name: 'John', isLoggedIn: true };
+
+const myElement = (
+  <>
+    <h1 className="title">Welcome, {user.name}!</h1>
+    {user.isLoggedIn ? (
+      <div>
+        <p>You are logged in.</p>
+        <ul>
+          <li>View Profile</li>
+          <li>Edit Settings</li>
+        </ul>
+      </div>
+    ) : (
+      <p>Please log in.</p>
+    )}
+    <input type="text" placeholder="Enter your name" />
+  </>
+);
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(myElement);
+
+	## Phân tích:
+	
+		- JSX: Sử dụng <h1>, <div>, <ul>, và <input> để tạo giao diện.
+		- Fragment: Bọc nội dung bằng <></> để tránh thêm phần tử thừa.
+		- Biểu thức: Chèn user.name và sử dụng ternary để hiển thị nội dung có điều kiện.
+		- className: Sử dụng className="title" thay cho class.
+		- Tự đóng thẻ: <input /> tuân theo quy tắc XML.
+	
+	
+https://www.w3schools.com/react/react_components.asp	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+</pre><a id='backBottom' href='../react-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
