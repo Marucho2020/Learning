@@ -1,0 +1,122 @@
+<html><head><title>Lesson 157 == StringTokenizer , String Split, Varargs ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 157 -- StringTokenizer , String Split, Varargs -//</h1><pre>
+# StringTokenizer
+	## 	✅ Mô tả: 
+	
+	- StringTokenizer là một class trong java.util dùng để phân tách chuỗi (tokenize) dựa trên ký tự phân cách.
+	
+	- Được dùng phổ biến trước Java 1.4, nhưng hiện tại không được khuyến khích dùng nữa do hạn chế về khả năng xử lý Unicode, thread-safe giả tạo, và không linh hoạt.
+
+
+	## 🧠 Cách dùng: 
+	
+StringTokenizer tokenizer = new StringTokenizer("apple,banana,carrot", ",");
+while (tokenizer.hasMoreTokens()) {
+    System.out.println(tokenizer.nextToken());
+}
+
+
+	## ❌ Nhược điểm: 
+		- Không hỗ trợ regex
+		- Không bỏ được token rỗng
+		- Không hiện đại, thay thế bởi String.split() hoặc Scanner
+
+
+
+
+# 🔹 2. String.split(regex) – Ưa chuộng hiện nay
+
+
+	## ✅ Mô tả: 
+		- Dùng để phân tách chuỗi theo biểu thức chính quy (regex).
+		- Trả về mảng String[]
+
+
+	## 🧠 Cách dùng: 
+		String str = "apple,banana,,carrot";
+		String[] parts = str.split(",", -1);  // giữ token rỗng
+		for (String part : parts) {
+			System.out.println("[" + part + "]");
+		}
+		
+
+	## ⚠️ Lưu ý:
+
+		split() dùng regex, nên "." là pattern, không phải dấu chấm. Cần split("\\.")
+		
+		Nếu không truyền limit, các phần tử cuối rỗng sẽ bị bỏ
+
+
+# 🔹 3. String.join() và String::lines, chars, codePoints
+
+
+	##  ✅ String.join(delimiter, elements...)
+		Dùng để nối chuỗi lại bằng delimiter
+
+String result = String.join("-", "2025", "08", "05");
+System.out.println(result); // "2025-08-05"
+
+
+
+	## ✅ String.lines() (Java 11+)
+		Trả về một Stream<String> gồm các dòng
+		
+String multiline = "line1\nline2\nline3";
+multiline.lines().forEach(System.out::println);
+	
+	## ✅ chars() và codePoints():
+		Cho phép thao tác từng ký tự hoặc mã Unicode:
+	
+"abc".chars().forEach(c -> System.out.println((char)c));
+
+	
+	
+	
+# 🔹 4. Varargs (String... args)	
+	
+	## ✅ Mô tả: 
+		String... là cú pháp varargs – đại diện cho mảng biến số lượng phần tử kiểu String[].
+
+
+	## 🧠 Dùng trong method: 
+		
+public void printAll(String... words) {
+    for (String word : words) {
+        System.out.println(word);
+    }
+}
+
+printAll("one", "two", "three");  // không cần truyền mảng
+
+
+		⚠️ Dưới hood:
+		
+		String... args === String[] args
+		Chỉ được dùng ở tham số cuối cùng
+
+
+
+# 🔹 5. Nên dùng cái nào?
+
+| Nhu cầu                          | Công cụ đề xuất                             |
+| -------------------------------- | ------------------------------------------- |
+| Phân tách chuỗi đơn giản         | `String.split()`                            |
+| Phân tách nâng cao (regex, trim) | `Pattern.compile().splitAsStream()`         |
+| Phân tách từng dòng              | `String.lines()`                            |
+| Nối chuỗi                        | `String.join()` hoặc `Collectors.joining()` |
+| Nạp mảng động                    | `String...` (varargs)                       |
+| Xử lý từng ký tự                 | `chars()`, `codePoints()`                   |
+
+
+
+# 🔚 Tổng kết (phải biết cho senior Java Dev):
+	
+	- ❗ Tránh StringTokenizer nếu không có lý do cụ thể (legacy system).
+	
+	- ✅ Ưu tiên String.split(), Pattern.splitAsStream() nếu cần regex mạnh.
+	
+	- 🔁 Xử lý dòng, ký tự – dùng lines(), chars(), codePoints().
+	
+	- 💡 Tối ưu hóa hiệu suất xử lý chuỗi bằng Stream hoặc Collectors khi thao tác lớn.
+	
+	- 📦 Luôn hiểu rõ String... là String[], và đừng lạm dụng nếu bạn muốn type-safety rõ ràng.
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
