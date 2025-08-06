@@ -1,0 +1,289 @@
+<html><head><title>Lesson 7 == React Class ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../react-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 7 -- React Class -//</h1><pre># 1. Tổng quan về Class Components
+	Tóm tắt: Trước React 16.8, Class Components là cách duy nhất để quản lý trạng thái (state) và vòng đời (lifecycle) trong React. Hiện nay, Function Components với Hooks đã thay thế gần như hoàn toàn, nhưng Class Components vẫn được hỗ trợ và hữu ích khi làm việc với mã cũ.
+
+	Class Components là gì?: Là các component được định nghĩa bằng cú pháp class của ES6, kế thừa từ React.Component. Chúng sử dụng phương thức render() để trả về JSX và có thể quản lý state, props, và các lifecycle methods.
+
+
+	## So sánh với Function Components: 
+		Class Components: Cú pháp phức tạp hơn, sử dụng this, cần constructor và super() để khởi tạo. Hỗ trợ state và lifecycle methods một cách tự nhiên.
+		
+		Function Components: Ngắn gọn, dễ đọc, kết hợp Hooks để xử lý state và lifecycle. Được khuyến nghị từ React 16.8.
+
+
+	## Tại sao cần học Class Components?:
+	
+		- Nhiều dự án cũ vẫn sử dụng Class Components.
+		- Hiểu Class Components giúp bạn dễ dàng chuyển đổi sang Function Components hoặc bảo trì mã legacy.
+		- Một số khái niệm (như lifecycle) vẫn áp dụng khi học Hooks.	
+	
+	
+	
+# 2. Tạo Class Component 
+	Tóm tắt: Class Component phải kế thừa React.Component, có phương thức render() trả về JSX, và tên component phải bắt đầu bằng chữ in hoa.
+	
+	## Cú pháp cơ bản 
+		
+class Car extends React.Component {
+  render() {
+    return <h2>Hi, I am a Car!</h2>;
+  }
+}
+
+	- extends React.Component: Kế thừa các tính năng của React, như state và lifecycle methods.
+	- render(): Phương thức bắt buộc, trả về JSX để hiển thị giao diện.
+	- Car: Tên component, bắt đầu bằng chữ in hoa (quy tắc React).	
+
+
+	## Sử dụng:
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<Car />);
+
+Gọi component như thẻ HTML: <Car />.
+Kết quả: <h2>Hi, I am a Car!</h2> được hiển thị.
+
+
+	## Sâu sắc hơn:
+	
+	Quy tắc đặt tên: Tên in hoa giúp React phân biệt component (như <Car />) với thẻ HTML (như <div>).
+	
+	JSX: Nội dung trong render() phải tuân theo quy tắc JSX (một phần tử cấp cao nhất, đóng thẻ đúng cách).
+	
+	
+# 	3. Constructor và State
+	Tóm tắt: Constructor khởi tạo state và props. State là một object lưu trữ dữ liệu của component, khi thay đổi sẽ kích hoạt re-render.	
+	
+	## Constructor 
+class Car extends React.Component {
+  constructor() {
+    super();
+    this.state = { color: "red" };
+  }
+  render() {
+    return <h2>I am a {this.state.color} Car!</h2>;
+  }
+}	
+	
+	
+	- constructor(): Được gọi khi component khởi tạo.
+	- super(): Gọi constructor của React.Component, đảm bảo component kế thừa các tính năng của lớp cha.
+	- this.state: Khởi tạo object state với thuộc tính color.
+	- this.state.color: Truy cập state trong render() để hiển thị động.
+	
+	
+	
+	## Sử dụng state 
+	
+	State là nơi lưu trữ dữ liệu nội bộ của component (ví dụ: màu sắc, trạng thái giao diện).
+	Khi state thay đổi (qua this.setState()), component sẽ tự động re-render.
+	
+class Car extends React.Component {
+  constructor() {
+    super();
+    this.state = { color: "red" };
+  }
+  render() {
+    return <h2>I am a {this.state.color} Car!</h2>;
+  }
+}
+
+	## State vs Props:
+		State: Dữ liệu nội bộ, có thể thay đổi bởi component (qua this.setState()).
+		Props: Dữ liệu truyền từ bên ngoài, chỉ đọc (read-only).
+
+	Không sửa state trực tiếp: Luôn dùng this.setState() để cập nhật state, đảm bảo React nhận biết thay đổi và re-render.
+
+# 4. Props trong Class Components
+	Tóm tắt: Props là các thuộc tính truyền vào component từ bên ngoài, truy cập qua this.props.
+
+	## 	Ví dụ 
+
+class Car extends React.Component {
+  render() {
+    return <h2>I am a {this.props.color} Car!</h2>;
+  }
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<Car color="red" />);
+	
+	
+	<Car color="red" />: Truyền prop color với giá trị "red".
+	this.props.color: Truy cập prop trong render().
+	Kết quả: <h2>I am a red Car!</h2>.	
+	
+	
+	
+	## Props trong constructor:
+		Nếu component có constructor, props phải được truyền vào và gửi tới super():
+		
+class Car extends React.Component {
+  constructor(props) {
+    super(props);
+  }
+  render() {
+    return <h2>I am a {this.props.model}!</h2>;
+  }
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<Car model="Mustang" />);	
+	
+	constructor(props) và super(props): Đảm bảo props có thể truy cập qua this.props.
+	
+	Props là cách để component nhận dữ liệu động, giúp tái sử dụng component với các giá trị khác nhau.
+	Props có thể là bất kỳ kiểu dữ liệu: chuỗi, số, object, hàm, hoặc thậm chí component khác.
+	
+	
+	
+	
+# 	5. Components lồng Components 
+	Tóm tắt: Class Components có thể được lồng trong nhau để tạo giao diện phức tạp.
+	
+	## Ví dụ:
+	
+class Car extends React.Component {
+  render() {
+    return <h2>I am a Car!</h2>;
+  }
+}
+
+class Garage extends React.Component {
+  render() {
+    return (
+      <div>
+        <h1>Who lives in my Garage?</h1>
+        <Car />
+      </div>
+    );
+  }
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<Garage />);	
+	
+	Garage là component cha, chứa component con Car.
+	
+<div>
+  <h1>Who lives in my Garage?</h1>
+  <h2>I am a Car!</h2>
+</div>	
+	
+	Lồng component giúp chia nhỏ giao diện thành các phần độc lập, dễ bảo trì.
+	Component con có thể nhận props từ component cha để hiển thị dữ liệu động.
+	
+	
+# 6. Components trong File riêng	
+	Tóm tắt: Đặt Class Components trong các file .js riêng để tái sử dụng và tổ chức mã tốt hơn.
+	
+	Giải thích chi tiết:
+	
+	## Tạo file Car.js 
+import React from 'react';
+
+class Car extends React.Component {
+  render() {
+    return <h2>Hi, I am a Car!</h2>;
+  }
+}
+
+export default Car; 	
+	
+	##  Sử dụng trong index.js
+	
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import Car from './Car.js';
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<Car />);	
+	
+	
+	
+# 7. State và Lifecycle Methods
+
+	Tóm tắt: Class Components có state để lưu trữ dữ liệu nội bộ và các lifecycle methods để quản lý vòng đời (mounting, updating, unmounting).
+	
+	
+	## 7.1. State
+		Khởi tạo state:
+		
+class Car extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      brand: "Ford",
+      model: "Mustang",
+      color: "red",
+      year: 1964
+    };
+  }
+  render() {
+    return (
+      <div>
+        <h1>My {this.state.brand}</h1>
+        <p>It is a {this.state.color} {this.state.model} from {this.state.year}.</p>
+      </div>
+    );
+  }
+}	
+	
+	this.state: Khởi tạo trong constructor với các thuộc tính như brand, model.
+	Kết quả: Hiển thị thông tin xe dựa trên state.
+	
+	
+	## Cập nhật state 
+		Sử dụng this.setState() để thay đổi state và kích hoạt re-render:
+	
+class Car extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { color: "red" };
+  }
+  changeColor = () => {
+    this.setState({ color: "blue" });
+  }
+  render() {
+    return (
+      <div>
+        <h1>My Car is {this.state.color}</h1>
+        <button onClick={this.changeColor}>Change color</button>
+      </div>
+    );
+  }
+}	
+	
+	this.setState({ color: "blue" }): Cập nhật color, khiến component re-render với giá trị mới.
+	
+	
+# 7.2. Lifecycle Methods	
+	Class Components có các phương thức đặc biệt để xử lý các giai đoạn trong vòng đời của component: Mounting, Updating, và Unmounting.
+	
+	## Mounting (Khi component được tạo và thêm vào DOM) 
+	
+		- constructor(): Khởi tạo state và props.
+		- componentDidMount(): Chạy sau khi component được render lần đầu. Thường dùng để gọi API hoặc thiết lập timer: 
+	
+class Header extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { favoritecolor: "red" };
+  }
+  componentDidMount() {
+    setTimeout(() => {
+      this.setState({ favoritecolor: "yellow" });
+    }, 1000);
+  }
+  render() {
+    return <h1>My Favorite Color is {this.state.favoritecolor}</h1>;
+  }
+}	
+	
+	
+	
+	
+	
+	
+	
+	
+</pre><a id='backBottom' href='../react-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
