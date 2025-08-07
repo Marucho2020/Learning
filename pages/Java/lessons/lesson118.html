@@ -1,90 +1,156 @@
-<html><head><title>Lesson 118 == So sánh chuyên sâu : B-Tree / B+ Tree với các cây nhị phân (Binary Tree, AVL, Red-Black, Treap, Splay...) ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 118 -- So sánh chuyên sâu : B-Tree / B+ Tree với các cây nhị phân (Binary Tree, AVL, Red-Black, Treap, Splay...) -//</h1><pre>
-# ⚔️ Mục tiêu so sánh:
-	Hiểu rõ khi nào nên dùng B-Tree / B+ Tree 
-	Biết tại sao các hệ quản trị cơ sở dữ liệu (DBMS), file system, search engine dùng B-Tree, chứ không dùng AVL, RBT...
-	Phân tích hiệu năng, I/O, cache locality, và concurrency
+<html><head><title>Lesson 118 == Delete trong RBT ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 118 -- Delete trong RBT -//</h1><pre># Khái niệm  
+Xóa node trong Red-Black Tree (RBT) là phần phức tạp nhất của cấu trúc này. Ở level senior, bạn cần hiểu rõ cả quy trình xóa, các tình huống mất cân bằng, hành vi của màu sắc (red/black) và đặc biệt là các phép xoay – tô màu – rebalance sau xóa.
+
+
+# 🎯 MỤC TIÊU CỦA DELETE TRONG RBT
+	Duy trì 5 tính chất của Red-Black Tree sau khi xóa:
 	
-# 	1. 🎯 Tư duy cốt lõi của B-Tree / B+ Tree
+		- Mỗi node là đỏ hoặc đen
+		- Gốc là đen
+		- Lá (null) là đen
+		- Node đỏ không có con đỏ
+		- Mọi đường từ một node đến các lá null đều có số node đen bằng nhau
 
-| Đặc điểm                         | Ý nghĩa                                                                    |
-| -------------------------------- | -------------------------------------------------------------------------- |
-| **Mỗi node chứa nhiều keys**     | Khác biệt lớn nhất. Một node có thể có hàng chục - hàng trăm key → ít tầng |
-| **Thiết kế tối ưu cho Disk I/O** | Mỗi lần đọc node là 1 lần truy cập ổ cứng. Ít tầng → ít I/O                |
-| **Cân bằng tuyệt đối**           | Không cần rotation. Mọi leaf đều cùng độ sâu                               |
-| **Tối ưu cache locality**        | Một node đọc vào RAM chứa được nhiều key → giảm cache miss                 |
-| **B+ Tree: all data ở leaf**     | Tìm kiếm nhanh, duyệt in-order dễ dàng, scan range hiệu quả                |
 
-# 2. 🔁 So sánh với Red-Black Tree / AVL Tree
+# 🔁 CÁC BƯỚC XÓA NODE TRONG RBT
+
+	## 🔹 BƯỚC 1: Xóa như BST bình thường 
+		Nếu node có 2 con → thay thế bằng node kế tiếp (in-order successor), rồi xóa successor.
+		Giờ bạn còn lại trường hợp node bị xóa chỉ có 0 hoặc 1 con → xử lý tương đối dễ.
+		
+		
+	## 	 BƯỚC 2: Phân tích màu sắc
+		Nếu node bị xóa là đỏ → KHÔNG ảnh hưởng gì, kết thúc.
+		Nếu node bị xóa là đen:
+			Mất đi 1 “black height” → RBT có thể mất cân bằng.
+			Cần fix lại màu sắc và cấu trúc bằng cách "fix double black".
+
+
+
+
+
+# 🔥 FIX DOUBLE BLACK (ĐỎ ĐEN KÉP)
+	Giả sử bạn xóa một node đen x, và thay thế bởi child (null hoặc 1 con). Nếu child cũng đen → xuất hiện double black → phải xử lý.
 	
-| Tiêu chí                  | **B-Tree / B+ Tree**                        | **AVL / Red-Black Tree**             |
-| ------------------------- | ------------------------------------------- | ------------------------------------ |
-| Cấu trúc node             | Nhiều keys + nhiều con (đa nhánh)           | 1 key, 2 con (nhị phân)              |
-| Chiều cao (depth)         | Rất thấp (\~logₘ(N), m = branching factor)  | Cao hơn (\~log₂(N))                  |
-| Phù hợp môi trường        | **Disk / SSD / DBMS**                       | RAM / in-memory                      |
-| Tối ưu cho I/O            | ✅ Có                                        | ❌ Không                              |
-| Tối ưu duyệt range        | ✅ B+ Tree duyệt liên tiếp dễ dàng           | ❌ Duyệt khó hơn                      |
-| Độ phức tạp insert/delete | O(log N) (ít tầng)                          | O(log N) (nhiều tầng hơn)            |
-| Cân bằng                  | Luôn cân bằng (no rotation)                 | Cần rotate (AVL: strict, RBT: loose) |
-| Áp dụng thực tế           | DB: MySQL, PostgreSQL, Oracle, Cassandra... | Java TreeMap, compiler symbol tables |
-| Concurrency support       | Dễ hơn do ít tầng → ít tranh chấp           | Phức tạp do nhiều rotation           |
-
-
-# 3. 📦 Tại sao DBMS chọn B-Tree / B+ Tree?
-
-	## Vì Disk I/O cực kỳ chậm → phải giảm số lần truy cập ổ đĩa.
-		Một node chứa nhiều key (ví dụ 100 key/node)
-		Từ root tới leaf chỉ mất log₁₀⁰(N) bước (rất thấp)
-		Mỗi bước đọc chỉ 1 lần I/O → cực nhanh so với BST/AVL (cần log₂(N) lần I/O)
-
-
-	## B+ Tree ưu việt hơn:
-		Tất cả data ở leaf → range scan mượt như Array
-		Các leaf liên kết nhau bằng con trỏ → duyệt liên tục không phải đi ngược lại cây
-
-
-	## 4. 🔧 Khi nào KHÔNG nên dùng B-Tree? 
+	Có 4 tình huống chính (fix bằng rotation + recoloring):
 	
-| Use-case                            | Lý do dùng RBT / AVL thay vì B-Tree           |
-| ----------------------------------- | --------------------------------------------- |
-| Cấu trúc dữ liệu trong bộ nhớ (RAM) | Không bị hạn chế I/O → AVL, RBT nhanh hơn     |
-| Update-heavy workload nhỏ           | Rotation AVL nhanh hơn split/merge của B-Tree |
-| Khi cần đơn giản & nhẹ              | B-Tree phức tạp code hơn RBT/AVL              |
-
-
-# 5. 🔥 Treap vs B-Tree
-	Treap dùng random để balance → fast insert/delete, tốt cho cache nhưng không đảm bảo độ cao như B-Tree
-	B-Tree luôn cân bằng tuyệt đối → thích hợp để lưu trữ dữ liệu lớn
-
-
-# 6. 📈 Benchmark ví dụ
-| Tree Type           | Depth (n = 1 triệu) | Tốc độ truy cập                             |
-| ------------------- | ------------------- | ------------------------------------------- |
-| B+ Tree (order 100) | \~3-4               | Rất nhanh (ít tầng, ít I/O)                 |
-| RBT / AVL           | \~20                | Chậm hơn do cần đi nhiều tầng               |
-| Treap / Splay       | \~25 (avg)          | Nhanh insert, nhưng không tốt cho scan      |
-| Skip List           | \~log N (\~20)      | Tốt cho concurrency, không tốt cho disk I/O |
-
-
-# 7. ✅ Lời khuyên cho system design
+	## 🔸 CASE 1: Sibling đỏ
 	
-| Hệ thống                    | Nên dùng        | Lý do                        |
-| --------------------------- | --------------- | ---------------------------- |
-| Database, Index             | B+ Tree         | Scan range, ít I/O           |
-| In-memory caching           | RBT, Treap, AVL | Dễ triển khai, hiệu năng tốt |
-| Realtime time-series        | Skip List       | Concurrent + fast insert     |
-| SSD-backed log store        | B+ Tree + WAL   | Ghi log hiệu quả             |
-| Symbol Table trong Compiler | AVL Tree        | Lookup nhanh, update ít      |
+     P(B)
+    /    \
+   x(DB)  S(R)
+         /   \
+       ...   ...
+	Sibling S là đỏ, P là đen → xoay P và S, đổi màu → biến thành case khác.
 
 
-# 8. 🧠 Tổng kết 
-| Cấu trúc      | Ưu điểm                                 | Nhược điểm                       |
-| ------------- | --------------------------------------- | -------------------------------- |
-| **B-Tree**    | Cân bằng tuyệt đối, ít tầng, tối ưu I/O | Phức tạp, insert/delete tốn công |
-| **B+ Tree**   | Tối ưu scan range, all data ở leaf      | Truy cập key trung gian mất công |
-| **AVL Tree**  | Cực kỳ cân bằng, lookup nhanh           | Update phức tạp, nhiều rotation  |
-| **Red-Black** | Cân bằng tốt, insert nhanh              | Duyệt range chậm                 |
-| **Treap**     | Random balance, đơn giản, nhanh         | Không đảm bảo worst-case         |
-| **Skip List** | Lock-free, concurrent tốt               | Memory overhead cao              |
+	## 🔸 CASE 2: Sibling đen, cả 2 con đều đen
+
+     P(?)
+    /    \
+   x(DB)  S(B)
+         /   \
+       B     B
+
+		Đổi màu S → đỏ
+		Nếu P là đỏ → đổi P thành đen → OK
+		Nếu P đen → P bị “double black”, đệ quy fix lên trên
+
+
+	## 🔸 CASE 3: Sibling đen, con gần là đỏ, con xa là đen
+
+     P
+    / \
+   x   S(B)
+       / \
+     R   B
+	Xoay S và R để tạo ra Case 4
+	
+	
+	## 🔸 CASE 4: Sibling đen, con xa là đỏ
+     P
+    / \
+   x   S(B)
+       / \
+     B   R
+
+	Xoay P và S
+	Đổi màu để cân bằng → fix hoàn tất
+	
+
+# 🧠 MẸO GHI NHỚ (THEO QUAN SÁT)
+
+	Sibling đỏ: luôn xoay và đổi màu ngay.
+	
+	Sibling đen:
+		Nếu có con đỏ xa → xoay phải/left rồi đổi màu
+		Nếu 2 con đen → đẩy đen lên trên → đệ quy tiếp
+
+# 💻 JAVA PSEUDO-CODE (PHẦN FIX)
+void fixDelete(Node x) {
+    while (x != root && x.color == BLACK) {
+        if (x == x.parent.left) {
+            Node s = x.parent.right;
+
+            if (s.color == RED) {
+                // Case 1
+                s.color = BLACK;
+                x.parent.color = RED;
+                rotateLeft(x.parent);
+                s = x.parent.right;
+            }
+
+            if (s.left.color == BLACK && s.right.color == BLACK) {
+                // Case 2
+                s.color = RED;
+                x = x.parent;
+            } else {
+                if (s.right.color == BLACK) {
+                    // Case 3
+                    s.left.color = BLACK;
+                    s.color = RED;
+                    rotateRight(s);
+                    s = x.parent.right;
+                }
+
+                // Case 4
+                s.color = x.parent.color;
+                x.parent.color = BLACK;
+                s.right.color = BLACK;
+                rotateLeft(x.parent);
+                x = root;
+            }
+        } else {
+            // mirror of above logic
+            ...
+        }
+    }
+    x.color = BLACK;
+}
+
+
+
+# 📊 TÓM TẮT ĐỘ PHỨC TẠP
+
+| Thao tác     | Thời gian                          |
+| ------------ | ---------------------------------- |
+| Xóa          | `O(log n)`                         |
+| Sửa màu/xoay | `≤ 3` lần xoay, `O(log n)` đổi màu |
+
+
+
+# 🚨 LƯU Ý QUAN TRỌNG
+	Đừng sửa cây khi chưa xét đến màu sắc – đỏ/đen quyết định logic
+	Hãy vẽ ra paper / debug bằng in-order và màu để hiểu “tình trạng”
+	Khi gặp bug logic, thường là do quên truyền lại màu sắc khi xoay
+
+# 📘 BẠN CẦN HỌC THÊM
+| Chủ đề                      | Vì sao cần                      |
+| --------------------------- | ------------------------------- |
+| Tree rotation (Left, Right) | Là core của RBT, AVL, Treap     |
+| Coloring strategy           | Logic đỏ/đen của mỗi case       |
+| In-order traversal          | Debug + xác nhận cân bằng cây   |
+| Red-Black vs AVL            | So sánh để hiểu sâu về cấu trúc |
 
 
 </pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

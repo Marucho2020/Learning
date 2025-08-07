@@ -1,162 +1,119 @@
-<html><head><title>Lesson 127 == Define Assignment Analysis (DAA) ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 127 -- Define Assignment Analysis (DAA) -//</h1><pre>
-# Khái niệm 
-	là một phần cực kỳ quan trọng trong kiểm tra độ an toàn cấp độ ngôn ngữ, được quy định trong Java Language Specification (JLS) §16.
-	
-	Definite Assignment Analysis (DAA) là quá trình phân tích tĩnh mà compiler Java thực hiện để đảm bảo rằng mọi biến local đều được gán giá trị rõ ràng trước khi được sử dụng.
-	
-	## Ví dụ kinh điển:
-void foo() {
-    int x;
-    System.out.println(x); // ❌ Compile-time error
-}
-	 
+<html><head><title>Lesson 127 == Segment Tree 2D ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 127 -- Segment Tree 2D -//</h1><pre># Khái niệm 
+	 là một cấu trúc dữ liệu mở rộng từ Segment Tree 1D để xử lý các truy vấn và cập nhật trên ma trận (2 chiều).
 
 
-# 📘 2. JLS §16: LUẬT NGHIÊM NGẶT VỀ DAA
+# ⚙️ Tổng quan 
+	Segment Tree 2D hỗ trợ các truy vấn như:
+		Query tổng, max, min trên hình chữ nhật con [(x1, y1), (x2, y2)]
+		Update giá trị tại một điểm (x, y) hoặc trên hình chữ nhật con
 
-	## 2.1. Local variables 
-		- Biến local phải được definitely assigned trước khi sử dụng.
-		- Không có giá trị mặc định như field (int default = 0, object = null).
-
-int x;
-if (condition) {
-    x = 5;
-}
-System.out.println(x); // ❌ Không chắc chắn x đã được gán
-
-
-
-	## 2.2. Final variables 
-		Biến final chỉ được phép gán duy nhất một lần.
-		Compiler sẽ xác minh rằng tất cả các path khả thi đều dẫn tới đúng 1 lần gán.
+# 🧠 Ý tưởng chính 
+	Xây dựng Segment Tree theo từng chiều: 
+		Coi hàng là một chiều (X-axis), cột là một chiều (Y-axis).
+		Với mỗi node trong cây X, bạn xây cây Y tương ứng. 
 		
-final int x;
-if (cond) x = 1;
-else x = 2;
-System.out.println(x); // ✅ OK
-
-
-if (cond) x = 1;
-System.out.println(x); // ❌ Có path không gán
-
-
-	## 2.3. Loops and DAA
-		JLS yêu cầu phân tích các vòng lặp một cách thận trọng:
-		
-int x;
-while (cond) {
-    x = 1;
-}
-System.out.println(x); // ❌ vì vòng lặp có thể không chạy
-
-
-
-	
-	## 2.4. DAA và try-catch-finally
-	
-final int x;
-try {
-    x = 1;
-} catch (Exception e) {
-    x = 2;
-}
-System.out.println(x); // ❌ nếu chưa có xử lý mọi path (finally không gán gì)
+	👉 Cấu trúc cây là cây trong cây (nested segment tree).
 	
 
-
-# 🧠 3. DAA = Static Control Flow Analysis
-
-DAA không phải runtime logic check mà là kiểm tra biểu đồ luồng điều khiển tĩnh (static control flow graph – CFG).
-
-Nó kiểm tra tất cả các path execution từ điểm khai báo đến điểm sử dụng biến. Nếu có bất kỳ path nào mà biến không được gán → lỗi compile.
-
-
-# 🧱 4. SO SÁNH VỚI CÁC LOẠI BIẾN 
-| Type             | Có default value?  | Phải gán trước dùng? | Subject to DAA? |
-| ---------------- | ------------------ | -------------------- | --------------- |
-| `local variable` | ❌                  | ✅                    | ✅               |
-| `instance field` | ✅ (default 0/null) | ❌                    | ❌               |
-| `static field`   | ✅                  | ❌                    | ❌               |
-| `final variable` | ❌                  | ✅ & only once        | ✅               |
+# 📦 Cấu trúc dữ liệu 
+	Giả sử ma trận A có kích thước N x M, ta xây cây như sau: 
+	
+	// segTree[x][y] = giá trị (tổng / min / max ...) tại node (x, y)
+	long[][] segTree;
+	Mỗi node theo X (hàng) sẽ chứa một cây con theo Y (cột).
 
 
-# 🔥 5. PHÂN TÍCH NÂNG CAO CHO FINAL (JLS §16.1) 
-
-	Biến final phải được gán:
-		Trước khi constructor hoàn tất
-		Hoặc trong static initializer block nếu là biến static
-		
-class A {
-    final int x;
-
-    A() {
-        x = 10; // ✅ OK
+# 🔧 Build Tree
+	Pseudocode (tổng quát):
+	
+// Gọi buildX(1, 0, N-1)
+void buildX(int vx, int lx, int rx) {
+    if (lx == rx) {
+        buildY(vx, lx, rx, 1, 0, M-1); // Chỉ cần lấy dữ liệu từ dòng lx
+    } else {
+        int mx = (lx + rx) / 2;
+        buildX(2*vx, lx, mx);
+        buildX(2*vx+1, mx+1, rx);
+        buildY(vx, lx, rx, 1, 0, M-1); // Sau khi con X được build, mới build cây Y
     }
 }
 
-class B {
-    final int y;
-    B(boolean cond) {
-        if (cond) y = 1;
-        // ❌ Nếu cond = false thì y không gán → compile error
+// Gọi buildY(vx, lx, rx, vy, ly, ry)
+void buildY(int vx, int lx, int rx, int vy, int ly, int ry) {
+    if (ly == ry) {
+        if (lx == rx) {
+            segTree[vx][vy] = A[lx][ly];
+        } else {
+            segTree[vx][vy] = segTree[2*vx][vy] + segTree[2*vx+1][vy];
+        }
+    } else {
+        int my = (ly + ry) / 2;
+        buildY(vx, lx, rx, 2*vy, ly, my);
+        buildY(vx, lx, rx, 2*vy+1, my+1, ry);
+        segTree[vx][vy] = segTree[vx][2*vy] + segTree[vx][2*vy+1];
     }
 }
-
-
-
-# 🧵 6. TƯ DUY SENIOR: TÁC ĐỘNG THỰC TẾ 
-
-
-	## ✅ Vì sao DAA là tốt? 
-		
-		Loại bỏ class bug tiềm ẩn: đảm bảo bạn không dùng rác bộ nhớ chưa khởi tạo
-		Tăng tính predictability: nhất quán giữa compile-time và runtime
-		Hỗ trợ tối ưu hóa code: giúp compiler loại bỏ path không cần thiết
-
-
-# ⚠️ 7. MỘT SỐ LỖ HỔNG & GÓC TỐI
-
-	##🔸 DAA không hiểu giá trị logic thực sự
 	
-final int x;
-if (true) x = 1;
-else x = 2;
-System.out.println(x); // ✅ (vì cả hai path đều gán)
-
-final int y;
-if (someConstMethod()) y = 1;
-else y = 2;
-// ❌ nếu compiler không inline được giá trị method → vẫn lỗi
-
-
-
-	## 🔸 DAA không nhận ra "return cuối cùng" 
 	
-final int x;
-if (cond) return;
-x = 10;
-System.out.println(x); // ❌ vì có path không gán (cond == true)
+	Cấu trúc này tạo nên một cây 2D, trong đó:
 
-
-
-
-	## 🔸 Loop bị giới hạn phân tích: 
+		Mỗi node vx quản lý đoạn dòng [lx, rx]
+		Mỗi cây con vy tại node vx quản lý đoạn cột [ly, ry]
 	
-final int x;
-for (;;) {
-    x = 10;
-    break;
+# 📥 Update	
+	Để cập nhật điểm (x, y):
+		void updateX(int vx, int lx, int rx, int x, int y, long newVal) {
+    if (lx == rx) {
+        updateY(vx, lx, rx, 1, 0, M-1, x, y, newVal);
+    } else {
+        int mx = (lx + rx) / 2;
+        if (x <= mx) updateX(2*vx, lx, mx, x, y, newVal);
+        else updateX(2*vx+1, mx+1, rx, x, y, newVal);
+        updateY(vx, lx, rx, 1, 0, M-1, x, y, newVal);
+    }
 }
-System.out.println(x); // ❌ Java không đủ “thông minh” để infer điều này
+Hàm updateY cập nhật lại cây Y tương ứng tại mỗi cấp của X.
 
 
-# 🛠 8. CÁCH DEBUG / LÀM VIỆC VỚI DAA
+	
+#	🔍 Query 
+	Truy vấn tổng/min/max trên hình chữ nhật:
+	
+long queryX(int vx, int lx, int rx, int x1, int x2, int y1, int y2) {
+    if (rx < x1 || lx > x2) return 0; // Không giao
+    if (x1 <= lx && rx <= x2) return queryY(vx, 1, 0, M-1, y1, y2);
+    int mx = (lx + rx) / 2;
+    return queryX(2*vx, lx, mx, x1, x2, y1, y2) +
+           queryX(2*vx+1, mx+1, rx, x1, x2, y1, y2);
+}
+	
+	Hàm queryY giống hệt query trong Segment Tree 1D.
+	
+# 📈 Độ phức tạp	
+	Xây dựng: O(N × M × logN × logM)
+	Truy vấn / cập nhật: O(logN × logM)
+	Tối ưu hơn nhiều so với brute-force (O(N×M)) và hiệu quả hơn Sparse Table trong bài toán có cập nhật.
+	
+# ⚔️ So sánh và hạn chế	
+| Cấu trúc         | Update   | Query    | Hỗ trợ lazy?               |
+| ---------------- | -------- | -------- | -------------------------- |
+| Brute-force      | O(1)     | O(NM)    | Không                      |
+| 2D Prefix Sum    | O(1)     | O(1)     | Không hỗ trợ update        |
+| Segment Tree 2D  | O(log²N) | O(log²N) | Có (cần mở rộng)           |
+| BIT 2D (Fenwick) | O(log²N) | O(log²N) | Không tốt với range-update |
 
-	Kiểm tra lại mọi path điều kiện
-	Với final, đảm bảo gán đúng duy nhất 1 lần trên mọi nhánh
-	Không lạm dụng nhiều nested logic — DAA không xử lý tốt logic lồng nhau phức tạp
-	Với loop, không giả định vòng lặp chắc chắn chạy
+# 	🧠 Nhận xét chuyên sâu (tầm senior)
 
-
+	Cây Segment 2D có thể mở rộng lên 3D, nhưng phức tạp tăng cấp số mũ.
+	Để dùng lazy propagation, bạn cần build thêm lazyY trong mỗi node X – không dễ maintain, rất prone to bug.
+	Trong nhiều trường hợp, Wavelet Tree, Persistent Segment Tree hoặc Sqrt Decomposition có thể thay thế nếu bạn chỉ cần query k-th, hoặc cập nhật theo vùng nhỏ.
+	Tuy nhiên, Segment Tree 2D là nền tảng bắt buộc nếu bạn làm về image processing, computational geometry, game engine backend hoặc xử lý grid phức tạp.	
+	
+	
+#🛠 Khi nào nên dùng?
+	
+	Có nhiều truy vấn hoặc cập nhật trong ma trận
+	Cần hiệu năng cao (ví dụ 10⁵ truy vấn, mỗi query trên lưới 1000×1000)
+	Không dùng được prefix sum vì có cập nhật
 
 </pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

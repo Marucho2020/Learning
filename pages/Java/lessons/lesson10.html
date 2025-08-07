@@ -1,41 +1,58 @@
-<html><head><title>Lesson 10 == Xử lý ngoại lệ ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 10 -- Xử lý ngoại lệ -//</h1><pre>
-	Ta có cây ngoại lệ như sau 
+<html><head><title>Lesson 10 == Đa kế thừa ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 10 -- Đa kế thừa -//</h1><pre>	# ❌ Đa kế thừa class  
+		❌ Java không hỗ trợ đa kế thừa class vì "diamond problem" và xung đột trạng thái (state conflict).
 		
-	Throwable
-	│
-	├── Error
-	│   ├── IOError
-	│   └── VirtualMachineError
-	│
-	└── Exception
-		├── RuntimeException 
-		│   └── IllegalArgumentException, NumberFormatException, NullPointerException
-		├── IOException
-		│   └── FileNotFoundException
-		├── SQLException
-		└── ClassNotFoundException
-		
-		
-	java.lang.Throwabe : Là class cha của tất cả các class xử lý và ném ra ngoại lệ trong JVM 	
-	
-	Error : Là class xử lý các lỗi xảy ra ở phần cứng và bộ nhớ, Không liên quan đến logic của phần mềm(source code)
-	
-	Exception : Là class cha của các class ném ra ngoại lệ lỗi khi phần mềm(source code) gặp sự cố lỗi 
-	
-	RuntimeExeption : Và class con của nó thực hiện xử lý lỗi TRONG KHI CHƯƠNG TRÌNH CHẠY , chứ không phụ trách lỗi khi complier 
-		-->	Các class con của Exception *(NGOẠI TRỪ RUNTIME EXCEPTION VÀ CÁC CLASS CON CỦA NÓ ) :  Là những lớp ngoại lệ để kiểm tra ngoại lệ trong quá trình Complier 
-		
+class A {
+    void say() { System.out.println("A"); }
+}
 
-	## Phân loại 
-		- Ngoại lệ unchecked  (チェックされない例外) : Là những ngoại lệ không được kiểm tra có xử lý không khi chương trình biên dịch . Cụ thể là các ngoại lệ của lớp RunTimeException và các lớp con của nó 
-		
-	
-		- Ngoại lệ checked (チェック例外) : Là ngoại lệ được kiểm tra có được xử lý không khi chương trình complier , nếu xử lý thiếu các ngoại lệ này ở các caller ... thì sẽ báo lỗi biên dịch . Tức là toàn bộ các class ngoại lệ trừ RunTimeException
+class B extends A {
+    void say() { System.out.println("B"); }
+}
+
+class C extends A {
+    void say() { System.out.println("C"); }
+}
+
+// class D extends B, C {} // ❌ Không được – Java không biết chọn "say()" của B hay C
 
 
-	
+	# ✅ đa kế thừa interface 
+		## 1. Interface không có state → tránh xung đột biến (trước Java 8) 
+		Trước Java 8, interface chỉ có:
+			- method abstract
+			- hằng số public static final
+			- Nên không có xung đột dữ liệu giữa các interface → an toàn để đa kế thừa.
 		
-	
+		## 2. Từ Java 8, interface có default method → có thể có logic, nhưng vẫn không gây mâu thuẫn vì quy tắc rõ ràng:
+		
+		Nếu có 2 interface cùng có default method trùng tên, class phải override rõ ràng:
+
+interface A {
+    default void say() { System.out.println("A"); }
+}
+
+interface B {
+    default void say() { System.out.println("B"); }
+}
+
+class C implements A, B {
+    public void say() {
+        A.super.say(); // hoặc B.super.say()
+    }
+}
+
+
+
+# 🧠 Tổng kết:
+
+
+| So sánh                   | Class                                | Interface                                         |
+| ------------------------- | ------------------------------------ | ------------------------------------------------- |
+| Có thể đa kế thừa?        | ❌ Không                              | ✅ Có                                              |
+| Có state (biến instance)? | ✅ Có                                 | ❌ Không (chỉ hằng số)                             |
+| Có logic sẵn?             | ✅ Có                                 | ✅ Từ Java 8 (default/static method)               |
+| Có thể xung đột logic?    | ✅ Có (và Java không biết giải quyết) | ✅ Có – nhưng Java bắt buộc override để giải quyết |
+
 	
 	
 </pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

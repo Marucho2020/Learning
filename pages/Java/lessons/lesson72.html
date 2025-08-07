@@ -1,60 +1,76 @@
-<html><head><title>Lesson 72 == AsyncSupportConfigurer ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 72 -- AsyncSupportConfigurer -//</h1><pre>
+<html><head><title>Lesson 72 == RequestMappingHandlerMapping ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 72 -- RequestMappingHandlerMapping -//</h1><pre>		
+		
+		
 # Khái niệm 
-	AsyncSupportConfigurer được dùng để bật hỗ trợ xử lý bất đồng bộ (Asynchronous processing) trong Spring MVC. 
+	Là một thành phần trong Spring MVC, RequestMappingHandlerMapping chịu trách nhiệm mapping request HTTP đến đúng Controller method dựa trên annotation @RequestMapping hoặc các annotation liên quan (@GetMapping, @PostMapping, …). 
 	
-	## 📌 Tại sao cần AsyncSupportConfigurer? 
 	
-		- Khi một request HTTP cần thời gian xử lý dài (như gọi API bên ngoài, xử lý file lớn).
-		- Nếu không dùng async, thread bị block, gây ảnh hưởng hiệu suất.
-		- Với async, Spring giải phóng thread chính, giúp server chịu tải tốt hơn.
-		
-		
-# 	📌 Cấu hình AsyncSupportConfigurer 	
-		
-		
-	@Configuration
-	public class AsyncConfig implements WebMvcConfigurer {
+# 	Cách hoạt động của RequestMappingHandlerMapping
+ 
+	1. Spring Boot quét toàn bộ ứng dụng để tìm các Controller có annotation @RequestMapping. 
+	2. Nó tạo một ánh xạ (mapping table) giữa URL và phương thức xử lý request. 
+	3. Khi request HTTP đến DispatcherServlet, nó tra cứu RequestMappingHandlerMapping để tìm phương thức phù hợp. 
 	
-		@Override
-		public void configureAsyncSupport(AsyncSupportConfigurer configurer) {
-			configurer.setDefaultTimeout(5000); // Timeout 5 giây
-			configurer.setTaskExecutor(new SimpleAsyncTaskExecutor()); // Dùng thread pool
+# 	 Cấu hình RequestMappingHandlerMapping 
+	
+	## Bạn có thể định nghĩa một custom RequestMappingHandlerMapping nếu cần: 
+	
+		@Bean
+		public RequestMappingHandlerMapping requestMappingHandlerMapping() {
+			RequestMappingHandlerMapping mapping = new RequestMappingHandlerMapping();
+			mapping.setOrder(0); // Ưu tiên cao nhất
+			mapping.setRemoveSemicolonContent(false); // Hỗ trợ request có dấu ';'
+			return mapping;
 		}
-	}
-
-	📌 setDefaultTimeout(5000): Timeout mặc định cho request async.
-	📌 setTaskExecutor(new SimpleAsyncTaskExecutor()): Dùng thread pool để chạy request bất đồng bộ.
-
-
-
-# 📌 Ví dụ Controller dùng Async 
-
-		@RestController
-		@RequestMapping("/async")
-		public class AsyncController {
 		
-			@GetMapping("/process")
-			public Callable<String> asyncProcess() {
-				return () -> {
-					Thread.sleep(3000); // Giả lập xử lý lâu 3 giây
-					return "Process Completed!";
-				};
+		📌 setOrder(0): Đặt mức ưu tiên của HandlerMapping (số càng nhỏ, ưu tiên càng cao).
+		📌 setRemoveSemicolonContent(false): Hỗ trợ URL chứa dấu ;, ví dụ /user;id=123.
+		
+
+
+# 	 Ví dụ RequestMappingHandlerMapping
+
+
+	## 1 Controller với @RequestMapping 
+		
+	
+		@RestController
+		@RequestMapping("/api")
+		public class UserController {
+		
+			@GetMapping("/users")
+			public List<User> getUsers() {
+				return userService.getAllUsers();
 			}
 		}
+
+
+
+	## 2. Spring Boot tự động tạo mapping như sau: 
+			GET /api/users  →  UserController.getUsers()
+
 	
 
 
-	## 📌 Khi client gọi /async/process: 
-	
-		- Callable<String> được Spring xử lý bất đồng bộ.
-		- Thread chính được giải phóng ngay lập tức.
-		- Khi xử lý xong, Spring trả về response cho client.
+	## Kiểm tra tất cả các Handler Mappings 
+		Bạn có thể kiểm tra tất cả các handler mappings được cấu hình bằng cách log: 
+		
+			@Autowired
+			private RequestMappingHandlerMapping handlerMapping;
+			
+			@PostConstruct
+			public void printAllMappings() {
+				handlerMapping.getHandlerMethods().forEach((key, value) -> 
+					System.out.println(key + " => " + value));
+			}
 
-# ✅ Ứng dụng: 
-	
-	Xử lý API chậm, gọi microservice, xử lý file lớn. 
-	Tăng throughput, giúp hệ thống chịu tải cao.
-	
-	
+
+# ✅ Ứng dụng:
+	Dùng để ghi log toàn bộ API của ứng dụng. 
+	Dùng để cấu hình routing động trong runtime.
+
+
+
+
 
 </pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

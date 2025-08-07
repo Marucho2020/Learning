@@ -1,101 +1,92 @@
-<html><head><title>Lesson 96 == CD Tool (Continuous Deployment / Delivery) ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 96 -- CD Tool (Continuous Deployment / Delivery) -//</h1><pre>
-# Khái niệm 
-	Là công cụ triển khai tự động ứng dụng từ image (hoặc build artifact) sang môi trường thực tế (dev, staging, production...).
-
-
-# 🎯 MỤC TIÊU CỦA CD TOOL 
-
-	Mục tiêu									Ý nghĩa thực tế
-	Triển khai nhanh, chính xác				Mỗi lần build → deploy tự động, không thao tác tay
-	Rollback nhanh							Nếu deploy lỗi → quay lại bản cũ tự động
-	Tách biệt môi trường					Dev, staging, prod deploy khác nhau → kiểm soát rủi ro
-	Audit & trace							Biết ai deploy, deploy cái gì, khi nào
-	Blue/Green, Canary...					Hỗ trợ rollout thông minh → giảm rủi ro khi release
-
-
-
-# 🛠️ CD TOOLS PHỔ BIẾN 
+<html><head><title>Lesson 96 == Build tool( BuildKit / Kaniko / Jib) ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 96 -- Build tool( BuildKit / Kaniko / Jib) -//</h1><pre> # Khái niệm 
+ 🐳 BuildKit / Kaniko / Jib — Giải pháp build container image 
 	
-Tool								Mô tả và khi nào dùng
-GitHub Actions					Dùng cho dự án nhỏ/trung, tích hợp CI/CD vào 1 nơi
-GitLab CI/CD					Full pipeline CI/CD. Dễ dùng nếu bạn đang dùng GitLab
-ArgoCD							Best choice cho GitOps với Kubernetes
-FluxCD							Cạnh tranh với ArgoCD, nhẹ hơn, GitOps-native
-Jenkins + plugin				Truyền thống, tùy biến cực mạnh, nhưng cồng kềnh
-Spinnaker						Cho enterprise scale, hỗ trợ multi-cloud, Blue/Green mạnh mẽ
-Tekton							Cloud-native pipeline engine, Kubernetes-based (nhưng phức tạp)
+	## ❓Vì sao không dùng docker build nữa?
+
+		docker build mặc định:
+		Chậm, không cache tốt
+		Không chạy được trong môi trường non-root (CI/CD)
+		Phải cài Docker Daemon (gây rắc rối trong GitHub Actions, GitLab CI...)
+		==> Sinh ra các công cụ build hiện đại hơn:
 
 
-# 🔄 MẪU CD FLOW CHUẨN 
+# 🔧 1. BuildKit (cho Docker) 
+
+	BuildKit là engine build mới của Docker. Tích hợp sâu trong Docker từ v19+.
+		Build nhanh hơn, hỗ trợ layer caching thông minh
+		Cho phép remote cache + export cache
+		Hỗ trợ --secret, --ssh, mount=type=cache	
 	
-Giả sử bạn dùng GitHub + Docker + EKS (Kubernetes AWS) 
-
-
-Dev push → GitHub Action build Docker image
-          → Push lên GitHub Container Registry
-          → Trigger ArgoCD sync → pull image mới → update deployment YAML
-          → K8s rollout → done.
-
-
-# 🔥 VÍ DỤ ARGOCD – TRIỂN KHAI CHUẨN GITOPS 
-
-	## 	Vì sao nên dùng ArgoCD?
-			GitOps-based: trạng thái hệ thống được version-control bằng Git
-			Auto sync trạng thái từ Git → cluster
-			Hiển thị trạng thái toàn bộ K8s system
-			Rollback 1-click nếu lỗi
-
-
-
-	## 🔧 Flow hoạt động ArgoCD: 
-				Bạn push file deployment.yaml lên Git repo (trỏ tới image mới)
-				ArgoCD phát hiện repo thay đổi
-				ArgoCD sync trạng
-				thái mới vào K8s cluster
-				App được deploy/update tự động
-
-
-
-	## 🧠 GitOps là gì? 
-		Git = single source of truth
-		Kubernetes trạng thái = Git repo định nghĩa
-
-
-
-
-# ✅ SO SÁNH NHANH CD TOOLS
-
-Tool					Khi nào dùng									Điểm mạnh chính
-GitHub CD				Dự án nhỏ, không cần hạ tầng phức tạp			Tích hợp CI/CD dễ, free cho OSS
-ArgoCD					K8s project production							GitOps, rollback, UI đẹp
-Jenkins CD				Dự án customize nặng							Plugin mạnh, tự làm tất cả
-Spinnaker				Enterprise-scale, đa môi trường					Blue/Green, multi-cloud, policy
-GitLab CD				Full DevOps team dùng GitLab					Tích hợp Git, CI/CD, registry
-
-
-
-
-# ☁️ CD TOOL + REGISTRY (LIÊN KẾT) 
+		
+		Cách dùng: 
+			DOCKER_BUILDKIT=1 docker build \
+			--build-arg BUILDKIT_INLINE_CACHE=1 \
+			-t myapp:latest .
 	
-	Bạn push image từ CI → registry:
-		ghcr.io/org/app:tag
-		ECR.amazonaws.com/org/app:tag
-		nexus.company.local/app:tag
+		Trong GitHub Actions:
+		
+		- name: Enable Docker BuildKit
 	
-	CD Tool sẽ:
-		Pull image đó từ registry
-		Deploy sang môi trường (k8s, ECS, server...)
-
-
-
-
-# 📦 VỀ REGISTRY 
+	run: echo '{"features":{"buildkit": true}}' | sudo tee /etc/docker/daemon.json
+	
 	
 
-	Tên	Mô												 tả ngắn
-GitHub Container Registry (GHCR)			Dễ dùng, public/private, tích hợp GitHub Actions
-ECR (Elastic Container Registry)			Registry mạnh mẽ cho AWS stack (ECS, EKS)
-Nexus										Self-hosted, lưu được cả image lẫn Maven/npm packages
+# 🔧 2. Kaniko (Google) 
+
+	Kaniko = Docker build không cần Docker daemon.
+	
+	Thường dùng khi bạn chạy CI trong môi trường như Kubernetes hoặc GitLab CI runner.
+		- Build image trong container
+		- Không cần quyền root
+		- Phù hợp với Kubernetes CI pipeline
+	Trong GitLab CI:
+
+		kaniko-build:
+		image: gcr.io/kaniko-project/executor:latest
+		script:
+			- /kaniko/executor --context $CI_PROJECT_DIR --dockerfile Dockerfile --destination $CI_REGISTRY_IMAGE:latest
+
+
+
+# 🔧 3. Jib (cho Java) 
+	Jib = Build Docker image cho Java mà KHÔNG cần Dockerfile. 
+	
+	Google tạo Jib cho Maven/Gradle. Nó tự phân tích các dependency và tạo multi-layer image hiệu quả.
+
+
+
+	## Cài Jib cho Maven: 
+		<plugin>
+		<groupId>com.google.cloud.tools</groupId>
+		<artifactId>jib-maven-plugin</artifactId>
+		<version>3.4.0</version>
+		</plugin>
+
+	
+	## Build: 
+		mvn compile jib:dockerBuild
+
+
+	## Push image: 
+		mvn compile jib:build \
+		-Dimage=ghcr.io/myorg/myapp
+
+
+
+
+
+
+# ✅ Khi nào dùng cái nào? 
+	
+Tool			Môi trường phù hợp									Ưu điểm nổi bật
+BuildKit	Local dev, Docker-based CI						Hiệu năng cao, tích hợp tốt
+Kaniko		CI/CD trong Kubernetes, GitLab CI				Không cần Docker daemon
+Jib			Dự án Java, Spring Boot							Không cần Dockerfile, build cực nhanh
+
+
+
+
+
 
 
 

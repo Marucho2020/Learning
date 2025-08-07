@@ -1,107 +1,102 @@
-<html><head><title>Lesson 98 == Secrets Management ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 98 -- Secrets Management -//</h1><pre>
-# Khái niệm  
-	Secrets Management - Bảo vệ dữ liệu nhạy cảm trong hệ thống CI/CD & IaC 
+<html><head><title>Lesson 98 == CD Tool (Continuous Deployment / Delivery) ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 98 -- CD Tool (Continuous Deployment / Delivery) -//</h1><pre>
+# Khái niệm 
+	Là công cụ triển khai tự động ứng dụng từ image (hoặc build artifact) sang môi trường thực tế (dev, staging, production...).
+
+
+# 🎯 MỤC TIÊU CỦA CD TOOL 
+
+	Mục tiêu									Ý nghĩa thực tế
+	Triển khai nhanh, chính xác				Mỗi lần build → deploy tự động, không thao tác tay
+	Rollback nhanh							Nếu deploy lỗi → quay lại bản cũ tự động
+	Tách biệt môi trường					Dev, staging, prod deploy khác nhau → kiểm soát rủi ro
+	Audit & trace							Biết ai deploy, deploy cái gì, khi nào
+	Blue/Green, Canary...					Hỗ trợ rollout thông minh → giảm rủi ro khi release
+
+
+
+# 🛠️ CD TOOLS PHỔ BIẾN 
 	
-	Là mọi loại thông tin nhạy cảm, nếu lộ ra thì : 
-		-  Mất bảo mật 
-		- Dễ bị khai thác 
-		- Có thể phá hủy cả hệ thống hoặc mất tiền 
-		
+Tool								Mô tả và khi nào dùng
+GitHub Actions					Dùng cho dự án nhỏ/trung, tích hợp CI/CD vào 1 nơi
+GitLab CI/CD					Full pipeline CI/CD. Dễ dùng nếu bạn đang dùng GitLab
+ArgoCD							Best choice cho GitOps với Kubernetes
+FluxCD							Cạnh tranh với ArgoCD, nhẹ hơn, GitOps-native
+Jenkins + plugin				Truyền thống, tùy biến cực mạnh, nhưng cồng kềnh
+Spinnaker						Cho enterprise scale, hỗ trợ multi-cloud, Blue/Green mạnh mẽ
+Tekton							Cloud-native pipeline engine, Kubernetes-based (nhưng phức tạp)
+
+
+# 🔄 MẪU CD FLOW CHUẨN 
 	
-	## Vi dụ 
-	Loại Secrets				Ví dụ
-	API Keys				AWS_ACCESS_KEY, GOOGLE_API_KEY
-	Database				DB_PASSWORD, ROOT_PASSWORD
-	Token					JWT_SECRET, OAUTH_TOKEN
-	SSH Keys				~/.ssh/id_rsa
-	TLS Cert				private.key, cert.pem
-	Encryption				ENCRYPTION_SALT, AES_KEY	
+Giả sử bạn dùng GitHub + Docker + EKS (Kubernetes AWS) 
 
-# Nếu không quản lý đúng , điều gì sẽ xảy ra 
+
+Dev push → GitHub Action build Docker image
+          → Push lên GitHub Container Registry
+          → Trigger ArgoCD sync → pull image mới → update deployment YAML
+          → K8s rollout → done.
+
+
+# 🔥 VÍ DỤ ARGOCD – TRIỂN KHAI CHUẨN GITOPS 
+
+	## 	Vì sao nên dùng ArgoCD?
+			GitOps-based: trạng thái hệ thống được version-control bằng Git
+			Auto sync trạng thái từ Git → cluster
+			Hiển thị trạng thái toàn bộ K8s system
+			Rollback 1-click nếu lỗi
+
+
+
+	## 🔧 Flow hoạt động ArgoCD: 
+				Bạn push file deployment.yaml lên Git repo (trỏ tới image mới)
+				ArgoCD phát hiện repo thay đổi
+				ArgoCD sync trạng
+				thái mới vào K8s cluster
+				App được deploy/update tự động
+
+
+
+	## 🧠 GitOps là gì? 
+		Git = single source of truth
+		Kubernetes trạng thái = Git repo định nghĩa
+
+
+
+
+# ✅ SO SÁNH NHANH CD TOOLS
+
+Tool					Khi nào dùng									Điểm mạnh chính
+GitHub CD				Dự án nhỏ, không cần hạ tầng phức tạp			Tích hợp CI/CD dễ, free cho OSS
+ArgoCD					K8s project production							GitOps, rollback, UI đẹp
+Jenkins CD				Dự án customize nặng							Plugin mạnh, tự làm tất cả
+Spinnaker				Enterprise-scale, đa môi trường					Blue/Green, multi-cloud, policy
+GitLab CD				Full DevOps team dùng GitLab					Tích hợp Git, CI/CD, registry
+
+
+
+
+# ☁️ CD TOOL + REGISTRY (LIÊN KẾT) 
 	
-	- Secrets bị push vào GitHub công khai -> lộ key AWS -> mất tiền vài ngàn USD trong vài giờ 
-	- Dev lưu secrets trong .env file -> ai cũng đọc được 
-	- Jenkins lưu token dạng plaintext -> bị xâm nhập 
+	Bạn push image từ CI → registry:
+		ghcr.io/org/app:tag
+		ECR.amazonaws.com/org/app:tag
+		nexus.company.local/app:tag
 	
-# Cách quản lý đúng cách 
-	
-	- Thêm .env vào .gitignore 
-	- Dùng git-secrets, truffleHog, gitleaks để quét trước khi push 
-	
-
-	## Lưu secrets ở nơi chuyên biệt 
-		
-		Giải pháp						 | Mô tả														| Mạnh khi
-		HashiCorp Vault 			| Hệ thống quản lý secrets chuyên nghiệp 						| System lớn, high-security
-		AWS Secrets Manager 		| Lưu secrets native trong AWS, rotate được						| Hạ tầng trên AWS
-		AWS Parameter Store (SSM)	| Rẻ hơn, đơn giản 												| Secrets đơn giản
-		GCP Secret Manager 			| Native cho Google Cloud 										| Dự án GCP
-		Kubernetes Secrets 			| Lưu secrets trong cluster 									| Tích hợp CI/CD & ArgoCD
-		SOPS + GitOps				| Secrets mã hoá lưu trong Git → dùng SOPS decrypt khi chạy		| GitOps pipeline
-
-
-	
-	## Inject secrets vào runtime - không hardcode 
-		- dùng enviroment variable (từ CI/CI hoặc K8s)
-		- Mount secret volume container 
-		- Hoặc đọc trực tiếp từ Vault API / AWS Secrets Manage SDK 
-		
-
-# Secrets trong CI/CD pipeline 
-
-	Không được viết thẳng và YAML -> dùng cơ chế riêng 
-		
-		CI Tool						 | Secrets hỗ trợ
-		GitHub Actions				 | secrets.* → trong repo settings
-		GitLab CI					 | CI/CD Variables + masked/protected
-		Jenkins						 | Credentials Plugin
-		ArgoCD						 | Dùng Sealed Secrets hoặc SOPS
-		Terraform 					 | Dùng Vault Provider hoặc remote backend
-		Docker 						 | Dùng --secret, hoặc mount secret file	
-
-
-
-# Kết hợp với IaC 
-Ví dụ với Terraform + Vault: 
-
-			provider "vault" {
-			address = "https://vault.mycompany.com"
-			}
-			
-			data "vault_generic_secret" "aws_creds" {
-			path = "secret/aws"
-			}
-			
-			provider "aws" {
-			access_key = data.vault_generic_secret.aws_creds.data["access_key"]
-			secret_key = data.vault_generic_secret.aws_creds.data["secret_key"]
-			}
-			
+	CD Tool sẽ:
+		Pull image đó từ registry
+		Deploy sang môi trường (k8s, ECS, server...)
 
 
 
 
-# Pro-level: GitOps + Secrets với SOPS + Sealed Secrets 
-
-	✨ Mô hình:
-		Secrets được mã hoá bằng SOPS
-		Lưu trữ file .enc.yaml trong Git repo
-		ArgoCD tự giải mã tại runtime (dùng key trong K8s)
-		Dễ audit, rollback, không bao giờ lộ plaintext
-
-
-
-
-
-
-# ✅ Best Practices (Senior-level) 
+# 📦 VỀ REGISTRY 
 	
 
-		✅ Làm đúng 									| ❌ Tuyệt đối tránh
-		Lưu secrets trong Vault / AWS SM 				| Push .env vào Git
-		Dùng env var + vault agent	 					| Hardcode secrets vào code
-		Rotate key định kỳ			 					| Dùng key hết hạn, không đổi
-		Giới hạn scope & permission  					| Cấp quyền full-access cho mọi container
+	Tên	Mô												 tả ngắn
+GitHub Container Registry (GHCR)			Dễ dùng, public/private, tích hợp GitHub Actions
+ECR (Elastic Container Registry)			Registry mạnh mẽ cho AWS stack (ECS, EKS)
+Nexus										Self-hosted, lưu được cả image lẫn Maven/npm packages
+
 
 
 </pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

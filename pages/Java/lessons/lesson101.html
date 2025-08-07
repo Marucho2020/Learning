@@ -1,160 +1,73 @@
-<html><head><title>Lesson 101 == Redis ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 101 -- Redis -//</h1><pre># Khái niệm  
-	Redis không chỉ là 1 cache - đó là một nền tảng dữ liệu in-memory đa năng cực kỳ quan trọng trong các hệ thống scale lớn, latency thấp và real-tome. 
+<html><head><title>Lesson 101 == Data Lineage ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 101 -- Data Lineage -//</h1><pre># Khái niệm 
+	Data Lineage = Dòng chảy của dữ liệu: từ nguồn gốc, qua các bước xử lý, đến nơi sử dụng cuối cùng. 
 	
-	Redis = Remote Dictionary Server 
-	-> Là data structure store chạy trên RAM hỗ trợ  
-	 
-		- Key-Value 
-		- Hash, List, Set, Sorted Set
-		- Stream, Bitmap, HyperLogLog
-		- Pub/Sub
-		- Lua scripting
-		- TTL (Time To Live)
-		- Transaction, Cluster, Replication,Persistence
+	## 🧠 Tưởng tượng: 
+		CSV file -> Load vào DB -> ETL -> Clean -> Join -> Model AI -> Dashboard
+ 
+	## Bạn cần biết:
+		Dữ liệu từ đâu ra?
+		Ai/chức năng nào đã xử lý nó?
+		Nó được biến đổi thế nào?
+		Đầu ra hiện tại có thể tin được không? 
 
-
-# Các use-case sử dụng Redis thực tế 
+# 🔎 Tại sao cần Data Lineage? 
 	
-Use Case 					 | Giải thích 											| Mô hình
-✅ Caching 		 	 		 | Tăng tốc API, DB query, AI model response 		| Read-through, Write-through
-✅ Session Store	 		 | Lưu thông tin phiên user (SSO, JWT metadata) 	| Cookie → Redis
-✅ Pub/Sub		 	 		 | Microservice events hoặc notification 			| Redis Pub/Sub
-✅ Queue / Task	 	 		 | Dùng Redis List làm job queue					| Celery, RQ
-✅ Rate Limiting 	 		 | Chống spam, brute-force 							| Counter với TTL
-✅ Leaderboard 		 		 | Game, app xếp hạng 								| Sorted Set
-✅ Feature flag				 | Kích hoạt tạm thời 1 tính năng 					| Key TTL
-✅ Stream / Log ingestion 	 | Ingest real-time stream → ML 					| Redis Streams
-
-
-
-# Triển khai Redis đúng cách trong dự án 
-
-	## Triển khai Redis cache cho Spring Boot 
-		- Dùng @Cacheable, @CacheEvict, cấu hình TTL 
-		- Tích hợp với RedisTemplate hoặc Lecttuce 
-		
-		@Cacheable(value = "products", key = "#id", unless="#result == null")
-		public Product getProduct(String id) { ... }
-		
-		🧠 Chú ý: Phải clear cache khi ghi DB (@CacheEvict), không thì stale data.
+Lý do									 | Mô tả
+✅ Debug dữ liệu			 		| Nếu output sai → trace ngược lại để biết chỗ hỏng
+✅ Audit tuân thủ 			 		| Phải chứng minh "dữ liệu bệnh nhân đến từ đâu", "ai chỉnh sửa", v.v.
+✅ Data Quality				 		| Phát hiện pipeline lỗi / thiếu bước
+✅ Phát hiện tác động		 		| Nếu schema DB thay đổi → biết ảnh hưởng đến đâu
+✅ Giải thích AI		     		| Explainable AI → biết model học từ dữ liệu nào
 
 
 
 
-	## Redis là Stateful service ->  Không nên dùng theo kiểu just install 
-		- Dùng Redis Sentinel để failover(HA)
-		- Dùng Redis Cluster để scale horizontal(shard)
-		- Dùng Persistent (RDB, AOF) nếu cần khôi phục Data 
-		
 
 
-# Redis Architecture 
+# 🛠️ Cách xây dựng hệ thống có Data Lineage? 
 
-	
-	## Redis Single Node 
-		- RAM only 
-		- Rất nhanh  (~sub-millisecond)
-		- Nhưng : không scale, không HA 
-	
-	## Redis Replication 
-		-Master → Replica
-		-Replica chỉ read
-		-Tốt cho read-heavy system
-
-
-	## Redis Sentinel 
-		-Theo dõi master
-		-Tự động failover
-		-Client phải hỗ trợ discovery Sentinel
-
-	## Redis Cluster 
-		- Nhiều node, shard key theo hash slot (16384 slot)
-		- Scale tốt
-		- Nhưng yêu cầu client cluster-aware
-			[Client] → [Redis Cluster]
-				├── Slot 0-5460 → Node A
-				├── Slot 5461-10922 → Node B
-				└── Slot 10923-16384 → Node C
-
-
-
-# Những kỹ thuật nâng cao cần nắm để làm chủ Redis 
-
-
-Kỹ thuật 								| Ý nghĩa 										| Gợi ý học
-🔁 TTL / Expiry							| Hạn chế memory leak 						| EXPIRE, SETEX, @Cacheable(ttl=...)
-🔒 Distributed Lock 					| Để tránh race-condition					| SETNX + EXPIRE, Redlock algorithm
-🔄 Read-through / Write-through cache 	| Sync với DB 								| Tự viết code xử lý
-🧪 Cache Invalidation 					| Tricky, quan trọng 						| @CacheEvict, versioning
-🔁 Pub/Sub & Streams 					| Giao tiếp giữa service 					| Dùng như Kafka mini
-📈 Monitoring & Metrics 				| Phát hiện memory full, eviction			| RedisInsight, Prometheus exporter
-🚨 Eviction Policy 						| Chọn chiến lược khi full RAM 				| volatile-lru, allkeys-lru, noeviction, ...
-🔐 Security 							| Password auth, TLS, ACL					| Cần đặc biệt chú ý nếu multi-tenant
-📦 Persistence							| RDB vs AOF, hybrid						| Cân nhắc trade-off tốc độ vs durability
-
-
-
-
-# 📚 VI. Những kiến thức liên quan cần học để thành thạo Redis 
-	
-	
-	## 🔥 1. Redis core commands (CRUD, TTL, Hash, Set, ZSet, List) 
-		SET, GET, HSET, LPUSH, ZADD, EXPIRE, DEL 
-
-
-	## ⚙️ 2. Cách tổ chức data trong Redis (key design)
-	
-			-Có nên dùng user:1234:cart hay cart:1234?
-			-Tránh key explosion
-			-TTL cho mỗi namespace	
-	
-	
-	## 🧠 3. Redlock algorithm 
-			- Dùng Redis để tạo distributed mutex
-			- Cần hiểu rõ để tránh deadlock hoặc inconsistency		
-	
-	
-	## 🕸 4. Redis Cluster vs Sentinel
-	
-			- Khi nào dùng cluster?
-			- Khi nào chỉ cần HA?
-	
-	
-	
-	## 🧪 5. Redis Testing, Fault tolerance
-	
-			- Giả lập Redis down
-			- Redis delay → service behave thế nào?	
-	
-	
-	## 📈 6. Monitoring (Redis Exporter, Grafana, Slowlog)
-	
-			- Phát hiện slow commands
-			- Track memory usage theo key	
-	
-	## 📖 7. Lua scripting
-	
-			- Dùng EVAL chạy batch logic atomic
-			- Ví dụ: gộp 3 command thành 1 block, tránh race
-
-
-	## 🔐 8. Redis Security
+	##  1. Metadata Collection (track từ đầu đến cuối) 
 			
-			- Không expose Redis ra public IP
-			- Bắt buộc config ACL, password, network restriction
+		Mỗi lần load data → log lại:
+			- Nguồn gốc (source file, API)
+			- Thời gian
+			- Job ID
+			- Schema version
+
+		ETL / DAG tool phải có tracking step
 
 
 
-# 🚀  Redis trong kiến trúc Microservices
 
 
-Thành phần					Redis ứng dụng
-API Cache					@Cacheable
-Event Queue					List hoặc Stream
-Config Sync					Pub/Sub
-Lock/Mutex					Redlock
-Session						Redis hash
-Leaderboard					Sorted Set
+
+	## 2. Tool hỗ trợ Data Lineage 
+		
+
+		Tool 								| Mô tả
+		OpenLineage 					 | Open standard cho lineage tracking
+		Apache Atlas					 | Dùng nhiều trong Hadoop ecosystem
+		Amundsen						 | Metadata search engine từ Lyft
+		DataHub							 | Từ LinkedIn, hỗ trợ Lineage, Schema registry
+		dbt								 | Nếu dùng dbt (SQL transformation), có builtin lineage
+		Airflow + OpenLineage plugin 	 | Track dữ liệu xuyên DAG
+
+
+
+#📉 Ví dụ trực quan: 
+
+			📁 orders.csv
+				↓
+			[ETL Job #1]
+				↓
+			🧮 Cleaned Orders Table
+				↓
+			[ETL Job #2]
+				↓
+			📊 Monthly Revenue Dashboard
+			
+		→ Data Lineage graph sẽ vẽ được cây dependency như vậy
+
 
 
 

@@ -1,165 +1,148 @@
-<html><head><title>Lesson 133 == StampedLock ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 133 -- StampedLock -//</h1><pre>
-# Khái niệm 
-	StampedLock – một trong những cơ chế đồng bộ hiện đại nhất trong Java kể từ Java 8, được thiết kế tối ưu cho hệ thống đa luồng tốc độ cao, với mục tiêu thay thế ReentrantReadWriteLock.
-
-
-# 🔧 1. Vấn đề với ReentrantReadWriteLock 
+<html><head><title>Lesson 133 == LongAccumulator ==============\ ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 133 -- LongAccumulator -----\ -//</h1><pre>
+# ✅ 1. Tóm tắt nhanh
+	LongAccumulator là phiên bản tổng quát hơn của LongAdder. 
+		LongAdder: chỉ hỗ trợ phép cộng (+)
+		LongAccumulator: cho phép bạn định nghĩa cách tích lũy tuỳ ý – max, min, product, bitwiseOr,...
+		
+		
+	## Cú pháp cơ bản: 
 	
-	ReentrantReadWriteLock chia khóa làm hai loại:
-		- Read lock (chia sẻ): nhiều thread cùng đọc
-		- Write lock (độc quyền): chỉ 1 thread ghi
+LongAccumulator acc = new LongAccumulator(Long::max, Long.MIN_VALUE);
+acc.accumulate(10);
+acc.accumulate(5);
+System.out.println(acc.get()); // 10
 
 
-	## Nhược điểm: 
-		- Chi phí lớn để lấy lock
-		- Khi nhiều thread đọc + 1 thread ghi, lock upgrade rất tốn kém
-		- Không hỗ trợ lock-free optimistic read
-		- Không hỗ trợ downgrade thông minh
 
+# ✅ 2. Cơ chế nội tại (nội tạng thực sự bên dưới)
 
-# ✅ 2. StampedLock – thiết kế hiện đại, high-performance
-
-	Không chỉ có read/write lock, mà còn có:
+	Giống LongAdder, LongAccumulator kế thừa từ lớp ẩn danh bên dưới: Striped64.
 	
-		✔️ Optimistic read (không block, không lock)
-		✔️ Precise validation sau khi đọc
-		✔️ Stamp (long token) để theo dõi trạng thái
-		✔️ Support lock upgrade/downgrade thủ công
+base: long                // giá trị gốc nếu không contention
+cells: Cell[]             // mảng các Cell nếu contention xảy ra
+function: LongBinaryOperator  // hàm tích lũy
+identity: long            // giá trị khởi đầu khi reset
+	
+	
+
+	## Hoạt động như sau: 
+		Nếu ít contention → áp dụng function.applyAsLong(base, x)
+		Nếu có contention → thread hash tới 1 Cell → áp dụng function trên Cell đó
+		get() hoặc getThenReset() sẽ cộng dồn base + cells[] bằng cùng function
+		➡ Không có đồng bộ hóa (synchronized), không có lock – hoàn toàn lock-free, CAS-based
 
 
 
-# 🧱 3. Cấu trúc và cách hoạt động 
 
-StampedLock lock = new StampedLock();
-long stamp = lock.tryOptimisticRead();
 
-if (lock.validate(stamp)) {
-    // dữ liệu không bị ghi trong lúc đọc
-} else {
-    // fallback: lock.readLock()
+# ✅ 3. Tại sao cần LongAccumulator? 
+	Vì không phải mọi phép toán đều là cộng (+).
+	
+
+Một số ví dụ: 
+| Use case          | Operation                   | Function           |
+| ----------------- | --------------------------- | ------------------ |
+| Tìm số lớn nhất   | max                         | `Long::max`        |
+| Tìm số nhỏ nhất   | min                         | `Long::min`        |
+| Phép nhân         | product                     | `(a, b) -> a * b`  |
+| Bitwise AND       | and                         | `(a, b) -> a & b`  |
+| Bitwise OR        | or                          | `(a, b) -> a \| b` |
+| Tổng trọng số log | `(a, b) -> log(a) + log(b)` | custom             |
+➡ Trong các tình huống cần logic phức tạp hơn cộng đơn giản, LongAdder không đủ.
+
+
+# ✅ 4. Các phương thức quan trọng 
+
+| Method               | Ý nghĩa                                   |
+| -------------------- | ----------------------------------------- |
+| `accumulate(long x)` | Áp dụng hàm tích lũy                      |
+| `get()`              | Lấy tổng (hoặc max/min tùy function)      |
+| `getThenReset()`     | Lấy rồi reset                             |
+| `reset()`            | Reset về identity                         |
+| `longValue()`        | Alias của `get()` (do implement `Number`) |
+
+
+# ✅ 5. Hiệu năng thực tế
+
+| Threads | `LongAdder` (sum) | `LongAccumulator` (max) |
+| ------- | ----------------- | ----------------------- |
+| 1       | Rất nhanh (\~20M) | Tương đương             |
+| 4       | \~70M             | \~65M                   |
+| 16      | \~160M            | \~150M                  |
+| 64      | \~200M            | \~180M                  |
+
+➡ Không thua kém LongAdder là bao, vì cùng chia sẻ cơ sở hạ tầng Striped64
+
+
+# ✅ 6. Ưu điểm và nhược điểm
+
+	## ✅ Ưu điểm 
+	
+		- Tùy biến logic tích lũy → bạn định nghĩa cách cộng dồn
+		- Rất tối ưu hóa cho high-concurrency
+		- Cấu trúc lock-free, dùng CAS
+		- Không đồng bộ, không block
+
+	## ❌ Nhược điểm
+
+		Không dùng được trong các tình huống cần get/set chính xác tại thời điểm (giống như AtomicLong)
+		Không thread-safe theo nghĩa strict của snapshot: get() không phải là atomic snapshot
+
+
+# ✅ 7. Khi nào dùng LongAccumulator?
+
+| Tình huống                                    | Dùng `LongAccumulator`? |
+| --------------------------------------------- | ----------------------- |
+| Tìm max/min liên tục trong high concurrency   | ✅ Tuyệt vời             |
+| Đếm số lượng log nhưng cần phép cộng đơn giản | ❌ Dùng `LongAdder`      |
+| Sinh ID tăng dần, cần chính xác tuyệt đối     | ❌ Dùng `AtomicLong`     |
+| Tính tích, tổng điểm có trọng số, custom rule | ✅ Dùng tốt              |
+| Ghi đè giá trị hoặc rollback                  | ❌ Không phù hợp         |
+
+
+# ✅ 8. Code ví dụ: thống kê điểm số lớn nhất từ nhiều thread
+LongAccumulator maxScore = new LongAccumulator(Long::max, Long.MIN_VALUE);
+
+// Mỗi thread nạp điểm
+Runnable task = () -> {
+    long score = Math.round(Math.random() * 100);
+    maxScore.accumulate(score);
+};
+
+ExecutorService pool = Executors.newFixedThreadPool(10);
+for (int i = 0; i < 1000; i++) {
+    pool.execute(task);
 }
 
-
-
-	## Các loại lock: 
-| Lock                  | Blocking?      | Shared? | Khi dùng                                         |
-| --------------------- | -------------- | ------- | ------------------------------------------------ |
-| `writeLock()`         | ✅ block        | ❌       | Khi update dữ liệu                               |
-| `readLock()`          | ✅ block        | ✅       | Khi đọc dữ liệu và cần đảm bảo không thay đổi    |
-| `tryOptimisticRead()` | ❌ non-blocking | ✅       | Đọc nhanh và kiểm tra sau                        |
-| `validate(stamp)`     | ❌              | ❌       | Kiểm tra xem dữ liệu có bị ghi sau khi đọc không |
-	
-
-
-# 🎯 4. Ví dụ dùng StampedLock chuẩn hóa
-
-class Point {
-    private double x, y;
-    private final StampedLock sl = new StampedLock();
-
-    // Ghi
-    void move(double deltaX, double deltaY) {
-        long stamp = sl.writeLock();
-        try {
-            x += deltaX;
-            y += deltaY;
-        } finally {
-            sl.unlockWrite(stamp);
-        }
-    }
-
-    // Đọc với optimistic lock
-    double distanceFromOrigin() {
-        long stamp = sl.tryOptimisticRead();
-        double currentX = x, currentY = y;
-        if (!sl.validate(stamp)) {
-            stamp = sl.readLock();
-            try {
-                currentX = x;
-                currentY = y;
-            } finally {
-                sl.unlockRead(stamp);
-            }
-        }
-        return Math.sqrt(currentX * currentX + currentY * currentY);
-    }
-}
-
-	➡ Nếu không có ghi xảy ra → tránh được chi phí lock
-	➡ Nếu ghi xảy ra → fallback sang read lock
-
-
-# 🧠 5. Khác biệt với ReentrantReadWriteLock
-
-| Tính năng              | `StampedLock`                                | `ReentrantReadWriteLock`      |
-| ---------------------- | -------------------------------------------- | ----------------------------- |
-| Optimistic read        | ✅ Có                                         | ❌ Không                       |
-| Downgrade write → read | ✅ Có (manual)                                | ✅                             |
-| Upgrade read → write   | ⚠️ Không trực tiếp (phải release & lock lại) | ✅ Có                          |
-| Lock reentrancy        | ❌ Không reentrant                            | ✅ Có                          |
-| Performance            | ✅ Cao hơn                                    | ❌ Chậm hơn khi contention lớn |
-| API phức tạp           | ⚠️ Cao                                       | Trung bình                    |
+pool.shutdown();
+pool.awaitTermination(1, TimeUnit.SECONDS);
+System.out.println("Max score: " + maxScore.get());
 
 
 
-# ⚠️ 6. Lưu ý quan trọng (cạm bẫy senior)
 
-	##❌ Không reentrant:
-	
-long s1 = lock.writeLock();
-long s2 = lock.writeLock(); // 💥 Deadlock – không tự động reentrant như `ReentrantLock`
-
-	## ⚠️ Phải luôn quản lý stamp thủ công:
-
-	Nếu bạn quên unlockRead(stamp) hoặc dùng sai stamp, hậu quả là:
-
-		- Deadlock
-		- Lost lock
-		- Race condition không rõ nguyên nhân
-
-	❌ Không dùng StampedLock cho các use-case đơn giản:
-	→ Nó phức tạp, nên chỉ phù hợp cho các hệ thống yêu cầu cực cao về hiệu năng và concurrency
+# ✅ 9. Mở rộng: so sánh 4 class phổ biến 
 
 
-
-# 🧪 7. Khi nào nên dùng StampedLock? 
-| Use case                                      | Có dùng `StampedLock`?                                       |
-| --------------------------------------------- | ------------------------------------------------------------ |
-| Cache nhiều thread đọc, ít thread ghi         | ✅ Rất phù hợp                                                |
-| Đếm, đo, log, mà muốn tránh lock              | ✅ Dùng optimistic read                                       |
-| Bài toán cần upgrade lock (đọc → ghi)         | ⚠️ Cân nhắc – không dễ dùng                                  |
-| Logic phức tạp, cần nhiều thread nesting lock | ❌ Không – dùng `ReentrantReadWriteLock` hoặc `ReentrantLock` |
-| Dùng trong cấu trúc dữ liệu custom concurrent | ✅ (ví dụ như ConcurrentLinkedTree)                           |
-
-
-# 🔧 8. Bonus: Mẫu nâng cấp lock đúng cách
-
-long stamp = lock.readLock();
-try {
-    if (needWrite()) {
-        long ws = lock.tryConvertToWriteLock(stamp);
-        if (ws != 0L) {
-            stamp = ws;
-            // now it's write lock
-        } else {
-            lock.unlockRead(stamp);
-            stamp = lock.writeLock(); // slow path
-        }
-    }
-    // do stuff
-} finally {
-    lock.unlock(stamp);
-}
-
+| Class                            | Dùng khi                             | Ghi     | Đọc        | Contention |
+| -------------------------------- | ------------------------------------ | ------- | ---------- | ---------- |
+| `AtomicLong`                     | Ghi ít, đọc nhiều, cần chính xác     | ❌ chậm  | ✅ nhanh    | ❌          |
+| `LongAdder`                      | Cộng dồn nhiều, đo lường log         | ✅ nhanh | ⚠ hơi chậm | ✅          |
+| `LongAccumulator`                | Phép tích lũy đặc biệt (max/min/etc) | ✅ nhanh | ⚠          | ✅          |
+| `LongAccumulator` (custom logic) | Phức tạp cần tích lũy logic riêng    | ✅       | ⚠          | ✅          |
 
 
 # ✅ Tổng kết
 
-	- StampedLock = hiện đại, hiệu năng cực cao, tối ưu cho tình huống read nhiều, write ít
-	- Nó đưa ra một level điều khiển lock thấp hơn, phù hợp cho hệ thống real-time, low-latency
-	- Phải quản lý logic và lifecycle thủ công
-	- Không phù hợp với beginner hoặc code đơn giản
-	- Nếu dùng đúng cách → outperform mọi lock trong Java
+| Điểm                                         | Giá trị |
+| -------------------------------------------- | ------- |
+| Tùy biến cao                                 | ✅       |
+| Hiệu năng tốt                                | ✅       |
+| Không cần synchronized                       | ✅       |
+| Không chính xác tức thời                     | ⚠       |
+| Không dùng cho business logic yêu cầu atomic | ❌       |
+
+
 
 
 </pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

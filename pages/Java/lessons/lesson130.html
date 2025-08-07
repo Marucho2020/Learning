@@ -1,125 +1,96 @@
-<html><head><title>Lesson 130 == LongAdder ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 130 -- LongAdder -//</h1><pre>
-# ✅ 1. Vấn đề gốc với AtomicLong 
-	AtomicLong.incrementAndGet() là một CAS (Compare-And-Swap) trên cùng một biến đơn (long), nên:
+<html><head><title>Lesson 130 == DAA &  Lambda expressions và closures ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 130 -- DAA &  Lambda expressions và closures -//</h1><pre>
+# khái niệm 
+	Trong Java, lambda và anonymous inner classes có thể captured biến từ scope bên ngoài — nhưng chỉ với điều kiện:
+	❗ Biến phải là "effectively final"
 
-		Nếu có nhiều thread cùng truy cập → tất cả tranh giành một vùng nhớ duy nhất
-		CPU pipeline flush + false sharing + cache invalidation
-		Gây contention rất nặng, mặc dù vẫn là "lock-free"
-		→ Giải pháp: Phân mảnh bộ đếm → mỗi thread ghi vào “ô đếm” riêng → sau đó cộng dồn lại khi cần thiết.
-	
-# ✅ 2. Giải pháp: LongAdder – lock-free + contention-friendly 
 
-	## Cơ chế hoạt động 
-		- Gồm một giá trị chính (base)
-		- Và một mảng các Cell (kiểu long), mỗi Cell tương đương một thread-local counter
-		- Khi contention thấp → tăng trực tiếp `base`
-		- Khi contention tăng → thread ghi vào Cell của mình (xác định qua hash)
+
+# 📌 2. "Effectively Final" là gì?
+	Thuật ngữ này xuất hiện từ Java 8 (JLS §4.12.4). Một biến effectively final nếu:
+		Nó chỉ được gán đúng một lần
+		Không cần khai báo final, miễn compiler có thể chứng minh không có gán lại sau lần đầu.
+
+	Java lambda là closure dạng capture-by-value (not reference).
+		Nghĩa là:
+			Biến được copy vào runtime object của lambda.
+			Nếu cho phép gán lại sau khi lambda tạo ra, tính toàn vẹn bị phá vỡ → dẫn đến bug không thể debug nổi.
+			
+
+
 		
-
-	## 📌 Điểm mạnh: 
-		Nhiều thread ghi song song mà không tranh giành cùng một biến
-		sum() cộng dồn giá trị của base + tất cả các Cell
-
-
-	## Hình ảnh tư duy: 
-		
-      LongAdder
-        |
-     [base = 10]
-        |
-   +----+----+----+
-   | C1 | C2 | C3 | ...   → array of cells (mỗi thread ghi riêng)
-   +----+----+----+
-
-Tổng = base + sum(C1..Cn)
+	## ✅ Ví dụ: 
+int x = 10; // effectively final
+Runnable r = () -> System.out.println(x); // OK
 
 
-# ✅ 3. Ưu điểm nổi bật 
+	## ❌ Vi phạm: 
 	
-| Đặc điểm             | So với `AtomicLong`                 |
-| -------------------- | ----------------------------------- |
-| Ghi (write)          | Nhanh hơn nhiều nếu có nhiều thread |
-| Đọc (read - `sum()`) | Tốn hơn một chút vì phải cộng dồn   |
-| Contention           | Rất tốt – gần như linear scaling    |
-| CAS fail rate        | Cực thấp do phân tán                |
-| Lock                 | Không dùng lock                     |
-
-
-
-# ✅ 4. Các phương thức quan trọng 
-| Method           | Mô tả                     |
-| ---------------- | ------------------------- |
-| `increment()`    | ++1, không trả về giá trị |
-| `add(long x)`    | Cộng `x` vào bộ đếm       |
-| `sum()`          | Trả về tổng hiện tại      |
-| `sumThenReset()` | Lấy tổng xong reset về 0  |
-| `reset()`        | Reset tất cả về 0         |
+int x = 10;
+x = 20; // now it's not effectively final
+Runnable r = () -> System.out.println(x); // ❌ Compile-time error
 	
 
-Lưu ý: sum() không đảm bảo chính xác tuyệt đối tức thời nếu đang có thread khác ghi vào cùng lúc → nhưng đủ chính xác cho thống kê, metric, logging, performance counter.
 
-
-
-
-
-# ❗ 5. Sai lầm thường gặp 
-
-	❌ Dùng sum() quá nhiều trong path hiệu năng cao 
-		→ sum() tốn chi phí cộng dồn nhiều cell → nên chỉ gọi định kỳ.
-
-	❌ Dùng trong môi trường yêu cầu chính xác tuyệt đối từng thời điểm
-		→ LongAdder là eventual consistency, không phải atomic snapshot.
-		
-	❌ Reset() mà chưa đọc trước
-		→ Làm mất dữ liệu không mong muốn nếu không có chiến lược đo lường rõ ràng.
-		
-		
-
-# ✅ 6. Khi nào nên dùng LongAdder thay vì AtomicLong? 
+# 📘 3. LIÊN QUAN ĐẾN DAA 
+	## Tình huống: sử dụng biến local trong lambda 
+	Compiler sẽ áp dụng DAA để đảm bảo biến đó đã được khởi tạo rõ ràng, và không thay đổi sau khi capture.
 	
-| Tình huống                                                         | Dùng `LongAdder`?                            |
-| ------------------------------------------------------------------ | -------------------------------------------- |
-| Counter cho hệ thống metric high-load (logging, Prometheus, stats) | ✅ Rất phù hợp                                |
-| Sinh ID, cần chính xác                                             | ❌ Không – dùng `AtomicLong`                  |
-| Giới hạn số thread đang chạy song song                             | ❌ Không nên – dùng `AtomicInteger`           |
-| Tạo gauge/summary dùng định kỳ đọc                                 | ✅ Phù hợp                                    |
-| Ghi đè lên giá trị hoặc rollback                                   | ❌ Không phù hợp – không có get/set trực tiếp |
+void test(boolean flag) {
+    int x;
+    if (flag) x = 1;
+    Runnable r = () -> System.out.println(x); // ❌ compile-time error
+}
+
+Dù không trực tiếp gọi x trước khi gán, lambda có thể được thực thi sau → phải đảm bảo x được "definitely assigned" trước mọi use-case tiềm năng.
+
+
+# ⚠️ 4. BẪY KHI KẾT HỢP DAA + CLOSURE
+
+❌ Gán lại biến sau khi capture
+int x = 5;
+Runnable r = () -> System.out.println(x);
+x = 10; // ❌ Compile error — x không còn effectively final
+➡️ Khi x bị gán lại, nó không còn "effectively final" nữa → lambda không được phép sử dụng nó.
 
 
 
-# ✅ 7. Performance benchmark (thực tế) 
-| Threads | `AtomicLong` (ops/sec) | `LongAdder` (ops/sec)    |
-| ------- | ---------------------- | ------------------------ |
-| 1       | \~20M                  | \~18M (thấp hơn)         |
-| 4       | \~10M                  | \~70M (cao hơn gấp 7)    |
-| 16      | \~1.2M                 | \~160M (cao hơn gấp 100) |
-| 64      | Gần như treo           | \~200M+                  |
+List<Runnable> jobs = new ArrayList<>();
+for (int i = 0; i < 3; i++) {
+    jobs.add(() -> System.out.println(i)); // ❌ i không effectively final
+}
 
-→ LongAdder hiệu năng vượt trội khi contention cao
-→ AtomicLong lại đơn giản, nhanh và chính xác khi concurrency thấp
-
-
-# ✅ 8. LongAdder vs LongAccumulator?
-	LongAdder = tổng (add)
-	LongAccumulator = tổng quát hóa: truyền vào 1 hàm BinaryOperator<Long> để định nghĩa cách combine
-	
-LongAccumulator max = new LongAccumulator(Long::max, Long.MIN_VALUE);
-max.accumulate(5);
-max.accumulate(10);
-System.out.println(max.get()); // 10
+➡️ Cách đúng:
+for (int i = 0; i < 3; i++) {
+    int j = i; // tạo biến trung gian "effectively final"
+    jobs.add(() -> System.out.println(j)); // ✅
+}
 
 
-# ✅ Tổng kết: LongAdder là vũ khí chuyên dụng cho:
-
-| Tình huống                               | Có dùng không |
-| ---------------------------------------- | ------------- |
-| Logging hiệu suất cao                    | ✅             |
-| Tracking metric/telemetry                | ✅             |
-| Đếm lượt truy cập                        | ✅             |
-| Quản lý tài nguyên chính xác theo đơn vị | ❌             |
-| Sinh số thứ tự chính xác tuyệt đối       | ❌             |
+# 3.  DAA + CLOSURE = LUỒNG PHÂN TÍCH ĐỘC LẬP
+	Khi compiler phân tích lambda:
+	Nó tạo một CFG riêng biệt cho lambda (như một hàm con),
+	Sau đó kiểm tra các biến từ outer-scope theo kiểu “đóng băng trạng thái”.
 
 
+Ví dụ nâng cao với array: 
+void foo() {
+    int[] arr = new int[]{1};
+    Runnable r = () -> arr[0] = 42; // ✅ OK – arr là effectively final, ta không gán lại arr
+}
+
+
+
+# 🧵 7. LIÊN QUAN ĐẾN THREAD, CONCURRENCY
+void startThread() {
+    int counter = 0;
+    new Thread(() -> {
+        System.out.println(counter); // ❌ compile error – counter không effectively final
+    }).start();
+}
+
+Giải pháp:
+	Dùng AtomicInteger nếu cần thay đổi
+	Dùng int[] hoặc wrapper class như Holder
 
 
 </pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

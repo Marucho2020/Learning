@@ -1,285 +1,52 @@
-<html><head><title>Lesson 152 == Stream performance tuning ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 152 -- Stream performance tuning -//</h1><pre>
-	Trong hệ thống lớn, Stream API của Java là một công cụ rất mạnh để xử lý dữ liệu, nhưng cũng có thể là nguyên nhân gây ra bottleneck nếu không được tinh chỉnh đúng cách. Dưới đây là phân tích chi tiết cấp độ senior về Stream performance tuning kèm theo các góc nhìn thực chiến:
+<html><head><title>Lesson 152 == Java Stream API ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 152 -- Java Stream API -//</h1><pre>
+# 1. Stream là gì?
+	Là abstraction cho xử lý dữ liệu tuần tự hoặc song song (parallel)
+	Không lưu trữ dữ liệu, không làm thay đổi collection gốc.
 
+# 2. Luồng xử lý của Stream
 
-# ⚙️ 1. Hiểu rõ bản chất của Stream
-
-	Stream không lưu trữ dữ liệu → chỉ là một pipeline của các phép biến đổi (map, filter, flatMap, v.v.)
+	- Nguồn (Source): Collection, array, I/O…
+	- Intermediate operations: filter, map, sorted, distinct (lười tính - lazy)
+	- Terminal operations: collect, forEach, reduce, count (kích hoạt - eager)
 	
-	Stream là lazy → các operations trung gian không thực hiện cho đến khi có terminal operation (collect, reduce, count, forEach,...).
+		→ Cần hiểu rõ: Stream chỉ thực sự chạy khi gọi terminal operation.
+
+# 3. Các nhóm hàm quan trọng 
+| Nhóm             | Hàm tiêu biểu                                        |
+| ---------------- | ---------------------------------------------------- |
+| Biến đổi dữ liệu | `map()`, `flatMap()`                                 |
+| Lọc              | `filter()`                                           |
+| Sắp xếp          | `sorted()`, `limit()`, `skip()`                      |
+| Tổng hợp         | `collect()`, `reduce()`, `count()`, `min()`, `max()` |
+| Song song        | `parallelStream()`                                   |
+
+
+# 4. Collector 
+
+	toList(), toSet(), joining(), groupingBy(), partitioningBy(), mapping()
 	
-	→ Điều này rất quan trọng: nếu không có terminal operation → Stream không làm gì cả.
+	groupingBy() đặc biệt quan trọng cho xử lý dữ liệu phân nhóm
 
+Map<String, List<Employee>> grouped = 
+    employees.stream().collect(Collectors.groupingBy(Employee::getDepartment));
 
-# 🚧 2. Tránh các lỗi hiệu năng phổ biến 
 
-	## ❌ Sử dụng Stream sai ngữ cảnh 
-List<String> result = list.stream()
-    .filter(s -> s.length() > 3)
-    .map(String::toUpperCase)
-    .collect(Collectors.toList());
+# 5. Custom Collector
+	Tự định nghĩa Collector nếu muốn kết hợp xử lý dữ liệu đặc biệt (xem Collector.of())	
 
 
-		Nếu danh sách rất lớn → memory pressure tăng nhanh nếu không có short-circuiting.
-		Nếu list là một LinkedList, việc stream hóa sẽ chậm hơn ArrayList do random access yếu.
-		
+# 6. Parallel Stream
 
-	## ✅ Khuyến nghị:
+	Ưu điểm: tăng tốc xử lý với CPU đa nhân
+	Cảnh báo: không an toàn nếu source không thread-safe hoặc operation có side effect
 
-		Chỉ dùng Stream khi thực sự cần: dữ liệu lớn + cần pipeline hóa logic rõ ràng.
-		Tránh dùng Stream trong loop hoặc khi cần logic phức tạp lồng nhau nhiều tầng.
+# III. Các lỗi và hiểu nhầm phổ biến (anti-patterns)
 
-
-
-# 🧠 3. Sử dụng parallelStream một cách thông minh
-	parallelStream() có thể tăng hiệu năng… hoặc giết chết performance nếu dùng sai.
-	
-	## Khi nên dùng parallelStream(): 
-		- Dữ liệu lớn (>10,000 phần tử).
-		- Mỗi phép biến đổi đắt đỏ (CPU-intensive).
-		- Máy có nhiều core (đa luồng hiệu quả).
-
-
-	## Khi không nên dùng:
-
-		Dữ liệu nhỏ.
-		Có thao tác I/O blocking.
-		Mỗi phần tử cần truy cập vào shared state (sẽ gây contention).
-
-		⚠️ "Parallel is not always faster." – Benchmark kỹ từng tình huống trước khi tin tưởng nó.
-
-
-# 📚 4. Dùng Collector custom để giảm allocation
-	Collector<T, ?, Map<K, List<T>>> customCollector = 
-    Collectors.groupingBy(...);
-
-	Những Collector mặc định như groupingBy, partitioningBy có thể gây ra allocation thừa hoặc boxing.
-
-	## ✅ Tạo custom Collector nếu: 
-		Cần pooling / reuse container.
-		Muốn optimize memory footprint.
-
-
-
-# 🔄 5. Tránh các map() thừa hoặc .stream().stream() lồng nhau
-
-	Ví dụ tệ:
-
-list.stream()
-    .map(obj -> obj.getSubList().stream())
-    .collect(Collectors.toList());
-
-→ Không tạo được pipeline đúng, hoặc gây ra vấn đề boxing/unboxing khi xử lý primitive.
-
-	✅ Dùng flatMap nếu muốn flatten:
-	
-list.stream()
-    .flatMap(obj -> obj.getSubList().stream())
-    .collect(Collectors.toList());
-
-
-# 🧩 6. Ưu tiên primitive streams khi có thể
-
-IntStream.range(0, 1000000).sum();
-
-Stream<Integer>.range(...).reduce(...)
-
-	→ Tránh boxing/unboxing → giảm GC pressure.
-
-
-
-# 🧵 7. Cẩn trọng với stateful lambda và side effect
-
-List<String> logs = new ArrayList<>();
-list.stream()
-    .filter(x -> {
-        logs.add(x.toString());  // side effect
-        return true;
-    })
-    .collect(Collectors.toList());
-
-
-	→ Vừa sai với functional style, vừa gây race condition nếu dùng parallel stream.
-
-
-
-# ✅ Tổng kết: Những nguyên tắc Tuning cấp độ Senior 
-
-
-| Kỹ thuật                                         | Mục tiêu                             | Lưu ý                                  |
-| ------------------------------------------------ | ------------------------------------ | -------------------------------------- |
-| Dùng đúng loại `Stream` (sequential vs parallel) | Tối ưu performance theo workload     | Benchmark cẩn thận                     |
-| Tránh boxing                                     | Giảm GC & CPU overhead               | Dùng `IntStream`, `LongStream`...      |
-| Ưu tiên `flatMap` thay cho stream lồng           | Giảm nesting, dễ đọc                 | Tránh `stream().stream()`              |
-| Custom Collector                                 | Giảm allocation, tăng tính linh hoạt | Yêu cầu hiểu sâu `Collector` interface |
-| Tránh `stateful lambda`                          | Đảm bảo purity                       | Dễ gây race condition                  |
-| Không lạm dụng stream                            | Khi logic đơn giản                   | `for` loop vẫn rất hiệu quả            |
-
-
-
-/===================== Reactive Streams (Project Reactor, RxJava) ===============
-
-# 🧠 I. Reactive Streams là gì?
-	Reactive Streams là một chuẩn giao tiếp bất đồng bộ, không chặn (non-blocking), backpressure-aware để xử lý dòng dữ liệu (stream) không đồng bộ giữa các thành phần.
-	
-# 	⚙️ 1. Mục tiêu của Reactive Streams:
-	
-	- Asynchronous: xử lý dữ liệu không đồng bộ.
-	- Non-blocking: không giữ thread chờ dữ liệu.
-	- Backpressure: kiểm soát tốc độ tiêu thụ dữ liệu, tránh tràn bộ nhớ.
-
-
-# 📦 II. Reactive Streams API chuẩn
-	
-public interface Publisher<T> {
-    void subscribe(Subscriber<? super T> s);
-}
-
-public interface Subscriber<T> {
-    void onSubscribe(Subscription s);
-    void onNext(T t);
-    void onError(Throwable t);
-    void onComplete();
-}
-
-public interface Subscription {
-    void request(long n);
-    void cancel();
-}
-
-public interface Processor<T, R> extends Subscriber<T>, Publisher<R> {}
-
-
-Đây là specification gốc. Project Reactor, RxJava, Akka Streams, Spring WebFlux... đều tuân thủ chuẩn này.
-
-
-# ⚙️ III. Project Reactor vs RxJava
-
-| Khía cạnh              | Project Reactor         | RxJava                                      |
-| ---------------------- | ----------------------- | ------------------------------------------- |
-| Được phát triển bởi    | Pivotal / Spring Team   | Netflix                                     |
-| Phù hợp với            | Spring WebFlux, Java 8+ | Android, general reactive                   |
-| API chính              | `Mono<T>`, `Flux<T>`    | `Single<T>`, `Observable<T>`, `Flowable<T>` |
-| Backpressure           | Native                  | `Observable` không hỗ trợ, `Flowable` có    |
-| Chuẩn Reactive Streams | ✅                       | ✅ (chỉ `Flowable`)                          |
-| Sử dụng phổ biến       | Backend, microservices  | Android, backend                            |
-
-# 🚀 IV. Cấu trúc cơ bản
-
-Flux<String> flux = Flux.just("A", "B", "C")
-    .map(s -> s.toLowerCase())
-    .filter(s -> !s.equals("b"))
-    .doOnNext(System.out::println)
-    .subscribe();
-
-Flux<T> = stream nhiều phần tử.
-
-Mono<T> = stream duy nhất 1 phần tử (hoặc không có gì).
-
-
-
-	## RxJava: 
-		
-Observable<String> obs = Observable.just("A", "B", "C")
-    .map(String::toLowerCase)
-    .filter(s -> !s.equals("b"))
-    .subscribe(System.out::println);
-
-
-# 🧩 V. Các khái niệm Senior cần nắm vững
-
-	##1. Backpressure 
-		Khi nguồn phát (Publisher) tạo dữ liệu quá nhanh, làm nghẽn subscriber → cần kiểm soát.
-
-
-		### RxJava: 
-			Observable không hỗ trợ → dễ OOM.
-			Flowable hỗ trợ → dùng chiến lược như BUFFER, DROP, LATEST, ERROR.
-			
-Flowable.interval(1, TimeUnit.MILLISECONDS)
-    .onBackpressureDrop()
-    .observeOn(Schedulers.io())
-    .subscribe(...);
-
-		### Reactor: 
-			Flux luôn backpressure-aware.
-			Subscriber dùng request(n) để lấy số lượng dữ liệu mong muốn.
-
-
-
-
-	## 2. Operators – Functional Style
-	
-	| Nhóm           | Ví dụ                                 |
-| -------------- | ------------------------------------- |
-| Transform      | `map`, `flatMap`, `concatMap`         |
-| Filter         | `filter`, `take`, `skip`, `distinct`  |
-| Combine        | `merge`, `zip`, `combineLatest`       |
-| Error handling | `onErrorResume`, `retry`, `doOnError` |
-| Terminal       | `subscribe`, `block`, `collectList`   |
-
-		flatMap có thể phát tán bất đồng bộ, concatMap duy trì thứ tự.
-	
-# 	3. Schedulers & Threading
-	Bạn phải kiểm soát luồng trong Reactive để tránh race condition.
-	
-Flux.just(1,2,3)
-    .subscribeOn(Schedulers.boundedElastic())  // nơi emit
-    .publishOn(Schedulers.parallel())          // nơi xử lý
-    .map(i -> i * 2)
-    .subscribe(System.out::println);
-	
-	subscribeOn: định nghĩa thread bắt đầu stream
-	publishOn: chuyển luồng ở giữa pipeline
-	
-	
-# 🧵 VI. Reactive trong hệ thống lớn
-
-	##  ⚡ Reactive vs Imperative 
-
-| Imperative             | Reactive                               |
-| ---------------------- | -------------------------------------- |
-| Blocking               | Non-blocking                           |
-| Nhiều thread, chờ đợi  | Ít thread, CPU hiệu quả                |
-| Dễ hiểu                | Khó debug, cần thiết kế lại            |
-| Tốt cho logic đơn giản | Tốt cho API gateway, stream, websocket |
-
-
-
-# ☠️ Những lỗi chết người trong hệ thống reactive:
-
-| Lỗi                               | Hậu quả                        |
-| --------------------------------- | ------------------------------ |
-| Quên xử lý backpressure           | Tràn bộ nhớ, crash             |
-| Gọi `.block()` trong WebFlux      | Chặn event loop → mất reactive |
-| Side-effect trong `map()`         | Dễ gây bug khó trace           |
-| Dùng `parallel()` không kiểm soát | Race condition, kết quả sai    |
-| Không monitor timeout/cancel      | Leak kết nối, queue đầy        |
-
-
-
-# 🛠️ VII. Spring WebFlux (dùng Reactor)
-
-@GetMapping("/users/{id}")
-public Mono<User> getUser(@PathVariable String id) {
-    return userService.getUserById(id); // Mono<User>
-}
-
-	WebFlux = non-blocking HTTP layer dựa trên Project Reactor
-	Không cần container threadpool như Tomcat truyền thống
-
-
-# ✅ Tổng kết – Senior checklist về Reactive
-
-| Cần hiểu rõ                               | Giải thích                                   |
-| ----------------------------------------- | -------------------------------------------- |
-| `Publisher`, `Subscriber`, `Subscription` | Foundation của reactive spec                 |
-| `Mono`, `Flux`, `Flowable`, `Observable`  | Tính chất, ưu nhược, khi nào dùng            |
-| Backpressure mechanics                    | Kiểm soát tốc độ xử lý dữ liệu               |
-| Hot vs Cold Publisher                     | Phân biệt stream dạng nóng/lạnh              |
-| Error propagation                         | `onErrorResume`, `retry`, `fallback`         |
-| Scheduling model                          | Threading + Performance tuning               |
-| Reactive vs Blocking                      | Tư duy mới về hệ thống không thread-blocking |
+| Vấn đề                                                      | Giải thích                                                                    |
+| ----------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| Dùng `stream().forEach()` để thay `for` loop có side effect | Vi phạm nguyên tắc **pure function** của Stream                               |
+| Gọi `stream()` nhiều lần                                    | Stream **không thể tái sử dụng**, phải tạo lại                                |
+| Dùng `parallelStream()` bừa bãi                             | Gây tốn tài nguyên, thậm chí **chậm hơn** nếu dữ liệu ít hoặc có shared state |
 
 
 

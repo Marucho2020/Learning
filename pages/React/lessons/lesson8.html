@@ -1,0 +1,212 @@
+<html><head><title>Lesson 8 == Props ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../react-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 8 -- Props -//</h1><pre>
+#	1. Props là gì?
+	Tóm tắt: Props (viết tắt của "properties") là các tham số được truyền vào component, tương tự như thuộc tính HTML hoặc tham số hàm trong JavaScript. Props cho phép component nhận dữ liệu từ bên ngoài để hiển thị động.
+
+	## Bản chất Props: 
+		Props là một object chứa các thuộc tính được truyền vào component khi nó được sử dụng. Ví dụ, khi viết <Car brand="Ford" />, component Car nhận một object props với props.brand là "Ford".
+		
+	## 	Tại sao quan trọng?: 
+		
+		- Tái sử dụng: Props cho phép một component hiển thị dữ liệu khác nhau tùy thuộc vào giá trị truyền vào, giúp tái sử dụng mã.
+		- Giao tiếp giữa components: Props là cách chính để component cha truyền dữ liệu cho component con.
+		- Tính read-only: Props không thể thay đổi bên trong component, đảm bảo tính dự đoán và dễ debug.		
+
+	## So sánh với State:
+
+		- Props: Dữ liệu từ bên ngoài, chỉ đọc.
+		- State: Dữ liệu nội bộ, có thể thay đổi thông qua setState (trong Class Components) hoặc useState (trong Function Components).
+
+	Quan trọng: Hiểu và sử dụng Props đúng cách là nền tảng để xây dựng các ứng dụng React linh hoạt và có tổ chức.
+	
+
+# 2. Cách sử dụng Props 
+	Tóm tắt: Props được truyền vào component thông qua các thuộc tính giống HTML và được truy cập trong component qua object props.
+
+	## 2.1. Truyền Props cơ bản
+
+function Car(props) {
+  return <h2>I am a {props.brand}!</h2>;
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<Car brand="Ford" />);
+
+
+		- Truyền Props: <Car brand="Ford" /> truyền thuộc tính brand với giá trị "Ford".
+		- Truy cập Props: Trong component Car, props.brand được sử dụng để hiển thị "Ford".
+		- Kết quả: <h2>I am a Ford!</h2>.
+
+
+	## 2.2. Truyền Props từ Component cha
+
+function Car(props) {
+  return <h2>I am a {props.brand}!</h2>;
+}
+
+function Garage() {
+  return (
+    <>
+      <h1>Who lives in my garage?</h1>
+      <Car brand="Ford" />
+    </>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<Garage />);
+
+	
+	Cơ chế: Component Garage (cha) truyền prop brand cho component Car (con).
+
+<h1>Who lives in my garage?</h1>
+<h2>I am a Ford!</h2>
+
+
+	## 2.3. Truyền biến làm Props
+
+function Car(props) {
+  return <h2>I am a {props.brand}!</h2>;
+}
+
+function Garage() {
+  const carName = "Ford";
+  return (
+    <>
+      <h1>Who lives in my garage?</h1>
+      <Car brand={carName} />
+    </>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<Garage />);
+
+
+	- Khác biệt: Thay vì truyền chuỗi trực tiếp (brand="Ford"), bạn truyền giá trị của biến carName bằng {carName}.
+	- Cú pháp: Dùng {} để truyền biến hoặc biểu thức JavaScript làm prop.
+
+
+
+	## 2.4. Truyền Object làm Props
+
+function Car(props) {
+  return <h2>I am a {props.brand.model}!</h2>;
+}
+
+function Garage() {
+  const carInfo = { name: "Ford", model: "Mustang" };
+  return (
+    <>
+      <h1>Who lives in my garage?</h1>
+      <Car brand={carInfo} />
+    </>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<Garage />);
+
+
+	
+	- Truyền Object: brand={carInfo} truyền toàn bộ object carInfo.
+	- Truy cập: Trong Car, sử dụng props.brand.model để lấy giá trị "Mustang".
+	- Kết quả: <h2>I am a Mustang!</h2>.	
+
+
+
+
+	
+	- Props linh hoạt: Props có thể là bất kỳ kiểu dữ liệu: chuỗi, số, mảng, object, hàm, hoặc thậm chí component.
+	
+	- Cú pháp {}: Dùng {} để truyền các giá trị không phải chuỗi (như biến, object, hàm). Chuỗi có thể truyền trực tiếp: brand="Ford".
+	
+	- Props là read-only: Bạn không thể thay đổi props trong component. Ví dụ, nếu bạn cố gắng
+
+
+function Car(props) {
+  props.brand = "Toyota"; // Lỗi
+  return <h2>I am a {props.brand}!</h2>;
+}
+
+React sẽ báo lỗi vì props là bất biến (immutable).
+
+
+
+# 3. Ứng dụng của Props
+	Tóm tắt: Props là cách chính để truyền dữ liệu giữa các component, giúp xây dựng giao diện động và tái sử dụng.
+
+	Giải thích chi tiết:
+		Tái sử dụng: Một component có thể được dùng ở nhiều nơi với các props khác nhau:
+		
+			<Car brand="Toyota" />
+			<Car brand="Honda" />		
+			Cả hai gọi cùng component Car nhưng hiển thị dữ liệu khác nhau.
+		
+		Giao tiếp cha-con: Component cha truyền dữ liệu cho component con qua props, tạo ra luồng dữ liệu một chiều (unidirectional data flow).
+		
+		Tổ chức mã: Props giúp chia nhỏ logic giao diện, mỗi component chỉ cần tập trung vào một phần cụ thể.
+		
+		
+	
+		## Props Destructuring:
+			Để mã gọn hơn, bạn có thể destructuring props trong Function Components:
+			
+function Car({ brand }) {
+  return <h2>I am a {brand}!</h2>;
+}		
+		
+		## Default Props: 
+			Bạn có thể định nghĩa giá trị mặc định cho props
+		
+function Car({ brand = "Unknown" }) {
+  return <h2>I am a {brand}!</h2>;
+}		
+		
+#	4. Ví dụ thực tế
+
+// Car.js
+function Car({ brand, model, year }) {
+  return (
+    <div>
+      <h2>{brand} {model}</h2>
+      <p>Year: {year}</p>
+    </div>
+  );
+}
+
+// Garage.js
+import Car from './Car';
+
+function Garage() {
+  const carInfo = { brand: "Toyota", model: "Camry", year: 2020 };
+  return (
+    <>
+      <h1>My Garage</h1>
+      <Car brand={carInfo.brand} model={carInfo.model} year={carInfo.year} />
+      <Car brand="Honda" model="Civic" year={2021} />
+    </>
+  );
+}
+
+// index.js
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import Garage from './Garage';
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<Garage />);
+
+
+https://www.w3schools.com/react/react_events.asp
+
+
+
+
+
+
+
+
+
+
+
+</pre><a id='backBottom' href='../react-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

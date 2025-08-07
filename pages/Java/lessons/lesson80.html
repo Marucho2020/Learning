@@ -1,17 +1,23 @@
-<html><head><title>Lesson 80 == Sidecar Proxy ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 80 -- Sidecar Proxy -//</h1><pre>
+<html><head><title>Lesson 80 == Security ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 80 -- Security -//</h1><pre>
 # Khái niệm 
-	Là một proxy nhỏ chạy cùng  pod/service, giúp quản lý network, security, observability mà không cần thay đổi code của service chính 
+	- Bảo mật để bảo vệ hệ thống khỏi các cuộc tấn công như DDoS, SQL Injection, XSS , Man-in-the-Middle
+	- Kiểm soát truy cập vào các service nội bộ 
+	- Mã hóa dữ liệu truyền tải giữa các service 
 	
-# Lợi ích  
-	- Dễ dàng thêm TLS, retries , circuit breaking 
-	- Tăng khả năng quan sát mà không sửa đổi ứng dụng 
-	- Độc lập với ngôn ngữ lập trình của service 
-	
-	
-# Triển khai trong thực tế : 
-	- Envoy Proxy thường được dùng làm Sidecar Proxy trong Service Mesh 
-	- Istio tự động chèn Envoy Proxy vào mỗi service 
+# Các cơ chế bảo mật phổ biến 
 
+	- Authentication (Xác thực) : Kiểm tra danh tính (JWT , OAuth2 ,  mTLS)
+	- Authorization (Phân quyền ): Kiểm soát quyển truy cập(RBAC ,  ABAC)
+	- mTLS (Mutual TLS) : Cả client và servicer đều xác thực lẫn nhau 
+	- API Gateway Security : Kiểm soát truy cập ở lớp API Gateway 
+	- Zero Trust Security : Không tin cậy bất cứ service nào, luôn xác thực 
+	
+# Triển khai trong thực tế 
 
+	- Spring Security + OAuth2 , JWT
+	- Envoy Proxy hỗ trợ mTLS , JWT Validation 
+	- Istio có Authorization Policy để kiểm soát truy cập 
+	
+	
 
 </pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

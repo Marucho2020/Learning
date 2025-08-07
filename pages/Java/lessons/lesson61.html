@@ -1,218 +1,198 @@
-<html><head><title>Lesson 61 == Protocol Buffer ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 61 -- Protocol Buffer -//</h1><pre>	Protocol Buffer (Protobuf) là một ngôn ngữ định dạng dữ liệu do Google phát triển, được dùng để serialize dữ liệu nhanh, nhẹ và hiệu quả hơn so với JSON hoặc XML . Nó là lựa chọn mặc định cho gRPC và rất phổ biến trong các hệ thống phân tán. 
-	
-
-
-Cú pháp						Vai trò
-int32					Kiểu số nguyên 32-bit
-string					Kiểu chuỗi UTF-8
-bool					Kiểu boolean
-message					Kiểu dữ liệu tự định nghĩa (custom type)
-
-
-
-	
-# Khai báo phiên bản (syntax)	
-	
-	syntax = "proto3"	; 	// Chọn phiên bản proto3 
-	
-	
-		proto2 (cũ , hỗ trợ required , toptinal , default values)
-		proto3 (mới , đơn giản hóa, tự động có giá trị mặc định)
+<html><head><title>Lesson 61 == Các kỹ thuật Java RMI nâng cao ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 61 -- Các kỹ thuật Java RMI nâng cao -//</h1><pre> 
+//------------------✅ Giao tiếp giữa các máy khác nhau trong mạng
+	# Khái niệm 
+		Java RMI cho phép các đối tượng Java chạy trên máy này có thể gọi phương thức trên đối tượng chạy ở máy khác như thể chúng đang gọi phương thức cục bộ. Điều này thực hiện được nhờ stub(client) và skeleton (server)
 		
-		
-		
-# Package và Import 
-
-	package mypackage ; 		// Giúp phân loại code , tránh trùng lặp 
-	
-	import "google/protobuf/timestamp.proto";	//Import thư viện ngoài 
-	
-		package  : giúp tránh trùng tên giữa các file .proto 
-		import   : giúp sử dụng các message định nghĩa sẵn 
-		
-		
-# Message (Định nghĩa cấu trúc dữ liệu ) 
-	
-	message Person{
-		string name = 1;
-		int32 age = 2;
-		bool isStudent = 3;
-	}
-		
-		## Lưu ý : 
-			Mỗi field có một số thứ tự duy nhất (1,2,3 ...)
-			Sô thứ tự không được thay đổi sau khi deploy (tránh lỗi khi deserialize)
+			✅ Các thành phần chính trong RMI:
+			Remote Interface: Định nghĩa các phương thức mà client có thể gọi từ xa.
+			Remote Object (Implementation): Cung cấp phần triển khai của remote interface.
+			Stub & Skeleton: Stub là proxy trên client, còn Skeleton (trước Java 5) nhận yêu cầu từ stub, gọi hàm và gửi kết quả về.
+			RMI Registry: Cơ sở dữ liệu lưu trữ các remote object đã đăng ký.
+			RMI Transport: Lớp trừu tượng xử lý truyền dữ liệu giữa client và server.
+			
+			✅ Cách giao tiếp giữa hai máy:
+			Server khởi động: Đăng ký remote object với RMI Registry.
+			Client tra cứu (lookup) remote object từ Registry.
+			Stub trên client gửi yêu cầu tới remote object trên server.
+			Server thực hiện phương thức và trả kết quả về client.
 			
 			
-	
-# Kiểu dữ liệu trong protobuf 
+			
+	# Ví dụ giao tiếp qua mạng 
+		// Remote Interface
+					import java.rmi.*;
+					
+					public interface RemoteInterface extends Remote {
+						String sayHello() throws RemoteException;
+					}
+					
+					// Server Implementation
+					import java.rmi.*;
+					import java.rmi.server.*;
+					
+					public class RemoteImpl extends UnicastRemoteObject implements RemoteInterface {
+						protected RemoteImpl() throws RemoteException {
+							super();
+						}
+					
+						public String sayHello() {
+							return "Hello from Server!";
+						}
+					
+						public static void main(String[] args) {
+							try {
+								RemoteImpl obj = new RemoteImpl();
+								Naming.rebind("rmi://localhost/HelloServer", obj);
+								System.out.println("Server is ready.");
+							} catch (Exception e) {
+								e.printStackTrace();
+							}
+						}
+					}
+					
+					// Client
+					import java.rmi.*;
+					
+					public class RMIClient {
+						public static void main(String[] args) {
+							try {
+								RemoteInterface obj = (RemoteInterface) Naming.lookup("rmi://localhost/HelloServer");
+								System.out.println(obj.sayHello());
+							} catch (Exception e) {
+								e.printStackTrace();
+							}
+						}
+					}
 
-		Kiểu dữ liệu				Kích thước					Miêu tả
-		double						8 byte				Số thực
-		float						4 byte				Số thực
-		int32						4 byte				Số nguyên
-		int64						8 byte				Số nguyên
-		uint32						4 byte				Số nguyên không dấu
-		uint64						8 byte				Số nguyên không dấu
-		sint32						4 byte				Số nguyên có dấu (tối ưu)
-		sint64						8 byte				Số nguyên có dấu (tối ưu)
-		fixed32						4 byte				Số nguyên cố định
-		fixed64						8 byte				Số nguyên cố định
-		sfixed32					4 byte				Số nguyên có dấu cố định
-		sfixed64					8 byte				Số nguyên có dấu cố định
-		bool						1 bit				True/False
-		string						Variable			Chuỗi UTF-8
-		bytes						Variable			Chuỗi nhị phân	
+
+# Các vấn đề gặp phải khi giao tiếp qua mạng . 
+
+			✅ Các vấn đề gặp phải khi giao tiếp qua mạng:
+				Firewall ngăn chặn cổng RMI.
+				Địa chỉ IP thay đổi gây lỗi java.rmi.ConnectException.
+				Security Policy hạn chế việc tải lớp từ xa.
+				Tường lửa NAT không cho phép kết nối hai chiều.
 
 
-# Enum 
-	
-	enum Status {
+
+//----------------------------✅ Security Policy trong RMI
+
+	# Khái niệm 
+		Java RMI chạy trên môi trường phân tán nên cần bảo mật để tránh bị khai thác 
 		
-		UNKNOWN = 0 ;
-		ACTIVE = 1;
-		INACTIVE = 2;
-	}
-	
-	message User {
-		string name = 1;
-		Status status = 2;
-	}
-
-
-	💡 Lưu ý: 
-		Enum phải có giá trị mặc định là 0
-		Giá trị trong enum phải là số nguyên  
+	# Các rủi ro bảo mật 
 		
-
-
-# Nested Message (Message lồng nhau)
-	
-	message Address {
-		string street = 1;
-		string city = 2;
-	}
-
-	message Person {
-		string name = 1;
-		Address address = 2; 	// Message bên trong message
-	
-	}
-
-
-
-# Repeated Fields (Danh sách )
-	
-	message Classroom{
-		repeated string students = 1 	// danh sách học sinh 
-	}
-
-	💡 Lưu ý: 
-		Không có List hay Array, chỉ có repeated 
-
-
-#	 Map  
-	
-	message PhoneBook {
-		map<string,string> contacts = 1;
-	}
-
-	💡 Lưu ý: 
-		KeyType chỉ có thể là string, int32 , int64 , bool 
-		ValueType có thể là bất kỳ kiểu nào 
+		- Kẻ tấn công gửi mã độc đến server hoặc client 
+		- Giao tiếp giữa client-server có thể bị nghe lén  
+		- Tải code từ xa có thể bị kẻ xấu lợi  
 		
 		
+	# Security Manager & Policy File 
 		
-# Optional Fields (trường không bát buộc )	
+		## Java yêu cầu cài đặt một Security Manager để kiếm soát quyền truy cập 
+			
+			
+			### Bước 1 
+			if (System.getSecurityManager() == null) {
+				System.setSecurityManager(new SecurityManager());
+			}
 
-	message Product {
-		string name = 1;
-		optional double price = 2;
-	}
+			### Bước 2  Ta cần một file policy để cấp quyền cho ứng dụng 
+				grant {
+					permission java.net.SocketPermission "*:1024-65535", "connect,accept";
+					permission java.io.FilePermission "/path/to/files/-", "read,write";
+					permission java.lang.RuntimePermission "createClassLoader";
+				};
+
+			### Bước 3 : Sau đó chạy java với 
+				java -Djava.security.policy=policy.txt Server
+
+	
+	# Cách hạn chế rủi ro 
+		- Không tải mã nguồn từ nguồn không đáng tin cậy 
+		- Dùng SSL/TLS để mã hóa giao tiếp RMI 
+		- Giới hạn quyền truy cập trong Security Policy 
+		- Sử dụng xác thực (Authentication) nếu cần 
+
+
+//-------------------------✅ RMI Callback (Client gọi ngược lại Server)
+	# Khái niệm 
+		Mô hình chuẩn của RMI là Client gọi server , nhưng có trường hợp Server cần gọi lại Client  
 		
-		💡 Lưu ý: 
-			Từ Protobuf 3.15+ optional cho phép kiểm tra một field có tồn tại hay không 
-
-
-# Oneof (Union Field - Chỉ một field tồn tại tại một thời điểm)
-	
-	message Response {
-		oneof result {
-			string successMessage = 1;
-			string errorMessage = 2;
-		}
-	}
-	
-		💡 Chỉ có thể set một field trong oneof, nếu set field khác thì field cũ sẽ bị ghi đè . 
+	# Cách triển khai 
+		1. Client cung cấp một Remote Interface 
+		2. Server phương thức trên Remote Interface của Client 
 		
+	# Ví du RMI Callback 
 		
-# Bytes (Lưu dữ liệu nhị phân)	
+		## Bước 1 : Client tạo Remote Interface để Server gọi lại 
+		
+				import java.rmi.*;
+				public interface ClientCallback extends Remote {
+					void notify(String message) throws RemoteException;
+				}
+
+
+		## Bước 2 : Client triển khai interface 
+				import java.rmi.server.*;
 	
-	message File{
-		string name = 1;
-		bytes = content 2;
-	}
+				public class ClientImpl extends UnicastRemoteObject implements ClientCallback {
+					protected ClientImpl() throws RemoteException {
+						super();
+					}
+				
+					public void notify(String message) throws RemoteException {
+						System.out.println("Server callback: " + message);
+					}
+				}
 
 
-# Dịch vụ gRPC  (Service )
-
-	service Greeter {
-		rpc SayHello (Hello Request) returns (HelloResponse);
-	}
-	
-	message HelloRequest {
-		string name = 1;
-	}
-	
-	message HelloResponse{
-		string message = 1;
-	}
-	
-		💡 Lưu ý: 
-			rpc khai báo một phương thức từ xa 
-			SayHello nhận HelloRequest và trả về HelloResponse
-
-
-
-# Reserved (dự trữ số ID hoặc tên field)
-	message User {
-		reserved 2,3;						// không cho phép dùng số thứ tự 2, 3 
-		reserved "old_name";				// không cho phép dùng tên cũ 
-	}
+		## Bước 3 : Server giữ danh sách Client và gọi lại 
+		
+				import java.util.*;
+				import java.rmi.*;
+				
+				public class ServerImpl extends UnicastRemoteObject {
+					private List<ClientCallback> clients = new ArrayList<>();
+				
+					protected ServerImpl() throws RemoteException {}
+				
+					public void registerClient(ClientCallback client) throws RemoteException {
+						clients.add(client);
+						System.out.println("Client registered.");
+					}
+				
+					public void sendUpdates() throws RemoteException {
+						for (ClientCallback client : clients) {
+							client.notify("Server message!");
+						}
+					}
+				}
 
 
-# Extensions (Mở rộng message - chỉ có trong proto2 )	
-	extend User {
-		optional string email = 100;
-	}
-	
-	💡 Chỉ có trong proto2, bị loại bỏ trong proto3.
+		## Ứng dụng của RMI Callback : 
+			Thông báo sự kiện từ Server về CLient(ví dụ tin nhắn mới , giá chứng khoán thay đổi )
+			Hệ thống Push Notification trong ứng dụng Java phân tán 
+			Mô hình pub-sub (publisher-subscriber)
 
 
+//------------------------------✅ Dynamic Code Loading trong RMI
 
-# Thư viện Google Well-Known Types 
-	import "google/protobuf/timestamp.proto";
-	import "google/protobuf/duration.proto";
-	
-	message Event {
-	string name = 1;
-	google.protobuf.Timestamp start_time = 2;
-	google.protobuf.Duration duration = 3;
-	}
+	# Khái niệm 
+		Dynamic Code Loading cho phép client hoặc server tải mã(class) từ xa trong quá trình thực thi 
+		
+	# Cách hoạt động 
+		- Khi RMI nhận được đối tượng không có trong JVM hiện tại, nó tải class từ một URL bên ngoài 
+		- Điều này giúp tránh cần phải phân phối mã từ trước 
+		
+	# Cách kích hoạt Dynamic Code Loading 
+		java -Djava.rmi.server.codebase="http://myserver/classes/" Server
 
 
+	# Rủi ro bảo mật 
+		- Kẻ tấn công có thể cung cấp mã độc qua class tải từ xa 
+		-> Giải pháp : Chỉ cho phép tải code từ nguồn tin cậy bằng Security Policy 
+		
 
-# Sinh code Java từ file Protobuf 
-
-	protoc --java_out=. your_file.proto
- 
-	// nếu dùng với gRPC 
-	\protoc --java_out=. --grpc-java_out=. your_file.proto
-
-🎯 Kết Luận
-✔ Đây là toàn bộ cách viết của ngôn ngữ Protocol Buffers.
-✔ Nó tối ưu hóa việc serialize dữ liệu so với JSON/XML.
-✔ Tích hợp mạnh với gRPC để giao tiếp giữa các microservices.
-✔ Hỗ trợ nhiều kiểu dữ liệu nâng cao như oneof, map, optional.
 
 </pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

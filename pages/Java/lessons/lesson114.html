@@ -1,110 +1,129 @@
-<html><head><title>Lesson 114 == B-Tree & B+Tree ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 114 -- B-Tree & B+Tree -//</h1><pre>
-# Khái niệm 
-	B-Tree và B+ Tree là hai cấu trúc dữ liệu cấp cao, được thiết kế tối ưu cho hệ thống I/O-intensive như cơ sở dữ liệu, filesystem, hoặc storage engine. Nếu bạn đang thiết kế hệ thống tầm cỡ enterprise (database engine, distributed storage, search engine…), thì hiểu rõ 2 cấu trúc này là bắt buộc ở trình độ senior system architect.
-
-# Mục đích ra đời  
-	Các cây nhị phân tìm kiếm như BST, AVL, hay Red-Black Tree hoạt động tốt trong bộ nhớ (RAM) nhưng không hiệu quả với disk I/O vì: 
-		- Chúng có chiều cao lớn → mỗi truy vấn tốn nhiều lần đọc đĩa.
-		- Trên đĩa, mỗi I/O cực kỳ đắt → cần giảm số lần truy cập disk 
-
-	➡️ B-Tree và B+ Tree giải quyết bằng cách: 
+<html><head><title>Lesson 114 == Concurrent RB-Tree ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 114 -- Concurrent RB-Tree -//</h1><pre># Khái niệm 
+	Concurrent RB-Tree là một phiên bản của Red-Black Tree (RB-Tree) – một loại cây tìm kiếm nhị phân tự cân bằng – được thiết kế để hỗ trợ truy cập đồng thời từ nhiều luồng (threads) trong môi trường đa luồng. RB-Tree thông thường đã đảm bảo hiệu suất tối ưu với độ phức tạp thời gian O(log n) cho các thao tác như tìm kiếm, chèn và xóa nhờ các quy tắc cân bằng nghiêm ngặt (sử dụng màu đỏ-đen và các phép quay). Concurrent RB-Tree mở rộng khả năng này bằng cách bổ sung các cơ chế đồng bộ hóa, cho phép nhiều luồng đọc và ghi vào cây một cách an toàn và hiệu quả mà không làm hỏng cấu trúc hoặc dữ liệu.
 	
-		- Mỗi node chứa nhiều keys (thay vì 1)
-		- Chiều cao thấp hơn rất nhiều 
-		- Tối ưu số lần I/O
-
-# 📘 B-TREE (Basic Concept) 
-
-	B-Tree là một cây cân bằng đa phân nhánh (multi-way balanced tree). Mỗi node có thể chứa nhiều key và nhiều con. 
 	
-	## ✅ Thuộc tính chính của B-Tree 
-		Tối đa m nhánh (bậc m) cho mỗi node.
-		Mỗi node chứa từ ⌈m/2⌉ - 1 đến m - 1 khóa (trừ root).
-		Các khóa trong 1 node được sắp xếp tăng dần. 
-		Mỗi con nằm giữa hai khóa phân vùng giá trị.
-		Tất cả lá ở cùng một mức → đảm bảo cân bằng.
-	
+# 2. Tại sao cần Concurrent RB-Tree?
 
-	## 🌲 Cấu trúc: 
-	    [17, 35]
-		/   |    \
-	[3,10] [20,30] [40,60,80]
-	→ Một truy vấn tìm 20 chỉ cần duyệt 2 node, thay vì đi 4–5 mức như BST.
-
-# 📗 B+ TREE – BIẾN THỂ TỐI ƯU CHO DATABASE
-	B+ Tree là biến thể tăng hiệu suất quét và truy cập theo dãy (range). Khác với B-Tree:
+	Trong các ứng dụng đa luồng, nếu không có cơ chế đồng bộ hóa, việc nhiều luồng cùng truy cập một RB-Tree có thể dẫn đến:
 	
-|                        | B-Tree            | B+ Tree                                 |
-| ---------------------- | ----------------- | --------------------------------------- |
-| **Key trong Internal** | Có thể chứa value | Chỉ dùng để định tuyến (routing)        |
-| **Key trong Leaf**     | Một phần keys     | Tất cả dữ liệu đều nằm ở **lá**         |
-| **Truy vấn tuần tự**   | Khó quét range    | Dễ → leaf nodes **liên kết nhau**       |
-| **Chiều cao**          | Thấp              | Tương đương B-Tree                      |
-| **Ứng dụng**           | Filesystem        | Database indexing (MySQL, MongoDB, etc) |
+		- Race conditions: Các luồng can thiệp lẫn nhau, gây ra kết quả không chính xác.
+		- Deadlocks: Các luồng chờ đợi nhau vô thời hạn.
+		- Inconsistencies: Cấu trúc cây bị phá vỡ do các thao tác đồng thời xung đột.
+		
+	Concurrent RB-Tree giải quyết những vấn đề này bằng cách sử dụng các kỹ thuật đồng bộ hóa như khóa (locking) hoặc các phương pháp không khóa (lock-free), đảm bảo tính nhất quán và toàn vẹn dữ liệu trong khi vẫn duy trì hiệu suất cao.
+	
+	
+# 	3. Các phương pháp triển khai Concurrent RB-Tree
+	Có một số cách tiếp cận để triển khai tính đồng thời cho RB-Tree, mỗi cách có ưu và nhược điểm riêng:
+	
+	
+	## a. Khóa toàn bộ cây (Locking the entire tree)
+	
+		- Cách hoạt động: Khi một luồng thực hiện thao tác (đọc hoặc ghi), nó khóa toàn bộ cây, hoàn thành thao tác, rồi mở khóa.
+		- Ưu điểm: Đơn giản, dễ triển khai, đảm bảo an toàn.
+		- Nhược điểm: Hiệu suất kém vì mọi thao tác bị tuần tự hóa, ngay cả khi chúng tác động đến các phần khác nhau của cây.
 
 	
-📊 Minh hoạ: 
-Internal:     [20, 50]
-             /    |     \
-Leaves: [10,15][25,35][55,75]
-              ↔     ↔     ↔
-→ Quét range từ 25 → 75 = duyệt liên tục các lá bằng pointer → cực nhanh và không cần quay lại internal node.
+	## b. Khóa tinh vi (Fine-grained locking)
+	
+		-Cách hoạt động: Chỉ khóa các nút hoặc các phần nhỏ của cây cần thiết cho thao tác, thay vì khóa toàn bộ cây.
+		-Ưu điểm: Cho phép nhiều luồng hoạt động đồng thời trên các vùng khác nhau của cây, cải thiện hiệu suất.
+		-Nhược điểm: Phức tạp hơn, đòi hỏi quản lý khóa cẩn thận để tránh deadlock.
+	
+	
+	## c. Thuật toán không khóa (Lock-free hoặc wait-free)
+	
+		- Cách hoạt động: Sử dụng các phép toán nguyên tử (atomic operations) để cập nhật cây mà không cần khóa, đảm bảo tính nhất quán trong môi trường đồng thời.
+		- Ưu điểm: Hiệu suất cao, không bị tắc nghẽn bởi khóa.
+		- Nhược điểm: Rất phức tạp để triển khai và khó đảm bảo tính đúng đắn.
+	
+	Trong thực tế, fine-grained locking là phương pháp phổ biến cho Concurrent RB-Tree vì nó cân bằng giữa hiệu suất và độ phức tạp.
+	
+	
+# 	4. Triển khai Fine-Grained Locking trong Concurrent RB-Tree
+
+	Dưới đây là cách triển khai Concurrent RB-Tree sử dụng fine-grained locking với reader-writer locks (khóa đọc-ghi), một kỹ thuật cho phép nhiều luồng đọc đồng thời nhưng chỉ một luồng ghi tại một thời điểm.
+	
+	## a. Thao tác tìm kiếm (Search)
+		Mục tiêu: Đọc dữ liệu từ cây mà không thay đổi cấu trúc.
+		
+		Cách thực hiện 
+			Mỗi nút trong cây được gắn một khóa đọc-ghi.
+			
+			Khi duyệt cây, luồng sử dụng khóa chia sẻ (shared lock) trên từng nút:
+				- Khóa nút hiện tại ở chế độ chia sẻ.
+				- Xác định nút con tiếp theo cần truy cập.
+				- Khóa nút con ở chế độ chia sẻ.
+				- Mở khóa nút hiện tại và chuyển sang nút con.
+			Quá trình này được gọi là hand-over-hand locking (khóa tay qua tay).
+			
+		Lợi ích: Nhiều luồng có thể tìm kiếm đồng thời trên các nhánh khác nhau, miễn là không có thao tác ghi can thiệp.
 
 
-# 🧠 TẠI SAO B+ TREE ĐƯỢC ƯU TIÊN TRONG DATABASE? 
 
-	- Truy xuất theo key: nhanh vì chiều cao cây thấp
-	- Range scan: rất nhanh nhờ pointer giữa leaf nodes
-	- Không cần truy cập node trung gian để lấy data
-	- Tối ưu hóa block I/O: mỗi node trùng khớp với 1 disk block
+	## b. Thao tác chèn (Insertion)	
+		Mục tiêu: Chèn một nút mới và cân bằng lại cây nếu cần.
+		Cách thực hiện:
+		
+		- Tìm vị trí chèn: Duyệt cây bằng khóa chia sẻ để xác định vị trí chèn.
+		- Chèn nút: Khi đến vị trí, chuyển sang khóa độc quyền (exclusive lock) trên nút cha và các nút liên quan để chèn nút mới (thường là một nút lá đỏ).
+		- Cân bằng cây: Nếu cần thực hiện phép quay hoặc đổi màu để duy trì tính chất RB-Tree:
+		- Khóa độc quyền các nút liên quan (thường là 3 nút trong một phép quay: nút pivot, cha và con).
+		- Thực hiện phép quay hoặc đổi màu.
+		- Mở khóa sau khi hoàn tất.
+		- Lưu ý: Các phép quay và đổi màu trong RB-Tree là cục bộ, nên chỉ cần khóa một số lượng nhỏ nút.
+	
+	
+	
+	## c. Thao tác xóa (Deletion)
+	
+		Mục tiêu: Xóa một nút và cân bằng lại cây.
+		Cách thực hiện: Tương tự như chèn, nhưng liên quan đến việc:
+		
+			Khóa độc quyền các nút trên đường đi đến nút cần xóa.
+			Xóa nút và thực hiện các bước cân bằng (phép quay, đổi màu) với khóa độc quyền trên các nút liên quan.
 
-💡 MySQL (InnoDB) dùng B+ Tree cho index.
 
-
-# 🚀 ỨNG DỤNG THỰC TẾ
-| Hệ thống              | Dùng gì                          | Mục đích                       |
-| --------------------- | -------------------------------- | ------------------------------ |
-| **MySQL / InnoDB**    | B+ Tree                          | Index data, support range scan |
-| **MongoDB**           | B+ Tree                          | B-Tree Indexing                |
-| **LevelDB / RocksDB** | LSM Tree + B-Tree (trên SSTable) | Tối ưu write-heavy             |
-| **Linux EXT4/NTFS**   | B-Tree                           | Directory structure            |
-| **Git internals**     | B-Tree                           | Object storage indexing        |
-
-
-
-# 🔨 CẤU TRÚC LỚP NODE TRONG JAVA (GỢI Ý)
-
-class BTreeNode {
-    int[] keys;
-    Object[] values; // optional
-    BTreeNode[] children;
-    int degree;
-    boolean isLeaf;
-
-    // methods: insert, splitChild, search...
-}
+# 	5. Xử lý các vấn đề đồng thời
+	
+	## a. Deadlock
+		Vấn đề: Nếu hai luồng khóa các nút theo thứ tự khác nhau, chúng có thể rơi vào trạng thái chờ đợi lẫn nhau (deadlock).
+		Giải pháp: Luôn khóa các nút theo thứ tự từ trên xuống (từ gốc đến lá), đảm bảo tất cả luồng tuân theo cùng một quy tắc.
+	
+	## b. Contention (Xung đột khóa) 
+		Vì RB-Tree có chiều cao logarithmic (O(log n)), số lượng nút cần khóa trong mỗi thao tác là nhỏ, giảm thiểu xung đột giữa các luồng.
+		Các thao tác trên các nhánh khác nhau hiếm khi chồng lấp, đặc biệt trong cây lớn.
+	
+	
+	## c. Cân bằng đồng thời 
+	
+		Các thao tác cân bằng trong RB-Tree (phép quay, đổi màu) chỉ ảnh hưởng đến một số lượng nhỏ nút cục bộ.
+		
+		Bằng cách khóa các nút liên quan trong quá trình cân bằng, cây vẫn duy trì được tính chất đỏ-đen ngay cả khi có nhiều luồng hoạt động. 
+		
+		
+	
+	
+# 	6. Ưu điểm của Concurrent RB-Tree 
+	- Hiệu suất cao: Cho phép nhiều luồng truy cập đồng thời trên các phần khác nhau của cây, tối ưu cho tải đọc nặng (read-heavy workloads).
+	- Cân bằng: Duy trì độ phức tạp O(log n) nhờ tính chất tự cân bằng của RB-Tree.
+	- An toàn: Đảm bảo toàn vẹn dữ liệu và tính nhất quán trong môi trường đa luồng.
+	- Khả năng mở rộng: Phù hợp với các ứng dụng lớn nhờ giảm thiểu vùng bị khóa.
+	
+	
+# 	7. Các triển khai nâng cao (Tùy chọn) 
+	
+	Lock-free RB-Tree: Sử dụng các phép toán nguyên tử để loại bỏ khóa, cải thiện hiệu suất nhưng phức tạp hơn nhiều.
+	
+	Transactional Memory: Dựa vào phần cứng hoặc phần mềm hỗ trợ giao dịch để quản lý đồng thời, giảm gánh nặng lập trình nhưng ít phổ biến hơn.
+	
+	
 	
 
-# 🎯 KIẾN THỨC CẦN HỌC ĐỂ MASTER
-
-| Chủ đề                    | Ghi chú                                     |
-| ------------------------- | ------------------------------------------- |
-| Cấu trúc B-Tree, B+ Tree  | Định nghĩa, các case insert/split/merge     |
-| Block size & Disk I/O     | Vì sao block-aligned node size quan trọng   |
-| Paging (Buffer Pool)      | Cách database load tree vào memory          |
-| Write-ahead logging (WAL) | Đảm bảo an toàn khi ghi B+ Tree             |
-| Concurrency (Latch)       | Nhiều thread cập nhật cây cùng lúc          |
-| LSM Tree                  | So sánh B+ Tree vs LSM (LevelDB, Cassandra) |
-| Cache-aware layout        | Khi muốn tối ưu CPU cache hit               |
-
-
-# ✅ TÓM TẮT 
-| Loại cây | Ưu điểm                                   | Dùng khi nào                         |
-| -------- | ----------------------------------------- | ------------------------------------ |
-| B-Tree   | Đọc theo key hiệu quả, đa năng            | Filesystem, khi không cần range scan |
-| B+ Tree  | Truy vấn range siêu nhanh, chiều cao thấp | Database indexing, OLAP/OLTP         |
-
-
-
-
+# Kết luận 
+	
+Concurrent RB-Tree là một cấu trúc dữ liệu mạnh mẽ, kết hợp tính tự cân bằng của Red-Black Tree với các cơ chế đồng bộ hóa tinh vi để hỗ trợ truy cập đồng thời an toàn và hiệu quả trong các ứng dụng đa luồng. Phương pháp fine-grained locking với reader-writer locks là cách tiếp cận phổ biến, cho phép nhiều luồng đọc đồng thời và thực hiện các thao tác ghi một cách an toàn thông qua việc khóa cục bộ các nút liên quan. Với chiều cao logarithmic và khả năng giảm thiểu xung đột, Concurrent RB-Tree là lựa chọn lý tưởng cho các hệ thống yêu cầu lưu trữ dữ liệu có thứ tự, hiệu suất cao và khả năng mở rộng trong môi trường đa luồng.
+	
+	
+	
 </pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

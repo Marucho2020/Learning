@@ -1,132 +1,107 @@
-<html><head><title>Lesson 122 == Persitent Segment Tree ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 122 -- Persitent Segment Tree -//</h1><pre># Khái niệm 
-	Persistence trong cấu trúc dữ liệu là khả năng giữ lại lịch sử các phiên bản trước của cấu trúc sau mỗi thay đổi (update), mà không thay đổi phiên bản cũ.
-		- Full persistence: truy cập & cập nhật bất kỳ phiên bản nào.
-		- Partial persistence: chỉ truy cập phiên bản cũ, cập nhật chỉ phiên bản hiện tại.
-		- Functional persistence: không có trạng thái thay đổi — mỗi thao tác trả về một phiên bản mới (giống lập trình hàm).
-
-	→ Persistent Segment Tree = giữ lại nhiều phiên bản của segment tree, sau mỗi lần update mà không phá vỡ phiên bản cũ.
+<html><head><title>Lesson 122 == ConcurrentNavigableMap ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 122 -- ConcurrentNavigableMap -//</h1><pre>
+# Khái niệm  
 	
-	
-# 	2. 🔧 So sánh Segment Tree thường vs Persistent Segment Tree 
-	| Đặc điểm          | Segment Tree thường      | Persistent Segment Tree              |
-| ----------------- | ------------------------ | ------------------------------------ |
-| Cập nhật (update) | Thay đổi trực tiếp       | Tạo phiên bản mới (dùng lại phần cũ) |
-| Truy vấn (query)  | Chỉ 1 phiên bản hiện tại | Truy vấn bất kỳ phiên bản nào        |
-| Lịch sử           | Không giữ                | Giữ từng phiên bản rõ ràng           |
-| Tốn bộ nhớ        | O(n)                     | O(n log n) (chia sẻ nút cũ)          |
-
-	
-	
-# 	3. ⚙️ Ứng dụng thực tế (cần biết khi thiết kế hệ thống)
-	
-| Trường hợp ứng dụng                                  | Giải thích                                                                                                |
-| ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| 🕓 Time-travel query                                 | Cần biết trạng thái dữ liệu ở 1 thời điểm trong quá khứ (log, lịch sử giao dịch, dữ liệu thời gian thực). |
-| ⏱ Versioned configuration / snapshot                 | Mỗi lần update cấu hình/dữ liệu → tạo version mới → rollback dễ dàng.                                     |
-| 🕹 Undo/Redo trong hệ thống phức tạp                 | Lưu lịch sử thay đổi dạng cây → dễ undo từng bước.                                                        |
-| 🧮 Dữ liệu không ổn định (time-varying)              | Như stock price, lượng truy cập server, lượt view theo giờ...                                             |
-| 🔐 Immutable data handling (Blockchain, DSL engines) | Không được thay đổi dữ liệu cũ → dùng persistence.                                                        |
-	
-	
-	
-# 	4. 🧠 Cốt lõi kỹ thuật
-	
-	## ❗ Ý tưởng chính: 
-		- Mỗi khi update, chỉ tạo lại các nút trên đường đi từ root đến leaf bị ảnh hưởng.
-		- Các phần khác của cây vẫn dùng lại được.
-		- Như vậy: O(log n) bộ nhớ/phiên bản → rất hiệu quả.
+	Bản chất và vai trò trong hệ thống đa luồng.
+	Cách hoạt động bên dưới (implementation).
+	Khi nào nên dùng / khi không nên dùng.
+	So sánh với các map khác: ConcurrentHashMap, TreeMap, NavigableMap, SkipListMap.
+	Các chiến lược tối ưu hiệu suất và memory.
 
 
+	Là một interface trong Java, mở rộng ConcurrentMap + NavigableMap. Điều này có nghĩa:
+	Concurrent: Hỗ trợ an toàn trong môi trường đa luồng (thread-safe).
+	Navigable: Hỗ trợ truy xuất theo thứ tự, như ceilingEntry, floorEntry, subMap, v.v.
+	🔧 Implementation chính: ConcurrentSkipListMap<K, V>
+	
 
-	## 📌 Code nguyên lý:
-class Node {
-    int val;
-    Node left, right;
+# 🏗️ 2. Cấu trúc triển khai bên dưới: Skip List
+	- ConcurrentNavigableMap duy nhất được Java implement chính thức là ConcurrentSkipListMap, dùng Skip List:
+	- Skip List là một cấu trúc đa lớp (multiple levels) để tìm kiếm nhanh hơn O(log n) mà không dùng rotation như tree.
+	- Được thiết kế tốt cho môi trường đa luồng, dễ chia nhỏ vùng cập nhật (fine-grained locking hoặc lock-free).
+	
+	
+	## ⏱️ Time Complexity: 
+| Operation        | Time Complexity |
+| ---------------- | --------------- |
+| get/put          | O(log n)        |
+| remove           | O(log n)        |
+| firstKey/lastKey | O(1)            |
+| subMap, headMap  | O(log n)        |
 
-    Node(int val, Node l, Node r) {
-        this.val = val;
-        this.left = l;
-        this.right = r;
-    }
-}
 
-Node update(Node node, int l, int r, int idx, int value) {
-    if (l == r) {
-        return new Node(value, null, null); // tạo nút mới
-    }
-    int mid = (l + r) / 2;
-    if (idx <= mid) {
-        return new Node(0,
-            update(node.left, l, mid, idx, value),
-            node.right
-        );
-    } else {
-        return new Node(0,
-            node.left,
-            update(node.right, mid + 1, r, idx, value)
-        );
-    }
-}
+# 🔒 3. Đồng bộ hóa (Concurrency) 
+	ConcurrentSkipListMap không dùng synchronized toàn cục như Collections.synchronizedMap, mà: 
 	
-	
-		- node là root của version hiện tại.
-		- Mỗi lần update trả về root mới của version mới.
-		- Có thể lưu danh sách List<Node> versions để giữ từng root.
-	
-	
-	
-	
-	## ⏱ Truy vấn trên version: 
-int query(Node node, int l, int r, int ql, int qr) {
-    if (ql > r || qr < l) return 0;
-    if (ql <= l && r <= qr) return node.val;
-    int mid = (l + r) / 2;
-    return query(node.left, l, mid, ql, qr)
-         + query(node.right, mid+1, r, ql, qr);
-}
-	
-	
-	
-	
-# 5. 📦 Bộ nhớ & độ phức tạp 
-	
-	
-	- Tạo version mới: O(log n)
-	- Truy vấn version bất kỳ: O(log n)
-	- Tổng số node sau k lần update: O(k log n)
-	- Tối ưu hơn ArrayList snapshot hoặc clone object!
-	
-	
-# 	6. 📚 Kiến thức cần nắm để hiểu sâu Persistent Segment Tree:
+	- Dùng lock chia nhỏ (fine-grained locks) hoặc CAS (Compare-and-Swap),
+	- Mỗi tầng trong SkipList hoạt động độc lập -> không bị bottleneck khi truy cập đồng thời,
+	- Một số thao tác như putIfAbsent, computeIfAbsent rất phù hợp cho concurrent map.
 
-| Chủ đề                                     | Vì sao cần học?                              |
-| ------------------------------------------ | -------------------------------------------- |
-| Tree data structure                        | Hiểu cách phân chia và tổ chức dữ liệu       |
-| Immutable data / Functional DS             | Hiểu cách giữ dữ liệu không thay đổi         |
-| Memory sharing / Copy-on-write             | Tối ưu hiệu suất & không tạo bản sao toàn bộ |
-| Dynamic Programming on trees               | Kết hợp logic xử lý phân đoạn phức tạp       |
-| Advanced Java (immutability, memory model) | Để code Persistent DS đúng cách              |
+# 🧪 4. Khi nào dùng ConcurrentNavigableMap? 
 	
-	
-	
-# 	7. 🧪 Ứng dụng demo bạn có thể triển khai:
-	
-		- Lưu lịch sử giao dịch tài khoản theo từng phiên bản cập nhật.
-		- Thống kê tổng view của các bài viết tại các mốc thời gian khác nhau.
-		- Xây dựng hệ thống undo/redo cho hệ thống vẽ đồ họa (mỗi lần thay đổi là 1 version).
-		- Lưu cấu hình hệ thống, có thể rollback lại bất kỳ lúc nào.	
-	
+
+| Trường hợp thực tế                              | Lợi ích khi dùng                                                          |
+| ----------------------------------------------- | ------------------------------------------------------------------------- |
+| Hệ thống cần duy trì thứ tự key khi truy cập    | Giữ thứ tự sắp xếp theo key (natural hoặc comparator)                     |
+| Cần chia nhỏ vùng dữ liệu (sharding, paging...) | Dùng `subMap`, `tailMap`, `headMap` hiệu quả                              |
+| Ghi / đọc đồng thời (đa luồng)                  | Không cần tự lock                                                         |
+| Tạo hàng đợi ưu tiên nhiều thread xử lý         | Dễ implement với `pollFirstEntry`                                         |
+| Cần xử lý nhiều phiên bản dữ liệu (timestamped) | Key là timestamp, value là dữ liệu, `tailMap(ts)` trả các giá trị mới hơn |
 
 
 
-# 8. 🧱 So sánh với những giải pháp khác 
+# 🔥 5. So sánh với các Map khác
+| Feature                          | HashMap | TreeMap  | ConcurrentHashMap | ConcurrentSkipListMap |
+| -------------------------------- | ------- | -------- | ----------------- | --------------------- |
+| Ordered                          | ❌       | ✅        | ❌                 | ✅                     |
+| Thread-safe                      | ❌       | ❌        | ✅                 | ✅                     |
+| Navigable (subMap, ceiling...)   | ❌       | ✅        | ❌                 | ✅                     |
+| Performance                      | ⭐⭐⭐⭐⭐   | ⭐⭐⭐      | ⭐⭐⭐⭐              | ⭐⭐⭐                   |
+| Memory overhead (extra pointers) | ⭐⭐⭐⭐⭐   | ⭐⭐       | ⭐⭐⭐⭐              | ⭐⭐                    |
+| Insert performance               | O(1)    | O(log n) | O(1)              | O(log n)              |
 
-| Giải pháp                 | Có persistence? | Có hỗ trợ query? | Hiệu suất      |
-| ------------------------- | --------------- | ---------------- | -------------- |
-| Array snapshot            | Có (deep copy)  | Có               | Rất chậm       |
-| Immutable Map/List (Java) | Có              | Có               | Tùy cấu trúc   |
-| Persistent Segment Tree   | Có (rất tốt)    | Có (O(log n))    | Tối ưu         |
-| Redis + versioned key     | Có              | Tùy              | Tốn tài nguyên |
+# ⚙️ 6. Ví dụ thực tế
+
+
+Ví dụ 1: Hệ thống giá cổ phiếu real-time 
+	
+ConcurrentNavigableMap<Long, Double> stockPrices = new ConcurrentSkipListMap<>();
+
+// Nhiều thread ghi giá theo timestamp
+stockPrices.put(System.currentTimeMillis(), 123.45);
+
+// Truy xuất giá sau 9:30 sáng
+long openTime = 9_30_00_000L;
+NavigableMap<Long, Double> pricesAfterOpen = stockPrices.tailMap(openTime);
+
+
+
+Ví dụ 2: Time-based cache / expiring data
+// Lưu dữ liệu theo timestamp
+ConcurrentNavigableMap<Long, MyData> cache = new ConcurrentSkipListMap<>();
+
+// Periodic cleanup thread:
+long cutoff = System.currentTimeMillis() - 5 * 60 * 1000;
+cache.headMap(cutoff).clear(); // clear các item đã hết hạn
+
+
+
+
+# 🚧 7. Cần lưu ý gì khi dùng? 
+
+	- Không phù hợp cho insert-heavy system với key ngẫu nhiên nếu chỉ cần hash-access.
+	- Nếu không cần thứ tự → Dùng ConcurrentHashMap nhanh hơn, tốn ít bộ nhớ hơn.
+	- Không nên lạm dụng subMap() nếu thao tác rất nhiều thread → có thể bị contention nếu vùng overlap nhau.
+
+
+# 🧠 8. Kiến thức cần để làm chủ ConcurrentNavigableMap
+
+| Kiến thức             | Mục tiêu                                                   |
+| --------------------- | ---------------------------------------------------------- |
+| Java Memory Model     | Hiểu volatile, happens-before, visibility giữa threads     |
+| Lock-free Programming | CAS, atomic variables, contention                          |
+| Skip List             | Cấu trúc, ưu nhược điểm, so sánh với BST                   |
+| NavigableMap API      | Sử dụng hiệu quả các hàm `subMap`, `tailMap`, `ceilingKey` |
+| Benchmark/Profiling   | So sánh thực tế với các concurrent map khác                |
 
 
 

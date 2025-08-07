@@ -1,143 +1,177 @@
-<html><head><title>Lesson 47 == Cloneable ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 47 -- Cloneable -//</h1><pre>
-# Khái niệm  
-	Cloneable là một Interface trong Java, giúp các đối tượng của lớp implement interface này có thể được sao chép(clone) thông qua phương thức clone() của lớp Object. Khi lớp implements Cloneable, các đối tượng của lớp đó có thể được sao chép để tạo ra các bản sao giống hệt với đối tượng gốc. 
+<html><head><title>Lesson 47 == CopyOnWriteArrayList ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 47 -- CopyOnWriteArrayList -//</h1><pre># Khái niệm  
+	CopyOnWriteArrayList là một trong những Implementations của List trong Java, được thiết kế đặc biệt để hỗ trợ thao tác an toàn trong môi trường đa luồng (multi-threadeding) mà không cần sử dụng cơ chế synchronization phức tạp. 
 	
-# Cloneable Interface 
-	Cloneable không có phương thức nào được định nghĩa trong đó. Nhiệm vụ chính của nó là đánh dấu rằng một lớp cho phép sao chép đối tượng của nó. Nếu bạn cố gắng sao chép (clone) một đối tượng của lớp không implement Cloneable, phương thức clone() sẽ ném ra một CloneNotSupportedException 
-	
-		public interface Cloneable {
-		}
-
-# Phương thức clone() trong lớp Object  
-	Mỗi đối tượng trong Java đều kế thừa từ lớp Object. Lớp Object cung cấp phương thức clone() 
-		protected Object clone() throws CloneNotSupportedException
-
-	Phươc thức này tạo ra một bản sao(shallow copy) của đối tượng. Tuy nhiên, phương thức này là protected, vì vậy phải override phương thức clone() để sử dụng trong mã của mình  
-	
-	
+# Đặc điểm chính của CopyOnWriteArrayList 
+	## Dữ liệu được sao chép khi có thao tác ghi(write)
+		- Mỗi khi mỗi phần tử được thêm, sửa , hoặc xóa, một bản sao mới của danh sách array sẽ được tạo ra 
+		- Điều này giúp đảm bảo rằng các luồng đọc(read operations) vẫn có thể chạy mà không bị ảnh hưởng bởi luồng ghi(write operations)
 		
-# Shallow Copy vs Deep Copy 
+	## Không cần đồng bộ hóa thủ công(synchronized)	 
+		Do cơ chế copy-on-write, các thao tác độc không cần dùng đến khóa(lock), tránh được vấn đề deadlock và perfomance bottleneck trong môi trường đa luồng. 
+		
+	## Chi phí cao khi ghi(write operations đắt đỏ)
+		Vì mỗi lần thay đổi danh sách(add, set, remove()) đều tạo  ra một bản sao mới, nên nó không phù hợp khi có nhiều thao tác ghi 
+		
+	## Duyệt phần tử an toàn mà không cần ConcurrentModificationException 
+		- Nếu bạn dùng Iterator để duyệt qua danh sách một ArrayList thông thường, mà đồng thời có một luồng khác sửa danh sách, bạn có thể gặp lỗi  ConcurrentModificationException  
+		
+		- Với CopyOnWriteArrayList, các luồng đọc không bị ảnh hưởng bởi các thay đổi trong danh danh sách vì chúng làm việc với bản sao cũ  
 
-	## Shallow Copy(Sao chép nông) : Khi bạn sao chép một đối tượng, các thuộc tính nguyên thủy của đối tượng gốc sẽ được sao chép vào đối tượng mới, nhưng nếu đối tượng gốc chứa các tham chiếu(reference) đến các đối tượng khác, các tham chiếu đó sẽ được sao chép. Điều này có nghĩa là cả đối tượng gốc và bản sao sẽ chia sẻ cùng một tham chiếu đến các đối tượng con  
+
+#  Cách sử dụng CopyOnWriteArrayList 
 	
-			class Person implements Cloneable {
-			String name;
-			int age;
+	## Ví dụ 1 : DUyệt qua danh sách mà không bị ConcurrentModificationException 
 		
-			Person(String name, int age) {
-				this.name = name;
-				this.age = age;
-			}
+	import java.util.concurrent.CopyOnWriteArrayList;
+
+		public class CopyOnWriteArrayListExample {
+			public static void main(String[] args) {
+				CopyOnWriteArrayList<String> list = new CopyOnWriteArrayList<>();
+				list.add("Java");
+				list.add("Python");
+				list.add("C++");
 		
-			@Override
-			public Person clone() {
-				try {
-					return (Person) super.clone();  // Shallow copy
-				} catch (CloneNotSupportedException e) {
-					return null;
+				// Duyệt danh sách bằng Iterator mà không gặp ConcurrentModificationException
+				for (String lang : list) {
+					System.out.println(lang);
+					list.add("JavaScript");  // Không lỗi ConcurrentModificationException
 				}
+		
+				System.out.println("Final list: " + list);
 			}
 		}
 
+		Khi for-each duyệt danh sách, CopyOnWriteArrayList sử dụng một bản sao cố định, vì vậy nó không bị lỗi ConcurrentModificationException, mặc dù chúng ta đang thêm phần tử mới trong khi duyệt.
 		
-
-	## Deep Copy (Copy sâu) : La sao chép hoàn toàn đối tượng, bao gồm cả các đối tượng mà các thuộc tính tham chiếu trỏ đến. Điều này yêu cầu lập trình viên phải sao chép thủ công các đối tượng con trong phương thức clone() 
-	
-			class Person implements Cloneable {
-			String name;
-			Address address;
 		
-			Person(String name, Address address) {
-				this.name = name;
-				this.address = address;
-			}
+	## Ví dụ 2: So sánh 	 CopyOnWriteArrayList với ArrayList trong môi trường đa luồng 
+		Nếu dùng ArrayList trong môi trường đa luồng mà không có đồng bộ hóa, sẽ có thể xảy ra lỗi ConcurrentModificationException 
 		
-			@Override
-			public Person clone() {
-				try {
-					Person cloned = (Person) super.clone();
-					cloned.address = new Address(this.address.city, this.address.street);  // Deep copy
-					return cloned;
-				} catch (CloneNotSupportedException e) {
-					return null;
-				}
-			}
-		}
-		
-		class Address {
-			String city;
-			String street;
-		
-			Address(String city, String street) {
-				this.city = city;
-				this.street = street;
-			}
-		}
-
-# Cách sử dụng Cloneable trong Java 
-		Khi bạn muốn sao chép một đối tượng, bạn cần thực hiện theo các bước sau : 
-			1/. Implements Cloneable : Lớp cần implement interface Cloneable để chỉ ra rằng đối tượng của lớp này có thể được sao chép 
+			import java.util.ArrayList;
+			import java.util.List;
 			
-			2/. Override phương thức Clone() : Lớp cần override phương thức clone() để xử lý sao chép đối tượng, thường gọi là super.clone() của lớp cha(lớp Object)
-			
-			
-				public class Main {
+			public class ArrayListMultiThreading {
 				public static void main(String[] args) {
-					try {
-						Person person1 = new Person("John", new Address("New York", "5th Avenue"));
-						Person person2 = person1.clone();  // Sử dụng phương thức clone() để tạo bản sao
+					List<Integer> list = new ArrayList<>();
+					list.add(1);
+					list.add(2);
+					list.add(3);
 			
-						System.out.println("Person1 Name: " + person1.name);
-						System.out.println("Person2 Name: " + person2.name);
+					Thread thread1 = new Thread(() -> {
+						for (int num : list) {
+							System.out.println(num);
+							list.add(4); // Lỗi ConcurrentModificationException
+						}
+					});
 			
-						// Xác minh các thuộc tính có được sao chép đúng cách không
-						person2.name = "Jane";
-						person2.address.city = "Los Angeles";
-			
-						System.out.println("After modifying person2:");
-						System.out.println("Person1 Name: " + person1.name);
-						System.out.println("Person1 Address: " + person1.address.city);  // Tham chiếu giống nhau trong shallow copy
-						System.out.println("Person2 Name: " + person2.name);
-						System.out.println("Person2 Address: " + person2.address.city);
-			
-					} catch (CloneNotSupportedException e) {
-						e.printStackTrace();
-					}
+					thread1.start();
 				}
 			}
 
-
-		## Output (Shallow Copy):
-		Person1 Name: John
-		Person2 Name: John
-		After modifying person2:
-		Person1 Name: John
-		Person1 Address: Los Angeles
-		Person2 Name: Jane
-		Person2 Address: Los Angeles
-
-# Khi nào sử dụng Cloneable? 
-
-	- Khi bạn cần sao chép đối tượng: Thực tế, việc sử dụng clone() trong Java không phổ biến, vì việc tạo bản sao có thể dễ dàng được thay thế bằng các cách khác như constructor sao chép hoặc Builder Pattern.
 	
-	- Khi bạn muốn tạo các bản sao đối tượng mà không cần phải khởi tạo lại toàn bộ trạng thái của đối tượng.	
-
-
-# Vấn đề với Cloneable 
-	- Kỹ thuật Clone không được khuyến khích trong một số trường hợp do các vấn đề liên quan đến sao chép đối tượng trong những tình huống phức tạp (ví dụ, với các đối tượng có vòng lặp hoặc các tham chiếu đến tài nguyên hệ thống).
+	## Ví dụ 3: Sử dụng CopyOnWriteArrayList trong môi trường đa luồng (Không Lỗi)
+		import java.util.concurrent.CopyOnWriteArrayList;
 	
-	- clone() không sao chép những thuộc tính static hoặc transient. Vì vậy, nếu bạn có các thuộc tính như vậy, bạn cần phải xử lý thủ công.
+		public class CopyOnWriteArrayListMultiThreading {
+			public static void main(String[] args) {
+				CopyOnWriteArrayList<Integer> list = new CopyOnWriteArrayList<>();
+				list.add(1);
+				list.add(2);
+				list.add(3);
+		
+				Thread thread1 = new Thread(() -> {
+					for (int num : list) {
+						System.out.println(num);
+						list.add(4);  // Không lỗi
+					}
+				});
+		
+				thread1.start();
+			}
+		}
 	
-	
-# Tóm tắt  
-	- Cloneable là một interface được sử dụng để chỉ ra rằng lớp có thể được sao chép bằng phương thức clone().
-	
-	- clone() trong lớp Object thực hiện sao chép nông (shallow copy), và bạn cần override phương thức này trong lớp của mình để thực hiện sao chép.
-	
-	- Sao chép sâu (deep copy) là việc sao chép hoàn toàn các đối tượng con mà không dùng chung tham chiếu.
-	
-	- Clone không được sử dụng rộng rãi trong Java hiện đại vì các vấn đề mà nó gây ra trong việc sao chép đối tượng, nhưng vẫn có thể hữu ích trong một số tình huống.
-	
+		
+		✅ Không bị lỗi ConcurrentModificationException
+💡 Lý do: Vì CopyOnWriteArrayList tạo một bản sao mới khi có thao tác ghi (write), nên Iterator vẫn duyệt danh sách cũ mà không bị lỗi.
 
 
+# Khi nào nên sử dụng  
+CopyOnWriteArrayList 
+
+	📌 Dùng khi:
+	✅ Khi có nhiều luồng đọc (read-heavy operations) nhưng ít luồng ghi
+	✅ Khi muốn tránh ConcurrentModificationException mà không cần sử dụng synchronization
+	✅ Khi cần duyệt danh sách an toàn trong môi trường đa luồng mà không cần synchronized
+	
+	🚫 Không nên dùng khi:
+	❌ Khi có nhiều thao tác ghi (add(), remove(), set()) vì mỗi lần ghi sẽ tạo một bản sao mới, tốn bộ nhớ và hiệu suất thấp.
+	❌ Khi cần danh sách thay đổi thường xuyên, ConcurrentLinkedQueue hoặc synchronized List có thể phù hợp hơn.	
+	
+	
+	
+	
+# So sánh CopyOnWriteArrayList với các Collection khác  
+	
+	
+Collection				Đa luồng?			Cơ chế đồng bộ hóa					Hiệu suất đọc			Hiệu suất ghi
+ArrayList				❌ Không			Không đồng bộ						Nhanh 🚀				Nhanh 🚀
+Vector					✅ Có				synchronized toàn bộ phương thức	Trung bình ⚡			Chậm 🐢
+CopyOnWriteArrayList	✅ Có				Copy-on-Write						Nhanh 🚀				Chậm 🐢
+ConcurrentLinkedQueue	✅ Có				Không khóa (lock-free)				Nhanh 🚀				Nhanh 🚀	
+	
+
+# Tóm tắt kiến thức dành cho Java Gold và Silver 
+✅ Điểm quan trọng cần nhớ cho kỳ thi:
+- CopyOnWriteArrayList là một danh sách an toàn trong môi trường đa luồng sử dụng cơ chế Copy-on-Write.
+- Khi có thao tác ghi (add(), set(), remove()), một bản sao mới của danh sách được tạo.
+- Không cần synchronized thủ công vì cơ chế Copy-on-Write đảm bảo an toàn cho đa luồng.
+- Hiệu suất ghi kém vì tạo bản sao mới tốn bộ nhớ và CPU, nhưng hiệu suất đọc rất cao.
+- Không bị lỗi ConcurrentModificationException khi duyệt danh sách, vì các luồng đọc không bị ảnh hưởng bởi các thay đổi trong danh sách.
+
+
+🎯 Kết luận
+Nếu chương trình của bạn có nhiều thao tác đọc, ít thao tác ghi, CopyOnWriteArrayList là một lựa chọn tuyệt vời.
+Nếu có nhiều thao tác ghi, hãy cân nhắc sử dụng ConcurrentLinkedQueue hoặc synchronized List thay vì CopyOnWriteArrayList.
+Trong kỳ thi Java Gold & Silver, hãy chú ý đến cách CopyOnWriteArrayList xử lý vòng lặp và thao tác ghi trong môi trường đa luồng.	
+	
+
+// Mối quan hệ giữa List và các Implementations của nó 
+
+java.util.List (Interface)
+│
+├── java.util.ArrayList (implements List, RandomAccess)
+│
+├── java.util.LinkedList (implements List, Deque)
+│
+├── java.util.Vector (implements List, RandomAccess)
+│   ├── java.util.Stack (extends Vector)
+│
+├── java.util.CopyOnWriteArrayList (implements List, RandomAccess)
+	
+	
+	
+// Mỗi quan hệ giữa List và RandomAccess 	
+	
+	
+            java.util.List (Interface)
+                  │
+ ┌────────────────┴────────────────┐
+ │                                 │
+ │                     java.util.LinkedList
+ │                                 ▲
+ │                                 │
+ │           ┌───────────────┬─────┴─────┐
+ │           │               │           │
+ │           │               │           │
+ ▼           ▼               ▼           ▼
+ java.util.ArrayList   java.util.Vector   java.util.CopyOnWriteArrayList
+        │                   │                   │
+        │                   ▼                   ▼
+        │          java.util.Stack          (implements RandomAccess)
+        │
+        ▼
+  (implements RandomAccess)
+	
+	
+	
 </pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

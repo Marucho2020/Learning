@@ -1,123 +1,84 @@
-<html><head><title>Lesson 102 == Node Class ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 102 -- Node Class -//</h1><pre>
-
+<html><head><title>Lesson 102 == Audit Trail ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 102 -- Audit Trail -//</h1><pre>
 # Khái niệm 
-	Một Node là một đơn vị cấu trúc dữ liệu cơ bản, có thể liên kết với các Node khác để hình thành cấu trúc lớn hơn như:
+	Audit Trail = Nhật ký hành động chi tiết: ai đã làm gì, khi nào, vào đâu.
+	Khác với lineage (theo dõi dữ liệu), audit trail theo dõi hành vi người dùng hoặc hệ thống.
 	
-		class Node {
-			T value;
-			Node next;
-		}
+	## Ví dụ: 
+			Thời gian		 	| Người dùng			 | Hành động
+			2025-04-10 12:00 	| admin 				| Đăng nhập
+			2025-04-10 12:05 	| admin 				| Cập nhật config API
+			2025-04-10 12:07 	| system 				| Trigger deploy
+
+
+
+# 📌 Mục tiêu của Audit Trail 
 	
-	Linked List
-	Tree (Binary Tree, Trie, B-Tree)
-	Graph (DAG, Cycles, v.v.)
+		Mục tiêu 							| Giải thích
+		✅ Bảo mật					  	 | Nếu hệ thống bị tấn công → cần biết ai làm gì
+		✅ Tuân thủ 				  	 | Nhiều ngành yêu cầu lưu log hành động (GDPR, HIPAA)
+		✅ Khắc phục sự cố 				 | Biết người dùng nào xóa nhầm, v.v.
+		✅ Accountability				 | Không ai có thể nói "tôi không biết"
 
 
 
-# ⚙️ 2. Các yếu tố kiến trúc trong Node 
-	
-	Thành phần			 		| Vai trò 							| Kiến trúc liên quan
-	value 					| Dữ liệu hiện tại 						| Payload / Entity
-	next 					| Liên kết với phần tử tiếp theo 		| Pointer / Edge
-	left, right 			| Cho cây nhị phân				 		| Tree traversal
-	neighbors 				| Cho Graph 					 		| Network Topology
-	parent					| Quan hệ ngược					 		| Backtracking, recursion
-	children (List<Node>)	| Quan hệ forward				 		| Hierarchy, Composite pattern
+# 🧰 Công cụ triển khai Audit Trail 
 
-
-Kết luận: Node = phần tử tự mô tả trong một cấu trúc phức tạp.
-
-
-
-
-
-# 🧠 3. Tư duy như một kiến trúc sư phần mềm
-	
-
-
-	## 🔸 Node như là một Actor (tác nhân độc lập) 
+		## Trong application: 
 		
-		-	Trong hệ thống phân tán, bạn có thể coi mỗi Node là:
-		-	Một microservice (có data, biết nói chuyện với người khác)
-		-	Một unit xử lý trong DAG (như trong airflow hoặc n8n)
-		-	Một actor (trong Actor Model - Akka, Erlang)
-
-
-
-	## 🔸 Node là abstraction của mọi thứ kết nối được
+			Log mọi hành động quan trọng (create/update/delete) 
+			
+			Ghi log thành structured logs (JSON)
+			
+					{
+					"timestamp": "2025-04-10T12:05:00Z",
+					"user": "admin",
+					"action": "update_api_config",
+					"resource": "/api/config",
+					"ip": "192.168.1.10"
+					}
 		
-		Context					 | Node là gì
-		DOM (HTML)			 | Mỗi element là một DOM node
-		React Fiber			 | Mỗi phần tử giao diện là 1 node với state
-		Blockchain			 | Mỗi peer là một node trong network
-		Kubernetes			 | Mỗi máy ảo là một node trong cluster
-		Graph 				 | Mỗi thực thể là 1 node (User, Page, Post, ...)
+		
+		
+		## Trong kubernetes/system level:
+		
+				Dùng Falco để audit hành vi pod/container
+				Dùng OPA Gatekeeper để enforce policy
+				Dùng audit webhook trong K8s để ghi log
+
 		
 
 
-# 🧰 4. Các dạng Node phổ biến
-
-		Kiểu Node									 | Mô tả
-		LinkedList Node 						| Trỏ đến next
-		Tree Node  								| Có left/right hoặc list of children
-		Graph Node 								| Có neighbors
-		Doubly Node 							| Có cả next và prev
-		Trie Node 								| Dùng trong từ điển prefix, text search
-		N-ary Tree Node 						| Mỗi node có nhiều children
-		AST Node (Abstract Syntax Tree) 		| Biểu diễn mã nguồn như 1 cây logic	
 
 
 
-
-# 🎯 5. Kiến thức liên quan cần học
-
-	## Data Structure & Algorithms
-		→ Cách tổ chức và xử lý tập hợp các Node để tối ưu:
-			- Tìm kiếm: DFS, BFS, Binary Search Tree
-			- Sắp xếp: Merge, Quick Sort
-			- Định tuyến: Dijkstra, A*	
+		## Trong cloud: 
+			Cloud 			| Tool
+			AWS 			| CloudTrail
+			GCP 			| Cloud Audit Logs
+			Azure 			| Monitor Logs
 
 
-	## Design Pattern 
-		
-		- Composite pattern
-		- Iterator pattern
-		- Visitor pattern (duyệt node kiểu AST)
 
-
-	## Functional programming
-
-		-	Xử lý node đệ quy, immutable
-		-	Lambda trên node list
-
-
-	## Distributed systems (Hệ thống phân tán )
-		-	Node là actor, là peer trong cluster
-		-	Gossip, Raft, Paxos: node tham gia đồng thuận
-
+# 💥 Senior-Level Best Practices 
 	
 
-# 💡 6. Tư duy system-level về Node 
-	
-	Node là gì ở cấp system? 							| Nghĩa kiến trúc
-	Thành phần độc lập 								 | Có thể test riêng, deploy riêng
-	Có quan hệ với các phần tử khác					 | Không đứng 1 mình
-	Có trạng thái (state) và hành vi (behavior) 	 | Tương tác với hệ thống
-	Có thể scale theo chiều ngang 					 | Giống cluster nodes
-	Có thể bị lỗi riêng biệt 						 | Fault-tolerant system
+Thực hành tốt															| Mục tiêu
+✅ Mọi dữ liệu nhạy cảm đều có Lineage 							 		| Để trace nếu lỗi phát sinh
+✅ Mọi API quan trọng có Audit log										| Để phát hiện abuse, debugging
+✅ Tách biệt log Audit và App log 										| Audit cần lưu dài hạn, bảo mật
+✅ Không chỉ log user, mà còn log hệ thống (cron, scheduler, agent)   	| Để tránh blame nhầm
+✅ Encrypt & phân quyền access log 									  	| Tránh dev đọc log chứa token
 
 
 
+# 🧠 Kết luận 
 
-# 📌 Kết luận 
-	
-	Node là một trong những khái niệm giản dị nhưng quyền lực nhất trong kiến trúc phần mềm. Là viên gạch cơ bản để bạn xây dựng:
+So sánh 				| Data Lineage 								| Audit Trail
+Ghi gì? 				| Dòng chảy dữ liệu 						| Hành vi người dùng / hệ thống
+Mục tiêu 				| Debug pipeline, data trust				| Tuân thủ, bảo mật, accountability
+Người đọc 				| Data engineer, AI/ML 						| Security, DevOps, Compliance
+Dữ liệu đầu vào 		| Job metadata, schema, pipeline config 	| HTTP logs, user actions, system logs
 
-		-	Linked List → FIFO Queue
-		-	Tree → DOM, UI hierarchy, Binary Index
-		-	DAG → Task pipelines
-		-	Graph → Social network, Microservice communication
-		-	Cluster → Distributed system
 
 
 </pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

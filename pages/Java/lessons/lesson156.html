@@ -1,116 +1,136 @@
-<html><head><title>Lesson 156 == Comparable và Comparator ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 156 -- Comparable và Comparator -//</h1><pre>
-# 🔍 1. Khác biệt tổng thể giữa Comparable vs Comparator
-| Đặc điểm               | `Comparable<T>`                                        | `Comparator<T>`                                        |
-| ---------------------- | ------------------------------------------------------ | ------------------------------------------------------ |
-| Mục đích               | So sánh **chính bản thân class**                       | So sánh **từ bên ngoài** (không can thiệp class)       |
-| Cách dùng              | Class implement `Comparable` và override `compareTo()` | Viết class/instance `Comparator` và truyền vào khi cần |
-| Thay đổi logic so sánh | Khó: chỉ có một cách sắp xếp duy nhất                  | Dễ: có thể tạo nhiều `Comparator` khác nhau            |
-| Ví dụ dùng             | `Collections.sort(list)` nếu phần tử `Comparable`      | `Collections.sort(list, comparator)`                   |
+<html><head><title>Lesson 156 == Stream ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 156 -- Stream -//</h1><pre>
+# 1. ✅ Stream là gì trong Java?
+
+Trong Java, “stream” là khái niệm chỉ luồng dữ liệu (data flow) giữa nguồn (source) và đích (destination). Có hai hệ thống stream tách biệt:
 
 
-# 🔧 2. Comparable<T> – Nội tại của đối tượng
+| Stream Type           | Dùng để xử lý             | Interface Gốc                 |
+| --------------------- | ------------------------- | ----------------------------- |
+| **Byte Streams**      | Dữ liệu nhị phân (binary) | `InputStream`, `OutputStream` |
+| **Character Streams** | Dữ liệu text (Unicode)    | `Reader`, `Writer`            |
 
-public class User implements Comparable<User> {
-    private String name;
-    private int age;
 
-    @Override
-    public int compareTo(User other) {
-        return Integer.compare(this.age, other.age); // sắp xếp theo tuổi
+
+# 2. 📦 Byte Stream là gì?
+
+	
+	Byte Stream đọc/ghi dữ liệu theo từng byte (8 bit). Phù hợp với:
+	
+		- File nhị phân (ảnh, audio, PDF…)
+		- Mạng, socket, file truyền tải không có encoding
+
+
+	🔧 Các lớp phổ biến: 
+	
+| Direction  | Class                                                                                    |
+| ---------- | ---------------------------------------------------------------------------------------- |
+| Input      | `InputStream` (abstract)                                                                 |
+| Output     | `OutputStream` (abstract)                                                                |
+| Subclasses | `FileInputStream`, `BufferedInputStream`, `DataInputStream`, `ByteArrayInputStream`, ... |
+	
+	
+try (InputStream in = new FileInputStream("file.bin")) {
+    int b;
+    while ((b = in.read()) != -1) {
+        // Xử lý từng byte
+    }
+}
+	
+	
+	
+	
+#3. 🧾 Character Stream là gì?
+	
+	Xử lý dữ liệu text (Unicode) theo từng char (16-bit).
+	Dựa vào encoding (UTF-8, UTF-16...) để ánh xạ byte thành ký tự.
+	
+| Direction  | Class                                                                |
+| ---------- | -------------------------------------------------------------------- |
+| Input      | `Reader`                                                             |
+| Output     | `Writer`                                                             |
+| Subclasses | `FileReader`, `BufferedReader`, `CharArrayReader`, `StringReader`... |
+	
+	Ví dụ: Đọc file văn bản
+	
+try (Reader reader = new FileReader("file.txt")) {
+    int ch;
+    while ((ch = reader.read()) != -1) {
+        System.out.print((char) ch);
     }
 }
 
 
-	## Ý nghĩa: 
-	Bạn đang ép User phải có thứ tự tự nhiên.
-	Khi bạn đưa User vào TreeSet, PriorityQueue, Collections.sort() => Java sẽ dùng compareTo().
-
-	## Hạn chế: 
-		Chỉ có một cách so sánh duy nhất. Muốn thay đổi phải sửa class.
-
-
-# ⚙️ 3. Comparator<T> – So sánh từ bên ngoài
-
-	## Cách dùng:
-	Comparator<User> nameComparator = Comparator.comparing(User::getName);
-	Collections.sort(userList, nameComparator);
+# 4. 🎯 Các kiểu Stream phân loại theo tính năng
+| Loại Stream            | Mục đích                                                |
+| ---------------------- | ------------------------------------------------------- |
+| `BufferedInputStream`  | Buffer dữ liệu để giảm số lần truy xuất I/O vật lý      |
+| `DataInputStream`      | Đọc kiểu dữ liệu nguyên thủy (int, float, long, UTF...) |
+| `ObjectInputStream`    | Đọc/ghi object đã được serialize                        |
+| `ByteArrayInputStream` | Đọc từ mảng byte như thể là stream                      |
+| `PipedInputStream`     | Dùng cho thread-to-thread communication nội bộ          |
+| `PrintStream`          | Ghi dữ liệu tiện lợi như `System.out` với format đẹp    |
 
 
-	## Hoặc custom complex logic: 
-Comparator<User> ageThenName = (u1, u2) -> {
-    int cmp = Integer.compare(u1.getAge(), u2.getAge());
-    if (cmp != 0) return cmp;
-    return u1.getName().compareTo(u2.getName());
-};
-
-
-	## Ưu điểm:
-		Không cần sửa class
-		Có thể tạo nhiều logic so sánh khác nhau tùy ngữ cảnh
-
-
-# 💥 4. Ứng dụng thực chiến – ví dụ bạn dùng trong hệ thống lớn
-
-| Use case                                            | So sánh nào phù hợp? | Giải thích                                         |
-| --------------------------------------------------- | -------------------- | -------------------------------------------------- |
-| Dùng `TreeMap<User, Data>` để lưu user theo tuổi    | `Comparable<User>`   | Vì `TreeMap` sẽ sắp theo key                       |
-| Dùng `PriorityQueue<User>` để lấy ra người trẻ nhất | `Comparator<User>`   | Truyền comparator vào constructor                  |
-| Lọc danh sách User theo nhiều tiêu chí              | `Comparator.chain()` | Dùng `.thenComparing(...)` để viết logic đa tầng   |
-| Không được sửa class (code bên thứ ba)              | `Comparator`         | Không thể dùng `Comparable` nếu không sở hữu class |
-
-
-
-
-# 🔄 5. Kết hợp Comparable + Comparator đúng cách
-
-	Collections.sort(users); // sẽ gọi user.compareTo()
-	Collections.sort(users, Comparator.comparing(User::getName)); // override cách mặc định
-
-
-	Trong TreeSet:
-	Set<User> set = new TreeSet<>(); // dùng compareTo()
-	Set<User> set = new TreeSet<>(Comparator.comparing(User::getName)); // custom comparator
-
-# 🔐 6. Nguyên tắc thiết kế: compareTo & compare phải consistent với equals()
-
-	Nếu bạn violate nguyên tắc này, TreeSet, HashSet, hoặc Map sẽ có hành vi bất ngờ.
 	
-	Ví dụ: nếu equals() trả về true nhưng compareTo() lại != 0, thì:
 	
-Set<User> set = new TreeSet<>();
-set.add(user1);
-set.add(user2); // nếu equals true nhưng compareTo != 0 => sẽ vẫn được thêm vào!
-
-
-
-# 🧠 7. Functional Style Comparator (Java 8+)
-
-	Khi bạn kết hợp với lambda, stream:
-
-users.sort(
-    Comparator.comparing(User::getAge)
-              .thenComparing(User::getName)
-              .reversed()
-);
-
-
-	Hoặc:
-users.stream()
-     .sorted(Comparator.comparing(User::getAge))
-     .collect(Collectors.toList());
 	
+# 5. 🧠 Khác biệt cốt lõi Byte vs Character Stream
+
+| Feature            | Byte Stream                   | Character Stream           |
+| ------------------ | ----------------------------- | -------------------------- |
+| Đơn vị dữ liệu     | Byte (8-bit)                  | Character (16-bit Unicode) |
+| Giao diện gốc      | `InputStream`, `OutputStream` | `Reader`, `Writer`         |
+| Phù hợp xử lý      | File nhị phân, mạng, ảnh      | Text, XML, JSON            |
+| Cần xử lý encoding | ❌ Không                       | ✅ Có                       |
 
 
-# 🔥 8. Câu hỏi thường gặp trong phỏng vấn senior:
+→ Senior note: Khi xử lý dữ liệu text từ mạng hoặc file binary có encoding, luôn phải explicit encoding với InputStreamReader.
 
-1. Có thể vừa implements Comparable, vừa truyền Comparator không?
-	→ Có. Khi truyền Comparator thì Comparator sẽ được ưu tiên, không dùng compareTo() nữa.
+Reader reader = new InputStreamReader(
+    new FileInputStream("file.txt"), StandardCharsets.UTF_8);
 
-2. TreeMap hoạt động như thế nào khi key không implement Comparable?
-	→ Bạn phải truyền Comparator vào constructor, nếu không sẽ ClassCastException.
 
-3. Comparator có thể thay đổi khi runtime không? 
-	→ Có. Bạn có thể inject Comparator khác vào runtime, rất hữu ích cho config-driven sorting.
+# 6. 🛠️ Stream chaining (Decorator Pattern)
+Java sử dụng Decorator Pattern để mở rộng tính năng stream:
+
+InputStream in = new BufferedInputStream(
+                    new FileInputStream("file.dat"));
+
+
+
+# 7. 🔬 Stream trong Java 8 (Functional API) vs I/O Stream
+
+| Java 8 Stream API                                                       | Java I/O Stream                |
+| ----------------------------------------------------------------------- | ------------------------------ |
+| Dòng các phần tử (element pipeline)                                     | Dòng byte hoặc ký tự           |
+| Functional (map, filter, reduce)                                        | Imperative (read/write)        |
+| Không liên quan đến I/O (trừ `Files.lines()`, `BufferedReader.lines()`) | Gốc rễ cho I/O file, socket... |
+
+
+Đừng nhầm lẫn Stream<T> của Java 8 với InputStream, chúng hoàn toàn khác nhau.
+
+
+
+# 8. ⚠️ Các lỗi thường gặp (Senior chú ý)
+
+	- Không đóng stream (gây leak resource)
+	- Encoding sai lệch: Đọc ghi text sai UTF-8, mất tiếng Việt/kanji
+	- Read toàn bộ file vào bộ nhớ → OOM
+	- Không dùng Buffered gây slowdown do gọi I/O vật lý nhiều lần
+
+
+
+# 9. 📌 Kết luận – Khi nào dùng loại nào?
+
+
+| Nhu cầu                          | Lựa chọn Stream                              |
+| -------------------------------- | -------------------------------------------- |
+| File nhị phân (ảnh, zip, mp3...) | `FileInputStream` / `BufferedInputStream`    |
+| File văn bản UTF-8               | `BufferedReader(new InputStreamReader(...))` |
+| Truyền dữ liệu giữa thread       | `PipedInputStream`, `PipedOutputStream`      |
+| Đọc dữ liệu nguyên thủy          | `DataInputStream`                            |
+| Serialize/Deserialize object     | `ObjectInputStream` / `ObjectOutputStream`   |
+
 
 
 

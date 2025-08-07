@@ -1,212 +1,126 @@
-<html><head><title>Lesson 66 == Stateful ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 66 -- Stateful -//</h1><pre># Khái niệm 
-	Trong Spring, Stateful liên quan đến việc lưu trữ trạng thái giữa các request hoặc giữa các session của người dùng. Điều này trái ngược với Stateless, nơi mỗi request độc lập và không giữ trạng thái.
-	
-# 	Khi nào Stateful quan trọng trong hệ thống? 
-
-	✔ Ứng dụng cần lưu trữ thông tin người dùng (session, shopping cart, authentication, v.v.)
-	✔ Các hệ thống giao dịch tài chính cần đảm bảo dữ liệu không mất trạng thái
-	✔ Ứng dụng cần giữ trạng thái trên nhiều bước (multi-step forms, wizard, v.v.)
-	✔ Khi cần quản lý phiên làm việc (WebSocket, chat application, game servers, v.v.)
-
-
-# Cách triển khai Stateful trong Spring
-	Spring hỗ trợ nhiều cách để lưu trữ trạng thái, tùy vào yêu cầu của hệ thống:
-
-	## 🔹 a) Lưu trữ trạng thái trong Session (@SessionAttributes, HttpSession) 
-			Cách này giúp giữ trạng thái trong session của người dùng.
-			Sử dụng @SessionAttributes để lưu dữ liệu giữa các request của một user.
-
-
-		@Controller
-		@SessionAttributes("cart")
-		public class CartController {
+<html><head><title>Lesson 66 == SingleThreadModel Interface ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 66 -- SingleThreadModel Interface -//</h1><pre>	
+# Khái niệm 
+	SingleThreadModel là một interface cũ trong Java Servlet API giúp đảm bảo rằng mỗi request đến một servlet sẽ được xử lý bởi một intance riêng biệt của servlet đó. 
 		
-			@ModelAttribute("cart")
-			public List<String> createCart() {
-				return new ArrayList<>();
-			}
-		
-			@PostMapping("/add")
-			public String addToCart(@ModelAttribute("cart") List<String> cart, 
-									@RequestParam String item) {
-				cart.add(item);
-				return "cartView";
-			}
-		}
-
-
-			💡 Giải thích:
+		💡 Tóm gọn: 
+			- Dùng trong servlet để tránh vấn đề đồng bộ hóa (thread safety)
+			- Mỗi request được xử lý bởi một instance servlet riêng biệt 
+			- Đã bị deprecated từ Servlet 2.4 và loại bỏ từ Servlet 2.5 trở đi 
 			
-			@SessionAttributes("cart") lưu trạng thái của cart trong session của user.
-			Khi user thêm sản phẩm, giỏ hàng sẽ giữ nguyên trạng thái cho đến khi session bị hủy.
-			➡ Nhược điểm: Không phù hợp với hệ thống có nhiều server (horizontal scaling) vì session lưu trên từng server riêng lẻ.
-
-
-
-
-
-
-	## 🔹 b) Lưu trạng thái với HttpSession (Thủ công hơn, nhưng linh hoạt hơn)
-			@Controller
-			public class SessionController {
 			
-				@GetMapping("/setSession")
-				public String setSession(HttpSession session) {
-					session.setAttribute("username", "User123");
-					return "sessionView";
-				}
-			
-				@GetMapping("/getSession")
-				@ResponseBody
-				public String getSession(HttpSession session) {
-					return "Hello, " + session.getAttribute("username");
-				}
-			}
-
-			
-					💡 Giải thích:
-					
-					session.setAttribute("username", "User123") lưu giá trị trong session.
-					Khi gọi /getSession, nó lấy lại giá trị username.
-					Phù hợp với các hệ thống cần lưu dữ liệu tạm thời cho user đăng nhập.
-
-
-
-
-	## 🔹 c) Lưu trạng thái bằng Stateful Bean (@Scope("session") hoặc @Scope("prototype"))
-	Spring hỗ trợ Bean có trạng thái thông qua scope:
-	
-
-		Scope						Mô tả
-		singleton				Chỉ có một instance duy nhất trong toàn bộ ứng dụng (Stateless).
-		prototype				Mỗi request tạo một instance mới (Stateful).
-		session					Một instance duy trì trong suốt phiên làm việc của user (Stateful).
-		request					Một instance tồn tại trong một HTTP request (Stateless).
-
-
-
-		### Ví dụ: Lưu trạng thái trong session bằng @SessionScope 
-
-		@Component
-		@SessionScope
-		public class UserSession {
-			private String username;
-		
-			public String getUsername() {
-				return username;
-			}
-		
-			public void setUsername(String username) {
-				this.username = username;
-			}
-		}
-		
-
-		### Controller sử dụng Stateful Bean
-		
-		@Controller
-		public class UserController {
-		
-			private final UserSession userSession;
-		
-			public UserController(UserSession userSession) {
-				this.userSession = userSession;
-			}
-		
-			@GetMapping("/setUser")
-			public String setUser(@RequestParam String name) {
-				userSession.setUsername(name);
-				return "userView";
-			}
-		
-			@GetMapping("/getUser")
-			@ResponseBody
-			public String getUser() {
-				return "User: " + userSession.getUsername();
-			}
-		}
+# Cách hoạt động  
 				
+	Khi một servlet implement SingleThreadModel, server có hai cách xử lý request:
 
-			@Controller
-			public class UserController {
-			
-				private final UserSession userSession;
-			
-				public UserController(UserSession userSession) {
-					this.userSession = userSession;
-				}
-			
-				@GetMapping("/setUser")
-				public String setUser(@RequestParam String name) {
-					userSession.setUsername(name);
-					return "userView";
-				}
-			
-				@GetMapping("/getUser")
-				@ResponseBody
-				public String getUser() {
-					return "User: " + userSession.getUsername();
-				}
-			}
+	Tạo một instance servlet mới cho mỗi request.
+	Dùng một pool servlet instance để xử lý nhiều request song song.
+	💡 Lý do: Servlet bản chất là đa luồng (multi-threaded), nếu nhiều request đến cùng lúc, có thể gây ra vấn đề race condition nếu servlet có biến instance chung
 
 
-
-
-	##  🔹 d) Lưu trạng thái với Redis (Hỗ trợ Scaling tốt hơn) 
-		Khi chạy hệ thống trên nhiều server (distributed system), sử dụng session sẽ gây lỗi vì mỗi server có session riêng. Để giải quyết, ta dùng Redis để lưu session.
+	## 📌 Ví dụ: Servlet không thread-safe 
+		@WebServlet("/unsafe")
+		public class UnsafeServlet extends HttpServlet {
+			private int counter = 0;  // Biến instance dùng chung
 		
-			
-	### Cấu hình Redis Session trong application.properties	
-		spring.session.store-type=redis
-		spring.redis.host=localhost
-		spring.redis.port=6379
-
-
-	### Controller sử dụng Redis Session 
-		@RestController
-		@RequestMapping("/session")
-		public class RedisSessionController {
-		
-			@GetMapping("/set")
-			public String setSession(HttpSession session) {
-				session.setAttribute("message", "Hello from Redis");
-				return "Session set!";
-			}
-		
-			@GetMapping("/get")
-			public String getSession(HttpSession session) {
-				return (String) session.getAttribute("message");
+			protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+				counter++;  // Có thể bị ghi đè bởi nhiều luồng khác nhau!
+				resp.getWriter().println("Counter: " + counter);
 			}
 		}
-		💡 Giải thích:
-		Dữ liệu session được lưu vào Redis, giúp có thể scale ngang hệ thống mà vẫn giữ session.
-
-
-
-# 3. So sánh Stateful và Stateless trong Spring
-	
-
-
-Tiêu chí							Stateful														Stateless
-Lưu trạng thái			Có giữ dữ liệu giữa các request/session.						Không giữ trạng thái giữa các request.
-Hiệu suất				Chậm hơn do phải quản lý session/memory.						Nhanh hơn vì không lưu trạng thái.
-Khả năng mở rộng		Hạn chế (cần Redis, DB để scale tốt).							Dễ scale ngang (microservices).
-Ứng dụng				Web app có đăng nhập, giỏ hàng, multi-step forms.				REST API, Microservices, serverless.
-
-
-# 4. Khi nào nên dùng Stateful trong Spring?
-
-		✔ Hệ thống Authentication (OAuth2, Session-based Auth)
-		✔ Ứng dụng có giỏ hàng (Shopping Cart, Checkout Process)
-		✔ Hệ thống chat real-time, WebSocket
-		✔ Ứng dụng cần lưu thông tin tạm thời cho từng user (multi-step forms, wizards)
-		✔ Hệ thống ngân hàng, giao dịch tài chính (cần giữ trạng thái giao dịch tạm thời)
 		
-		🚀 Tóm lại:
+			⚠ Lỗi có thể xảy ra: 
+			Nếu 2 request chạy song song, biến counter có thể bị ghi đè không mong muốn, dẫn đến bug dữ liệu.
+			
+			
+			
+	## 		📌 Dùng SingleThreadModel để tránh lỗi trên 
+			@WebServlet("/safe")
+			public class SafeServlet extends HttpServlet implements SingleThreadModel {
+				private int counter = 0;  // Biến instance không bị truy cập đồng thời
+			
+				protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+					counter++;  
+					resp.getWriter().println("Counter: " + counter);
+				}
+			}
+
+			🚀 Lúc này, mỗi request có một instance servlet riêng, tránh được lỗi đồng bộ hóa.
+			
+			
+# 		3. Tại sao SingleThreadModel bị loại bỏ?	
+
+			🚨 Hạn chế lớn của SingleThreadModel:
+			❌ Nhược điểm										⚡ Giải thích
+			Tốn bộ nhớ											Vì mỗi request có một servlet riêng, nên server phải quản lý nhiều instance servlet.
+			Không thực sự an toàn								Nếu servlet có biến static hoặc dùng shared resource (file, DB), thì vẫn bị vấn đề đồng bộ hóa.
+			Không phù hợp với hệ thống lớn						Với hệ thống nhiều request, việc tạo nhiều instance servlet sẽ làm giảm hiệu suất.
+			
+			💡 Thay vào đó, nên dùng synchronized, ThreadLocal hoặc Stateless Servlet.
+			
+			
+			
+# 4. Cách thay thế SingleThreadModel 
+				
+			
+	## 🔹 Cách 1: Dùng synchronized (Không khuyến khích) 
+		Đặt synchronized vào doGet() hoặc doPost(), nhưng làm giảm hiệu suất.
+				@WebServlet("/sync")
+				public class SyncServlet extends HttpServlet {
+					private int counter = 0;
+				
+					protected synchronized void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+						counter++;
+						resp.getWriter().println("Counter: " + counter);
+					}
+				}
+
+					⚠ Nhược điểm:
 		
-		Stateful phù hợp với các hệ thống cần lưu trữ dữ liệu của người dùng trong suốt phiên làm việc.
-		Stateless phù hợp với microservices, REST API, giúp hệ thống dễ mở rộng hơn.
-		Redis là một giải pháp tốt nếu cần Stateful nhưng vẫn muốn hệ thống có thể scale ngang.
-		💡 Lời khuyên: Khi thiết kế hệ thống, ưu tiên Stateless, chỉ dùng Stateful khi thực sự cần thiết.
+					Tất cả request phải chờ nhau, giảm tốc độ xử lý.
+			
+			
+			
+			
+	## 	🔹 Cách 2: Dùng ThreadLocal để tạo biến riêng cho từng request	
 	
+	
+			@WebServlet("/threadlocal")
+			public class ThreadLocalServlet extends HttpServlet {
+				private ThreadLocal<Integer> counter = ThreadLocal.withInitial(() -> 0);
+			
+				protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+					counter.set(counter.get() + 1);
+					resp.getWriter().println("Counter: " + counter.get());
+				}
+			}
+	
+			🚀 Ưu điểm:
+			Không cần đồng bộ hóa.
+			Mỗi request có một biến riêng, tránh lỗi race condition.	🚀 Ưu điểm:
+			
+			Không cần đồng bộ hóa.
+			Mỗi request có một biến riêng, tránh lỗi race condition.
+			
+			
+			
+	## 	🔹 Cách 3: Dùng Stateless Servlet (Cách tốt nhất)
+			
+			Không dùng biến instance để tránh vấn đề đồng bộ hóa.
+			📌 Ví dụ: Servlet Stateless
+			
+			@WebServlet("/stateless")
+			public class StatelessServlet extends HttpServlet {
+				protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+					int counter = Integer.parseInt(req.getParameter("count")); // Không dùng biến instance
+					resp.getWriter().println("Counter: " + (counter + 1));
+				}
+			}
+
+			✅ Lợi ích:
+
+Servlet không giữ trạng thái, mọi request độc lập với nhau.
+Không lo lắng về đồng bộ hóa hay bộ nhớ.
+			
+
+
 </pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

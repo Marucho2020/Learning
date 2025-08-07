@@ -1,212 +1,218 @@
-<html><head><title>Lesson 50 == JSON Serialization ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 50 -- JSON Serialization -//</h1><pre>	# Khái niệm  
-		JSON Serialization trong Java là quá trình biến đổi một object Java thành JSON String và ngược lại. từ JSON strign thành object Java. Kỹ thuật này rất quan trọng trong lập trình hiện đại, đặc biệt là khi làm việc với RESR API ,  Web Services , và lưu trữ dữ liệu nhẹ 
-		
-		+> Serialization : Chuyển object Java -> JSON String 
-		+> Deserialization : Chuyển JSON string -> Object Java 
-		
-			Ưu điểm  : 
-				Dễ đọc hơn so với XML 
-				Nhẹ và nhanh hơn XML Serialization 
-				Tương thích đa nền tảng, dễ trao đổi giữa các hệ thống  
-				
-		
-	# Các thư viện JSON phổ biến trong Java 
-		
-	Thư viện											Ưu điểm										Nhược điểm
-	Jackson (com.fasterxml.jackson)			Hiệu suất cao, hỗ trợ annotation mạnh mẽ				Cấu hình hơi phức tạp
-	Gson (com.google.gson)					Dễ dùng, code đơn giản									Chậm hơn Jackson
-	org.json								Không cần annotation, dễ thao tác JSON thô				Không hỗ trợ tự động mapping object
+<html><head><title>Lesson 50 == Serializable ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 50 -- Serializable -//</h1><pre>
+#  Khái niệm 
+	Serializable là một interface trong Java dùng để đánh dấu rằng một class có thể được chuyển đổi thành byte stream để lưu trữ hoặc truyền qua mạng, và sau đó có thể được khôi phục thành đối tượng. 
 	
 	
-# JSON Serialization với Jackson(Tốt nhất )
-			## Thêm phụ thuộc 
-			
-				<dependencies>
-					<dependency>
-						<groupId>com.fasterxml.jackson.core</groupId>
-						<artifactId>jackson-databind</artifactId>
-						<version>2.16.0</version>
-					</dependency>
-				</dependencies>
-
-
-			## Chuyển Object java thành JSON string 
-				import com.fasterxml.jackson.databind.ObjectMapper;
-				class Person {
-					public String name;
-					public int age;
-				
-					public Person(String name, int age) {
-						this.name = name;
-						this.age = age;
-					}
-				}
-				
-				public class JacksonSerializationExample {
-					public static void main(String[] args) throws Exception {
-						Person person = new Person("Alice", 25);
-						
-						// Tạo ObjectMapper
-						ObjectMapper objectMapper = new ObjectMapper();
-				
-						// Chuyển Object → JSON
-						String json = objectMapper.writeValueAsString(person);
-						System.out.println("Serialized JSON: " + json);
-					}
-				}
-				
-				
-			--> {"name":"Alice","age":25}
-			
-			
-			## Chuyển JSON Strign thành Object Java 
-					String json = "{\"name\":\"Alice\",\"age\":25}";
-					
-					// Deserialize JSON → Object
-					Person person = objectMapper.readValue(json, Person.class);
-					System.out.println("Deserialized Object: " + person.name + ", " + person.age);
-					
-					Deserialized Object: Alice, 25
-
-
-
-
-
-
-			## Dùng Annotation để tùy chỉnh JSON Serialization
-				
-				## @JsonIgnore - Bỏ qua một field chi serialize 
-					import com.fasterxml.jackson.annotation.JsonIgnore;
-					
-					class User {
-						public String username;
-						
-						@JsonIgnore
-						public String password; // Không serialize field này
-					
-						public User(String username, String password) {
-							this.username = username;
-							this.password = password;
-						}
-					}
-										
-					--> {"username":"admin"}
-					
-					
-				###	@JsonProperty - Đổi tên field trong JSON 
-				
-						import com.fasterxml.jackson.annotation.JsonProperty;
-						class Car {
-							@JsonProperty("car_name")
-							public String name;
-						
-							public Car(String name) {
-								this.name = name;
-							}
-						}
+	## Mục đích 
+		Cho phép đối tượng của một class được ghi vào file, truyền qua mạng, lưu vào DB dưới dạng byte stream 
 		
-						---> 	{"car_name":"Tesla"}
-
-
-				
-				### @JsonFormat - Định dạng ngày tháng 
-				
-						import com.fasterxml.jackson.annotation.JsonFormat;
-						import java.util.Date;
-						
-						class Event {
-							public String name;
-						
-							@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy")
-							public Date date;
-						
-							public Event(String name, Date date) {
-								this.name = name;
-								this.date = date;
-							}
-						}
-						
-						--> {"name":"Conference","date":"15-02-2025"}
-						
-						
-				
-				### @JsonInclude - bỏ qua field có giá trị null hoặc default 
-				
-					import com.fasterxml.jackson.annotation.JsonInclude;
-					@JsonInclude(JsonInclude.Include.NON_NULL)
-					class Product {
-						public String name;
-						public Double price; // Nếu null sẽ bị bỏ qua
-					
-						public Product(String name, Double price) {
-							this.name = name;
-							this.price = price;
-						}
-					}
-					
-					--> {"name":"Laptop"}
-					
-					
-
-
-				
-
-# GSON 
-	
-	Đơn giản và ít tùy chỉnh hơn Jackson 
-	
-	
-	## Dependency 
-			<dependency>
-				<groupId>com.google.code.gson</groupId>
-				<artifactId>gson</artifactId>
-				<version>2.10</version>
-			</dependency>
-
-
-
-	## Serializable đơn giản với GSON 
-		import com.google.gson.Gson;
-		class Student {
-			public String name;
-			public int age;
+	## Cơ chế hoạt động 
+		Java cung cấp cơ chế hoạt động thông qua ObjectOutputStream và ObjectInputStream để serialize và deserialize một object  
 		
-			public Student(String name, int age) {
+	## Tính chất  
+		Interface Serializble thuộc package java.io và không có phương thức nào marker interface 
+		
+		
+# Cách sử dụng  
+		
+		
+	## Khai báo một Serializable 
+		-> chỉ cần implements Serializable  
+		
+		import java.io.Serializable;
+		class Person implements Serializable {
+			private String name;
+			private int age;
+		
+			public Person(String name, int age) {
 				this.name = name;
 				this.age = age;
 			}
-		}
 		
-		public class GsonExample {
-			public static void main(String[] args) {
-				Gson gson = new Gson();
-		
-				// Serialize
-				Student student = new Student("Bob", 22);
-				String json = gson.toJson(student);
-				System.out.println("Serialized JSON: " + json);
-		
-				// Deserialize
-				Student deserializedStudent = gson.fromJson(json, Student.class);
-				System.out.println("Deserialized Object: " + deserializedStudent.name);
+			@Override
+			public String toString() {
+				return "Person{name='" + name + "', age=" + age + "}";
 			}
 		}
 
-		--> {"name":"Bob","age":22}
+	Ở đây, class Person có thể được serialize và deserialize.
+
+
+
+	## Serialize đối tượng 
+		Sử dụng ObjectOutputStream để ghi object vào file  
+		
+		import java.io.FileOutputStream;
+		import java.io.IOException;
+		import java.io.ObjectOutputStream;
+		
+		public class SerializeExample {
+			public static void main(String[] args) {
+				Person person = new Person("John Doe", 30);
+		
+				try (FileOutputStream fileOut = new FileOutputStream("person.ser");
+					ObjectOutputStream out = new ObjectOutputStream(fileOut)) {
+					out.writeObject(person);
+					System.out.println("Object has been serialized.");
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+
+
+	## Deserialize đối tượng 
+		import java.io.FileInputStream;
+		import java.io.IOException;
+		import java.io.ObjectInputStream;
+		
+		public class DeserializeExample {
+			public static void main(String[] args) {
+				try (FileInputStream fileIn = new FileInputStream("person.ser");
+					ObjectInputStream in = new ObjectInputStream(fileIn)) {
+		
+					Person person = (Person) in.readObject();
+					System.out.println("Object has been deserialized: " + person);
+		
+				} catch (IOException | ClassNotFoundException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+				FileInputStream để đọc từ file
+				ObjectInputStream để chuyển đổi byte stream về object bằng readObject()
+				Downcasting: Vì readObject() trả về Object, cần ép kiểu về Person.
+
+
+
+
+# Transient - bỏ qua một field khi serialize 
+	
+		Một số dữ liệu không nên được lưu khi serialize, ví dụ như mật khẩu -> sử dụng "trainsient" để bỏ qua file đó 
 		
 		
+		
+				class User implements Serializable {
+					private String username;
+					private transient String password; // Không được lưu
+				
+					public User(String username, String password) {
+						this.username = username;
+						this.password = password;
+					}
+				
+					@Override
+					public String toString() {
+						return "User{username='" + username + "', password='" + password + "'}";
+					}
+				}
+				
+				// Nếu serialize và deserialize, password sẽ trở thành null: 
+				
+				User user = new User("admin", "123456");
+				System.out.println(user);  // User{username='admin', password='123456'}
+				
+				serialize(user);
+				User deserializedUser = deserialize();
+				System.out.println(deserializedUser); // User{username='admin', password='null'}
+		
 
-Câu hỏi																			Câu trả lời
-Khi nào nên dùng Jackson thay vì Gson?								Khi cần tốc độ và tùy chỉnh mạnh mẽ bằng annotation.
-@JsonIgnore dùng để làm gì?											Để bỏ qua một field khi serialize.
-@JsonProperty("id") có tác dụng gì?									Đổi tên field trong JSON thành "id".
-Gson có hỗ trợ annotation như Jackson không?						❌ Không, Gson không mạnh về annotation.
-Khi nào nên dùng @JsonInclude(JsonInclude.Include.NON_NULL)?		Khi muốn bỏ qua các field có giá trị null.
 
 
-Jackson mạnh hơn Gson, nhưng phức tạp hơn.
-Gson đơn giản, dễ dùng, nhưng ít tùy chỉnh hơn.
 
+#	serialVersionUID - Tránh lỗi khi deserialize 
+	
+	## Mỗi class Serializable có một serialVersionUID. Nếu không khai báo, JVM sẽ tự sinh ra dựa trên class structure 
+	
+			private static final long serialVersionUID = 1L;
+
+	## Vấn đề khi không có serialVersionUID 
+		Nếu class thay đổi(thêm field mới ), Java sẽ ném lỗi khi deserialize :
+			java.io.InvalidClassException: User; local class incompatible
+			Để tránh lỗi này, luôn khai báo serialVersionUID thủ công.
+			
+
+
+# Serializable với Object Composition 
+	
+	## nếu một class có field là một object khác, class đó cũng phải Serializable 
+
+
+				class Address implements Serializable {
+				private String city;
+					
+					public Address(String city) {
+						this.city = city;
+					}
+				}
+				
+				class Employee implements Serializable {
+					private String name;
+					private Address address; // Address cũng phải Serializable
+				
+					public Employee(String name, Address address) {
+						this.name = name;
+						this.address = address;
+					}
+				}
+
+		Nếu Address không implements Serializable, sẽ gặp lỗi khi serialize Employee.
+
+
+# Externalizable - Kiểm soát chi tiết quá trình serialize 
+
+	Interface Externalizable (extends Serializable) giúp tùy chỉnh quá trình serialize.
+	
+				import java.io.*;
+				
+				class CustomPerson implements Externalizable {
+					private String name;
+					private int age;
+				
+					public CustomPerson() { } // Bắt buộc có constructor không tham số
+				
+					public CustomPerson(String name, int age) {
+						this.name = name;
+						this.age = age;
+					}
+				
+					@Override
+					public void writeExternal(ObjectOutput out) throws IOException {
+						out.writeUTF(name);
+						out.writeInt(age);
+					}
+				
+					@Override
+					public void readExternal(ObjectInput in) throws IOException {
+						name = in.readUTF();
+						age = in.readInt();
+					}
+				
+					@Override
+					public String toString() {
+						return "CustomPerson{name='" + name + "', age=" + age + "}";
+					}
+				}
+
+
+
+		## Lợi ích của Externalizable:
+			Kiểm soát cách ghi và đọc dữ liệu (ví dụ: mã hóa, nén dữ liệu).
+			Tiết kiệm dung lượng so với Serializable.
+
+
+# Những điểm lưu ý quan trọng  
+
+Câu hỏi																					Câu trả lời
+Serializable có method nào không?														Không, chỉ là marker interface.
+						
+Nếu một field là transient, nó có được serialize không?									Không, khi deserialize nó sẽ là null (với object) hoặc giá trị mặc định (0, false).
+						
+Nếu class con kế thừa class không Serializable, có lỗi không?							Có, trừ khi class cha có constructor không tham số.
+			
+Nếu serialVersionUID khác nhau giữa hai phiên bản class, chuyện gì xảy ra?				InvalidClassException.
+
+Externalizable khác Serializable thế nào?					Externalizable yêu cầu triển khai writeExternal() và readExternal(), giúp kiểm soát chi tiết việc serialize.
 
 
 </pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

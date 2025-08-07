@@ -1,108 +1,90 @@
-<html><head><title>Lesson 120 == ConcurrentNavigableMap ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 120 -- ConcurrentNavigableMap -//</h1><pre>
-# Khái niệm  
+<html><head><title>Lesson 120 == So sánh chuyên sâu : B-Tree / B+ Tree với các cây nhị phân (Binary Tree, AVL, Red-Black, Treap, Splay...) ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 120 -- So sánh chuyên sâu : B-Tree / B+ Tree với các cây nhị phân (Binary Tree, AVL, Red-Black, Treap, Splay...) -//</h1><pre>
+# ⚔️ Mục tiêu so sánh:
+	Hiểu rõ khi nào nên dùng B-Tree / B+ Tree 
+	Biết tại sao các hệ quản trị cơ sở dữ liệu (DBMS), file system, search engine dùng B-Tree, chứ không dùng AVL, RBT...
+	Phân tích hiệu năng, I/O, cache locality, và concurrency
 	
-	Bản chất và vai trò trong hệ thống đa luồng.
-	Cách hoạt động bên dưới (implementation).
-	Khi nào nên dùng / khi không nên dùng.
-	So sánh với các map khác: ConcurrentHashMap, TreeMap, NavigableMap, SkipListMap.
-	Các chiến lược tối ưu hiệu suất và memory.
+# 	1. 🎯 Tư duy cốt lõi của B-Tree / B+ Tree
 
+| Đặc điểm                         | Ý nghĩa                                                                    |
+| -------------------------------- | -------------------------------------------------------------------------- |
+| **Mỗi node chứa nhiều keys**     | Khác biệt lớn nhất. Một node có thể có hàng chục - hàng trăm key → ít tầng |
+| **Thiết kế tối ưu cho Disk I/O** | Mỗi lần đọc node là 1 lần truy cập ổ cứng. Ít tầng → ít I/O                |
+| **Cân bằng tuyệt đối**           | Không cần rotation. Mọi leaf đều cùng độ sâu                               |
+| **Tối ưu cache locality**        | Một node đọc vào RAM chứa được nhiều key → giảm cache miss                 |
+| **B+ Tree: all data ở leaf**     | Tìm kiếm nhanh, duyệt in-order dễ dàng, scan range hiệu quả                |
 
-	Là một interface trong Java, mở rộng ConcurrentMap + NavigableMap. Điều này có nghĩa:
-	Concurrent: Hỗ trợ an toàn trong môi trường đa luồng (thread-safe).
-	Navigable: Hỗ trợ truy xuất theo thứ tự, như ceilingEntry, floorEntry, subMap, v.v.
-	🔧 Implementation chính: ConcurrentSkipListMap<K, V>
+# 2. 🔁 So sánh với Red-Black Tree / AVL Tree
 	
+| Tiêu chí                  | **B-Tree / B+ Tree**                        | **AVL / Red-Black Tree**             |
+| ------------------------- | ------------------------------------------- | ------------------------------------ |
+| Cấu trúc node             | Nhiều keys + nhiều con (đa nhánh)           | 1 key, 2 con (nhị phân)              |
+| Chiều cao (depth)         | Rất thấp (\~logₘ(N), m = branching factor)  | Cao hơn (\~log₂(N))                  |
+| Phù hợp môi trường        | **Disk / SSD / DBMS**                       | RAM / in-memory                      |
+| Tối ưu cho I/O            | ✅ Có                                        | ❌ Không                              |
+| Tối ưu duyệt range        | ✅ B+ Tree duyệt liên tiếp dễ dàng           | ❌ Duyệt khó hơn                      |
+| Độ phức tạp insert/delete | O(log N) (ít tầng)                          | O(log N) (nhiều tầng hơn)            |
+| Cân bằng                  | Luôn cân bằng (no rotation)                 | Cần rotate (AVL: strict, RBT: loose) |
+| Áp dụng thực tế           | DB: MySQL, PostgreSQL, Oracle, Cassandra... | Java TreeMap, compiler symbol tables |
+| Concurrency support       | Dễ hơn do ít tầng → ít tranh chấp           | Phức tạp do nhiều rotation           |
 
-# 🏗️ 2. Cấu trúc triển khai bên dưới: Skip List
-	- ConcurrentNavigableMap duy nhất được Java implement chính thức là ConcurrentSkipListMap, dùng Skip List:
-	- Skip List là một cấu trúc đa lớp (multiple levels) để tìm kiếm nhanh hơn O(log n) mà không dùng rotation như tree.
-	- Được thiết kế tốt cho môi trường đa luồng, dễ chia nhỏ vùng cập nhật (fine-grained locking hoặc lock-free).
+
+# 3. 📦 Tại sao DBMS chọn B-Tree / B+ Tree?
+
+	## Vì Disk I/O cực kỳ chậm → phải giảm số lần truy cập ổ đĩa.
+		Một node chứa nhiều key (ví dụ 100 key/node)
+		Từ root tới leaf chỉ mất log₁₀⁰(N) bước (rất thấp)
+		Mỗi bước đọc chỉ 1 lần I/O → cực nhanh so với BST/AVL (cần log₂(N) lần I/O)
+
+
+	## B+ Tree ưu việt hơn:
+		Tất cả data ở leaf → range scan mượt như Array
+		Các leaf liên kết nhau bằng con trỏ → duyệt liên tục không phải đi ngược lại cây
+
+
+	## 4. 🔧 Khi nào KHÔNG nên dùng B-Tree? 
 	
+| Use-case                            | Lý do dùng RBT / AVL thay vì B-Tree           |
+| ----------------------------------- | --------------------------------------------- |
+| Cấu trúc dữ liệu trong bộ nhớ (RAM) | Không bị hạn chế I/O → AVL, RBT nhanh hơn     |
+| Update-heavy workload nhỏ           | Rotation AVL nhanh hơn split/merge của B-Tree |
+| Khi cần đơn giản & nhẹ              | B-Tree phức tạp code hơn RBT/AVL              |
+
+
+# 5. 🔥 Treap vs B-Tree
+	Treap dùng random để balance → fast insert/delete, tốt cho cache nhưng không đảm bảo độ cao như B-Tree
+	B-Tree luôn cân bằng tuyệt đối → thích hợp để lưu trữ dữ liệu lớn
+
+
+# 6. 📈 Benchmark ví dụ
+| Tree Type           | Depth (n = 1 triệu) | Tốc độ truy cập                             |
+| ------------------- | ------------------- | ------------------------------------------- |
+| B+ Tree (order 100) | \~3-4               | Rất nhanh (ít tầng, ít I/O)                 |
+| RBT / AVL           | \~20                | Chậm hơn do cần đi nhiều tầng               |
+| Treap / Splay       | \~25 (avg)          | Nhanh insert, nhưng không tốt cho scan      |
+| Skip List           | \~log N (\~20)      | Tốt cho concurrency, không tốt cho disk I/O |
+
+
+# 7. ✅ Lời khuyên cho system design
 	
-	## ⏱️ Time Complexity: 
-| Operation        | Time Complexity |
-| ---------------- | --------------- |
-| get/put          | O(log n)        |
-| remove           | O(log n)        |
-| firstKey/lastKey | O(1)            |
-| subMap, headMap  | O(log n)        |
+| Hệ thống                    | Nên dùng        | Lý do                        |
+| --------------------------- | --------------- | ---------------------------- |
+| Database, Index             | B+ Tree         | Scan range, ít I/O           |
+| In-memory caching           | RBT, Treap, AVL | Dễ triển khai, hiệu năng tốt |
+| Realtime time-series        | Skip List       | Concurrent + fast insert     |
+| SSD-backed log store        | B+ Tree + WAL   | Ghi log hiệu quả             |
+| Symbol Table trong Compiler | AVL Tree        | Lookup nhanh, update ít      |
 
 
-# 🔒 3. Đồng bộ hóa (Concurrency) 
-	ConcurrentSkipListMap không dùng synchronized toàn cục như Collections.synchronizedMap, mà: 
-	
-	- Dùng lock chia nhỏ (fine-grained locks) hoặc CAS (Compare-and-Swap),
-	- Mỗi tầng trong SkipList hoạt động độc lập -> không bị bottleneck khi truy cập đồng thời,
-	- Một số thao tác như putIfAbsent, computeIfAbsent rất phù hợp cho concurrent map.
-
-# 🧪 4. Khi nào dùng ConcurrentNavigableMap? 
-	
-
-| Trường hợp thực tế                              | Lợi ích khi dùng                                                          |
-| ----------------------------------------------- | ------------------------------------------------------------------------- |
-| Hệ thống cần duy trì thứ tự key khi truy cập    | Giữ thứ tự sắp xếp theo key (natural hoặc comparator)                     |
-| Cần chia nhỏ vùng dữ liệu (sharding, paging...) | Dùng `subMap`, `tailMap`, `headMap` hiệu quả                              |
-| Ghi / đọc đồng thời (đa luồng)                  | Không cần tự lock                                                         |
-| Tạo hàng đợi ưu tiên nhiều thread xử lý         | Dễ implement với `pollFirstEntry`                                         |
-| Cần xử lý nhiều phiên bản dữ liệu (timestamped) | Key là timestamp, value là dữ liệu, `tailMap(ts)` trả các giá trị mới hơn |
-
-
-
-# 🔥 5. So sánh với các Map khác
-| Feature                          | HashMap | TreeMap  | ConcurrentHashMap | ConcurrentSkipListMap |
-| -------------------------------- | ------- | -------- | ----------------- | --------------------- |
-| Ordered                          | ❌       | ✅        | ❌                 | ✅                     |
-| Thread-safe                      | ❌       | ❌        | ✅                 | ✅                     |
-| Navigable (subMap, ceiling...)   | ❌       | ✅        | ❌                 | ✅                     |
-| Performance                      | ⭐⭐⭐⭐⭐   | ⭐⭐⭐      | ⭐⭐⭐⭐              | ⭐⭐⭐                   |
-| Memory overhead (extra pointers) | ⭐⭐⭐⭐⭐   | ⭐⭐       | ⭐⭐⭐⭐              | ⭐⭐                    |
-| Insert performance               | O(1)    | O(log n) | O(1)              | O(log n)              |
-
-# ⚙️ 6. Ví dụ thực tế
-
-
-Ví dụ 1: Hệ thống giá cổ phiếu real-time 
-	
-ConcurrentNavigableMap<Long, Double> stockPrices = new ConcurrentSkipListMap<>();
-
-// Nhiều thread ghi giá theo timestamp
-stockPrices.put(System.currentTimeMillis(), 123.45);
-
-// Truy xuất giá sau 9:30 sáng
-long openTime = 9_30_00_000L;
-NavigableMap<Long, Double> pricesAfterOpen = stockPrices.tailMap(openTime);
-
-
-
-Ví dụ 2: Time-based cache / expiring data
-// Lưu dữ liệu theo timestamp
-ConcurrentNavigableMap<Long, MyData> cache = new ConcurrentSkipListMap<>();
-
-// Periodic cleanup thread:
-long cutoff = System.currentTimeMillis() - 5 * 60 * 1000;
-cache.headMap(cutoff).clear(); // clear các item đã hết hạn
-
-
-
-
-# 🚧 7. Cần lưu ý gì khi dùng? 
-
-	- Không phù hợp cho insert-heavy system với key ngẫu nhiên nếu chỉ cần hash-access.
-	- Nếu không cần thứ tự → Dùng ConcurrentHashMap nhanh hơn, tốn ít bộ nhớ hơn.
-	- Không nên lạm dụng subMap() nếu thao tác rất nhiều thread → có thể bị contention nếu vùng overlap nhau.
-
-
-# 🧠 8. Kiến thức cần để làm chủ ConcurrentNavigableMap
-
-| Kiến thức             | Mục tiêu                                                   |
-| --------------------- | ---------------------------------------------------------- |
-| Java Memory Model     | Hiểu volatile, happens-before, visibility giữa threads     |
-| Lock-free Programming | CAS, atomic variables, contention                          |
-| Skip List             | Cấu trúc, ưu nhược điểm, so sánh với BST                   |
-| NavigableMap API      | Sử dụng hiệu quả các hàm `subMap`, `tailMap`, `ceilingKey` |
-| Benchmark/Profiling   | So sánh thực tế với các concurrent map khác                |
-
+# 8. 🧠 Tổng kết 
+| Cấu trúc      | Ưu điểm                                 | Nhược điểm                       |
+| ------------- | --------------------------------------- | -------------------------------- |
+| **B-Tree**    | Cân bằng tuyệt đối, ít tầng, tối ưu I/O | Phức tạp, insert/delete tốn công |
+| **B+ Tree**   | Tối ưu scan range, all data ở leaf      | Truy cập key trung gian mất công |
+| **AVL Tree**  | Cực kỳ cân bằng, lookup nhanh           | Update phức tạp, nhiều rotation  |
+| **Red-Black** | Cân bằng tốt, insert nhanh              | Duyệt range chậm                 |
+| **Treap**     | Random balance, đơn giản, nhanh         | Không đảm bảo worst-case         |
+| **Skip List** | Lock-free, concurrent tốt               | Memory overhead cao              |
 
 
 </pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

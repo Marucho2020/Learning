@@ -1,152 +1,164 @@
-<html><head><title>Lesson 117 == Concurrent Tree ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 117 -- Concurrent Tree -//</h1><pre>
-# Khái niệm 
-	Concurrent Tree là một nhánh nâng cao trong thiết kế cấu trúc dữ liệu dùng cho đa luồng (multi-threading), nơi mà các cây như Binary Search Tree, AVL, Red-Black Tree, B-Tree... được thiết kế để hỗ trợ truy cập và cập nhật song song mà vẫn đảm bảo đúng logic và không xảy ra race condition.
+<html><head><title>Lesson 117 == Segment Tree ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 117 -- Segment Tree -//</h1><pre># Khái niệm 
+	Segment Tree là một cấu trúc dữ liệu cây cực kỳ mạnh mẽ, được thiết kế để xử lý nhanh các bài toán dạng range query + update. Ở level senior system engineer / backend optimization, hiểu và sử dụng Segment Tree giúp bạn:
 	
-	Tại level senior system architect, bạn cần hiểu:
+	-  Giảm độ phức tạp từ O(n) xuống O(log n) cho các bài toán range
+	-  Tối ưu xử lý dữ liệu lớn (data stream, time-series)
+	-  Ứng dụng trong database engine, game engine, analytics, real-time monitoring...
 
-		Tại sao Concurrent Tree lại khó.
-		Các kỹ thuật đồng bộ hóa và tối ưu được dùng để giải quyết.
-		Cách triển khai một cây dữ liệu có thể chịu được tải cao trong môi trường đa luồng.
-		Những trade-off giữa hiệu năng và tính đồng bộ
+# 🧠 1. MỤC TIÊU CỦA SEGMENT TREE
 
-
-# 🧠 VẤN ĐỀ CỐT LÕI KHI DÙNG TREE TRONG MULTITHREADING
-
-	❌ Vấn đề: 
-		Race condition: 2 thread chạm cùng 1 node hoặc subtree.
-		Deadlock: nếu locking không đúng thứ tự.
-		Starvation: thread bị đói tài nguyên
-		Cache coherence và false sharing ảnh hưởng hiệu năng.
+	Cho 1 mảng số A[0...n-1], bạn cần xử lý nhiều truy vấn dạng:
+		- query(l, r) → tổng, min, max, GCD, XOR, đếm số âm… 
+		- update(i, val) → thay đổi phần tử ở vị trí i 
 		
+	Nếu xử lý bằng cách duyệt đoạn [l, r] thì mỗi truy vấn là O(n) → không chấp nhận được nếu có tới hàng triệu lần gọi.
+	➡️ Segment Tree giải quyết bằng cách chia mảng ra thành các đoạn (segment), lưu thông tin của từng đoạn.
+	
+	
+	
+# 🌲 2. CẤU TRÚC VÀ Ý TƯỞNG 
+	Là cây nhị phân, mỗi node quản lý 1 đoạn con của mảng.
+	
+		Root quản lý đoạn [0, n-1]
+		Mỗi node chia đôi thành hai đoạn con: [l, mid] và [mid+1, r]
+		Lá tương ứng với từng phần tử đơn lẻ.
+		Mỗi node lưu thông tin đã xử lý (tổng, min, max…) 
 		
-# 	✅ YÊU CẦU CỦA 1 CONCURRENT TREE 
-| Yêu cầu                     | Diễn giải                                |
-| --------------------------- | ---------------------------------------- |
-| **Thread-safe**             | Đảm bảo truy cập đúng khi có nhiều luồng |
-| **Non-blocking (tùy chọn)** | Có thể dùng lock-free nếu cần            |
-| **Hiệu năng cao**           | Scale với số thread                      |
-| **Consistency**             | Cây luôn giữ đúng trạng thái             |
-
-
-# 🔧 CÁC CHIẾN LƯỢC ĐỒNG BỘ (LOCKING STRATEGIES)
-
-
-	## 1 . Global Lock
-		Lock toàn bộ cây mỗi lần truy cập 
-		Đơn giản, hiệu năng thấp → bottleneck 
+Ví dụ: A = [5, 8, 6, 3, 2, 7, 4, 6]
 		
-	## 	2. Fine-Grained Locking 
-		Mỗi node có lock riêng (ReentrantLock) 
+                            [0,7]
+                          /       \
+                     [0,3]         [4,7]
+                    /    \         /    \
+                [0,1]  [2,3]   [4,5]   [6,7]
+                / \     / \    / \     / \
+              [0][1] [2][3] [4][5]  [6][7]
+	
+
+
+
+# 📏 3. CÁC TÁC VỤ CHÍNH 
+	## ✅ Xây cây: build(A) 
+		Đệ quy chia mảng thành đoạn con 
+		Tính giá trị tại từng node (tổng, min…)
+		⏱️ Độ phức tạp: O(n)
+
+
+	## ✅ Truy vấn đoạn: query(l, r) 
+		Đệ quy duyệt xuống cây 
+		Nếu đoạn con nằm trong phạm vi, lấy node
+		Nếu đoạn con cắt nhau, duyệt cả hai bên
+		⏱️ Độ phức tạp: O(log n)
 		
-node.lock();
-try {
-   if (key < node.key)
-       go left;
-   else
-       go right;
-} finally {
-   node.unlock();
+	## ✅ Cập nhật phần tử: update(i, val) 
+		Duyệt xuống cây đến lá tương ứng 
+		Cập nhật node và các tổ tiên
+		
+	⏱️ Độ phức tạp: O(log n)	
+
+
+
+# 🛠️ 4. CÀI ĐẶT JAVA
+class SegmentTree {
+    int[] tree;
+    int n;
+
+    public SegmentTree(int[] arr) {
+        n = arr.length;
+        tree = new int[4 * n]; // đủ chỗ
+        build(arr, 0, 0, n - 1);
+    }
+
+    void build(int[] arr, int node, int l, int r) {
+        if (l == r) {
+            tree[node] = arr[l];
+        } else {
+            int mid = (l + r) / 2;
+            build(arr, 2 * node + 1, l, mid);
+            build(arr, 2 * node + 2, mid + 1, r);
+            tree[node] = tree[2 * node + 1] + tree[2 * node + 2];
+        }
+    }
+
+    int query(int node, int l, int r, int ql, int qr) {
+        if (qr < l || ql > r) return 0;
+        if (ql <= l && r <= qr) return tree[node];
+        int mid = (l + r) / 2;
+        return query(2 * node + 1, l, mid, ql, qr) +
+               query(2 * node + 2, mid + 1, r, ql, qr);
+    }
+
+    void update(int node, int l, int r, int idx, int val) {
+        if (l == r) {
+            tree[node] = val;
+        } else {
+            int mid = (l + r) / 2;
+            if (idx <= mid)
+                update(2 * node + 1, l, mid, idx, val);
+            else
+                update(2 * node + 2, mid + 1, r, idx, val);
+            tree[node] = tree[2 * node + 1] + tree[2 * node + 2];
+        }
+    }
+
+    // Helper
+    public int rangeQuery(int l, int r) {
+        return query(0, 0, n - 1, l, r);
+    }
+
+    public void pointUpdate(int idx, int val) {
+        update(0, 0, n - 1, idx, val);
+    }
 }
 
-	Cho phép truy cập song song ở các nhánh khác nhau
-	Dễ deadlock nếu không cẩn thận với thứ tự lock
+
+
+# 🚀 5. ỨNG DỤNG TRONG HỆ THỐNG
+
+| Ứng dụng                        | Lý do sử dụng Segment Tree       |
+| ------------------------------- | -------------------------------- |
+| Game server real-time combat    | Range damage, range heal         |
+| Financial system (streaming)    | Query trên time series           |
+| Compiler / IDE                  | Phát hiện lỗi trên đoạn code     |
+| Search engine                   | Đếm số term xuất hiện theo range |
+| Database (Column store)         | Bitmap index, summary tree       |
+| Analytics Engine (log / metric) | Query giá trị trong range        |
+
+
+# 🔥 6. NÂNG CAO: Lazy Propagation 
+
+	Khi có nhiều truy vấn update(l, r) (cập nhật cả đoạn), việc cập nhật từng node rất tốn thời gian.
+
+	→ Dùng kỹ thuật Lazy Propagation:
 	
-
-	## 3. Hand-over-hand locking (Lock Coupling)
-		Lock node hiện tại → lock node tiếp theo → rồi mới unlock node hiện tại 
-		
-		-> Giữ tính nhất quán khi duyệt
-		-> Tốt hơn fine-grained nhưng vẫn blocking 
-
-
-
-
-## 🔥 LOCK-FREE TREE (ADVANCED) 
-	✨ Không dùng lock (dùng CAS – Compare and Swap) 
-			- Dựa vào AtomicReference, VarHandle, Unsafe 
-			- Dùng versioned pointers, logical deletion, marking flags
-			- Rất khó debug, chỉ dùng trong hệ thống cực kỳ yêu cầu hiệu suất 
-			
-		Ví dụ: Concurrent Skip List trong Java (ConcurrentSkipListMap) là lock-free tree-based structure.
-
-
-
-# 🌳 LOẠI CÂY PHÙ HỢP MULTITHREADING 
-| Cây                    | Có dùng concurrent version không?        | Ghi chú                            |
-| ---------------------- | ---------------------------------------- | ---------------------------------- |
-| BST                    | Có (tùy chỉnh locking)                   | Khó cân bằng                       |
-| AVL                    | Có (phức tạp do rotation)                | Cần phối hợp lock xoay cây         |
-| Red-Black Tree         | Có, nhưng rotation phức tạp              | Chỉ dùng nếu cần sorted map        |
-| Treap                  | Có, đơn giản rotation                    | Randomized balance giảm tranh chấp |
-| Skip List              | ✅ Dễ lock-free                           | Java dùng cho ConcurrentMap        |
-| B-Tree / B+Tree        | ✅ Dùng trong database (RocksDB, LevelDB) | Hỗ trợ concurrent insert/scan      |
-| Segment Tree / Fenwick | Hiếm (ít use case concurrent)            | Chủ yếu đọc nhiều, ít ghi          |
-
-
-
-# 📦 JAVA EXAMPLE: Concurrent Skip List
-Java có sẵn ConcurrentSkipListMap<K, V> là 1 lock-free sorted map:
-
-ConcurrentSkipListMap<Integer, String> map = new ConcurrentSkipListMap<>();
-map.put(10, "A");
-map.put(20, "B");
-map.remove(10);
-
-
-	Được dùng trong ConcurrentHashMap, ConcurrentNavigableMap
-	Cho phép insert/search/delete đồng thời
+		Đánh dấu node chưa cập nhật
+		Khi nào truy vấn đến thì mới cập nhật (lazy)
 	
-	
-	
-# 	🔬 EXAMPLE: Concurrent Red-Black Tree (Khó)
-	
-	Bạn phải:
-	
-		Lock theo từng node (fine-grain)
-		Trong xoay cây (rotation), lock 2-3 node cùng lúc
-		Ghi nhớ việc đổi màu và giữ cây balanced
-	
-	Pseudo-code Lock Coupling (insert) 
-	
-parent.lock();
-Node curr = parent.left;
+	Kết quả: Cả update và query vẫn giữ O(log n)
 
-while (curr != null) {
-    curr.lock();
-    parent.unlock();
-    parent = curr;
-    curr = (key < curr.key) ? curr.left : curr.right;
-}
-insert node;
-parent.unlock();
-	
-# 	⚖️ TRADE-OFF KHI DÙNG CONCURRENT TREE
-	
-| Ưu điểm                        | Nhược điểm                              |
-| ------------------------------ | --------------------------------------- |
-| Hỗ trợ truy cập song song      | Phức tạp về locking                     |
-| Dữ liệu luôn đúng              | Dễ deadlock hoặc starvation             |
-| Tốt hơn Hashtable (nếu sorted) | Tốn bộ nhớ (extra lock fields)          |
-| Có thể lock-free (SkipList)    | Không phù hợp cho update-heavy workload |
-	
-	
-# 	📘 KIẾN THỨC CẦN NẮM VỮNG ĐỂ LÀM CHỦ CONCURRENT TREE 
-| Kiến thức                  | Mục tiêu                                               |
-| -------------------------- | ------------------------------------------------------ |
-| Tree Rotation, Balance     | Hiểu logic tự cân bằng khi có nhiều thread             |
-| Concurrency in Java        | Lock, volatile, atomic, `ReentrantLock`, `StampedLock` |
-| CAS operation              | Dùng `AtomicReference`, `compareAndSet()`              |
-| Memory model               | Happens-before, visibility                             |
-| Lock-free data structure   | SkipList, Treiber Stack, Michael-Scott Queue           |
-| Thread-safe design pattern | Copy-on-write, immutable tree                          |
+# 🎓 7. NHỮNG THỨ CẦN HỌC THÊM
+
+| Chủ đề                  | Mục tiêu                          |
+| ----------------------- | --------------------------------- |
+| Lazy Propagation        | Xử lý update theo đoạn            |
+| Persistent Segment Tree | Undo/redo, versioning             |
+| Merge Sort Tree         | Query thứ hạng (order statistic)  |
+| Segment Tree Beats      | Complex range (max/min update...) |
+| Segment Tree 2D         | Xử lý range query trong ma trận   |
+| Fenwick Tree (BIT)      | So sánh và lựa chọn               |
 
 
-# 🎯 ỨNG DỤNG THỰC TẾ
 
-	Database: RocksDB, LevelDB dùng concurrent B+Tree
-	Search engine: Lucene sử dụng concurrent tree structures
-	In-memory cache: Sorted LRU caches cần concurrent AVL / RBT
-	Realtime analytics: Dữ liệu streaming cần update/scan song song
+# ✅ TÓM TẮT 
+
+| Tính năng         | Segment Tree           |
+| ----------------- | ---------------------- |
+| Truy vấn đoạn     | `O(log n)`             |
+| Cập nhật          | `O(log n)`             |
+| Dùng nhiều memory | `4 * n` phần tử        |
+| Tối ưu disk?      | Không (chạy trong RAM) |
+| Nâng cấp          | Lazy, Persistent, 2D   |
+
 
 
 </pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

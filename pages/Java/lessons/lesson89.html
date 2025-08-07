@@ -1,122 +1,41 @@
-<html><head><title>Lesson 89 == Xử lý file upload trong Spring MVC ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 89 -- Xử lý file upload trong Spring MVC -//</h1><pre>
-# ⚙️ 1. Cơ bản: Xử lý file upload với MultipartFile 
-	Spring MVC hỗ trợ upload file thông qua MultipartFile.
-
-
-
-	## ✅ Controller mẫu: 
-			@PostMapping("/upload")
-			public ResponseEntity<String> handleFileUpload(@RequestParam("file") MultipartFile file) {
-				if (file.isEmpty()) {
-					return ResponseEntity.badRequest().body("File is empty");
-				}
-			
-				try {
-					Path uploadPath = Paths.get("uploads/" + file.getOriginalFilename());
-					Files.copy(file.getInputStream(), uploadPath, StandardCopyOption.REPLACE_EXISTING);
-					return ResponseEntity.ok("File uploaded successfully");
-				} catch (IOException e) {
-					throw new RuntimeException("Failed to upload file", e);
-				}
-			}
-					
-			
-
-
-# 🔐 2. Quan điểm của một senior: Những vấn đề cần xử lý bắt buộc
-
-	## a. Bảo mật 
-		### Không bao giờ tin tưởng tên file từ client.
-			String safeFilename = StringUtils.cleanPath(Objects.requireNonNull(file.getOriginalFilename()));
-		
-		
-		### Chống path traversal (../../etc/passwd): Validate tên file.
-			
-		### Giới hạn kích thước file – tránh DoS bằng file lớn.
-			Cấu hình trong application.properties:
-				spring.servlet.multipart.max-file-size=5MB
-				spring.servlet.multipart.max-request-size=5MB
-
-
-	## b. Kiểm tra loại file 
-		Đừng dựa vào tên file hoặc content-type từ client. Dùng thư viện như Apache Tika để xác định loại file thực:
-		
-				Tika tika = new Tika();
-				String mimeType = tika.detect(file.getInputStream());
-
-
-
-
-# c. Xử lý song song & đa luồng 
+<html><head><title>Lesson 89 == A/B Testting ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 89 -- A/B Testting -//</h1><pre>
+# Khái niệm 
 	
-		Nếu xử lý file nặng, hãy đưa vào background thread, message queue (RabbitMQ, Kafka), hoặc offload qua microservice khác.
+A/B Testing là một phương pháp kiểm thử và tối ưu hóa sản phẩm/dịch vụ thông qua việc chia tách người dùng thành các nhóm khác nhau, mỗi nhóm được trải nghiệm một phiên bản khác nhau của sản phẩm. Phương pháp này giúp so sánh hiệu quả của các biến thể khác nhau để xác định cái nào mang lại kết quả tốt hơn về mặt chuyển đổi, trải nghiệm người dùng, hoặc các chỉ số KPI quan trọng.
 
 
-# d. Không lưu vào thư mục /uploads cứng 
+# Quy trình 
+	
+	## 1 . Xác định mục tiêu:  
+		Đầu tiên, bạn cần xác định rõ mục tiêu thử nghiệm. Ví dụ, bạn muốn tăng tỷ lệ chuyển đổi trên trang đăng ký hoặc giảm tỷ lệ thoát trang.
 		
-
-	## Lưu trữ nên trừu tượng:
-
-		Lưu vào filesystem (dev/test)
+	## 2. Chọn biến thể: 
+		 Bạn chia thử nghiệm thành hai nhóm. Nhóm A sẽ thấy phiên bản gốc, trong khi nhóm B sẽ thấy phiên bản đã được thay đổi một yếu tố (có thể là giao diện, lời kêu gọi hành động, tốc độ tải trang, v.v.). 
+		 
+	## 3. Đo lường và phân tích:  
+		Sau khi thử nghiệm được thực hiện trên một mẫu người dùng đủ lớn, bạn thu thập dữ liệu và phân tích để so sánh hiệu quả của hai nhóm.
 		
-		Lưu vào Amazon S3, Google Cloud Storage (prod)
-		
-		Lưu vào database BLOB (nếu thực sự cần – ví dụ: ảnh avatar nhỏ)
-
-	## Viết class StorageService interface để dễ mở rộng:
-
-		public interface StorageService {
-			void save(MultipartFile file);
-			Resource load(String filename);
-		}
-		Dễ unit test, mock, triển khai khác nhau. 
-
-
-# 🔁 3. Upload nhiều file
-
-		@PostMapping("/uploadMultiple")
-		public ResponseEntity<?> uploadMultiple(@RequestParam("files") MultipartFile[] files) {
-			List<String> filenames = new ArrayList<>();
-			for (MultipartFile file : files) {
-				storageService.save(file);
-				filenames.add(file.getOriginalFilename());
-			}
-			return ResponseEntity.ok("Uploaded: " + String.join(", ", filenames));
-		}
+	## 	4. Quyết định: 
+		 Dựa trên kết quả, bạn quyết định giữ lại phiên bản nào hoặc thử nghiệm thêm các yếu tố khác. 
+			
+# Ứng dụng trong phát triển phần mềm: 
+	A/B Testing thường xuyên được sử dụng trong các dịch vụ web để tối ưu hóa trải nghiệm người dùng. Ví dụ, khi triển khai giao diện mới, bạn có thể dùng A/B Testing để xem liệu giao diện mới có tăng số lượng người dùng sử dụng tính năng hay không. 
+	
+	Trong AI, A/B Testing có thể được áp dụng để thử nghiệm các mô hình hoặc thuật toán khác nhau để xem mô hình nào có hiệu quả hơn đối với người dùng.
+	
+	
+# Nhược điểm và lưu ý: 
 
 
- 
-
-# 🧠 4. Kinh nghiệm battle-tested (senior-level) 
+	## Mẫu dữ liệu nhỏ:
+		A/B Testing chỉ chính xác khi mẫu người dùng đủ lớn để tạo ra sự khác biệt có ý nghĩa thống kê. 
+	
+	## Kiểm thử chéo: 
+		Nếu thử nghiệm không được triển khai đúng cách, một nhóm người dùng có thể bị ảnh hưởng bởi các yếu tố ngoài thử nghiệm.
+	
 	
 
 
-Vấn đề thực tế											Cách xử lý chuyên nghiệp
-Tải file độc hại (virus/malware)					Tích hợp virus scanner như ClamAV
-Tải nhầm file (format sai)							Kiểm tra định dạng bằng byte header (magic number)
-Ghi đè file cũ										Tạo tên file duy nhất bằng UUID hoặc hash
-Sự cố khi lưu file (disk full, permission)			Bắt lỗi chi tiết, log cẩn thận, rollback nếu cần
-Audit & traceability								Log người upload, IP, tên file, timestamp
-Lưu metadata file (kích thước, type)				Ghi vào database cho dễ query
 
-
-
-
-
-# 📦 5. Spring Boot + REST + Frontend 
-	Với frontend (React, Vue, v.v.) → cần endpoint dạng multipart/form-data.
-	CORS phải được xử lý nếu frontend chạy riêng port:
-	
-			@CrossOrigin(origins = "*")
-			@PostMapping("/upload")
-			public ResponseEntity<?> upload(@RequestParam MultipartFile file) { ... }
-
-
-Muốn lên Java Gold hay làm lead trong microservice architecture, thì:
-	Hãy trừu tượng phần lưu file
-	Tách logic upload ra khỏi controller
-	Luôn validate input từ client
-	Logging đầy đủ để trace issue
-	Chuẩn bị cho scale (phân tán file, queue xử lý async)
 
 </pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

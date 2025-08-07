@@ -1,84 +1,107 @@
-<html><head><title>Lesson 100 == Audit Trail ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 100 -- Audit Trail -//</h1><pre>
-# Khái niệm 
-	Audit Trail = Nhật ký hành động chi tiết: ai đã làm gì, khi nào, vào đâu.
-	Khác với lineage (theo dõi dữ liệu), audit trail theo dõi hành vi người dùng hoặc hệ thống.
+<html><head><title>Lesson 100 == Secrets Management ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 100 -- Secrets Management -//</h1><pre>
+# Khái niệm  
+	Secrets Management - Bảo vệ dữ liệu nhạy cảm trong hệ thống CI/CD & IaC 
 	
-	## Ví dụ: 
-			Thời gian		 	| Người dùng			 | Hành động
-			2025-04-10 12:00 	| admin 				| Đăng nhập
-			2025-04-10 12:05 	| admin 				| Cập nhật config API
-			2025-04-10 12:07 	| system 				| Trigger deploy
-
-
-
-# 📌 Mục tiêu của Audit Trail 
-	
-		Mục tiêu 							| Giải thích
-		✅ Bảo mật					  	 | Nếu hệ thống bị tấn công → cần biết ai làm gì
-		✅ Tuân thủ 				  	 | Nhiều ngành yêu cầu lưu log hành động (GDPR, HIPAA)
-		✅ Khắc phục sự cố 				 | Biết người dùng nào xóa nhầm, v.v.
-		✅ Accountability				 | Không ai có thể nói "tôi không biết"
-
-
-
-# 🧰 Công cụ triển khai Audit Trail 
-
-		## Trong application: 
+	Là mọi loại thông tin nhạy cảm, nếu lộ ra thì : 
+		-  Mất bảo mật 
+		- Dễ bị khai thác 
+		- Có thể phá hủy cả hệ thống hoặc mất tiền 
 		
-			Log mọi hành động quan trọng (create/update/delete) 
+	
+	## Vi dụ 
+	Loại Secrets				Ví dụ
+	API Keys				AWS_ACCESS_KEY, GOOGLE_API_KEY
+	Database				DB_PASSWORD, ROOT_PASSWORD
+	Token					JWT_SECRET, OAUTH_TOKEN
+	SSH Keys				~/.ssh/id_rsa
+	TLS Cert				private.key, cert.pem
+	Encryption				ENCRYPTION_SALT, AES_KEY	
+
+# Nếu không quản lý đúng , điều gì sẽ xảy ra 
+	
+	- Secrets bị push vào GitHub công khai -> lộ key AWS -> mất tiền vài ngàn USD trong vài giờ 
+	- Dev lưu secrets trong .env file -> ai cũng đọc được 
+	- Jenkins lưu token dạng plaintext -> bị xâm nhập 
+	
+# Cách quản lý đúng cách 
+	
+	- Thêm .env vào .gitignore 
+	- Dùng git-secrets, truffleHog, gitleaks để quét trước khi push 
+	
+
+	## Lưu secrets ở nơi chuyên biệt 
+		
+		Giải pháp						 | Mô tả														| Mạnh khi
+		HashiCorp Vault 			| Hệ thống quản lý secrets chuyên nghiệp 						| System lớn, high-security
+		AWS Secrets Manager 		| Lưu secrets native trong AWS, rotate được						| Hạ tầng trên AWS
+		AWS Parameter Store (SSM)	| Rẻ hơn, đơn giản 												| Secrets đơn giản
+		GCP Secret Manager 			| Native cho Google Cloud 										| Dự án GCP
+		Kubernetes Secrets 			| Lưu secrets trong cluster 									| Tích hợp CI/CD & ArgoCD
+		SOPS + GitOps				| Secrets mã hoá lưu trong Git → dùng SOPS decrypt khi chạy		| GitOps pipeline
+
+
+	
+	## Inject secrets vào runtime - không hardcode 
+		- dùng enviroment variable (từ CI/CI hoặc K8s)
+		- Mount secret volume container 
+		- Hoặc đọc trực tiếp từ Vault API / AWS Secrets Manage SDK 
+		
+
+# Secrets trong CI/CD pipeline 
+
+	Không được viết thẳng và YAML -> dùng cơ chế riêng 
+		
+		CI Tool						 | Secrets hỗ trợ
+		GitHub Actions				 | secrets.* → trong repo settings
+		GitLab CI					 | CI/CD Variables + masked/protected
+		Jenkins						 | Credentials Plugin
+		ArgoCD						 | Dùng Sealed Secrets hoặc SOPS
+		Terraform 					 | Dùng Vault Provider hoặc remote backend
+		Docker 						 | Dùng --secret, hoặc mount secret file	
+
+
+
+# Kết hợp với IaC 
+Ví dụ với Terraform + Vault: 
+
+			provider "vault" {
+			address = "https://vault.mycompany.com"
+			}
 			
-			Ghi log thành structured logs (JSON)
+			data "vault_generic_secret" "aws_creds" {
+			path = "secret/aws"
+			}
 			
-					{
-					"timestamp": "2025-04-10T12:05:00Z",
-					"user": "admin",
-					"action": "update_api_config",
-					"resource": "/api/config",
-					"ip": "192.168.1.10"
-					}
-		
-		
-		
-		## Trong kubernetes/system level:
-		
-				Dùng Falco để audit hành vi pod/container
-				Dùng OPA Gatekeeper để enforce policy
-				Dùng audit webhook trong K8s để ghi log
-
-		
+			provider "aws" {
+			access_key = data.vault_generic_secret.aws_creds.data["access_key"]
+			secret_key = data.vault_generic_secret.aws_creds.data["secret_key"]
+			}
+			
 
 
 
 
+# Pro-level: GitOps + Secrets với SOPS + Sealed Secrets 
 
-		## Trong cloud: 
-			Cloud 			| Tool
-			AWS 			| CloudTrail
-			GCP 			| Cloud Audit Logs
-			Azure 			| Monitor Logs
+	✨ Mô hình:
+		Secrets được mã hoá bằng SOPS
+		Lưu trữ file .enc.yaml trong Git repo
+		ArgoCD tự giải mã tại runtime (dùng key trong K8s)
+		Dễ audit, rollback, không bao giờ lộ plaintext
 
 
 
-# 💥 Senior-Level Best Practices 
+
+
+
+# ✅ Best Practices (Senior-level) 
 	
 
-Thực hành tốt															| Mục tiêu
-✅ Mọi dữ liệu nhạy cảm đều có Lineage 							 		| Để trace nếu lỗi phát sinh
-✅ Mọi API quan trọng có Audit log										| Để phát hiện abuse, debugging
-✅ Tách biệt log Audit và App log 										| Audit cần lưu dài hạn, bảo mật
-✅ Không chỉ log user, mà còn log hệ thống (cron, scheduler, agent)   	| Để tránh blame nhầm
-✅ Encrypt & phân quyền access log 									  	| Tránh dev đọc log chứa token
-
-
-
-# 🧠 Kết luận 
-
-So sánh 				| Data Lineage 								| Audit Trail
-Ghi gì? 				| Dòng chảy dữ liệu 						| Hành vi người dùng / hệ thống
-Mục tiêu 				| Debug pipeline, data trust				| Tuân thủ, bảo mật, accountability
-Người đọc 				| Data engineer, AI/ML 						| Security, DevOps, Compliance
-Dữ liệu đầu vào 		| Job metadata, schema, pipeline config 	| HTTP logs, user actions, system logs
-
+		✅ Làm đúng 									| ❌ Tuyệt đối tránh
+		Lưu secrets trong Vault / AWS SM 				| Push .env vào Git
+		Dùng env var + vault agent	 					| Hardcode secrets vào code
+		Rotate key định kỳ			 					| Dùng key hết hạn, không đổi
+		Giới hạn scope & permission  					| Cấp quyền full-access cho mọi container
 
 
 </pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

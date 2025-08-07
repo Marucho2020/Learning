@@ -1,30 +1,23 @@
-<html><head><title>Lesson 81 == mTLS (Mutual TLS -  Chứng thực TLS hai chiều) ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 81 -- mTLS (Mutual TLS -  Chứng thực TLS hai chiều) -//</h1><pre>
-# Định nghĩa 
-	mTLS là cơ chế xác thực hai chiều tỏng giao tiếp giữa client và server, trong đó cả hai đều sử dụng chứng chỉ TLS để xác minh danh tính của nhau 
+<html><head><title>Lesson 81 == Observability ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 81 -- Observability -//</h1><pre>
+# Khái niệm 
+	Observability(Khả năng quan sát hệ thống ) : là khả năng theo dõi trạng thái hệ thống thông qua log, metrics , tracing 
 	
-
-# Cách hoạt động 
-	- Client gửi yêu cầu kết nối đến server 
-	- Server gửi chứng chỉ TLS của nó cho client để xác thực 
-	- Client cũng gửi chứng chỉ TLS của mình để server xác thực ngược lại 
-	- Cả hai xác thực thành công -> kết nối được thiết lập với mã hóa mạnh 
-	
-# Ưu điểm 
-	
-	- Bảo mật cao : Ngăn chặn tấn công Man-in-the-Middle(MITM)
-	- Không cần mật khẩu : Xác thực thông qua chứng chỉ số 
-	- Bảo vệ API và Service Mesh : Được dùng trong Istio, Envoy, Kubernetes để bảo mật giao tiếp giữa microservices 
+# Mục tiêu 
+	- Dễ dàng phát hiện lỗi khi có sự cố 
+	- Giám sát hiệu suất của hệ thống 
+	- Phân tích luồng request giữa các service 
 	
 	
-# Nhược điểm : 
-
-	- Phức tạp : Phải quản lý chứng chỉ(xử lý gia hạn, phân phối)
-	- Tốn tài nguyên : Xác thực chứng chỉ tốn thời gian hơn so với JWT 
+# Các thành phần chính 
+	- Logging(Nhật ký) : Lưu thông tin sự kiện(ELK Stack, Loki)
+	- Metrics(Đo lường hiệu suất ): thu thập số liệu (Prometheus ,  Grafana )
+	- Tracing(theo dõi luồng request ) : Hiển thị flow request giữa các service (Jaeger , Zipkin)
+	
 	
 # Triển khai trong thực tế : 
-	- Spring Boot + Istio : Dùng mTLS để bảo mật service-to-service 
-	- Envoy Proxy : Cấu hình mTLS để xác thực giữa microservices 
-	- Nginx + Cert-Manager : Cấp phát và quản lý chứng chỉ tự động 
+	- Spring Boot Actuator : Thu thập metrics , logs 
+	- Envoy Proxy : Hỗ trợ tracing với Open Telemetry 
+	- Istio : cung cấp Kiali để giám sát topology  hệ thống 
 	
-
+	
 </pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
