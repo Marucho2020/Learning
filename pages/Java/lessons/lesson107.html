@@ -1,167 +1,164 @@
-<html><head><title>Lesson 107 == Double Linked List ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 107 -- Double Linked List -//</h1><pre>
+<html><head><title>Lesson 107 == Skip List ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 107 -- Skip List -//</h1><pre>
 # Khái niệm 
-	Là một cấu trúc dữ liệu tuyến tính, gồm các node, mỗi node chứa: 
-		1. Giá trị (data), 
-		2. Con trỏ đến node trước (prev), 
-		3. Con trỏ đến node sau (next). 
+	Skip List là một cấu trúc dữ liệu kết hợp giữa linked list và binary search tree,  được thiết kế để duy trì dữ liệu có thứ tự và hỗ trợ tìm kiếm, chèn xóa, hiệu quả O(log n)
 		
-		NULL <- [1] <-> [2] <-> [3] <-> [4] -> NULL
+		Ý tưởng : Thêm nhiều tầng (level) linked list phía trên để nhảy cóc qua các phần tử -> giúp tìm kiếm nhanh hơn mà không cần cấu trúc cây phức tạp  
 
 
-# 🧠 II. Cấu trúc bên trong node 
+# 📊 2. Cấu trúc tổng quan 
 	
-class Node {
-    int data;
-    Node prev;
-    Node next;
+	Skip List gồm nhiều lớp danh sách liên kết (linked list), mỗi lớp cao hơn là một bản rút gọn của lớp dưới: 
+	
+		Level 0: Là danh sách đầy đủ, chứa mọi phần tử.	
+		Level 1+: Chứa ngẫu nhiên một phần các phần tử (theo xác suất p). 
+		
+		Level 2:     A ----------- G
+		Level 1:     A ---- C ---- G
+		Level 0: A - B - C - D - E - F - G
 
-    Node(int data) {
-        this.data = data;
+		Khi tìm G: A → C → G ở level 1 (bỏ qua hàng loạt phần tử trung gian).
+		Mỗi node có thể có nhiều “next pointers” ở các level khác nhau.
+		
+		
+# 🧪 3. Vì sao cần Skip List? 
+
+Thứ bạn cần 								| Giải pháp thường dùng		
+
+Tìm kiếm nhanh trên dữ liệu có thứ tự 		| Tree (AVL, Red-Black) 	
+Cấu trúc dễ concurrent (multi-thread) 		| Tree khó đồng bộ 			
+HashMap có thứ tự							 | TreeMap					
+
+	<next>
+		| Vấn đề 								| Skip List giải quyết
+		
+		| Cài đặt phức tạp, xoay node			| Đơn giản, randomize, dễ song song
+		| Dễ deadlock 							| Skip List dễ parallelize
+		| Nhưng phức tạp 						| ConcurrentSkipListMap là giải pháp		
+
+
+
+# ⏱️ 4. Độ phức tạp 
+	
+Operation 			| Thời gian
+Search 				| O(log n)
+Insert 				| O(log n)
+Delete 				| O(log n)
+Space				| O(n)
+
+So với TreeMap (Red-Black Tree): hiệu năng tương đương, nhưng cài đặt đơn giản và dễ song song hóa hơn.
+
+
+
+
+# ⚙️ 5. Triển khai thủ công Skip List (Java simplified) 
+
+class SkipNode {
+    int value;
+    SkipNode[] forward;
+
+    public SkipNode(int level, int value) {
+        this.value = value;
+        this.forward = new SkipNode[level + 1];
     }
 }
 
-		Mỗi node đều có 2 chiều: đi tới (next) và quay lại (prev) → hỗ trợ truy cập 2 chiều và xoá/chèn linh hoạt hơn so với Singly Linked List.
+class SkipList {
+    private static final int MAX_LEVEL = 4;
+    private final double P = 0.5;
+    private SkipNode head = new SkipNode(MAX_LEVEL, Integer.MIN_VALUE);
+    private int level = 0;
 
-
-
-# 🧰 III. Các thao tác cơ bản 
-
-Operation		 	| Mục đích 				| Phức tạp 						| Tư duy
-insertHead()	 	| Chèn đầu 				| O(1)							| Gắn prev/next, cập nhật head
-insertTail() 	 	| Chèn cuối 			| O(1) (tail), O(n) or not 		| Truy cập tail, cập nhật con trỏ
-deleteNode(Node n)  | Xóa node cụ thể 		| O(1) 							| Cập nhật n.prev.next và n.next.prev
-traverseForward()	| Duyệt xuôi 			| O(n) 							| Đi từ head → next
-traverseBackward()  | Duyệt ngược 			| O(n) 							| Đi từ tail → prev
-
-
-
-# 🧠 IV. Ưu điểm thực sự của Doubly Linked List 
-
-Ưu điểm 									| Vì sao quan trọng trong hệ thống lớn
-Truy cập 2 chiều 							| Quản lý undo/redo, back/forward (browser)
-Xóa/chèn O(1) nếu có con trỏ 				| Scheduler, task queue với loại bỏ linh hoạt
-Không cần duyệt toàn bộ để xóa phần tử 		| Tốt hơn ArrayList trong các thao tác insert/delete giữa danh sách
-Có thể cắt nối / merge danh sách dễ dàng 	| Dùng trong cấu trúc LRU Cache, Media playlist, Job Queue
-
-
-
-# ⚖️ V. So sánh với các cấu trúc khác 
-	
-
-Cấu trúc 		| Truy cập ngẫu nhiên	 | Thêm/Xoá đầu/cuối 		| Truy cập 2 chiều
-ArrayList 			| ✅ (O(1))   		 | ❌ (chậm ở đầu) 				| ❌
-Singly Linked List  | ❌ (chậm)   		 | ✅ (đầu nhanh) 				| ❌
-Doubly Linked List  | ❌ 			 	 | ✅ 							| ✅
-
-
-
-# 🛠️ VI. Ứng dụng thực tế ở cấp độ kiến trúc 
-	
-
-	## LRU Cache
-	
-		Khi cần xóa phần tử ít dùng nhất, ta dùng DLL + HashMap.
-		DLL giữ thứ tự truy cập, HashMap giúp truy cập node O(1).
-		
-		LinkedHashMap<K, V> // Java đã cài đặt sẵn bằng DLL
-
-	## Undo/Redo Stack 
-	
-		Undo: đi về phía prev
-		Redo: đi về phía next
-
-
-	##  Web Browser History 
-		Dữ liệu cần di chuyển qua lại (Back/Forward). 
-		
-	##  Media Playlist 
-		Dễ dàng điều hướng và xoá bài giữa danh sách. 
-		
-		
-	##  Job Dispatcher / Task Queue 
-		Duy trì một danh sách có thể thêm, xóa ở cả hai đầu → Double-ended Queue (Deque). 
-		
-		
-# 	🧪 VII. Cài đặt custom Doubly Linked List (senior-friendly) 
-	
-class DoublyLinkedList {
-    private Node head;
-    private Node tail;
-
-    public void insertAtFront(int data) {
-        Node newNode = new Node(data);
-        newNode.next = head;
-        if (head != null)
-            head.prev = newNode;
-        else
-            tail = newNode; // danh sách rỗng
-        head = newNode;
+    private int randomLevel() {
+        int lvl = 0;
+        while (Math.random() < P && lvl < MAX_LEVEL) lvl++;
+        return lvl;
     }
 
-    public void delete(Node node) {
-        if (node == null) return;
+    public void insert(int value) {
+        SkipNode[] update = new SkipNode[MAX_LEVEL + 1];
+        SkipNode current = head;
 
-        if (node.prev != null)
-            node.prev.next = node.next;
-        else
-            head = node.next;
-
-        if (node.next != null)
-            node.next.prev = node.prev;
-        else
-            tail = node.prev;
-    }
-
-    public void traverseForward() {
-        Node curr = head;
-        while (curr != null) {
-            System.out.print(curr.data + " ");
-            curr = curr.next;
+        for (int i = level; i >= 0; i--) {
+            while (current.forward[i] != null && current.forward[i].value < value) {
+                current = current.forward[i];
+            }
+            update[i] = current;
         }
-        System.out.println();
-    }
 
-    public void traverseBackward() {
-        Node curr = tail;
-        while (curr != null) {
-            System.out.print(curr.data + " ");
-            curr = curr.prev;
+        current = current.forward[0];
+        if (current == null || current.value != value) {
+            int newLevel = randomLevel();
+            if (newLevel > level) {
+                for (int i = level + 1; i <= newLevel; i++) {
+                    update[i] = head;
+                }
+                level = newLevel;
+            }
+
+            SkipNode newNode = new SkipNode(newLevel, value);
+            for (int i = 0; i <= newLevel; i++) {
+                newNode.forward[i] = update[i].forward[i];
+                update[i].forward[i] = newNode;
+            }
         }
-        System.out.println();
     }
 }
 
+🧠 Tư duy: Mỗi khi insert, ta chọn ngẫu nhiên mức độ "level" mà node này sẽ tồn tại. Càng cao, càng nhảy xa.
 
 
 
+# 🔧 6. Skip List trong Java chuẩn (sẵn có) 
 
-# 	🧠 VIII. Khi nào KHÔNG dùng Doubly Linked List? 
+	Java đã có sẵn Skip List trong java.util.concurrent:
+	
+	✅ ConcurrentSkipListMap / ConcurrentSkipListSet
+	ConcurrentSkipListMap<String, Integer> map = new ConcurrentSkipListMap<>();
+	map.put("a", 1);
+	map.put("b", 2);
+	
+	System.out.println(map.get("a")); // 1
+	System.out.println(map.ceilingKey("a")); // a
+	System.out.println(map.tailMap("a")); // {a=1, b=2}
 
-Tình huống 									| Lý do
-Cần truy cập ngẫu nhiên 					| Array/ArrayList tốt hơn
-Bộ nhớ giới hạn 							| DLL dùng gấp đôi bộ nhớ mỗi node
-Không cần thao tác chèn/xoá giữa danh sách  | Không cần thiết dùng DLL	
-	
-	
-	
-# 	📚 IX. Các khái niệm liên quan bạn nên nắm (để chuyên sâu):
+	Ưu điểm 				 | Mô tả
+	Thread-safe				 | Hỗ trợ nhiều thread mà không cần synchronized
+	Sorted					 | Duy trì key theo thứ tự tăng
+	Non-blocking reads 		 | High-performance dưới nhiều thread
 
-Chủ đề											 | Mô tả
-LinkedHashMap 					| Cấu trúc bên trong là DLL để giữ thứ tự
-Deque 							| Double Ended Queue có thể dùng DLL
-Cursor-based LinkedList			| Trong C hoặc hệ thống nơi không dùng con trỏ thật
-Lock-free Linked List			| Dùng CAS, atomic operation cho concurrent
-Persistent List					| Danh sách bất biến (immutable) trong functional programming
 
-# 🎯 Tóm lại
-	Doubly Linked List là cấu trúc cực kỳ quan trọng nếu bạn làm các hệ thống cần quản lý dữ liệu theo thứ tự thay đổi, cần thêm/xoá nhanh mà không cần giữ kích thước cố định như array.
+	Được dùng trong các hệ thống cần truy cập đồng thời mà vẫn giữ thứ tự như cache, scheduler, hoặc log indexing.
 	
-		Đơn giản nhưng hiệu quả.
-		Cơ sở của nhiều cấu trúc: Deque, LRU Cache, History Stack.
-		Là một kỹ năng "bắt buộc phải thành thạo" nếu bạn làm việc gần hệ thống (System Engineer, Java Backend).
+
+# 💥 7. Khi nào nên dùng Skip List? 
 	
-	
-	
-	
-	
+Tình huống 										| Dùng Skip List?
+Cần dữ liệu duy trì thứ tự theo key 			| ✅
+Cần tìm kiếm nhanh O(log n) 					| ✅
+Cần đa luồng, không block 						| ✅
+Cần dễ hiểu, dễ debug hơn tree  				| ✅
+Cần cực kỳ tối ưu cho memory  					| ❌ (tree có thể tốt hơn)
+Chỉ cần tìm kiếm key đơn giản 					| ❌ HashMap là đủ
+
+
+
+# 🧱 8. So sánh với TreeMap
+
+Tính năng 				| SkipListMap 						| TreeMap (Red-Black Tree)
+Thread-safe				| ✅ (ConcurrentSkipListMap) 		| ❌
+Thứ tự					| Có 								| Có
+Hiệu năng 				| O(log n), tốt khi concurrent 		| O(log n), tốt khi đơn luồng
+Dễ mở rộng song song 	| Rất tốt 							| Khó vì cấu trúc cây xoay
+Bộ nhớ 					| Tốn hơn vì thêm pointer 			| Tốt hơn
+
+
+
+# 📌 Tổng kết
+
+Hiểu Skip List là hiểu được một cấu trúc dữ liệu thay thế tree nhưng phù hợp hơn với các hệ thống phân tán, concurrent, real-time, và cần logic đơn giản hơn cây xoay.
+
+Biết sử dụng ConcurrentSkipListMap là vũ khí mạnh trong xây dựng scheduler, priority queue, job ordering, real-time indexing.
+
+Khi cần kiểm soát logic thread-safe + ordered access mà không cần block → Skip List là ứng cử viên số 1.
+
 </pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

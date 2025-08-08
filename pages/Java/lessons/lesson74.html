@@ -1,59 +1,70 @@
-<html><head><title>Lesson 74 == AsyncSupportConfigurer ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 74 -- AsyncSupportConfigurer -//</h1><pre>
+<html><head><title>Lesson 74 == InternalResourceViewResolver ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 74 -- InternalResourceViewResolver -//</h1><pre>
 # Khái niệm 
-	AsyncSupportConfigurer được dùng để bật hỗ trợ xử lý bất đồng bộ (Asynchronous processing) trong Spring MVC. 
 	
-	## 📌 Tại sao cần AsyncSupportConfigurer? 
+	InternalResourceViewResolver là một ViewResolver trong Spring MVC, giúp ánh xạ tên view thành file thực tế trong hệ thống (JSP, HTML).
+
+# Cách hoạt động của InternalResourceViewResolver 
+	1. Controller trả về tên view (không phải đường dẫn cụ thể). 
+	2. InternalResourceViewResolver tìm file JSP/HTML tương ứng dựa trên prefix (/WEB-INF/views/) và suffix (.jsp). 
+	3. Trả về response cho client.
+
+ 
+# 📌 Ví dụ InternalResourceViewResolver 
 	
-		- Khi một request HTTP cần thời gian xử lý dài (như gọi API bên ngoài, xử lý file lớn).
-		- Nếu không dùng async, thread bị block, gây ảnh hưởng hiệu suất.
-		- Với async, Spring giải phóng thread chính, giúp server chịu tải tốt hơn.
-		
-		
-# 	📌 Cấu hình AsyncSupportConfigurer 	
-		
-		
-	@Configuration
-	public class AsyncConfig implements WebMvcConfigurer {
 	
-		@Override
-		public void configureAsyncSupport(AsyncSupportConfigurer configurer) {
-			configurer.setDefaultTimeout(5000); // Timeout 5 giây
-			configurer.setTaskExecutor(new SimpleAsyncTaskExecutor()); // Dùng thread pool
+	## 1. Cấu hình InternalResourceViewResolver
+		@Bean
+		public InternalResourceViewResolver viewResolver() {
+			InternalResourceViewResolver resolver = new InternalResourceViewResolver();
+			resolver.setPrefix("/WEB-INF/views/");
+			resolver.setSuffix(".jsp");
+			resolver.setViewClass(JstlView.class); // Hỗ trợ JSTL
+			return resolver;
 		}
-	}
-
-	📌 setDefaultTimeout(5000): Timeout mặc định cho request async.
-	📌 setTaskExecutor(new SimpleAsyncTaskExecutor()): Dùng thread pool để chạy request bất đồng bộ.
-
-
-
-# 📌 Ví dụ Controller dùng Async 
-
-		@RestController
-		@RequestMapping("/async")
-		public class AsyncController {
 		
-			@GetMapping("/process")
-			public Callable<String> asyncProcess() {
-				return () -> {
-					Thread.sleep(3000); // Giả lập xử lý lâu 3 giây
-					return "Process Completed!";
-				};
+		📌 setPrefix("/WEB-INF/views/"): Tất cả view sẽ nằm trong thư mục /WEB-INF/views/.
+		📌 setSuffix(".jsp"): Tự động thêm .jsp vào tên view.
+		📌 setViewClass(JstlView.class): Hỗ trợ các thẻ JSTL trong JSP.
+		
+		
+ 
+# 📌 Ví dụ Controller trả về view 
+	
+	## 1.Controller 
+	
+		@Controller
+		@RequestMapping("/home")
+		public class HomeController {
+		
+			@GetMapping
+			public String homePage(Model model) {
+				model.addAttribute("message", "Welcome to Spring MVC");
+				return "index"; // Chỉ trả về tên view (không có .jsp)
 			}
 		}
+
 	
+	## 2. File index.jsp 
+		<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+		<html>
+		<body>
+			<h1>${message}</h1>
+		</body>
+		</html>
 
 
-	## 📌 Khi client gọi /async/process: 
-	
-		- Callable<String> được Spring xử lý bất đồng bộ.
-		- Thread chính được giải phóng ngay lập tức.
-		- Khi xử lý xong, Spring trả về response cho client.
+	## 3. Khi client truy cập /home, Spring sẽ: 
+			- Controller trả về "index".
+
+			- InternalResourceViewResolver biến nó thành /WEB-INF/views/index.jsp.
+
+			- JSP được render ra HTML và trả về client.
+
 
 # ✅ Ứng dụng: 
+	Dùng để render JSP, Thymeleaf hoặc FreeMarker. 
+	Hỗ trợ caching view để tăng hiệu suất. 
 	
-	Xử lý API chậm, gọi microservice, xử lý file lớn. 
-	Tăng throughput, giúp hệ thống chịu tải cao.
 	
 	
 

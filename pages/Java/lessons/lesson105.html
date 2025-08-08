@@ -1,119 +1,123 @@
-<html><head><title>Lesson 105 == Circular Linked List(CLL) ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 105 -- Circular Linked List(CLL) -//</h1><pre>
+<html><head><title>Lesson 105 == Node Class ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 105 -- Node Class -//</h1><pre>
+
 # Khái niệm 
-	Circular LinkedList  là danh sách liên kết node cuối trỏ ngược lại node đầu , tạo thành vòng trong kín 
-	Có hai loại 
-		
-		## 1. Singly Circular Linked List 
-			- Mỗi node có 1 next 
-			- tail.next -> head 
-			
-		## Doubly Circular Linked List 
-			- Mỗi node có cả next và prev 
-			- tail.next = head , head.prev = tail 
-			
-
-# Cấu trúc của Circular  Linked List 
+	Một Node là một đơn vị cấu trúc dữ liệu cơ bản, có thể liên kết với các Node khác để hình thành cấu trúc lớn hơn như:
 	
-	## ⚙️ Java Implementation (Singly) 
-
 		class Node {
-			int data;
+			T value;
 			Node next;
-			
-			Node(int data) {
-				this.data = data;
-				this.next = null;
-			}
 		}
+	
+	Linked List
+	Tree (Binary Tree, Trie, B-Tree)
+	Graph (DAG, Cycles, v.v.)
+
+
+
+# ⚙️ 2. Các yếu tố kiến trúc trong Node 
+	
+	Thành phần			 		| Vai trò 							| Kiến trúc liên quan
+	value 					| Dữ liệu hiện tại 						| Payload / Entity
+	next 					| Liên kết với phần tử tiếp theo 		| Pointer / Edge
+	left, right 			| Cho cây nhị phân				 		| Tree traversal
+	neighbors 				| Cho Graph 					 		| Network Topology
+	parent					| Quan hệ ngược					 		| Backtracking, recursion
+	children (List<Node>)	| Quan hệ forward				 		| Hierarchy, Composite pattern
+
+
+Kết luận: Node = phần tử tự mô tả trong một cấu trúc phức tạp.
+
+
+
+
+
+# 🧠 3. Tư duy như một kiến trúc sư phần mềm
+	
+
+
+	## 🔸 Node như là một Actor (tác nhân độc lập) 
 		
-		class CircularLinkedList {
-			Node head = null;
-			Node tail = null;
+		-	Trong hệ thống phân tán, bạn có thể coi mỗi Node là:
+		-	Một microservice (có data, biết nói chuyện với người khác)
+		-	Một unit xử lý trong DAG (như trong airflow hoặc n8n)
+		-	Một actor (trong Actor Model - Akka, Erlang)
+
+
+
+	## 🔸 Node là abstraction của mọi thứ kết nối được
 		
-			void add(int data) {
-				Node newNode = new Node(data);
-				if (head == null) {
-					head = newNode;
-					tail = newNode;
-					newNode.next = head; // vòng
-				} else {
-					tail.next = newNode;
-					tail = newNode;
-					tail.next = head; // giữ vòng
-				}
-			}
-		}
+		Context					 | Node là gì
+		DOM (HTML)			 | Mỗi element là một DOM node
+		React Fiber			 | Mỗi phần tử giao diện là 1 node với state
+		Blockchain			 | Mỗi peer là một node trong network
+		Kubernetes			 | Mỗi máy ảo là một node trong cluster
+		Graph 				 | Mỗi thực thể là 1 node (User, Page, Post, ...)
+		
+
+
+# 🧰 4. Các dạng Node phổ biến
+
+		Kiểu Node									 | Mô tả
+		LinkedList Node 						| Trỏ đến next
+		Tree Node  								| Có left/right hoặc list of children
+		Graph Node 								| Có neighbors
+		Doubly Node 							| Có cả next và prev
+		Trie Node 								| Dùng trong từ điển prefix, text search
+		N-ary Tree Node 						| Mỗi node có nhiều children
+		AST Node (Abstract Syntax Tree) 		| Biểu diễn mã nguồn như 1 cây logic	
+
+
+
+
+# 🎯 5. Kiến thức liên quan cần học
+
+	## Data Structure & Algorithms
+		→ Cách tổ chức và xử lý tập hợp các Node để tối ưu:
+			- Tìm kiếm: DFS, BFS, Binary Search Tree
+			- Sắp xếp: Merge, Quick Sort
+			- Định tuyến: Dijkstra, A*	
+
+
+	## Design Pattern 
+		
+		- Composite pattern
+		- Iterator pattern
+		- Visitor pattern (duyệt node kiểu AST)
+
+
+	## Functional programming
+
+		-	Xử lý node đệ quy, immutable
+		-	Lambda trên node list
+
+
+	## Distributed systems (Hệ thống phân tán )
+		-	Node là actor, là peer trong cluster
+		-	Gossip, Raft, Paxos: node tham gia đồng thuận
 
 	
 
-# 🧠 III. Lợi ích – Tại sao dùng Circular Linked List? 
+# 💡 6. Tư duy system-level về Node 
 	
-
-Vấn đề									 | Circular Linked List giải quyết tốt
-Quay vòng (circular scheduling) 			| Ví dụ: CPU Round-Robin Scheduler, Carousel UI
-Không có điểm kết thúc cố định 				| Duyệt vòng mãi mãi (ví dụ game loop)
-Bài toán nhảy vòng 							| Josephus problem, vòng tròn loại người
-Load balancer vòng 							| Chia task theo vòng node
-Cache ring buffer 							| Dễ implement buffer giới hạn có wrap-around
-
+	Node là gì ở cấp system? 							| Nghĩa kiến trúc
+	Thành phần độc lập 								 | Có thể test riêng, deploy riêng
+	Có quan hệ với các phần tử khác					 | Không đứng 1 mình
+	Có trạng thái (state) và hành vi (behavior) 	 | Tương tác với hệ thống
+	Có thể scale theo chiều ngang 					 | Giống cluster nodes
+	Có thể bị lỗi riêng biệt 						 | Fault-tolerant system
 
 
-# 📊 IV. So sánh với Linked List thường 
+
+
+# 📌 Kết luận 
 	
-Tính năng 					 | Linked List 						| Circular Linked List
-Node cuối					 | null 							| Trỏ về node đầu
-Duyệt đến cuối				 | Có kết thúc 						| Không kết thúc
-Duyệt vòng					 | Phức tạp hơn 					| Tự nhiên hơn
-Xoay vòng danh sách 		 | Phải xử lý lại 					| Có sẵn theo cấu trúc
-Thêm vào cuối 				 | O(n) hoặc O(1) (nếu có tail) 	| O(1)
-Dễ nhầm vòng vô hạn 		 | Không 							| Có – cần cảnh giác
+	Node là một trong những khái niệm giản dị nhưng quyền lực nhất trong kiến trúc phần mềm. Là viên gạch cơ bản để bạn xây dựng:
 
-
-
-# 🚀 V. Ứng dụng thực tế
-
-Tình huống							 | Mô tả
-Scheduler 							| CPU scheduler Round Robin: mỗi process là 1 node
-Josephus Problem 					| Mô phỏng bài toán loại người theo chu kỳ
-Music Playlist Loop 				| Mỗi bài hát là 1 node, lặp vô hạn
-UI Carousel 					 	| Slide lặp vô hạn
-Circular Buffer 					| Dùng trong producer-consumer
-Distributed Ring Topology 			| P2P hoặc blockchain node mạng vòng
-
-
-
-# 🧠 VI. Những thứ cần "cảnh giác" khi dùng Circular Linked List 
-	
-Rủi ro 									 | Giải pháp
-Loop vô hạn khi duyệt					 | Luôn check curr != head thay vì != null
-Xóa node phải đặc biệt cẩn thận			 | Vì có thể phá vòng
-Gỡ node cuối/head						 | Phải rewire kỹ
-Multi-thread							 | Phải lock hoặc đồng bộ
-GC & Memory Leak						 | Dễ bị giữ tham chiếu mãi mãi
-
-
-# 📌 VII. Demo vòng duyệt vô hạn (điều khiển bằng vòng lặp) 
-
-	Node current = head;
-	do {
-		System.out.println(current.data);
-		current = current.next;
-	} while(current != head);
-	
-	🔥 Không có null, không bao giờ kết thúc nếu không có điều kiện dừng rõ ràng!
-
-
-
-
-# 🧠 VIII. Những kiến thức liên quan cần học 
-
-	Mục 										| Lý do
-	Doubly Linked List 						| Để xử lý backward và delete hiệu quả
-	Queue và Deque 							| Để hiểu cấu trúc lặp vòng kiểu thực tế
-	Memory & Pointer 						| Quan trọng nếu bạn làm C/C++ hoặc low-level Java
-	Circular Buffer / Ring Buffer			| Áp dụng nhiều trong I/O, log
-	Thread-safe List 						| Circular list trong đa luồng rất nguy hiểm nếu không đồng bộ
-	Data Structure Patterns					| Hiểu khi nào dùng Circular List vs Tree/Array/Deque
+		-	Linked List → FIFO Queue
+		-	Tree → DOM, UI hierarchy, Binary Index
+		-	DAG → Task pipelines
+		-	Graph → Social network, Microservice communication
+		-	Cluster → Distributed system
 
 
 </pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

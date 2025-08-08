@@ -1,21 +1,20 @@
-<html><head><title>Lesson 79 == Circuit Breaking ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 79 -- Circuit Breaking -//</h1><pre>
+<html><head><title>Lesson 79 == Retries ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 79 -- Retries -//</h1><pre>
 # Khái niệm 
-	Circuit Breaking (Ngắt mạch) là cơ chế bảo vệ hệ thống bằng cách ngắt luồng request đến service đang gặp lỗi. 
+	Retries(Thử lại khi requets thất bại )
+		- Khi một request bị lỗi (timeout , 5xx errors), hệ thống có thể tự động gửi lại request để tăng tỷ lệ thành công 
+		
+# Lợi ích 
+	- Giảm thiểu lỗi do sự cố mạng tạm thời 
+	- Tăng tính ổn định của hệ thống 
 	
-# Mục tiêu 
-	- Tránh tính trạng thác lỗi (cascading failures)
-	- Bảo vệ service đang quá tải khỏi việc nhận thêm request 
-	- Cho phép service có thời gian hồi phục 
-	
-# Cách hoạt động  
-	- Close State(Mạch đóng): Request được gửi bình thường 
-	- Open State(Mạch mở ) : Khi tỷ lệ lỗi vượt ngưỡng , circuit breaker sẽ chặn request đến service đích 
-	- Half-Open State (Mạch bán mở ): Sau một thời gian, hệ thống thử gửi request kiểm tra service đã phục hồi hay chưa 
-	
+# Nhược điểm & Cần lưu ý 
+	- Thêm tải : Nếu không kiểm soát, có thể gây quá tải cho service đích 
+	- Retry Storm : Khi nhiều request cùng retry, có thể gây thác lỗi(cascading failure)
+	- Idempotency : Request phải là idempotent (cùng dữ liệu, gọi nhiền lần vẫn có kết quả như nhau), tránh insert trùng lặp 
 	
 # Triển khai trong thực tế : 
-	- Spring Cloud Gateway : Dùng Resilience4j CircuitBreaker. 
-	- Envoy Proxy : Dùng outlier_detection để tự động chặn backend bị lỗi. 
-
-
+	- Spring Cloud Gateway : Dùng resilience4j-retry 
+	- Envoy Proxy : Cấu hình retry_policy với số lần thử lại (num_retries) và khoản thời gian giữa các lần thử 
+	
+	
 </pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

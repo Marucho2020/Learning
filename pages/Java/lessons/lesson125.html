@@ -1,120 +1,133 @@
-<html><head><title>Lesson 125 == Merge Sort Tree ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 125 -- Merge Sort Tree -//</h1><pre># Khái niệm  
-	Merge Sort Tree là một cấu trúc dữ liệu nâng cao, kết hợp giữa : 
-		- Segment Tree(phân đoạn vùng dữ liệu )
-		- và Merge Sort (chia để trị, trộn mảng con đã sắp xếp )
-		
-	📌 Mục đích chính: 
-		Trả lời các truy vấn có điều kiện thứ hạng trên đoạn [L, R] một cách nhanh chóng. 
+<html><head><title>Lesson 125 == Persitent Segment Tree ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 125 -- Persitent Segment Tree -//</h1><pre># Khái niệm 
+	Persistence trong cấu trúc dữ liệu là khả năng giữ lại lịch sử các phiên bản trước của cấu trúc sau mỗi thay đổi (update), mà không thay đổi phiên bản cũ.
+		- Full persistence: truy cập & cập nhật bất kỳ phiên bản nào.
+		- Partial persistence: chỉ truy cập phiên bản cũ, cập nhật chỉ phiên bản hiện tại.
+		- Functional persistence: không có trạng thái thay đổi — mỗi thao tác trả về một phiên bản mới (giống lập trình hàm).
 
-
-# 🧠 VẤN ĐỀ CẦN GIẢI:
-
-	Cho mảng A[1..n]. Có thể bạn sẽ phải trả lời truy vấn kiểu:
-	count(L, R, x): trong đoạn A[L..R], có bao nhiêu phần tử ≤ x?
-	kth(L, R, k): phần tử nhỏ thứ k trong đoạn A[L..R] là gì?
-	🔁 Nếu bạn dùng sort mỗi lần, thì độ phức tạp sẽ là O(n log n) mỗi truy vấn. Không tối ưu.
-
-
-
-
-# ✅ CẤU TRÚC MERGE SORT TREE: 
-
-	Mỗi node đại diện cho một đoạn [l..r] của mảng.
-	Dữ liệu lưu tại node: là một mảng con đã được sắp xếp từ A[l..r]. 
-	
-	→ Giống y như cách Merge Sort tách mảng rồi trộn lại, nhưng ta lưu toàn bộ mảng đã sort ở từng node.
+	→ Persistent Segment Tree = giữ lại nhiều phiên bản của segment tree, sau mỗi lần update mà không phá vỡ phiên bản cũ.
 	
 	
-# 	🏗️ CẤU TRÚC: 
+# 	2. 🔧 So sánh Segment Tree thường vs Persistent Segment Tree 
+	| Đặc điểm          | Segment Tree thường      | Persistent Segment Tree              |
+| ----------------- | ------------------------ | ------------------------------------ |
+| Cập nhật (update) | Thay đổi trực tiếp       | Tạo phiên bản mới (dùng lại phần cũ) |
+| Truy vấn (query)  | Chỉ 1 phiên bản hiện tại | Truy vấn bất kỳ phiên bản nào        |
+| Lịch sử           | Không giữ                | Giữ từng phiên bản rõ ràng           |
+| Tốn bộ nhớ        | O(n)                     | O(n log n) (chia sẻ nút cũ)          |
+
+	
+	
+# 	3. ⚙️ Ứng dụng thực tế (cần biết khi thiết kế hệ thống)
+	
+| Trường hợp ứng dụng                                  | Giải thích                                                                                                |
+| ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| 🕓 Time-travel query                                 | Cần biết trạng thái dữ liệu ở 1 thời điểm trong quá khứ (log, lịch sử giao dịch, dữ liệu thời gian thực). |
+| ⏱ Versioned configuration / snapshot                 | Mỗi lần update cấu hình/dữ liệu → tạo version mới → rollback dễ dàng.                                     |
+| 🕹 Undo/Redo trong hệ thống phức tạp                 | Lưu lịch sử thay đổi dạng cây → dễ undo từng bước.                                                        |
+| 🧮 Dữ liệu không ổn định (time-varying)              | Như stock price, lượng truy cập server, lượt view theo giờ...                                             |
+| 🔐 Immutable data handling (Blockchain, DSL engines) | Không được thay đổi dữ liệu cũ → dùng persistence.                                                        |
+	
+	
+	
+# 	4. 🧠 Cốt lõi kỹ thuật
+	
+	## ❗ Ý tưởng chính: 
+		- Mỗi khi update, chỉ tạo lại các nút trên đường đi từ root đến leaf bị ảnh hưởng.
+		- Các phần khác của cây vẫn dùng lại được.
+		- Như vậy: O(log n) bộ nhớ/phiên bản → rất hiệu quả.
 
 
-class MergeSortTree {
-    int n;
-    ArrayList<Integer>[] tree;
 
-    MergeSortTree(int[] arr) {
-        n = arr.length;
-        tree = new ArrayList[4 * n];
-        build(1, 0, n - 1, arr);
-    }
+	## 📌 Code nguyên lý:
+class Node {
+    int val;
+    Node left, right;
 
-    void build(int node, int l, int r, int[] arr) {
-        tree[node] = new ArrayList<>();
-        if (l == r) {
-            tree[node].add(arr[l]);
-            return;
-        }
-        int mid = (l + r) / 2;
-        build(2 * node, l, mid, arr);
-        build(2 * node + 1, mid + 1, r, arr);
-        tree[node] = merge(tree[2 * node], tree[2 * node + 1]);
-    }
-
-    ArrayList<Integer> merge(List<Integer> left, List<Integer> right) {
-        ArrayList<Integer> result = new ArrayList<>();
-        int i = 0, j = 0;
-        while (i < left.size() && j < right.size()) {
-            if (left.get(i) < right.get(j))
-                result.add(left.get(i++));
-            else
-                result.add(right.get(j++));
-        }
-        while (i < left.size()) result.add(left.get(i++));
-        while (j < right.size()) result.add(right.get(j++));
-        return result;
+    Node(int val, Node l, Node r) {
+        this.val = val;
+        this.left = l;
+        this.right = r;
     }
 }
 
-
-# 🔍 QUERY ĐẾM PHẦN TỬ ≤ X TRONG [L, R]
-int query(int node, int l, int r, int ql, int qr, int x) {
-    if (qr < l || ql > r) return 0;  // không giao
-    if (ql <= l && r <= qr) {
-        // Tại node này chứa mảng đã sort -> binary search
-        return upperBound(tree[node], x);
+Node update(Node node, int l, int r, int idx, int value) {
+    if (l == r) {
+        return new Node(value, null, null); // tạo nút mới
     }
     int mid = (l + r) / 2;
-    return query(2 * node, l, mid, ql, qr, x) +
-           query(2 * node + 1, mid + 1, r, ql, qr, x);
-}
-
-int upperBound(List<Integer> list, int x) {
-    int low = 0, high = list.size();
-    while (low < high) {
-        int mid = (low + high) / 2;
-        if (list.get(mid) <= x) low = mid + 1;
-        else high = mid;
+    if (idx <= mid) {
+        return new Node(0,
+            update(node.left, l, mid, idx, value),
+            node.right
+        );
+    } else {
+        return new Node(0,
+            node.left,
+            update(node.right, mid + 1, r, idx, value)
+        );
     }
-    return low; // số phần tử ≤ x
 }
+	
+	
+		- node là root của version hiện tại.
+		- Mỗi lần update trả về root mới của version mới.
+		- Có thể lưu danh sách List<Node> versions để giữ từng root.
+	
+	
+	
+	
+	## ⏱ Truy vấn trên version: 
+int query(Node node, int l, int r, int ql, int qr) {
+    if (ql > r || qr < l) return 0;
+    if (ql <= l && r <= qr) return node.val;
+    int mid = (l + r) / 2;
+    return query(node.left, l, mid, ql, qr)
+         + query(node.right, mid+1, r, ql, qr);
+}
+	
+	
+	
+	
+# 5. 📦 Bộ nhớ & độ phức tạp 
+	
+	
+	- Tạo version mới: O(log n)
+	- Truy vấn version bất kỳ: O(log n)
+	- Tổng số node sau k lần update: O(k log n)
+	- Tối ưu hơn ArrayList snapshot hoặc clone object!
+	
+	
+# 	6. 📚 Kiến thức cần nắm để hiểu sâu Persistent Segment Tree:
+
+| Chủ đề                                     | Vì sao cần học?                              |
+| ------------------------------------------ | -------------------------------------------- |
+| Tree data structure                        | Hiểu cách phân chia và tổ chức dữ liệu       |
+| Immutable data / Functional DS             | Hiểu cách giữ dữ liệu không thay đổi         |
+| Memory sharing / Copy-on-write             | Tối ưu hiệu suất & không tạo bản sao toàn bộ |
+| Dynamic Programming on trees               | Kết hợp logic xử lý phân đoạn phức tạp       |
+| Advanced Java (immutability, memory model) | Để code Persistent DS đúng cách              |
+	
+	
+	
+# 	7. 🧪 Ứng dụng demo bạn có thể triển khai:
+	
+		- Lưu lịch sử giao dịch tài khoản theo từng phiên bản cập nhật.
+		- Thống kê tổng view của các bài viết tại các mốc thời gian khác nhau.
+		- Xây dựng hệ thống undo/redo cho hệ thống vẽ đồ họa (mỗi lần thay đổi là 1 version).
+		- Lưu cấu hình hệ thống, có thể rollback lại bất kỳ lúc nào.	
+	
 
 
 
-# 📈 ĐỘ PHỨC TẠP: 
-	Xây dựng: O(n log n log n) → vì tại mỗi node merge mất O(n log n).
-	Query: O(log^2 n) → mỗi level là O(log n) node, mỗi node O(log n) cho binary search.
-	Nhanh hơn rất nhiều nếu bạn dùng cho truy vấn có điều kiện so sánh.
+# 8. 🧱 So sánh với những giải pháp khác 
 
+| Giải pháp                 | Có persistence? | Có hỗ trợ query? | Hiệu suất      |
+| ------------------------- | --------------- | ---------------- | -------------- |
+| Array snapshot            | Có (deep copy)  | Có               | Rất chậm       |
+| Immutable Map/List (Java) | Có              | Có               | Tùy cấu trúc   |
+| Persistent Segment Tree   | Có (rất tốt)    | Có (O(log n))    | Tối ưu         |
+| Redis + versioned key     | Có              | Tùy              | Tốn tài nguyên |
 
-# ✅ ỨNG DỤNG THỰC TẾ: 
-| Tình huống                                | Giải pháp Merge Sort Tree                     |
-| ----------------------------------------- | --------------------------------------------- |
-| Game: Tìm số người có điểm < X trong vùng | Tính toán nhanh số lượng điểm nằm trong range |
-| Analytics: Top-k / rank queries           | Truy vấn phần tử nhỏ thứ k trong đoạn         |
-| Hệ thống log, realtime data               | Truy vấn tập hợp dữ liệu có điều kiện lọc     |
-| Kết hợp Lazy Propagation (khó hơn)        | Cần mở rộng MergeSortTree lazy-aware          |
-
-
-
-
-# 🧠 CÁC CẤU TRÚC LIÊN QUAN NÊN HỌC:
-| Tên cấu trúc            | Mục tiêu                              |
-| ----------------------- | ------------------------------------- |
-| Segment Tree            | Truy vấn tổng, min/max, update        |
-| Binary Indexed Tree     | Nhẹ hơn Segment Tree (prefix sum)     |
-| Persistent Segment Tree | Lưu lịch sử thay đổi                  |
-| Wavelet Tree            | Truy vấn rank/k-th + tần suất phần tử |
-| Merge Sort Tree         | Đếm phần tử thỏa điều kiện (≤ x)      |
 
 
 </pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

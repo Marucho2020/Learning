@@ -1,3 +1,46 @@
-<html><head><title>Lesson 18 == functional interface ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 18 -- functional interface -//</h1><pre>
+<html><head><title>Lesson 18 == Iterator ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 18 -- Iterator -//</h1><pre>	Iterator là một đối tượng thuộc lớp triển khai Iterable (List m Set , Queue)
+	- Iterator không Phải là Iterable nên không thể duyệt theo index giống như list 
+	- Iterator không cho phép thay đổi cấu trúc collection trong khi duyệt qua (ngoại trừ sử dụng phương thức remove() của chính Iterator )
+	- Iterator là đơn hướng, nghĩa là chỉ có thể đi từ đầu đến cuối giống thời gian , không thể quay lại 
+	- Nếu cần duyệt 2 chiều, phải sử dụng ListIterator(áp dụng cho danh sách như ArrayList,LinkedList)
+	
+	
+	
+	 # Các phương thức của Iterator 
+		hasNext()          : Kiểm tra xem còn phẩn tử có thể đi tiếp không 
+		next()             : đi tiếp đến phần tử tiếp theo 
+		remove()           : xóa phần tử cuối cùng được trả về next() trước đó(nếu chưa gọi next lần nào sẽ lỗi vì khi này chưa đi vào chạy được xíu nào đã xóa nên k xóa được và lỗi IllegalStateException 
+		)
 		
+	# Ví dụ sử dụng LỖI khi sử dụng Iterator duyệt như List 
+	
+	List list = new ArrayList();        list.add("1");list.add("2");list.add("3");
+	Iterator iterator = list.iterator();
+		
+	for (Object obj : iterator) {			/./ Lỗi tại đây vì k thể duyệt Iterator thế này đâu bạn 
+		System.out.println(obj + " , ");
+	}
+	
+	
+	# Ví dụ ĐÚNG khi muốn duyệt qua một iterator 
+	while(iterator.hasNext()){
+		String num = iterator.next();
+		System.out.println(num);			 1 , 2 , 3 
+	}
+	
+	# Ví dụ duyệt 2 chiều List Iterator  
+	ListIterator<String> lstIterator = list.listIterator();
+	
+	//duyệt xuôi 
+	while(lstIterator.hasNext()){
+		System.out.println(lstIterator.next())			// 1 ,  2 ,  3 
+	}
+	
+	//duyệt ngược 
+	while(lstIterator.hasPrevious()){
+		System.out.println(lstIterator.previous())		// 3 , 2  ,  1
+	}
+	
+
+
 </pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

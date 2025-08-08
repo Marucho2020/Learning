@@ -1,124 +1,118 @@
-<html><head><title>Lesson 159 == StringTokenizer , String Split, Varargs ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 159 -- StringTokenizer , String Split, Varargs -//</h1><pre>
-# StringTokenizer
-	## 	✅ Mô tả: 
-	
-	- StringTokenizer là một class trong java.util dùng để phân tách chuỗi (tokenize) dựa trên ký tự phân cách.
-	
-	- Được dùng phổ biến trước Java 1.4, nhưng hiện tại không được khuyến khích dùng nữa do hạn chế về khả năng xử lý Unicode, thread-safe giả tạo, và không linh hoạt.
+<html><head><title>Lesson 159 == Comparable và Comparator ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 159 -- Comparable và Comparator -//</h1><pre>
+# 🔍 1. Khác biệt tổng thể giữa Comparable vs Comparator
+| Đặc điểm               | `Comparable<T>`                                        | `Comparator<T>`                                        |
+| ---------------------- | ------------------------------------------------------ | ------------------------------------------------------ |
+| Mục đích               | So sánh **chính bản thân class**                       | So sánh **từ bên ngoài** (không can thiệp class)       |
+| Cách dùng              | Class implement `Comparable` và override `compareTo()` | Viết class/instance `Comparator` và truyền vào khi cần |
+| Thay đổi logic so sánh | Khó: chỉ có một cách sắp xếp duy nhất                  | Dễ: có thể tạo nhiều `Comparator` khác nhau            |
+| Ví dụ dùng             | `Collections.sort(list)` nếu phần tử `Comparable`      | `Collections.sort(list, comparator)`                   |
 
 
-	## 🧠 Cách dùng: 
-	
-StringTokenizer tokenizer = new StringTokenizer("apple,banana,carrot", ",");
-while (tokenizer.hasMoreTokens()) {
-    System.out.println(tokenizer.nextToken());
-}
+# 🔧 2. Comparable<T> – Nội tại của đối tượng
 
+public class User implements Comparable<User> {
+    private String name;
+    private int age;
 
-	## ❌ Nhược điểm: 
-		- Không hỗ trợ regex
-		- Không bỏ được token rỗng
-		- Không hiện đại, thay thế bởi String.split() hoặc Scanner
-
-
-
-
-# 🔹 2. String.split(regex) – Ưa chuộng hiện nay
-
-
-	## ✅ Mô tả: 
-		- Dùng để phân tách chuỗi theo biểu thức chính quy (regex).
-		- Trả về mảng String[]
-
-
-	## 🧠 Cách dùng: 
-		String str = "apple,banana,,carrot";
-		String[] parts = str.split(",", -1);  // giữ token rỗng
-		for (String part : parts) {
-			System.out.println("[" + part + "]");
-		}
-		
-
-	## ⚠️ Lưu ý:
-
-		split() dùng regex, nên "." là pattern, không phải dấu chấm. Cần split("\\.")
-		
-		Nếu không truyền limit, các phần tử cuối rỗng sẽ bị bỏ
-
-
-# 🔹 3. String.join() và String::lines, chars, codePoints
-
-
-	##  ✅ String.join(delimiter, elements...)
-		Dùng để nối chuỗi lại bằng delimiter
-
-String result = String.join("-", "2025", "08", "05");
-System.out.println(result); // "2025-08-05"
-
-
-
-	## ✅ String.lines() (Java 11+)
-		Trả về một Stream<String> gồm các dòng
-		
-String multiline = "line1\nline2\nline3";
-multiline.lines().forEach(System.out::println);
-	
-	## ✅ chars() và codePoints():
-		Cho phép thao tác từng ký tự hoặc mã Unicode:
-	
-"abc".chars().forEach(c -> System.out.println((char)c));
-
-	
-	
-	
-# 🔹 4. Varargs (String... args)	
-	
-	## ✅ Mô tả: 
-		String... là cú pháp varargs – đại diện cho mảng biến số lượng phần tử kiểu String[].
-
-
-	## 🧠 Dùng trong method: 
-		
-public void printAll(String... words) {
-    for (String word : words) {
-        System.out.println(word);
+    @Override
+    public int compareTo(User other) {
+        return Integer.compare(this.age, other.age); // sắp xếp theo tuổi
     }
 }
 
-printAll("one", "two", "three");  // không cần truyền mảng
+
+	## Ý nghĩa: 
+	Bạn đang ép User phải có thứ tự tự nhiên.
+	Khi bạn đưa User vào TreeSet, PriorityQueue, Collections.sort() => Java sẽ dùng compareTo().
+
+	## Hạn chế: 
+		Chỉ có một cách so sánh duy nhất. Muốn thay đổi phải sửa class.
 
 
-		⚠️ Dưới hood:
-		
-		String... args === String[] args
-		Chỉ được dùng ở tham số cuối cùng
+# ⚙️ 3. Comparator<T> – So sánh từ bên ngoài
+
+	## Cách dùng:
+	Comparator<User> nameComparator = Comparator.comparing(User::getName);
+	Collections.sort(userList, nameComparator);
+
+
+	## Hoặc custom complex logic: 
+Comparator<User> ageThenName = (u1, u2) -> {
+    int cmp = Integer.compare(u1.getAge(), u2.getAge());
+    if (cmp != 0) return cmp;
+    return u1.getName().compareTo(u2.getName());
+};
+
+
+	## Ưu điểm:
+		Không cần sửa class
+		Có thể tạo nhiều logic so sánh khác nhau tùy ngữ cảnh
+
+
+# 💥 4. Ứng dụng thực chiến – ví dụ bạn dùng trong hệ thống lớn
+
+| Use case                                            | So sánh nào phù hợp? | Giải thích                                         |
+| --------------------------------------------------- | -------------------- | -------------------------------------------------- |
+| Dùng `TreeMap<User, Data>` để lưu user theo tuổi    | `Comparable<User>`   | Vì `TreeMap` sẽ sắp theo key                       |
+| Dùng `PriorityQueue<User>` để lấy ra người trẻ nhất | `Comparator<User>`   | Truyền comparator vào constructor                  |
+| Lọc danh sách User theo nhiều tiêu chí              | `Comparator.chain()` | Dùng `.thenComparing(...)` để viết logic đa tầng   |
+| Không được sửa class (code bên thứ ba)              | `Comparator`         | Không thể dùng `Comparable` nếu không sở hữu class |
 
 
 
-# 🔹 5. Nên dùng cái nào?
 
-| Nhu cầu                          | Công cụ đề xuất                             |
-| -------------------------------- | ------------------------------------------- |
-| Phân tách chuỗi đơn giản         | `String.split()`                            |
-| Phân tách nâng cao (regex, trim) | `Pattern.compile().splitAsStream()`         |
-| Phân tách từng dòng              | `String.lines()`                            |
-| Nối chuỗi                        | `String.join()` hoặc `Collectors.joining()` |
-| Nạp mảng động                    | `String...` (varargs)                       |
-| Xử lý từng ký tự                 | `chars()`, `codePoints()`                   |
+# 🔄 5. Kết hợp Comparable + Comparator đúng cách
+
+	Collections.sort(users); // sẽ gọi user.compareTo()
+	Collections.sort(users, Comparator.comparing(User::getName)); // override cách mặc định
 
 
+	Trong TreeSet:
+	Set<User> set = new TreeSet<>(); // dùng compareTo()
+	Set<User> set = new TreeSet<>(Comparator.comparing(User::getName)); // custom comparator
 
-# 🔚 Tổng kết (phải biết cho senior Java Dev):
+# 🔐 6. Nguyên tắc thiết kế: compareTo & compare phải consistent với equals()
+
+	Nếu bạn violate nguyên tắc này, TreeSet, HashSet, hoặc Map sẽ có hành vi bất ngờ.
 	
-	- ❗ Tránh StringTokenizer nếu không có lý do cụ thể (legacy system).
+	Ví dụ: nếu equals() trả về true nhưng compareTo() lại != 0, thì:
 	
-	- ✅ Ưu tiên String.split(), Pattern.splitAsStream() nếu cần regex mạnh.
+Set<User> set = new TreeSet<>();
+set.add(user1);
+set.add(user2); // nếu equals true nhưng compareTo != 0 => sẽ vẫn được thêm vào!
+
+
+
+# 🧠 7. Functional Style Comparator (Java 8+)
+
+	Khi bạn kết hợp với lambda, stream:
+
+users.sort(
+    Comparator.comparing(User::getAge)
+              .thenComparing(User::getName)
+              .reversed()
+);
+
+
+	Hoặc:
+users.stream()
+     .sorted(Comparator.comparing(User::getAge))
+     .collect(Collectors.toList());
 	
-	- 🔁 Xử lý dòng, ký tự – dùng lines(), chars(), codePoints().
-	
-	- 💡 Tối ưu hóa hiệu suất xử lý chuỗi bằng Stream hoặc Collectors khi thao tác lớn.
-	
-	- 📦 Luôn hiểu rõ String... là String[], và đừng lạm dụng nếu bạn muốn type-safety rõ ràng.
+
+
+# 🔥 8. Câu hỏi thường gặp trong phỏng vấn senior:
+
+1. Có thể vừa implements Comparable, vừa truyền Comparator không?
+	→ Có. Khi truyền Comparator thì Comparator sẽ được ưu tiên, không dùng compareTo() nữa.
+
+2. TreeMap hoạt động như thế nào khi key không implement Comparable?
+	→ Bạn phải truyền Comparator vào constructor, nếu không sẽ ClassCastException.
+
+3. Comparator có thể thay đổi khi runtime không? 
+	→ Có. Bạn có thể inject Comparator khác vào runtime, rất hữu ích cho config-driven sorting.
+
+
 
 
 </pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

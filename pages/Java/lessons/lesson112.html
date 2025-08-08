@@ -1,133 +1,107 @@
-<html><head><title>Lesson 112 == Treap / Scapegoat Tree ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 112 -- Treap / Scapegoat Tree -//</h1><pre>
-# TREAP (Tree + Heap)
-	
-	## Khái niệm  
-		Treap = Binary Search Tree + Heap Property (ngẫu nhiên)
+<html><head><title>Lesson 112 == Splay Tree ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 112 -- Splay Tree -//</h1><pre># Khái niệm  
+	Splay Tree là một dạng cây nhị phân tìm kiếm tự điều chỉnh (self-adjusting binary search tree)
+	-> khi bạn truy cập (search, insert, delete) một node, cây sẽ splay (đưa node đó lên gốc) qua một chuỗi rotation thông minh  
 
-	Mỗi node có:
-		key → đảm bảo thứ tự BST
-		priority (ngẫu nhiên) → đảm bảo thứ tự giống Max-Heap hoặc Min-Heap
+
+#🎯 2. Mục đích của Splay Tree
+	Tối ưu truy cập theo thói quen người dùng:
+	Nếu bạn truy cập một node thường xuyên, nó sẽ dần được đưa lên gốc → lần sau tìm cực nhanh (O(1)).
+	Không cần lưu thêm thông tin phụ (chiều cao, màu,...) như AVL hay Red-Black.
+	Thời gian truy cập trung bình (amortized) là O(log n) dù một số thao tác có thể tệ nhất là O(n).
+
+#⚙️ 3. Các thao tác chính
+	Thao tác	Đặc biệt gì?
+	Search		Sau khi tìm, node đó được "splay" lên root
+	Insert		Sau khi chèn, node mới cũng được đưa lên root
+	Delete		Xoá xong, cây được sắp lại qua splay để root là node gần nhất
+
+#🔁 4. Thuật toán Splay: Làm thế nào để đưa 1 node lên root?
+		Dùng các rotation kết hợp dựa vào vị trí của node với cha và ông nội (nếu có):
 		
-	Tưởng tượng bạn xây dựng một cây BST, nhưng đồng thời cũng muốn nó không quá mất cân bằng → bạn đưa randomization vào qua priority.
-
-
-
-	## 🧠 Cấu trúc Node:
-	
-		class TreapNode {
-			int key;       // khóa chính giống BST
-			int priority;  // giá trị random
-			TreapNode left, right;
-		}
-	
-	
-	## 🎯 Mục tiêu: 
-		1. Đảm bảo BST Property:
-			left.key < node.key < right.key
-	
-		2. Đảm bảo Heap Property: 
-			node.priority > left.priority && node.priority > right.priority
-			
-			
-
-
-
-	## ⚙️ Cách hoạt động:
-	
-		### Insert:
-			Chèn giống BST
-			Sau đó "bubble up" node mới theo priority bằng cách xoay cây như heap
-			
-			
-		### Delete:
-			Sử dụng rotation để đẩy node xuống cho đến khi nó là lá → rồi xoá
-			
-			
-			
-			
-	## 	🎲 Tại sao dùng priority random?
-		→ Để cây có tính cân bằng xác suất, như randomized quicksort
-		→ Tránh worst-case như BST lệch hẳn một phía
+		##A. Zig (nằm gần gốc)
+				10
+				/
+				5    ← muốn đưa lên
+			→ Right Rotation → 5 lên root.
 		
-		Có thể dùng random hoặc gán "priority = thời điểm tạo" để mô phỏng cây Cartesian hoặc cây thứ tự.
-			
-	## 	📈 Ứng dụng thực tế:	
-			
-			Khi bạn không muốn giữ chiều cao (như AVL) và không muốn dùng màu (như Red-Black)
-			Xây dựng index trong hệ thống phân tán
-			Persistent data structure nhờ cách tách và hợp Treap rất dễ			
-			
-			
-			
-			
-			
-# 🧩 PHẦN 2: SCAPEGOAT TREE	
-
-	## 📌 Khái niệm:
-		Scapegoat Tree = BST có kiểm tra chiều sâu và rebuild subtree khi mất cân bằng quá nặng
-
-
-
-	## 🎯 Mục tiêu:
 		
-		Tránh overhead của việc xoay cây liên tục như AVL
-			## Cân bằng bằng cách xây lại cả 1 subtree khi cần, thay vì từng bước
+		## B. Zig-Zig (node và cha đều trái hoặc đều phải)
+				
+					30
+					/
+					20
+					/
+				   10   ← target
+				→ Rotate 30 → 20 → 10
+				
+				Giống như:
+					Right rotate tại 30
+					Right rotate tại 20
+				
+		C. Zig-Zag (node trái - cha phải hoặc ngược lại)
 
-	## ⚙️ Cách hoạt động: 
-		Khi chèn 1 node, nếu chiều sâu vượt mức cho phép:
-			1. Tìm tổ tiên gọi là "scapegoat" (con dê tế thần) – nơi cấu trúc mất cân bằng
-			2. Rebuild toàn bộ cây con tại node đó (như xây lại BST từ mảng đã sắp xếp)
-
-
-
-	## 📐 Định nghĩa cân bằng: 
-		Nếu cây có n node, thì chiều cao tối đa là log₃⁄₂(n)
-		Nếu vượt giới hạn → rebuild
-		Không rotation! Không thêm metadata phức tạp như height hay color!
+					30
+					/
+				10
+					\
+					20 ← target
+				→ Zig-zag:
 		
-	## 	📉 Ưu và Nhược:
+			Left rotate tại 10
+			Right rotate tại 30
+			→ 20 lên root
 		
-| Ưu điểm                            | Nhược điểm                                       |
-| ---------------------------------- | ------------------------------------------------ |
-| Dễ triển khai                      | Rebuild toàn bộ subtree tốn kém                  |
-| Không cần lưu thêm thông tin       | Chỉ cân bằng ở insert, không cân bằng khi search |
-| Cấu trúc rõ ràng                   | Không tối ưu cho workload có pattern             |
-| Tốt cho hệ thống memory-persistent | Không bảo toàn O(log n) tại mọi bước             |
-
-
-
-	## 📈 Ứng dụng thực tế: 
 		
-		Khi bạn không muốn sử dụng rotation (phức tạp trong memory layout)
-		Dữ liệu hay được chèn ồ ạt rồi query sau (bulk-insert, batch mode)
+#📚 5. Ví dụ minh họa
+		Giả sử bạn có cây:
 		
-		Embedded systems hoặc file systems cần logic đơn giản, rebuild toàn bộ nhanh hơn rotation
-		
+			50
+			/  	\
+			30    70
+			/
+			10
+		Bạn search(10)
+		→ Zig-Zig case
+		→ Kết quả:
+
+				10
+				\
+				30
+				\
+				50
+					\
+					70
+#📌 6. So sánh với Red-Black / AVL Tree
+
+|                    | Splay Tree        | Red-Black Tree | AVL Tree       |
+| ------------------ | ----------------- | -------------- | -------------- |
+| Cân bằng tuyệt đối | ❌ Không           | ✅ Gần cân bằng | ✅ Rất cân bằng |
+| Truy cập gần đây   | ✅ Cực nhanh       | ❌ Bình thường  | ❌ Bình thường  |
+| Tệ nhất            | O(n)              | O(log n)       | O(log n)       |
+| Dễ code hơn        | ✅                 | ❌ Phức tạp     | ❌ Khó nhất     |
+| Phù hợp            | Cache, UI, Router | DB index       | Realtime, DB   |
 
 
 
-	## 🆚 So sánh nhanh:
-	
-| Tên            | Đảm bảo cân bằng        | Cách làm                   | Tốt cho                        |
-| -------------- | ----------------------- | -------------------------- | ------------------------------ |
-| Treap          | Trung bình (randomized) | Rotation dựa theo priority | Index, distributed cache       |
-| Scapegoat Tree | Cứng rắn hơn BST        | Rebuild subtree khi cần    | Embedded system, batch insert  |
-| AVL            | Luôn cân bằng           | Rotation theo chiều cao    | Realtime system, DB            |
-| Red-Black Tree | Tốt                     | Rotation + color logic     | Java TreeMap, Filesystem index |
+# 🛠️ 7. Ứng dụng thực tế
+	Memory cache: đưa phần tử được truy cập thường xuyên lên đầu.
+	Command history: đưa thao tác lặp lại gần đây lên đầu danh sách.
+	Data router hoặc network switch: ưu tiên node được truy cập thường xuyên.
+	Tối ưu UI menu, autocomplete: chữ được gõ nhiều sẽ được đưa lên gợi ý đầu.
 
+⚠#️ 8. Lưu ý khi dùng trong dự án thực
+	Không dùng nếu cần đảm bảo thời gian worst-case (ví dụ: DB, tài chính).
+	Rất phù hợp khi phân phối truy cập không đều (nhiều truy cập vào 1 node).
+	Cây có thể bị lệch → cần kiểm soát hoặc reset nếu cần.
+	Dễ dàng implement vì không cần giữ thêm thuộc tính phụ (như height, color).
 
+🚀 9. Kiến thức cần học thêm để dùng Splay Tree thành thạo
+	Biết chắc về: Binary Search Tree (BST), rotation trái/phải
+	Biết amortized time (phân tích thời gian trung bình)
+	Biết ứng dụng trong locality-sensitive systems (cache, history)
+	Nắm rõ Zig, Zig-Zig, Zig-Zag
+	Hiểu cách debug cây qua hình vẽ hoặc Tree printer
 
-#🧠 Kỹ năng cần có để hiểu và dùng tốt Treap / Scapegoat Tree:
-	Nắm chắc:
-		Binary Search Tree
-		Rotation
-		Phân tích độ phức tạp theo xác suất (amortized analysis)
-		Đệ quy và cấu trúc con trỏ
-	
-	Biết cách:
-		Cân bằng trade-off giữa chi phí insert/delete vs. query
-		Phân tích workload của hệ thống trước khi chọn tree phù hợp
-		Hiểu ứng dụng của Split, Merge trong Treap
 
 
 

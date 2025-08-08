@@ -1,107 +1,196 @@
-<html><head><title>Lesson 100 == Secrets Management ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 100 -- Secrets Management -//</h1><pre>
-# Khái niệm  
-	Secrets Management - Bảo vệ dữ liệu nhạy cảm trong hệ thống CI/CD & IaC 
-	
-	Là mọi loại thông tin nhạy cảm, nếu lộ ra thì : 
-		-  Mất bảo mật 
-		- Dễ bị khai thác 
-		- Có thể phá hủy cả hệ thống hoặc mất tiền 
+<html><head><title>Lesson 100 == 🏗️ Infrastructure as Code (IaC) – Hạ tầng dưới dạng mã ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 100 -- 🏗️ Infrastructure as Code (IaC) – Hạ tầng dưới dạng mã -//</h1><pre>
+
+# Khái niệm 
+	❓ IaC là gì? 
+		Hạ tầng không cấu hình bằng tay (click-click), mà định nghĩa bằng mã.
 		
-	
-	## Vi dụ 
-	Loại Secrets				Ví dụ
-	API Keys				AWS_ACCESS_KEY, GOOGLE_API_KEY
-	Database				DB_PASSWORD, ROOT_PASSWORD
-	Token					JWT_SECRET, OAUTH_TOKEN
-	SSH Keys				~/.ssh/id_rsa
-	TLS Cert				private.key, cert.pem
-	Encryption				ENCRYPTION_SALT, AES_KEY	
+	Tất cả tài nguyên như: 
+		Server, Database, VPC, Subnet, Load Balancer 
+		EKS Cluster, S3 Bucket, IAM Role, Firewall
+				→ Được mô tả bằng file YAML / JSON / HCL / TypeScript
+				→ Lưu trên Git → Có version, rollback, review, CI/CD
 
-# Nếu không quản lý đúng , điều gì sẽ xảy ra 
-	
-	- Secrets bị push vào GitHub công khai -> lộ key AWS -> mất tiền vài ngàn USD trong vài giờ 
-	- Dev lưu secrets trong .env file -> ai cũng đọc được 
-	- Jenkins lưu token dạng plaintext -> bị xâm nhập 
-	
-# Cách quản lý đúng cách 
-	
-	- Thêm .env vào .gitignore 
-	- Dùng git-secrets, truffleHog, gitleaks để quét trước khi push 
+
+
+
+
+# 🧱 Phân Loại IaC: Có Tầng 
 	
 
-	## Lưu secrets ở nơi chuyên biệt 
+
+Tầng												Công cụ / File									Mục đích
+IaC Hệ thống (Provisioning)						Terraform, Pulumi, AWS CDK					Tạo cloud resource: VM, VPC, LB, Database...
+IaC Ứng dụng (App Infrastructure)				Dockerfile, docker-compose					Build & định nghĩa container, service
+IaC Điều phối (Orchestration)					Kubernetes YAML, Helm, ArgoCD				Tự động hóa triển khai, scaling, networking
+
+
+
+
+
+
+
+
+
+
+
+
+# 💡 Vì sao IaC là bắt buộc cho hệ thống hiện đại?
+
+
+		Lợi ích													Mô tả
+	Đồng nhất môi trường					Dev = Test = Prod, không "máy tao chạy được"
+	Version Control							Biết ai sửa gì, rollback được như code
+	Tự động hóa hoàn toàn					Deploy hạ tầng như deploy app
+	Audit và Security						Kiểm tra thay đổi, tuân thủ chính sách
+	Cost Estimation							Biết trước chi phí hạ tầng trước khi apply
+
+
+
+
+# 🛠️ CÁC CÔNG CỤ IaC PHỔ BIẾN 
+	
+
+
+Tool					Ngôn ngữ						Dùng cho							        	Ghi chú mạnh mẽ
+Terraform			    HCL								Cloud mọi loại (AWS, GCP, Azure, v.v)			Chuẩn công nghiệp
+Pulumi				    TypeScript, Python, Go			Cloud, infra, app								Dễ dùng cho dev (code thật)
+AWS CDK				    TypeScript, Python				AWS Infra (100%)								Native cho AWS
+CloudFormation		    YAML/JSON						AWS												Dễ tích hợp, nhưng verbose (rườm rà)
+Ansible				    YAML							Server config, post-deploy						Dễ viết, chạy được cục bộ
+
+
+
+
+
+
+# 🔧 1. Terraform – King of IaC 
+	Terraform = chuẩn công nghiệp cho cloud IaC.
+
+	
+	## Cấu trúc đơn giản: 
 		
-		Giải pháp						 | Mô tả														| Mạnh khi
-		HashiCorp Vault 			| Hệ thống quản lý secrets chuyên nghiệp 						| System lớn, high-security
-		AWS Secrets Manager 		| Lưu secrets native trong AWS, rotate được						| Hạ tầng trên AWS
-		AWS Parameter Store (SSM)	| Rẻ hơn, đơn giản 												| Secrets đơn giản
-		GCP Secret Manager 			| Native cho Google Cloud 										| Dự án GCP
-		Kubernetes Secrets 			| Lưu secrets trong cluster 									| Tích hợp CI/CD & ArgoCD
-		SOPS + GitOps				| Secrets mã hoá lưu trong Git → dùng SOPS decrypt khi chạy		| GitOps pipeline
+		resource "aws_s3_bucket" "my_bucket" {
+		bucket = "my-company-backup"
+		acl    = "private"
+		}
 
 
+	## Quy trình chuẩn: 
+		
+		terraform init      # Khởi tạo project
+		terraform plan      # Xem trước sẽ tạo/sửa gì
+		terraform apply     # Thực thi
+		terraform destroy   # Xóa toàn bộ
+		
+
+	## Tính năng hay:
+			State file quản lý resource
+			Module tái sử dụng hạ tầng
+			Hỗ trợ multi-cloud	
+
+
+
+
+
+
+
+
+# 🌀 2. Pulumi – Viết IaC bằng ngôn ngữ thật 
 	
-	## Inject secrets vào runtime - không hardcode 
-		- dùng enviroment variable (từ CI/CI hoặc K8s)
-		- Mount secret volume container 
-		- Hoặc đọc trực tiếp từ Vault API / AWS Secrets Manage SDK 
-		
+		import * as aws from "@pulumi/aws";
+		const bucket = new aws.s3.Bucket("my-bucket");
 
-# Secrets trong CI/CD pipeline 
-
-	Không được viết thẳng và YAML -> dùng cơ chế riêng 
-		
-		CI Tool						 | Secrets hỗ trợ
-		GitHub Actions				 | secrets.* → trong repo settings
-		GitLab CI					 | CI/CD Variables + masked/protected
-		Jenkins						 | Credentials Plugin
-		ArgoCD						 | Dùng Sealed Secrets hoặc SOPS
-		Terraform 					 | Dùng Vault Provider hoặc remote backend
-		Docker 						 | Dùng --secret, hoặc mount secret file	
+	Phù hợp nếu team bạn là dev (JavaScript, TypeScript, Python) — không thích học HCL.
 
 
 
-# Kết hợp với IaC 
-Ví dụ với Terraform + Vault: 
 
-			provider "vault" {
-			address = "https://vault.mycompany.com"
-			}
+
+# ☁️ 3. AWS CDK 
+	CDK = Cloud Development Kit → cho AWS native 
+	
+	
+		const bucket = new s3.Bucket(this, 'MyBucket', {
+		versioned: true,
+		removalPolicy: RemovalPolicy.DESTROY
+		});
+
+
+
+
+	# Lợi ích:
+			Kiểm soát AWS resource sâu
+			Tự động sinh ra CloudFormation
+			Đúng cú pháp, autocompletion
+
+
+
+
+
+
+# 🤖 4. Ansible – Khi cần configure server 
+	
+
+	Ansible = viết script để:
+	
+		Cài nginx, docker
+		Setup config file
+		Quản lý người dùng SSH
+
+
+		- name: Install nginx
+		apt:
+			name: nginx
+			state: latest
+	
 			
-			data "vault_generic_secret" "aws_creds" {
-			path = "secret/aws"
-			}
-			
-			provider "aws" {
-			access_key = data.vault_generic_secret.aws_creds.data["access_key"]
-			secret_key = data.vault_generic_secret.aws_creds.data["secret_key"]
-			}
-			
-
-
-
-
-# Pro-level: GitOps + Secrets với SOPS + Sealed Secrets 
-
-	✨ Mô hình:
-		Secrets được mã hoá bằng SOPS
-		Lưu trữ file .enc.yaml trong Git repo
-		ArgoCD tự giải mã tại runtime (dùng key trong K8s)
-		Dễ audit, rollback, không bao giờ lộ plaintext
-
-
-
-
-
-
-# ✅ Best Practices (Senior-level) 
+	Không mạnh như Terraform trong provisioning, nhưng mạnh trong post-setup và cấu hình máy ảo.
 	
+	
+	
+	
+# 	🧠 Kiến trúc IaC chuẩn production 
+	
+	
+	## Tách biệt:
+	
+			infra/ → chứa Terraform hoặc CDK
+			app/ → chứa source code
+			ci-cd/ → chứa GitHub Actions / ArgoCD / Helm chart
+			Mỗi môi trường (dev/stage/prod) có folder riêng
+	
+	
+	
+	
+	## GitOps cho IaC: 
+	
+			Pull request để thay đổi hạ tầng
+			Terraform Plan chạy trên PR
+			Sau khi duyệt → Terraform Apply (qua GitHub Actions)
+	
+	
+	
+	
+	
+# 🔐 Terraform Cloud / Atlantis / Terragrunt 
 
-		✅ Làm đúng 									| ❌ Tuyệt đối tránh
-		Lưu secrets trong Vault / AWS SM 				| Push .env vào Git
-		Dùng env var + vault agent	 					| Hardcode secrets vào code
-		Rotate key định kỳ			 					| Dùng key hết hạn, không đổi
-		Giới hạn scope & permission  					| Cấp quyền full-access cho mọi container
+Công cụ							Mục đích
+Terraform Cloud				Hosted CI/CD cho IaC của HashiCorp
+Atlantis					Trigger Terraform Apply qua PR comment
+Terragrunt					Tổ chức nhiều module Terraform hiệu quả hơn
 
 
+
+
+# 🎯 Best Practice IaC cho Senior Architect
+	
+	
+		Không click hạ tầng → viết IaC cho tất cả
+		Lưu IaC trên Git → review, audit, rollback
+		Chạy Terraform Plan mỗi pull request
+		Dùng module để tái sử dụng (load balancer, VPC, database)
+		Không để secret trong code → dùng Vault / SOPS / GitHub Secrets	
+	
+	
+	
 </pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

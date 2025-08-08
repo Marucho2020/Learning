@@ -1,177 +1,100 @@
-<html><head><title>Lesson 47 == CopyOnWriteArrayList ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 47 -- CopyOnWriteArrayList -//</h1><pre># Khái niệm  
-	CopyOnWriteArrayList là một trong những Implementations của List trong Java, được thiết kế đặc biệt để hỗ trợ thao tác an toàn trong môi trường đa luồng (multi-threadeding) mà không cần sử dụng cơ chế synchronization phức tạp. 
+<html><head><title>Lesson 47 == Random Access ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 47 -- Random Access -//</h1><pre># Khái niệm  
+	RandomAccess trong Java là một interface trong Java Collections Framework dùng để chỉ những lớp danh sách (list) hỗ trợ việc truy cập đến các phần tử theo index một cách nhanh chóng, không phụ thuộc vào cấu trúc dữ liệu bên trong. Điều này đặc biệt quan trọng khi làm việc với các cấu trúc dữ liệu bên trong. Điều này đặc biệt quan trọng khi làm việc với các cấu trúc dữ liệu như mảng, nơi bạn có thể truy cập trực tiếp bất kỳ bằng phần tử nào bằng chỉ số. 
+
+	RandomAccess là một MAKER INTERFACE (giao diện đánh dấu) trong java.util có nghĩa là nó không chứa phương thức nào cần phải thực hiện mà chỉ đơn giản đánh dấu các lớp List hỗ trợ truy xuất nhanh (constant time access) đến các phần tử của list bằng index 
 	
-# Đặc điểm chính của CopyOnWriteArrayList 
-	## Dữ liệu được sao chép khi có thao tác ghi(write)
-		- Mỗi khi mỗi phần tử được thêm, sửa , hoặc xóa, một bản sao mới của danh sách array sẽ được tạo ra 
-		- Điều này giúp đảm bảo rằng các luồng đọc(read operations) vẫn có thể chạy mà không bị ảnh hưởng bởi luồng ghi(write operations)
+	## Cấu trúc hỗ trợ RandomAccess : 
+		Ví dụ , array trong java hoặc ArrayLisst đều hỗ trợ truy cập nhanh tới các phần tử thông qua chỉ số. Còn các cấu trúc như LinkedList không hỗ trợ, vì phải đi qua từng phần tử để đến mục tiêu(dẫn đến độ phức tạp tuyến tính O(n))
 		
-	## Không cần đồng bộ hóa thủ công(synchronized)	 
-		Do cơ chế copy-on-write, các thao tác độc không cần dùng đến khóa(lock), tránh được vấn đề deadlock và perfomance bottleneck trong môi trường đa luồng. 
 		
-	## Chi phí cao khi ghi(write operations đắt đỏ)
-		Vì mỗi lần thay đổi danh sách(add, set, remove()) đều tạo  ra một bản sao mới, nên nó không phù hợp khi có nhiều thao tác ghi 
-		
-	## Duyệt phần tử an toàn mà không cần ConcurrentModificationException 
-		- Nếu bạn dùng Iterator để duyệt qua danh sách một ArrayList thông thường, mà đồng thời có một luồng khác sửa danh sách, bạn có thể gặp lỗi  ConcurrentModificationException  
-		
-		- Với CopyOnWriteArrayList, các luồng đọc không bị ảnh hưởng bởi các thay đổi trong danh danh sách vì chúng làm việc với bản sao cũ  
+# Các implements class của RandomAccess (Các lớp triển khai của RandomAccess)
 
+	Các lớp List triển khai RandomAccess đều có thể truy cập phần tử bất kỳ trong danh sách với thời gian ổn định(O(1)). Một số lớp phổ biến: 
+		
+		## ArrayList 
+			Lớp này hỗ trợ RandomAccess vì nó sử dụng mảng bên trong để lưu trữ phần tử 
+			
+		## Vector  
+			Cũng hỗ trợ RandomAccess, nhưng vector ít được sử dụng trong các phiên bản mới của Java 
+			
+			CopyOnWriteArrayList : Lớp danh sách thread-safe dựa trên mảng hỗ trợ RandomAccess 
+			
+		Các lớp khác như LinkedList không triển khai RandomAccess, vì chúng không có khả năng truy xuất nhanh các phần tử qua chỉ số 
 
-#  Cách sử dụng CopyOnWriteArrayList 
+# Tại sao cần RandomAccess 
+	Khi làm việc với các danh sách trong Java , nếu danh sách là RandomAccess, việc truy cập phần tử bằng chỉ số sẽ rất nhanh, tức là O(1). Tuy nhiên nếu danh sách không hỗ trợ RandomAccess, truy cập đến một phần tử qua chỉ số yêu cầu duyệt qua các phần tử trước đó, điều này sẽ có độ phức tạp O(n)
 	
-	## Ví dụ 1 : DUyệt qua danh sách mà không bị ConcurrentModificationException 
-		
-	import java.util.concurrent.CopyOnWriteArrayList;
+# Ví dụ về RandomAccess 
 
-		public class CopyOnWriteArrayListExample {
+	## Ví dụ 1: ArrayList (Hỗ trợ RandomAccess) 
+		import java.util.ArrayList;
+		import java.util.List;
+		
+		public class RandomAccessExample {
 			public static void main(String[] args) {
-				CopyOnWriteArrayList<String> list = new CopyOnWriteArrayList<>();
-				list.add("Java");
-				list.add("Python");
-				list.add("C++");
+				List<String> list = new ArrayList<>();
+				list.add("A");
+				list.add("B");
+				list.add("C");
 		
-				// Duyệt danh sách bằng Iterator mà không gặp ConcurrentModificationException
-				for (String lang : list) {
-					System.out.println(lang);
-					list.add("JavaScript");  // Không lỗi ConcurrentModificationException
+				if (list instanceof RandomAccess) {
+					System.out.println("Danh sách này hỗ trợ RandomAccess");
+				} else {
+					System.out.println("Danh sách này không hỗ trợ RandomAccess");
 				}
 		
-				System.out.println("Final list: " + list);
+				// Truy cập phần tử nhanh chóng
+				System.out.println(list.get(0)); // A
+			}
+		}
+		
+		
+	## Ví dụ 2: LinkedList (Không hỗ trợ RandomAccess)
+		import java.util.LinkedList;
+		import java.util.List;
+		
+		public class RandomAccessExample {
+			public static void main(String[] args) {
+				List<String> list = new LinkedList<>();
+				list.add("A");
+				list.add("B");
+				list.add("C");
+		
+				if (list instanceof RandomAccess) {
+					System.out.println("Danh sách này hỗ trợ RandomAccess");
+				} else {
+					System.out.println("Danh sách này không hỗ trợ RandomAccess");
+				}
+		
+				// Truy cập phần tử, nhưng sẽ chậm hơn so với ArrayList
+				System.out.println(list.get(0)); // A
 			}
 		}
 
-		Khi for-each duyệt danh sách, CopyOnWriteArrayList sử dụng một bản sao cố định, vì vậy nó không bị lỗi ConcurrentModificationException, mặc dù chúng ta đang thêm phần tử mới trong khi duyệt.
+	
+	
+	
+# Tác dụng thực tế của RandomAccess 
 		
 		
-	## Ví dụ 2: So sánh 	 CopyOnWriteArrayList với ArrayList trong môi trường đa luồng 
-		Nếu dùng ArrayList trong môi trường đa luồng mà không có đồng bộ hóa, sẽ có thể xảy ra lỗi ConcurrentModificationException 
+	RandomAccess đặc biệt hữu ích khi bạn cần thao tác với các danh sách lớn và yêu cầu hiệu suất cao khi truy cập phần tử theo chỉ số. Đối với ArrayList(hỗ trợ RandomAccess), khi bạn gọi get(index), việc truy xuất sẽ mất O(1) thời gian. Còn LinkedList(không hỗ trợ RandomAccess) , truy xuất phần tử phải duyệt qua từng node, dẫn đến độ phức tạp O(n)
+	
+# Phương thức ListIterator và RandomAccess 
+	Nếu bạn muốn duyệt qua các phần tử của một danh sách mà không phải phụ thuộc vào RandomAccess, bạn có thể sử dụng ListIterator, một công cụ linh hoạt để duyệt qua danh sách. Tuy nhiên khi danh sách hỗ trợ RandomAccess, bạn có thể tối ưu hóa việc duyệt phần tử bằng cách sử dụng chỉ số thay vì phải đi qua tất cả các phần tử như trong trường hợp của LinkedList 	
+	
+# Hiệu suất 
+	Sử dụng ArrayList : 
+		Khi cần truy cập nhiều phần tử ngẫu nhiên(random access) với hiệu suất cao, bạn nên sử dụng ArrayList thay vì LinkedList 
 		
-			import java.util.ArrayList;
-			import java.util.List;
-			
-			public class ArrayListMultiThreading {
-				public static void main(String[] args) {
-					List<Integer> list = new ArrayList<>();
-					list.add(1);
-					list.add(2);
-					list.add(3);
-			
-					Thread thread1 = new Thread(() -> {
-						for (int num : list) {
-							System.out.println(num);
-							list.add(4); // Lỗi ConcurrentModificationException
-						}
-					});
-			
-					thread1.start();
-				}
-			}
-
-	
-	## Ví dụ 3: Sử dụng CopyOnWriteArrayList trong môi trường đa luồng (Không Lỗi)
-		import java.util.concurrent.CopyOnWriteArrayList;
-	
-		public class CopyOnWriteArrayListMultiThreading {
-			public static void main(String[] args) {
-				CopyOnWriteArrayList<Integer> list = new CopyOnWriteArrayList<>();
-				list.add(1);
-				list.add(2);
-				list.add(3);
+	Sử dụng LinkedList : 
+		Khi bạn cần thực hiện các thao tác chèn, xóa phần tử ở đầu hoặc giữa danh sách nhiều hơn là chỉ truy cập qua chỉ số, LinkedList sẽ là lựa chọn hợp lý, vì thao tác chèn và xóa phần tử trong LinkedList có độ phức tạo O(1), trong khi ArrayList lại cần phải di chuyển các phần tử .  
 		
-				Thread thread1 = new Thread(() -> {
-					for (int num : list) {
-						System.out.println(num);
-						list.add(4);  // Không lỗi
-					}
-				});
 		
-				thread1.start();
-			}
-		}
-	
-		
-		✅ Không bị lỗi ConcurrentModificationException
-💡 Lý do: Vì CopyOnWriteArrayList tạo một bản sao mới khi có thao tác ghi (write), nên Iterator vẫn duyệt danh sách cũ mà không bị lỗi.
-
-
-# Khi nào nên sử dụng  
-CopyOnWriteArrayList 
-
-	📌 Dùng khi:
-	✅ Khi có nhiều luồng đọc (read-heavy operations) nhưng ít luồng ghi
-	✅ Khi muốn tránh ConcurrentModificationException mà không cần sử dụng synchronization
-	✅ Khi cần duyệt danh sách an toàn trong môi trường đa luồng mà không cần synchronized
-	
-	🚫 Không nên dùng khi:
-	❌ Khi có nhiều thao tác ghi (add(), remove(), set()) vì mỗi lần ghi sẽ tạo một bản sao mới, tốn bộ nhớ và hiệu suất thấp.
-	❌ Khi cần danh sách thay đổi thường xuyên, ConcurrentLinkedQueue hoặc synchronized List có thể phù hợp hơn.	
-	
-	
-	
-	
-# So sánh CopyOnWriteArrayList với các Collection khác  
-	
-	
-Collection				Đa luồng?			Cơ chế đồng bộ hóa					Hiệu suất đọc			Hiệu suất ghi
-ArrayList				❌ Không			Không đồng bộ						Nhanh 🚀				Nhanh 🚀
-Vector					✅ Có				synchronized toàn bộ phương thức	Trung bình ⚡			Chậm 🐢
-CopyOnWriteArrayList	✅ Có				Copy-on-Write						Nhanh 🚀				Chậm 🐢
-ConcurrentLinkedQueue	✅ Có				Không khóa (lock-free)				Nhanh 🚀				Nhanh 🚀	
-	
-
-# Tóm tắt kiến thức dành cho Java Gold và Silver 
-✅ Điểm quan trọng cần nhớ cho kỳ thi:
-- CopyOnWriteArrayList là một danh sách an toàn trong môi trường đa luồng sử dụng cơ chế Copy-on-Write.
-- Khi có thao tác ghi (add(), set(), remove()), một bản sao mới của danh sách được tạo.
-- Không cần synchronized thủ công vì cơ chế Copy-on-Write đảm bảo an toàn cho đa luồng.
-- Hiệu suất ghi kém vì tạo bản sao mới tốn bộ nhớ và CPU, nhưng hiệu suất đọc rất cao.
-- Không bị lỗi ConcurrentModificationException khi duyệt danh sách, vì các luồng đọc không bị ảnh hưởng bởi các thay đổi trong danh sách.
-
-
-🎯 Kết luận
-Nếu chương trình của bạn có nhiều thao tác đọc, ít thao tác ghi, CopyOnWriteArrayList là một lựa chọn tuyệt vời.
-Nếu có nhiều thao tác ghi, hãy cân nhắc sử dụng ConcurrentLinkedQueue hoặc synchronized List thay vì CopyOnWriteArrayList.
-Trong kỳ thi Java Gold & Silver, hãy chú ý đến cách CopyOnWriteArrayList xử lý vòng lặp và thao tác ghi trong môi trường đa luồng.	
-	
-
-// Mối quan hệ giữa List và các Implementations của nó 
-
-java.util.List (Interface)
-│
-├── java.util.ArrayList (implements List, RandomAccess)
-│
-├── java.util.LinkedList (implements List, Deque)
-│
-├── java.util.Vector (implements List, RandomAccess)
-│   ├── java.util.Stack (extends Vector)
-│
-├── java.util.CopyOnWriteArrayList (implements List, RandomAccess)
-	
-	
-	
-// Mỗi quan hệ giữa List và RandomAccess 	
-	
-	
-            java.util.List (Interface)
-                  │
- ┌────────────────┴────────────────┐
- │                                 │
- │                     java.util.LinkedList
- │                                 ▲
- │                                 │
- │           ┌───────────────┬─────┴─────┐
- │           │               │           │
- │           │               │           │
- ▼           ▼               ▼           ▼
- java.util.ArrayList   java.util.Vector   java.util.CopyOnWriteArrayList
-        │                   │                   │
-        │                   ▼                   ▼
-        │          java.util.Stack          (implements RandomAccess)
-        │
-        ▼
-  (implements RandomAccess)
-	
+# Tóm lại  
+	RandomAccess là một giao diện đánh dấu cho các danh sách(List) hỗ trợ truy cập phần tử nhanh chóng bằng chỉ số(O(1)) 
+	ArrayList, Vector , và CopyOnWriteArrayList hỗ trợ RandomAccess 
+	LinkedList không hỗ trợ RandomAccess, và truy cập phần tử nó sẽ có độ phức tạp O(n)
+	Sử dụng ArrayList nếu cần truy cập nhanh các phần tử, và LinkedList nếu cần hiệu quả lớn hơn với các thao tác thêm, xóa phần tử  
 	
 	
 </pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

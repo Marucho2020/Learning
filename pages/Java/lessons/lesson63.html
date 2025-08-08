@@ -1,218 +1,205 @@
-<html><head><title>Lesson 63 == Protocol Buffer ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 63 -- Protocol Buffer -//</h1><pre>	Protocol Buffer (Protobuf) là một ngôn ngữ định dạng dữ liệu do Google phát triển, được dùng để serialize dữ liệu nhanh, nhẹ và hiệu quả hơn so với JSON hoặc XML . Nó là lựa chọn mặc định cho gRPC và rất phổ biến trong các hệ thống phân tán. 
-	
-
-
-Cú pháp						Vai trò
-int32					Kiểu số nguyên 32-bit
-string					Kiểu chuỗi UTF-8
-bool					Kiểu boolean
-message					Kiểu dữ liệu tự định nghĩa (custom type)
-
-
-
-	
-# Khai báo phiên bản (syntax)	
-	
-	syntax = "proto3"	; 	// Chọn phiên bản proto3 
-	
-	
-		proto2 (cũ , hỗ trợ required , toptinal , default values)
-		proto3 (mới , đơn giản hóa, tự động có giá trị mặc định)
+<html><head><title>Lesson 63 == gRPC ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 63 -- gRPC -//</h1><pre>	# Khái niệm 
+		gRPC là một framework giao tiếp từ xa (RPC) mã nguồn mở do Google phát triển. Nó tận dụng HTTP/2 và Protocol Bufers để tạo nên một hệ thống giao tiếp nhanh, nhẹ và hiệu quả, đặc biệt phù hợp với các hệ thống microservices và ứng dụng đa ngôn ngữ. Dưới đây là cái nhìn chi tiết từ cơ bản đến nâng cao về gRPC 
 		
-		
-		
-# Package và Import 
-
-	package mypackage ; 		// Giúp phân loại code , tránh trùng lặp 
-	
-	import "google/protobuf/timestamp.proto";	//Import thư viện ngoài 
-	
-		package  : giúp tránh trùng tên giữa các file .proto 
-		import   : giúp sử dụng các message định nghĩa sẵn 
-		
-		
-# Message (Định nghĩa cấu trúc dữ liệu ) 
-	
-	message Person{
-		string name = 1;
-		int32 age = 2;
-		bool isStudent = 3;
-	}
-		
-		## Lưu ý : 
-			Mỗi field có một số thứ tự duy nhất (1,2,3 ...)
-			Sô thứ tự không được thay đổi sau khi deploy (tránh lỗi khi deserialize)
+		## Định nghĩa 
+		gRPC (g Remote Procedure Call) là một framework RPC giúp bạn gọi các hàm từ xa như thể chúng là hàm cục bộ. Nó sử dụng HTTP/2 làm giao thức và truyền tải và Protocol Buffer(protobuf) làm ngôn ngữ định nghĩa dữ liệu 
+		 
+		## Đặc điểm nổi bật  
+			- HIệu năng cao : Sử dụng HTTP/2 với khả năng multiplexing, giảm độ trễ và tăng hiệu năng. 
+			
+			- TƯơng tác đa ngôn ngữ : Hỗ trợ nhiều ngôn ngữ lập trình (Java , C++ , Python, Go, ... )
+			
+			- Giao tiếp theo mô hình RPC : Giúp gọi hàm từ xa như các hàm nội bộ, giảm phức tạp của giao tiếp mạng 
+			
+			- Hỗ trợ Streaming : Có 4 kiểu giao tiếp : Unary (một-một), Server streaming , Client streaming , Bidirectional streaming 
 			
 			
 	
-# Kiểu dữ liệu trong protobuf 
-
-		Kiểu dữ liệu				Kích thước					Miêu tả
-		double						8 byte				Số thực
-		float						4 byte				Số thực
-		int32						4 byte				Số nguyên
-		int64						8 byte				Số nguyên
-		uint32						4 byte				Số nguyên không dấu
-		uint64						8 byte				Số nguyên không dấu
-		sint32						4 byte				Số nguyên có dấu (tối ưu)
-		sint64						8 byte				Số nguyên có dấu (tối ưu)
-		fixed32						4 byte				Số nguyên cố định
-		fixed64						8 byte				Số nguyên cố định
-		sfixed32					4 byte				Số nguyên có dấu cố định
-		sfixed64					8 byte				Số nguyên có dấu cố định
-		bool						1 bit				True/False
-		string						Variable			Chuỗi UTF-8
-		bytes						Variable			Chuỗi nhị phân	
-
-
-# Enum 
-	
-	enum Status {
+	# Kiến trúc và cách thức hoạt động của gRPC 
 		
-		UNKNOWN = 0 ;
-		ACTIVE = 1;
-		INACTIVE = 2;
-	}
-	
-	message User {
-		string name = 1;
-		Status status = 2;
-	}
-
-
-	💡 Lưu ý: 
-		Enum phải có giá trị mặc định là 0
-		Giá trị trong enum phải là số nguyên  
+		## Cấu trúc cơ bản : 
 		
+			### Bước 1 : Service Definition 
+				Bạn định nghĩa dịch vụ và các phương thức bằng ngôn ngữ định nghĩa giao diện (IDL) của Protocol Bufer trong file .proto 
+				
+					syntax = "proto3";
 
+					service Greeter {
+						rpc SayHello (HelloRequest) returns (HelloResponse);
+					}
+					
+					message HelloRequest {
+						string name = 1;
+					}
+					
+					message HelloResponse {
+						string message = 1;
+					}
 
-# Nested Message (Message lồng nhau)
-	
-	message Address {
-		string street = 1;
-		string city = 2;
-	}
+		
+			### Bước 2 : Code Generation 
+				Dựa vào file .proto, công cụ protoc sẽ tạo ra các lớp stub cho cả client và server 
+				
+			
+			## Bước 3 :  Client & Server 
+				- Client : Sử dụng stub đã tạo ra để gọi các phương thức của dịch vụ như gọi hàm nội bộ 
+				- Server : Triển khai các phương thức được định nghĩa trong file .proto và đăng ký dịch vụ trên server 
+				
 
-	message Person {
-		string name = 1;
-		Address address = 2; 	// Message bên trong message
-	
-	}
-
-
-
-# Repeated Fields (Danh sách )
-	
-	message Classroom{
-		repeated string students = 1 	// danh sách học sinh 
-	}
-
-	💡 Lưu ý: 
-		Không có List hay Array, chỉ có repeated 
-
-
-#	 Map  
-	
-	message PhoneBook {
-		map<string,string> contacts = 1;
-	}
-
-	💡 Lưu ý: 
-		KeyType chỉ có thể là string, int32 , int64 , bool 
-		ValueType có thể là bất kỳ kiểu nào 
+		
+		## Các kiểu RPC trong gRPC 
+			
+			### Unary RPC 
+				Client gửi một yêu cầu và nhận lại một phản hồi duy nhất 
+				
+			### Server Streaming RPC 
+				Client gửi một yêu cầu, server trả về một luồng các phản hồi 
+				
+			### Client Streaming RPC : 
+				Client gửi một luồng yêu cầu, server trả về một phản hồi duy nhất sau khi nhận đủ dữ liệu 
+				
+			### Bidirectional Streaming RPC 
+				Cả Client và server đều gửi luồng dữ liệu độc lập, giao tiếp song song 
 		
 		
 		
-# Optional Fields (trường không bát buộc )	
-
-	message Product {
-		string name = 1;
-		optional double price = 2;
-	}
 		
-		💡 Lưu ý: 
-			Từ Protobuf 3.15+ optional cho phép kiểm tra một field có tồn tại hay không 
+	# Cách triển khai gRPC 
 
+		## Bước 1 : Định nghĩa dịch vụ (Service Definition )
+			Tạo file greeter.proto như ví dụ ở phần trên 
+			Sử dụng protoc để sinh mã cho ngôn ngữ bạn cần 
+			
+					protoc --java_out=. --grpc-java_out=. greeter.proto
 
-# Oneof (Union Field - Chỉ một field tồn tại tại một thời điểm)
-	
-	message Response {
-		oneof result {
-			string successMessage = 1;
-			string errorMessage = 2;
-		}
-	}
-	
-		💡 Chỉ có thể set một field trong oneof, nếu set field khác thì field cũ sẽ bị ghi đè . 
+			
+			
+		
+		## Bước 2 : Triển khai server 
+			Cài đặt các phương thức theo file.proto đã định nghĩa 
+			Ví dụ Server triển khai trong Java : 
+				import io.grpc.Server;
+				import io.grpc.ServerBuilder;
+				import io.grpc.stub.StreamObserver;
+				
+				public class GreeterServer {
+					public static void main(String[] args) throws Exception {
+						Server server = ServerBuilder.forPort(50051)
+							.addService(new GreeterImpl())
+							.build()
+							.start();
+						System.out.println("Server started on port 50051");
+						server.awaitTermination();
+					}
+				
+					static class GreeterImpl extends GreeterGrpc.GreeterImplBase {
+						@Override
+						public void sayHello(HelloRequest req, StreamObserver<HelloResponse> responseObserver) {
+							String greeting = "Hello, " + req.getName();
+							HelloResponse reply = HelloResponse.newBuilder().setMessage(greeting).build();
+							responseObserver.onNext(reply);
+							responseObserver.onCompleted();
+						}
+					}
+				}
+
 		
 		
-# Bytes (Lưu dữ liệu nhị phân)	
+		
+		## Bước 3 : Triển khai Client 
+			Sử dụng Stub để gọi dịch vụ 
+				import io.grpc.ManagedChannel;
+				import io.grpc.ManagedChannelBuilder;
+				
+				public class GreeterClient {
+					public static void main(String[] args) {
+						ManagedChannel channel = ManagedChannelBuilder.forAddress("localhost", 50051)
+							.usePlaintext()
+							.build();
+						GreeterGrpc.GreeterBlockingStub stub = GreeterGrpc.newBlockingStub(channel);
+						
+						HelloRequest request = HelloRequest.newBuilder().setName("Alice").build();
+						HelloResponse response = stub.sayHello(request);
+						System.out.println("Greeting: " + response.getMessage());
+						
+						channel.shutdown();
+					}
+				}
+				
+						
+		
 	
-	message File{
-		string name = 1;
-		bytes = content 2;
-	}
+	# Tính năng nâng cao của gRPC 
+		
+		## Interceptors 
+			Định nghĩa: Các interceptor cho phép bạn chặn và xử lý các yêu cầu hoặc phản hồi, hữu ích để thêm logging, authentication hay xử lý lỗi.
+			
+			Ứng dụng: Thêm vào pipeline xử lý yêu cầu trên server hoặc client.
+		
+		
+
+		## Deadlines và Timeouts 
+			Định nghĩa: Cho phép bạn đặt thời gian tối đa cho mỗi RPC để tránh chờ đợi vô hạn.
+
+			Cách sử dụng: 
+				HelloResponse response = stub.withDeadlineAfter(3, TimeUnit.SECONDS)
+					.sayHello(request);
 
 
-# Dịch vụ gRPC  (Service )
 
-	service Greeter {
-		rpc SayHello (Hello Request) returns (HelloResponse);
-	}
+
+		## Streaming nâng cao 
+			Server Streaming : Xử lý các phản hồi dưới dạng luồng, phù hợp với việc truyền dữ liệu lớn 
+			
+			Client Streaming và Bidirectional Streaming : Tối ưu hóa giao tiếp khi cần gửi/nhận liên tục dữ liệu theo luồng .
+			
+			
+		## Bảo mật (Security ) 
+			TLS : gRPC hỗ trợ tích hợp bảo mật bằng TLS, đảm bảo dữ liệu truyền đi được mã hóa 
+			
+			Authentication : Có thể kết hợp với các cơ chế xác thực như OAuth2 để bảo vệ các dịch vụ 
+			
+			
+		## Load Balancing và Service Discovery 
+			gRPC có thể làm việc cùng với các hệ thống load balancing, service registry để hỗ trợ môi trường microservices quy mô lớn. 
+			
+			
+			
+# Ưu và nhược điểm của gRPC 
+	## Ưu điểm 
 	
-	message HelloRequest {
-		string name = 1;
-	}
+		Hiệu năng cao: Nhờ sử dụng HTTP/2 và dữ liệu nhị phân của Protocol Buffers.
+		
+		Đa ngôn ngữ: Hỗ trợ giao tiếp giữa các dịch vụ viết bằng nhiều ngôn ngữ khác nhau.
+		
+		Tích hợp streaming: Hỗ trợ giao tiếp theo luồng, thích hợp cho các ứng dụng thời gian thực.
+		
+		Bảo mật và quản lý lỗi: Hỗ trợ deadlines, interceptors, và TLS.
 	
-	message HelloResponse{
-		string message = 1;
-	}
 	
-		💡 Lưu ý: 
-			rpc khai báo một phương thức từ xa 
-			SayHello nhận HelloRequest và trả về HelloResponse
+	## Nhược điểm 
+
+			
+			Độ phức tạp ban đầu: Cấu hình và triển khai ban đầu phức tạp hơn so với REST.
+			
+			Không thân thiện với trình duyệt: gRPC truyền thống không làm việc trực tiếp trên trình duyệt (trừ khi dùng gRPC-Web).
+			
+			Yêu cầu học Protocol Buffers: Cần làm quen với ngôn ngữ định nghĩa dữ liệu mới.
 
 
 
-# Reserved (dự trữ số ID hoặc tên field)
-	message User {
-		reserved 2,3;						// không cho phép dùng số thứ tự 2, 3 
-		reserved "old_name";				// không cho phép dùng tên cũ 
-	}
+# Ứng dụng của gRPC trong thực tế 
+		Microservices: gRPC là lựa chọn lý tưởng cho giao tiếp giữa các dịch vụ trong kiến trúc microservices nhờ hiệu năng và khả năng mở rộng.
+		
+		Hệ thống phân tán: Các hệ thống cần giao tiếp nhanh và đáng tin cậy, chẳng hạn như hệ thống AI, machine learning pipeline. 
+		
+		Ứng dụng thời gian thực: Các ứng dụng cần truyền dữ liệu streaming (video, chat, telemetry) sử dụng gRPC để giảm độ trễ và tăng băng thông.
 
 
-# Extensions (Mở rộng message - chỉ có trong proto2 )	
-	extend User {
-		optional string email = 100;
-	}
-	
-	💡 Chỉ có trong proto2, bị loại bỏ trong proto3.
-
-
-
-# Thư viện Google Well-Known Types 
-	import "google/protobuf/timestamp.proto";
-	import "google/protobuf/duration.proto";
-	
-	message Event {
-	string name = 1;
-	google.protobuf.Timestamp start_time = 2;
-	google.protobuf.Duration duration = 3;
-	}
-
-
-
-# Sinh code Java từ file Protobuf 
-
-	protoc --java_out=. your_file.proto
- 
-	// nếu dùng với gRPC 
-	\protoc --java_out=. --grpc-java_out=. your_file.proto
-
-🎯 Kết Luận
-✔ Đây là toàn bộ cách viết của ngôn ngữ Protocol Buffers.
-✔ Nó tối ưu hóa việc serialize dữ liệu so với JSON/XML.
-✔ Tích hợp mạnh với gRPC để giao tiếp giữa các microservices.
-✔ Hỗ trợ nhiều kiểu dữ liệu nâng cao như oneof, map, optional.
-
+		gRPC là một framework mạnh mẽ và linh hoạt: Không chỉ hỗ trợ giao tiếp RPC truyền thống mà còn tích hợp các tính năng nâng cao như streaming, interceptors, deadlines và bảo mật.
+		Ứng dụng trong thời đại đa ngôn ngữ và microservices: gRPC thực sự tỏa sáng khi cần xây dựng các hệ thống phân tán hiệu năng cao, bảo mật và mở rộng.
+		Tư duy và cách triển khai chuyên sâu: Khi thi Java Gold hay xây dựng dự án thực tế, hiểu rõ gRPC sẽ giúp bạn chọn lựa công nghệ phù hợp với yêu cầu của dự án và tối ưu hóa giao tiếp giữa các thành phần.
+		
+		
+		
 </pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

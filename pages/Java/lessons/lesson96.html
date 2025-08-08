@@ -1,93 +1,112 @@
-<html><head><title>Lesson 96 == Build tool( BuildKit / Kaniko / Jib) ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 96 -- Build tool( BuildKit / Kaniko / Jib) -//</h1><pre> # Khái niệm 
- 🐳 BuildKit / Kaniko / Jib — Giải pháp build container image 
+<html><head><title>Lesson 96 == Cache ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 96 -- Cache -//</h1><pre>
+# Khái niệm  
 	
-	## ❓Vì sao không dùng docker build nữa?
-
-		docker build mặc định:
-		Chậm, không cache tốt
-		Không chạy được trong môi trường non-root (CI/CD)
-		Phải cài Docker Daemon (gây rắc rối trong GitHub Actions, GitLab CI...)
-		==> Sinh ra các công cụ build hiện đại hơn:
+		Cache = Lưu trữ tạm thời dữ liệu đã xử lý, nhằm tránh xử lý lại.
+		Nếu bạn gọi API hoặc truy vấn DB và kết quả không thay đổi trong 5 phút → không cần làm lại. Cache nó.
 
 
-# 🔧 1. BuildKit (cho Docker) 
-
-	BuildKit là engine build mới của Docker. Tích hợp sâu trong Docker từ v19+.
-		Build nhanh hơn, hỗ trợ layer caching thông minh
-		Cho phép remote cache + export cache
-		Hỗ trợ --secret, --ssh, mount=type=cache	
+# Mục tiêu 
 	
+Mục tiêu									Ý nghĩa thực tế
+Giảm latency							Truy vấn dữ liệu nhanh hơn → phản hồi nhanh hơn cho user
+Giảm tải backend						API/DB không phải tính lại → tiết kiệm CPU/RAM
+Tiết kiệm chi phí						Tránh gọi API trả phí (GPT, Cloud API...)
+Tăng khả năng chịu tải					Dễ scale vì cache hoạt động như buffer chống sốc
+Tăng độ ổn định							Khi service backend lỗi → có thể fallback từ cache
+
+
+# 💡 VÍ DỤ THỰC TẾ TRONG DỰ ÁN
+
+	## 1. Frontend / Client-side Cache 
+		- Trình duyệt cache ảnh, JS, CSS (cache-control headers)
+		- SWR/React Query cache kết quả API: tránh gọi lại mỗi lần load lại tab
+		- Service Worker Cache (PWA): để chạy offline
+
+
+	## 2. Backend API Cache (Controller level) 
+		### Với Spring Boot: 
 		
-		Cách dùng: 
-			DOCKER_BUILDKIT=1 docker build \
-			--build-arg BUILDKIT_INLINE_CACHE=1 \
-			-t myapp:latest .
-	
-		Trong GitHub Actions:
+			@Cacheable(value = "products", key = "#id")
+			public Product getProduct(Long id) { ... }
+		→ Lần đầu gọi, truy vấn DB. Sau đó, trả kết quả từ cache (ví dụ Redis). 
 		
-		- name: Enable Docker BuildKit
+	## 	3. Database Query Cache 
 	
-	run: echo '{"features":{"buildkit": true}}' | sudo tee /etc/docker/daemon.json
+		-   Hibernate cache (L1, L2)
+		-   Query result cache với Redis
+		-   Tăng tốc truy vấn phức tạp (JOIN, AGGREGATE...)
+			
+
+	## 4 . HTTP/API Gateway Cache 
+		API Gateway (Kong, Nginx, Cloudflare...) có thể cache response 
+		
+		Ví dụ: 
+			/weather/tokyo cache trong 10s
+			/exchange-rate cache 5 phút
+
+
+
+	## 5. Distributed Cache (dùng trong Microservices)
 	
+		Dùng Redis, Memcached như layer trung gian dữ liệu giữa services
+		Ví dụ: auth service cache access token, user info để các service khác không cần query DB
+
+
+
+# ⚙️ CÁC LOẠI CACHE PHỔ BIẾN 
+	
+Loại cache				Mô tả ngắn										Công cụ phổ biến
+In-memory				Nằm trong RAM app								Guava Cache, Caffeine
+Distributed				Dùng giữa nhiều server/service					Redis, Memcached
+HTTP cache				Cache response theo URL + headers				Nginx, Cloudflare, Varnish
+File cache				Lưu data tính toán (VD: image, model)			Local disk, CDN
+Build cache				Cache kết quả build/test để tăng tốc CI			GitHub Cache, Docker layer
+
+
+
+# 🧪 CÁC TRƯỜNG HỢP SỬ DỤNG CACHE CỤ THỂ 
 	
 
-# 🔧 2. Kaniko (Google) 
+Tình huống																	Giải pháp cache
+Gọi OpenAI API 1000 lần/ngày								Cache kết quả prompt trong Redis/SQLite
+Truy vấn getUserById(id) 10 lần/giây						@Cacheable với key = userId
+Trang sản phẩm truy cập nhiều								CDN + API Gateway Cache + Redis
+Thống kê realtime nhưng update mỗi phút						Cache query trong 30s → update async sau
+CI/CD chạy Maven build mất 5 phút							Cache .m2/ và Docker layers
+Mobile app load dữ liệu từ API								Cache offline (Room DB, localStorage, PWA SW)
 
-	Kaniko = Docker build không cần Docker daemon.
+
+
+# 🔥 NHỮNG SAI LẦM CHẾT NGƯỜI KHI DÙNG CACHE 
 	
-	Thường dùng khi bạn chạy CI trong môi trường như Kubernetes hoặc GitLab CI runner.
-		- Build image trong container
-		- Không cần quyền root
-		- Phù hợp với Kubernetes CI pipeline
-	Trong GitLab CI:
 
-		kaniko-build:
-		image: gcr.io/kaniko-project/executor:latest
-		script:
-			- /kaniko/executor --context $CI_PROJECT_DIR --dockerfile Dockerfile --destination $CI_REGISTRY_IMAGE:latest
+			Không có chiến lược invalidation (xóa cache)
+			→ Dữ liệu stale, sai, hoặc bị leak thông tin
+			
+			Dùng cache cho dữ liệu thay đổi liên tục (stock, balance...)
+			→ Cache không phù hợp → gây lỗi nghiêm trọng
+			
+			Không có TTL (time-to-live)
+			→ Cache sống mãi, không dọn → memory leak hoặc dữ liệu lỗi thời
+			
+			Quên phân biệt cache theo user/session/region
+			→ Trả nhầm kết quả của người khác
 
 
-
-# 🔧 3. Jib (cho Java) 
-	Jib = Build Docker image cho Java mà KHÔNG cần Dockerfile. 
+# 🧠 STRATEGY(chiến lược) CHO SENIOR/ARCHITECT 
 	
-	Google tạo Jib cho Maven/Gradle. Nó tự phân tích các dependency và tạo multi-layer image hiệu quả.
-
-
-
-	## Cài Jib cho Maven: 
-		<plugin>
-		<groupId>com.google.cloud.tools</groupId>
-		<artifactId>jib-maven-plugin</artifactId>
-		<version>3.4.0</version>
-		</plugin>
-
+	## 🔄 Cache Invalidation: 
 	
-	## Build: 
-		mvn compile jib:dockerBuild
+		Cache không chỉ set là xong, mấu chốt là khi nào xóa hoặc làm mới (refresh).
+		TTL (time to live): hết hạn tự xóa
+		Manual invalidate: khi update data, gọi cache.evict(...)
+		Write-through, Read-through, Cache-aside: chiến lược phổ biến
 
 
-	## Push image: 
-		mvn compile jib:build \
-		-Dimage=ghcr.io/myorg/myapp
-
-
-
-
-
-
-# ✅ Khi nào dùng cái nào? 
-	
-Tool			Môi trường phù hợp									Ưu điểm nổi bật
-BuildKit	Local dev, Docker-based CI						Hiệu năng cao, tích hợp tốt
-Kaniko		CI/CD trong Kubernetes, GitLab CI				Không cần Docker daemon
-Jib			Dự án Java, Spring Boot							Không cần Dockerfile, build cực nhanh
-
-
-
-
-
-
-
+	## 🏗 Thiết kế Cache Layer: 
+		User → CDN → API Gateway (cache) → Backend → Redis → DB
+		
+	Cache theo tầng, mỗi tầng có TTL khác nhau
+	Tầng trên fail → dùng tầng dưới fallback
 
 </pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

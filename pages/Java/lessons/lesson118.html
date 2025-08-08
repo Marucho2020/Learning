@@ -1,156 +1,164 @@
-<html><head><title>Lesson 118 == Delete trong RBT ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 118 -- Delete trong RBT -//</h1><pre># Khái niệm  
-Xóa node trong Red-Black Tree (RBT) là phần phức tạp nhất của cấu trúc này. Ở level senior, bạn cần hiểu rõ cả quy trình xóa, các tình huống mất cân bằng, hành vi của màu sắc (red/black) và đặc biệt là các phép xoay – tô màu – rebalance sau xóa.
-
-
-# 🎯 MỤC TIÊU CỦA DELETE TRONG RBT
-	Duy trì 5 tính chất của Red-Black Tree sau khi xóa:
+<html><head><title>Lesson 118 == Segment Tree ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 118 -- Segment Tree -//</h1><pre># Khái niệm 
+	Segment Tree là một cấu trúc dữ liệu cây cực kỳ mạnh mẽ, được thiết kế để xử lý nhanh các bài toán dạng range query + update. Ở level senior system engineer / backend optimization, hiểu và sử dụng Segment Tree giúp bạn:
 	
-		- Mỗi node là đỏ hoặc đen
-		- Gốc là đen
-		- Lá (null) là đen
-		- Node đỏ không có con đỏ
-		- Mọi đường từ một node đến các lá null đều có số node đen bằng nhau
+	-  Giảm độ phức tạp từ O(n) xuống O(log n) cho các bài toán range
+	-  Tối ưu xử lý dữ liệu lớn (data stream, time-series)
+	-  Ứng dụng trong database engine, game engine, analytics, real-time monitoring...
 
+# 🧠 1. MỤC TIÊU CỦA SEGMENT TREE
 
-# 🔁 CÁC BƯỚC XÓA NODE TRONG RBT
-
-	## 🔹 BƯỚC 1: Xóa như BST bình thường 
-		Nếu node có 2 con → thay thế bằng node kế tiếp (in-order successor), rồi xóa successor.
-		Giờ bạn còn lại trường hợp node bị xóa chỉ có 0 hoặc 1 con → xử lý tương đối dễ.
+	Cho 1 mảng số A[0...n-1], bạn cần xử lý nhiều truy vấn dạng:
+		- query(l, r) → tổng, min, max, GCD, XOR, đếm số âm… 
+		- update(i, val) → thay đổi phần tử ở vị trí i 
 		
+	Nếu xử lý bằng cách duyệt đoạn [l, r] thì mỗi truy vấn là O(n) → không chấp nhận được nếu có tới hàng triệu lần gọi.
+	➡️ Segment Tree giải quyết bằng cách chia mảng ra thành các đoạn (segment), lưu thông tin của từng đoạn.
+	
+	
+	
+# 🌲 2. CẤU TRÚC VÀ Ý TƯỞNG 
+	Là cây nhị phân, mỗi node quản lý 1 đoạn con của mảng.
+	
+		Root quản lý đoạn [0, n-1]
+		Mỗi node chia đôi thành hai đoạn con: [l, mid] và [mid+1, r]
+		Lá tương ứng với từng phần tử đơn lẻ.
+		Mỗi node lưu thông tin đã xử lý (tổng, min, max…) 
 		
-	## 	 BƯỚC 2: Phân tích màu sắc
-		Nếu node bị xóa là đỏ → KHÔNG ảnh hưởng gì, kết thúc.
-		Nếu node bị xóa là đen:
-			Mất đi 1 “black height” → RBT có thể mất cân bằng.
-			Cần fix lại màu sắc và cấu trúc bằng cách "fix double black".
-
-
-
-
-
-# 🔥 FIX DOUBLE BLACK (ĐỎ ĐEN KÉP)
-	Giả sử bạn xóa một node đen x, và thay thế bởi child (null hoặc 1 con). Nếu child cũng đen → xuất hiện double black → phải xử lý.
-	
-	Có 4 tình huống chính (fix bằng rotation + recoloring):
-	
-	## 🔸 CASE 1: Sibling đỏ
-	
-     P(B)
-    /    \
-   x(DB)  S(R)
-         /   \
-       ...   ...
-	Sibling S là đỏ, P là đen → xoay P và S, đổi màu → biến thành case khác.
-
-
-	## 🔸 CASE 2: Sibling đen, cả 2 con đều đen
-
-     P(?)
-    /    \
-   x(DB)  S(B)
-         /   \
-       B     B
-
-		Đổi màu S → đỏ
-		Nếu P là đỏ → đổi P thành đen → OK
-		Nếu P đen → P bị “double black”, đệ quy fix lên trên
-
-
-	## 🔸 CASE 3: Sibling đen, con gần là đỏ, con xa là đen
-
-     P
-    / \
-   x   S(B)
-       / \
-     R   B
-	Xoay S và R để tạo ra Case 4
-	
-	
-	## 🔸 CASE 4: Sibling đen, con xa là đỏ
-     P
-    / \
-   x   S(B)
-       / \
-     B   R
-
-	Xoay P và S
-	Đổi màu để cân bằng → fix hoàn tất
+Ví dụ: A = [5, 8, 6, 3, 2, 7, 4, 6]
+		
+                            [0,7]
+                          /       \
+                     [0,3]         [4,7]
+                    /    \         /    \
+                [0,1]  [2,3]   [4,5]   [6,7]
+                / \     / \    / \     / \
+              [0][1] [2][3] [4][5]  [6][7]
 	
 
-# 🧠 MẸO GHI NHỚ (THEO QUAN SÁT)
 
-	Sibling đỏ: luôn xoay và đổi màu ngay.
-	
-	Sibling đen:
-		Nếu có con đỏ xa → xoay phải/left rồi đổi màu
-		Nếu 2 con đen → đẩy đen lên trên → đệ quy tiếp
 
-# 💻 JAVA PSEUDO-CODE (PHẦN FIX)
-void fixDelete(Node x) {
-    while (x != root && x.color == BLACK) {
-        if (x == x.parent.left) {
-            Node s = x.parent.right;
+# 📏 3. CÁC TÁC VỤ CHÍNH 
+	## ✅ Xây cây: build(A) 
+		Đệ quy chia mảng thành đoạn con 
+		Tính giá trị tại từng node (tổng, min…)
+		⏱️ Độ phức tạp: O(n)
 
-            if (s.color == RED) {
-                // Case 1
-                s.color = BLACK;
-                x.parent.color = RED;
-                rotateLeft(x.parent);
-                s = x.parent.right;
-            }
 
-            if (s.left.color == BLACK && s.right.color == BLACK) {
-                // Case 2
-                s.color = RED;
-                x = x.parent;
-            } else {
-                if (s.right.color == BLACK) {
-                    // Case 3
-                    s.left.color = BLACK;
-                    s.color = RED;
-                    rotateRight(s);
-                    s = x.parent.right;
-                }
+	## ✅ Truy vấn đoạn: query(l, r) 
+		Đệ quy duyệt xuống cây 
+		Nếu đoạn con nằm trong phạm vi, lấy node
+		Nếu đoạn con cắt nhau, duyệt cả hai bên
+		⏱️ Độ phức tạp: O(log n)
+		
+	## ✅ Cập nhật phần tử: update(i, val) 
+		Duyệt xuống cây đến lá tương ứng 
+		Cập nhật node và các tổ tiên
+		
+	⏱️ Độ phức tạp: O(log n)	
 
-                // Case 4
-                s.color = x.parent.color;
-                x.parent.color = BLACK;
-                s.right.color = BLACK;
-                rotateLeft(x.parent);
-                x = root;
-            }
+
+
+# 🛠️ 4. CÀI ĐẶT JAVA
+class SegmentTree {
+    int[] tree;
+    int n;
+
+    public SegmentTree(int[] arr) {
+        n = arr.length;
+        tree = new int[4 * n]; // đủ chỗ
+        build(arr, 0, 0, n - 1);
+    }
+
+    void build(int[] arr, int node, int l, int r) {
+        if (l == r) {
+            tree[node] = arr[l];
         } else {
-            // mirror of above logic
-            ...
+            int mid = (l + r) / 2;
+            build(arr, 2 * node + 1, l, mid);
+            build(arr, 2 * node + 2, mid + 1, r);
+            tree[node] = tree[2 * node + 1] + tree[2 * node + 2];
         }
     }
-    x.color = BLACK;
+
+    int query(int node, int l, int r, int ql, int qr) {
+        if (qr < l || ql > r) return 0;
+        if (ql <= l && r <= qr) return tree[node];
+        int mid = (l + r) / 2;
+        return query(2 * node + 1, l, mid, ql, qr) +
+               query(2 * node + 2, mid + 1, r, ql, qr);
+    }
+
+    void update(int node, int l, int r, int idx, int val) {
+        if (l == r) {
+            tree[node] = val;
+        } else {
+            int mid = (l + r) / 2;
+            if (idx <= mid)
+                update(2 * node + 1, l, mid, idx, val);
+            else
+                update(2 * node + 2, mid + 1, r, idx, val);
+            tree[node] = tree[2 * node + 1] + tree[2 * node + 2];
+        }
+    }
+
+    // Helper
+    public int rangeQuery(int l, int r) {
+        return query(0, 0, n - 1, l, r);
+    }
+
+    public void pointUpdate(int idx, int val) {
+        update(0, 0, n - 1, idx, val);
+    }
 }
 
 
 
-# 📊 TÓM TẮT ĐỘ PHỨC TẠP
+# 🚀 5. ỨNG DỤNG TRONG HỆ THỐNG
 
-| Thao tác     | Thời gian                          |
-| ------------ | ---------------------------------- |
-| Xóa          | `O(log n)`                         |
-| Sửa màu/xoay | `≤ 3` lần xoay, `O(log n)` đổi màu |
+| Ứng dụng                        | Lý do sử dụng Segment Tree       |
+| ------------------------------- | -------------------------------- |
+| Game server real-time combat    | Range damage, range heal         |
+| Financial system (streaming)    | Query trên time series           |
+| Compiler / IDE                  | Phát hiện lỗi trên đoạn code     |
+| Search engine                   | Đếm số term xuất hiện theo range |
+| Database (Column store)         | Bitmap index, summary tree       |
+| Analytics Engine (log / metric) | Query giá trị trong range        |
+
+
+# 🔥 6. NÂNG CAO: Lazy Propagation 
+
+	Khi có nhiều truy vấn update(l, r) (cập nhật cả đoạn), việc cập nhật từng node rất tốn thời gian.
+
+	→ Dùng kỹ thuật Lazy Propagation:
+	
+		Đánh dấu node chưa cập nhật
+		Khi nào truy vấn đến thì mới cập nhật (lazy)
+	
+	Kết quả: Cả update và query vẫn giữ O(log n)
+
+# 🎓 7. NHỮNG THỨ CẦN HỌC THÊM
+
+| Chủ đề                  | Mục tiêu                          |
+| ----------------------- | --------------------------------- |
+| Lazy Propagation        | Xử lý update theo đoạn            |
+| Persistent Segment Tree | Undo/redo, versioning             |
+| Merge Sort Tree         | Query thứ hạng (order statistic)  |
+| Segment Tree Beats      | Complex range (max/min update...) |
+| Segment Tree 2D         | Xử lý range query trong ma trận   |
+| Fenwick Tree (BIT)      | So sánh và lựa chọn               |
 
 
 
-# 🚨 LƯU Ý QUAN TRỌNG
-	Đừng sửa cây khi chưa xét đến màu sắc – đỏ/đen quyết định logic
-	Hãy vẽ ra paper / debug bằng in-order và màu để hiểu “tình trạng”
-	Khi gặp bug logic, thường là do quên truyền lại màu sắc khi xoay
+# ✅ TÓM TẮT 
 
-# 📘 BẠN CẦN HỌC THÊM
-| Chủ đề                      | Vì sao cần                      |
-| --------------------------- | ------------------------------- |
-| Tree rotation (Left, Right) | Là core của RBT, AVL, Treap     |
-| Coloring strategy           | Logic đỏ/đen của mỗi case       |
-| In-order traversal          | Debug + xác nhận cân bằng cây   |
-| Red-Black vs AVL            | So sánh để hiểu sâu về cấu trúc |
+| Tính năng         | Segment Tree           |
+| ----------------- | ---------------------- |
+| Truy vấn đoạn     | `O(log n)`             |
+| Cập nhật          | `O(log n)`             |
+| Dùng nhiều memory | `4 * n` phần tử        |
+| Tối ưu disk?      | Không (chạy trong RAM) |
+| Nâng cấp          | Lazy, Persistent, 2D   |
+
 
 
 </pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

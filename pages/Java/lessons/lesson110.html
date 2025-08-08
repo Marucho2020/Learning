@@ -1,152 +1,152 @@
-<html><head><title>Lesson 110 == Red-Black Tree ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 110 -- Red-Black Tree -//</h1><pre># Khái niệm 
-	Là một dạng Binary Search Tree tự cân bằng. Nó đảm bảo cây luôn ở trạng thái "gần như cân bằng", đủ tốt để giữ hiệu năng O(log n) cho mọi thao tác: insert, delete, search.
+<html><head><title>Lesson 110 == AVL Tree ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 110 -- AVL Tree -//</h1><pre>
+# Khái niệm  
+	
+	AVL Tree là một dạng Binary Search Tree (BST) tự cân bằng, được phát minh năm 1962 bởi hai ông người Nga: Adelson-Velsky và Landis. 
+	
+	BST bình thường có vấn đề nghiêm trọng:
+		- Nếu bạn insert 1, 2, 3, 4,… theo thứ tự, nó thoái hóa thành Linked List.
+		- Thay vì O(log n), giờ mọi thao tác tệ hại thành O(n).
 
-		Khác với AVL Tree – cân bằng “chặt chẽ”, thì Red-Black Tree chỉ cân bằng “lỏng hơn”, đổi lại:
-			- Thêm/sửa/xóa nhanh hơn
-			- Cấu trúc đơn giản hơn
-			- Rất phù hợp cho các hệ thống ghi-heavy (write-intensive)
+	➡️ AVL Tree giải quyết bằng cách:
+		Tự động cân bằng cây sau mỗi insert() hoặc delete().
+		
+		
+		
+# 	⚙️ 2. Quy tắc cân bằng của AVL 
+
+	Mỗi node giữ một balance factor: 	
+			balance = height(left subtree) - height(right subtree)
+
+	AVL giữ nguyên tắc: 
+		balance ∈ { -1, 0, 1 } 
+		
+	Nếu chênh lệch lớn hơn ±1 → Cây mất cân bằng → cần xoay cây (rotation) để tái cân bằng. 	
+		
+		
+# 	3. Cơ chế Rotation 
+		
+		
+| Trường hợp           | Tên | Cách xử lý                |
+| -------------------- | --- | ------------------------- |
+| Insert vào trái-trái | LL  | Xoay phải                 |
+| Insert vào phải-phải | RR  | Xoay trái                 |
+| Insert vào trái-phải | LR  | Xoay trái → rồi xoay phải |
+| Insert vào phải-trái | RL  | Xoay phải → rồi xoay trái |
+		
+		
+		
 		
 
 
-# 📏 2. Quy tắc đỏ-đen (Red-Black Invariants) 
-
-	Mỗi node có một màu: đỏ hoặc đen, và phải tuân theo các quy tắc:
-		- Mỗi node hoặc đỏ, hoặc đen
-		- Root luôn đen
-		- Mọi null node (lá ảo) được xem là đen
-		- Node đỏ không được có con đỏ (không có chuỗi đỏ liên tiếp)
-		- Mọi đường đi từ node đến lá đều đi qua cùng số lượng node đen (black-height invariant)
-
-	Mục đích: giữ cho cây không lệch quá nhiều, nhưng đủ linh hoạt để insert/delete nhanh chóng.
-	
-	
-
-
-#  3. Độ phức tạp 
-	
-| Thao tác | Big-O    |
-| -------- | -------- |
-| Search   | O(log n) |
-| Insert   | O(log n) |
-| Delete   | O(log n) |
-
-	Vì cây không hoàn toàn cân bằng như AVL nên:
-		- Search có thể chậm hơn AVL
-		- Nhưng Insert/Delete nhanh hơn AVL
-	
-	→ Phù hợp với các hệ thống cần tốc độ ghi và xử lý đồng thời (concurrent updates)
-	
-
-
-# 🔁 4. Xoay cây (Rotation) 
-	
-
-	Tương tự AVL Tree, Red-Black Tree dùng các phép xoay cây trái/phải để giữ cân bằng sau khi insert hoặc delete.
-	Các thao tác xoay thường kèm với đổi màu node để giữ đúng các quy tắc đỏ-đen.
-	Ví dụ insert vào cây có node đỏ → kiểm tra uncle có đỏ không → nếu đỏ, đổi màu; nếu đen, xoay cây.
-
-
-
-
-# 🧰 5. Khi nào nên dùng Red-Black Tree? 
-
-	## ✅ Phù hợp:
-	
-		- Hệ thống write-heavy: log system, event stream
-		- Java collections: TreeMap, TreeSet đều dùng Red-Black Tree
-		- Kernel data structures: Linux rb_tree dùng để quản lý memory, I/O
-		- Database indexing (nội bộ)
-		- Khi insert/delete xảy ra thường xuyên
-
-
-
-# ❌ Không phù hợp: 
-	
-	- Khi cần độ cân bằng tuyệt đối (AVL tốt hơn cho search tốc độ cao)
-	- Hệ thống không chịu được latency variation nhỏ (real-time system)
-	- Khi cần cấu trúc immutable (functional programming → persistent tree)
-
-
-# 🏗️ 6. So sánh Red-Black Tree với AVL Tree 
-	
-| Tiêu chí            | AVL Tree            | Red-Black Tree      |
-| ------------------- | ------------------- | ------------------- |
-| Cân bằng            | Chặt (strict)       | Lỏng (relaxed)      |
-| Tìm kiếm            | Nhanh hơn           | Chậm hơn chút       |
-| Insert/Delete       | Chậm hơn            | Nhanh hơn           |
-| Rotation trung bình | Nhiều               | Ít                  |
-| Ứng dụng            | Realtime, đọc nhiều | Viết nhiều, scale   |
-| Có sẵn trong Java   | ❌                   | ✔️ TreeMap, TreeSet |
-
-
-
-# 🧪 7. Triển khai Red-Black Tree trong Java 
-	
-	Không cần code tay. Java cung cấp sẵn:
-	
-		TreeMap<K, V>: Map có thứ tự, tự cân bằng nhờ Red-Black Tree
-		TreeSet<T>: Set có thứ tự, không trùng lặp 
-
-			TreeMap<Integer, String> rbtMap = new TreeMap<>();
-			rbtMap.put(10, "A");
-			rbtMap.put(5, "B");
-			rbtMap.put(20, "C");
-
-		Tự động cân bằng, hỗ trợ floorKey(), ceilingKey(), subMap(), firstEntry(), lastEntry() — tất cả O(log n).
-
-
-# 🔍 8. Ứng dụng thực tế
-
-| Hệ thống     | Mục đích sử dụng                                              |
-| ------------ | ------------------------------------------------------------- |
-| Java SDK     | TreeMap/TreeSet                                               |
-| Linux Kernel | `struct rb_node` quản lý heap memory                          |
-| Cassandra    | Memtable lưu tạm thời trong RAM dùng RBT                      |
-| Game Engine  | Collision detection phân vùng thời gian thực                  |
-| Database     | Bên dưới Secondary Index có thể dùng RBT nếu không cần B-Tree |
-
-
-# 🔐 9. Ưu điểm / Nhược điểm
-
-	## ✔️ Ưu điểm:
-		- Dễ cài đặt hơn AVL (ít xoay hơn)
-		- Hiệu năng ghi tốt
-		- Tương thích tốt với multithread
-		- Được dùng rộng rãi (TreeMap, TreeSet, OS, DB…)	
-	
-	## ❌️ Nhược điểm::
-
-		- Search chậm hơn AVL
-		- Không cân bằng tuyệt đối → không predict được latency chính xác
-		- Cần logic phức tạp khi delete
+	## 	Ví dụ LL Case (Left-Left): 
 		
+Insert: 3 → 2 → 1
+
+    3
+   /
+  2
+ /
+1
+	Insert: 3 → 2 → 1
+
+    3
+   /
+  2
+ /
+1
 
 
-# 📚 10. Cần học gì thêm? 
+	Xoay phải: 
+	     2
+		/ \
+		1   3
+ 
+	
+		
+	| Thao tác | Độ phức tạp |
+	| -------- | ----------- |
+	| `Insert` | O(log n)    |
+	| `Delete` | O(log n)    |
+	| `Search` | O(log n)    |
+			
+	AVL luôn đảm bảo cây cân bằng tốt hơn Red-Black Tree
+	→ Tốc độ tìm kiếm thường nhanh hơn RBT (ở read-heavy system).
 
-| Chủ đề             | Lý do                                             |
-| ------------------ | ------------------------------------------------- |
-| Tree rotation      | Hiểu được cơ chế xoay giúp debug/debug lib        |
-| Concurrent RB-Tree | Xử lý đa luồng trong hệ thống scale               |
-| Persistent Tree    | Nếu dùng trong functional programming (immutable) |
-| B-Tree / B+ Tree   | Khi cần dùng cho DB index hoặc disk               |
-| Segment Tree       | Nếu cần range queries nhiều                       |
+# 	🧰 5. Dùng AVL Tree khi nào?	
+
+		- Hệ thống read-heavy: search nhanh, insert/update ít
+		- Memory-efficient systems: giữ cây nhỏ nhất có thể
+		- Realtime applications cần predictable latency
+		- Compilers, Parsers, Autocomplete Engines	
 
 
-| Chủ đề                        | Tại sao                                                 |
-| ----------------------------- | ------------------------------------------------------- |
-| Delete trong RBT              | Phức tạp, thường bỏ qua trong demo nhưng rất quan trọng |
-| Concurrent Tree               | Cho các hệ thống đa luồng                               |
-| Compare với B-Tree            | Khi lưu vào disk (cache, DB)                            |
-| Functional Red-Black Tree     | Dùng trong immutable data structure                     |
-| TreeMap / TreeSet source code | Hiểu hệ thống thực sự dùng như thế nào                  |
+# ❌ Tránh dùng: 
+	Write-heavy systems: insert/delete tốn công balance
+	Khi cần multi-threaded access (AVL phức tạp hơn RBT)
+	Nếu bạn cần cấu trúc dữ liệu built-in → Java không hỗ trợ AVL, chỉ có Red-Black (TreeMap)
+
+
+# 🧩 6. So sánh với các cấu trúc khác 
+	
+| Cấu trúc       | Cân bằng     | Tốc độ search | Insert/Delete | Java Support        |
+| -------------- | ------------ | ------------- | ------------- | ------------------- |
+| BST thường     | Không        | Tệ nếu lệch   | Dễ            | ✔️                  |
+| **AVL Tree**   | ✅ Tuyệt đối  | ✅ Rất tốt     | ❌ Nặng        | ❌ (phải tự code)    |
+| Red-Black Tree | ✅ Trung bình | Tốt           | Tốt           | ✔️ TreeMap, TreeSet |
+| HashMap        | ❌ Không cần  | ✅ Nhanh nhất  | ✅             | ✔️                  |
+| B-Tree         | ✅ Cho disk   | ✅             | ✅             | DB / file systems   |
+
+# 💥 7. Nhược điểm của AVL Tree 
+
+	Phức tạp khi delete(): phải xử lý nhiều trường hợp xoay cây
+	Mỗi node cần lưu thêm thông tin height, nên tốn thêm RAM
+	Tốc độ insert() chậm hơn Red-Black Tree vì xoay cây nhiều hơn	
+
+
+# 🧠 8. Java triển khai AVL (custom) 
+
+Không có trong thư viện chuẩn → cần tự code:
+
+class Node {
+    int val, height;
+    Node left, right;
+
+    Node(int val) {
+        this.val = val;
+        this.height = 1;
+    }
+}
+
+Mỗi lần insert(), bạn phải:
+	Tính lại height
+	Tính balance
+	Gọi rotateLeft, rotateRight nếu mất cân bằng
+	Nếu muốn, tôi sẽ code full 1 class AVLTree Java với insert/delete/rotate cho ông.
 
 
 
 
-Red-Black Tree là giải pháp cân bằng giữa tốc độ và hiệu năng thực tế.
-Nó không tối ưu về mặt lý thuyết (search nhanh nhất), nhưng lại ổn định và linh hoạt hơn trong các hệ thống thực chiến write-heavy, nơi cấu trúc dữ liệu cần tự cân bằng và hoạt động ổn định dưới áp lực dữ liệu lớn.
+#  9. Case thực tế dùng AVL 
+| Hệ thống               | Dùng AVL để làm gì?                     |
+| ---------------------- | --------------------------------------- |
+| Từ điển / Autocomplete | Lưu trữ từ có prefix gần đúng           |
+| Compiler               | Cấu trúc dữ liệu cho biểu thức toán học |
+| Game Engine            | Xử lý quadtree / spatial data           |
+| Realtime Leaderboard   | AVL giữ score theo thứ tự rank          |
+| Filesystem Index       | Tìm file theo tên, size… nhanh nhất     |
 
+
+# 📚 10. Học gì thêm để làm chủ AVL? 
+| Chủ đề             | Lý do                                           |
+| ------------------ | ----------------------------------------------- |
+| Rotation Theory    | Hiểu sâu hơn về xoay cây                        |
+| Red-Black Tree     | So sánh ưu nhược RBT vs AVL                     |
+| Segment Tree       | Xử lý range-based queries                       |
+| B-Trees            | Làm việc với ổ đĩa hoặc DB                      |
+| Splay Tree / Treap | Các dạng BST tối ưu khác                        |
+| Immutable AVL      | Dùng trong Functional Programming (VD: Clojure) |
+
+	
 
 
 

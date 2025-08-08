@@ -1,168 +1,177 @@
-<html><head><title>Lesson 48 == Iterator và Iteration ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 48 -- Iterator và Iteration -//</h1><pre>
+<html><head><title>Lesson 48 == CopyOnWriteArrayList ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 48 -- CopyOnWriteArrayList -//</h1><pre># Khái niệm  
+	CopyOnWriteArrayList là một trong những Implementations của List trong Java, được thiết kế đặc biệt để hỗ trợ thao tác an toàn trong môi trường đa luồng (multi-threadeding) mà không cần sử dụng cơ chế synchronization phức tạp. 
+	
+# Đặc điểm chính của CopyOnWriteArrayList 
+	## Dữ liệu được sao chép khi có thao tác ghi(write)
+		- Mỗi khi mỗi phần tử được thêm, sửa , hoặc xóa, một bản sao mới của danh sách array sẽ được tạo ra 
+		- Điều này giúp đảm bảo rằng các luồng đọc(read operations) vẫn có thể chạy mà không bị ảnh hưởng bởi luồng ghi(write operations)
+		
+	## Không cần đồng bộ hóa thủ công(synchronized)	 
+		Do cơ chế copy-on-write, các thao tác độc không cần dùng đến khóa(lock), tránh được vấn đề deadlock và perfomance bottleneck trong môi trường đa luồng. 
+		
+	## Chi phí cao khi ghi(write operations đắt đỏ)
+		Vì mỗi lần thay đổi danh sách(add, set, remove()) đều tạo  ra một bản sao mới, nên nó không phù hợp khi có nhiều thao tác ghi 
+		
+	## Duyệt phần tử an toàn mà không cần ConcurrentModificationException 
+		- Nếu bạn dùng Iterator để duyệt qua danh sách một ArrayList thông thường, mà đồng thời có một luồng khác sửa danh sách, bạn có thể gặp lỗi  ConcurrentModificationException  
+		
+		- Với CopyOnWriteArrayList, các luồng đọc không bị ảnh hưởng bởi các thay đổi trong danh danh sách vì chúng làm việc với bản sao cũ  
 
-# Khái niệm  
 
-	## Iteration (Duyệt qua phần tử)
-		Là quá trình lặp qua các phần tử của một tập hợp Collection như List, Set, Map 
-		
-	## Iterator (Design Pattern)	
-		Là một thiết kế mẫu (Design Pattern) giúp duyệt các phần tử trong một Collection mà không cần biết chi tiết cấu trúc chi tiết bên trong  
-		
-	-> Java cung cấp Iterator như một Interface trong java.util, giúp duyệt phần tử của Collection một cách an toàn và có thể loại bỏ phần tử khi đang duyệt 
+#  Cách sử dụng CopyOnWriteArrayList 
 	
-	
-	## Các bài toán thường hay sử dụng Iterator 
-		Thường được sử dụng trong các bài toán thao tác với tập hợp dữ liệu lớn, yêu cầu truy cập tuần tự, và có thể cần xóa hoặc sửa dữ liệu khi duyệt. Dưới đây là những bài toán phổ biến thường sử dụng Iterator trong java 
+	## Ví dụ 1 : DUyệt qua danh sách mà không bị ConcurrentModificationException 
 		
-			- Xóa phần tử thỏa mãn điều kiện (Remove Elements While Iterating)
-				
-			- Duyệt danh sách liên kết (LinkedList Traversal)
-			
-			- Duyệt Map (Key-Value Traversal)
-			....
-	Bài toán						Loại Iterator nên dùng								Điểm nổi bật
-	Xóa phần tử khi duyệt			Iterator									Tránh ConcurrentModificationException
-	Duyệt LinkedList				Iterator									Hiệu suất cao hơn for loop
-	Duyệt Map						Iterator<Map.Entry<K,V>>					Truy cập key-value dễ dàng
-	Duyệt ngược List				ListIterator								Hỗ trợ duyệt 2 chiều
-	Custom Iterable					Iterable<T>									Hỗ trợ for-each cho class tùy chỉnh
-	Duyệt song song					Spliterator									Tối ưu hiệu suất
-	Tách từ trong chuỗi				StringTokenizer								Nhanh hơn split()
-	
-	
-# Sử dụng Iterator trong Java 
-		
-		### Ví dụ sử dụng Iterator cơ bản  
-		import java.util.*;
-		public class IteratorExample {
+	import java.util.concurrent.CopyOnWriteArrayList;
+
+		public class CopyOnWriteArrayListExample {
 			public static void main(String[] args) {
-				List<String> list = new ArrayList<>(Arrays.asList("A", "B", "C", "D"));
+				CopyOnWriteArrayList<String> list = new CopyOnWriteArrayList<>();
+				list.add("Java");
+				list.add("Python");
+				list.add("C++");
 		
-				Iterator<String> iterator = list.iterator(); // Lấy Iterator từ list
-		
-				while (iterator.hasNext()) { // Kiểm tra còn phần tử không
-					String item = iterator.next(); // Lấy phần tử tiếp theo
-					System.out.println(item);
+				// Duyệt danh sách bằng Iterator mà không gặp ConcurrentModificationException
+				for (String lang : list) {
+					System.out.println(lang);
+					list.add("JavaScript");  // Không lỗi ConcurrentModificationException
 				}
+		
+				System.out.println("Final list: " + list);
 			}
 		}
-		
-		remove() có thể xóa phần tử khỏi Collection trong khi duyệt.
-	
-	
 
-	## Xóa phần tử trong khi duyệt (Iterator với for-each)
-		Thông thường khi duyệt qua danh sách phần tử mà thêm xóa phần tử sẽ gây ra lỗi vì đang duyệt mà -> ConcurrentModificationException 
+		Khi for-each duyệt danh sách, CopyOnWriteArrayList sử dụng một bản sao cố định, vì vậy nó không bị lỗi ConcurrentModificationException, mặc dù chúng ta đang thêm phần tử mới trong khi duyệt.
 		
-		### Ví dụ gây ra lỗi ConcurrentModificationException 
-			import java.util.*;
-			public class IteratorRemoveExample {
+		
+	## Ví dụ 2: So sánh 	 CopyOnWriteArrayList với ArrayList trong môi trường đa luồng 
+		Nếu dùng ArrayList trong môi trường đa luồng mà không có đồng bộ hóa, sẽ có thể xảy ra lỗi ConcurrentModificationException 
+		
+			import java.util.ArrayList;
+			import java.util.List;
+			
+			public class ArrayListMultiThreading {
 				public static void main(String[] args) {
-					List<String> list = new ArrayList<>(Arrays.asList("A", "B", "C", "D"));
+					List<Integer> list = new ArrayList<>();
+					list.add(1);
+					list.add(2);
+					list.add(3);
 			
-					for (String item : list) { // Sử dụng for-each
-						if (item.equals("B")) {
-							list.remove(item); // Gây ConcurrentModificationException
+					Thread thread1 = new Thread(() -> {
+						for (int num : list) {
+							System.out.println(num);
+							list.add(4); // Lỗi ConcurrentModificationException
 						}
+					});
+			
+					thread1.start();
+				}
+			}
+
+	
+	## Ví dụ 3: Sử dụng CopyOnWriteArrayList trong môi trường đa luồng (Không Lỗi)
+		import java.util.concurrent.CopyOnWriteArrayList;
+	
+		public class CopyOnWriteArrayListMultiThreading {
+			public static void main(String[] args) {
+				CopyOnWriteArrayList<Integer> list = new CopyOnWriteArrayList<>();
+				list.add(1);
+				list.add(2);
+				list.add(3);
+		
+				Thread thread1 = new Thread(() -> {
+					for (int num : list) {
+						System.out.println(num);
+						list.add(4);  // Không lỗi
 					}
-				}
-			}
-
+				});
 		
-		-> Lý do lỗi xảy ra: for-each sử dụng Iterator ngầm, nhưng remove() từ Collection trực tiếp làm thay đổi cấu trúc list, gây ra ConcurrentModificationException 
-		
-		--> Ta sử dụng Iterator.remove() sẽ giải quyết được lỗi này 
-		
-		## Ví dụ sử dụng Iterator.remove() an toàn vì nó cập nhật trạng thái bên trong của Iterator 
-			Iterator<String> iterator = list.iterator();
-			while (iterator.hasNext()) {
-				if (iterator.next().equals("B")) {
-					iterator.remove(); // Xóa phần tử an toàn
-				}
-			}
-
-	
-	
-# ListIterator - Iterator nâng cao 
-	## Nếu bạn cần duyệt theo cả 2 chiều(forward & backward) trong List hãy dùng ListIterator : 
-		
-		import java.util.*;
-		public class ListIteratorExample {
-			public static void main(String[] args) {
-				List<String> list = new ArrayList<>(Arrays.asList("A", "B", "C", "D"));
-				ListIterator<String> listIterator = list.listIterator();
-		
-				// Duyệt xuôi
-				while (listIterator.hasNext()) {
-					System.out.print(listIterator.next() + " "); // Output: A B C D
-				}
-		
-				System.out.println();
-		
-				// Duyệt ngược
-				while (listIterator.hasPrevious()) {
-					System.out.print(listIterator.previous() + " "); // Output: D C B A
-				}
+				thread1.start();
 			}
 		}
-
-	## ListIterator có thể : 
-		- Duyệt xuôi(next()) và ngược(previois)
-		- Thêm phần tử (add())
-		- Sửa phần tử(set())
-		- Xóa phần tử(remove()) an toàn  
-		
-# Iterabale Interface - tùy chỉnh Iterator 
 	
-	Nếu bạn muốn một class có thể sử dụng trong for-each, hãy triển khai Iterable<T>
-	-> Tức là ta biến một Class thành một dạng Danh sách để duyệt được ấy 
-	Iterable giúp class có thể dùng for-each loop mà không cần gọi iterator() thủ công 
 		
-		### Ví dụ  
-		import java.util.*;
-		class CustomCollection implements Iterable<String> {
-			private List<String> data = Arrays.asList("X", "Y", "Z");
-		
-			@Override
-			public Iterator<String> iterator() {
-				return data.iterator(); // Trả về Iterator của List
-			}
-		}
-		
-		public class IterableExample {
-			public static void main(String[] args) {
-				CustomCollection collection = new CustomCollection();
-		
-				for (String item : collection) { // for-each có thể dùng vì đã implement Iterable
-					System.out.println(item);
-				}
-			}
-		}
+		✅ Không bị lỗi ConcurrentModificationException
+💡 Lý do: Vì CopyOnWriteArrayList tạo một bản sao mới khi có thao tác ghi (write), nên Iterator vẫn duyệt danh sách cũ mà không bị lỗi.
 
-# Spliterator - Iterator tối ưu cho Stream  
-	Java 8 giới thiệu Spliterator<T> như một cách mạnh mẽ hơn để duyệt dữ liệu song song  
-	Spliterator hỗ trợ duyệt song song (parallel processing ) giúp tôi ưu hiệu suất khi xử lý dữ liệu lớn  
+
+# Khi nào nên sử dụng  
+CopyOnWriteArrayList 
+
+	📌 Dùng khi:
+	✅ Khi có nhiều luồng đọc (read-heavy operations) nhưng ít luồng ghi
+	✅ Khi muốn tránh ConcurrentModificationException mà không cần sử dụng synchronization
+	✅ Khi cần duyệt danh sách an toàn trong môi trường đa luồng mà không cần synchronized
+	
+	🚫 Không nên dùng khi:
+	❌ Khi có nhiều thao tác ghi (add(), remove(), set()) vì mỗi lần ghi sẽ tạo một bản sao mới, tốn bộ nhớ và hiệu suất thấp.
+	❌ Khi cần danh sách thay đổi thường xuyên, ConcurrentLinkedQueue hoặc synchronized List có thể phù hợp hơn.	
 	
 	
-		import java.util.*;
-		public class SpliteratorExample {
-			public static void main(String[] args) {
-				List<String> list = Arrays.asList("A", "B", "C", "D");
-		
-				Spliterator<String> spliterator = list.spliterator();
-				spliterator.forEachRemaining(System.out::println);
-			}
-		}
-
-# So sánh cách duyệt Collection  	
 	
-Cách			Duyệt					Có thể xóa?							Hỗ trợ duyệt ngược?				Hỗ trợ song song?
-for-each		Dễ dùng					❌ Không							❌ Không							❌ Không
-Iterator		Cơ bản					✅ Có (remove())					❌ Không							❌ Không
-ListIterator	Nâng cao				✅ Có (remove(), set(), add())		✅ Có								❌ Không
-Spliterator		Hiệu suất cao			❌ Không							❌ Không							✅ Có
+	
+# So sánh CopyOnWriteArrayList với các Collection khác  
+	
+	
+Collection				Đa luồng?			Cơ chế đồng bộ hóa					Hiệu suất đọc			Hiệu suất ghi
+ArrayList				❌ Không			Không đồng bộ						Nhanh 🚀				Nhanh 🚀
+Vector					✅ Có				synchronized toàn bộ phương thức	Trung bình ⚡			Chậm 🐢
+CopyOnWriteArrayList	✅ Có				Copy-on-Write						Nhanh 🚀				Chậm 🐢
+ConcurrentLinkedQueue	✅ Có				Không khóa (lock-free)				Nhanh 🚀				Nhanh 🚀	
+	
+
+# Tóm tắt kiến thức dành cho Java Gold và Silver 
+✅ Điểm quan trọng cần nhớ cho kỳ thi:
+- CopyOnWriteArrayList là một danh sách an toàn trong môi trường đa luồng sử dụng cơ chế Copy-on-Write.
+- Khi có thao tác ghi (add(), set(), remove()), một bản sao mới của danh sách được tạo.
+- Không cần synchronized thủ công vì cơ chế Copy-on-Write đảm bảo an toàn cho đa luồng.
+- Hiệu suất ghi kém vì tạo bản sao mới tốn bộ nhớ và CPU, nhưng hiệu suất đọc rất cao.
+- Không bị lỗi ConcurrentModificationException khi duyệt danh sách, vì các luồng đọc không bị ảnh hưởng bởi các thay đổi trong danh sách.
 
 
+🎯 Kết luận
+Nếu chương trình của bạn có nhiều thao tác đọc, ít thao tác ghi, CopyOnWriteArrayList là một lựa chọn tuyệt vời.
+Nếu có nhiều thao tác ghi, hãy cân nhắc sử dụng ConcurrentLinkedQueue hoặc synchronized List thay vì CopyOnWriteArrayList.
+Trong kỳ thi Java Gold & Silver, hãy chú ý đến cách CopyOnWriteArrayList xử lý vòng lặp và thao tác ghi trong môi trường đa luồng.	
+	
 
+// Mối quan hệ giữa List và các Implementations của nó 
 
+java.util.List (Interface)
+│
+├── java.util.ArrayList (implements List, RandomAccess)
+│
+├── java.util.LinkedList (implements List, Deque)
+│
+├── java.util.Vector (implements List, RandomAccess)
+│   ├── java.util.Stack (extends Vector)
+│
+├── java.util.CopyOnWriteArrayList (implements List, RandomAccess)
+	
+	
+	
+// Mỗi quan hệ giữa List và RandomAccess 	
+	
+	
+            java.util.List (Interface)
+                  │
+ ┌────────────────┴────────────────┐
+ │                                 │
+ │                     java.util.LinkedList
+ │                                 ▲
+ │                                 │
+ │           ┌───────────────┬─────┴─────┐
+ │           │               │           │
+ │           │               │           │
+ ▼           ▼               ▼           ▼
+ java.util.ArrayList   java.util.Vector   java.util.CopyOnWriteArrayList
+        │                   │                   │
+        │                   ▼                   ▼
+        │          java.util.Stack          (implements RandomAccess)
+        │
+        ▼
+  (implements RandomAccess)
+	
+	
+	
 </pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

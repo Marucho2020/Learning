@@ -1,125 +1,123 @@
-<html><head><title>Lesson 132 == LongAdder ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 132 -- LongAdder -//</h1><pre>
-# ✅ 1. Vấn đề gốc với AtomicLong 
-	AtomicLong.incrementAndGet() là một CAS (Compare-And-Swap) trên cùng một biến đơn (long), nên:
-
-		Nếu có nhiều thread cùng truy cập → tất cả tranh giành một vùng nhớ duy nhất
-		CPU pipeline flush + false sharing + cache invalidation
-		Gây contention rất nặng, mặc dù vẫn là "lock-free"
-		→ Giải pháp: Phân mảnh bộ đếm → mỗi thread ghi vào “ô đếm” riêng → sau đó cộng dồn lại khi cần thiết.
-	
-# ✅ 2. Giải pháp: LongAdder – lock-free + contention-friendly 
-
-	## Cơ chế hoạt động 
-		- Gồm một giá trị chính (base)
-		- Và một mảng các Cell (kiểu long), mỗi Cell tương đương một thread-local counter
-		- Khi contention thấp → tăng trực tiếp `base`
-		- Khi contention tăng → thread ghi vào Cell của mình (xác định qua hash)
+<html><head><title>Lesson 132 == Atomic Integer ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 132 -- Atomic Integer -//</h1><pre># Khái niệm 
+	## Vấn đề gốc: Vì sao cần AtomicInteger? 
+		Trong Java, các phép toán trên int không nguyên tử (non-atomic).
 		
+			int counter = 0;
+			counter++; // NOT atomic
 
-	## 📌 Điểm mạnh: 
-		Nhiều thread ghi song song mà không tranh giành cùng một biến
-		sum() cộng dồn giá trị của base + tất cả các Cell
+		Phép counter++ thực chất là 3 bước: 
+			load counter → tăng → lưu lại
 
 
-	## Hình ảnh tư duy: 
+		→ Nếu nhiều thread cùng chạy counter++, thì kết quả có thể bị mất cập nhật (race condition).
 		
-      LongAdder
-        |
-     [base = 10]
-        |
-   +----+----+----+
-   | C1 | C2 | C3 | ...   → array of cells (mỗi thread ghi riêng)
-   +----+----+----+
+# ✅ 2. AtomicInteger giải quyết gì? 
+			
+	AtomicInteger cung cấp các phép toán nguyên tử (atomic) trên int mà không cần dùng synchronized.
 
-Tổng = base + sum(C1..Cn)
+		AtomicInteger counter = new AtomicInteger(0);
+		counter.incrementAndGet(); // ++counter, atomic
+		→ Không cần lock, vẫn thread-safe.
 
 
-# ✅ 3. Ưu điểm nổi bật 
+# ✅ 3. Cơ chế bên trong (rất quan trọng)
+
+
+	## 🔧 AtomicInteger dùng hardware-level CAS (Compare-And-Swap) thông qua Unsafe API của JVM.
+		Ví dụ (đơn giản hóa):
+
+while (true) {
+    int old = value;
+    int newVal = old + 1;
+    if (compareAndSwap(old, newVal)) break;
+}
+
+		→ Nếu value bị thay đổi bởi thread khác, CAS sẽ thất bại và thử lại (spin loop).
+
+	🔹 compareAndSwap là atomic hardware instruction (trên CPU như LOCK CMPXCHG x86)
+
+
+# ✅ 4. Các phương thức quan trọng
+
+| Method                          | Mô tả                                                            |
+| ------------------------------- | ---------------------------------------------------------------- |
+| `get()`                         | Trả về giá trị hiện tại                                          |
+| `set(int newValue)`             | Gán giá trị (không đảm bảo memory visibility nếu ko có volatile) |
+| `getAndIncrement()`             | Trả về rồi ++ (postfix)                                          |
+| `incrementAndGet()`             | ++ rồi trả về (prefix)                                           |
+| `compareAndSet(expect, update)` | Nếu giá trị hiện tại == `expect`, thì gán `update` (atomic)      |
+| `getAndUpdate(UnaryOperator)`   | Apply hàm custom (nhưng vẫn atomic)                              |
+
+
+# ✅ 5. Ưu điểm 
+
+	Hiệu năng cao hơn synchronized, vì không block
+	Tránh context switch
+	Phù hợp cho các biến đếm (counter, ID generator, lượt truy cập…)
+
+
+
+# ⚠️ 6. Cạm bẫy & hiểu sai phổ biến 
+
+	## ❌ Dùng AtomicInteger nhưng vẫn gặp race condition?
 	
-| Đặc điểm             | So với `AtomicLong`                 |
-| -------------------- | ----------------------------------- |
-| Ghi (write)          | Nhanh hơn nhiều nếu có nhiều thread |
-| Đọc (read - `sum()`) | Tốn hơn một chút vì phải cộng dồn   |
-| Contention           | Rất tốt – gần như linear scaling    |
-| CAS fail rate        | Cực thấp do phân tán                |
-| Lock                 | Không dùng lock                     |
+	## ❌ Ví dụ sai: 
+if (atomic.get() < LIMIT) {
+    atomic.incrementAndGet(); // ❌ không đồng bộ với điều kiện
+}
+
+	→ TOÀN BỘ điều kiện + hành động phải atomic, chứ không chỉ riêng increment
 
 
 
-# ✅ 4. Các phương thức quan trọng 
-| Method           | Mô tả                     |
-| ---------------- | ------------------------- |
-| `increment()`    | ++1, không trả về giá trị |
-| `add(long x)`    | Cộng `x` vào bộ đếm       |
-| `sum()`          | Trả về tổng hiện tại      |
-| `sumThenReset()` | Lấy tổng xong reset về 0  |
-| `reset()`        | Reset tất cả về 0         |
+	## ✅ Đúng: 
+	while (true) {
+    int val = atomic.get();
+    if (val >= LIMIT) break;
+    if (atomic.compareAndSet(val, val + 1)) break;
+}
+
+
+
+
+	## ❌ Dùng AtomicInteger để thay thế mọi synchronized logic → design anti-pattern
+	Bạn chỉ nên dùng AtomicInteger cho các biến độc lập, không dùng nó như giải pháp cho toàn bộ shared state.
+	
+	## ❌ Hiểu nhầm rằng AtomicInteger "lock-free" = "fast" 
+			CAS thất bại quá nhiều sẽ khiến chương trình spin vô hạn (live-lock) → còn tệ hơn synchronized.
+
+		→ Khi contention cao, có khi synchronized hiệu quả hơn Atomic*.
+
+
+
+# ✅ 7. Khi nào nên dùng AtomicInteger 
 	
 
-Lưu ý: sum() không đảm bảo chính xác tuyệt đối tức thời nếu đang có thread khác ghi vào cùng lúc → nhưng đủ chính xác cho thống kê, metric, logging, performance counter.
+| Trường hợp                          | Có nên dùng?                                                           |
+| ----------------------------------- | ---------------------------------------------------------------------- |
+| Đếm số lượt truy cập                | ✅ Rất phù hợp                                                          |
+| Sinh ID duy nhất (concurrent)       | ✅                                                                      |
+| Kiểm soát số lượng thread đang chạy | ✅                                                                      |
+| Thay thế lock cho object phức tạp   | ❌ Không – nên dùng `ReentrantLock`                                     |
+| Cập nhật nhiều biến cùng lúc        | ❌ Không dùng `Atomic*` riêng lẻ – nên dùng `AtomicReference` hoặc lock |
+
+
+# ✅ 8. Bonus: LongAdder vs AtomicInteger 
+	Trong các ứng dụng high-throughput như metric logging (e.g., Micrometer), AtomicInteger vẫn có thể gây bottleneck, vì tất cả thread ghi vào 1 biến → false sharing. 
+	
+	LongAdder (Java 8+) sinh ra để giải quyết: 
+		Dùng nhiều cell bên dưới → giảm contention
+		Cộng dồn lại khi sum()
 
 
 
+# ✅ Kết luận 
 
-
-# ❗ 5. Sai lầm thường gặp 
-
-	❌ Dùng sum() quá nhiều trong path hiệu năng cao 
-		→ sum() tốn chi phí cộng dồn nhiều cell → nên chỉ gọi định kỳ.
-
-	❌ Dùng trong môi trường yêu cầu chính xác tuyệt đối từng thời điểm
-		→ LongAdder là eventual consistency, không phải atomic snapshot.
+	AtomicInteger là công cụ cực mạnh nếu bạn biết giới hạn của nó
+	Đừng lạm dụng CAS. Chỉ dùng khi:
+		Dữ liệu đơn giản
+		Không có liên kết phức tạp giữa nhiều biến
 		
-	❌ Reset() mà chưa đọc trước
-		→ Làm mất dữ liệu không mong muốn nếu không có chiến lược đo lường rõ ràng.
-		
-		
-
-# ✅ 6. Khi nào nên dùng LongAdder thay vì AtomicLong? 
-	
-| Tình huống                                                         | Dùng `LongAdder`?                            |
-| ------------------------------------------------------------------ | -------------------------------------------- |
-| Counter cho hệ thống metric high-load (logging, Prometheus, stats) | ✅ Rất phù hợp                                |
-| Sinh ID, cần chính xác                                             | ❌ Không – dùng `AtomicLong`                  |
-| Giới hạn số thread đang chạy song song                             | ❌ Không nên – dùng `AtomicInteger`           |
-| Tạo gauge/summary dùng định kỳ đọc                                 | ✅ Phù hợp                                    |
-| Ghi đè lên giá trị hoặc rollback                                   | ❌ Không phù hợp – không có get/set trực tiếp |
-
-
-
-# ✅ 7. Performance benchmark (thực tế) 
-| Threads | `AtomicLong` (ops/sec) | `LongAdder` (ops/sec)    |
-| ------- | ---------------------- | ------------------------ |
-| 1       | \~20M                  | \~18M (thấp hơn)         |
-| 4       | \~10M                  | \~70M (cao hơn gấp 7)    |
-| 16      | \~1.2M                 | \~160M (cao hơn gấp 100) |
-| 64      | Gần như treo           | \~200M+                  |
-
-→ LongAdder hiệu năng vượt trội khi contention cao
-→ AtomicLong lại đơn giản, nhanh và chính xác khi concurrency thấp
-
-
-# ✅ 8. LongAdder vs LongAccumulator?
-	LongAdder = tổng (add)
-	LongAccumulator = tổng quát hóa: truyền vào 1 hàm BinaryOperator<Long> để định nghĩa cách combine
-	
-LongAccumulator max = new LongAccumulator(Long::max, Long.MIN_VALUE);
-max.accumulate(5);
-max.accumulate(10);
-System.out.println(max.get()); // 10
-
-
-# ✅ Tổng kết: LongAdder là vũ khí chuyên dụng cho:
-
-| Tình huống                               | Có dùng không |
-| ---------------------------------------- | ------------- |
-| Logging hiệu suất cao                    | ✅             |
-| Tracking metric/telemetry                | ✅             |
-| Đếm lượt truy cập                        | ✅             |
-| Quản lý tài nguyên chính xác theo đơn vị | ❌             |
-| Sinh số thứ tự chính xác tuyệt đối       | ❌             |
-
-
-
+	Nếu cần logic phức tạp: dùng StampedLock, ReentrantLock, hoặc VarHandle (Java 9+)
 
 </pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

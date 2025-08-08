@@ -1,132 +1,127 @@
-<html><head><title>Lesson 124 == Persitent Segment Tree ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 124 -- Persitent Segment Tree -//</h1><pre># Khái niệm 
-	Persistence trong cấu trúc dữ liệu là khả năng giữ lại lịch sử các phiên bản trước của cấu trúc sau mỗi thay đổi (update), mà không thay đổi phiên bản cũ.
-		- Full persistence: truy cập & cập nhật bất kỳ phiên bản nào.
-		- Partial persistence: chỉ truy cập phiên bản cũ, cập nhật chỉ phiên bản hiện tại.
-		- Functional persistence: không có trạng thái thay đổi — mỗi thao tác trả về một phiên bản mới (giống lập trình hàm).
+<html><head><title>Lesson 124 == Lazy Propagation ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 124 -- Lazy Propagation -//</h1><pre>
+# Khái niệm 
 
-	→ Persistent Segment Tree = giữ lại nhiều phiên bản của segment tree, sau mỗi lần update mà không phá vỡ phiên bản cũ.
+Lazy Propagation là một kỹ thuật tối ưu hóa cho các cấu trúc dữ liệu phân đoạn (như Segment Tree, Interval Tree…), giúp trì hoãn (delay) cập nhật đến khi thật sự cần thiết
+	💡 Thay vì cập nhật ngay tất cả các node bị ảnh hưởng bởi một thao tác, ta đánh dấu rằng nó sẽ cần cập nhật sau — và chỉ thực hiện khi phải truy vấn chính xác vào vùng đó.
 	
 	
-# 	2. 🔧 So sánh Segment Tree thường vs Persistent Segment Tree 
-	| Đặc điểm          | Segment Tree thường      | Persistent Segment Tree              |
-| ----------------- | ------------------------ | ------------------------------------ |
-| Cập nhật (update) | Thay đổi trực tiếp       | Tạo phiên bản mới (dùng lại phần cũ) |
-| Truy vấn (query)  | Chỉ 1 phiên bản hiện tại | Truy vấn bất kỳ phiên bản nào        |
-| Lịch sử           | Không giữ                | Giữ từng phiên bản rõ ràng           |
-| Tốn bộ nhớ        | O(n)                     | O(n log n) (chia sẻ nút cũ)          |
+	
+# 🔥 2. Tại sao phải dùng Lazy Propagation? 
 
-	
-	
-# 	3. ⚙️ Ứng dụng thực tế (cần biết khi thiết kế hệ thống)
-	
-| Trường hợp ứng dụng                                  | Giải thích                                                                                                |
-| ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| 🕓 Time-travel query                                 | Cần biết trạng thái dữ liệu ở 1 thời điểm trong quá khứ (log, lịch sử giao dịch, dữ liệu thời gian thực). |
-| ⏱ Versioned configuration / snapshot                 | Mỗi lần update cấu hình/dữ liệu → tạo version mới → rollback dễ dàng.                                     |
-| 🕹 Undo/Redo trong hệ thống phức tạp                 | Lưu lịch sử thay đổi dạng cây → dễ undo từng bước.                                                        |
-| 🧮 Dữ liệu không ổn định (time-varying)              | Như stock price, lượng truy cập server, lượt view theo giờ...                                             |
-| 🔐 Immutable data handling (Blockchain, DSL engines) | Không được thay đổi dữ liệu cũ → dùng persistence.                                                        |
+	Bài toán ví dụ: Cập nhật cộng thêm 5 vào đoạn [l, r] và sau đó query tổng đoạn [a, b].
+	Nếu dùng Segment Tree thường, bạn phải cập nhật O(log n) node và các node con bên dưới nữa → tốn công dù chưa chắc cần dùng đến. 
+	Với Lazy Propagation, bạn đánh dấu node nào “nợ” cập nhật, và chỉ xử lý thật sự khi buộc phải đi sâu xuống truy vấn.
+	✅ Giảm độ phức tạp từ O(n) về O(log n) trong các trường hợp update đoạn lớn mà query nhỏ.
 	
 	
 	
-# 	4. 🧠 Cốt lõi kỹ thuật
-	
-	## ❗ Ý tưởng chính: 
-		- Mỗi khi update, chỉ tạo lại các nút trên đường đi từ root đến leaf bị ảnh hưởng.
-		- Các phần khác của cây vẫn dùng lại được.
-		- Như vậy: O(log n) bộ nhớ/phiên bản → rất hiệu quả.
+# 🧠 3. Áp dụng ở đâu?
+
+	Memory-efficient real-time systems.
+	Analytics engine ghi log theo thời gian (query nhanh, update chậm).
+	Hệ thống có cập nhật hàng loạt (batch update) và truy vấn cục bộ.
+	Distributed computing (chậm propagation giữa node vì tối ưu traffic).
 
 
+# ⚙️ 4. Nguyên lý hoạt động 
+	
+	Khi cập nhật một khoảng [l, r]:
+	Nếu node hiện tại nằm hoàn toàn trong [l, r] → cập nhật node hiện tại và đánh dấu các con là "dirty" (nợ cập nhật).
+	Nếu chỉ giao một phần → Đẩy lazy update từ cha xuống con (propagate) trước khi tiếp tục.
+	Nếu nằm ngoài đoạn → bỏ qua.
 
-	## 📌 Code nguyên lý:
-class Node {
-    int val;
-    Node left, right;
 
-    Node(int val, Node l, Node r) {
-        this.val = val;
-        this.left = l;
-        this.right = r;
+# 📐 5. Cấu trúc Segment Tree với Lazy Propagation 
+
+class SegmentTree {
+    int[] tree;
+    int[] lazy;
+    int n;
+
+    public SegmentTree(int size) {
+        n = size;
+        tree = new int[4 * n];
+        lazy = new int[4 * n];
+    }
+
+    void updateRange(int l, int r, int val) {
+        update(1, 0, n - 1, l, r, val);
+    }
+
+    int queryRange(int l, int r) {
+        return query(1, 0, n - 1, l, r);
+    }
+
+    private void propagate(int node, int start, int end) {
+        if (lazy[node] != 0) {
+            tree[node] += (end - start + 1) * lazy[node]; // Cập nhật giá trị
+            if (start != end) {
+                lazy[node * 2] += lazy[node];     // Gán lazy cho con trái
+                lazy[node * 2 + 1] += lazy[node]; // Gán lazy cho con phải
+            }
+            lazy[node] = 0; // Clear lazy
+        }
+    }
+
+    private void update(int node, int start, int end, int l, int r, int val) {
+        propagate(node, start, end);
+        if (r < start || end < l) return;
+
+        if (l <= start && end <= r) {
+            lazy[node] += val;
+            propagate(node, start, end);
+            return;
+        }
+
+        int mid = (start + end) / 2;
+        update(node * 2, start, mid, l, r, val);
+        update(node * 2 + 1, mid + 1, end, l, r, val);
+        tree[node] = tree[node * 2] + tree[node * 2 + 1];
+    }
+
+    private int query(int node, int start, int end, int l, int r) {
+        propagate(node, start, end);
+        if (r < start || end < l) return 0;
+
+        if (l <= start && end <= r) return tree[node];
+
+        int mid = (start + end) / 2;
+        return query(node * 2, start, mid, l, r) +
+               query(node * 2 + 1, mid + 1, end, l, r);
     }
 }
 
-Node update(Node node, int l, int r, int idx, int value) {
-    if (l == r) {
-        return new Node(value, null, null); // tạo nút mới
-    }
-    int mid = (l + r) / 2;
-    if (idx <= mid) {
-        return new Node(0,
-            update(node.left, l, mid, idx, value),
-            node.right
-        );
-    } else {
-        return new Node(0,
-            node.left,
-            update(node.right, mid + 1, r, idx, value)
-        );
-    }
-}
-	
-	
-		- node là root của version hiện tại.
-		- Mỗi lần update trả về root mới của version mới.
-		- Có thể lưu danh sách List<Node> versions để giữ từng root.
-	
-	
-	
-	
-	## ⏱ Truy vấn trên version: 
-int query(Node node, int l, int r, int ql, int qr) {
-    if (ql > r || qr < l) return 0;
-    if (ql <= l && r <= qr) return node.val;
-    int mid = (l + r) / 2;
-    return query(node.left, l, mid, ql, qr)
-         + query(node.right, mid+1, r, ql, qr);
-}
-	
-	
-	
-	
-# 5. 📦 Bộ nhớ & độ phức tạp 
-	
-	
-	- Tạo version mới: O(log n)
-	- Truy vấn version bất kỳ: O(log n)
-	- Tổng số node sau k lần update: O(k log n)
-	- Tối ưu hơn ArrayList snapshot hoặc clone object!
-	
-	
-# 	6. 📚 Kiến thức cần nắm để hiểu sâu Persistent Segment Tree:
 
-| Chủ đề                                     | Vì sao cần học?                              |
-| ------------------------------------------ | -------------------------------------------- |
-| Tree data structure                        | Hiểu cách phân chia và tổ chức dữ liệu       |
-| Immutable data / Functional DS             | Hiểu cách giữ dữ liệu không thay đổi         |
-| Memory sharing / Copy-on-write             | Tối ưu hiệu suất & không tạo bản sao toàn bộ |
-| Dynamic Programming on trees               | Kết hợp logic xử lý phân đoạn phức tạp       |
-| Advanced Java (immutability, memory model) | Để code Persistent DS đúng cách              |
-	
-	
-	
-# 	7. 🧪 Ứng dụng demo bạn có thể triển khai:
-	
-		- Lưu lịch sử giao dịch tài khoản theo từng phiên bản cập nhật.
-		- Thống kê tổng view của các bài viết tại các mốc thời gian khác nhau.
-		- Xây dựng hệ thống undo/redo cho hệ thống vẽ đồ họa (mỗi lần thay đổi là 1 version).
-		- Lưu cấu hình hệ thống, có thể rollback lại bất kỳ lúc nào.	
-	
+# 📊 6. Phân tích thời gian
+| Operation     | With Lazy Propagation |
+| ------------- | --------------------- |
+| `updateRange` | O(log n)              |
+| `queryRange`  | O(log n)              |
+| `build tree`  | O(n)                  |
 
 
 
-# 8. 🧱 So sánh với những giải pháp khác 
+# 🧩 7. Mở rộng & kết hợp thực tế 
 
-| Giải pháp                 | Có persistence? | Có hỗ trợ query? | Hiệu suất      |
-| ------------------------- | --------------- | ---------------- | -------------- |
-| Array snapshot            | Có (deep copy)  | Có               | Rất chậm       |
-| Immutable Map/List (Java) | Có              | Có               | Tùy cấu trúc   |
-| Persistent Segment Tree   | Có (rất tốt)    | Có (O(log n))    | Tối ưu         |
-| Redis + versioned key     | Có              | Tùy              | Tốn tài nguyên |
+
+| Mô hình ứng dụng        | Lazy Propagation biến thể                                        |
+| ----------------------- | ---------------------------------------------------------------- |
+| Game map update         | Cập nhật sức mạnh vùng AOE nhưng chỉ khi quái vào vùng đó        |
+| Event sourcing          | Cập nhật trạng thái theo batch, chỉ xử lý khi user truy cập      |
+| Inverted Index (search) | Update từ khóa theo nhóm document, query thì mới ghi ngược xuống |
+| Distributed simulation  | Trì hoãn đồng bộ trạng thái giữa các node                        |
+
+
+# 🧠 8. Kiến thức nền tảng cần học để hiểu & tối ưu Lazy Propagation
+
+| Chủ đề                       | Lý do                                                      |
+| ---------------------------- | ---------------------------------------------------------- |
+| Segment Tree / Interval Tree | Cấu trúc nền tảng                                          |
+| Recursion nâng cao           | Gọi hàm đệ quy không stack overflow                        |
+| Java memory model            | Đảm bảo consistency nếu dùng trong multi-thread env        |
+| Persistent data structures   | Lazy Propagation kết hợp với snapshot để rollback          |
+| Concurrency (advanced)       | Nếu tree là shared resource trong multi-thread environment |
+
 
 
 

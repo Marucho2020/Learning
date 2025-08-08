@@ -1,226 +1,218 @@
-<html><head><title>Lesson 64 == module-info.java ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 64 -- module-info.java -//</h1><pre>
-# Khái niệm 
-	là  file dùng để định nghĩa module trong Java từ phiên bản 9 trở đi 
+<html><head><title>Lesson 64 == Protocol Buffer ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 64 -- Protocol Buffer -//</h1><pre>	Protocol Buffer (Protobuf) là một ngôn ngữ định dạng dữ liệu do Google phát triển, được dùng để serialize dữ liệu nhanh, nhẹ và hiệu quả hơn so với JSON hoặc XML . Nó là lựa chọn mặc định cho gRPC và rất phổ biến trong các hệ thống phân tán. 
 	
-		✅ Kiểm soát quyền truy cập giữa các module 
-		✅ Tăng cường đóng gói (encapsulation)
-		✅ Giảm kích thướng ứn dụng bằng cách chỉ sử dụng các module cần thiết 
-		✅ Cải thiện hiệu suất khởi động của ứng dụng lớn 
-		
-		## Ví dụ  
-		module my.module {
-			exports com.example.myapp;    // Xuất gói (package) cho module khác sử dụng 
-		}
-	
-# Cấu trúc một Module trong Java 
-	
-	
-	Một module chứa 📂src/com/example/myapp/Main.java 
-	📂src/module-info.java
-	
-	## Ví dụ 
-		my-module
-		│── src
-		│   ├── com.example.myapp
-		│   │   ├── Main.java
-		│   ├── module-info.java
+
+
+Cú pháp						Vai trò
+int32					Kiểu số nguyên 32-bit
+string					Kiểu chuỗi UTF-8
+bool					Kiểu boolean
+message					Kiểu dữ liệu tự định nghĩa (custom type)
+
+
 
 	
-	📌 Java sẽ tạo file module-info.class khi biên dịch 
+# Khai báo phiên bản (syntax)	
+	
+	syntax = "proto3"	; 	// Chọn phiên bản proto3 
 	
 	
-# Từ khóa trong module-info.java 
+		proto2 (cũ , hỗ trợ required , toptinal , default values)
+		proto3 (mới , đơn giản hóa, tự động có giá trị mặc định)
+		
+		
+		
+# Package và Import 
+
+	package mypackage ; 		// Giúp phân loại code , tránh trùng lặp 
 	
-	module           :  Khai báo Module 
-	exports          :	Xuất package cho module khác sử dụng 
-	requires         :	Khai báo module phụ thuộc 
-	opens            :	cho phép phản xạ, ánh xạ (reflection)
-	uses             :	khai báo module sử dụng dịch vụ 
-	providers        :	Định nghĩa dịch vụ được cung cấp 
+	import "google/protobuf/timestamp.proto";	//Import thư viện ngoài 
 	
+		package  : giúp tránh trùng tên giữa các file .proto 
+		import   : giúp sử dụng các message định nghĩa sẵn 
+		
+		
+# Message (Định nghĩa cấu trúc dữ liệu ) 
 	
-# 🚀 4. exports – Xuất Package 
+	message Person{
+		string name = 1;
+		int32 age = 2;
+		bool isStudent = 3;
+	}
+		
+		## Lưu ý : 
+			Mỗi field có một số thứ tự duy nhất (1,2,3 ...)
+			Sô thứ tự không được thay đổi sau khi deploy (tránh lỗi khi deserialize)
+			
+			
 	
-	Nếu không dùng exports, package sẽ không thể truy cập từ module khác 
+# Kiểu dữ liệu trong protobuf 
+
+		Kiểu dữ liệu				Kích thước					Miêu tả
+		double						8 byte				Số thực
+		float						4 byte				Số thực
+		int32						4 byte				Số nguyên
+		int64						8 byte				Số nguyên
+		uint32						4 byte				Số nguyên không dấu
+		uint64						8 byte				Số nguyên không dấu
+		sint32						4 byte				Số nguyên có dấu (tối ưu)
+		sint64						8 byte				Số nguyên có dấu (tối ưu)
+		fixed32						4 byte				Số nguyên cố định
+		fixed64						8 byte				Số nguyên cố định
+		sfixed32					4 byte				Số nguyên có dấu cố định
+		sfixed64					8 byte				Số nguyên có dấu cố định
+		bool						1 bit				True/False
+		string						Variable			Chuỗi UTF-8
+		bytes						Variable			Chuỗi nhị phân	
+
+
+# Enum 
 	
-	module my.module {
-		exports com.example.service;
+	enum Status {
+		
+		UNKNOWN = 0 ;
+		ACTIVE = 1;
+		INACTIVE = 2;
 	}
 	
-		- Chỉ package com.example.service được truy cập từ module khác 
-		- Các package khác trong module bị ẩn 
+	message User {
+		string name = 1;
+		Status status = 2;
+	}
+
+
+	💡 Lưu ý: 
+		Enum phải có giá trị mặc định là 0
+		Giá trị trong enum phải là số nguyên  
 		
-		
-# 🚀 5. requires – Khai Báo Phụ Thuộc
+
+
+# Nested Message (Message lồng nhau)
 	
-	Nếu module cần dùng class từ module khác, ta dùng requires 
+	message Address {
+		string street = 1;
+		string city = 2;
+	}
+
+	message Person {
+		string name = 1;
+		Address address = 2; 	// Message bên trong message
 	
-	## Ví dụ 
+	}
+
+
+
+# Repeated Fields (Danh sách )
+	
+	message Classroom{
+		repeated string students = 1 	// danh sách học sinh 
+	}
+
+	💡 Lưu ý: 
+		Không có List hay Array, chỉ có repeated 
+
+
+#	 Map  
+	
+	message PhoneBook {
+		map<string,string> contacts = 1;
+	}
+
+	💡 Lưu ý: 
+		KeyType chỉ có thể là string, int32 , int64 , bool 
+		ValueType có thể là bất kỳ kiểu nào 
 		
-		module my.app{
-			requires my.module; // sử dụng my.module 
+		
+		
+# Optional Fields (trường không bát buộc )	
+
+	message Product {
+		string name = 1;
+		optional double price = 2;
+	}
+		
+		💡 Lưu ý: 
+			Từ Protobuf 3.15+ optional cho phép kiểm tra một field có tồn tại hay không 
+
+
+# Oneof (Union Field - Chỉ một field tồn tại tại một thời điểm)
+	
+	message Response {
+		oneof result {
+			string successMessage = 1;
+			string errorMessage = 2;
 		}
-
-		
-		Lưu ý : requires sẽ tự động import tất cả các packages trong module my.module 
-
-
-# 🚀 6. opens  - Mở package cho Reflection 
+	}
 	
-	exports không cho phép reflection (dùng trong Hibernate . Spring, Gson )
-	Để dùng reflection, ta dùng opens thay vì exports 
+		💡 Chỉ có thể set một field trong oneof, nếu set field khác thì field cũ sẽ bị ghi đè . 
+		
+		
+# Bytes (Lưu dữ liệu nhị phân)	
 	
-	## Ví dụ  
-		module my.module{
-			opens com.example.model; 		// cho phép reflection 
-		}
-		
-		dùng opens để Spring/Hibernate có thể truy cập private fields 
-		
-		
-# 🚀 uses và provides -  Cơ chế Service Provider 
-		Java hỗ trợ dịch vụ (Service Provider Interface - SPI) bằng uses provides 
-		
-		
-	Ví dụ : 
-		
-		##📌 Bước 1 : Khai báo interface dịch vụ 
-			package com.example.service; 
-			public interface PaymentService {
-				void processPayment(); 
-			}
-			
-		
-		##📌 Bước 2: tạo Module cung cấp dịch vụ : 
-			module payment.module {
-				exports com.example.service;
-				provides com.example.service.PaymentService with com.example.service.impl.PayPalPayment
-			}
-		
+	message File{
+		string name = 1;
+		bytes = content 2;
+	}
 
-		## 📌 Bước 3 : 
-		
-			module app.module{
-				requires payment.module;
-				uses com.example.service.PaymentService;
-			}
-			
-			
-			- provides ... with ... -> Cung cấp dịch vụ 
-			- uses  -> Module sử dụng dịch vụ đó 
+
+# Dịch vụ gRPC  (Service )
+
+	service Greeter {
+		rpc SayHello (Hello Request) returns (HelloResponse);
+	}
+	
+	message HelloRequest {
+		string name = 1;
+	}
+	
+	message HelloResponse{
+		string message = 1;
+	}
+	
+		💡 Lưu ý: 
+			rpc khai báo một phương thức từ xa 
+			SayHello nhận HelloRequest và trả về HelloResponse
 
 
 
-
-# 🚀 8. Biên dịch và chạy chương trình có module 
-	
-	## Biên dịch 
-		javac -d out --module-source-path src $(find src -name "*.java")
-	
-	## Chạy chương trình 
-		java --module-path out -m my.module/com.example.myapp.Main
-		
-		
-# Lợi ích 
-	✔ Tăng bảo mật - Không thể truy cập package nội bộ 
-	✔ Giảm kích thước ứng dụng -  Không cần phụ thuộc toàn bộ JDK 
-	✔ Cải thiện hiệu suất -  Load nhanh và tối ưu hơn 
-	
-	
-# Kết luận 
-		- Module giúp tổ chức code tốt hơn và tăng bảo mật 
-		- Không thể truy cập package nếu không được exports hoặc opens 
-		- Module giúp Java cạnh tranh với hệ thống module của OSGi và Jigsaw 
-		
-		
-		
-# transitive 
-
-	Từ khác transitive trong module-info.java giúp tự động truyền (re-export)	module phụ thuộc đến các module khác 
-	
-	- Bình thường : Khi module A phụ thuộc Module B, và Module B phụ thuộc Module C thì Module A không thể dùng trực tiếp Module C 
-	
-	- Nhưng nếu requires transitive được khai báo , Module A sẽ có thể sử dụng cả Module C  
-	
-	
-	📌 Tóm gọn: 
-		requires -> Chỉ module này dùng được 
-		requires transitive  -> module khác cũng dùng được
-		
-		
-		
-	##🔹 Ví dụ SỬ DỤNG THƯ VIỆN CƠ BẢN 
-		📌 module-info.java của Module C (cung cấp tính năng): 
-	
-			module moduleC {
-				exports com.example.moduleC; 	// xuất package 
-			}
-			
-		
-		📌Code Java trong Module C 
-			package com.example.moduleC; 
-			public class CService{
-				public static void printC() {
-					System.out.println("Hello from Module C!");
-				}
-			}
-		
-
-	##🔹 Ví dụ Module B - SỬ dụng Module C 
-	
-		📌 module-info.java của Module B 
-		
-		module moduleB {
-			requires transitive moduleC;	// Xuất Module C cho Module khác ! 
-			export com.example.moduleB; 
-		} 
-		
-			
-		📌 Code Java trong Module B 
-		
-		package com.example.moduleB;
-		import com.example.moduleC.CService; // Dùng class từ Module C
-		public class BService {
-			public static void printB() {
-				CService.printC();
-				System.out.println("Hello from Module B!");
-			}
-		}
+# Reserved (dự trữ số ID hoặc tên field)
+	message User {
+		reserved 2,3;						// không cho phép dùng số thứ tự 2, 3 
+		reserved "old_name";				// không cho phép dùng tên cũ 
+	}
 
 
+# Extensions (Mở rộng message - chỉ có trong proto2 )	
+	extend User {
+		optional string email = 100;
+	}
 	
-	##🔹 Module A - không cần requires moduleC vẫn dùng được  
-	
-		📌 module-info.java của Module A:
-			module moduleA {
-				requires moduleB ; 	//  Không cần requires moduleC vẫn dùng được  
-			}
-		
-		
-		📌 Code Java trong Module A 
-			package com.example.moduleA;
-			import com.example.moduleC.CService;  // DÙNG ĐƯỢC class từ Module C!
-			public class AService {
-				public static void main(String[] args) {
-					CService.printC();  // Gọi trực tiếp từ Module C
-				}
-			}
-			
-			📌 Lý do? moduleB đã requires transitive moduleC, nên moduleA cũng được phép dùng moduleC mà không cần khai báo requires moduleC! 🚀
-			
-			
+	💡 Chỉ có trong proto2, bị loại bỏ trong proto3.
 
-# 3. Khi nào nên dùng requires transitive?			
 
-	✅ Nên dùng khi												
-	Module của bạn là một API chung dùng cho nhiều module khác	
-	Module B bọc lại một thư viện khác (Wrapper Module)
-	Muốn tự động truyền phụ thuộc đến nhiều module	
+
+# Thư viện Google Well-Known Types 
+	import "google/protobuf/timestamp.proto";
+	import "google/protobuf/duration.proto";
 	
-	
-	❌ Không nên dùng khi
-	Khi module chỉ dùng nội bộ, không cần module khác biết đến
-	Khi bạn muốn giữ module tách biệt
-	Khi cần giảm bớt sự phức tạp của module
+	message Event {
+	string name = 1;
+	google.protobuf.Timestamp start_time = 2;
+	google.protobuf.Duration duration = 3;
+	}
+
+
+
+# Sinh code Java từ file Protobuf 
+
+	protoc --java_out=. your_file.proto
+ 
+	// nếu dùng với gRPC 
+	\protoc --java_out=. --grpc-java_out=. your_file.proto
+
+🎯 Kết Luận
+✔ Đây là toàn bộ cách viết của ngôn ngữ Protocol Buffers.
+✔ Nó tối ưu hóa việc serialize dữ liệu so với JSON/XML.
+✔ Tích hợp mạnh với gRPC để giao tiếp giữa các microservices.
+✔ Hỗ trợ nhiều kiểu dữ liệu nâng cao như oneof, map, optional.
 
 </pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

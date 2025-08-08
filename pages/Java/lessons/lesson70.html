@@ -1,82 +1,70 @@
-<html><head><title>Lesson 70 == Các mức độ isolation trong transactional ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 70 -- Các mức độ isolation trong transactional -//</h1><pre>
+<html><head><title>Lesson 70 == java.base ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 70 -- java.base -//</h1><pre>
+# Khái niệm 
+	Trong Java 9, hệ thống module được giới thiệu (JPMS - Java Platform Module System), và java.base là module lõi của JDK 
+		- java.base chứa các API cơ bản nhất mà mọi ứng dụng Java cần 
+		- Tự động được import vào tất cả các module, không thể bị loại bỏ 
+		
+		➡ Không có java.base thì JVM không thể hoạt động 
+		
+# java.base chứa gì 
+		
+		Module java.base chứa các package cốt lõi như : 
+		
+			Package							Chức năng
+			java.lang					String, Math, Object, System, Thread...
+			java.util					Collections, List, Set, Map, Date, Optional...
+			java.io						Input/Output Streams, File, Reader/Writer...
+			java.nio					NIO (Non-blocking IO), Buffer, Charset...
+			java.net					Networking API (HTTP, URL, Socket)...
+			java.security				API bảo mật, mã hóa, hash...
+			java.time					Date/Time API (Java 8+)
+			java.math					BigInteger, BigDecimal (số lớn, số chính xác cao)
 
-	#Khái niệm 
+
+		💡 Mọi class cơ bản của Java đều nằm trong java.base.
+
+
+# java.base hoạt động thế nào ? 
 	
-		isolation : Cách ly 
-		transaction :  giao dịch 
+	🔹 a) không cần requires java.base 
+		- Khi tạo module, bạn không cần requires java.base vì nó được import mặc định  
 		
-		Trong Java, các mức độ isolation trong các transaction được định nghĩa bởi chuẩn sql và ảnh hưởng đến cách dữu liệu được truy cập và thay đổi trong môi trường có nhiều giao dịch song song. Java sử dụng các mức độ cách ly này thông qua JDBC và các framework như Hibernate hoặc Spring.
-		
-		
+				module mymodule {
+					requires java.sql;  // Chỉ cần khai báo các module khác ngoài java.base
+				}
 
-
-	# READ UNCOMMITTED
-		## Giải thích 	
-			Cho phép giao dịch đọc dữ liệu chưa được xác nhận từ giao dịch khác (còn gọi là dữ liệu "bẩn"). 
-			
-		## Ưu điểm : 
-			Tăng hiệu suất, vì không phải chờ các giao dịch khác hoàn thành 
-			
-		## Nhược điểm 
-			Có thể dẫn đến dirty reads, nghĩa là bạn có thể đọc dữ liệu đang trong quá trình thay đổi và chưa được commit, điều này có thể gây ra kết quả không chính xác 
-			
-			Sử dụng khi : Hiệu suất là ưu tiên hơn tính chính xác của dữ liệu(hiếm khi được sử dụng trong môi trường production )
-			
-			
-	## READ COMMITTED 
-		## Giải thích : 
-			Giao dịch chỉ có thể đọc dữ liệu đã được xác nhận(commit) từ giao dịch khác. Bạn không thể đọc dữ liệu bẩn, nhưng vẫn có thể gặp non-repeatable reads 
-		
-		## Ưu điểm : 
-			Tránh đọc dữ liệu chưa xác nhận, giảm khả năng đọc dữ liệu không hợp lệ 
-			
-		## Nhược điểm 
-			Có thể xảy ra tình trạng non-repeatable reads : Giá trị dữ liệu có thể thay đổi trong khi giao dịch vẫn đang được thực hiện 
-			
-		## Sử dụng khi 
-			Cần tránh các dữ liệu không được xác thực, nhưng không cần phải đảm bảo rằng dữ liệu không thay đổi trong suốt một giao dịch 
-			
-			
-	## REPEATABLE READ 
-		## Giải thích 
-			Đảm bảo rằng dữ liệu đọc trong suốt giao dịch không thay đổi, tránh được non-repeatable reads . Tuy nhiên, vẫn có thể gặp phantom reads 
-			
-		## Ưu điểm 
-			Dữ liệu đọc sẽ không thay đổi trong suốt giao dịch, giúp đảm bảo tính nhất quán 
-			
-		## Nhược điểm 
-			Phantom reads có thể xảy ra, tức là các bản ghi mới có thể được thêm vào trong khi giao dịch đang được thực hiện, nhưng giao dịch không nhìn thấy thay đổi này 
-			
-		## Sử dụng khi 
-			Cần đảm bảo rằng các giá trị dữ liệu đọc không thay đổi trong suốt giao dịch 
-			
-	## SERIALIZABLE 
-		## Giải thích 
-			Mức độ cách ly cao nhất, đảm bảo rằng các giao dịch không thể chồng chéo lên nhau. Mỗi giao dịch sẽ phải chờ giao dịch khác hoàn tất trước khi có thể thực hiện. Điều này loại bỏ dirty reads, non-repeatable reads và phantom reads 
-			
-		## Ưu điểm 
-			Tính nhất quán tuyệt đối, không có sự thay đổi bất ngờ trong suốt quá trình giao dịch 
-			
-		## Nhược điểm 
-			Hiệu suất rất thấp, vì các giao dịch phải đợi nhau, điều này có thể gây ra tắc nghẽn và làm giảm hiệu suất hệ thống 
-			
-		## Sử dụng khi 
-			Dữ liệu rất quan trọng và phải đảm bảo tính chính xác tuyệt đối, không thể chấp nhận bất kỳ lỗi nào trong quá trình giao dịch 
-			
-# Tổng kết  
 	
-		READ UNCOMMITTED: Cho phép tất cả các kiểu đọc, nhưng không đảm bảo tính chính xác.
+	🔹 b) java.base không phụ thuộc vào module nào khác 
+		- Tất cả các module khác trong JDK đều phụ thuộc vào java.base 
+		- Nhưng java.base không phụ thuộc vào bất kỳ nhóm module nào khác 
+	
+	🔹 Ví dụ Dependency Tree của java.sql
+	
+			$ jdeps --module java.sql
+			java.sql -> java.base
+			java.sql -> java.logging
 
-		READ COMMITTED: Đảm bảo không đọc dữ liệu chưa xác nhận, nhưng có thể xảy ra thay đổi dữ liệu trong quá trình giao dịch.
+			➡ java.sql cần java.base để hoạt động.
+
+
+# Tại sao  java.base quan trọng trong hệ thống lớn 
+	
+	## ✅ Giảm kích thước ứng dụng 
+		- Trước Java 9 , tất cả các JAR của JDK đều được nạp vào JVM 
+		- Giờ đây, nếu ứng dụng không cần java.desktop, ta có thể bỏ module đó 
 		
-		REPEATABLE READ: Đảm bảo dữ liệu không thay đổi trong suốt giao dịch, nhưng có thể có các bản ghi ma (phantom records).
-		
-		SERIALIZABLE: Đảm bảo tính nhất quán tuyệt đối, nhưng với hiệu suất thấp.
-		
-		Các mức độ cách ly này ảnh hưởng trực tiếp đến hiệu suất của hệ thống, vì vậy việc lựa chọn mức độ phù hợp phụ thuộc vào nhu cầu của ứng dụng và sự cân bằng giữa hiệu suất và tính nhất quán của dữ liệu.	
+	## ✅ Tăng bảo mật và kiểm soát 
+		- Trước đây, Java không thể kiểm soát code nào được truy cập vào package nào 
+		- Bây giờ, module system ngăn chặn truy cập trái phép giữa các phần của ứng dụng 
+	
+	## ✅ Tối ưu hóa JVM và ứng dụng AI , Microservice 
+		- Trong ứng dụng AI, Spring Boot , gRPC, Microservices, ta chỉ cần nạp các module cần thiết 
+		- Hệ thống nhẹ hơn, tốc độ nhanh hơn 
 
 
-
+5. Kết luận
+🚀 java.base là module lõi của Java, không thể bị loại bỏ.
+💡 Nắm vững java.base giúp tối ưu hóa, bảo mật, và thiết kế hệ thống tốt hơn.
 
 
 </pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

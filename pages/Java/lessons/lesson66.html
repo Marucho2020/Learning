@@ -1,126 +1,106 @@
-<html><head><title>Lesson 66 == SingleThreadModel Interface ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 66 -- SingleThreadModel Interface -//</h1><pre>	
-# Khái niệm 
-	SingleThreadModel là một interface cũ trong Java Servlet API giúp đảm bảo rằng mỗi request đến một servlet sẽ được xử lý bởi một intance riêng biệt của servlet đó. 
+<html><head><title>Lesson 66 == Reflection ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 66 -- Reflection -//</h1><pre># Khái niệm 
+	
+	Reflection là cơ chế giúp chương trình Java có thể kiểm tra hoặc thay đổi cấu trúc của chính nó trong lúc chạy (runtime)
+	
+	💡 Hiểu đơn giản 
+		Bình thường, bạn dùng Person person = new Person() ; để tạo object 
+		Với Reflection, bạn có thể tạo object, gọi method, truy cập field ngay cả khi không biến trước class nào sẽ được dùng 
 		
-		💡 Tóm gọn: 
-			- Dùng trong servlet để tránh vấn đề đồng bộ hóa (thread safety)
-			- Mỗi request được xử lý bởi một instance servlet riêng biệt 
-			- Đã bị deprecated từ Servlet 2.4 và loại bỏ từ Servlet 2.5 trở đi 
-			
-			
-# Cách hoạt động  
-				
-	Khi một servlet implement SingleThreadModel, server có hai cách xử lý request:
-
-	Tạo một instance servlet mới cho mỗi request.
-	Dùng một pool servlet instance để xử lý nhiều request song song.
-	💡 Lý do: Servlet bản chất là đa luồng (multi-threaded), nếu nhiều request đến cùng lúc, có thể gây ra vấn đề race condition nếu servlet có biến instance chung
-
-
-	## 📌 Ví dụ: Servlet không thread-safe 
-		@WebServlet("/unsafe")
-		public class UnsafeServlet extends HttpServlet {
-			private int counter = 0;  // Biến instance dùng chung
 		
-			protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-				counter++;  // Có thể bị ghi đè bởi nhiều luồng khác nhau!
-				resp.getWriter().println("Counter: " + counter);
-			}
+	🛠 Ứng dụng của Reflection  
+		✅ Framework như Spring, Hibernate - dùng để inject dependencies(DI) và mapping object 
+		✅ Gson, Jackson - Chuyển đổi Object thành Json 
+		✅ JUnit - CHạy test case tự động mà không cần gọi method thủ công 
+		
+		
+	🔥 Hình dung đơn giản 
+		- Giả sử bạn có một cánh cửa (class), thông thường bạn cần chìa khóa(xác định class để mở)
+		👉 Nhưng với Reflection bạn có thể bẻ khóa, tháo bản lề hoặc xem cấu trúc bên trong ngay cả khi không có chìa ! 
+		
+		
+# Các dùng Reflection trong Java 
+
+	## 🔹 Lấy thông tin lúc Runtime 
+		Dùng Class<?> để lấy thông tin về một class 
+		📌 Lệnh Class.forName("Tên class") giúp lấy class tại runtime! 
+		
+		
+		Class<?> clazz = Class.forName("com.example.Person");
+		System.out.println("Class Name: " + clazz.getName());
+
+	
+	## 🔹 Lấy danh sách Constructor 
+
+		Constructor<?>[] constructors = clazz.getDeclaredConstructors();
+		for (Constructor<?> constructor : constructors) {
+			System.out.println("Constructor: " + constructor);
 		}
+
+
+
+	## 🔹 Lấy danh sách Field (biến)
+	
+		Field[] fields = clazz.getDeclaredFields();
+		for (Field field : fields) {
+			System.out.println("Field: " + field.getName());
+		}
+
+
+	## 🔹 Lấy danh sách Method 
+	
+		Method[] methods = clazz.getDeclaredMethods();
+		for (Method method : methods) {
+			System.out.println("Method: " + method.getName());
+		}
+
 		
-			⚠ Lỗi có thể xảy ra: 
-			Nếu 2 request chạy song song, biến counter có thể bị ghi đè không mong muốn, dẫn đến bug dữ liệu.
-			
-			
-			
-	## 		📌 Dùng SingleThreadModel để tránh lỗi trên 
-			@WebServlet("/safe")
-			public class SafeServlet extends HttpServlet implements SingleThreadModel {
-				private int counter = 0;  // Biến instance không bị truy cập đồng thời
-			
-				protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-					counter++;  
-					resp.getWriter().println("Counter: " + counter);
-				}
-			}
 
-			🚀 Lúc này, mỗi request có một instance servlet riêng, tránh được lỗi đồng bộ hóa.
-			
-			
-# 		3. Tại sao SingleThreadModel bị loại bỏ?	
-
-			🚨 Hạn chế lớn của SingleThreadModel:
-			❌ Nhược điểm										⚡ Giải thích
-			Tốn bộ nhớ											Vì mỗi request có một servlet riêng, nên server phải quản lý nhiều instance servlet.
-			Không thực sự an toàn								Nếu servlet có biến static hoặc dùng shared resource (file, DB), thì vẫn bị vấn đề đồng bộ hóa.
-			Không phù hợp với hệ thống lớn						Với hệ thống nhiều request, việc tạo nhiều instance servlet sẽ làm giảm hiệu suất.
-			
-			💡 Thay vào đó, nên dùng synchronized, ThreadLocal hoặc Stateless Servlet.
-			
-			
-			
-# 4. Cách thay thế SingleThreadModel 
-				
-			
-	## 🔹 Cách 1: Dùng synchronized (Không khuyến khích) 
-		Đặt synchronized vào doGet() hoặc doPost(), nhưng làm giảm hiệu suất.
-				@WebServlet("/sync")
-				public class SyncServlet extends HttpServlet {
-					private int counter = 0;
-				
-					protected synchronized void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-						counter++;
-						resp.getWriter().println("Counter: " + counter);
-					}
-				}
-
-					⚠ Nhược điểm:
+	## 🔹 Truy cập Field private (Hack biến private)
+		Bình thường không thể truy cập biến private, nhưng với Reflection thì có thể:
 		
-					Tất cả request phải chờ nhau, giảm tốc độ xử lý.
-			
-			
-			
-			
-	## 	🔹 Cách 2: Dùng ThreadLocal để tạo biến riêng cho từng request	
-	
-	
-			@WebServlet("/threadlocal")
-			public class ThreadLocalServlet extends HttpServlet {
-				private ThreadLocal<Integer> counter = ThreadLocal.withInitial(() -> 0);
-			
-				protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-					counter.set(counter.get() + 1);
-					resp.getWriter().println("Counter: " + counter.get());
-				}
-			}
-	
-			🚀 Ưu điểm:
-			Không cần đồng bộ hóa.
-			Mỗi request có một biến riêng, tránh lỗi race condition.	🚀 Ưu điểm:
-			
-			Không cần đồng bộ hóa.
-			Mỗi request có một biến riêng, tránh lỗi race condition.
-			
-			
-			
-	## 	🔹 Cách 3: Dùng Stateless Servlet (Cách tốt nhất)
-			
-			Không dùng biến instance để tránh vấn đề đồng bộ hóa.
-			📌 Ví dụ: Servlet Stateless
-			
-			@WebServlet("/stateless")
-			public class StatelessServlet extends HttpServlet {
-				protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-					int counter = Integer.parseInt(req.getParameter("count")); // Không dùng biến instance
-					resp.getWriter().println("Counter: " + (counter + 1));
-				}
-			}
+		Person person = new Person();
+		Field nameField = clazz.getDeclaredField("name");
+		nameField.setAccessible(true); // Bypass private!
+		nameField.set(person, "John Doe"); // Gán giá trị mới
+		System.out.println(person.getName()); // In ra John Doe
 
-			✅ Lợi ích:
+	🚨 Lưu ý: Việc này phá vỡ nguyên tắc đóng gói (encapsulation), nên chỉ dùng khi thực sự cần
+	
+	
+	## 🔹 Gọi Method tại runtime 
+		Method method = clazz.getDeclaredMethod("sayHello");
+		method.invoke(person);  // Gọi sayHello() mà không cần biết trước class
+ 
+		📌 Ứng dụng: Spring dùng để gọi Bean method tự động.
 
-Servlet không giữ trạng thái, mọi request độc lập với nhau.
-Không lo lắng về đồng bộ hóa hay bộ nhớ.
-			
+	
+
+	## 🔹 Tạo Object tại runtime 
+	
+		Constructor<?> constructor = clazz.getDeclaredConstructor();
+		Person person = (Person) constructor.newInstance(); // Tạo object
+		System.out.println(person);
+
+
+
+# 	Khi nào nên và không nên dùng Reflection? 
+
+✅ Nên dùng khi															❌ Không nên dùng khi
+Dùng trong framework như Spring, Hibernate							Khi hiệu suất quan trọng
+Test Automation (JUnit, Mockito)									Khi không cần thay đổi class lúc runtime
+Xây dựng Plugin, Dependency Injection								Khi có thể dùng cách khác tốt hơn
+
+
+# Hạn chế của Reflection
+❌ Hiệu suất thấp hơn do phải truy vấn metadata class.
+❌ Bỏ qua tính đóng gói (private, protected có thể bị truy cập).
+❌ Dễ lỗi nếu class bị đổi tên (Refactor tên class có thể gây lỗi runtime).
+
+
+🔥 Kết luận
+✔ Reflection giúp ta khám phá và thao tác với class tại runtime.
+✔ Rất mạnh mẽ nhưng cần dùng cẩn thận để tránh giảm hiệu suất.
+✔ Hữu ích trong Spring, Hibernate, JUnit, và nhiều framework khác.
 
 
 </pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

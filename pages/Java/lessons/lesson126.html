@@ -1,97 +1,120 @@
-<html><head><title>Lesson 126 == Segment Tree Beats ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 126 -- Segment Tree Beats -//</h1><pre># Khái niệm 
-	Segment Tree Beats là một dạng cải tiến cao cấp của SegmentTree, được thiết kế để xử lý các truy vấn phức tạp mà các dạng Lazy Propagation truyền thống không xử lý được hiệu quả
+<html><head><title>Lesson 126 == Merge Sort Tree ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 126 -- Merge Sort Tree -//</h1><pre># Khái niệm  
+	Merge Sort Tree là một cấu trúc dữ liệu nâng cao, kết hợp giữa : 
+		- Segment Tree(phân đoạn vùng dữ liệu )
+		- và Merge Sort (chia để trị, trộn mảng con đã sắp xếp )
+		
+	📌 Mục đích chính: 
+		Trả lời các truy vấn có điều kiện thứ hạng trên đoạn [L, R] một cách nhanh chóng. 
+
+
+# 🧠 VẤN ĐỀ CẦN GIẢI:
+
+	Cho mảng A[1..n]. Có thể bạn sẽ phải trả lời truy vấn kiểu:
+	count(L, R, x): trong đoạn A[L..R], có bao nhiêu phần tử ≤ x?
+	kth(L, R, k): phần tử nhỏ thứ k trong đoạn A[L..R] là gì?
+	🔁 Nếu bạn dùng sort mỗi lần, thì độ phức tạp sẽ là O(n log n) mỗi truy vấn. Không tối ưu.
+
+
+
+
+# ✅ CẤU TRÚC MERGE SORT TREE: 
+
+	Mỗi node đại diện cho một đoạn [l..r] của mảng.
+	Dữ liệu lưu tại node: là một mảng con đã được sắp xếp từ A[l..r]. 
+	
+	→ Giống y như cách Merge Sort tách mảng rồi trộn lại, nhưng ta lưu toàn bộ mảng đã sort ở từng node.
 	
 	
-# 🔥 Khi nào cần Segment Tree Beats? 
-Khi bạn có những truy vấn phức tạp như sau: 
-| Truy vấn kiểu                                      | Lazy Segment Tree có xử lý tốt không? | Segment Tree Beats thì sao? |
-| -------------------------------------------------- | ------------------------------------- | --------------------------- |
-| Cập nhật tất cả `A[i] := x` trong đoạn \[L, R]     | ✅ Có                                  | ✅ Có                        |
-| Cập nhật `A[i] := min(A[i], x)` trong đoạn \[L, R] | ❌ Không hiệu quả                      | ✅ Rất hiệu quả              |
-| Truy vấn tổng / min / max trong đoạn \[L, R]       | ✅ Có                                  | ✅ Có                        |
-| Truy vấn số lần `A[i] == max` trong đoạn \[L, R]   | ❌ Không làm được                      | ✅ Làm được nếu Beats        |
-
-	📌 Ví dụ thực tế:
-Bạn có mảng điểm số người chơi, và muốn giảm điểm những người có điểm quá cao (ví dụ, tất cả A[i] > 90 thì A[i] := min(A[i], 90)) → rất giống "đánh bầm" cây, làm yếu dần phần tử mạnh nhất → Segment Tree Beats.
-
-# 🧠 Ý tưởng chính – “Beating” logic 
-Mỗi node trong Segment Tree Beats lưu:
-
-- max1: phần tử lớn nhất trong đoạn
-- max2: phần tử lớn thứ 2 trong đoạn
-- cntMax: số lần max1 xuất hiện
-- sum: tổng giá trị đoạn
-
-	##💥 Khi ta cập nhật min(A[i], x) trong đoạn, nếu x ≥ max1:
-		→ Không làm gì (vì mọi phần tử đều ≤ x)
-		Nhưng nếu x < max1 và x ≥ max2:
-		→ Chỉ cần giảm max1 về x, update lại sum, không đụng gì khác.
-		Nếu x < max2 → không thể cập nhật node hiện tại, phải đệ quy xuống 2 con.
+# 	🏗️ CẤU TRÚC: 
 
 
-# 🛠️ Ví dụ code xử lý min(A[i], x) (Beating step): 
+class MergeSortTree {
+    int n;
+    ArrayList<Integer>[] tree;
 
-void applyMin(int node, int l, int r, int x) {
-    if (max1[node] <= x) return; // không cần làm gì
-    if (max2[node] < x) {
-        // có thể cập nhật toàn bộ đoạn
-        long delta = (long)(x - max1[node]) * cntMax[node];
-        sum[node] += delta;
-        max1[node] = x;
-        // không cần update max2 nếu không cần truy vấn khác
-        return;
+    MergeSortTree(int[] arr) {
+        n = arr.length;
+        tree = new ArrayList[4 * n];
+        build(1, 0, n - 1, arr);
     }
-    // không thể cập nhật đoạn, đệ quy xuống
-    pushDown(node);
-    applyMin(leftChild, l, mid, x);
-    applyMin(rightChild, mid+1, r, x);
-    pullUp(node);
+
+    void build(int node, int l, int r, int[] arr) {
+        tree[node] = new ArrayList<>();
+        if (l == r) {
+            tree[node].add(arr[l]);
+            return;
+        }
+        int mid = (l + r) / 2;
+        build(2 * node, l, mid, arr);
+        build(2 * node + 1, mid + 1, r, arr);
+        tree[node] = merge(tree[2 * node], tree[2 * node + 1]);
+    }
+
+    ArrayList<Integer> merge(List<Integer> left, List<Integer> right) {
+        ArrayList<Integer> result = new ArrayList<>();
+        int i = 0, j = 0;
+        while (i < left.size() && j < right.size()) {
+            if (left.get(i) < right.get(j))
+                result.add(left.get(i++));
+            else
+                result.add(right.get(j++));
+        }
+        while (i < left.size()) result.add(left.get(i++));
+        while (j < right.size()) result.add(right.get(j++));
+        return result;
+    }
 }
 
 
-# 🔍 Lưu gì trong mỗi node?
+# 🔍 QUERY ĐẾM PHẦN TỬ ≤ X TRONG [L, R]
+int query(int node, int l, int r, int ql, int qr, int x) {
+    if (qr < l || ql > r) return 0;  // không giao
+    if (ql <= l && r <= qr) {
+        // Tại node này chứa mảng đã sort -> binary search
+        return upperBound(tree[node], x);
+    }
+    int mid = (l + r) / 2;
+    return query(2 * node, l, mid, ql, qr, x) +
+           query(2 * node + 1, mid + 1, r, ql, qr, x);
+}
 
-| Trường dữ liệu                    | Ý nghĩa                     |
-| --------------------------------- | --------------------------- |
-| `max1`                            | Phần tử lớn nhất trong đoạn |
-| `max2`                            | Phần tử lớn thứ 2           |
-| `cntMax`                          | Số lần max1 xuất hiện       |
-| `sum`                             | Tổng giá trị đoạn           |
-| (option) `min1`, `min2`, `cntMin` | Nếu cần làm `max(A[i], x)`  |
+int upperBound(List<Integer> list, int x) {
+    int low = 0, high = list.size();
+    while (low < high) {
+        int mid = (low + high) / 2;
+        if (list.get(mid) <= x) low = mid + 1;
+        else high = mid;
+    }
+    return low; // số phần tử ≤ x
+}
 
 
-# 📈 Độ phức tạp:
-	✅ Mỗi lần update min(A[i], x) hoặc max(A[i], x) mất: O(log n) trong trường hợp tốt
-	❌ Trường hợp xấu nhất: phải đệ quy nhiều → O(log² n)
-	Nhưng vẫn tốt hơn rất nhiều so với cách naive hoặc lazy propagation thông thường (vì không phải update từng phần tử trong đoạn).
+
+# 📈 ĐỘ PHỨC TẠP: 
+	Xây dựng: O(n log n log n) → vì tại mỗi node merge mất O(n log n).
+	Query: O(log^2 n) → mỗi level là O(log n) node, mỗi node O(log n) cho binary search.
+	Nhanh hơn rất nhiều nếu bạn dùng cho truy vấn có điều kiện so sánh.
 
 
-# 📌 Ứng dụng thực tiễn: 
+# ✅ ỨNG DỤNG THỰC TẾ: 
+| Tình huống                                | Giải pháp Merge Sort Tree                     |
+| ----------------------------------------- | --------------------------------------------- |
+| Game: Tìm số người có điểm < X trong vùng | Tính toán nhanh số lượng điểm nằm trong range |
+| Analytics: Top-k / rank queries           | Truy vấn phần tử nhỏ thứ k trong đoạn         |
+| Hệ thống log, realtime data               | Truy vấn tập hợp dữ liệu có điều kiện lọc     |
+| Kết hợp Lazy Propagation (khó hơn)        | Cần mở rộng MergeSortTree lazy-aware          |
 
-| Vấn đề                                       | Có thể dùng Segment Tree Beats không? |
-| -------------------------------------------- | ------------------------------------- |
-| Game server: giảm chỉ số các user > 99 về 99 | ✅                                     |
-| Truy vấn số người có HP tối đa               | ✅                                     |
-| Truy vấn tổng HP trong đoạn                  | ✅                                     |
-| Truy vấn số lần max HP xuất hiện trong đoạn  | ✅                                     |
-| Update tăng/giảm từng phần tử                | ✅ kết hợp Lazy                        |
 
-# 🧠 So sánh với các cấu trúc khác:
 
-| Cấu trúc                | Mạnh ở đâu                                    | Yếu ở đâu                                           |
-| ----------------------- | --------------------------------------------- | --------------------------------------------------- |
-| Segment Tree (classic)  | Tổng, min/max, update 1 giá trị               | Không làm tốt các truy vấn dạng min/max điều kiện   |
-| Lazy Segment Tree       | Cập nhật đoạn, tổng, cộng/trừ                 | Không handle được `min(A[i], x)` hay `max(A[i], x)` |
-| Segment Tree Beats      | Truy vấn phức tạp có điều kiện, min/max limit | Rất phức tạp để implement, nhiều nhánh edge         |
-| Persistent Segment Tree | Quản lý snapshot, undo/redo                   | Không hỗ trợ truy vấn `min(A[i], x)` tốt            |
-| Merge Sort Tree         | Truy vấn rank / count / ≤ x                   | Không update động tốt                               |
 
-# 🔚 Kết luận:
-	Segment Tree Beats là kỹ thuật chuyên sâu dùng cho:
+# 🧠 CÁC CẤU TRÚC LIÊN QUAN NÊN HỌC:
+| Tên cấu trúc            | Mục tiêu                              |
+| ----------------------- | ------------------------------------- |
+| Segment Tree            | Truy vấn tổng, min/max, update        |
+| Binary Indexed Tree     | Nhẹ hơn Segment Tree (prefix sum)     |
+| Persistent Segment Tree | Lưu lịch sử thay đổi                  |
+| Wavelet Tree            | Truy vấn rank/k-th + tần suất phần tử |
+| Merge Sort Tree         | Đếm phần tử thỏa điều kiện (≤ x)      |
 
-		Truy vấn phức tạp
-		Cập nhật có điều kiện
-		Khi Lazy Segment Tree không đủ
-		Nó có độ phức tạp logic cao, nhưng khi triển khai đúng sẽ cực kỳ hiệu quả cho những bài toán kiểu reduce/max/min conditional update.
 
 </pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

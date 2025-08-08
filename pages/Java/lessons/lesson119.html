@@ -1,152 +1,156 @@
-<html><head><title>Lesson 119 == Concurrent Tree ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 119 -- Concurrent Tree -//</h1><pre>
-# Khái niệm 
-	Concurrent Tree là một nhánh nâng cao trong thiết kế cấu trúc dữ liệu dùng cho đa luồng (multi-threading), nơi mà các cây như Binary Search Tree, AVL, Red-Black Tree, B-Tree... được thiết kế để hỗ trợ truy cập và cập nhật song song mà vẫn đảm bảo đúng logic và không xảy ra race condition.
+<html><head><title>Lesson 119 == Delete trong RBT ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 119 -- Delete trong RBT -//</h1><pre># Khái niệm  
+Xóa node trong Red-Black Tree (RBT) là phần phức tạp nhất của cấu trúc này. Ở level senior, bạn cần hiểu rõ cả quy trình xóa, các tình huống mất cân bằng, hành vi của màu sắc (red/black) và đặc biệt là các phép xoay – tô màu – rebalance sau xóa.
+
+
+# 🎯 MỤC TIÊU CỦA DELETE TRONG RBT
+	Duy trì 5 tính chất của Red-Black Tree sau khi xóa:
 	
-	Tại level senior system architect, bạn cần hiểu:
+		- Mỗi node là đỏ hoặc đen
+		- Gốc là đen
+		- Lá (null) là đen
+		- Node đỏ không có con đỏ
+		- Mọi đường từ một node đến các lá null đều có số node đen bằng nhau
 
-		Tại sao Concurrent Tree lại khó.
-		Các kỹ thuật đồng bộ hóa và tối ưu được dùng để giải quyết.
-		Cách triển khai một cây dữ liệu có thể chịu được tải cao trong môi trường đa luồng.
-		Những trade-off giữa hiệu năng và tính đồng bộ
 
+# 🔁 CÁC BƯỚC XÓA NODE TRONG RBT
 
-# 🧠 VẤN ĐỀ CỐT LÕI KHI DÙNG TREE TRONG MULTITHREADING
-
-	❌ Vấn đề: 
-		Race condition: 2 thread chạm cùng 1 node hoặc subtree.
-		Deadlock: nếu locking không đúng thứ tự.
-		Starvation: thread bị đói tài nguyên
-		Cache coherence và false sharing ảnh hưởng hiệu năng.
+	## 🔹 BƯỚC 1: Xóa như BST bình thường 
+		Nếu node có 2 con → thay thế bằng node kế tiếp (in-order successor), rồi xóa successor.
+		Giờ bạn còn lại trường hợp node bị xóa chỉ có 0 hoặc 1 con → xử lý tương đối dễ.
 		
 		
-# 	✅ YÊU CẦU CỦA 1 CONCURRENT TREE 
-| Yêu cầu                     | Diễn giải                                |
-| --------------------------- | ---------------------------------------- |
-| **Thread-safe**             | Đảm bảo truy cập đúng khi có nhiều luồng |
-| **Non-blocking (tùy chọn)** | Có thể dùng lock-free nếu cần            |
-| **Hiệu năng cao**           | Scale với số thread                      |
-| **Consistency**             | Cây luôn giữ đúng trạng thái             |
+	## 	 BƯỚC 2: Phân tích màu sắc
+		Nếu node bị xóa là đỏ → KHÔNG ảnh hưởng gì, kết thúc.
+		Nếu node bị xóa là đen:
+			Mất đi 1 “black height” → RBT có thể mất cân bằng.
+			Cần fix lại màu sắc và cấu trúc bằng cách "fix double black".
 
 
-# 🔧 CÁC CHIẾN LƯỢC ĐỒNG BỘ (LOCKING STRATEGIES)
 
 
-	## 1 . Global Lock
-		Lock toàn bộ cây mỗi lần truy cập 
-		Đơn giản, hiệu năng thấp → bottleneck 
-		
-	## 	2. Fine-Grained Locking 
-		Mỗi node có lock riêng (ReentrantLock) 
-		
-node.lock();
-try {
-   if (key < node.key)
-       go left;
-   else
-       go right;
-} finally {
-   node.unlock();
+
+# 🔥 FIX DOUBLE BLACK (ĐỎ ĐEN KÉP)
+	Giả sử bạn xóa một node đen x, và thay thế bởi child (null hoặc 1 con). Nếu child cũng đen → xuất hiện double black → phải xử lý.
+	
+	Có 4 tình huống chính (fix bằng rotation + recoloring):
+	
+	## 🔸 CASE 1: Sibling đỏ
+	
+     P(B)
+    /    \
+   x(DB)  S(R)
+         /   \
+       ...   ...
+	Sibling S là đỏ, P là đen → xoay P và S, đổi màu → biến thành case khác.
+
+
+	## 🔸 CASE 2: Sibling đen, cả 2 con đều đen
+
+     P(?)
+    /    \
+   x(DB)  S(B)
+         /   \
+       B     B
+
+		Đổi màu S → đỏ
+		Nếu P là đỏ → đổi P thành đen → OK
+		Nếu P đen → P bị “double black”, đệ quy fix lên trên
+
+
+	## 🔸 CASE 3: Sibling đen, con gần là đỏ, con xa là đen
+
+     P
+    / \
+   x   S(B)
+       / \
+     R   B
+	Xoay S và R để tạo ra Case 4
+	
+	
+	## 🔸 CASE 4: Sibling đen, con xa là đỏ
+     P
+    / \
+   x   S(B)
+       / \
+     B   R
+
+	Xoay P và S
+	Đổi màu để cân bằng → fix hoàn tất
+	
+
+# 🧠 MẸO GHI NHỚ (THEO QUAN SÁT)
+
+	Sibling đỏ: luôn xoay và đổi màu ngay.
+	
+	Sibling đen:
+		Nếu có con đỏ xa → xoay phải/left rồi đổi màu
+		Nếu 2 con đen → đẩy đen lên trên → đệ quy tiếp
+
+# 💻 JAVA PSEUDO-CODE (PHẦN FIX)
+void fixDelete(Node x) {
+    while (x != root && x.color == BLACK) {
+        if (x == x.parent.left) {
+            Node s = x.parent.right;
+
+            if (s.color == RED) {
+                // Case 1
+                s.color = BLACK;
+                x.parent.color = RED;
+                rotateLeft(x.parent);
+                s = x.parent.right;
+            }
+
+            if (s.left.color == BLACK && s.right.color == BLACK) {
+                // Case 2
+                s.color = RED;
+                x = x.parent;
+            } else {
+                if (s.right.color == BLACK) {
+                    // Case 3
+                    s.left.color = BLACK;
+                    s.color = RED;
+                    rotateRight(s);
+                    s = x.parent.right;
+                }
+
+                // Case 4
+                s.color = x.parent.color;
+                x.parent.color = BLACK;
+                s.right.color = BLACK;
+                rotateLeft(x.parent);
+                x = root;
+            }
+        } else {
+            // mirror of above logic
+            ...
+        }
+    }
+    x.color = BLACK;
 }
 
-	Cho phép truy cập song song ở các nhánh khác nhau
-	Dễ deadlock nếu không cẩn thận với thứ tự lock
-	
 
-	## 3. Hand-over-hand locking (Lock Coupling)
-		Lock node hiện tại → lock node tiếp theo → rồi mới unlock node hiện tại 
-		
-		-> Giữ tính nhất quán khi duyệt
-		-> Tốt hơn fine-grained nhưng vẫn blocking 
 
+# 📊 TÓM TẮT ĐỘ PHỨC TẠP
+
+| Thao tác     | Thời gian                          |
+| ------------ | ---------------------------------- |
+| Xóa          | `O(log n)`                         |
+| Sửa màu/xoay | `≤ 3` lần xoay, `O(log n)` đổi màu |
 
 
 
-## 🔥 LOCK-FREE TREE (ADVANCED) 
-	✨ Không dùng lock (dùng CAS – Compare and Swap) 
-			- Dựa vào AtomicReference, VarHandle, Unsafe 
-			- Dùng versioned pointers, logical deletion, marking flags
-			- Rất khó debug, chỉ dùng trong hệ thống cực kỳ yêu cầu hiệu suất 
-			
-		Ví dụ: Concurrent Skip List trong Java (ConcurrentSkipListMap) là lock-free tree-based structure.
+# 🚨 LƯU Ý QUAN TRỌNG
+	Đừng sửa cây khi chưa xét đến màu sắc – đỏ/đen quyết định logic
+	Hãy vẽ ra paper / debug bằng in-order và màu để hiểu “tình trạng”
+	Khi gặp bug logic, thường là do quên truyền lại màu sắc khi xoay
 
-
-
-# 🌳 LOẠI CÂY PHÙ HỢP MULTITHREADING 
-| Cây                    | Có dùng concurrent version không?        | Ghi chú                            |
-| ---------------------- | ---------------------------------------- | ---------------------------------- |
-| BST                    | Có (tùy chỉnh locking)                   | Khó cân bằng                       |
-| AVL                    | Có (phức tạp do rotation)                | Cần phối hợp lock xoay cây         |
-| Red-Black Tree         | Có, nhưng rotation phức tạp              | Chỉ dùng nếu cần sorted map        |
-| Treap                  | Có, đơn giản rotation                    | Randomized balance giảm tranh chấp |
-| Skip List              | ✅ Dễ lock-free                           | Java dùng cho ConcurrentMap        |
-| B-Tree / B+Tree        | ✅ Dùng trong database (RocksDB, LevelDB) | Hỗ trợ concurrent insert/scan      |
-| Segment Tree / Fenwick | Hiếm (ít use case concurrent)            | Chủ yếu đọc nhiều, ít ghi          |
-
-
-
-# 📦 JAVA EXAMPLE: Concurrent Skip List
-Java có sẵn ConcurrentSkipListMap<K, V> là 1 lock-free sorted map:
-
-ConcurrentSkipListMap<Integer, String> map = new ConcurrentSkipListMap<>();
-map.put(10, "A");
-map.put(20, "B");
-map.remove(10);
-
-
-	Được dùng trong ConcurrentHashMap, ConcurrentNavigableMap
-	Cho phép insert/search/delete đồng thời
-	
-	
-	
-# 	🔬 EXAMPLE: Concurrent Red-Black Tree (Khó)
-	
-	Bạn phải:
-	
-		Lock theo từng node (fine-grain)
-		Trong xoay cây (rotation), lock 2-3 node cùng lúc
-		Ghi nhớ việc đổi màu và giữ cây balanced
-	
-	Pseudo-code Lock Coupling (insert) 
-	
-parent.lock();
-Node curr = parent.left;
-
-while (curr != null) {
-    curr.lock();
-    parent.unlock();
-    parent = curr;
-    curr = (key < curr.key) ? curr.left : curr.right;
-}
-insert node;
-parent.unlock();
-	
-# 	⚖️ TRADE-OFF KHI DÙNG CONCURRENT TREE
-	
-| Ưu điểm                        | Nhược điểm                              |
-| ------------------------------ | --------------------------------------- |
-| Hỗ trợ truy cập song song      | Phức tạp về locking                     |
-| Dữ liệu luôn đúng              | Dễ deadlock hoặc starvation             |
-| Tốt hơn Hashtable (nếu sorted) | Tốn bộ nhớ (extra lock fields)          |
-| Có thể lock-free (SkipList)    | Không phù hợp cho update-heavy workload |
-	
-	
-# 	📘 KIẾN THỨC CẦN NẮM VỮNG ĐỂ LÀM CHỦ CONCURRENT TREE 
-| Kiến thức                  | Mục tiêu                                               |
-| -------------------------- | ------------------------------------------------------ |
-| Tree Rotation, Balance     | Hiểu logic tự cân bằng khi có nhiều thread             |
-| Concurrency in Java        | Lock, volatile, atomic, `ReentrantLock`, `StampedLock` |
-| CAS operation              | Dùng `AtomicReference`, `compareAndSet()`              |
-| Memory model               | Happens-before, visibility                             |
-| Lock-free data structure   | SkipList, Treiber Stack, Michael-Scott Queue           |
-| Thread-safe design pattern | Copy-on-write, immutable tree                          |
-
-
-# 🎯 ỨNG DỤNG THỰC TẾ
-
-	Database: RocksDB, LevelDB dùng concurrent B+Tree
-	Search engine: Lucene sử dụng concurrent tree structures
-	In-memory cache: Sorted LRU caches cần concurrent AVL / RBT
-	Realtime analytics: Dữ liệu streaming cần update/scan song song
+# 📘 BẠN CẦN HỌC THÊM
+| Chủ đề                      | Vì sao cần                      |
+| --------------------------- | ------------------------------- |
+| Tree rotation (Left, Right) | Là core của RBT, AVL, Treap     |
+| Coloring strategy           | Logic đỏ/đen của mỗi case       |
+| In-order traversal          | Debug + xác nhận cân bằng cây   |
+| Red-Black vs AVL            | So sánh để hiểu sâu về cấu trúc |
 
 
 </pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

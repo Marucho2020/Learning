@@ -1,0 +1,142 @@
+<html><head><title>Lesson 161 == Java Memory Model - JMM ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 161 -- Java Memory Model - JMM -//</h1><pre>
+# I. ❗ Tại sao phải hiểu Java Memory Model?
+	Khi code đa luồng, logic đúng chưa đủ. Nếu không hiểu cách JVM giao tiếp với bộ nhớ vật lý (RAM, cache), bạn sẽ dính lỗi khó truy vết như:
+		- Race condition dù có if kiểm tra logic.
+		- Dữ liệu không đồng nhất dù không có lỗi cú pháp.
+		- Thread đọc giá trị cũ không rõ lý do.
+
+	💣 Những lỗi này sinh ra do compiler optimizations, CPU caching, và thiếu đảm bảo về thứ tự thực thi – và JMM ra đời để xử lý điều đó.
+
+
+# II. 🔬 Java Memory Model (JMM) là gì?
+
+	JMM định nghĩa hành vi đọc/ghi của các biến shared giữa các thread.
+	Nó giải quyết: 
+		- visibility: thread A cập nhật biến, liệu thread B có thấy không?
+		- ordering: thứ tự đọc/ghi có giữ nguyên như code không?
+		- atomicity: thao tác có chia nhỏ không?
+	
+
+# III. 🔁 Quy tắc happens-before 
+	JMM không đảm bảo thứ tự thực thi theo thứ tự code – chỉ đảm bảo các hành vi tuân theo quan hệ happens-before.
+
+	Một số quy tắc happens-before quan trọng:
+
+| Hành vi                 | Ý nghĩa                                                       |
+| ----------------------- | ------------------------------------------------------------- |
+| `synchronized`          | Vào 1 monitor lock xảy ra sau khi thread khác thoát cùng lock |
+| `volatile` write → read | Ghi biến volatile luôn "xảy ra trước" khi thread khác đọc     |
+| `Thread.start()`        | Main thread xảy ra trước logic trong thread mới               |
+| `Thread.join()`         | Thread chính thấy mọi thay đổi của thread con sau khi join    |
+
+
+# IV. 🔥 CPU Reordering & Compiler Optimization
+	CPU và compiler không đảm bảo thực thi đúng thứ tự như bạn viết.
+
+boolean ready = false;
+int data;
+
+Thread A:             Thread B:
+data = 42;            if (ready) System.out.println(data);
+ready = true;
+
+	Nếu không dùng volatile hay synchronized, có thể ready = true bị thực thi trước data = 42 → Thread B in ra 0.
+
+
+# V. 🧠 Visibility – Mối hiểm họa vô hình 
+
+class Shared {
+    boolean flag = false;
+
+    void writer() {
+        flag = true;
+    }
+
+    void reader() {
+        while (!flag) {
+            // loop mãi mãi?
+        }
+    }
+}
+
+	Không có volatile, reader() có thể không bao giờ thấy flag = true, vì thread có thể dùng giá trị cached từ CPU register.
+	
+	
+# 	VI. 🔄 Thread Lifecycle (Vòng đời thread)
+	
+| Trạng thái     | Ý nghĩa                    |
+| -------------- | -------------------------- |
+| NEW            | Thread mới được tạo        |
+| RUNNABLE       | Được lên lịch bởi JVM      |
+| BLOCKED        | Đang chờ lock (monitor)    |
+| WAITING        | Chờ signal từ thread khác  |
+| TIMED\_WAITING | Chờ trong thời gian cụ thể |
+| TERMINATED     | Kết thúc                   |
+	
+	Bạn cần biết trạng thái để debug thread dump, tune performance, tránh deadlock.
+
+	
+# VII. 📦 Các cách đảm bảo memory visibility	
+	
+	
+| Cách           | Giải thích                                                     |
+| -------------- | -------------------------------------------------------------- |
+| `synchronized` | Lock đảm bảo atomicity, visibility, ordering                   |
+| `volatile`     | Chỉ visibility & ordering, không atomic                        |
+| `Atomic*`      | CAS-based atomic operation                                     |
+| `final`        | Immutable đảm bảo thread-safe bởi construction visibility rule |
+	
+#	VIII. ⚠️ Các lỗi phổ biến	
+	
+	- Race Condition: nhiều thread cùng đọc/ghi dữ liệu mà không có đồng bộ → kết quả không lường trước.
+	- Stale Data: thread đọc dữ liệu cũ vì không có đồng bộ.
+	- Memory Visibility Bug: thread không thấy thay đổi từ thread khác.
+	- Out-of-Order Execution: kết quả sai dù code đúng.	
+	
+	
+# IX. ✍️ Kinh nghiệm thực chiến
+
+| Kinh nghiệm                                 | Giải thích                                                   |
+| ------------------------------------------- | ------------------------------------------------------------ |
+| Không dùng `volatile` cho logic phức tạp    | `volatile` không đảm bảo atomic hoặc đồng bộ chuỗi hành động |
+| Đọc từ nhiều thread → cần đồng bộ           | Dù không ghi cũng có thể sai nếu cache không đồng bộ         |
+| Immutable class là vũ khí mạnh              | `final`, `constructor init` an toàn với đa luồng             |
+| Đừng tin thứ tự code khi debug bug đa luồng | Phải nhìn bằng con mắt của CPU và JMM                        |
+
+
+
+# volatile
+	 là một từ khóa dùng để đảm bảo rằng mọi thread luôn đọc giá trị mới nhất của biến từ bộ nhớ chính (main memory), thay vì từ cache riêng của thread.
+
+	## 🚩 Khi nào cần volatile? 
+		Khi nhiều thread truy cập một biến dùng để kiểm tra trạng thái (flag, signal) mà:
+
+		Có 1 thread ghi,
+		Có n thread đọc,
+		Và không cần đồng bộ nhiều thao tác liên tiếp
+		
+	## 🧠 Tóm gọn:
+	
+	
+| Điều kiện      | `volatile` đảm bảo                               |
+| -------------- | ------------------------------------------------ |
+| **Visibility** | ✅ Có: Mọi thread luôn thấy giá trị mới nhất      |
+| **Atomicity**  | ❌ Không: Không đảm bảo cập nhật nguyên khối      |
+| **Ordering**   | ✅ Có: Ngăn reorder làm sai thứ tự logic đơn giản |
+	
+	
+	## ❗ Không nên dùng volatile nếu:
+	
+		Bạn cần cập nhật nhiều biến cùng lúc.
+		Bạn cần tăng/giảm (++/--) → không atomic.
+		Bạn cần logic kiểm tra rồi hành động → dùng synchronized hoặc Atomic*.	
+			
+	
+	
+	
+	## 💡 Ghi nhớ:
+		Dùng volatile cho “biến trạng thái đơn” khi cần đảm bảo mọi thread đều thấy đúng giá trị hiện tại. Không dùng cho thao tác phức tạp.
+	
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

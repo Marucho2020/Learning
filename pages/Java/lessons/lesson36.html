@@ -1,145 +1,126 @@
-<html><head><title>Lesson 36 == ArrayBlockingQueue ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 36 -- ArrayBlockingQueue -//</h1><pre># 1. Khái niệm  
-	Array BlockingQueue là một trong những cài đặt phổ biến của BlockingQueue trong Java. Nó rất quan trọng trong việc quản lý luồng dữ liệu trong các ứng dụng đa luồng, đặc biệt khi làm việc với bài toán Producer-Comsumer(Nhà sản xuất và người tiêu dùng )
+<html><head><title>Lesson 36 == BlockingQueue ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 36 -- BlockingQueue -//</h1><pre>
+# Khái niệm 
+	BlockingQueue trong Java là một trong những cấu trúc dữ liệu rất hữu ích khi làm việc với các ứng dụng đa luồng, nơi bạn cần quản lý và đồng bộ hóa việc truy cập vào một hàng đợi(queue) giữa các luồng (threads). Đây là một giao diện trong Java, nằm trong gói java.util.concurrent, giúp hỗ trợ các thao tác liên quan đến hàng đợi với cơ chế chặn(blocking) khi các điều kiện không thỏa mãn. 
 	
-	ArrayBlockingQueue là một hàn đợi(queue) tuần tự, có kích thước cố định được cài đặt dựa trên mảng array. Khi bạn tạo một đối tượng ArrayBlockingQueue, bạn phải chỉ định dung lượng tối đa của nó ngay từ đầu. Điều này có nghĩa là nó không thể mở rộng hoặc thu hẹp kích thước sau khi đã được khởi tạo. 
+	Một BlockingQueue là một hàng đợi có thể chứa các phần tử và có các hành vi đặc biệt khi thao tác thêm và lấy phần tử vào hay ra của hàng đợi gặp phải một số điều kiện nhất định, như hàng đợi đầy hoặc rỗng. Các luồng có thể bị chặn khi cố gắng thao tác trên hàng đợi trong những tình huống này. 
 	
-# 2. Đặc điểm của ArrayBlockingQueue 
-	## 1. Kích thước cố định : 
-	Dung lượng của hàng đợi được xác định khi tạo, và không thể thay đổi sau đó. 
+# Các phương thức chính của BlockingQueue 
+	.put(E e)                   : Thêm một phần tử vào hàng đợi. Nếu hàng đợi đầy, phương thức này sẽ CHẶN đến khi có không gian trống 
 	
-	#Hỗ trợ đồng bộ hóa 
-		- Hàng đợi sử dụng cơ chế khóa(lock) để đảm bảo an toàn khi truy cập trong môi trường đa luồng 
-		- Khi một luồng thực hiện thao tác thêm(put) hoặc lấy (take), các luồng khác sẽ bị chặn cho đến khi thao tác hoàn tất. 
+	.take()                     : Lấy phần tử ra khỏi hàng đợi. Nếu hàng đợi đang rỗng, phương thức này sẽ chặn cho đến khi có phần tử trong hàng đợi 
+	
+	.offer(E e)                 : Thêm một phần tử vào hàng đợi nhưng không chặn. Nếu hàng đợi đầy, phương thức này sẽ trả về false thay vì chặn 
+	
+	.poll()                     : Lấy phần tử ra khỏi hàng đợi mà không chặn. Nếu hàng đợi rỗng, phương thức này sẽ trả về null thay vì chặn  
+	
+	.remainingCapacity()        : Trả về số lượng phần tử còn lại có thể thêm vào hàng đợi mà không vượt quá dụng lượng của nó 
+	
+	.clear()                    : Xóa tất cả các phần tử trong hàng đợi 
+	
+#Các cài đặt của BlockingQueue 
+	
+	Java cung cấp một số lớp triển khai của BlockingQueue với các tính năng khác nhau 
+	
+	## 1. ArrayBlockingQueue 
+		Đây là một triển khai BlockingQueue dựa trên mảng có dung lượng cố định. Khi hàng đợi đầy, các luồng muốn thêm phần tử sẽ bị chặn cho đến khi có không gian trống. 
 		
-	## FIFO 
-		- Các phần tử được xử lý theo thứ tự chúng được thêm vào hàng đợi 
+	## 2. LinkedBlockingQueue 
+		Đây là một triển khai BlockingQueue sử dụng danh sách liên kết. Nó có thể có dung lượng cố định hoặc không giới hạn. Nếu không giới hạn, hàng đợi có thể tăng trưởng theo nhu cầu. 
 		
-	# Hai khóa : (Two-lock queue)
-		ArrayBlockingQueue sử dụng hai loại khóa để đông bộ hóa:
-			Một cho thao tác thêm phần tử(enqueue)
-			Một cho thao tác lấy phần tử(dequeue)
-	# Hỗ trợ chặn (Blocking )
-		- Nếu hàng đợi đầy, các luồng cố gắng thêm phần tử sẽ bị chặn cho đến khi có không gian trống. 
-		- Nếu hàng đợi rỗng, các luồng cố gắng lấy phần tử sẽ bị chặn cho đến khi có phần tử được thêm vào 
-
-
-# 3.Các phương thức quan trọng của ArrayBlockingQueue 
-
-	offer(E e)               : Cố gắng thêm phần tử vào hàng đợi, nếu thành công trả về true, false nếu hàng đợi đã đầy 
-	put(E e)                 : Thêm phần tử vào hàng đợi, Nếu hàng đợi đầy, luồng sẽ bị chặn cho đến khi có không gian trống 
-	poll()                   : Lấy phần tử đầu tiên ra khỏi hàng đợi, nhưng không chặn , trả về null nếu hàng đợi rỗng 
-	take                     : Lấy phần tử đầu tiên ra khỏi hàng đợi, nếu hàng đợi rỗng, luồng sẽ bị chặn cho đến khi có phần tử 
-	remainingCapacity()      : Trả về số lượng phần tử kiểu int có thể thêm vào hàng đợi 
-	contais(Object o)        : Kiểm tra xem một phần tử có tồn tại trong hàng đợi hay không 
+	## 3.  PriorityBlockingQueue 
+		Đây là một triển khai BlockingQueue hỗ trợ các phần tử có độ ưu tiên. Các phần tử được lấy ra theo thứ tự ưu tiên thay vì theo thứ tự vào 
+		
+	##  4 . DelayQueue 
+		Đây là một triển khai BlockingQueue cho phép các phần tử có thể được trì hoãn cho đến một thời điểm nhất định trước khi có thể lấy ra  
+		
+# Ứng dụng của BlockingQueue
+	BlockingQueue rất hữu ích trong các ứng dụng đa luồng(multi-threaded applications), đặc biệt trong những tình huống sau  : 
 	
-	
-# 4. Ví dụ sử dụng ArrayBlockingQueue 
-	1. Bài toán Producer-Comsumer Example 
-					import java.util.concurrent.ArrayBlockingQueue;
-					import java.util.concurrent.BlockingQueue;
-					
-					// Nhà sản xuất
-					class Producer implements Runnable {
-						private BlockingQueue<Integer> queue;
-					
-						public Producer(BlockingQueue<Integer> queue) {
-							this.queue = queue;
-						}
-					
-						@Override
-						public void run() {
-							try {
-								for (int i = 1; i <= 10; i++) {
-									System.out.println("Producer: Producing item " + i);
-									queue.put(i); // Thêm phần tử vào hàng đợi (chặn nếu đầy)
-									Thread.sleep(500); // Giả lập thời gian sản xuất
+		- Producer-Consumer Problem(Bài toán nahf sản xuất và người tiêu dùng) 
+			Một luồng sản xuất dữ liệu và thêm vào hàng đợi, trong khi một luồng khác lấy dữ liệu từ hàng đợi để xử lý. 
+			BlockingQueue giúp dễ dàng đồng bộ hóa giữa các luồng mà không cần phải dùng nhiều synchronized blocks 
+			
+		- Task Scheduling(Lập lịch công việc)
+			Các công việc(task) được thêm vào hàng đợi và các luồng xử lý chúng theo thứ tự có sẵn. BlockingQueue sẽ đảm bảo rằng các luồng không lấy công việc khi công có công việc nào trong hàng đợi hoặc không thêm công việc mới khi hàng đợi đã đầy 
+			
+# Ví dụ về BlockingQueue
+	Dưới đây là ví dụ về cách sử dụng BlockingQueue để giải quyết bài toán nahf sản xuất và người tiêu dùng  
+		
+								class Producer implements Runnable {
+									private BlockingQueue<Integer> queue;
+								
+									public Producer(BlockingQueue<Integer> queue) {
+										this.queue = queue;
+									}
+								
+									@Override
+									public void run() {
+										try {
+											int i = 0;
+											while (true) {
+												queue.put(i);  // Thêm phần tử vào hàng đợi, sẽ chặn nếu hàng đợi đầy
+												System.out.println("Produced: " + i);
+												i++;
+												Thread.sleep(1000);  // Giả lập thời gian sản xuất
+											}
+										} catch (InterruptedException e) {
+											Thread.currentThread().interrupt();
+										}
+									}
 								}
-							} catch (InterruptedException e) {
-								Thread.currentThread().interrupt();
-							}
-						}
-					}
-					
-					// Người tiêu dùng
-					class Consumer implements Runnable {
-						private BlockingQueue<Integer> queue;
-					
-						public Consumer(BlockingQueue<Integer> queue) {
-							this.queue = queue;
-						}
-					
-						@Override
-						public void run() {
-							try {
-								while (true) {
-									Integer item = queue.take(); // Lấy phần tử từ hàng đợi (chặn nếu rỗng)
-									System.out.println("Consumer: Consuming item " + item);
-									Thread.sleep(1000); // Giả lập thời gian tiêu thụ
+								
+								class Consumer implements Runnable {
+									private BlockingQueue<Integer> queue;
+								
+									public Consumer(BlockingQueue<Integer> queue) {
+										this.queue = queue;
+									}
+								
+									@Override
+									public void run() {
+										try {
+											while (true) {
+												Integer item = queue.take();  // Lấy phần tử ra khỏi hàng đợi, sẽ chặn nếu hàng đợi rỗng
+												System.out.println("Consumed: " + item);
+												Thread.sleep(1500);  // Giả lập thời gian tiêu thụ
+											}
+										} catch (InterruptedException e) {
+											Thread.currentThread().interrupt();
+										}
+									}
 								}
-							} catch (InterruptedException e) {
-								Thread.currentThread().interrupt();
-							}
-						}
-					}
-					
-					public class ArrayBlockingQueueExample {
-						public static void main(String[] args) {
-							// Tạo hàng đợi có kích thước tối đa là 5
-							BlockingQueue<Integer> queue = new ArrayBlockingQueue<>(5);
-					
-							Thread producerThread = new Thread(new Producer(queue));
-							Thread consumerThread = new Thread(new Consumer(queue));
-					
-							producerThread.start();
-							consumerThread.start();
-						}
-					}
+								
+								public class BlockingQueueExample {
+									public static void main(String[] args) {
+										BlockingQueue<Integer> queue = new ArrayBlockingQueue<>(10);  // Hàng đợi có dung lượng tối đa là 10
+								
+										Thread producerThread = new Thread(new Producer(queue));
+										Thread consumerThread = new Thread(new Consumer(queue));
+								
+										producerThread.start();
+										consumerThread.start();
+									}
+								}
 
-			// Giải thích ví dụ:
-				Hàng đợi có kích thước cố định là 5:
+
+			// Giải thích  
+			Producer (Nhà sản xuất) sẽ liên tục tạo ra các số nguyên và thêm chúng vào BlockingQueue. Nếu hàng đợi đầy, put() sẽ chặn và đợi cho đến khi có không gian trống
+			
+			Consumer (Người tiêu dùng)
+				Sẽ liên tục lấy ra các số nguyên từ BlockingQueue và in ra . Nếu hàng đợi rỗng, take() sẽ chặn và đợi cho đến khi có phần tử mới trong hàng đợi. 
 				
-				Nếu nhà sản xuất cố gắng thêm phần tử vào hàng đợi khi đầy, nó sẽ bị chặn.
-				Nếu người tiêu dùng cố gắng lấy phần tử khi hàng đợi rỗng, nó sẽ bị chặn.
-				Sự đồng bộ hóa tự động:
-				
-				ArrayBlockingQueue quản lý việc đồng bộ hóa giữa nhà sản xuất và người tiêu dùng, nên bạn không cần phải sử dụng từ khóa synchronized thủ công.
-				Kết quả đầu ra:
-				
-				Nhà sản xuất thêm phần tử vào hàng đợi, người tiêu dùng lấy phần tử từ hàng đợi theo thứ tự FIFO.
+# Lợi ích của BlockingQueue
+			- Đồng bộ hóa tự động : Giúp quản lý các vấn đề đồng bộ hóa giữa các luồng mà không cần phải sử dụng các synchronized blocks. 
+			- Đảm bảo an toàn dữ liệu : Cung cấp các phương thức đảm bảo rằng các phần tử sẽ được thêm vào hoặc lấy ra một cách an toàn trong môi trường đa luồng  
+			- Giảm thiểu khả năng bị chặn vô thời hạn : Các phương thức như offer() và poll() giúp tránh việc luồng bị chặn vô thời hạn 
 
 
-# Ưu điểm của ArrayBlockingQueue 
-	#1. An toàn trong môi trường đa luồng : 
-		Không cần xử lý thử công việc đồng bộ hóa giữa các luồng 
-	# Đồng bộ hóa hiệu quả 
-		Sử dụng cơ chế khóa tối ưu hóa giúp giảm chi phí đồng bộ 
-	
-	# Đơn giản và dễ sử dụng :
-		API rõ ràng và phù hợp cho nhiều bài toán trong lập trình đa luồng 
+# Tóm tắt : 
+				BlockingQueue là một interface hỗ trợ các thao tác đồng bộ giữa các luồng khi làm việc với hàng đợi, giúp giải quyết các vấn đề như nhà sản xuất và người tiêu dùng  
+				Java cung cấp nhiều triển khai của BlockingQueue như ArrayBlockingQueue, LinkedBlockingQueue, PriorityBlockingQueue giúp bạn lựa chọn phù hợp với ứng dụng của mình 
 
-	# Hạn chế tài nguyên 
-		Giới hạn dung lượng giúp tránh các vấn đề như sử dụng quá nhiều bộ nhớ 
-		
-		
-Bài tập thực hành
 
-Bài tập 1:
-Tạo một ArrayBlockingQueue với kích thước là 3.
-Viết chương trình để thêm 10 số nguyên vào hàng đợi bằng một luồng và lấy chúng ra bằng một luồng khác.
 
-Bài tập 2:
-Thay đổi chương trình ví dụ trên để nhà sản xuất và người tiêu dùng có tốc độ khác nhau. Quan sát kết quả và giải thích tại sao việc đồng bộ hóa vẫn đảm bảo đúng thứ tự.
 
-Bài tập 3:
-Sử dụng ArrayBlockingQueue để quản lý các yêu cầu đến một máy chủ (như HTTP requests) và phân phối chúng cho một nhóm luồng xử lý (thread pool).		
-		
-		
-		public static void main(String[] args){
-			System.out.print(args.length);
-		}
-		
-		
-		
-		
-		
+
 </pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

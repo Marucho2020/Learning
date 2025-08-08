@@ -1,140 +1,60 @@
-<html><head><title>Lesson 75 == Cấu hình Routing động trong Runtime ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 75 -- Cấu hình Routing động trong Runtime -//</h1><pre>
+<html><head><title>Lesson 75 == AsyncSupportConfigurer ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 75 -- AsyncSupportConfigurer -//</h1><pre>
 # Khái niệm 
+	AsyncSupportConfigurer được dùng để bật hỗ trợ xử lý bất đồng bộ (Asynchronous processing) trong Spring MVC. 
 	
-	Routing động trong runtime là một kỹ thuật cho phép hệ thống thay đổi đường đi của request mà không cần restart ứng dụng. Điều này cực kỳ quan trọng trong các hệ thống microservices, API Gateway, và dynamic load balancing.
+	## 📌 Tại sao cần AsyncSupportConfigurer? 
+	
+		- Khi một request HTTP cần thời gian xử lý dài (như gọi API bên ngoài, xử lý file lớn).
+		- Nếu không dùng async, thread bị block, gây ảnh hưởng hiệu suất.
+		- Với async, Spring giải phóng thread chính, giúp server chịu tải tốt hơn.
+		
+		
+# 	📌 Cấu hình AsyncSupportConfigurer 	
+		
+		
+	@Configuration
+	public class AsyncConfig implements WebMvcConfigurer {
+	
+		@Override
+		public void configureAsyncSupport(AsyncSupportConfigurer configurer) {
+			configurer.setDefaultTimeout(5000); // Timeout 5 giây
+			configurer.setTaskExecutor(new SimpleAsyncTaskExecutor()); // Dùng thread pool
+		}
+	}
+
+	📌 setDefaultTimeout(5000): Timeout mặc định cho request async.
+	📌 setTaskExecutor(new SimpleAsyncTaskExecutor()): Dùng thread pool để chạy request bất đồng bộ.
 
 
-	## 🚀 Trường hợp sử dụng: 
-		- API Gateway tự động định tuyến request đến backend phù hợp. 
-		- A/B Testing & Canary Deployment: Chuyển traffic đến phiên bản mới mà không cần downtime.
-		- Tối ưu hiệu suất & Load Balancing: Chuyển hướng request khi một service quá tải hoặc chết.
-		- Tích hợp với Service Discovery: Giao tiếp linh hoạt giữa các microservices.
 
+# 📌 Ví dụ Controller dùng Async 
 
-	## 🏆 Lợi ích chính: 
-		- Không cần restart ứng dụng khi thay đổi route.
-		- Dễ dàng scale system mà không gián đoạn dịch vụ.
-		- Giảm downtime & tăng resilience.
-
-
-
-
-# Cách triển khai Routing Động trong Java 
+		@RestController
+		@RequestMapping("/async")
+		public class AsyncController {
+		
+			@GetMapping("/process")
+			public Callable<String> asyncProcess() {
+				return () -> {
+					Thread.sleep(3000); // Giả lập xử lý lâu 3 giây
+					return "Process Completed!";
+				};
+			}
+		}
 	
 
-	## A. Sử dụng Spring Cloud Gateway 
-		Spring Cloud Gateway là giải pháp mạnh mẽ thay thế Zuul, hỗ trợ routing động dựa trên config hoặc runtime API. 
-		
-		
-		### 	🛠 Cấu hình ban đầu (application.yml) 
-					spring:
-						cloud:
-							gateway:
-							routes:
-								- id: user-service
-								uri: lb://USER-SERVICE
-								predicates:
-									- Path=/users/**
-								- id: order-service
-								uri: lb://ORDER-SERVICE
-								predicates:
-									- Path=/orders/**
 
-		### 🛠 Trong config này: 
-			/users/** → route đến USER-SERVICE 
-			/orders/** → route đến ORDER-SERVICE 
-			lb:// → sử dụng Load Balancer để chọn instance phù hợp. 
-		
-		
+	## 📌 Khi client gọi /async/process: 
+	
+		- Callable<String> được Spring xử lý bất đồng bộ.
+		- Thread chính được giải phóng ngay lập tức.
+		- Khi xử lý xong, Spring trả về response cho client.
 
+# ✅ Ứng dụng: 
+	
+	Xử lý API chậm, gọi microservice, xử lý file lớn. 
+	Tăng throughput, giúp hệ thống chịu tải cao.
 	
 	
-	## B. Thay đổi Routing Động trong Runtime 
-		Spring Cloud Gateway hỗ trợ cập nhật routing mà không cần restart bằng cách thay đổi Bean trong Java. 
-			
-
-		## 👨‍💻 Code tạo Route Dynamically 
-		
-				@Bean
-				public RouteLocator customRouteLocator(RouteLocatorBuilder builder) {
-					return builder.routes()
-						.route("dynamic-service", r -> r.path("/dynamic/**")
-							.uri("http://dynamic-service:8080"))
-						.build();
-				}
-		
-		
-		## ✅ Nếu muốn thay đổi route trong runtime? 
-			Dùng Refreshable Route Configuration, thay đổi config từ Redis, Database, hoặc API Call. 
-			
-				
-			### 🚀 Dynamic Route từ API 
-					@RestController
-					@RequestMapping("/routes")
-					public class DynamicRouteController {
-					
-						private final RouteDefinitionLocator routeDefinitionLocator;
-						private final RouteDefinitionWriter routeDefinitionWriter;
-					
-						public DynamicRouteController(RouteDefinitionLocator locator, RouteDefinitionWriter writer) {
-							this.routeDefinitionLocator = locator;
-							this.routeDefinitionWriter = writer;
-						}
-					
-						@PostMapping("/add")
-						public Mono<String> addRoute(@RequestBody RouteDefinition routeDefinition) {
-							routeDefinitionWriter.save(Mono.just(routeDefinition)).subscribe();
-							return Mono.just("✅ Route added successfully!");
-						}
-					}
-		
-		
-		
-				📌 Cách hoạt động:
-					Nhận request API POST /routes/add với JSON cấu hình route mới. 
-					Lưu vào Gateway mà không cần restart app.
-					Hỗ trợ hot-reload route ngay lập tức. 
-
-
-
-		##  C. Kết hợp với Service Discovery (Eureka) 
-			Nếu hệ thống dùng Eureka để quản lý microservices, bạn có thể tự động cập nhật route mà không cần config tay. 
-				
-
-			## 🔧 Tự động tìm và cập nhật route
-					@Bean
-					public DiscoveryClientRouteDefinitionLocator discoveryClientRouteLocator(ReactiveDiscoveryClient discoveryClient) {
-						return new DiscoveryClientRouteDefinitionLocator(discoveryClient);
-					}
-					
-				📌 Hệ thống sẽ tự động cập nhật route mỗi khi có service mới đăng ký vào Eureka.
-				👉 Không cần restart – không cần chỉnh tay!
- 
-
-
-#  So sánh với các phương pháp khác 
-
-
-Công nghệ				Routing động?		Hỗ trợ Load Balancing? 		API Configurable?		Tích hợp với Service Discovery?
-Spring Cloud Gateway	✅ Có					✅ Có						✅ Có API					✅ Có
-Zuul 1 (Netflix)		❌ Không				✅ Có						❌ Không					❌ Không
-Nginx + Lua				✅ Có					✅ Có						✅ Có						❌ Không
-Envoy Proxy				✅ Có					✅ Có						✅ Có						✅ Có
-				
-
-👉 Spring Cloud Gateway là lựa chọn mạnh mẽ cho hệ thống Java, vì: 
-	Dễ cấu hình bằng API hoặc Config Server.
-	Hỗ trợ Load Balancing & Service Discovery.
-	Không cần thêm proxy như Nginx/Envoy.
-
-	
-# Kết luận 
-Routing động là tối quan trọng trong các hệ thống microservices.
-Spring Cloud Gateway cho phép cấu hình routing trong runtime mà không cần restart.
-Kết hợp với Service Discovery (Eureka) giúp routing tự động thích nghi với môi trường động.
-
-💡 Bước tiếp theo?
-Tích hợp thêm JWT Authorization + Rate Limiting vào Gateway để bảo mật hệ thống!
-
 
 </pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

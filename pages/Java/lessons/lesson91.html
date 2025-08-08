@@ -1,122 +1,56 @@
-<html><head><title>Lesson 91 == Xử lý file upload trong Spring MVC ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 91 -- Xử lý file upload trong Spring MVC -//</h1><pre>
-# ⚙️ 1. Cơ bản: Xử lý file upload với MultipartFile 
-	Spring MVC hỗ trợ upload file thông qua MultipartFile.
-
-
-
-	## ✅ Controller mẫu: 
-			@PostMapping("/upload")
-			public ResponseEntity<String> handleFileUpload(@RequestParam("file") MultipartFile file) {
-				if (file.isEmpty()) {
-					return ResponseEntity.badRequest().body("File is empty");
-				}
-			
-				try {
-					Path uploadPath = Paths.get("uploads/" + file.getOriginalFilename());
-					Files.copy(file.getInputStream(), uploadPath, StandardCopyOption.REPLACE_EXISTING);
-					return ResponseEntity.ok("File uploaded successfully");
-				} catch (IOException e) {
-					throw new RuntimeException("Failed to upload file", e);
-				}
-			}
-					
-			
-
-
-# 🔐 2. Quan điểm của một senior: Những vấn đề cần xử lý bắt buộc
-
-	## a. Bảo mật 
-		### Không bao giờ tin tưởng tên file từ client.
-			String safeFilename = StringUtils.cleanPath(Objects.requireNonNull(file.getOriginalFilename()));
-		
-		
-		### Chống path traversal (../../etc/passwd): Validate tên file.
-			
-		### Giới hạn kích thước file – tránh DoS bằng file lớn.
-			Cấu hình trong application.properties:
-				spring.servlet.multipart.max-file-size=5MB
-				spring.servlet.multipart.max-request-size=5MB
-
-
-	## b. Kiểm tra loại file 
-		Đừng dựa vào tên file hoặc content-type từ client. Dùng thư viện như Apache Tika để xác định loại file thực:
-		
-				Tika tika = new Tika();
-				String mimeType = tika.detect(file.getInputStream());
-
-
-
-
-# c. Xử lý song song & đa luồng 
+<html><head><title>Lesson 91 == Canary Deployment ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 91 -- Canary Deployment -//</h1><pre>
+# Khái niệm 
+	Canary Deployment là một chiến lược triển khai phần mềm trong môi trường sản xuất, giúp giảm thiểu rủi ro khi cập nhật phần mềm bằng cách phát hành các phiên bản mới một cách từ từ. Cách thức này mô phỏng theo việc thả "chim hoàng yến" (canary) vào mỏ hầm để xem xét các yếu tố nguy hiểm (ví dụ: khí độc), và nếu có vấn đề gì, chỉ một phần người dùng sẽ bị ảnh hưởng, thay vì toàn bộ hệ thống. 
 	
-		Nếu xử lý file nặng, hãy đưa vào background thread, message queue (RabbitMQ, Kafka), hoặc offload qua microservice khác.
+	
 
-
-# d. Không lưu vào thư mục /uploads cứng 
+# Quy trình Canary Deployment: 
+	
+	## 1.Chia nhỏ lượng người dùng:  
+		Bạn triển khai phiên bản mới của hệ thống cho một nhóm người dùng nhỏ đầu tiên, thay vì phát hành cho tất cả người dùng. Thường nhóm này chiếm khoảng 1-5% tổng số người dùng. 
 		
-
-	## Lưu trữ nên trừu tượng:
-
-		Lưu vào filesystem (dev/test)
+	## 2. Giám sát hiệu suất và sự cố:
+		Sau khi triển khai, bạn theo dõi các chỉ số hệ thống như độ ổn định, hiệu suất và các lỗi xảy ra. Nếu không có vấn đề gì nghiêm trọng, bạn tiếp tục triển khai cho các nhóm người dùng lớn hơn. 
 		
-		Lưu vào Amazon S3, Google Cloud Storage (prod)
 		
-		Lưu vào database BLOB (nếu thực sự cần – ví dụ: ảnh avatar nhỏ)
+	## 3. Mở rộng dần: 
+		Sau khi đảm bảo hệ thống hoạt động ổn định với nhóm nhỏ, bạn tiếp tục mở rộng việc triển khai cho nhóm người dùng lớn hơn cho đến khi toàn bộ người dùng được cập nhật. 
+		
+	## 4. Rollback nếu có lỗi:  
+			Nếu phát hiện lỗi nghiêm trọng trong quá trình triển khai, bạn có thể nhanh chóng rollback (quay lại phiên bản cũ) mà không ảnh hưởng đến toàn bộ hệ thống.
+			
+			
+# Ứng dụng trong phát triển phần mềm: 
+	
+	Canary Deployment là một phương pháp phổ biến trong môi trường microservices, nơi bạn có thể thử nghiệm một dịch vụ mới mà không ảnh hưởng đến toàn bộ hệ thống. 
+	
+	Trong CI/CD (Continuous Integration / Continuous Deployment), Canary Deployment giúp giảm thiểu nguy cơ của các thay đổi không mong muốn, nhờ vào việc triển khai dần dần.
+	
+	Các công cụ như Kubernetes và Docker Swarm hỗ trợ việc triển khai Canary rất tốt thông qua các cấu hình tự động và cân bằng tải.
+	
+	
+# Lợi ích: 
 
-	## Viết class StorageService interface để dễ mở rộng:
-
-		public interface StorageService {
-			void save(MultipartFile file);
-			Resource load(String filename);
-		}
-		Dễ unit test, mock, triển khai khác nhau. 
-
-
-# 🔁 3. Upload nhiều file
-
-		@PostMapping("/uploadMultiple")
-		public ResponseEntity<?> uploadMultiple(@RequestParam("files") MultipartFile[] files) {
-			List<String> filenames = new ArrayList<>();
-			for (MultipartFile file : files) {
-				storageService.save(file);
-				filenames.add(file.getOriginalFilename());
-			}
-			return ResponseEntity.ok("Uploaded: " + String.join(", ", filenames));
-		}
-
-
+	## Giảm thiểu rủi ro:
+		Chỉ một phần nhỏ người dùng bị ảnh hưởng khi có lỗi xảy ra.
+		
+	## Tiết kiệm thời gian:  
+		 Nếu có lỗi, việc rollback hoặc sửa lỗi sẽ nhanh chóng hơn vì chỉ có một phần nhỏ của hệ thống bị ảnh hưởng.
  
+	## Tăng độ ổn định: 
+		 Bạn có thể kiểm tra phiên bản mới trong môi trường thực tế trước khi phát hành cho tất cả người dùng.
+		 
+		 
 
-# 🧠 4. Kinh nghiệm battle-tested (senior-level) 
+# Nhược điểm và lưu ý: 
 	
-
-
-Vấn đề thực tế											Cách xử lý chuyên nghiệp
-Tải file độc hại (virus/malware)					Tích hợp virus scanner như ClamAV
-Tải nhầm file (format sai)							Kiểm tra định dạng bằng byte header (magic number)
-Ghi đè file cũ										Tạo tên file duy nhất bằng UUID hoặc hash
-Sự cố khi lưu file (disk full, permission)			Bắt lỗi chi tiết, log cẩn thận, rollback nếu cần
-Audit & traceability								Log người upload, IP, tên file, timestamp
-Lưu metadata file (kích thước, type)				Ghi vào database cho dễ query
-
-
-
-
-
-# 📦 5. Spring Boot + REST + Frontend 
-	Với frontend (React, Vue, v.v.) → cần endpoint dạng multipart/form-data.
-	CORS phải được xử lý nếu frontend chạy riêng port:
 	
-			@CrossOrigin(origins = "*")
-			@PostMapping("/upload")
-			public ResponseEntity<?> upload(@RequestParam MultipartFile file) { ... }
+	## Tăng độ phức tạp: 
+		Cần có hệ thống giám sát mạnh mẽ để theo dõi và xử lý các vấn đề trong quá trình triển khai. 
+		
+	## Đồng bộ hóa vấn đề: 
+		Cần đảm bảo rằng người dùng trong các nhóm khác nhau có trải nghiệm đồng nhất, tránh tình trạng một số người dùng gặp lỗi trong khi những người khác lại không.
 
 
-Muốn lên Java Gold hay làm lead trong microservice architecture, thì:
-	Hãy trừu tượng phần lưu file
-	Tách logic upload ra khỏi controller
-	Luôn validate input từ client
-	Logging đầy đủ để trace issue
-	Chuẩn bị cho scale (phân tán file, queue xử lý async)
 
 </pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

@@ -1,55 +1,181 @@
-<html><head><title>Lesson 149 == Buffer ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 149 -- Buffer -//</h1><pre># Khái niệm 
-	## ⚔️ 1. Buffer vs Cache: bản chất khác nhau 
+<html><head><title>Lesson 149 == Decorator pattern ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 149 -- Decorator pattern -//</h1><pre>
+# 📌 1. Decorator Pattern là gì?
+	Decorator Pattern là mẫu thiết kế thuộc nhóm structural, cho phép thêm hành vi (behavior) vào một object mà không thay đổi cấu trúc hoặc class gốc.
+
+	## Cốt lõi:
+		Không sửa class gốc
+		Không kế thừa → mà bao bọc (wrap) object gốc
+		Có thể xếp chồng nhiều lớp Decorator
+
+# 🧠 2. Cấu trúc chuẩn
+| Thành phần          | Vai trò                            |
+| ------------------- | ---------------------------------- |
+| `Component`         | Interface/abstract class chung     |
+| `ConcreteComponent` | Logic gốc                          |
+| `Decorator`         | Lớp trừu tượng bao bọc `Component` |
+| `ConcreteDecorator` | Thêm chức năng mới                 |
+
+// Component
+interface DataSource {
+    void write(String data);
+    String read();
+}
+
+// ConcreteComponent
+class FileDataSource implements DataSource {
+    public void write(String data) {
+        System.out.println("Writing to file: " + data);
+    }
+
+    public String read() {
+        return "Data from file";
+    }
+}
+
+// Decorator base class
+class DataSourceDecorator implements DataSource {
+    protected DataSource wrappee;
+
+    public DataSourceDecorator(DataSource source) {
+        this.wrappee = source;
+    }
+
+    public void write(String data) {
+        wrappee.write(data);
+    }
+
+    public String read() {
+        return wrappee.read();
+    }
+}
+
+// Concrete Decorator
+class EncryptionDecorator extends DataSourceDecorator {
+    public EncryptionDecorator(DataSource source) {
+        super(source);
+    }
+
+    public void write(String data) {
+        String encrypted = "ENCRYPTED(" + data + ")";
+        super.write(encrypted);
+    }
+
+    public String read() {
+        return "DECRYPTED(" + super.read() + ")";
+    }
+}
+
+
+DataSource file = new FileDataSource();
+DataSource encrypted = new EncryptionDecorator(file);
+encrypted.write("Hello");
+
+
+
+| Mục tiêu                               | Giải thích                                    |
+| -------------------------------------- | --------------------------------------------- |
+| **Mở rộng chức năng mà không kế thừa** | Kế thừa dễ bị cứng, bị giới hạn trong 1 cấp   |
+| **Tăng tính composable**               | Có thể xếp nhiều decorator                    |
+| **Tách biệt concern**                  | Không trộn logic gốc và logic phụ vào 1 class |
+| **Tuân thủ Open/Closed Principle**     | Mở rộng bằng cách wrap, không sửa             |
+
+
+# 📦 4. Decorator vs Inheritance
+
+| Inheritance         | Decorator                  |
+| ------------------- | -------------------------- |
+| Dùng `extends`      | Dùng `has-a` (composition) |
+| Một chiều           | Có thể lồng nhiều lớp      |
+| Khó thay đổi thứ tự | Tùy biến theo runtime      |
+| Cứng, ít linh hoạt  | Rất mềm, dễ mở rộng        |
+
+
+# ⚡ 5. Ứng dụng thực tế trong Java
+
+	A. java.io là ví dụ kinh điển:
 	
-| Đặc điểm           | Buffer                                                                       | Cache                                                   |
-| ------------------ | ---------------------------------------------------------------------------- | ------------------------------------------------------- |
-| **Mục đích**       | Giảm chi phí I/O giữa các luồng tốc độ khác nhau (disk ↔ CPU, network ↔ app) | Giảm độ trễ bằng cách lưu lại kết quả/đối tượng đã dùng |
-| **Thời điểm dùng** | Trước khi dữ liệu được xử lý                                                 | Sau khi dữ liệu được xử lý                              |
-| **Cập nhật**       | Ghi đè liên tục, FIFO                                                        | Thường dùng LRU/LFU, tùy chiến lược                     |
-| **Tính nhất quán** | Không quan trọng                                                             | Có thể cần invalidate khi source thay đổi               |
-| **Tình huống**     | File I/O, network, stream, pipeline                                          | Tính toán nặng, DB query, API gọi nhiều lần             |
+InputStream in = new BufferedInputStream(
+                    new GZIPInputStream(
+                        new FileInputStream("data.gz")
+                    )
+                );
+
+		Mỗi stream wrap stream trước đó, và thêm hành vi như buffering, decompress, encrypt...
+
+
+
+	B. Spring Framework
+
+| Ví dụ                       | Giải thích                           |
+| --------------------------- | ------------------------------------ |
+| `HandlerInterceptor`        | Decorator cho request flow           |
+| `BeanPostProcessor`         | Có thể dùng để wrap bean (decorator) |
+| `HttpServletRequestWrapper` | Decorator cho request object         |
+
+
+
+
+	C. Logger 
+
+interface Logger {
+    void log(String msg);
+}
+
+class ConsoleLogger implements Logger {
+    public void log(String msg) {
+        System.out.println(msg);
+    }
+}
+
+class TimeLoggerDecorator implements Logger {
+    private Logger logger;
+
+    public TimeLoggerDecorator(Logger logger) {
+        this.logger = logger;
+    }
+
+    public void log(String msg) {
+        logger.log("[" + System.currentTimeMillis() + "] " + msg);
+    }
+}
+
+
+
+# ❗ 6. Anti-pattern & khi không nên dùng
+
+| Tình huống                          | Vì sao nên tránh Decorator                             |
+| ----------------------------------- | ------------------------------------------------------ |
+| Quá nhiều lớp decorator             | Gây rối, khó trace bug                                 |
+| Dùng để xử lý logic chính           | Decorator **không nên chứa business logic chính**      |
+| Không thống nhất giữa các decorator | Decorator nên tuân thủ interface chặt chẽ              |
+| Decorator phụ thuộc vào nhau        | Decorator phải độc lập, không dựa vào thứ tự cứng nhắc |
+
+
+# 🧠 7. Level senior: tư duy sử dụng Decorator
+
+	Dùng để xử lý cross-cutting concerns như log, metric, cache, security...
 	
-	
-# 🧠 2. Buffer trong Java – chuyên sâu 
-	java.io.BufferedReader, BufferedWriter, BufferedInputStream, v.v.
-	
-	Những lớp này bọc các stream gốc, lưu dữ liệu vào vùng nhớ tạm trước khi xử lý. 
-	Giảm số lần gọi I/O thật sự (rất tốn tài nguyên)
-	
-	BufferedReader reader = new BufferedReader(new FileReader("file.txt"));
-	String line = reader.readLine();
-
-		Khi gọi readLine(), nó đọc 8K–64K bytes một lần vào mảng byte bên trong.
-		Sau đó, đọc dần từng dòng từ vùng đệm đó – không cần chạm disk lại
-
-	## 🔹 Bạn có thể tùy chỉnh kích thước buffer:
-		new BufferedReader(new FileReader("file.txt"), 16384); // 16 KB buffer
-
-	Senior tip: Nếu bạn biết file lớn và đọc theo block – nên tăng buffer size để giảm I/O syscall.
-
-# 🔸 Buffer trong java.nio (non-blocking I/O) 
-
-ByteBuffer buffer = ByteBuffer.allocate(1024);
-channel.read(buffer);
-buffer.flip();
-
-	Key points: 
-		
-		- Buffer trong NIO là vùng bộ nhớ thô + con trỏ
-		- flip() chuyển trạng thái từ “ghi” sang “đọc”
-		- Dùng cho high-performance server, async IO
-
-# 🔥 Direct vs Non-direct Buffer
-
-| Loại          | Vị trí                  | Ưu/Nhược                                                     |
-| ------------- | ----------------------- | ------------------------------------------------------------ |
-| Heap Buffer   | Trong JVM heap          | GC quản lý, dễ copy, chậm khi gửi ra socket                  |
-| Direct Buffer | Ngoài JVM heap (native) | Gửi thẳng xuống OS (zero-copy), nhanh hơn, nhưng khó quản lý |
+	Đặc biệt hữu dụng cho middleware pipeline, giống như chain of responsibilities
+	Biết viết Decorator nhưng cũng biết khi nào nên dừng, nếu cần shared state → Decorator có thể không phù hợp
 
 
-	ByteBuffer buffer = ByteBuffer.allocateDirect(1024); // native memory
+# 🧠 8. So sánh Decorator với Proxy / AOP
+| Pattern       | Mục tiêu                                              |
+| ------------- | ----------------------------------------------------- |
+| **Decorator** | Thêm chức năng mới (log, cache, encrypt...)           |
+| **Proxy**     | Kiểm soát truy cập, uỷ quyền                          |
+| **AOP**       | Tách cross-cutting logic ra hoàn toàn khỏi code chính |
 
-	Level senior: Nếu làm socket server (Netty, Reactor, Kafka), bạn nên biết rõ DirectBuffer để tối ưu I/O latency.
+	→ Decorator làm rõ mối quan hệ lớp, AOP thì ẩn hoàn toàn logic phụ.
 
-# 
+| Điểm then chốt                                          | Diễn giải                                    |
+| ------------------------------------------------------- | -------------------------------------------- |
+| Decorator dùng composition để thêm chức năng            | Không cần kế thừa class gốc                  |
+| Tuân thủ OCP, tách logic phụ khỏi logic chính           | Được dùng nhiều trong I/O, logging, security |
+| Có thể xếp chồng nhiều lớp                              | Rất linh hoạt, dễ mở rộng                    |
+| Dễ bị lạm dụng nếu không kiểm soát thứ tự hoặc mục đích | Phải giữ decorator đơn nhiệm, dễ trace       |
+
+
+
+
 </pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

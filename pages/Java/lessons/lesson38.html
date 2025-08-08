@@ -1,148 +1,135 @@
-<html><head><title>Lesson 38 == LinkedBlockingQueue ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 38 -- LinkedBlockingQueue -//</h1><pre># Khái niệm  
-	LinkedBlockingQueue là một trong các lớp thuộc gói java.util.concurrent. Nó đại diện cho một hàng đợi thread-safe được cài đặt theo kiểu blocking queue(hàng đợi chặn luồng). Điều này có nghĩa là nó hỗ trợ đồng bộ hóa khi nhiều luồng thực hiện thêm hoặc lấy phần tử từ hàng đợi 
+<html><head><title>Lesson 38 == ArrayBlockingQueue ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 38 -- ArrayBlockingQueue -//</h1><pre># 1. Khái niệm 
+	LinkedBlockingQueue là một blocking Queue được triển khai dựa trên danh sách liên kết(linked list)
+	Đây là một phần của gói java.util.concurrent, được thiết kế để sử dụng trong môi trường đa luồng, nơi các luồng có thể thêm(enqueue) và lấy(dequeue) phần tử một cách an toàn mà không cần khóa thủ công 
+
+# 2. Các đặc điểm chính của LinkedBlockingQueue
 	
-	
-# Đặc điểm chính 
-	## Thread-safe 
-		- LinkedBlockingQueue sử dụng cơ chế khóa riêng biệt cho các thao tác thêm(put, offer) và lấy(take hoặc poll ) để đảm bảo sự an toàn khi có nhiều luồng hoạt động cùng lúc 
+	## 1. Hỗ trợ giới hạn kích thước 
+		Bạn có thể tạo một LinkedBlockingQueue với một kích thước cố định hoặc không giới hạn(mặc định là không giới hạn)
 		
-	## Kích thước tùy chọn : 
-		Bạn có thể đặt kích thước tối đa của queue khi khởi tạo. 
-		Nếu không chỉ định kích thước, queue sẽ có kích thước mặc định là MAX_VALUE 
+		Khi đạt đến trạng thái kích thước tối đa, các luồng sẽ bị chặn(blocked) khi cố gắng thêm phần tử mới cho đến khi có không gian trống 
+		
+	## An toàn trong môi trường đa luồng 
+		Việc thêm (put) và lấy(take) phần tử được đồng bộ hóa, đảm bảo rằng không có luồng nào có thể làm sai lệch dữ liệu 
+		
+	## Hai khóa tách biệt 
+		LinkedBlockingQueue sử dụng hai khóa tách biệt(lock splitting) để cải thiện hiệu suất: 
+			- một khóa cho hành động thêm(enqueue)
+			- Một khóa cho hành động lấy(dequeue)
+			
+		Điều này cho phép các luồng thêm và lấy phần tử đồng thời mà không gây cản trở lẫn nhau. 
 		
 	## Hỗ trợ các thao tác blocking 
-		Phương thức put sẽ chặn luồng nếu queue đầy cho đến khi có chỗ trống
-		Phương thức take sẽ chặn luồng nếu queue rỗng cho đến khi có phần tử 
+		Các phương thức như put()  và take() sẽ chặn(block) luồng gọi nếu queue đầy hoặc rỗng, giúp quản lý luồng dễ dàng hơn 
 		
-	## Cấu trúc bên trong  
-		LinkedBlockingQueue sử dụng một danh sách liên kết(linked list để lưu trữ các phần tử )
-		Điều này giúp cho queue có hiệu suất tốt hơn với các thao tác thêm và lấy phần tử  
+	## Dựa trên danh sách liên kết 
+		Nội bộ LinkedBlockingQueue được triển khai trên một danh sách liên kết, không giống như ArrayBlockingQueue vốn dựa trên mảng. 
 		
-	## Phân tách khóa : 
-		LinkedBlockingQueue sử dụng hai khóa riêng biệt cho thao tác thêm và lấy. Điều này cho phép một luồng thêm và một luồng khác lấy phần tử đồng thời. 
+# Cách sử dụng LinkedBlockingQueue 
 		
-	
-
-# Khởi tạo  
-	## Constructor 
+	## Khởi tạo LinkedBlockingQueue 
+					// Queue không giới hạn kích thước
+					LinkedBlockingQueue<Integer> unboundedQueue = new LinkedBlockingQueue<>();
+					
+					// Queue với kích thước cố định
+					LinkedBlockingQueue<Integer> boundedQueue = new LinkedBlockingQueue<>(5);
+			
+					// Thêm phần tử vào queue
+					boundedQueue.put(1); // Chặn nếu đầy
+					boundedQueue.offer(2); // Không chặn, trả về false nếu đầy
 		
-		// Khởi tạo mặc định không giới hạn kích thước 
-			LinkecBlockingQueue<E> queue = new LinkecBlockingQueue<>();
-				
-				-> Kích thước tối đa được tham chiếu với biến Integer.MAX_VALUE 
 		
-		// Khởi tạo với kích thước giới hạn tùy chỉnh  , ví dụ là 100 chẳng hạn 
-			LinkedBlockingQueue<E> queue = new LinkedBlockingQueue<>(100);
-
-
-
-
-
-# Các phương thức quan trọng của LinkedBlockingQueue
-
-
+# Các phương thức quan trọng 
+			
 	## Thêm phần tử 
-		.add(E e)                  : Thêm phần tử nếu còn chỗ, Nếu queue đầy, ném ngoại lệ IllegalStateException 
-		.offer(E e)                : Thêm phần tử nếu còn chỗ, trả về false nếu Queue đầy  
-		.offer(E e , timeout)      : chặn trong khoảng thời gian timeout. Nếu vẫn đầy trả về false 
-		.put(E e)                  : Chặn luồng nếu queue đầy cho đến khi có chỗ trống 
-
-
-	## Lấy phần tử 
-		.poll()           : Lấy và loại bỏ phần tử đầu tiên. Trả về null nếu queue rỗng  
-		.poll(timeout)    : Chặn trong một khoảng thời gian. Nếu vẫn rỗng trả về null 
-		.take()           : Chặn luồng nếu queue rỗng cho đến khi có phần tử 
-		.peek()           : Lấy phần tử đầu tiên mà không xóa nó. Trả về null nếu queue rỗng 
-
-
-	## Thông tin về queue 
-		.size()                 : Trả về số lượng phần tử hiện có trong queue
-		.remainingCapacity()    : Trả về số lượng chỗ trống còn lại trong queue 
-
-
-
-# 4. Ví dụ minh họa 
-
-	## Ví dụ khởi tạo đơn giản 
-	
-	
-					LinkedBlockingQueue<Integer> queue = new LinkedBlockingQueue<>(3); // Kích thước tối đa là 3
-					try {
-						queue.put(1); // Thêm phần tử 1
-						queue.put(2); // Thêm phần tử 2
-						queue.put(3); // Thêm phần tử 3
-						System.out.println("Queue: " + queue);
-			
-						// Thử thêm phần tử khi queue đầy (sẽ bị chặn)
-						System.out.println("Trying to add 4...");
-						queue.put(4); // Chờ đến khi có chỗ trống
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-	
-
-
-	## Ví dụ với bài toàn Producer-Consumer với LinkecBlockingQueue
-			Một luồng producer thêm phần tử vào queue.
-			Một luồng consumer lấy phần tử từ queue.
-
-
+		.add(E e)                             : Thêm phần tử, ném ngoại lệ nếu queue đầy 
+		.offer(E e)                           : Thêm phần tử, trả về false nếu queue đầy 
+		.offer(E e, timeout, TimeUnit unit)   : Thử thêm phần tử trong khoảng thời gian nhất định, chặn nếu đầy 
+		.put(E e)                             : Thêm phần tử vào cuối queue,  Chặn luồng cho đến khi có không gian trống trong queue để thêm phần tử 
 		
-			import java.util.concurrent.LinkedBlockingQueue;
-			
-			public class ProducerConsumerExample {
-				public static void main(String[] args) {
-					LinkedBlockingQueue<Integer> queue = new LinkedBlockingQueue<>(3);
-			
-					// Luồng producer
-					Thread producer = new Thread(() -> {
-						try {
-							for (int i = 1; i <= 5; i++) {
-								System.out.println("Producer: Adding " + i);
-								queue.put(i); // Chặn nếu queue đầy
-								System.out.println("Producer: " + i + " added");
-							}
-						} catch (InterruptedException e) {
-							Thread.currentThread().interrupt();
+	## Xóa phần tử 
+		.poll()                          : Lấy và xóa phần tử đầu tiên, trả về null nếu queue rỗng 
+		.poll(timeout, TimeUnit unit )   : Lấy và xóa phần tử đầu tiên, chờ trong khoảng thời gian nhất định nếu queue rỗng 
+		.take()                          : Chặn luồng cho đến khi có phần tử để lấy 
+		.peek()                          : Xem phần tử đầu tiên nhưng không xóa, trả về null nếu queue rỗng 
+		
+	## Các phương thức khác 
+		.size()                : Trả về số lượng phần tử hiện tại trong queue
+		.remainingCapacity()   : Trả về không gian trống còn lại trong queue
+		.clear()               : Xóa tất cả phần tử trong queue
+		.contains(Object o)    : Kiểm tra xem queue có chứa phần tử o hay không 
+		
+		
+		
+		
+# Ví dụ thực tế: Sử dụng LinkedBlockingQueue để quản lý tác vụ 	và bài toán người tiêu dùng nhà sản xuất 	
+		
+					import java.util.concurrent.LinkedBlockingQueue;
+					
+					class Producer implements Runnable {
+						private LinkedBlockingQueue<Integer> queue;
+					
+						public Producer(LinkedBlockingQueue<Integer> queue) {
+							this.queue = queue;
 						}
-					});
-			
-					// Luồng consumer
-					Thread consumer = new Thread(() -> {
-						try {
-							while (true) {
-								Thread.sleep(1000); // Giả lập xử lý lâu
-								Integer item = queue.take(); // Chặn nếu queue rỗng
-								System.out.println("Consumer: Consumed " + item);
+					
+						@Override
+						public void run() {
+							try {
+								for (int i = 1; i <= 5; i++) {
+									System.out.println("Produced: " + i);
+									queue.put(i); // Chặn nếu queue đầy
+									Thread.sleep(100); // Giả lập thời gian sản xuất
+								}
+							} catch (InterruptedException e) {
+								Thread.currentThread().interrupt();
 							}
-						} catch (InterruptedException e) {
-							Thread.currentThread().interrupt();
 						}
-					});
-			
-					producer.start();
-					consumer.start();
-				}
-			}
+					}
+					
+					class Consumer implements Runnable {
+						private LinkedBlockingQueue<Integer> queue;
+					
+						public Consumer(LinkedBlockingQueue<Integer> queue) {
+							this.queue = queue;
+						}
+					
+						@Override
+						public void run() {
+							try {
+								while (true) {
+									Integer item = queue.take(); // Chặn nếu queue rỗng
+									System.out.println("Consumed: " + item);
+									Thread.sleep(200); // Giả lập thời gian tiêu thụ
+								}
+							} catch (InterruptedException e) {
+								Thread.currentThread().interrupt();
+							}
+						}
+					}
+					
+					public class LinkedBlockingQueueExample {
+						public static void main(String[] args) {
+							LinkedBlockingQueue<Integer> queue = new LinkedBlockingQueue<>(3);
+					
+							Thread producer = new Thread(new Producer(queue));
+							Thread consumer = new Thread(new Consumer(queue));
+					
+							producer.start();
+							consumer.start();
+						}
+					}
+		
+		
+# So sánh LinkedBlockingQueue và ArrayBlockingQueue
 
+Đặc điểm						LinkedBlockingQueue							ArrayBlockingQueue
 
-
-
-# 5. So sánh ArrayBlockingQueue và LinkedBlockingQueue
-
-	Đặc điểm						ArrayBlockingQueue								LinkedBlockingQueue
-	Cấu trúc dữ liệu				Sử dụng mảng cố định							Sử dụng danh sách liên kết
-	Kích thước						Bắt buộc phải đặt kích thước khi khởi tạo		Có thể đặt hoặc không đặt kích thước
-	Hiệu suất						Hiệu suất cao hơn với kích thước nhỏ			Hiệu suất tốt hơn khi làm việc với kích thước lớn
-	
-
-
-
-
-# 6. Khi nào nên sử dụng LinkedBlockingQueue
-	
-	- Khi cần một queue có kích thước linh hoạt 
-	- Khi muốn xử lý công việc trong các hệ thống đa luồng mà producer và consumer hoạt động độc lập 
-	- Khi queue có thể chứa nhiều phần tử mà bạn không muốn giới hạn cứng 
-
+Cấu trúc nội bộ					Danh sách liên kết							Mảng
+Kích thước						Tùy chọn: có thể giới hạn hoặc không		Phải có kích thước cố định
+Hiệu suất						Tốt hơn khi thêm và lấy đồng thời			Chậm hơn do sử dụng một khóa chung
+Sử dụng tài nguyên				Tiêu tốn nhiều bộ nhớ hơn (do node)			Sử dụng ít bộ nhớ hơn			
+		
+		
+		
 </pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

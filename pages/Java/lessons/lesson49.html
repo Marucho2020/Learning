@@ -1,143 +1,168 @@
-<html><head><title>Lesson 49 == Cloneable ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 49 -- Cloneable -//</h1><pre>
+<html><head><title>Lesson 49 == Iterator và Iteration ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 49 -- Iterator và Iteration -//</h1><pre>
+
 # Khái niệm  
-	Cloneable là một Interface trong Java, giúp các đối tượng của lớp implement interface này có thể được sao chép(clone) thông qua phương thức clone() của lớp Object. Khi lớp implements Cloneable, các đối tượng của lớp đó có thể được sao chép để tạo ra các bản sao giống hệt với đối tượng gốc. 
-	
-# Cloneable Interface 
-	Cloneable không có phương thức nào được định nghĩa trong đó. Nhiệm vụ chính của nó là đánh dấu rằng một lớp cho phép sao chép đối tượng của nó. Nếu bạn cố gắng sao chép (clone) một đối tượng của lớp không implement Cloneable, phương thức clone() sẽ ném ra một CloneNotSupportedException 
-	
-		public interface Cloneable {
-		}
 
-# Phương thức clone() trong lớp Object  
-	Mỗi đối tượng trong Java đều kế thừa từ lớp Object. Lớp Object cung cấp phương thức clone() 
-		protected Object clone() throws CloneNotSupportedException
-
-	Phươc thức này tạo ra một bản sao(shallow copy) của đối tượng. Tuy nhiên, phương thức này là protected, vì vậy phải override phương thức clone() để sử dụng trong mã của mình  
+	## Iteration (Duyệt qua phần tử)
+		Là quá trình lặp qua các phần tử của một tập hợp Collection như List, Set, Map 
+		
+	## Iterator (Design Pattern)	
+		Là một thiết kế mẫu (Design Pattern) giúp duyệt các phần tử trong một Collection mà không cần biết chi tiết cấu trúc chi tiết bên trong  
+		
+	-> Java cung cấp Iterator như một Interface trong java.util, giúp duyệt phần tử của Collection một cách an toàn và có thể loại bỏ phần tử khi đang duyệt 
 	
 	
+	## Các bài toán thường hay sử dụng Iterator 
+		Thường được sử dụng trong các bài toán thao tác với tập hợp dữ liệu lớn, yêu cầu truy cập tuần tự, và có thể cần xóa hoặc sửa dữ liệu khi duyệt. Dưới đây là những bài toán phổ biến thường sử dụng Iterator trong java 
 		
-# Shallow Copy vs Deep Copy 
-
-	## Shallow Copy(Sao chép nông) : Khi bạn sao chép một đối tượng, các thuộc tính nguyên thủy của đối tượng gốc sẽ được sao chép vào đối tượng mới, nhưng nếu đối tượng gốc chứa các tham chiếu(reference) đến các đối tượng khác, các tham chiếu đó sẽ được sao chép. Điều này có nghĩa là cả đối tượng gốc và bản sao sẽ chia sẻ cùng một tham chiếu đến các đối tượng con  
+			- Xóa phần tử thỏa mãn điều kiện (Remove Elements While Iterating)
+				
+			- Duyệt danh sách liên kết (LinkedList Traversal)
+			
+			- Duyệt Map (Key-Value Traversal)
+			....
+	Bài toán						Loại Iterator nên dùng								Điểm nổi bật
+	Xóa phần tử khi duyệt			Iterator									Tránh ConcurrentModificationException
+	Duyệt LinkedList				Iterator									Hiệu suất cao hơn for loop
+	Duyệt Map						Iterator<Map.Entry<K,V>>					Truy cập key-value dễ dàng
+	Duyệt ngược List				ListIterator								Hỗ trợ duyệt 2 chiều
+	Custom Iterable					Iterable<T>									Hỗ trợ for-each cho class tùy chỉnh
+	Duyệt song song					Spliterator									Tối ưu hiệu suất
+	Tách từ trong chuỗi				StringTokenizer								Nhanh hơn split()
 	
-			class Person implements Cloneable {
-			String name;
-			int age;
-		
-			Person(String name, int age) {
-				this.name = name;
-				this.age = age;
-			}
-		
-			@Override
-			public Person clone() {
-				try {
-					return (Person) super.clone();  // Shallow copy
-				} catch (CloneNotSupportedException e) {
-					return null;
-				}
-			}
-		}
-
-		
-
-	## Deep Copy (Copy sâu) : La sao chép hoàn toàn đối tượng, bao gồm cả các đối tượng mà các thuộc tính tham chiếu trỏ đến. Điều này yêu cầu lập trình viên phải sao chép thủ công các đối tượng con trong phương thức clone() 
 	
-			class Person implements Cloneable {
-			String name;
-			Address address;
+# Sử dụng Iterator trong Java 
 		
-			Person(String name, Address address) {
-				this.name = name;
-				this.address = address;
-			}
+		### Ví dụ sử dụng Iterator cơ bản  
+		import java.util.*;
+		public class IteratorExample {
+			public static void main(String[] args) {
+				List<String> list = new ArrayList<>(Arrays.asList("A", "B", "C", "D"));
 		
-			@Override
-			public Person clone() {
-				try {
-					Person cloned = (Person) super.clone();
-					cloned.address = new Address(this.address.city, this.address.street);  // Deep copy
-					return cloned;
-				} catch (CloneNotSupportedException e) {
-					return null;
+				Iterator<String> iterator = list.iterator(); // Lấy Iterator từ list
+		
+				while (iterator.hasNext()) { // Kiểm tra còn phần tử không
+					String item = iterator.next(); // Lấy phần tử tiếp theo
+					System.out.println(item);
 				}
 			}
 		}
 		
-		class Address {
-			String city;
-			String street;
-		
-			Address(String city, String street) {
-				this.city = city;
-				this.street = street;
-			}
-		}
+		remove() có thể xóa phần tử khỏi Collection trong khi duyệt.
+	
+	
 
-# Cách sử dụng Cloneable trong Java 
-		Khi bạn muốn sao chép một đối tượng, bạn cần thực hiện theo các bước sau : 
-			1/. Implements Cloneable : Lớp cần implement interface Cloneable để chỉ ra rằng đối tượng của lớp này có thể được sao chép 
-			
-			2/. Override phương thức Clone() : Lớp cần override phương thức clone() để xử lý sao chép đối tượng, thường gọi là super.clone() của lớp cha(lớp Object)
-			
-			
-				public class Main {
+	## Xóa phần tử trong khi duyệt (Iterator với for-each)
+		Thông thường khi duyệt qua danh sách phần tử mà thêm xóa phần tử sẽ gây ra lỗi vì đang duyệt mà -> ConcurrentModificationException 
+		
+		### Ví dụ gây ra lỗi ConcurrentModificationException 
+			import java.util.*;
+			public class IteratorRemoveExample {
 				public static void main(String[] args) {
-					try {
-						Person person1 = new Person("John", new Address("New York", "5th Avenue"));
-						Person person2 = person1.clone();  // Sử dụng phương thức clone() để tạo bản sao
+					List<String> list = new ArrayList<>(Arrays.asList("A", "B", "C", "D"));
 			
-						System.out.println("Person1 Name: " + person1.name);
-						System.out.println("Person2 Name: " + person2.name);
-			
-						// Xác minh các thuộc tính có được sao chép đúng cách không
-						person2.name = "Jane";
-						person2.address.city = "Los Angeles";
-			
-						System.out.println("After modifying person2:");
-						System.out.println("Person1 Name: " + person1.name);
-						System.out.println("Person1 Address: " + person1.address.city);  // Tham chiếu giống nhau trong shallow copy
-						System.out.println("Person2 Name: " + person2.name);
-						System.out.println("Person2 Address: " + person2.address.city);
-			
-					} catch (CloneNotSupportedException e) {
-						e.printStackTrace();
+					for (String item : list) { // Sử dụng for-each
+						if (item.equals("B")) {
+							list.remove(item); // Gây ConcurrentModificationException
+						}
 					}
 				}
 			}
 
+		
+		-> Lý do lỗi xảy ra: for-each sử dụng Iterator ngầm, nhưng remove() từ Collection trực tiếp làm thay đổi cấu trúc list, gây ra ConcurrentModificationException 
+		
+		--> Ta sử dụng Iterator.remove() sẽ giải quyết được lỗi này 
+		
+		## Ví dụ sử dụng Iterator.remove() an toàn vì nó cập nhật trạng thái bên trong của Iterator 
+			Iterator<String> iterator = list.iterator();
+			while (iterator.hasNext()) {
+				if (iterator.next().equals("B")) {
+					iterator.remove(); // Xóa phần tử an toàn
+				}
+			}
 
-		## Output (Shallow Copy):
-		Person1 Name: John
-		Person2 Name: John
-		After modifying person2:
-		Person1 Name: John
-		Person1 Address: Los Angeles
-		Person2 Name: Jane
-		Person2 Address: Los Angeles
+	
+	
+# ListIterator - Iterator nâng cao 
+	## Nếu bạn cần duyệt theo cả 2 chiều(forward & backward) trong List hãy dùng ListIterator : 
+		
+		import java.util.*;
+		public class ListIteratorExample {
+			public static void main(String[] args) {
+				List<String> list = new ArrayList<>(Arrays.asList("A", "B", "C", "D"));
+				ListIterator<String> listIterator = list.listIterator();
+		
+				// Duyệt xuôi
+				while (listIterator.hasNext()) {
+					System.out.print(listIterator.next() + " "); // Output: A B C D
+				}
+		
+				System.out.println();
+		
+				// Duyệt ngược
+				while (listIterator.hasPrevious()) {
+					System.out.print(listIterator.previous() + " "); // Output: D C B A
+				}
+			}
+		}
 
-# Khi nào sử dụng Cloneable? 
+	## ListIterator có thể : 
+		- Duyệt xuôi(next()) và ngược(previois)
+		- Thêm phần tử (add())
+		- Sửa phần tử(set())
+		- Xóa phần tử(remove()) an toàn  
+		
+# Iterabale Interface - tùy chỉnh Iterator 
+	
+	Nếu bạn muốn một class có thể sử dụng trong for-each, hãy triển khai Iterable<T>
+	-> Tức là ta biến một Class thành một dạng Danh sách để duyệt được ấy 
+	Iterable giúp class có thể dùng for-each loop mà không cần gọi iterator() thủ công 
+		
+		### Ví dụ  
+		import java.util.*;
+		class CustomCollection implements Iterable<String> {
+			private List<String> data = Arrays.asList("X", "Y", "Z");
+		
+			@Override
+			public Iterator<String> iterator() {
+				return data.iterator(); // Trả về Iterator của List
+			}
+		}
+		
+		public class IterableExample {
+			public static void main(String[] args) {
+				CustomCollection collection = new CustomCollection();
+		
+				for (String item : collection) { // for-each có thể dùng vì đã implement Iterable
+					System.out.println(item);
+				}
+			}
+		}
 
-	- Khi bạn cần sao chép đối tượng: Thực tế, việc sử dụng clone() trong Java không phổ biến, vì việc tạo bản sao có thể dễ dàng được thay thế bằng các cách khác như constructor sao chép hoặc Builder Pattern.
+# Spliterator - Iterator tối ưu cho Stream  
+	Java 8 giới thiệu Spliterator<T> như một cách mạnh mẽ hơn để duyệt dữ liệu song song  
+	Spliterator hỗ trợ duyệt song song (parallel processing ) giúp tôi ưu hiệu suất khi xử lý dữ liệu lớn  
 	
-	- Khi bạn muốn tạo các bản sao đối tượng mà không cần phải khởi tạo lại toàn bộ trạng thái của đối tượng.	
+	
+		import java.util.*;
+		public class SpliteratorExample {
+			public static void main(String[] args) {
+				List<String> list = Arrays.asList("A", "B", "C", "D");
+		
+				Spliterator<String> spliterator = list.spliterator();
+				spliterator.forEachRemaining(System.out::println);
+			}
+		}
+
+# So sánh cách duyệt Collection  	
+	
+Cách			Duyệt					Có thể xóa?							Hỗ trợ duyệt ngược?				Hỗ trợ song song?
+for-each		Dễ dùng					❌ Không							❌ Không							❌ Không
+Iterator		Cơ bản					✅ Có (remove())					❌ Không							❌ Không
+ListIterator	Nâng cao				✅ Có (remove(), set(), add())		✅ Có								❌ Không
+Spliterator		Hiệu suất cao			❌ Không							❌ Không							✅ Có
 
 
-# Vấn đề với Cloneable 
-	- Kỹ thuật Clone không được khuyến khích trong một số trường hợp do các vấn đề liên quan đến sao chép đối tượng trong những tình huống phức tạp (ví dụ, với các đối tượng có vòng lặp hoặc các tham chiếu đến tài nguyên hệ thống).
-	
-	- clone() không sao chép những thuộc tính static hoặc transient. Vì vậy, nếu bạn có các thuộc tính như vậy, bạn cần phải xử lý thủ công.
-	
-	
-# Tóm tắt  
-	- Cloneable là một interface được sử dụng để chỉ ra rằng lớp có thể được sao chép bằng phương thức clone().
-	
-	- clone() trong lớp Object thực hiện sao chép nông (shallow copy), và bạn cần override phương thức này trong lớp của mình để thực hiện sao chép.
-	
-	- Sao chép sâu (deep copy) là việc sao chép hoàn toàn các đối tượng con mà không dùng chung tham chiếu.
-	
-	- Clone không được sử dụng rộng rãi trong Java hiện đại vì các vấn đề mà nó gây ra trong việc sao chép đối tượng, nhưng vẫn có thể hữu ích trong một số tình huống.
-	
 
 
 </pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

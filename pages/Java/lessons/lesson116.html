@@ -1,109 +1,131 @@
-<html><head><title>Lesson 116 == B-Tree & B+Tree ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 116 -- B-Tree & B+Tree -//</h1><pre>
-# Khái niệm 
-	B-Tree và B+ Tree là hai cấu trúc dữ liệu cấp cao, được thiết kế tối ưu cho hệ thống I/O-intensive như cơ sở dữ liệu, filesystem, hoặc storage engine. Nếu bạn đang thiết kế hệ thống tầm cỡ enterprise (database engine, distributed storage, search engine…), thì hiểu rõ 2 cấu trúc này là bắt buộc ở trình độ senior system architect.
-
-# Mục đích ra đời  
-	Các cây nhị phân tìm kiếm như BST, AVL, hay Red-Black Tree hoạt động tốt trong bộ nhớ (RAM) nhưng không hiệu quả với disk I/O vì: 
-		- Chúng có chiều cao lớn → mỗi truy vấn tốn nhiều lần đọc đĩa.
-		- Trên đĩa, mỗi I/O cực kỳ đắt → cần giảm số lần truy cập disk 
-
-	➡️ B-Tree và B+ Tree giải quyết bằng cách: 
+<html><head><title>Lesson 116 == Persistent Tree ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 116 -- Persistent Tree -//</h1><pre># Khái niệm 
+	Persistent Tree là một dạng cây dữ liệu mà mỗi khi cập nhật, nó không ghi đè (mutate) cấu trúc cũ, mà tạo ra một phiên bản mới, nhờ vậy ta có thể:
 	
-		- Mỗi node chứa nhiều keys (thay vì 1)
-		- Chiều cao thấp hơn rất nhiều 
-		- Tối ưu số lần I/O
-
-# 📘 B-TREE (Basic Concept) 
-
-	B-Tree là một cây cân bằng đa phân nhánh (multi-way balanced tree). Mỗi node có thể chứa nhiều key và nhiều con. 
+		- Truy xuất lại các trạng thái trước đó của cây. 
+		- Song song đọc các phiên bản cũ mà không bị xung đột với việc ghi (no read-write conflict). 
+		- Triển khai Undo/Redo, Snapshot, Time-travel debugging, hoặc immutability trong lập trình hàm.
 	
-	## ✅ Thuộc tính chính của B-Tree 
-		Tối đa m nhánh (bậc m) cho mỗi node.
-		Mỗi node chứa từ ⌈m/2⌉ - 1 đến m - 1 khóa (trừ root).
-		Các khóa trong 1 node được sắp xếp tăng dần. 
-		Mỗi con nằm giữa hai khóa phân vùng giá trị.
-		Tất cả lá ở cùng một mức → đảm bảo cân bằng.
 	
-
-	## 🌲 Cấu trúc: 
-	    [17, 35]
-		/   |    \
-	[3,10] [20,30] [40,60,80]
-	→ Một truy vấn tìm 20 chỉ cần duyệt 2 node, thay vì đi 4–5 mức như BST.
-
-# 📗 B+ TREE – BIẾN THỂ TỐI ƯU CHO DATABASE
-	B+ Tree là biến thể tăng hiệu suất quét và truy cập theo dãy (range). Khác với B-Tree:
 	
-|                        | B-Tree            | B+ Tree                                 |
-| ---------------------- | ----------------- | --------------------------------------- |
-| **Key trong Internal** | Có thể chứa value | Chỉ dùng để định tuyến (routing)        |
-| **Key trong Leaf**     | Một phần keys     | Tất cả dữ liệu đều nằm ở **lá**         |
-| **Truy vấn tuần tự**   | Khó quét range    | Dễ → leaf nodes **liên kết nhau**       |
-| **Chiều cao**          | Thấp              | Tương đương B-Tree                      |
-| **Ứng dụng**           | Filesystem        | Database indexing (MySQL, MongoDB, etc) |
-
+# 	🔍 Cốt lõi của Persistent Tree
+	##  🧠 Nguyên tắc:
+	“Không sửa – chỉ tạo bản sao các phần bị thay đổi” 
+	Giống như Git vậy: bạn commit một thay đổi nhỏ, nhưng cả project không bị copy toàn bộ – chỉ những file thay đổi.
 	
-📊 Minh hoạ: 
-Internal:     [20, 50]
-             /    |     \
-Leaves: [10,15][25,35][55,75]
-              ↔     ↔     ↔
-→ Quét range từ 25 → 75 = duyệt liên tục các lá bằng pointer → cực nhanh và không cần quay lại internal node.
+	
+	##	⚙️ Có 2 loại chính: 
+	| Loại                    | Giải thích                                                          |
+| ----------------------- | ------------------------------------------------------------------- |
+| **Partial Persistence** | Có thể **đọc** phiên bản cũ, nhưng chỉ **ghi** ở phiên bản mới nhất |
+| **Full Persistence**    | Có thể **đọc và ghi** trên **bất kỳ phiên bản nào**                 |
+	
+	
+# 📦 Ví dụ: Persistent Binary Search Tree (BST)	
+	
+	Giả sử bạn có cây BST T0 như sau:
+     10
+    /  \
+   5   15
+		
+	Bạn muốn insert(7) → tạo T1. 
+	Ý tưởng: không tạo lại toàn bộ cây → chỉ tạo một bản sao của các node trên đường đi từ root đến nơi chèn.
+	
+	## Tạo T1 (insert 7): 
+		Copy root 10 → gán T1 
+		Copy left child 5 → chèn 7 vào bên phải 
+		
+		T1 → 10'
+		10'.left → 5'
+		5'.right → 7
+	
+	✅ Kết quả:
+		T0: không thay đổi
+		
+		T1: là phiên bản mới, chia sẻ phần lớn dữ liệu với T0
+	
+	
+# 	🏗️ Ứng dụng thực tế
+| Use case                      | Mô tả                                                              |
+| ----------------------------- | ------------------------------------------------------------------ |
+| **Undo/Redo**                 | Mỗi thay đổi là một phiên bản mới → quay lui/thực hiện lại dễ dàng |
+| **Time-travel Debugger**      | Debug qua các version cây đã bị thay đổi                           |
+| **Concurrency without locks** | Reader đọc version cũ trong khi writer tạo version mới             |
+| **Functional Programming**    | Tree là immutable → an toàn hơn trong code phức tạp                |
 
 
-# 🧠 TẠI SAO B+ TREE ĐƯỢC ƯU TIÊN TRONG DATABASE? 
 
-	- Truy xuất theo key: nhanh vì chiều cao cây thấp
-	- Range scan: rất nhanh nhờ pointer giữa leaf nodes
-	- Không cần truy cập node trung gian để lấy data
-	- Tối ưu hóa block I/O: mỗi node trùng khớp với 1 disk block
+# 🧠 So sánh: Persistent Tree vs Copy 
+		
+| Tiêu chí          | Copy toàn bộ | Persistent Tree  |
+| ----------------- | ------------ | ---------------- |
+| Bộ nhớ            | Tốn nhiều    | Tối ưu nhờ reuse |
+| Thời gian tạo     | Lâu          | Nhanh hơn nhiều  |
+| Chia sẻ dữ liệu   | Không        | Có               |
+| Truy vết thay đổi | Không dễ     | Có sẵn version   |
+	
+	
+# 	🔬 Java: Làm sao để triển khai? 
+	Java không hỗ trợ persistent tree mặc định. Nhưng bạn có thể tự viết hoặc dùng thư viện.
+	
+	✅ Cách đơn giản: 
+		Không sửa trực tiếp node. 
+		Dùng class Node bất biến (immutable), ví dụ:
+	
+class Node {
+    final int key;
+    final Node left;
+    final Node right;
 
-💡 MySQL (InnoDB) dùng B+ Tree cho index.
-
-
-# 🚀 ỨNG DỤNG THỰC TẾ
-| Hệ thống              | Dùng gì                          | Mục đích                       |
-| --------------------- | -------------------------------- | ------------------------------ |
-| **MySQL / InnoDB**    | B+ Tree                          | Index data, support range scan |
-| **MongoDB**           | B+ Tree                          | B-Tree Indexing                |
-| **LevelDB / RocksDB** | LSM Tree + B-Tree (trên SSTable) | Tối ưu write-heavy             |
-| **Linux EXT4/NTFS**   | B-Tree                           | Directory structure            |
-| **Git internals**     | B-Tree                           | Object storage indexing        |
-
-
-
-# 🔨 CẤU TRÚC LỚP NODE TRONG JAVA (GỢI Ý)
-
-class BTreeNode {
-    int[] keys;
-    Object[] values; // optional
-    BTreeNode[] children;
-    int degree;
-    boolean isLeaf;
-
-    // methods: insert, splitChild, search...
+    Node(int key, Node left, Node right) {
+        this.key = key;
+        this.left = left;
+        this.right = right;
+    }
 }
+
+✅ Hàm insert:
+Node insert(Node root, int key) {
+    if (root == null) return new Node(key, null, null);
+    if (key < root.key)
+        return new Node(root.key, insert(root.left, key), root.right);
+    else
+        return new Node(root.key, root.left, insert(root.right, key));
+}
+→ Mỗi lần insert: tạo cây mới, chia sẻ các node không thay đổi.
+
+# 📚 Kiến thức cần học để triển khai tốt Persistent Tree
+
+| Kiến thức                              | Ghi chú                                       |
+| -------------------------------------- | --------------------------------------------- |
+| Immutable Data Structures              | Đặc biệt trong Java, Scala, Clojure           |
+| Persistent Segment Tree / Fenwick Tree | Tối ưu hiệu năng cho range query              |
+| Copy-on-Write logic                    | Làm sao để clone 1 phần và giữ phần còn lại   |
+| Garbage Collection impact              | Biết được khi nào nên giữ/làm rác các version |
+| Functional Programming Patterns        | Cách tư duy bất biến hoá toàn bộ hệ thống     |
+
+🧠 Bonus: Persistent Segment Tree
+
+	Trong thuật toán (competitive programming), bạn có thể triển khai Persistent Segment Tree để:
 	
-
-# 🎯 KIẾN THỨC CẦN HỌC ĐỂ MASTER
-
-| Chủ đề                    | Ghi chú                                     |
-| ------------------------- | ------------------------------------------- |
-| Cấu trúc B-Tree, B+ Tree  | Định nghĩa, các case insert/split/merge     |
-| Block size & Disk I/O     | Vì sao block-aligned node size quan trọng   |
-| Paging (Buffer Pool)      | Cách database load tree vào memory          |
-| Write-ahead logging (WAL) | Đảm bảo an toàn khi ghi B+ Tree             |
-| Concurrency (Latch)       | Nhiều thread cập nhật cây cùng lúc          |
-| LSM Tree                  | So sánh B+ Tree vs LSM (LevelDB, Cassandra) |
-| Cache-aware layout        | Khi muốn tối ưu CPU cache hit               |
+		Truy xuất trạng thái dữ liệu trong quá khứ
+		Truy vấn “prefix sum đến thời điểm version K”
+		So sánh snapshot của dữ liệu tại 2 thời điểm
+	
+	Đây là nền tảng cho hệ thống như:
+	
+		Versioned Key-Value Store
+		Time-series Database
+		Immutable Indexing Structures
 
 
-# ✅ TÓM TẮT 
-| Loại cây | Ưu điểm                                   | Dùng khi nào                         |
-| -------- | ----------------------------------------- | ------------------------------------ |
-| B-Tree   | Đọc theo key hiệu quả, đa năng            | Filesystem, khi không cần range scan |
-| B+ Tree  | Truy vấn range siêu nhanh, chiều cao thấp | Database indexing, OLAP/OLTP         |
+# ✅ Tổng kết
 
+| Mục tiêu         | Ý nghĩa                                    |
+| ---------------- | ------------------------------------------ |
+| Truy vết version | Quản lý lịch sử cấu trúc dữ liệu           |
+| Tránh mutation   | Tránh bug và race condition                |
+| Cấu trúc chia sẻ | Tối ưu RAM và hiệu năng                    |
+| Tư duy bất biến  | Gốc rễ của Functional & Concurrent Systems |
 
 
 

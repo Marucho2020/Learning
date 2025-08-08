@@ -1,218 +1,143 @@
-<html><head><title>Lesson 50 == Serializable ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 50 -- Serializable -//</h1><pre>
-#  Khái niệm 
-	Serializable là một interface trong Java dùng để đánh dấu rằng một class có thể được chuyển đổi thành byte stream để lưu trữ hoặc truyền qua mạng, và sau đó có thể được khôi phục thành đối tượng. 
+<html><head><title>Lesson 50 == Cloneable ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 50 -- Cloneable -//</h1><pre>
+# Khái niệm  
+	Cloneable là một Interface trong Java, giúp các đối tượng của lớp implement interface này có thể được sao chép(clone) thông qua phương thức clone() của lớp Object. Khi lớp implements Cloneable, các đối tượng của lớp đó có thể được sao chép để tạo ra các bản sao giống hệt với đối tượng gốc. 
+	
+# Cloneable Interface 
+	Cloneable không có phương thức nào được định nghĩa trong đó. Nhiệm vụ chính của nó là đánh dấu rằng một lớp cho phép sao chép đối tượng của nó. Nếu bạn cố gắng sao chép (clone) một đối tượng của lớp không implement Cloneable, phương thức clone() sẽ ném ra một CloneNotSupportedException 
+	
+		public interface Cloneable {
+		}
+
+# Phương thức clone() trong lớp Object  
+	Mỗi đối tượng trong Java đều kế thừa từ lớp Object. Lớp Object cung cấp phương thức clone() 
+		protected Object clone() throws CloneNotSupportedException
+
+	Phươc thức này tạo ra một bản sao(shallow copy) của đối tượng. Tuy nhiên, phương thức này là protected, vì vậy phải override phương thức clone() để sử dụng trong mã của mình  
 	
 	
-	## Mục đích 
-		Cho phép đối tượng của một class được ghi vào file, truyền qua mạng, lưu vào DB dưới dạng byte stream 
 		
-	## Cơ chế hoạt động 
-		Java cung cấp cơ chế hoạt động thông qua ObjectOutputStream và ObjectInputStream để serialize và deserialize một object  
+# Shallow Copy vs Deep Copy 
+
+	## Shallow Copy(Sao chép nông) : Khi bạn sao chép một đối tượng, các thuộc tính nguyên thủy của đối tượng gốc sẽ được sao chép vào đối tượng mới, nhưng nếu đối tượng gốc chứa các tham chiếu(reference) đến các đối tượng khác, các tham chiếu đó sẽ được sao chép. Điều này có nghĩa là cả đối tượng gốc và bản sao sẽ chia sẻ cùng một tham chiếu đến các đối tượng con  
+	
+			class Person implements Cloneable {
+			String name;
+			int age;
 		
-	## Tính chất  
-		Interface Serializble thuộc package java.io và không có phương thức nào marker interface 
-		
-		
-# Cách sử dụng  
-		
-		
-	## Khai báo một Serializable 
-		-> chỉ cần implements Serializable  
-		
-		import java.io.Serializable;
-		class Person implements Serializable {
-			private String name;
-			private int age;
-		
-			public Person(String name, int age) {
+			Person(String name, int age) {
 				this.name = name;
 				this.age = age;
 			}
 		
 			@Override
-			public String toString() {
-				return "Person{name='" + name + "', age=" + age + "}";
-			}
-		}
-
-	Ở đây, class Person có thể được serialize và deserialize.
-
-
-
-	## Serialize đối tượng 
-		Sử dụng ObjectOutputStream để ghi object vào file  
-		
-		import java.io.FileOutputStream;
-		import java.io.IOException;
-		import java.io.ObjectOutputStream;
-		
-		public class SerializeExample {
-			public static void main(String[] args) {
-				Person person = new Person("John Doe", 30);
-		
-				try (FileOutputStream fileOut = new FileOutputStream("person.ser");
-					ObjectOutputStream out = new ObjectOutputStream(fileOut)) {
-					out.writeObject(person);
-					System.out.println("Object has been serialized.");
-				} catch (IOException e) {
-					e.printStackTrace();
+			public Person clone() {
+				try {
+					return (Person) super.clone();  // Shallow copy
+				} catch (CloneNotSupportedException e) {
+					return null;
 				}
 			}
 		}
 
+		
 
-	## Deserialize đối tượng 
-		import java.io.FileInputStream;
-		import java.io.IOException;
-		import java.io.ObjectInputStream;
+	## Deep Copy (Copy sâu) : La sao chép hoàn toàn đối tượng, bao gồm cả các đối tượng mà các thuộc tính tham chiếu trỏ đến. Điều này yêu cầu lập trình viên phải sao chép thủ công các đối tượng con trong phương thức clone() 
+	
+			class Person implements Cloneable {
+			String name;
+			Address address;
 		
-		public class DeserializeExample {
-			public static void main(String[] args) {
-				try (FileInputStream fileIn = new FileInputStream("person.ser");
-					ObjectInputStream in = new ObjectInputStream(fileIn)) {
+			Person(String name, Address address) {
+				this.name = name;
+				this.address = address;
+			}
 		
-					Person person = (Person) in.readObject();
-					System.out.println("Object has been deserialized: " + person);
-		
-				} catch (IOException | ClassNotFoundException e) {
-					e.printStackTrace();
+			@Override
+			public Person clone() {
+				try {
+					Person cloned = (Person) super.clone();
+					cloned.address = new Address(this.address.city, this.address.street);  // Deep copy
+					return cloned;
+				} catch (CloneNotSupportedException e) {
+					return null;
 				}
 			}
 		}
-				FileInputStream để đọc từ file
-				ObjectInputStream để chuyển đổi byte stream về object bằng readObject()
-				Downcasting: Vì readObject() trả về Object, cần ép kiểu về Person.
-
-
-
-
-# Transient - bỏ qua một field khi serialize 
-	
-		Một số dữ liệu không nên được lưu khi serialize, ví dụ như mật khẩu -> sử dụng "trainsient" để bỏ qua file đó 
 		
+		class Address {
+			String city;
+			String street;
 		
-		
-				class User implements Serializable {
-					private String username;
-					private transient String password; // Không được lưu
-				
-					public User(String username, String password) {
-						this.username = username;
-						this.password = password;
-					}
-				
-					@Override
-					public String toString() {
-						return "User{username='" + username + "', password='" + password + "'}";
-					}
-				}
-				
-				// Nếu serialize và deserialize, password sẽ trở thành null: 
-				
-				User user = new User("admin", "123456");
-				System.out.println(user);  // User{username='admin', password='123456'}
-				
-				serialize(user);
-				User deserializedUser = deserialize();
-				System.out.println(deserializedUser); // User{username='admin', password='null'}
-		
+			Address(String city, String street) {
+				this.city = city;
+				this.street = street;
+			}
+		}
 
-
-
-
-#	serialVersionUID - Tránh lỗi khi deserialize 
-	
-	## Mỗi class Serializable có một serialVersionUID. Nếu không khai báo, JVM sẽ tự sinh ra dựa trên class structure 
-	
-			private static final long serialVersionUID = 1L;
-
-	## Vấn đề khi không có serialVersionUID 
-		Nếu class thay đổi(thêm field mới ), Java sẽ ném lỗi khi deserialize :
-			java.io.InvalidClassException: User; local class incompatible
-			Để tránh lỗi này, luôn khai báo serialVersionUID thủ công.
+# Cách sử dụng Cloneable trong Java 
+		Khi bạn muốn sao chép một đối tượng, bạn cần thực hiện theo các bước sau : 
+			1/. Implements Cloneable : Lớp cần implement interface Cloneable để chỉ ra rằng đối tượng của lớp này có thể được sao chép 
 			
-
-
-# Serializable với Object Composition 
-	
-	## nếu một class có field là một object khác, class đó cũng phải Serializable 
-
-
-				class Address implements Serializable {
-				private String city;
-					
-					public Address(String city) {
-						this.city = city;
-					}
-				}
-				
-				class Employee implements Serializable {
-					private String name;
-					private Address address; // Address cũng phải Serializable
-				
-					public Employee(String name, Address address) {
-						this.name = name;
-						this.address = address;
-					}
-				}
-
-		Nếu Address không implements Serializable, sẽ gặp lỗi khi serialize Employee.
-
-
-# Externalizable - Kiểm soát chi tiết quá trình serialize 
-
-	Interface Externalizable (extends Serializable) giúp tùy chỉnh quá trình serialize.
-	
-				import java.io.*;
-				
-				class CustomPerson implements Externalizable {
-					private String name;
-					private int age;
-				
-					public CustomPerson() { } // Bắt buộc có constructor không tham số
-				
-					public CustomPerson(String name, int age) {
-						this.name = name;
-						this.age = age;
-					}
-				
-					@Override
-					public void writeExternal(ObjectOutput out) throws IOException {
-						out.writeUTF(name);
-						out.writeInt(age);
-					}
-				
-					@Override
-					public void readExternal(ObjectInput in) throws IOException {
-						name = in.readUTF();
-						age = in.readInt();
-					}
-				
-					@Override
-					public String toString() {
-						return "CustomPerson{name='" + name + "', age=" + age + "}";
-					}
-				}
-
-
-
-		## Lợi ích của Externalizable:
-			Kiểm soát cách ghi và đọc dữ liệu (ví dụ: mã hóa, nén dữ liệu).
-			Tiết kiệm dung lượng so với Serializable.
-
-
-# Những điểm lưu ý quan trọng  
-
-Câu hỏi																					Câu trả lời
-Serializable có method nào không?														Không, chỉ là marker interface.
-						
-Nếu một field là transient, nó có được serialize không?									Không, khi deserialize nó sẽ là null (với object) hoặc giá trị mặc định (0, false).
-						
-Nếu class con kế thừa class không Serializable, có lỗi không?							Có, trừ khi class cha có constructor không tham số.
+			2/. Override phương thức Clone() : Lớp cần override phương thức clone() để xử lý sao chép đối tượng, thường gọi là super.clone() của lớp cha(lớp Object)
 			
-Nếu serialVersionUID khác nhau giữa hai phiên bản class, chuyện gì xảy ra?				InvalidClassException.
+			
+				public class Main {
+				public static void main(String[] args) {
+					try {
+						Person person1 = new Person("John", new Address("New York", "5th Avenue"));
+						Person person2 = person1.clone();  // Sử dụng phương thức clone() để tạo bản sao
+			
+						System.out.println("Person1 Name: " + person1.name);
+						System.out.println("Person2 Name: " + person2.name);
+			
+						// Xác minh các thuộc tính có được sao chép đúng cách không
+						person2.name = "Jane";
+						person2.address.city = "Los Angeles";
+			
+						System.out.println("After modifying person2:");
+						System.out.println("Person1 Name: " + person1.name);
+						System.out.println("Person1 Address: " + person1.address.city);  // Tham chiếu giống nhau trong shallow copy
+						System.out.println("Person2 Name: " + person2.name);
+						System.out.println("Person2 Address: " + person2.address.city);
+			
+					} catch (CloneNotSupportedException e) {
+						e.printStackTrace();
+					}
+				}
+			}
 
-Externalizable khác Serializable thế nào?					Externalizable yêu cầu triển khai writeExternal() và readExternal(), giúp kiểm soát chi tiết việc serialize.
+
+		## Output (Shallow Copy):
+		Person1 Name: John
+		Person2 Name: John
+		After modifying person2:
+		Person1 Name: John
+		Person1 Address: Los Angeles
+		Person2 Name: Jane
+		Person2 Address: Los Angeles
+
+# Khi nào sử dụng Cloneable? 
+
+	- Khi bạn cần sao chép đối tượng: Thực tế, việc sử dụng clone() trong Java không phổ biến, vì việc tạo bản sao có thể dễ dàng được thay thế bằng các cách khác như constructor sao chép hoặc Builder Pattern.
+	
+	- Khi bạn muốn tạo các bản sao đối tượng mà không cần phải khởi tạo lại toàn bộ trạng thái của đối tượng.	
+
+
+# Vấn đề với Cloneable 
+	- Kỹ thuật Clone không được khuyến khích trong một số trường hợp do các vấn đề liên quan đến sao chép đối tượng trong những tình huống phức tạp (ví dụ, với các đối tượng có vòng lặp hoặc các tham chiếu đến tài nguyên hệ thống).
+	
+	- clone() không sao chép những thuộc tính static hoặc transient. Vì vậy, nếu bạn có các thuộc tính như vậy, bạn cần phải xử lý thủ công.
+	
+	
+# Tóm tắt  
+	- Cloneable là một interface được sử dụng để chỉ ra rằng lớp có thể được sao chép bằng phương thức clone().
+	
+	- clone() trong lớp Object thực hiện sao chép nông (shallow copy), và bạn cần override phương thức này trong lớp của mình để thực hiện sao chép.
+	
+	- Sao chép sâu (deep copy) là việc sao chép hoàn toàn các đối tượng con mà không dùng chung tham chiếu.
+	
+	- Clone không được sử dụng rộng rãi trong Java hiện đại vì các vấn đề mà nó gây ra trong việc sao chép đối tượng, nhưng vẫn có thể hữu ích trong một số tình huống.
+	
 
 
 </pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

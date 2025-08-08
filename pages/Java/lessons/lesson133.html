@@ -1,146 +1,123 @@
-<html><head><title>Lesson 133 == LongAccumulator ==============\ ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 133 -- LongAccumulator -----\ -//</h1><pre>
-# ✅ 1. Tóm tắt nhanh
-	LongAccumulator là phiên bản tổng quát hơn của LongAdder. 
-		LongAdder: chỉ hỗ trợ phép cộng (+)
-		LongAccumulator: cho phép bạn định nghĩa cách tích lũy tuỳ ý – max, min, product, bitwiseOr,...
+<html><head><title>Lesson 133 == LongAdder ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 133 -- LongAdder -//</h1><pre>
+# ✅ 1. Vấn đề gốc với AtomicLong 
+	AtomicLong.incrementAndGet() là một CAS (Compare-And-Swap) trên cùng một biến đơn (long), nên:
+
+		Nếu có nhiều thread cùng truy cập → tất cả tranh giành một vùng nhớ duy nhất
+		CPU pipeline flush + false sharing + cache invalidation
+		Gây contention rất nặng, mặc dù vẫn là "lock-free"
+		→ Giải pháp: Phân mảnh bộ đếm → mỗi thread ghi vào “ô đếm” riêng → sau đó cộng dồn lại khi cần thiết.
+	
+# ✅ 2. Giải pháp: LongAdder – lock-free + contention-friendly 
+
+	## Cơ chế hoạt động 
+		- Gồm một giá trị chính (base)
+		- Và một mảng các Cell (kiểu long), mỗi Cell tương đương một thread-local counter
+		- Khi contention thấp → tăng trực tiếp `base`
+		- Khi contention tăng → thread ghi vào Cell của mình (xác định qua hash)
 		
+
+	## 📌 Điểm mạnh: 
+		Nhiều thread ghi song song mà không tranh giành cùng một biến
+		sum() cộng dồn giá trị của base + tất cả các Cell
+
+
+	## Hình ảnh tư duy: 
 		
-	## Cú pháp cơ bản: 
+      LongAdder
+        |
+     [base = 10]
+        |
+   +----+----+----+
+   | C1 | C2 | C3 | ...   → array of cells (mỗi thread ghi riêng)
+   +----+----+----+
+
+Tổng = base + sum(C1..Cn)
+
+
+# ✅ 3. Ưu điểm nổi bật 
 	
-LongAccumulator acc = new LongAccumulator(Long::max, Long.MIN_VALUE);
-acc.accumulate(10);
-acc.accumulate(5);
-System.out.println(acc.get()); // 10
+| Đặc điểm             | So với `AtomicLong`                 |
+| -------------------- | ----------------------------------- |
+| Ghi (write)          | Nhanh hơn nhiều nếu có nhiều thread |
+| Đọc (read - `sum()`) | Tốn hơn một chút vì phải cộng dồn   |
+| Contention           | Rất tốt – gần như linear scaling    |
+| CAS fail rate        | Cực thấp do phân tán                |
+| Lock                 | Không dùng lock                     |
 
-
-
-# ✅ 2. Cơ chế nội tại (nội tạng thực sự bên dưới)
-
-	Giống LongAdder, LongAccumulator kế thừa từ lớp ẩn danh bên dưới: Striped64.
-	
-base: long                // giá trị gốc nếu không contention
-cells: Cell[]             // mảng các Cell nếu contention xảy ra
-function: LongBinaryOperator  // hàm tích lũy
-identity: long            // giá trị khởi đầu khi reset
-	
-	
-
-	## Hoạt động như sau: 
-		Nếu ít contention → áp dụng function.applyAsLong(base, x)
-		Nếu có contention → thread hash tới 1 Cell → áp dụng function trên Cell đó
-		get() hoặc getThenReset() sẽ cộng dồn base + cells[] bằng cùng function
-		➡ Không có đồng bộ hóa (synchronized), không có lock – hoàn toàn lock-free, CAS-based
-
-
-
-
-
-# ✅ 3. Tại sao cần LongAccumulator? 
-	Vì không phải mọi phép toán đều là cộng (+).
-	
-
-Một số ví dụ: 
-| Use case          | Operation                   | Function           |
-| ----------------- | --------------------------- | ------------------ |
-| Tìm số lớn nhất   | max                         | `Long::max`        |
-| Tìm số nhỏ nhất   | min                         | `Long::min`        |
-| Phép nhân         | product                     | `(a, b) -> a * b`  |
-| Bitwise AND       | and                         | `(a, b) -> a & b`  |
-| Bitwise OR        | or                          | `(a, b) -> a \| b` |
-| Tổng trọng số log | `(a, b) -> log(a) + log(b)` | custom             |
-➡ Trong các tình huống cần logic phức tạp hơn cộng đơn giản, LongAdder không đủ.
 
 
 # ✅ 4. Các phương thức quan trọng 
-
-| Method               | Ý nghĩa                                   |
-| -------------------- | ----------------------------------------- |
-| `accumulate(long x)` | Áp dụng hàm tích lũy                      |
-| `get()`              | Lấy tổng (hoặc max/min tùy function)      |
-| `getThenReset()`     | Lấy rồi reset                             |
-| `reset()`            | Reset về identity                         |
-| `longValue()`        | Alias của `get()` (do implement `Number`) |
-
-
-# ✅ 5. Hiệu năng thực tế
-
-| Threads | `LongAdder` (sum) | `LongAccumulator` (max) |
-| ------- | ----------------- | ----------------------- |
-| 1       | Rất nhanh (\~20M) | Tương đương             |
-| 4       | \~70M             | \~65M                   |
-| 16      | \~160M            | \~150M                  |
-| 64      | \~200M            | \~180M                  |
-
-➡ Không thua kém LongAdder là bao, vì cùng chia sẻ cơ sở hạ tầng Striped64
-
-
-# ✅ 6. Ưu điểm và nhược điểm
-
-	## ✅ Ưu điểm 
+| Method           | Mô tả                     |
+| ---------------- | ------------------------- |
+| `increment()`    | ++1, không trả về giá trị |
+| `add(long x)`    | Cộng `x` vào bộ đếm       |
+| `sum()`          | Trả về tổng hiện tại      |
+| `sumThenReset()` | Lấy tổng xong reset về 0  |
+| `reset()`        | Reset tất cả về 0         |
 	
-		- Tùy biến logic tích lũy → bạn định nghĩa cách cộng dồn
-		- Rất tối ưu hóa cho high-concurrency
-		- Cấu trúc lock-free, dùng CAS
-		- Không đồng bộ, không block
 
-	## ❌ Nhược điểm
-
-		Không dùng được trong các tình huống cần get/set chính xác tại thời điểm (giống như AtomicLong)
-		Không thread-safe theo nghĩa strict của snapshot: get() không phải là atomic snapshot
-
-
-# ✅ 7. Khi nào dùng LongAccumulator?
-
-| Tình huống                                    | Dùng `LongAccumulator`? |
-| --------------------------------------------- | ----------------------- |
-| Tìm max/min liên tục trong high concurrency   | ✅ Tuyệt vời             |
-| Đếm số lượng log nhưng cần phép cộng đơn giản | ❌ Dùng `LongAdder`      |
-| Sinh ID tăng dần, cần chính xác tuyệt đối     | ❌ Dùng `AtomicLong`     |
-| Tính tích, tổng điểm có trọng số, custom rule | ✅ Dùng tốt              |
-| Ghi đè giá trị hoặc rollback                  | ❌ Không phù hợp         |
-
-
-# ✅ 8. Code ví dụ: thống kê điểm số lớn nhất từ nhiều thread
-LongAccumulator maxScore = new LongAccumulator(Long::max, Long.MIN_VALUE);
-
-// Mỗi thread nạp điểm
-Runnable task = () -> {
-    long score = Math.round(Math.random() * 100);
-    maxScore.accumulate(score);
-};
-
-ExecutorService pool = Executors.newFixedThreadPool(10);
-for (int i = 0; i < 1000; i++) {
-    pool.execute(task);
-}
-
-pool.shutdown();
-pool.awaitTermination(1, TimeUnit.SECONDS);
-System.out.println("Max score: " + maxScore.get());
+Lưu ý: sum() không đảm bảo chính xác tuyệt đối tức thời nếu đang có thread khác ghi vào cùng lúc → nhưng đủ chính xác cho thống kê, metric, logging, performance counter.
 
 
 
 
-# ✅ 9. Mở rộng: so sánh 4 class phổ biến 
+
+# ❗ 5. Sai lầm thường gặp 
+
+	❌ Dùng sum() quá nhiều trong path hiệu năng cao 
+		→ sum() tốn chi phí cộng dồn nhiều cell → nên chỉ gọi định kỳ.
+
+	❌ Dùng trong môi trường yêu cầu chính xác tuyệt đối từng thời điểm
+		→ LongAdder là eventual consistency, không phải atomic snapshot.
+		
+	❌ Reset() mà chưa đọc trước
+		→ Làm mất dữ liệu không mong muốn nếu không có chiến lược đo lường rõ ràng.
+		
+		
+
+# ✅ 6. Khi nào nên dùng LongAdder thay vì AtomicLong? 
+	
+| Tình huống                                                         | Dùng `LongAdder`?                            |
+| ------------------------------------------------------------------ | -------------------------------------------- |
+| Counter cho hệ thống metric high-load (logging, Prometheus, stats) | ✅ Rất phù hợp                                |
+| Sinh ID, cần chính xác                                             | ❌ Không – dùng `AtomicLong`                  |
+| Giới hạn số thread đang chạy song song                             | ❌ Không nên – dùng `AtomicInteger`           |
+| Tạo gauge/summary dùng định kỳ đọc                                 | ✅ Phù hợp                                    |
+| Ghi đè lên giá trị hoặc rollback                                   | ❌ Không phù hợp – không có get/set trực tiếp |
 
 
-| Class                            | Dùng khi                             | Ghi     | Đọc        | Contention |
-| -------------------------------- | ------------------------------------ | ------- | ---------- | ---------- |
-| `AtomicLong`                     | Ghi ít, đọc nhiều, cần chính xác     | ❌ chậm  | ✅ nhanh    | ❌          |
-| `LongAdder`                      | Cộng dồn nhiều, đo lường log         | ✅ nhanh | ⚠ hơi chậm | ✅          |
-| `LongAccumulator`                | Phép tích lũy đặc biệt (max/min/etc) | ✅ nhanh | ⚠          | ✅          |
-| `LongAccumulator` (custom logic) | Phức tạp cần tích lũy logic riêng    | ✅       | ⚠          | ✅          |
+
+# ✅ 7. Performance benchmark (thực tế) 
+| Threads | `AtomicLong` (ops/sec) | `LongAdder` (ops/sec)    |
+| ------- | ---------------------- | ------------------------ |
+| 1       | \~20M                  | \~18M (thấp hơn)         |
+| 4       | \~10M                  | \~70M (cao hơn gấp 7)    |
+| 16      | \~1.2M                 | \~160M (cao hơn gấp 100) |
+| 64      | Gần như treo           | \~200M+                  |
+
+→ LongAdder hiệu năng vượt trội khi contention cao
+→ AtomicLong lại đơn giản, nhanh và chính xác khi concurrency thấp
 
 
-# ✅ Tổng kết
+# ✅ 8. LongAdder vs LongAccumulator?
+	LongAdder = tổng (add)
+	LongAccumulator = tổng quát hóa: truyền vào 1 hàm BinaryOperator<Long> để định nghĩa cách combine
+	
+LongAccumulator max = new LongAccumulator(Long::max, Long.MIN_VALUE);
+max.accumulate(5);
+max.accumulate(10);
+System.out.println(max.get()); // 10
 
-| Điểm                                         | Giá trị |
-| -------------------------------------------- | ------- |
-| Tùy biến cao                                 | ✅       |
-| Hiệu năng tốt                                | ✅       |
-| Không cần synchronized                       | ✅       |
-| Không chính xác tức thời                     | ⚠       |
-| Không dùng cho business logic yêu cầu atomic | ❌       |
+
+# ✅ Tổng kết: LongAdder là vũ khí chuyên dụng cho:
+
+| Tình huống                               | Có dùng không |
+| ---------------------------------------- | ------------- |
+| Logging hiệu suất cao                    | ✅             |
+| Tracking metric/telemetry                | ✅             |
+| Đếm lượt truy cập                        | ✅             |
+| Quản lý tài nguyên chính xác theo đơn vị | ❌             |
+| Sinh số thứ tự chính xác tuyệt đối       | ❌             |
 
 
 
