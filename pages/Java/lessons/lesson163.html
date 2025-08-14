@@ -1,0 +1,100 @@
+<html><head><title>Lesson 163 == synchronized và Intrinsic Locks ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 163 -- synchronized và Intrinsic Locks -//</h1><pre>
+# 1. Intrinsic Lock / Object Monitor là gì?
+
+	- Mỗi object trong Java (bao gồm cả instance và Class object) có 1 monitor ẩn bên trong
+	- Monitor này là cơ chế đồng bộ hóa ở mức JVM (không phải Java API) dùng để:
+		1.Quản lý quyền truy cập vào các đoạn code được đánh dấu synchronized.
+		2.Hỗ trợ reentrant locking (cùng một thread có thể lock nhiều lần mà không bị block chính nó).
+
+	- Khi một thread gọi code synchronized (method hoặc block), JVM sẽ gắn intrinsic lock của object đó vào thread.
+
+	💡 Lưu ý: “Intrinsic lock” = “Monitor lock” = “Object monitor” trong tài liệu JVM.
+
+
+# 2. Cơ chế hoạt động của synchronized
+
+	## Có 2 cách sử dụng: 
+	
+		1. Synchronized Method
+			public synchronized void doTask() { ... }
+			→ Lock gắn với object instance (hoặc class nếu method là static).
+
+		2. Synchronized Block
+			synchronized (lockObj) { ... }
+			
+		→ Lock gắn với lockObj cụ thể.
+
+
+	## Nguyên tắc:
+		- Khi một thread chưa giữ lock → nó phải chờ (BLOCKED) đến khi lock được release.
+		- Khi thread đã giữ lock → nó có thể vào lại các đoạn code synchronized trên cùng object (reentrant).
+		- Khi ra khỏi block/method → JVM release lock tự động (khác với ReentrantLock cần unlock() thủ công).	
+	
+	
+# 3. Reentrancy	
+		Reentrant lock nghĩa là: nếu thread A đã giữ lock của object X, nó có thể vào lại bất kỳ đoạn code synchronized nào trên X mà không bị block.
+	
+		JVM theo dõi đếm số lần lock (lock count).
+	
+public synchronized void a() { b(); }
+public synchronized void b() { ... }
+
+		Khi thread A gọi a():
+			a() gọi b() → cùng object, lock count tăng = 2
+			Khi b() xong → lock count giảm = 1, khi a() xong → giảm = 0 → release lock.
+
+# 4. Race Condition & Deadlock
+
+	## Race Condition
+
+		Xảy ra khi nhiều thread truy cập cùng dữ liệu chia sẻ và ít nhất 1 thread ghi dữ liệu, mà không có đồng bộ.
+		
+		Ví dụ: counter tăng/giảm không đồng bộ → kết quả sai.
+		
+
+	## Deadlock
+		Xảy ra khi 2+ thread giữ các lock khác nhau và chờ nhau release → vòng chờ vô tận.
+
+synchronized (lockA) {
+    synchronized (lockB) { ... }
+}
+
+		Thread 1 lock A → chờ B
+		Thread 2 lock B → chờ A
+		→ Deadlock.
+		
+
+# 5. Hiệu năng & JVM Optimization
+
+	JVM từ Java 6+ tối ưu synchronized bằng:
+
+	- Biased Locking: lock gắn cố định cho thread nếu không có tranh chấp.
+	- Lightweight Locking: dùng CAS thay vì OS-level mutex khi có tranh chấp nhẹ.
+	- Lock Elision: bỏ lock nếu chứng minh được không có tranh chấp.
+	- Lock Coarsening: mở rộng phạm vi lock để giảm số lần acquire/release.
+
+# 6. Khi nào dùng synchronized, khi nào dùng ReentrantLock?
+
+| Tiêu chí                  | `synchronized` | `ReentrantLock`                  |
+| ------------------------- | -------------- | -------------------------------- |
+| **Cú pháp**               | Từ khóa, gọn   | API phức tạp                     |
+| **Reentrancy**            | Có             | Có                               |
+| **Fairness**              | Không          | Có (tùy chọn fair lock)          |
+| **Try lock with timeout** | Không          | Có                               |
+| **Condition variables**   | Không          | Có (`Condition` interface)       |
+| **Tự động release**       | Có             | Không (phải `unlock()` thủ công) |
+
+
+
+# 8. Tóm tắt
+
+	- Intrinsic Lock = Lock gắn với object, quản lý bởi JVM.
+	- synchronized đảm bảo mutual exclusion + visibility.
+	- Hỗ trợ reentrant → tránh self-deadlock.
+	- Cần cẩn trọng tránh deadlock bằng cách thống nhất thứ tự lock.
+	- JVM tối ưu mạnh từ Java 6+ → đừng sợ dùng synchronized nếu code đúng.
+
+
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
