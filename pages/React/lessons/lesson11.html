@@ -1,0 +1,174 @@
+<html><head><title>Lesson 11 == List ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../react-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 11 -- List -//</h1><pre>
+#1. Tổng quan về Lists trong React
+	Trong React, danh sách được hiển thị bằng cách sử dụng vòng lặp, thường là phương thức map() của mảng trong JavaScript, để chuyển đổi dữ liệu mảng thành các phần tử JSX. Mỗi phần tử trong danh sách cần một key duy nhất để React theo dõi và tối ưu hóa việc render.
+
+
+	## Lists là gì?:
+		Danh sách trong React là cách hiển thị nhiều phần tử giống nhau (như danh sách các mục, sản phẩm, hoặc bài viết) dựa trên dữ liệu từ một mảng. Ví dụ: hiển thị danh sách các xe trong garage.
+		
+	## Tại sao dùng map()?
+	
+		map() là một phương thức JavaScript, duyệt qua từng phần tử của mảng và trả về một mảng mới chứa các kết quả từ hàm callback.
+		Trong React, map() được dùng để tạo danh sách các phần tử JSX từ dữ liệu mảng, giúp giao diện động và dễ quản lý.	
+	
+	## Vai trò của key
+		- Key là một thuộc tính đặc biệt giúp React xác định từng phần tử trong danh sách.
+		- Khi danh sách thay đổi (thêm, xóa, sửa), React sử dụng key để chỉ render lại phần tử bị ảnh hưởng, thay vì toàn bộ danh sách, cải thiện hiệu suất.	
+		
+	## Tại sao quan trọng?
+		
+		- Hiển thị danh sách là một tác vụ phổ biến trong ứng dụng web (ví dụ: danh sách bài viết, sản phẩm trong giỏ hàng).
+		- Sử dụng key đúng cách giúp ứng dụng chạy nhanh hơn và tránh lỗi giao diện.	
+	
+	Quan trọng: Hiểu cách sử dụng map() và key là nền tảng để hiển thị dữ liệu động trong React, đặc biệt trong các ứng dụng thực tế như danh sách người dùng hoặc sản phẩm.	
+	
+	
+	
+# 	2. Hiển thị danh sách với map()
+	Tóm tắt: Sử dụng phương thức map() để chuyển đổi mảng dữ liệu thành danh sách các phần tử JSX.
+	
+	
+	## Ví dụ
+	
+function Car(props) {
+  return <li>I am a {props.brand}</li>;
+}
+
+function Garage() {
+  const cars = ['Ford', 'BMW', 'Audi'];
+  return (
+    <>
+      <h1>Who lives in my garage?</h1>
+      <ul>
+        {cars.map((car) => <Car brand={car} />)}
+      </ul>
+    </>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<Garage />);	
+	
+	
+	- cars: Một mảng chứa các chuỗi ['Ford', 'BMW', 'Audi'].
+	- cars.map((car) => <Car brand={car} />): Duyệt qua từng phần tử trong mảng cars, tạo component Car với prop brand tương ứng.
+	- Mỗi <Car /> render thành <li>I am a {brand}</li>.	
+	
+	
+Mặc dù mã trên hoạt động, React sẽ đưa ra cảnh báo trong console: "Warning: Each child in a list should have a unique 'key' prop". Điều này dẫn đến phần tiếp theo về Keys.
+
+	## Tại sao dùng map() thay vì for hoặc forEach?
+		- map() trả về một mảng mới, phù hợp để tạo danh sách JSX.
+		- forEach không trả về giá trị, còn vòng lặp for phức tạp hơn và không phù hợp với cú pháp JSX.
+		
+		Tính linh hoạt: map() có thể xử lý mảng chứa bất kỳ kiểu dữ liệu (chuỗi, số, object) và tạo ra các phần tử JSX phức tạp hơn.
+
+
+#3. Keys trong danh sách 
+
+	Mỗi phần tử trong danh sách cần một thuộc tính key duy nhất để React theo dõi và tối ưu hóa việc render. Key phải duy nhất trong danh sách (siblings), nhưng không cần duy nhất toàn cục.
+
+
+	## Ví dụ với Key
+function Car(props) {
+  return <li>I am a {props.brand}</li>;
+}
+
+function Garage() {
+  const cars = [
+    { id: 1, brand: 'Ford' },
+    { id: 2, brand: 'BMW' },
+    { id: 3, brand: 'Audi' }
+  ];
+  return (
+    <>
+      <h1>Who lives in my garage?</h1>
+      <ul>
+        {cars.map((car) => <Car key={car.id} brand={car.brand} />)}
+      </ul>
+    </>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<Garage />);	
+	
+	
+	- cars: Mảng các object, mỗi object có id (duy nhất) và brand.
+	- key={car.id}: Thuộc tính key được thêm vào mỗi <Car />, sử dụng id làm giá trị duy nhất.
+	- React sử dụng key để xác định từng phần tử, đảm bảo chỉ render lại phần tử thay đổi (nếu có).
+	
+	
+	
+	## Quy tắc Key
+	
+		- Duy nhất trong siblings: Key chỉ cần duy nhất trong danh sách hiện tại (giữa các <Car /> trong <ul>), không cần duy nhất toàn ứng dụng.
+		- Ưu tiên ID: Sử dụng ID từ dữ liệu (như car.id) làm key. Nếu không có ID, có thể dùng chỉ số mảng (index) như giải pháp cuối cùng:
+	
+		cars.map((car, index) => <Car key={index} brand={car} />)
+	
+		Không dùng key ngẫu nhiên: Tránh dùng Math.random() làm key vì nó thay đổi mỗi lần render, gây lỗi hiệu suất.
+		
+	## 	Tầm quan trọng của Key:
+		
+		- Khi danh sách thay đổi (thêm, xóa, sắp xếp), React so sánh key để xác định phần tử nào cần cập nhật, giữ nguyên hoặc xóa.
+		- Nếu thiếu key, React phải so sánh toàn bộ danh sách, dẫn đến render không cần thiết, làm chậm ứng dụng.		
+		
+
+	## Vấn đề với Index làm Key
+		- Sử dụng index có thể gây lỗi nếu danh sách thay đổi thứ tự hoặc có thêm/xóa phần tử, vì index không cố định với dữ liệu.
+		- Ví dụ: Nếu xóa phần tử đầu tiên, các index thay đổi, khiến React render sai giao diện.	
+	
+	Tối ưu hóa: Luôn dùng ID duy nhất từ dữ liệu (như ID từ cơ sở dữ liệu) để đảm bảo tính chính xác.
+	
+	
+# 4. Ví dụ thực tế
+
+// Car.js
+function Car({ brand, model }) {
+  return (
+    <li>
+      {brand} - {model}
+    </li>
+  );
+}
+
+// Garage.js
+import Car from './Car';
+
+function Garage() {
+  const cars = [
+    { id: 1, brand: 'Ford', model: 'Mustang' },
+    { id: 2, brand: 'BMW', model: 'X5' },
+    { id: 3, brand: 'Audi', model: 'Q7' }
+  ];
+
+  return (
+    <div>
+      <h1>My Garage</h1>
+      {cars.length > 0 ? (
+        <ul>
+          {cars.map((car) => (
+            <Car key={car.id} brand={car.brand} model={car.model} />
+          ))}
+        </ul>
+      ) : (
+        <p>No cars in the garage.</p>
+      )}
+    </div>
+  );
+}
+
+// index.js
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import Garage from './Garage';
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<Garage />);
+	
+	
+	
+	https://www.w3schools.com/react/react_forms.asp
+	
+</pre><a id='backBottom' href='../react-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
