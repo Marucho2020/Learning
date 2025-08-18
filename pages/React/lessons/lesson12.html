@@ -1,0 +1,387 @@
+<html><head><title>Lesson 12 == Forms ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../react-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 12 -- Forms -//</h1><pre>
+# 1. Tổng quan về Forms trong React
+
+	Tóm tắt: Trong React, form được sử dụng để thu thập dữ liệu người dùng, tương tự HTML. Tuy nhiên, React khuyến khích quản lý dữ liệu form thông qua state của component thay vì DOM, sử dụng controlled components với useState Hook để kiểm soát giá trị và xử lý sự kiện.
+
+
+	## Forms là gì?: 
+		Form là các giao diện người dùng cho phép nhập liệu (như tên, tuổi, lựa chọn) và gửi dữ liệu (submit). Ví dụ: form đăng nhập, đăng ký, hoặc tìm kiếm.
+		
+	## Khác biệt với HTML: 
+		
+		- HTML: Dữ liệu form được quản lý bởi DOM (ví dụ: giá trị input được lưu trong chính phần tử <input>).
+		- React: Dữ liệu form được lưu trong state của component, đảm bảo kiểm soát hoàn toàn và đồng bộ (gọi là controlled components).
+
+
+	## Tại sao quan trọng?: 
+		
+		- Form là thành phần cốt lõi trong ứng dụng tương tác (như gửi biểu mẫu, cập nhật dữ liệu).
+		- Sử dụng state và controlled components giúp React duy trì một single source of truth, tránh xung đột dữ liệu.
+
+	Controlled Components: Các phần tử form (input, textarea, select) có giá trị (value) được kiểm soát bởi state và cập nhật thông qua sự kiện onChange.
+
+	Quan trọng: Hiểu cách xử lý form trong React là nền tảng để xây dựng các giao diện tương tác, đặc biệt khi làm việc với dữ liệu người dùng.
+
+
+
+# 2. Thêm Form trong React
+
+	Tóm tắt: Form trong React được thêm giống như các phần tử JSX khác, nhưng cần xử lý sự kiện để kiểm soát dữ liệu và hành vi.	
+
+	## Ví dụ cơ bản: 
+		
+function MyForm() {
+  return (
+    <form>
+      <label>
+        Enter your name:
+        <input type="text" />
+      </label>
+    </form>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<MyForm />);
+
+	## Cơ chế: 
+		- Form được tạo bằng thẻ <form> và <input> như trong HTML.
+		- Khi submit, form sẽ làm mới trang (hành vi mặc định của HTML).
+
+	## Vấn đề: 
+		Hành vi mặc định (refresh trang) không mong muốn trong React, vì React ưu tiên kiểm soát toàn bộ trạng thái và giao diện.
+
+	## Giải pháp 
+		Sử dụng controlled components và xử lý sự kiện onSubmit
+
+
+	## Form trong React là JSX, nên tuân theo các quy tắc JSX (như className thay vì class, đóng thẻ đúng cách).
+
+	## Để ngăn refresh trang, sử dụng event.preventDefault() trong hàm xử lý onSubmit.
+
+
+
+# 3. Xử lý Form với Controlled Components
+	Tóm tắt: Dữ liệu form được quản lý qua state sử dụng useState Hook. Gắn sự kiện onChange để cập nhật state khi người dùng nhập liệu.
+
+import { useState } from 'react';
+import ReactDOM from 'react-dom/client';
+
+function MyForm() {
+  const [name, setName] = useState("");
+
+  return (
+    <form>
+      <label>
+        Enter your name:
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+      </label>
+    </form>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<MyForm />);
+
+
+	- useState(""): Khởi tạo state name với giá trị ban đầu là chuỗi rỗng.
+	- value={name}: Liên kết giá trị của <input> với state name.
+	- onChange={(e) => setName(e.target.value)}: Khi người dùng nhập, giá trị input (e.target.value) được dùng để cập nhật name qua setName.
+	
+	Kết quả: Giá trị input luôn đồng bộ với state, tạo ra controlled input.
+
+	## Controlled Component
+		Giá trị của input được kiểm soát bởi state, không phải DOM.
+		
+		Mỗi lần nhập, onChange kích hoạt, cập nhật state, và React re-render input với giá trị mới.
+
+	## Single Source of Truth: 
+		State là nguồn dữ liệu duy nhất, đảm bảo tính nhất quán.
+
+	## Lợi ích:
+		
+		- Dễ validate dữ liệu (ví dụ: kiểm tra độ dài tên).
+		- Dễ reset form (bằng cách set state về giá trị ban đầu).
+		- Dễ đồng bộ dữ liệu với các phần khác của ứng dụng.	
+
+
+# 4. Xử lý Submit Form
+	Tóm tắt: Thêm sự kiện onSubmit vào <form> để xử lý hành động submit, sử dụng event.preventDefault() để ngăn refresh trang.
+
+	
+import { useState } from 'react';
+import ReactDOM from 'react-dom/client';
+
+function MyForm() {
+  const [name, setName] = useState("");
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    alert(`The name you entered was: ${name}`);
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <label>
+        Enter your name:
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+      </label>
+      <input type="submit" />
+    </form>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<MyForm />);	
+	
+	- onSubmit={handleSubmit}: Gắn hàm xử lý khi form được submit (nhấn nút submit hoặc Enter).
+	- event.preventDefault(): Ngăn hành vi mặc định (refresh trang).
+	- alert: Hiển thị giá trị name từ state.	
+	
+	Kết quả: Khi người dùng nhập tên và nhấn submit, alert hiển thị tên mà không làm mới trang.
+
+
+	- Submit trigger: Sự kiện onSubmit được kích hoạt khi nhấn <input type="submit" /> hoặc phím Enter trong form.
+	- Ứng dụng: handleSubmit có thể dùng để gửi dữ liệu đến API, cập nhật state, hoặc hiển thị thông báo.
+	
+	
+	
+# 	5. Xử lý nhiều Input Fields
+	Tóm tắt: Quản lý nhiều input bằng một state object, sử dụng thuộc tính name để xác định input nào thay đổi.
+	
+import { useState } from 'react';
+import ReactDOM from 'react-dom/client';
+
+function MyForm() {
+  const [inputs, setInputs] = useState({});
+
+  const handleChange = (event) => {
+    const name = event.target.name;
+    const value = event.target.value;
+    setInputs((values) => ({ ...values, [name]: value }));
+  };
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    alert(JSON.stringify(inputs));
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <label>
+        Enter your name:
+        <input
+          type="text"
+          name="username"
+          value={inputs.username || ""}
+          onChange={handleChange}
+        />
+      </label>
+      <label>
+        Enter your age:
+        <input
+          type="number"
+          name="age"
+          value={inputs.age || ""}
+          onChange={handleChange}
+        />
+      </label>
+      <input type="submit" />
+    </form>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<MyForm />);
+
+
+	- useState({}): Khởi tạo state inputs là một object rỗng.
+	- name="username": Thuộc tính name xác định trường input.
+	- handleChange: Lấy event.target.name (ví dụ: "username") và event.target.value để cập nhật state.
+	- setInputs((values) => ({ ...values, [name]: value })): Cập nhật state bằng cách giữ các giá trị cũ (...values) và thêm hoặc cập nhật giá trị mới ([name]: value).
+	- value={inputs.username || ""}: Đảm bảo giá trị mặc định là chuỗi rỗng nếu inputs.username chưa được định nghĩa.	
+	
+	Kết quả: Khi submit, alert hiển thị object inputs (ví dụ: {"username":"John","age":"25"}).
+	
+	
+	- Bracket Notation: [name]: value cho phép cập nhật động các thuộc tính của object dựa trên giá trị name.
+	- Tính linh hoạt: Một hàm handleChange có thể xử lý nhiều input, giảm lặp mã.
+	- Default Value: inputs.username || "" tránh lỗi khi inputs.username là undefined.	
+	
+	
+#	6. Xử lý Textarea	
+	Tóm tắt: Trong React, giá trị của <textarea> được quản lý qua thuộc tính value và state, thay vì nội dung giữa thẻ như HTML.
+	
+import { useState } from 'react';
+import ReactDOM from 'react-dom/client';
+
+function MyForm() {
+  const [textarea, setTextarea] = useState(
+    "The content of a textarea goes in the value attribute"
+  );
+
+  const handleChange = (event) => {
+    setTextarea(event.target.value);
+  };
+
+  return (
+    <form>
+      <textarea value={textarea} onChange={handleChange} />
+    </form>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<MyForm />);
+
+
+
+	- HTML: Giá trị <textarea> nằm giữa thẻ <textarea>Content</textarea>.
+	- React: Giá trị được đặt trong value={textarea} và quản lý qua state.
+
+	- useState: Khởi tạo textarea với nội dung ban đầu.
+	- onChange: Cập nhật state khi người dùng nhập.
+	- Kết quả: <textarea> hiển thị và cập nhật nội dung từ state.
+
+	Controlled Textarea: Giống input, <textarea> là controlled component, đồng bộ với state.
+
+	Ứng dụng: Dùng để lưu trữ bình luận, mô tả, hoặc nội dung dài.
+
+
+# 7. Xử lý Select
+	Tóm tắt: Trong React, giá trị của <select> được quản lý qua thuộc tính value và state, thay vì thuộc tính selected như HTML.
+	
+import { useState } from 'react';
+import ReactDOM from 'react-dom/client';
+
+function MyForm() {
+  const [myCar, setMyCar] = useState("Volvo");
+
+  const handleChange = (event) => {
+    setMyCar(event.target.value);
+  };
+
+  return (
+    <form>
+      <select value={myCar} onChange={handleChange}>
+        <option value="Ford">Ford</option>
+        <option value="Volvo">Volvo</option>
+        <option value="Fiat">Fiat</option>
+      </select>
+    </form>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<MyForm />);	
+	
+	
+	
+	## Khác biệt với HTML
+		- HTML: Dùng selected trên <option> để xác định giá trị mặc định.
+		- React: Dùng value trên <select> để liên kết với state.	
+	
+	## Cơ chế
+	
+		- useState("Volvo"): Khởi tạo giá trị mặc định là "Volvo".
+		- onChange: Cập nhật state khi người dùng chọn option khác.
+		- Kết quả: <select> hiển thị giá trị từ state và cập nhật khi thay đổi.	
+	
+	Controlled Select: <select> là controlled component, đồng bộ với state.
+	Ứng dụng: Dùng cho dropdown lựa chọn danh mục, quốc gia, hoặc tùy chọn cấu hình.	
+	
+	
+# 8. Ví dụ thực tế	
+	
+// MyForm.js
+import { useState } from 'react';
+
+function MyForm() {
+  const [formData, setFormData] = useState({
+    username: '',
+    age: '',
+    bio: '',
+    car: 'Volvo'
+  });
+
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    alert(JSON.stringify(formData, null, 2));
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <label>
+        Name:
+        <input
+          type="text"
+          name="username"
+          value={formData.username}
+          onChange={handleChange}
+        />
+      </label>
+      <label>
+        Age:
+        <input
+          type="number"
+          name="age"
+          value={formData.age}
+          onChange={handleChange}
+        />
+      </label>
+      <label>
+        Bio:
+        <textarea name="bio" value={formData.bio} onChange={handleChange} />
+      </label>
+      <label>
+        Favorite Car:
+        <select name="car" value={formData.car} onChange={handleChange}>
+          <option value="Ford">Ford</option>
+          <option value="Volvo">Volvo</option>
+          <option value="Fiat">Fiat</option>
+        </select>
+      </label>
+      <input type="submit" value="Submit" />
+    </form>
+  );
+}
+
+export default MyForm;
+
+// index.js
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import MyForm from './MyForm';
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<MyForm />);	
+	
+	State: formData lưu trữ tất cả giá trị form trong một object.
+	Handle Change: Một hàm handleChange xử lý tất cả input, textarea, và select.
+	Handle Submit: Ngăn refresh và hiển thị dữ liệu form.
+	Controlled Components: Tất cả input, textarea, select đều đồng bộ với state.
+	Kết quả: Khi submit, alert hiển thị object chứa tất cả dữ liệu form.	
+	
+	
+	
+https://www.w3schools.com/react/react_router.asp	
+	
+	
+	
+	
+	
+	
+</pre><a id='backBottom' href='../react-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

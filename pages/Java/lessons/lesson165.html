@@ -1,0 +1,147 @@
+<html><head><title>Lesson 165 == java.util.concurrent.lock ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 165 -- java.util.concurrent.lock -//</h1><pre>
+# 1. Vì sao cần Lock API khi đã có synchronized?
+	synchronized đơn giản, gắn chặt với JVM, release lock tự động.
+	Nhưng nó bị giới hạn:
+
+		- Không có tryLock() với timeout (không thử trước được).
+		- Không có fairness (công bằng khi tranh chấp).
+		- Không có nhiều condition variable trên cùng một lock (chỉ có wait/notify toàn cục).
+		- Không thể unlock từ thread khác.
+	Lock API (từ Java 5, package java.util.concurrent.locks) → linh hoạt hơn, cho phép nhiều pattern nâng cao.
+	
+	
+	
+# 2. ReentrantLock	
+	Giống synchronized về cơ bản: mutual exclusion + reentrancy.
+	Nhưng có thêm power:
+	
+		- tryLock() → không block, trả về ngay true/false.
+		- tryLock(timeout, unit) → thử lock trong khoảng thời gian, tránh deadlock.
+		- lockInterruptibly() → cho phép thread bị interrupt khi đang chờ.
+		- Condition → tạo nhiều “hàng chờ” riêng biệt thay vì wait/notifyAll.
+
+
+ReentrantLock lock = new ReentrantLock(true); // fairness = true
+try {
+    if (lock.tryLock(1, TimeUnit.SECONDS)) {
+        // critical section
+    } else {
+        // timeout
+    }
+} finally {
+    if (lock.isHeldByCurrentThread()) {
+        lock.unlock();
+    }
+}
+
+	Fairness:
+		- new ReentrantLock(true) → thread nào chờ lâu hơn được ưu tiên (fair lock).
+		- Default = unfair lock → nhanh hơn, nhưng có thể starve thread yếu thế.
+
+
+# 3. ReadWriteLock 
+	Ý tưởng: đa số đọc, ít ghi → nếu chỉ lock toàn bộ bằng mutex sẽ phí. 
+	ReadWriteLock có 2 loại lock: 
+		- readLock → nhiều thread có thể vào song song (nếu không có writer).
+		- writeLock → độc quyền, chặn cả reader.
+
+	Triển khai phổ biến: ReentrantReadWriteLock.
+	Dùng cho cache, cấu trúc dữ liệu nhiều đọc ít ghi.
+
+ReentrantReadWriteLock rwLock = new ReentrantReadWriteLock();
+Lock rLock = rwLock.readLock();
+Lock wLock = rwLock.writeLock();
+
+rLock.lock();
+try {
+    // nhiều thread đọc song song
+} finally {
+    rLock.unlock();
+}
+
+wLock.lock();
+try {
+    // chỉ một thread ghi
+} finally {
+    wLock.unlock();
+}
+
+
+
+
+# 4. StampedLock (Java 8+)
+	Tiến hóa của ReadWriteLock, giải quyết nhược điểm writer starvation.
+	Không dùng boolean lock/unlock → dùng stamp (long id) để quản lý.
+	Hỗ trợ 3 mode:
+	
+		- Write Lock: độc quyền như writeLock.
+		- Read Lock: cho nhiều thread đọc song song.
+		- Optimistic Read: đọc mà không thực sự lock (lock-free read).
+		- Nếu trong lúc đọc có writer chen vào → validate thất bại → fallback sang read lock.	
+	
+	Ưu điểm: cực kỳ nhanh cho workload read-heavy.
+	Nhược điểm: API phức tạp, dễ code sai (nhất là quên unlock bằng đúng stamp).	
+	
+StampedLock lock = new StampedLock();
+long stamp = lock.tryOptimisticRead();
+int value = data; 
+if (!lock.validate(stamp)) { // check có writer chen vào ko
+    stamp = lock.readLock();
+    try {
+        value = data;
+    } finally {
+        lock.unlockRead(stamp);
+    }
+}
+	
+	
+	
+# 5. Deadlock Prevention với Lock API	
+	Với synchronized → khó tránh deadlock nếu lock nhiều object.
+	Với Lock:
+		
+		- Dùng tryLock() có timeout → tránh chờ vô hạn.
+		- Có thể implement deadlock avoidance bằng cách lock theo thứ tự cố định hoặc bỏ qua nếu không acquire được.	
+	
+	
+	## Ví dụ pattern tránh deadlock: 
+		
+if (lock1.tryLock()) {
+    try {
+        if (lock2.tryLock()) {
+            try {
+                // critical
+            } finally {
+                lock2.unlock();
+            }
+        }
+    } finally {
+        lock1.unlock();
+    }
+}
+	
+# 	6. So sánh tổng quát
+
+
+| Tính năng       | synchronized    | ReentrantLock      | ReadWriteLock                | StampedLock         |
+| --------------- | --------------- | ------------------ | ---------------------------- | ------------------- |
+| Reentrant       | ✔               | ✔                  | ✔ (read/write đều reentrant) | ✖ (không reentrant) |
+| Fairness        | ✖               | ✔                  | ✔                            | ✖                   |
+| tryLock/timeout | ✖               | ✔                  | ✔                            | ✔                   |
+| Condition       | 1 (wait/notify) | Nhiều Condition    | Nhiều Condition              | ✖                   |
+| Optimistic Read | ✖               | ✖                  | ✖                            | ✔                   |
+| Tự động release | ✔               | ✖                  | ✖                            | ✖                   |
+| Deadlock tránh  | Khó             | Dễ hơn (`tryLock`) | Dễ hơn                       | Dễ hơn              |
+
+
+# 7. Tư duy Senior
+
+	- ReentrantLock → dùng khi cần nhiều condition variable, timeout, interruptible lock.
+	- ReadWriteLock → dùng cho cache/data structure nhiều đọc ít ghi.
+	- StampedLock → tối ưu cực mạnh cho read-mostly, nhưng code phức tạp và dễ bug.
+	- Nếu logic đơn giản → cứ dùng synchronized, JVM tối ưu rồi.
+	- Luôn nhớ: Lock mạnh hơn nhưng dễ code sai (quên unlock, unlock nhầm thread, v.v.).
+
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
