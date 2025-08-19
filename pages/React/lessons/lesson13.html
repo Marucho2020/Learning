@@ -1,0 +1,277 @@
+<html><head><title>Lesson 13 == React Router ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../react-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 13 -- React Router -//</h1><pre>
+# 1. Tổng quan về React Router
+	Tóm tắt: React Router là thư viện phổ biến để quản lý điều hướng (routing) trong ứng dụng React, cho phép hiển thị các component khác nhau dựa trên URL. Create React App không tích hợp sẵn routing, nên bạn cần cài đặt react-router-dom.
+	
+	## Routing là gì?: 
+		Routing là quá trình điều hướng giữa các trang trong ứng dụng web mà không cần tải lại toàn bộ trang (giống ứng dụng một trang - SPA). React Router giúp ánh xạ URL (như /blogs hoặc /contact) với các component tương ứng.
+
+	## Tại sao cần React Router?
+		Cho phép tạo ứng dụng đa trang (multi-page experience) trong SPA.
+		
+		Quản lý lịch sử trình duyệt (browser history) để hỗ trợ nút back/forward.
+		
+		Tăng tính tương tác và trải nghiệm người dùng bằng cách hiển thị nội dung động dựa trên URL.
+		
+	React Router v6: Phiên bản mới nhất (tính đến thời điểm bài viết) với API đơn giản hơn, hỗ trợ các tính năng như nested routes và outlet.
+
+	Quan trọng: React Router là công cụ thiết yếu để xây dựng các ứng dụng React phức tạp với nhiều trang, như trang chủ, trang blog, hoặc trang liên hệ.
+
+
+# 2. Cài đặt React Router
+
+	Tóm tắt: Để sử dụng React Router, bạn cần cài đặt gói react-router-dom thông qua npm.
+	
+	npm i -D react-router-dom
+	npm i -D react-router-dom@latest
+	
+	
+	Cài đặt react-router-dom làm dev dependency (dùng trong quá trình phát triển).
+	Bạn cần chạy lệnh này trong thư mục gốc của dự án React (nơi có package.json).
+	Sau khi cài đặt, bạn có thể import các thành phần như BrowserRouter, Routes, Route, và Link từ react-router-dom.
+
+
+# npm i -D react-router-dom@latest
+	
+	Tóm tắt: Để tổ chức ứng dụng với nhiều trang, tạo thư mục src/pages chứa các component đại diện cho từng trang.
+	
+src/
+  └── pages/
+      ├── Layout.js
+      ├── Home.js
+      ├── Blogs.js
+      ├── Contact.js
+      ├── NoPage.js	
+
+	Layout.js: Component chứa giao diện chung (như menu điều hướng) cho tất cả các trang.
+	Home.js, Blogs.js, Contact.js: Các component đại diện cho từng trang cụ thể.
+	NoPage.js: Component hiển thị khi URL không khớp (trang 404).
+
+	Mục đích:
+		- Tách biệt các trang thành các file riêng để dễ quản lý.
+		- Quy ước đặt tên file trùng với tên component (bắt đầu bằng chữ in hoa).
+
+	Sâu sắc hơn:
+		- Cấu trúc thư mục này là một cách tổ chức phổ biến, nhưng bạn có thể tùy chỉnh (ví dụ: đặt tên thư mục là routes hoặc views).
+		- Mỗi file trong pages là một Function Component đơn giản, trả về JSX cơ bản.
+
+	
+
+# 4. Sử dụng React Router trong ứng dụng
+
+	Tóm tắt: Sử dụng các thành phần như BrowserRouter, Routes, Route, và Link để thiết lập điều hướng dựa trên URL.
+
+
+	Ví dụ index.js:
+
+import ReactDOM from "react-dom/client";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Layout from "./pages/Layout";
+import Home from "./pages/Home";
+import Blogs from "./pages/Blogs";
+import Contact from "./pages/Contact";
+import NoPage from "./pages/NoPage";
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Layout />}>
+          <Route index element={<Home />} />
+          <Route path="blogs" element={<Blogs />} />
+          <Route path="contact" element={<Contact />} />
+          <Route path="*" element={<NoPage />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+
+
+	BrowserRouter: Bao bọc toàn bộ ứng dụng, cung cấp khả năng điều hướng dựa trên lịch sử trình duyệt.
+
+	Routes: Chứa danh sách các Route, định nghĩa ánh xạ giữa URL và component.
+
+<Route path="/" element={<Layout />}>: Route gốc, render component Layout.
+<Route index element={<Home />}: Route mặc định cho /, render Home bên trong Layout.
+<Route path="blogs" element={<Blogs />}: Route /blogs, render Blogs.
+<Route path="contact" element={<Contact />}: Route /contact, render Contact.
+<Route path="*" element={<NoPage />}: Route catch-all, render NoPage cho bất kỳ URL không khớp.
+
+
+	## Nested Routes: 
+		
+	- Các route như /blogs, /contact được lồng trong route /, kế thừa đường dẫn cha (/ + blogs = /blogs).
+	- index chỉ định route mặc định cho route cha.	
+	
+	
+	
+	## BrowserRouter vs. HashRouter 
+		
+		- BrowserRouter sử dụng HTML5 history API, tạo URL đẹp (ví dụ: /blogs).
+		- HashRouter sử dụng # trong URL (ví dụ: /#blogs), phù hợp với môi trường không hỗ trợ history API (như server tĩnh).	
+	
+	Catch-all Route (*): Đảm bảo ứng dụng luôn hiển thị nội dung hợp lý, ngay cả khi URL không tồn tại.
+	
+	Tính năng v6: element prop thay thế component của v5, cú pháp ngắn gọn hơn.
+	
+	
+	
+# 5. Các Component Trang
+
+	Tóm tắt: Mỗi trang là một component, trong đó Layout chứa giao diện chung và sử dụng Outlet để render các route con. Link được dùng để điều hướng thay vì thẻ <a>.
+
+	## Layout.js: 
+		
+import { Outlet, Link } from "react-router-dom";
+
+const Layout = () => {
+  return (
+    <>
+      <nav>
+        <ul>
+          <li>
+            <Link to="/">Home</Link>
+          </li>
+          <li>
+            <Link to="/blogs">Blogs</Link>
+          </li>
+          <li>
+            <Link to="/contact">Contact</Link>
+          </li>
+        </ul>
+      </nav>
+      <Outlet />
+    </>
+  );
+};
+
+export default Layout;
+
+	- Outlet: Điểm đánh dấu nơi các component con (như Home, Blogs) sẽ được render.
+	- Link: Thay thế thẻ <a>, điều hướng mà không tải lại trang, giữ lịch sử trình duyệt.
+	- Cơ chế: Layout cung cấp thanh điều hướng (nav) chung, còn Outlet hiển thị nội dung của route con (ví dụ: Home khi URL là /).
+
+	// Home.js
+const Home = () => {
+  return <h1>Home</h1>;
+};
+export default Home;
+
+
+	// NoPage.js: 
+	
+const NoPage = () => {
+  return <h1>404</h1>;
+};
+export default NoPage;
+
+
+	- URL /: Hiển thị thanh điều hướng từ Layout và <h1>Home</h1>.
+	- URL /blogs: Hiển thị thanh điều hướng và <h1>Blog Articles</h1>.
+	- URL /contact: Hiển thị thanh điều hướng và <h1>Contact Me</h1>.
+	- URL bất kỳ (như /xyz): Hiển thị thanh điều hướng và <h1>404</h1>.
+
+	- Outlet: Hoạt động như một placeholder, cho phép lồng các route con trong route cha.
+	- Link vs. a: <Link> sử dụng history API để điều hướng client-side, nhanh hơn và mượt mà hơn <a> (gây tải lại trang).
+	- Layout Route: Tạo giao diện chung (như header, footer) cho tất cả các trang, giảm lặp mã.
+
+
+# 6. Ví dụ thực tế
+
+// src/pages/Layout.js
+import { Outlet, Link } from 'react-router-dom';
+
+const Layout = () => {
+  return (
+    <>
+      <nav>
+        <ul>
+          <li><Link to="/">Home</Link></li>
+          <li><Link to="/blogs">Blogs</Link></li>
+          <li><Link to="/contact">Contact</Link></li>
+        </ul>
+      </nav>
+      <Outlet />
+    </>
+  );
+};
+export default Layout;
+
+// src/pages/Home.js
+const Home = () => {
+  return <h1>Welcome to the Home Page</h1>;
+};
+export default Home;
+
+// src/pages/Blogs.js
+const Blogs = () => {
+  return <h1>Latest Blog Posts</h1>;
+};
+export default Blogs;
+
+// src/pages/Contact.js
+const Contact = () => {
+  return <h1>Contact Us</h1>;
+};
+export default Contact;
+
+// src/pages/NoPage.js
+const NoPage = () => {
+  return <h1>404 - Page Not Found</h1>;
+};
+export default NoPage;
+
+// src/index.js
+import ReactDOM from 'react-dom/client';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Layout from './pages/Layout';
+import Home from './pages/Home';
+import Blogs from './pages/Blogs';
+import Contact from './pages/Contact';
+import NoPage from './pages/NoPage';
+
+function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Layout />}>
+          <Route index element={<Home />} />
+          <Route path="blogs" element={<Blogs />} />
+          <Route path="contact" element={<Contact />} />
+          <Route path="*" element={<NoPage />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+
+
+	- Cấu trúc: Các file được tổ chức trong thư mục pages.
+	- Routing: BrowserRouter và Routes quản lý điều hướng.
+	- Layout: Thanh điều hướng chung và Outlet cho nội dung trang.
+	- Link: Điều hướng mượt mà giữa các trang.
+	- Kết quả: Ứng dụng có thể chuyển đổi giữa các trang /, /blogs, /contact, và hiển thị 404 cho URL không hợp lệ.
+
+
+
+# 7. Bài học rút ra
+
+
+	- React Router: Thư viện để quản lý điều hướng trong ứng dụng React.
+	- Cài đặt: Sử dụng npm i -D react-router-dom.
+	- Cấu trúc:
+	- Tạo thư mục pages cho các component trang.
+	- Sử dụng BrowserRouter, Routes, Route để định nghĩa route.
+	- Layout Route: Dùng Layout và Outlet để tạo giao diện chung.
+	- Link: Sử dụng <Link> thay <a> để điều hướng client-side.
+	- Catch-all Route: path="*" cho trang 404.
+	- Thực hành: Xây dựng ứng dụng đa trang với điều hướng.
+
+
+</pre><a id='backBottom' href='../react-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
