@@ -1,0 +1,282 @@
+<html><head><title>Lesson 15 == React Forms Submits ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../react-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 15 -- React Forms Submits -//</h1><pre>	
+# 1. React Submit Forms là gì?
+
+	Trong React, biểu mẫu (forms) được sử dụng để thu thập dữ liệu từ người dùng, chẳng hạn như tên, email, mật khẩu, v.v. Khi người dùng nhấn nút "Submit" (gửi), bạn cần xử lý dữ liệu này, ví dụ như hiển thị dữ liệu, gửi dữ liệu đến server, hoặc thực hiện các hành động khác. React sử dụng controlled components (thành phần được kiểm soát) để quản lý dữ liệu biểu mẫu thông qua state, và sự kiện onSubmit để xử lý hành động gửi biểu mẫu.
+
+
+# 2. Phân tích ví dụ 
+	
+import { useState } from 'react';
+import { createRoot } from 'react-dom/client';
+
+function MyForm() {
+  const [name, setName] = useState("");
+
+  function handleChange(e) {
+    setName(e.target.value);
+  }
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    alert(name);
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <label>Enter your name:
+        <input
+          type="text" 
+          value={name}
+          onChange={handleChange}
+        />
+      </label>
+      <input type="submit" />
+    </form>
+  )
+}
+
+createRoot(document.getElementById('root')).render(
+  <MyForm />
+);
+
+
+	## Import các thành phần cần thiết 
+	
+		- useState từ React được sử dụng để quản lý trạng thái (state) của biểu mẫu.
+		- createRoot từ react-dom/client để render ứng dụng React vào DOM.
+
+
+	## State name 
+		
+		- const [name, setName] = useState(""); tạo một biến trạng thái name với giá trị ban đầu là chuỗi rỗng ("").
+		- name lưu trữ giá trị mà người dùng nhập vào ô input.
+		- setName là hàm dùng để cập nhật giá trị của name.
+
+
+	## Hàm handleChange
+	
+		- Hàm này được gọi mỗi khi người dùng nhập hoặc thay đổi dữ liệu trong ô input (sự kiện onChange).
+		- e.target.value lấy giá trị hiện tại của ô input.
+		- setName(e.target.value) cập nhật state name với giá trị mới, đảm bảo ô input luôn đồng bộ với state.	
+		
+
+	## Hàm handleSubmit 
+		
+		- Hàm này được gọi khi người dùng nhấn nút "Submit" (gửi biểu mẫu).
+		- e.preventDefault() ngăn chặn hành vi mặc định của biểu mẫu (ngăn trang web tải lại khi gửi biểu mẫu, điều thường xảy ra trong HTML truyền thống).
+		- alert(name) hiển thị giá trị của name trong một hộp thoại cảnh báo (alert).
+
+
+	## JSX của biểu mẫu: 
+		
+		- <form onSubmit={handleSubmit}>: Gắn sự kiện onSubmit với hàm handleSubmit. Khi biểu mẫu được gửi (bằng cách nhấn nút submit hoặc phím Enter), handleSubmit sẽ được gọi.
+		- <input type="text" value={name} onChange={handleChange} />: Ô input là một controlled input (ô nhập được kiểm soát), nghĩa là giá trị của nó được điều khiển bởi state name. Mỗi khi người dùng nhập, sự kiện onChange sẽ gọi handleChange để cập nhật state.
+		- <input type="submit" />: Nút submit để gửi biểu mẫu.
+
+	## Render ứng dụng: 
+		createRoot(document.getElementById('root')).render(<MyForm />); render component MyForm vào phần tử có id="root" trong DOM.
+
+
+Khi bạn nhập tên vào ô input, giá trị được lưu vào state name.
+Khi nhấn nút "Submit", một hộp thoại alert sẽ hiển thị giá trị của name.
+Trang web không tải lại nhờ e.preventDefault().
+
+
+# 3. Hiểu sâu hơn về Controlled Components
+
+	Trong ví dụ trên, ô input là một controlled component (thành phần được kiểm soát), nghĩa là:
+	
+		- Giá trị của ô input (value={name}) được liên kết trực tiếp với state name.
+		- Mọi thay đổi trong ô input đều được xử lý qua sự kiện onChange, cập nhật state, và state lại cập nhật giá trị của ô input.
+		- Điều này đảm bảo React luôn kiểm soát hoàn toàn giá trị của biểu mẫu, giúp dễ dàng xử lý dữ liệu, xác thực (validation), hoặc gửi dữ liệu đi nơi khác.
+
+
+	## Tại sao cần controlled components? 
+		- Đồng bộ hóa dữ liệu giữa giao diện và state.
+		- Dễ dàng xác thực dữ liệu (ví dụ: kiểm tra email hợp lệ, độ dài mật khẩu).
+		- Dễ dàng xử lý dữ liệu khi gửi biểu mẫu (gửi đến API, hiển thị kết quả, v.v.).	
+	
+	
+	
+	## So sánh với uncontrolled components: 
+		Trong uncontrolled components, bạn không sử dụng state để quản lý giá trị input mà sử dụng ref để truy cập giá trị trực tiếp từ DOM. Điều này ít phổ biến hơn trong React vì nó làm mất đi tính kiểm soát của React.
+	
+	
+# 	4. Ví dụ mở rộng: Biểu mẫu phức tạp hơn
+
+	Để giúp bạn hiểu sâu hơn, tôi sẽ tạo một ví dụ mở rộng với nhiều trường nhập liệu (name, email) và xử lý dữ liệu khi gửi biểu mẫu.	
+	
+	
+import { useState } from 'react';
+import { createRoot } from 'react-dom/client';
+
+function MyForm() {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+  });
+
+  function handleChange(e) {
+    const { name, value } = e.target; // Lấy name và value từ input
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value, // Cập nhật động dựa trên tên trường
+    }));
+  }
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    if (!formData.name || !formData.email) {
+      alert('Please fill out all fields!');
+      return;
+    }
+    alert(`Submitted: Name = ${formData.name}, Email = ${formData.email}`);
+    // Có thể gửi dữ liệu đến API ở đây
+    setFormData({ name: '', email: '' }); // Reset biểu mẫu
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <label>
+        Name:
+        <input
+          type="text"
+          name="name"
+          value={formData.name}
+          onChange={handleChange}
+        />
+      </label>
+      <br />
+      <label>
+        Email:
+        <input
+          type="email"
+          name="email"
+          value={formData.email}
+          onChange={handleChange}
+        />
+      </label>
+      <br />
+      <input type="submit" value="Submit" />
+    </form>
+  );
+}
+
+createRoot(document.getElementById('root')).render(<MyForm />);	
+	
+	
+# 	5. Kết hợp với React Transitions
+	
+import { useState } from 'react';
+import { CSSTransition } from 'react-transition-group';
+import { createRoot } from 'react-dom/client';
+import './style.css';
+
+function MyForm() {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+  });
+  const [submitted, setSubmitted] = useState(false);
+
+  function handleChange(e) {
+    const { name, value } = e.target;
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
+  }
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    if (!formData.name || !formData.email) {
+      alert('Please fill out all fields!');
+      return;
+    }
+    setSubmitted(true);
+    setTimeout(() => setSubmitted(false), 3000); // Ẩn thông báo sau 3 giây
+    setFormData({ name: '', email: '' });
+  }
+
+  return (
+    <div>
+      <form onSubmit={handleSubmit}>
+        <label>
+          Name:
+          <input
+            type="text"
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+          />
+        </label>
+        <br />
+        <label>
+          Email:
+          <input
+            type="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+          />
+        </label>
+        <br />
+        <input type="submit" value="Submit" />
+      </form>
+
+      <CSSTransition
+        in={submitted}
+        timeout={300}
+        classNames="fade"
+        unmountOnExit
+      >
+        <div className="success-message">
+          <p>Form submitted successfully!</p>
+        </div>
+      </CSSTransition>
+    </div>
+  );
+}
+
+createRoot(document.getElementById('root')).render(<MyForm />);	
+	
+	
+CSS (style.css):	
+	
+.success-message {
+  background-color: lightgreen;
+  padding: 10px;
+  border-radius: 5px;
+  margin-top: 10px;
+}
+
+.fade-enter {
+  opacity: 0;
+}
+.fade-enter-active {
+  opacity: 1;
+  transition: opacity 300ms;
+}
+.fade-exit {
+  opacity: 1;
+}
+.fade-exit-active {
+  opacity: 0;
+  transition: opacity 300ms;
+}	
+	
+	
+# Gửi dữ liệu đến server	
+	
+async function handleSubmit(e) {
+  e.preventDefault();
+  const response = await fetch('/api/submit', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(formData),
+  });
+  const result = await response.json();
+  alert(result.message);
+}
+
+</pre><a id='backBottom' href='../react-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
