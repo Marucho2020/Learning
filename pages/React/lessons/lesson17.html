@@ -1,0 +1,129 @@
+<html><head><title>Lesson 17 == React Form Select ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../react-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 17 -- React Form Select -//</h1><pre>
+
+# 1. Select trong React là gì?
+	Trong HTML, giá trị được chọn trong <select> được xác định bằng thuộc tính selected trên thẻ <option>. Trong React, <select> là một controlled component, sử dụng thuộc tính value trên thẻ <select> và sự kiện onChange để quản lý giá trị được chọn thông qua state.
+
+
+# 2. Phân tích ví dụ từ W3Schools
+
+import { useState } from 'react';
+import { createRoot } from 'react-dom/client';
+
+function MyForm() {
+  const [myCar, setMyCar] = useState("Volvo");
+
+  const handleChange = (event) => {
+    setMyCar(event.target.value);
+  };
+
+  return (
+    <form>
+      <select value={myCar} onChange={handleChange}>
+        <option value="Ford">Ford</option>
+        <option value="Volvo">Volvo</option>
+        <option value="Fiat">Fiat</option>
+      </select>
+    </form>
+  );
+}
+
+createRoot(document.getElementById('root')).render(<MyForm />);
+
+
+
+# 3. So sánh với <input> và <textarea>
+
+	- <select> hoạt động tương tự <input> và <textarea>: đều là controlled components sử dụng value và onChange để quản lý state.
+	- Khác biệt: <select> quản lý danh sách các tùy chọn (<option>), giá trị được chọn là value của <option>.
+
+
+# 4. Kết hợp với React Submit Forms 
+
+function handleSubmit(e) {
+  e.preventDefault();
+  alert(`Selected car: ${myCar}`);
+}
+
+return (
+  <form onSubmit={handleSubmit}>
+    <select value={myCar} onChange={handleChange}>
+      <option value="Ford">Ford</option>
+      <option value="Volvo">Volvo</option>
+      <option value="Fiat">Fiat</option>
+    </select>
+    <input type="submit" value="Submit" />
+  </form>
+);
+
+
+# 	Kết hợp với Textarea và Input: 
+	
+	Tạo biểu mẫu kết hợp <input>, <textarea>, và <select>:
+	
+function MyForm() {
+  const [formData, setFormData] = useState({
+    name: '',
+    comment: '',
+    car: 'Volvo',
+  });
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    alert(`Name: ${formData.name}, Comment: ${formData.comment}, Car: ${formData.car}`);
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input type="text" name="name" value={formData.name} onChange={handleChange} />
+      <textarea name="comment" value={formData.comment} onChange={handleChange} />
+      <select name="car" value={formData.car} onChange={handleChange}>
+        <option value="Ford">Ford</option>
+        <option value="Volvo">Volvo</option>
+        <option value="Fiat">Fiat</option>
+      </select>
+      <input type="submit" value="Submit" />
+    </form>
+  );
+}	
+	
+	
+# 	Kết hợp với React Transitions 
+	
+import { CSSTransition } from 'react-transition-group';
+import './style.css';
+
+function MyForm() {
+  const [myCar, setMyCar] = useState("Volvo");
+  const [submitted, setSubmitted] = useState(false);
+
+  const handleChange = (e) => setMyCar(e.target.value);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setSubmitted(true);
+    setTimeout(() => setSubmitted(false), 2000);
+  };
+
+  return (
+    <div>
+      <form onSubmit={handleSubmit}>
+        <select value={myCar} onChange={handleChange}>
+          <option value="Ford">Ford</option>
+          <option value="Volvo">Volvo</option>
+          <option value="Fiat">Fiat</option>
+        </select>
+        <input type="submit" value="Submit" />
+      </form>
+      <CSSTransition in={submitted} timeout={300} classNames="fade" unmountOnExit>
+        <p className="success">Selected: {myCar}</p>
+      </CSSTransition>
+    </div>
+  );
+}	
+	
+	
+</pre><a id='backBottom' href='../react-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
