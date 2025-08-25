@@ -1,0 +1,185 @@
+<html><head><title>Lesson 20 == React Forms Radio ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../react-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 20 -- React Forms Radio -//</h1><pre>
+# 1. Radio Buttons trong React 
+
+	Radio buttons trong React là controlled components dùng để chọn một lựa chọn duy nhất từ nhóm (group). Tất cả radio trong nhóm chia sẻ cùng name để đảm bảo tính độc quyền. Trạng thái được quản lý qua checked (so sánh với state giá trị chọn), không dùng value như input text. Đây là cách React kiểm soát trạng thái chọn (true/false) dựa trên state, đảm bảo tính nhất quán và dễ tái sử dụng.
+
+
+# 2. Phân tích ví dụ 
+	import { useState } from 'react';
+import { createRoot } from 'react-dom/client';
+
+function MyForm() {
+  const [selectedFruit, setSelectedFruit] = useState('banana');
+
+  const handleChange = (event) => {
+    setSelectedFruit(event.target.value);
+  };
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    alert(`Your favorite fruit is: ${selectedFruit}`);
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <p>Select your favorite fruit:</p>
+      <label>
+        <input 
+          type="radio" 
+          name="fruit" 
+          value="apple" 
+          checked={selectedFruit === 'apple'} 
+          onChange={handleChange} 
+        /> Apple
+      </label>
+      <br />
+      <label>
+        <input 
+          type="radio" 
+          name="fruit" 
+          value="banana" 
+          checked={selectedFruit === 'banana'} 
+          onChange={handleChange} 
+        /> Banana
+      </label>
+      <br />
+      <label>
+        <input 
+          type="radio" 
+          name="cherry" 
+          value="cherry" 
+          checked={selectedFruit === 'cherry'} 
+          onChange={handleChange} 
+        /> Cherry
+      </label>
+      <br />
+      <button type="submit">Submit</button>
+    </form>
+  );
+}
+
+createRoot(document.getElementById('root')).render(<MyForm />);
+
+
+
+	## Radio Buttons: 
+		
+		- name="fruit": Nhóm các radio lại, đảm bảo chỉ một cái được chọn (hành vi DOM tự động).
+		- checked={selectedFruit === 'apple'}: Kiểm tra boolean động (true nếu state khớp value của radio).
+		- onChange={handleChange}: Cập nhật state khi chọn, khiến các radio khác tự động bỏ chọn.
+		- 
+
+
+
+# 3. So sánh với Checkbox 
+
+		- Radio dùng cho chọn một (exclusive), checkbox cho chọn nhiều (inclusive).
+		- Cả hai dùng checked để kiểm soát trạng thái, nhưng radio so sánh state với value cụ thể, checkbox dùng trực tiếp boolean.
+		- Radio yêu cầu cùng name để nhóm; checkbox không cần.
+
+
+
+# Kết hợp với Multiple Inputs, Checkbox, Textarea, Select:
+
+const [inputs, setInputs] = useState({
+  firstname: '',
+  fruit: 'banana',
+  tomato: false
+});
+
+const handleChange = (e) => {
+  const { name, type, value, checked } = e.target;
+  if (type === 'radio') {
+    setInputs({ ...inputs, [name]: value });
+  } else if (type === 'checkbox') {
+    setInputs({ ...inputs, [name]: checked });
+  } else {
+    setInputs({ ...inputs, [name]: value });
+  }
+};
+
+return (
+  <form onSubmit={handleSubmit}>
+    <input type="text" name="firstname" value={inputs.firstname || ''} onChange={handleChange} />
+    <input type="radio" name="fruit" value="apple" checked={inputs.fruit === 'apple'} onChange={handleChange} /> Apple
+    <input type="radio" name="fruit" value="banana" checked={inputs.fruit === 'banana'} onChange={handleChange} /> Banana
+    <input type="checkbox" name="tomato" checked={inputs.tomato || false} onChange={handleChange} /> Tomato
+    <button type="submit">Submit</button>
+  </form>
+);
+
+	## Kết hợp với React Transitions: 
+
+
+import { CSSTransition } from 'react-transition-group';
+import './style.css';
+
+function MyForm() {
+  const [selectedFruit, setSelectedFruit] = useState('banana');
+  const [submitted, setSubmitted] = useState(false);
+
+  const handleChange = (e) => setSelectedFruit(e.target.value);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setSubmitted(true);
+    setTimeout(() => setSubmitted(false), 2000);
+  };
+
+  return (
+    <div>
+      <form onSubmit={handleSubmit}>
+        <input type="radio" name="fruit" value="apple" checked={selectedFruit === 'apple'} onChange={handleChange} /> Apple
+        <input type="radio" name="fruit" value="banana" checked={selectedFruit === 'banana'} onChange={handleChange} /> Banana
+        <input type="radio" name="fruit" value="cherry" checked={selectedFruit === 'cherry'} onChange={handleChange} /> Cherry
+        <button type="submit">Submit</button>
+      </form>
+      <CSSTransition in={submitted} timeout={300} classNames="fade" unmountOnExit>
+        <p className="success">Selected fruit: {selectedFruit}</p>
+      </CSSTransition>
+    </div>
+  );
+}
+
+.success { background-color: lightgreen; padding: 10px; border-radius: 5px; }
+.fade-enter { opacity: 0; }
+.fade-enter-active { opacity: 1; transition: opacity 300ms; }
+.fade-exit { opacity: 1; }
+.fade-exit-active { opacity: 0; transition: opacity 300ms; }
+
+	
+	
+	
+	
+	
+# Lưu ý kỹ thuật (chuyên sâu) 
+
+	## Nhóm Radio: 
+		- Cùng name đảm bảo hành vi exclusive (DOM tự xử lý, React chỉ kiểm soát state).
+		- Nếu không cùng name, chúng hoạt động như checkbox độc lập.	
+
+
+	## Hàm handleChange mở rộng: 
+		- Trong form phức tạp, kiểm tra type === 'radio' để lấy value, tránh nhầm với checkbox. 
+
+
+
+	## Default Value: 
+		Khởi tạo state khớp một value của radio để tránh tất cả không chọn (uncontrolled state).
+	
+
+	## Hiệu suất & Accessibility 
+
+		- Sử dụng <fieldset> và <legend> cho nhóm radio để cải thiện accessibility (ARIA).
+		- Tránh re-render không cần bằng memoization nếu form lớn.
+
+
+
+
+
+https://www.w3schools.com/react/react_portals.asp
+
+
+
+
+</pre><a id='backBottom' href='../react-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

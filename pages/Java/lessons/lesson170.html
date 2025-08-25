@@ -1,0 +1,137 @@
+<html><head><title>Lesson 170 == Concurrency Design Patterns & Best Practices ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 170 -- Concurrency Design Patterns & Best Practices -//</h1><pre>
+# 1. Immutable Objects 
+	Nguyên tắc: Object không thay đổi sau khi khởi tạo → thread-safe “tự nhiên”.
+	Lợi ích:
+		Không cần lock.
+		Dễ dàng share giữa threads.
+
+final class User {
+    private final String name;
+    private final int age;
+    public User(String name, int age) { this.name = name; this.age = age; }
+    public String getName() { return name; }
+    public int getAge() { return age; }
+}
+
+	Senior tip: Immutable + copy-on-write → kết hợp với functional style cho thread-safe state.
+	
+	
+# 2. Thread Confinemen	
+	Giới hạn dữ liệu/objects cho một thread → không cần lock.
+	Types:	
+		Stack confinement – local variable chỉ dùng trong method/thread → tự thread-safe.
+		ThreadLocal – giữ state riêng cho mỗi thread, ví dụ connection pool, date formatter.
+		
+		private static final ThreadLocal<SimpleDateFormat> df = ThreadLocal.withInitial(() -> new SimpleDateFormat("yyyy-MM-dd"));
+
+		Pitfall senior: nhớ remove() nếu dùng thread pool → tránh memory leak.
+	
+	
+	
+# 3. Thread Pool / Executor Pattern	
+	
+	Thay vì new Thread():
+		- Quản lý resource tốt hơn.
+		- Tái sử dụng thread → giảm overhead.	
+	
+	Các loại Executor:
+		- FixedThreadPool → cố định, predictable.
+		- CachedThreadPool → dynamic, thích hợp IO-bound.
+		- ScheduledThreadPool → định kỳ.		
+	
+	Best practice: luôn shutdown pool, tránh leak threads.
+		
+	
+	
+# 4. Double-Checked Locking
+	Pattern lazy init singleton thread-safe.
+
+private volatile static Singleton instance;
+public static Singleton getInstance() {
+    if (instance == null) {
+        synchronized(Singleton.class) {
+            if (instance == null) instance = new Singleton();
+        }
+    }
+    return instance;
+}
+
+	Key: volatile để tránh instruction reordering → đảm bảo instance fully constructed.
+
+
+# 5. Blocking vs Non-blocking
+
+	Blocking:
+		synchronized, Lock, BlockingQueue.
+		Thread chờ → tốn context switch.
+		
+	Non-blocking / lock-free:
+		Atomic*, CAS, LongAdder, StampedLock (optimistic read).
+		Thích hợp low-latency, high concurrency.
+
+
+# 6. Reactive / Event-driven patterns 
+
+	Dựa trên async event loops, không block thread.
+	
+	Java 9+: Flow API (Publisher/Subscriber).
+	
+	Phù hợp IO-bound, số lượng thread ít nhưng xử lý nhiều sự kiện.	
+
+
+# 7. Livelock vs Deadlock 
+
+	Deadlock: threads chờ nhau → block.
+	
+	Livelock: threads vẫn chạy, liên tục retry, nhưng không tiến triển.
+	
+	Senior tip:
+	
+		Detect patterns, dùng tryLock(timeout), atomic per-key, hoặc design retry/backoff.
+
+
+
+# 8. Kết hợp các pattern
+
+
+	Immutable + Thread confinement + Executor → tối ưu cho shared state minimal, dễ maintain.
+	
+	CAS / atomic + lock-free data structures → high concurrency.
+	
+	BlockingQueue + thread pool → producer-consumer pattern.
+	
+	Reactive + event loop → IO-bound, low thread count.
+	
+	Double-checked locking → singleton initialization.
+	
+	ThreadLocal → state per-thread trong pool → tránh shared mutable state.
+	
+	
+	
+	
+# 	9. Senior-level mindset 
+	
+	Always minimize shared mutable state → immutable + confinement.
+	
+	Use high-level concurrency constructs first → Executors, BlockingQueue, ForkJoin, Reactive.
+	
+	Avoid low-level wait/notify trừ khi viết framework hoặc cần tối ưu.
+	
+	Detect deadlock/livelock early → diagram locks and resources.
+	
+	Performance tuning → balance thread count, task granularity, lock-free vs blocking.	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
