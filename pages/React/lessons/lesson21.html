@@ -1,0 +1,196 @@
+<html><head><title>Lesson 21 == React Portals ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../react-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 21 -- React Portals -//</h1><pre>
+# 1. React Portals là gì? 
+
+	React Portals cho phép render nội dung React vào một DOM node ngoài cây DOM của parent component (thường là document.body). Điều này hữu ích cho các UI như modal, tooltip, hoặc notification, cần thoát khỏi layout giới hạn của parent (e.g., overflow: hidden, z-index).
+
+	Cú pháp:
+	import { createPortal } from 'react-dom';
+	createPortal(children, domNode);
+
+		children: Nội dung React (element, string, fragment).
+		domNode: DOM node đích (thường là document.body hoặc một container cụ thể).
+
+
+
+
+# 2. Phân tích ví dụ
+
+import { createRoot } from 'react-dom/client';
+import { useState } from 'react';
+import { createPortal } from 'react-dom';
+
+function Modal({ isOpen, onClose, children }) {
+  if (!isOpen) return null;
+  return createPortal(
+    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ background: 'white', padding: '20px', borderRadius: '8px' }}>
+        {children}
+        <button onClick={onClose}>Close</button>
+      </div>
+    </div>,
+    document.body
+  );
+}
+
+function MyApp() {
+  const [isOpen, setIsOpen] = useState(false);
+  return (
+    <div>
+      <h1>My App</h1>
+      <button onClick={() => setIsOpen(true)}>Open Modal</button>
+      <Modal isOpen={isOpen} onClose={() => setIsOpen(false)}>
+        <h2>Modal Content</h2>
+        <p>This content is rendered outside the App component!</p>
+      </Modal>
+    </div>
+  );
+}
+
+createRoot(document.getElementById('root')).render(<MyApp />);
+
+
+
+	## State isOpen: 
+		
+		- useState(false) quản lý trạng thái hiển thị modal.
+		- setIsOpen(true/false) điều khiển mở/đóng modal.
+
+	## Modal Component: 
+		- if (!isOpen) return null: Không render gì nếu modal đóng.
+		- createPortal: Render modal vào document.body, tránh bị giới hạn bởi CSS của parent (e.g., overflow: hidden, z-index).
+		- Inline styles tạo overlay (nền mờ) và modal (hộp trắng) với vị trí cố định, căn giữa.		
+
+
+	## Kết quả
+		Nhấn "Open Modal" hiển thị modal ở chính giữa màn hình, thoát khỏi DOM hierarchy của MyApp. Nhấn "Close" ẩn modal.
+
+
+
+
+# Ví dụ 2: Event Bubbling với Portal
+
+import { createRoot } from 'react-dom/client';
+import { useState } from 'react';
+import { createPortal } from 'react-dom';
+
+function PortalButton({ onClick, children }) {
+  return createPortal(
+    <button style={{ position: 'fixed', bottom: '20px', right: '20px', padding: '10px', background: 'blue', color: 'white' }}>
+      {children}
+    </button>,
+    document.body
+  );
+}
+
+function App() {
+  const [count1, setCount1] = useState(0);
+  const [count2, setCount2] = useState(0);
+
+  return (
+    <div style={{ padding: '20px', border: '2px solid black', margin: '20px' }} onClick={() => setCount1(c => c + 1)}>
+      <h2>Div Clicked: {count1}</h2>
+      <h2>Button Clicked: {count2}</h2>
+      <p>The floating button is rendered outside this box using a portal, but its clicks still bubble up to this parent div!</p>
+      <PortalButton onClick={(e) => setCount2(c => c + 1)}>Floating Button</PortalButton>
+    </div>
+  );
+}
+
+createRoot(document.getElementById('root')).render(<App />);
+
+
+
+	## PortalButton: 
+		
+		- Render nút cố định ở góc dưới-phải màn hình (document.body) bằng createPortal.
+		- Mặc dù nằm ngoài DOM của App, sự kiện onClick vẫn hoạt động trong React tree.
+
+	## Event Bubbling:
+		Khi nhấn nút, sự kiện chạy qua:	
+			- onClick của PortalButton (tăng count2).
+			- onClick của parent <div> (tăng count1), vì React quản lý sự kiện theo component hierarchy, không phải DOM hierarchy.
+
+		Đây là đặc tính quan trọng: Portals giữ hành vi React event bubbling dù DOM tách biệt.
+
+	## Kết quả
+		Nhấn nút tăng cả count1 (parent div) và count2 (button), minh họa bubbling qua React tree.
+
+
+
+# 3. Tại sao dùng Portals?
+	Thoát khỏi layout parent: Modal, tooltip, notification cần vượt qua giới hạn CSS (overflow, z-index, position).
+	
+	Tách biệt DOM: Đảm bảo UI không bị ảnh hưởng bởi cấu trúc DOM của parent.
+	
+	Ứng dụng:
+		- Modal: Hiển thị hộp thoại trên toàn màn hình.
+		- Tooltip: Hiển thị nội dung nổi bên ngoài container.
+		- Notification: Hiển thị thông báo ở góc màn hình.	
+
+
+
+# Kết hợp với Forms
+
+function ModalForm({ isOpen, onClose }) {
+  const [inputs, setInputs] = useState({ name: '', fruit: 'banana' });
+  const handleChange = (e) => setInputs({ ...inputs, [e.target.name]: e.target.value });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    alert(`Submitted: ${inputs.name}, ${inputs.fruit}`);
+    onClose();
+  };
+
+  if (!isOpen) return null;
+  return createPortal(
+    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ background: 'white', padding: '20px', borderRadius: '8px' }}>
+        <form onSubmit={handleSubmit}>
+          <input type="text" name="name" value={inputs.name} onChange={handleChange} />
+          <input type="radio" name="fruit" value="apple" checked={inputs.fruit === 'apple'} onChange={handleChange} /> Apple
+          <input type="radio" name="fruit" value="banana" checked={inputs.fruit === 'banana'} onChange={handleChange} /> Banana
+          <button type="submit">Submit</button>
+          <button type="button" onClick={onClose}>Close</button>
+        </form>
+      </div>
+    </div>,
+    document.body
+  );
+}
+
+
+# 5. Lưu ý kỹ thuật (chuyên sâu)
+
+	## DOM Destination: 
+		- document.body là phổ biến, nhưng có thể dùng container khác (e.g., document.getElementById('modal-root')) để kiểm soát tốt hơn.
+		- Đảm bảo domNode tồn tại trước khi render (dùng document.createElement nếu cần).
+
+	## Event Bubbling: 
+		- Portals giữ React event system, cho phép sự kiện (click, keypress) bubble qua component tree, không phụ thuộc DOM hierarchy.
+		- Cẩn thận với stopPropagation nếu không muốn bubbling đến parent.		
+
+	## Performance: 
+		
+		- Tránh render portal quá nhiều lần (dùng useMemo hoặc điều kiện như if (!isOpen) return null).
+		- Modal lớn nên tách thành component riêng để tối ưu re-render.
+
+	## Accessibility: 
+		
+		- Thêm aria-modal, role="dialog", và focus management (e.g., useEffect để focus vào modal khi mở).
+		- Đảm bảo modal có thể đóng bằng phím (e.g., Esc key).
+
+
+# 6. Ứng dụng thực tế 
+	
+		- Modal: Form đăng nhập/đăng ký, xác nhận hành động.
+		- Tooltip/Notification: Hiển thị nội dung nổi ở vị trí cố định.
+		- Floating UI: Menu hoặc button cố định (e.g., "Back to top").
+		- Kết hợp với API (gửi form trong modal) và transitions để tăng UX.
+
+
+
+
+https://www.w3schools.com/react/react_suspense.asp
+
+
+</pre><a id='backBottom' href='../react-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
