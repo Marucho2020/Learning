@@ -1,0 +1,133 @@
+<html><head><title>Lesson 172 == Semaphore ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 172 -- Semaphore -//</h1><pre>
+# 🔹 Semaphore – Bộ đếm cấp phép (permit counter)
+	- Semaphore là một cơ chế đồng bộ hoá dựa trên permit (giấy phép).
+	- Có N permits, thread muốn tiếp tục phải acquire() (xin phép).
+	- Khi xong việc → release() (trả phép).
+
+	👉 Nếu không còn permit, thread bị block cho đến khi có permit khác trả lại.
+
+
+
+# 2. Cơ chế hoạt động 
+
+	Nội bộ, Semaphore được implement dựa trên AbstractQueuedSynchronizer (AQS)
+	Có hai loại:
+		
+		## Fair semaphore (new Semaphore(n, true)): 
+			Threads xếp hàng FIFO, công bằng.
+			Ít starvation, nhưng throughput thấp hơn.
+
+		## Non-fair semaphore (new Semaphore(n)): 
+			- Thread mới đến có thể vượt hàng.
+			- Throughput cao, nhưng có nguy cơ starvation.
+	
+
+# 3. Use cases thực tế 
+
+	## Resource Pool 
+		- Ví dụ: bạn có pool với 10 connection → semaphore với 10 permits.
+		- Thread nào muốn dùng connection → acquire().
+		- Khi trả connection → release().
+		- Nếu không có permit → thread block → tránh overload DB.
+
+
+	## Bounded concurrency 
+		- Kiểm soát số thread chạy song song trong critical section.
+		- Ví dụ: giới hạn chỉ cho 3 thread truy cập API gọi third-party để tránh rate limit
+
+	## Throttling / Rate limiting (primitive) 
+		- Semaphore có thể được dùng để giới hạn số lượng task đồng thời.
+
+
+	## Alternative cho Mutex 
+		
+		- Semaphore với 1 permit ~ binary semaphore ~ mutex.
+		- Nhưng cẩn thận: mutex là reentrant + ownership strict, còn binary semaphore thì không enforce ownership.
+		
+		
+# 	4. Senior-level code example	
+		
+class ConnectionPool {
+    private final Semaphore semaphore;
+    private final List<Connection> pool;
+
+    public ConnectionPool(int poolSize) {
+        this.semaphore = new Semaphore(poolSize, true); // fair
+        this.pool = Collections.synchronizedList(new ArrayList<>());
+        for (int i = 0; i < poolSize; i++) pool.add(new Connection("conn-" + i));
+    }
+
+    public Connection acquire() throws InterruptedException {
+        semaphore.acquire(); // block nếu hết permits
+        synchronized (pool) {
+            return pool.remove(0);
+        }
+    }
+
+    public void release(Connection conn) {
+        synchronized (pool) {
+            pool.add(conn);
+        }
+        semaphore.release();
+    }
+}
+		
+	👉 Điều này thay thế việc bạn phải tự spin-lock + counter.	
+		
+		
+		
+# 5. Ưu điểm vs Nhược điểm		
+		
+	## 	✅ Ưu điểm 
+		
+		- Đơn giản, dễ hiểu, dễ implement resource pool.
+		- Có mode fairness (quan trọng khi làm việc với IO/DB).
+		- Linh hoạt hơn synchronized (có thể cấp nhiều permits 1 lần).		
+		
+			
+	## 	⚠️ Nhược điểm / trap 
+		
+		- Không enforce ownership: Thread A acquire, Thread B release vẫn hợp lệ → dễ bug logic.
+		- Không reentrant: Nếu một thread acquire nhiều lần mà không release → deadlock chính nó.
+		- Có thể gây deadlock/livelock nếu không thiết kế chuẩn (ví dụ release quên gọi → permit leak → toàn hệ thống block).
+		
+		
+		
+# 6. So sánh với các cơ chế khác
+
+
+| Cơ chế                           | Đặc điểm                                      | Khi nào dùng                                          |
+| -------------------------------- | --------------------------------------------- | ----------------------------------------------------- |
+| `synchronized` / `ReentrantLock` | Mutual exclusion, ownership strict, reentrant | Khi bảo vệ **1 resource duy nhất**                    |
+| `Semaphore(1)`                   | Binary semaphore, không ownership strict      | Khi muốn **binary control**, ít quan trọng reentrancy |
+| `Semaphore(n)`                   | Counting semaphore, cấp phép N                | Khi có **pool tài nguyên giới hạn (DB, socket, GPU)** |
+| `CountDownLatch`                 | Đếm ngược 1 chiều, không reset                | Khi cần **đồng bộ điểm hẹn**                          |
+| `CyclicBarrier`                  | Đồng bộ nhóm threads, reset được              | Khi cần **barrier rendezvous**                        |
+
+
+# 7. Senior-level Best Practices 
+	
+	1. Prefer higher-level constructs (Executor + BlockingQueue) hơn là tự quản lý Semaphore, trừ khi bạn cần kiểm soát concurrency thô. 
+	
+	2. Always release in finally để tránh leak permit: 
+semaphore.acquire();
+try {
+    // do work
+} finally {
+    semaphore.release();
+}
+
+
+	3. Nếu dùng cho resource pool → nên wrap logic acquire/release vào abstraction, tránh cho client quên release. 
+	
+	4. Cẩn thận với tryAcquire(timeout) → nếu timeout, logic fallback phải rõ ràng.
+
+	5. Với workload CPU-bound → semaphore không giúp, dùng ForkJoinPool tuning sẽ hiệu quả hơn. 
+
+👉 Tóm lại: Semaphore là counting gatekeeper – cho phép giới hạn số thread truy cập tài nguyên. Ở level senior, bạn phải phân biệt rõ mutex vs semaphore, hiểu fair vs non-fair, và biết tránh trap non-reentrant + ownership leak.
+
+
+
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

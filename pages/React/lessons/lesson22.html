@@ -1,0 +1,275 @@
+<html><head><title>Lesson 22 == React Suspense ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../react-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 22 -- React Suspense -//</h1><pre>
+React Suspense là một tính năng mạnh mẽ trong React (từ phiên bản 16.6), cho phép ứng dụng "treo" (suspend) việc render một phần UI trong khi chờ dữ liệu hoặc code tải, đồng thời hiển thị fallback UI (như "Loading...") để duy trì trải nghiệm mượt mà. Không chỉ là công cụ loading, Suspense đại diện cho triết lý concurrent rendering của React, nơi ứng dụng có thể ưu tiên các nhiệm vụ quan trọng, tránh blocking UI và nâng cao hiệu suất. Nó tích hợp sâu với lazy loading và data fetching, giúp xây dựng ứng dụng responsive, đặc biệt trong các app lớn với network latency cao.
+
+# 1. Cách Hoạt Động Nội Bộ Của Suspense (Deeper Mechanics)
+	Suspense hoạt động dựa trên cơ chế "suspending" – khi một component con "throw" một Promise (thay vì throw error thông thường), React sẽ tạm dừng render subtree đó và fallback đến UI thay thế. Điều này tận dụng concurrent rendering: React có thể ưu tiên render các phần khác của UI mà không block toàn bộ app. Nội bộ, React sử dụng fiber architecture để schedule tasks, nơi suspended trees được "hidden" và chỉ reveal khi Promise resolve.
+
+	## Props Của <suspense></suspense> 
+		
+		- children: Phần UI chính cần render. Nếu children suspend, Suspense sẽ kích hoạt fallback.
+		- fallback: UI thay thế (có thể là component, text, hoặc bất kỳ JSX valid). Nếu fallback cũng suspend, nó sẽ propagate lên Suspense cha gần nhất.
+
+
+	## Caveats Chuyên Gia: 
+		State không được preserve nếu component suspend trước khi mount lần đầu – React sẽ retry render từ scratch khi data sẵn, tránh stale data nhưng có thể dẫn đến redundant computations nếu không optimize.
+
+		Khi content suspend sau khi đã reveal, fallback sẽ hiển thị lại trừ khi update được mark là non-urgent qua startTransition hoặc useDeferredValue (React 18+), giúp giữ responsiveness.
+		
+		React cleanup layout effects khi hide suspended content và refire chúng khi reveal, đảm bảo DOM measurements chính xác (ví dụ: tính height của element sau load)
+
+
+
+# 2. Tích Hợp Với Lazy Loading (Code Splitting) 
+	
+	Suspense thường kết hợp với React.lazy() để tải động code, giảm initial bundle size (thường 20-50% ở app lớn), đặc biệt hữu ích cho routes ít dùng. W3Schools nhấn mạnh fallback hiển thị ngay cả với loading nhanh
+
+	## Ví Dụ Cơ Bản (Từ W3Schools): Lazy load một component đơn giản 
+		
+import { createRoot } from 'react-dom/client';
+import { Suspense, lazy } from 'react';
+
+const Cars = lazy(() => import('./Cars')); // ./Cars là file riêng, tải động
+
+function App() {
+  return (
+    <div>
+      <Suspense fallback={<div>Loading...</div>}>
+        <Cars />
+      </Suspense>
+    </div>
+  );
+}
+
+createRoot(document.getElementById('root')).render(<App />);
+
+	Phân Tích: Khi import('./Cars') throw Promise (đang tải code), Suspense fallback. Trong thực tế, trên mạng chậm (3G), fallback visible rõ rệt. Chuyên gia khuyên dùng webpack hoặc Vite cho code splitting để bundle nhỏ hơn.
+
+
+
+
+	## Ví Dụ Nâng Cao: Multiple Lazy Components: Một Suspense bao quát nhiều child, reveal cùng lúc để tránh flicker.
+
+import { createRoot } from 'react-dom/client';
+import { Suspense, lazy } from 'react';
+
+const Header = lazy(() => import('./Header'));
+const Content = lazy(() => import('./Content'));
+const Sidebar = lazy(() => import('./Sidebar'));
+
+function App() {
+  return (
+    <div>
+      <Suspense fallback={<div>Loading all sections...</div>}>
+        <Header />
+        <div style={{ display: 'flex' }}>
+          <Sidebar />
+          <Content />
+        </div>
+      </Suspense>
+    </div>
+  );
+}
+
+createRoot(document.getElementById('root')).render(<App />);
+
+
+	Phân Tích Sâu: Điều này thúc đẩy "grouping" để reveal đồng bộ, nhưng nếu một child chậm, toàn bộ delay. Giải pháp: Nesting Suspense (xem phần 4) để fallback granular.
+
+
+
+# 3. Tích Hợp Với Data Fetching (Render-As-You-Fetch) 
+
+	Suspense chuyển đổi data fetching từ imperative (useEffect + loading state) sang declarative: Component suspend nếu data chưa sẵn. Từ React 18+, dùng use hook để read Promise trực tiếp, tránh waterfall fetching (sequential waits
+	
+	## Ví Dụ Cơ Bản Với Fetch: Suspend khi fetch data 
+		
+import { Suspense } from 'react';
+
+function Albums({ artistId }) {
+  const dataPromise = fetch(`https://api.example.com/artists/${artistId}/albums`)
+    .then(res => res.json());
+  const albums = use(dataPromise); // use throw Promise nếu pending
+  return <ul>{albums.map(album => <li key={album.id}>{album.title}</li>)}</ul>;
+}
+
+function ArtistPage({ artist }) {
+  return (
+    <>
+      <h1>{artist.name}</h1>
+      <Suspense fallback={<h2>🌀 Loading albums...</h2>}>
+        <Albums artistId={artist.id} />
+      </Suspense>
+    </>
+  );
+}
+	
+	Phân Tích: use read Promise, suspend component nếu pending. Lý tưởng cho SSR: Fetch ở Server Component, pass Promise sang Client để suspend client-side. Tránh tạo Promise mới mỗi render bằng cách wrap ở parent.
+	
+
+	
+	## Ví Dụ Với Server/Client Components (Next.js Style): Streaming data 
+	
+// Server Component
+import { fetchMessage } from './lib.js';
+import { Message } from './Message.js'; // Client Component
+
+export default function App() {
+  const messagePromise = fetchMessage(); // Fetch trên server
+  return (
+    <Suspense fallback={<p>Waiting for message...</p>}>
+      <Message messagePromise={messagePromise} />
+    </Suspense>
+  );
+}
+
+// Message.js (Client Component)
+'use client';
+import { use } from 'react';
+
+export function Message({ messagePromise }) {
+  const messageContent = use(messagePromise); // Suspend nếu pending
+  return <p>Here is the message: {messageContent}</p>;
+}	
+	
+	Phân Tích Sâu: Điều này cho phép streaming SSR – server gửi HTML partial với fallback, client hydrate dần. Chuyên gia: Giảm TTFB (Time to First Byte) 30-50% ở app data-heavy, nhưng yêu cầu serializable data (no functions).
+	
+	
+	
+	## 	Ví Dụ Với Thư Viện (React Query): Sử dụng suspense-enabled queries. 
+	
+	import { Suspense } from 'react';
+import { useSuspenseQuery } from '@tanstack/react-query';
+
+function Todos() {
+  const { data } = useSuspenseQuery({ queryKey: ['todos'], queryFn: fetchTodos });
+  return <ul>{data.map(todo => <li key={todo.id}>{todo.title}</li>)}</ul>;
+}
+
+function App() {
+  return (
+    <Suspense fallback={<div>Loading todos...</div>}>
+      <Todos />
+    </Suspense>
+  );
+}
+		
+		Phân Tích: Thư viện như React Query hoặc SWR wrap fetch thành Promise suspensible, tự động cache và refetch. Deeper: Tránh over-fetching bằng stale-while-revalidate.
+
+
+
+
+# 4. Nested Suspense Và Revealing Sequentially
+
+	Để fallback cụ thể, nest Suspense: Outer cho critical content nhanh, inner cho slow
+
+	## Ví Dụ Nested 
+		
+import { Suspense } from 'react';
+
+export default function ArtistPage({ artist }) {
+  return (
+    <>
+      <h1>{artist.name}</h1>
+      <Suspense fallback={<BigSpinner />}>
+        <Biography artistId={artist.id} /> {/* Load nhanh, reveal sớm */}
+        <Suspense fallback={<AlbumsGlimmer />}> {/* Placeholder cho albums */}
+          <Albums artistId={artist.id} /> {/* Load chậm */}
+        </Suspense>
+      </Suspense>
+    </>
+  );
+}
+
+function BigSpinner() { return <h2>🌀 Loading...</h2>; }
+function AlbumsGlimmer() { return <div>Albums placeholder...</div>; }
+
+
+	Phân Tích: Biography reveal trước, albums fallback riêng. Chuyên gia: Sử dụng cho progressive loading, cải thiện perceived performance (người dùng thấy tiến triển).
+
+
+
+# 5. Error Handling Với Suspense
+
+	Suspense không handle error trực tiếp; dùng ErrorBoundary cho rejected Promises.
+
+	## Ví Dụ Với ErrorBoundary: 
+	
+import { Suspense, use } from 'react';
+import { ErrorBoundary } from 'react-error-boundary';
+
+function MessageContainer({ messagePromise }) {
+  return (
+    <ErrorBoundary fallback={<p>⚠️ Something went wrong</p>}>
+      <Suspense fallback={<p>⌛ Downloading...</p>}>
+        <Message messagePromise={messagePromise} />
+      </Suspense>
+    </ErrorBoundary>
+  );
+}
+
+function Message({ messagePromise }) {
+  const content = use(messagePromise); // Reject sẽ throw lên ErrorBoundary
+  return <p>Here is the message: {content}</p>;
+}
+	
+	
+	Phân Tích: ErrorBoundary catch error từ rejected Promise. Alternative: Sử dụng .catch() trên Promise để fallback value. Trong SSR, Suspense handle server errors bằng retry client-side
+	
+	
+	
+	## Ví Dụ Client-Only Component: Tránh render server-side 
+	
+<Suspense fallback={<Loading />}>
+  <Chat />
+</Suspense>
+
+function Chat() {
+  if (typeof window === 'undefined') {
+    throw Error('Chat only on client.');
+  }
+  // Client logic...
+}	
+	
+	Phân Tích: Server render fallback, client replace. Lý tưởng cho features như WebSockets.
+	
+	
+
+
+
+#6. Best Practices Và Khái Niệm Liên Quan (Expert Insights)
+
+
+	## Best Practices: 
+	
+		- Nesting: Sử dụng multi-level để fallback chi tiết, tránh single fallback lớn gây UX kém.
+		- Transitions: Kết hợp startTransition cho non-blocking updates: startTransition(() => setState(newValue)) – suspended updates không show fallback ngay, giữ UI responsive.
+		- SSR Và Streaming: Trong Next.js, Suspense enable selective hydration – hydrate parts dần, giảm JavaScript tải ban đầu.
+		- Performance: Test trên slow networks; sử dụng preload (e.g., link rel="preload") cho resources. Tránh overuse Suspense cho sync operations.
+		- Accessibility: Fallback nên có ARIA (e.g., role="progressbar"), thông báo screen readers.
+
+	## Related Concepts: 
+	
+		- Concurrent Mode: Suspense là phần của nó, cho phép interruptible rendering.
+		- useDeferredValue: Defer low-priority values để tránh suspend frequent.
+		- Limitations: Hiện tại, data fetching native chưa ổn định; phụ thuộc frameworks. Tương lai: Full Suspense cho tất cả async ops.		
+
+
+	Tổng thể, Suspense định hình React hướng tới app resilient với uncertainties (network, code load), giảm boilerplate code 30-40% so với manual handling. Trong app enterprise, nó enable micro-frontends và better scalability, nhưng đòi hỏi hiểu sâu về concurrency để tránh pitfalls như infinite suspend loops.
+
+
+
+
+
+
+
+
+
+https://www.w3schools.com/react/react_css_styling.asp
+
+
+
+
+
+
+ 
+</pre><a id='backBottom' href='../react-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
