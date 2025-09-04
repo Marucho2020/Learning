@@ -1,0 +1,110 @@
+<html><head><title>Lesson 28 == HOC ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../react-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 28 -- HOC -//</h1><pre>
+# 1 What is a Higher Order Component?  HOC 
+
+	HOC là hàm (function) nhận component làm input và trả về component mới với enhancement. Không modify component gốc, mà compose (kết hợp) để thêm feature. Useful cho:
+	
+	- Thêm props (props proxy): Inject data hoặc functions.
+	- Manipulate rendering (render hijacking): Thay đổi JSX output.
+	- Inheritance inversion: Kế thừa từ component gốc để override.	
+	
+	Note từ bài: HOCs có thể thay bằng Hooks, nhưng vẫn useful cho auth hoặc data fetching.
+	
+	Insight chuyên gia: HOC lấy cảm hứng từ Higher-Order Functions trong functional programming (JS). Trong React, giúp DRY (Don't Repeat Yourself) bằng cách abstract logic chung. Ví dụ: Một HOC cho loading spinner có thể wrap nhiều components. Lỗi phổ biến: Quên spread props dẫn đến mất data; luôn dùng {...props}. Trong TypeScript, khai báo HOC với generics để type-safe: function withBorder<P>(Wrapped: ComponentType<P>): ComponentType<P> { ... }. Nếu dùng nhiều HOC, chain chúng (compose) với thư viện như recompose (dù giờ ít dùng).
+	
+	
+# 2. Example: Adding a Border
+	
+	Ví dụ tạo HOC withBorder để thêm border xanh cho bất kỳ component nào, minh họa tính reusable.
+	
+// This is our HOC - it adds a border to any component
+function withBorder(WrappedComponent) {  // HOC nhận component gốc
+  return function NewComponent(props) {  // Trả về component mới
+    return (
+      <div style={{ border: '2px solid blue', padding: '10px' }}>  // Wrap với div có style
+        <WrappedComponent {...props} />  // Render component gốc, truyền props
+      </div>
+    );
+  };
+}
+
+// Simple component without border
+function Greeting({ name }) {  // Component gốc đơn giản
+  return <h1>Hello, {name}!</h1>;
+}
+
+// Create a new component with border
+const GreetingWithBorder = withBorder(Greeting);  // Áp dụng HOC để tạo version mới
+
+function App() {
+  return (
+    <div>
+      <Greeting name="John" />  // Sử dụng gốc: Không border
+      <GreetingWithBorder name="Jane" />  // Sử dụng enhanced: Có border
+    </div>
+  );
+}
+	
+	- function withBorder(WrappedComponent): Định nghĩa HOC, nhận component gốc làm tham số.
+	- return function NewComponent(props): Trả về một functional component mới (anonymous function), nhận props từ cha.
+	- <div style={{ border: '2px solid blue', padding: '10px' }}>: Thêm wrapper DOM với inline style (có thể dùng className cho CSS external).
+	- <WrappedComponent {...props} />: Render component gốc, spread props để truyền tất cả prop xuống (giữ nguyên behavior, ví dụ: name prop).
+	- const GreetingWithBorder = withBorder(Greeting);: Tạo component enhanced bằng cách gọi HOC với Greeting.
+	- Trong App(): Sử dụng cả hai version để chứng minh tính linh hoạt – gốc không thay đổi.
+	
+	
+	## Insight chuyên gia: Ví dụ này là props proxy đơn giản (thêm props gián tiếp qua wrapper). Trong thực tế, mở rộng để dynamic: Truyền props vào HOC (curried HOC):
+	
+function withBorder(color = 'blue') {  // Tham số cho HOC
+  return (WrappedComponent) => (props) => (
+    <div style={{ border: `2px solid ${color}`, padding: '10px' }}>
+      <WrappedComponent {...props} />
+    </div>
+  );
+}
+const GreetingWithRedBorder = withBorder('red')(Greeting);	
+	
+	
+		
+	##	 Ví dụ mở rộng để học: 
+	
+	function withAuth(WrappedComponent) {
+  return (props) => {
+    const [isAuthenticated, setIsAuthenticated] = useState(false);  // Giả lập auth state
+    useEffect(() => { setIsAuthenticated(true); }, []);  // Check auth
+    if (!isAuthenticated) return <div>Login required</div>;
+    return <WrappedComponent {...props} />;
+  };
+}
+const ProtectedGreeting = withAuth(Greeting);
+	
+	
+	
+	
+	
+# 	3. Example Explained
+	
+	- withBorder là HOC: Nhận component, trả về mới.
+	- Wrapper thêm div border.
+	- Component gốc (Greeting) không thay đổi.
+	- Sử dụng cả hai version song song.
+	
+	Note từ bài: HOCs thay thế được bằng Hooks, nhưng useful cho patterns như auth/data fetching.
+	
+	Insight chuyên gia: Trong v18+, dùng custom hooks cho logic tương tự (ví dụ: useBorder return { wrapperStyle }, áp dụng trong component). Nhưng HOCs tốt hơn cho class components hoặc khi cần manipulate children (render hijacking). Trong libraries, HOCs giúp backward compatibility. Debug tip: Sử dụng React Profiler để check re-renders do HOC gây ra.
+	
+	
+	
+	
+	
+https://www.w3schools.com/react/react_sass_styling.asp	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+</pre><a id='backBottom' href='../react-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
