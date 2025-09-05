@@ -1,0 +1,159 @@
+<html><head><title>Lesson 177 == AbstractQueuedSynchronizer (AQS). ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 177 -- AbstractQueuedSynchronizer (AQS). -//</h1><pre>
+# 1. AQS là gì?
+
+
+	AbstractQueuedSynchronizer (AQS) là một framework cơ sở để xây dựng các công cụ đồng bộ hóa tùy chỉnh (synchronizers).
+	
+	Các lớp như ReentrantLock, Semaphore, CountDownLatch, CyclicBarrier, Phaser đều được xây dựng trên AQS.
+	
+	Ý tưởng cốt lõi: quản lý trạng thái đồng bộ (synchronization state) thông qua một biến nguyên tử (volatile int state), và duy trì hàng đợi chờ đợi (wait queue) cho các thread chưa có được quyền truy cập.
+
+	👉 Vì vậy AQS không phải là "cái lock trực tiếp", mà là một bộ khung để ta xây các loại lock và synchronizer khác nhau.
+
+
+
+# 2. Cấu trúc bên trong AQS
+
+	## state (volatile int):
+		Biểu diễn trạng thái của lock/synchronizer (ví dụ:
+			0 = unlocked, 1 = locked
+			hoặc giá trị đếm còn lại của CountDownLatch).
+
+		Được thao tác bằng các phương thức nguyên tử compareAndSetState, getState, setState.
+
+
+	## FIFO queue (CLH queue):
+	
+		Các thread không lấy được lock sẽ được xếp vào một danh sách liên kết kép kiểu CLH (Craig, Landin, and Hagersten).
+		
+		Mỗi nút (Node) đại diện cho một thread, có trạng thái SIGNAL, CANCELLED, CONDITION.	
+
+		
+# 3. Hai chế độ: Exclusive vs Shared
+
+	AQS hỗ trợ 2 loại đồng bộ:
+	
+	## 1. Exclusive (độc quyền): 
+
+		Một thread giữ lock → các thread khác chờ.
+		
+		Ví dụ: ReentrantLock.
+		
+		Override tryAcquire(int) và tryRelease(int).
+		
+
+	## Shared (chia sẻ): 
+
+		Nhiều thread có thể cùng vào (tới một giới hạn).
+		
+		Ví dụ: Semaphore, CountDownLatch.
+		
+		Override tryAcquireShared(int) và tryReleaseShared(int).
+
+
+# 4. Các bước hoạt động của AQS (flow cơ bản)
+
+
+	1. Thread gọi acquire(). 
+	
+		Nếu tryAcquire() thành công → lấy lock ngay.
+		Nếu thất bại → Thread bị xếp vào queue (enq), block (park()).
+
+	2. Khi lock được release(), AQS gọi unparkSuccessor() để đánh thức thread kế tiếp trong queue. 
+
+	3. Với shared mode, có thể đánh thức nhiều thread cùng lúc.
+
+
+# 5. Các template method quan trọng (senior cần nắm)
+
+	## Exclusive:
+
+		tryAcquire(int arg)
+		
+		tryRelease(int arg)
+		
+	## Shared: 
+		tryAcquireShared(int arg) (trả về số dư hoặc âm nếu thất bại)
+		
+		tryReleaseShared(int arg)
+
+
+	## Công cụ queue: 
+
+		acquire(), acquireInterruptibly(), tryAcquireNanos()
+		
+		release(), acquireShared(), releaseShared().
+
+👉 Lập trình viên chỉ cần override tryAcquire* / tryRelease*, còn AQS lo hết phần queue, blocking, wakeup.
+
+
+
+# 6. Ví dụ: Xây dựng Mutex bằng AQS
+
+class SimpleMutex {
+    private static class Sync extends AbstractQueuedSynchronizer {
+        @Override
+        protected boolean tryAcquire(int arg) {
+            // chỉ một thread được giữ lock (state = 0 → 1)
+            return compareAndSetState(0, 1);
+        }
+
+        @Override
+        protected boolean tryRelease(int arg) {
+            setState(0);
+            return true;
+        }
+
+        @Override
+        protected boolean isHeldExclusively() {
+            return getState() == 1;
+        }
+    }
+
+    private final Sync sync = new Sync();
+
+    public void lock() {
+        sync.acquire(1);
+    }
+
+    public void unlock() {
+        sync.release(1);
+    }
+}
+
+👉 Đây là mutex đơn giản không reentrant, nhưng nó cho thấy AQS giúp ta tạo synchronizer dễ dàng.	
+
+
+# 7. Performance và Best Practices
+
+	## Ưu điểm:
+		Code reusability: thay vì viết lại toàn bộ hàng đợi, park/unpark, ta chỉ cần implement tryAcquire/tryRelease.
+		
+		Hiệu năng: dựa trên park/unpark (LockSupport), không dùng busy-wait.
+		
+		Công bằng: hỗ trợ cả fair và non-fair.
+	
+	
+	## Nhược điểm:
+	
+		Khó debug, code phức tạp.
+		
+		Nếu override sai (ví dụ không release state đúng) → thread deadlock.
+		
+		Không phải công cụ thích hợp cho newbie, vì nó là low-level primitive.	
+	
+	
+# 	8. Senior Insights
+	
+	Khi design synchronizer custom (ví dụ: một barrier đặc biệt, throttler, hay một lock ưu tiên theo rule riêng), AQS là lựa chọn duy nhất nếu bạn muốn hiệu năng và tích hợp chuẩn với Java.	
+	
+	Thread contention: AQS có spinning nhỏ trước khi park để giảm chi phí context switch (giúp throughput cao hơn khi lock contention thấp).
+	
+	Fairness trade-off: AQS cho phép fair mode (FIFO chính xác), nhưng thực tế fair mode có thể gây throughput drop, nên hầu hết lib chọn non-fair (trừ khi business logic cần fairness).
+	
+	
+✅ Tóm lại: AbstractQueuedSynchronizer (AQS) là cốt lõi của toàn bộ java.util.concurrent.locks. Nếu bạn là senior, phải hiểu state + queue + exclusive/shared acquisition. Nắm được AQS, bạn sẽ hiểu toàn bộ các synchronizer khác và thậm chí tự viết một công cụ đồng bộ theo yêu cầu hệ thống của mình.	
+	
+	
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
