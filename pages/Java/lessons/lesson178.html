@@ -1,0 +1,101 @@
+<html><head><title>Lesson 178 == Phân biệt Instance vs  State ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 178 -- Phân biệt Instance vs  State -//</h1><pre>
+# 1. Instance là gì?
+
+	Trong Java, khi bạn new một object → JVM tạo một instance của class.
+	Instance bao gồm:
+	
+		- Identity (địa chỉ tham chiếu trên heap).
+		- State (các field/biến instance).
+		- Behavior (các method có thể thao tác lên state).
+
+	👉 Vậy bản thân một instance chính là một gói chứa state + behavior.
+
+
+
+# 2. State là gì?
+	“State” (trạng thái) trong OOP có nghĩa: giá trị hiện tại của các field của một object tại một thời điểm.
+
+class User {
+    String name;
+    int age;
+}
+
+User u = new User();
+u.name = "Bảo";
+u.age = 30;
+
+→ Object u là một instance.
+→ Cặp giá trị "Bảo", 30 là state của instance đó.
+
+
+
+# 3. Tại sao có lúc người ta gọi instance = state?
+
+
+	## (a) OOP context 
+	
+		Một instance chỉ khác instance khác ở chỗ nó có state khác.
+		
+		Nếu cùng một class, cùng behavior, thì cái duy nhất phân biệt các instance chính là state.	
+			
+		Ví dụ: User("Bảo", 30) vs User("An", 25) → khác instance vì state khác nhau.
+		Nên đôi khi người ta nói: “an instance is a stateful realization of a class” → tức là instance hiện thân bằng state.
+	
+	
+	## (b) Concurrency context (liên quan AQS, thread-safe) 
+		Trong AbstractQueuedSynchronizer, có field volatile int state. Đây là “state” biểu diễn tình trạng của synchronizer (lock/unlock, số permit còn lại...).
+		
+		Nhưng cái “synchronizer” bản thân nó cũng là một instance của class con extends AQS.
+		
+		Vì thế trong thực tế, người ta nói: “the instance’s state” → nhiều khi rút gọn thành “the instance”.
+		
+		Nghĩa là: instance đó được định nghĩa toàn bộ bởi state của nó.	
+	
+	
+# 4. Ví dụ minh hoạ (senior-level)	
+	
+		Mutex là một instance của class.
+		
+		Nhưng cái duy nhất quan trọng trong nó là state = 0 hay 1.
+		
+		Khi ta nói: “this mutex instance is locked” → ta thực chất nói “instance’s state = 1”.
+		
+		Nên trong concurrency, instance ↔ state có thể coi như gần đồng nghĩa.	
+	
+	
+	
+# 5. So sánh với Functional programming 	
+		
+	Trong FP (hàm thuần túy), không có khái niệm state → chỉ có input/output.
+	
+	Trong OOP, instance được sinh ra để gói state lại với behavior.
+	
+	Vậy nên, khi bạn nói “instance” trong OOP → thực chất bạn nói tới một stateful entity.	
+	
+	
+	
+# 6. Senior Insights
+
+	Ngữ cảnh quan trọng:
+
+		Trong design OOP: Instance ≠ State (instance = identity + state + behavior).
+		Trong concurrency, khi ta phân tích lock/synchronizer, instance thường chỉ khác nhau ở state, nên người ta dùng từ state để biểu đạt.
+
+	Nếu không hiểu chỗ nhập nhằng này, dễ nhầm khi đọc doc của JDK hoặc paper: “the state of an instance” vs “the instance itself”.
+
+	👉 Hiểu đúng thì: Instance là “container”, state là “nội dung”; nhưng ở mức thực dụng, với nhiều synchronizer hay entity thuần dữ liệu, instance chỉ còn là “state”.
+
+
+
+
+
+
+
+
+
+
+
+	
+	
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
