@@ -1,0 +1,199 @@
+<html><head><title>Lesson 32 == useEffect ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../react-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 32 -- useEffect -//</h1><pre>
+# 1. What is useEffect?
+
+	useEffect cho phép chạy code side effects sau render. Ví dụ: Fetch API, set timers, add event listeners. Callback chạy sau browser paint, tránh block UI.
+	Insight chuyên gia: Side effects phải ở useEffect để giữ component pure (predictable). React chạy effects sau commit phase. Nếu không deps, chạy mọi render; với deps, chỉ khi deps thay đổi (shallow compare). Lưu ý: Effects async, không block render.
+
+
+	Insight chuyên gia: useEffect là Hook linh hoạt nhất, nhưng dễ lạm dụng dẫn đến bugs (như infinite re-renders hoặc stale closures). Trong React 18+, nó hỗ trợ Concurrent Rendering, cho phép suspend effects. Best practice: Giữ effects focused (one per effect), dùng ESLint react-hooks/exhaustive-deps để warn missing deps. Nếu effect sync, dùng useLayoutEffect (chạy trước paint). Alternative cho complex logic: Custom Hooks hoặc thư viện như React Query cho data fetching. Nhược điểm: Async nature có thể gây race conditions; giải pháp: Cleanup hoặc abort controllers.
+	
+	
+	
+	
+	
+#2. Example: Timer cơ bản (với vấn đề)
+
+	Ví dụ dùng setTimeout để đếm giây, nhưng gây infinite loop vì không deps – effect chạy mọi render, update state, trigger re-render.
+
+
+import { useState, useEffect } from 'react';  // Import Hooks
+import { createRoot } from 'react-dom/client';
+
+function Timer() {
+  const [count, setCount] = useState(0);  // State cho đếm
+
+  useEffect(() => {  // Effect không deps
+    setTimeout(() => {
+      setCount((count) => count + 1);  // Update state sau 1s
+    }, 1000);
+  });
+
+  return <h1>I've rendered {count} times!</h1>;  // Render state
+}
+
+createRoot(document.getElementById('root')).render(
+  <Timer />
+);
+
+
+	useState(0): Khởi tạo count = 0.
+	useEffect(() => { ... }): Callback chạy sau mỗi render. setTimeout delay 1s rồi update count (functional update để tránh stale value).
+	Return JSX: Hiển thị count, re-render khi count thay đổi → loop vô tận.
+	Render: Mount component.
+	
+	Insight chuyên gia: Vấn đề: Không deps → effect chạy quá thường xuyên. Trong production, có thể gây performance issues (nhiều timers chồng). Debug: Thêm console.log trong effect để thấy loop. Best practice: Luôn thêm deps array trừ khi intentional (hiếm).
+
+
+
+# 3. Controlling When Effects Run: Dependency Array
+
+	Deps array kiểm soát execution:
+
+		- No deps: Chạy mọi render.
+		- Empty []: Chạy chỉ lần đầu (mount).
+		- Với values [dep1, dep2]: Chạy mount + khi deps thay đổi.
+
+
+	## Mã code ví dụ (no deps):
+		useEffect(() => {
+		// Runs on every render
+		});
+	
+	
+	## Mã code ví dụ (empty array):
+		useEffect(() => {
+		// Runs only on the first render
+		}, []);	
+	
+	
+	## Mã code ví dụ (with deps): 
+		
+		useEffect(() => {
+		// Runs on first render + deps changes
+		}, [prop, state]);	
+	
+	Insight chuyên gia: Deps shallow compare (===), nên primitives OK, nhưng objects/arrays cần memoize (với useMemo) để tránh unnecessary runs. ESLint warn nếu quên deps (ví dụ: Nếu dùng variable trong effect, phải deps). Nếu deps thay đổi thường, refactor logic để minimize.
+	
+	
+# 4. Example: Fix Timer với Empty Array	
+	
+	Thêm [] để effect chỉ chạy mount, tránh loop.
+	
+import { useState, useEffect } from 'react';
+import { createRoot } from 'react-dom/client';
+
+function Timer() {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    setTimeout(() => {
+      setCount((count) => count + 1);
+    }, 1000);
+  }, []);  // Empty deps: Chỉ mount
+
+  return <h1>I've rendered {count} times!</h1>;
+}
+
+createRoot(document.getElementById('root')).render(
+  <Timer />
+);
+	
+	}, []);: Empty array → effect chỉ chạy lần đầu, nhưng vẫn loop vì setCount trigger re-render (nhưng effect không rerun). Thực tế ví dụ này vẫn chỉ tăng 1 lần (fix loop), nhưng nếu cần recurring, dùng setInterval (xem cleanup).
+	
+	Insight chuyên gia: Empty deps tương đương componentDidMount. Useful cho one-time setup (fetch initial data). Lỗi: Stale closures nếu deps thiếu (ví dụ: count trong callback là 0 forever). Giải pháp: Functional update setCount(prev => prev + 1).
+	
+	
+# 	5. Example: Effect with Dependency
+	
+	Effect phụ thuộc count: Chạy khi count thay đổi, update calculation.
+	
+import { useState, useEffect } from 'react';
+import { createRoot } from 'react-dom/client';
+
+function Counter() {
+  const [count, setCount] = useState(0);
+  const [calculation, setCalculation] = useState(0);
+
+  useEffect(() => {
+    setCalculation(() => count * 2);  // Update dựa trên count
+  }, [count]);  // Deps: count
+
+  return (
+    <>
+      <p>Count: {count}</p>
+      <button onClick={() => setCount((c) => c + 1)}>+</button>
+      <p>Calculation: {calculation}</p>
+    </>
+  );
+}
+
+createRoot(document.getElementById('root')).render(
+  <Counter />
+);	
+	
+	[count]: Effect rerun khi count thay đổi.
+setCalculation(() => count * 2): Functional setter (không cần deps cho count vì closure).
+	
+	
+	Insight chuyên gia: Useful cho derived state (nhưng ưu tiên compute trong render nếu sync: const calculation = count * 2;). Multiple deps: [dep1, dep2] – rerun nếu bất kỳ thay đổi. Best practice: Nếu effect fetch data, thêm abort signal để tránh race.	
+	
+	Fetch data với deps:
+	
+	useEffect(() => {
+  const controller = new AbortController();
+  fetch(`https://api.example.com/data/${id}`, { signal: controller.signal })
+    .then(res => res.json())
+    .then(setData);
+  return () => controller.abort();  // Cleanup
+}, [id]);  // Rerun khi id thay đổi
+	
+	
+	
+	
+# 	6. Effect Cleanup
+
+Return function từ effect để cleanup (unmount hoặc trước rerun). Useful cho clear timers, unsubscribe, remove listeners để tránh leaks.
+
+
+import { useState, useEffect } from 'react';
+import { createRoot } from 'react-dom/client';
+
+function Timer() {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    let timer = setTimeout(() => {  // Name timer để clear
+      setCount((count) => count + 1);
+    }, 1000);
+
+    return () => clearTimeout(timer);  // Cleanup
+  }, []);
+
+  return <h1>I've rendered {count} times!</h1>;
+}
+
+createRoot(document.getElementById('root')).render(
+  <Timer />
+);
+
+let timer = setTimeout(...): Lưu ID để clear.
+return () => clearTimeout(timer): Chạy khi unmount hoặc deps thay đổi (trước effect rerun).
+
+
+	Insight chuyên gia: Cleanup chạy sync, trước effect tiếp theo. Must-have cho subscriptions (WebSockets, event listeners). Ví dụ với interval (recurring timer):
+
+useEffect(() => {
+  const interval = setInterval(() => setCount(prev => prev + 1), 1000);
+  return () => clearInterval(interval);
+}, []);
+
+	Lỗi: Quên cleanup → memory leaks (đặc biệt hot module reload). Best practice: Luôn cleanup resources created in effect.
+
+
+
+
+
+https://www.w3schools.com/react/react_usecontext.asp
+
+
+</pre><a id='backBottom' href='../react-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
