@@ -1,0 +1,140 @@
+<html><head><title>Lesson 184 == Function Chaining ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 184 -- Function Chaining -//</h1><pre>
+# 1. Function Chaining 
+
+	Trong java.util.function.Function<T,R> có 2 method quan trọng:
+	
+		- andThen (〜した後に, ato ni):
+			f1.andThen(f2) = trước tiên chạy f1, rồi lấy kết quả đưa vào f2.
+			Công thức: f2(f1(x))
+
+		- compose (合成, gōsei): 
+			f2.compose(f1) = chạy f1 trước, sau đó mới f2.
+			Công thức: f2(f1(x))
+
+
+		Thực ra, f1.andThen(f2) ≡ f2.compose(f1) (chỉ khác về cách đọc code từ trái qua phải).
+
+
+	## Ví dụ: 
+
+Function<String, String> trim = String::trim;
+Function<String, String> toUpper = String::toUpperCase;
+
+// andThen
+Function<String, String> f1 = trim.andThen(toUpper);
+System.out.println(f1.apply("   hello ")); // "HELLO"
+
+// compose
+Function<String, String> f2 = toUpper.compose(trim);
+System.out.println(f2.apply("   hello ")); // "HELLO"
+	
+		➡️ Senior note: dùng andThen khi muốn code “đọc xuôi” theo pipeline, dễ cho reviewer.
+
+
+
+# 2. Predicate Logic Composition
+
+	Predicate<T> cung cấp:
+	
+		p1.and(p2) → cả hai đều true.
+		
+		p1.or(p2) → một trong hai true.
+		
+		p1.negate() → phủ định (NOT).
+
+
+	## Ví dụ:
+
+Predicate<Employee> hasEmail = e -> e.getEmail() != null;
+Predicate<Employee> highSalary = e -> e.getSalary() > 5000;
+
+// AND
+Predicate<Employee> valid = hasEmail.and(highSalary);
+
+// OR
+Predicate<Employee> valid2 = hasEmail.or(highSalary);
+
+// NEGATE
+Predicate<Employee> notHighSalary = highSalary.negate();
+
+➡️ Đây là cách để viết business rules kiểu DSL (Domain Specific Language).
+Ví dụ: eligibleForPromotion = hasEmail.and(highSalary).and(e -> e.isActive());
+
+
+
+# 3. Consumer Chaining
+
+	Consumer<T> có andThen:
+	
+		- c1.andThen(c2) → chạy c1.accept(x) rồi c2.accept(x) với cùng input.
+		- Đây thường dùng cho logging, audit, hoặc khi muốn nhiều side-effect trên cùng data.
+
+Consumer<Employee> log = e -> System.out.println("Logging: " + e.getName());
+Consumer<Employee> save = e -> saveToDB(e);
+
+Consumer<Employee> combined = log.andThen(save);
+
+combined.accept(new Employee("Bảo", "bao@corp.jp", 6000));
+
+
+
+# 4. Enterprise Example: Rule Validation Chain
+
+	Giả sử bạn muốn validate nhân viên theo 3 điều kiện:
+		- Email không null
+		- Age ≥ 18
+		- Status = ACTIVE
+
+	Ta dùng Predicate chain:
+
+Predicate<Employee> hasEmail = e -> e.getEmail() != null && !e.getEmail().isBlank();
+Predicate<Employee> adult = e -> e.getAge() >= 18;
+Predicate<Employee> active = e -> e.getStatus() == Status.ACTIVE;
+
+Predicate<Employee> isValidEmployee = hasEmail.and(adult).and(active);
+
+Employee emp = new Employee("A", "a@corp.jp", 25, Status.ACTIVE);
+System.out.println(isValidEmployee.test(emp)); // true
+
+
+	Thay vì viết một hàm if-else dài, ta chain predicate để logic rõ ràng, dễ mở rộng (thêm rule thì chỉ .and(...)).
+
+Đây là nền tảng để build validation framework hoặc rule engine trong enterprise system.
+
+
+
+# 5. Liên hệ thi Java Silver & Gold 
+
+	Java Silver: họ sẽ hỏi về output của f1.andThen(f2) vs f2.compose(f1).
+	Java Gold: đi xa hơn → viết chain nhiều Predicate, debug xem output logic.
+	Enterprise thực tế: pattern này hay dùng trong:
+
+		- Data validation (form input, entity validation).
+		- Stream API pipelines (filter, map, forEach chain).
+		- Event processing (chạy nhiều Consumer liên tiếp).
+
+
+
+# 6. Tổng hợp (Senior Insight)
+	
+	- Function chaining = pipeline transform (như Unix pipe).
+	
+	- Predicate chaining = boolean algebra (AND, OR, NOT).
+	
+	- Consumer chaining = multi-side effect execution.
+	
+	- Dùng chaining để giảm if-else, tăng khả năng tái sử dụng và dễ test unit (mỗi rule = 1 predicate).
+
+
+
+
+		
+		
+		
+		
+		
+		
+		
+		
+		
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
