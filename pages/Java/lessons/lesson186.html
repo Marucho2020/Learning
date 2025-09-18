@@ -1,0 +1,53 @@
+<html><head><title>Lesson 186 == Pipeline ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 186 -- Pipeline -//</h1><pre>
+# 1. Pipeline trong lập trình nói chung
+
+	Khái niệm: Pipeline = nhiều bước xử lý nối tiếp nhau, đầu ra của bước này → đầu vào của bước kế.
+
+	Giống như dây chuyền sản xuất: nguyên liệu đi qua nhiều công đoạn, cuối cùng ra sản phẩm.
+
+	Ưu điểm:
+		Dễ tách nhỏ logic.
+		
+		Dễ tái sử dụng từng bước.
+		
+		Dễ thay đổi/thêm bước mới.
+
+
+# 2. Pipeline trong Java (liên hệ Functional Interface) 
+	Functional Interfaces + chaining = cách Java hiện thực hóa pipeline.
+
+Function<String, String> trim = String::trim;
+Function<String, String> toUpper = String::toUpperCase;
+
+Function<String, String> pipeline = trim.andThen(toUpper);
+System.out.println(pipeline.apply("   hello ")); // "HELLO"
+
+➡️ Input " hello " đi qua bước trim → kết quả "hello" → tiếp tục qua toUpper → "HELLO".
+
+
+
+	## Predicate pipeline
+
+Predicate<Employee> hasEmail = e -> e.getEmail() != null;
+Predicate<Employee> adult = e -> e.getAge() >= 18;
+
+Predicate<Employee> valid = hasEmail.and(adult);
+	➡️ Một nhân viên đi qua rule check email rồi rule check age → cuối cùng trả true/false.
+
+
+	## Consumer pipeline 
+Consumer<Employee> log = e -> System.out.println("Logging " + e.getName());
+Consumer<Employee> save = e -> saveToDB(e);
+
+Consumer<Employee> pipeline = log.andThen(save);
+pipeline.accept(emp);
+
+	➡️ Nhân viên đi qua pipeline → đầu tiên log rồi lưu DB.
+
+
+
+
+
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

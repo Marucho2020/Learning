@@ -1,0 +1,270 @@
+<html><head><title>Lesson 36 == User Callback ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../react-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 36 -- User Callback -//</h1><pre>
+#  Giới Thiệu Về Hook useCallback Trong React (Mức Độ Senior)
+
+	useCallback là một hook quan trọng trong React, được giới thiệu từ phiên bản 16.8, dùng để memoize (lưu cache) các callback functions, giúp tránh việc recreate function không cần thiết trong mỗi render. Điều này cải thiện performance bằng cách giảm re-renders của child components, đặc biệt khi kết hợp với React.memo hoặc useMemo. Ở mức độ senior, chúng ta cần hiểu sâu về referential equality (so sánh tham chiếu), cách hook hoạt động trong closure và dependency array, tích hợp với các hook khác để tránh stale closures hoặc infinite loops, và các tình huống tối ưu hóa trong large-scale apps (như với Context, Redux, hoặc heavy computations). Memoization ở đây dựa trên shallow compare của dependencies, tương tự useMemo, nhưng tập trung vào functions.
+
+
+
+# 1. Cơ Chế Hoạt Động Nội Bộ Của useCallback 
+
+	Định nghĩa cơ bản: useCallback(callback, dependencies) nhận một callback function và mảng dependencies, trả về version memoized của callback. Callback chỉ được recreate khi deps thay đổi (shallow compare). Nếu deps là [], callback stable mãi mãi.	
+
+	Memoization và Referential Equality: Trong React, mỗi render tạo mới functions (vì JS functions là objects). Điều này làm props thay đổi theo referential (!==), gây re-render child dù giá trị logic không đổi. useCallback cache function instance, giữ reference ổn định.
+
+
+	## So sánh với useMemo: 
+
+		useMemo: Memoize bất kỳ value nào (số, object, array), dùng cho computations nặng.
+
+		useCallback: Là trường hợp đặc biệt của useMemo cho functions, tương đương useMemo(() => callback, deps). Dùng khi cần pass function làm prop hoặc dep.
+
+		Khác biệt: useMemo chạy computation mỗi khi deps đổi; useCallback chỉ return cached function mà không chạy nó.
+
+
+
+	## Lifecycle và Performance:
+		Hook chạy ở render phase, cache ở React's fiber tree. Giảm re-renders bằng stable props. Ở senior level: Theo dõi deps để tránh bugs (quên dep gây stale values); dùng ESLint plugin (react-hooks/exhaustive-deps) để lint deps.	
+	
+	## Pitfalls chuyên sâu
+	
+		- Missing deps: Nếu quên dep, callback capture stale values từ closure cũ.
+		- Over-memoization: Memoize mọi thứ gây memory overhead; chỉ dùng khi cần (ví dụ: child re-render costly).
+		- Infinite loops: Nếu dep bao gồm state từ setter trong callback, gây loop.
+		- Không mutate: Callback nên pure nếu có thể, tránh side effects ngoài dispatch.
+	
+# 	Ví dụ cơ bản
+	
+	// App.js (không useCallback - vấn đề)
+import { useState } from 'react';
+import Todos from './Todos';
+
+function App() {
+  const [count, setCount] = useState(0);
+  const [todos, setTodos] = useState([]);
+
+  const increment = () => setCount(c => c + 1);
+  const addTodo = () => setTodos(t => [...t, 'New Todo']); // Recreate mỗi render
+
+  console.log('App render');
+  return (
+    <>
+      <Todos todos={todos} addTodo={addTodo} />
+      <hr />
+      <div>Count: {count} <button onClick={increment}>+</button></div>
+    </>
+  );
+}
+
+// Todos.js
+import { memo } from 'react';
+
+const Todos = memo(({ todos, addTodo }) => {
+  console.log('Todos render'); // Re-render dù todos không đổi
+  return (
+    <>
+      <h2>My Todos</h2>
+      {todos.map((todo, index) => <p key={index}>{todo}</p>)}
+      <button onClick={addTodo}>Add Todo</button>
+    </>
+  );
+});
+	
+	Giải thích: Khi click "+", App re-render, addTodo recreate (reference mới), Todos re-render dù todos không đổi vì memo shallow compare props.	
+	
+	
+	## Giải pháp với useCallback:
+	
+// App.js (với useCallback)
+import { useState, useCallback } from 'react';
+import Todos from './Todos';
+
+function App() {
+  const [count, setCount] = useState(0);
+  const [todos, setTodos] = useState([]);
+
+  const increment = () => setCount(c => c + 1);
+  const addTodo = useCallback(() => setTodos(t => [...t, 'New Todo']), [setTodos]); // Memoize, deps rỗng nếu setTodos stable
+
+  console.log('App render');
+  return (
+    <>
+      <Todos todos={todos} addTodo={addTodo} />
+      <hr />
+      <div>Count: {count} <button onClick={increment}>+</button></div>
+    </>
+  );
+}
+
+	Giải thích: addTodo stable trừ khi deps đổi (ở đây [], nên stable mãi). Todos chỉ re-render khi todos đổi. Lưu ý: deps nên bao gồm todos nếu callback dùng nó, nhưng ở đây dùng updater function nên không cần.
+
+
+
+# 2. Use Case Nâng Cao: Tích Hợp Với useEffect Và Debounce
+
+	Dùng để stable callback trong deps của useEffect, tránh re-run effect không cần.
+	Ví dụ: Debounce Search Với useCallback (Tối ưu API calls):
+import { useState, useCallback, useEffect } from 'react';
+
+function DebouncedSearch() {
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState([]);
+
+  // Memoize debounce function
+  const debouncedSearch = useCallback((q) => {
+    const timer = setTimeout(() => {
+      // Giả lập API call
+      console.log(`Searching for: ${q}`);
+      setResults([`Kết quả 1 cho ${q}`, `Kết quả 2 cho ${q}`]);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, []); // Deps rỗng, stable debounce
+
+  useEffect(() => {
+    if (query) {
+      return debouncedSearch(query); // Cleanup previous timeout
+    }
+  }, [query, debouncedSearch]); // debouncedSearch stable nhờ useCallback
+
+  return (
+    <>
+      <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Tìm kiếm..." />
+      <ul>{results.map((res, idx) => <li key={idx}>{res}</li>)}</ul>
+    </>
+  );
+}
+
+	Giải thích: useCallback giữ debouncedSearch stable, useEffect chỉ re-run khi query đổi, tránh recreate timeout mỗi render. Không useCallback, debouncedSearch recreate, gây useEffect loop.
+
+
+
+# 3. Use Case Nâng Cao: Pass Callback Qua Context Hoặc Custom Hooks
+
+
+	Trong Context, callback cần stable để tránh re-render consumers.
+	Ví dụ: Global Counter Với Context Và useCallback:
+import { createContext, useContext, useState, useCallback } from 'react';
+
+const CounterContext = createContext();
+
+function CounterProvider({ children }) {
+  const [count, setCount] = useState(0);
+
+  const increment = useCallback(() => setCount(c => c + 1), []); // Stable
+  const decrement = useCallback(() => setCount(c => c - 1), []);
+
+  return (
+    <CounterContext.Provider value={{ count, increment, decrement }}>
+      {children}
+    </CounterContext.Provider>
+  );
+}
+
+function CounterDisplay() {
+  const { count } = useContext(CounterContext);
+  return <h1>Count: {count}</h1>;
+}
+
+function CounterButtons() {
+  const { increment, decrement } = useContext(CounterContext);
+  console.log('Buttons render'); // Không re-render không cần
+  return (
+    <>
+      <button onClick={increment}>+</button>
+      <button onClick={decrement}>-</button>
+    </>
+  );
+}
+
+// App.js
+function App() {
+  return (
+    <CounterProvider>
+      <CounterDisplay />
+      <CounterButtons />
+    </CounterProvider>
+  );
+}
+
+	Giải thích: useCallback giữ increment/decrement stable, tránh re-render CounterButtons khi Provider re-render (ví dụ: thêm state khác). Ở senior, dùng cho performance trong large context trees.
+
+
+# 4. Use Case Nâng Cao: Tích Hợp Với React.memo Và Heavy Child
+	Dùng cho child với expensive renders.
+	Ví dụ: Expensive List Với Filter Callback:
+
+import { useState, useCallback, memo } from 'react';
+
+const ExpensiveItem = memo(({ item, onSelect }) => {
+  console.log(`Render item ${item}`); // Heavy render giả lập
+  return <li onClick={() => onSelect(item)}>{item}</li>;
+});
+
+function FilteredList() {
+  const [filter, setFilter] = useState('');
+  const items = ['Apple', 'Banana', 'Cherry', 'Date', 'Elderberry'];
+
+  const handleSelect = useCallback((selected) => {
+    alert(`Selected: ${selected}`);
+  }, []); // Stable callback
+
+  const filteredItems = items.filter(item => item.toLowerCase().includes(filter.toLowerCase()));
+
+  return (
+    <>
+      <input value={filter} onChange={e => setFilter(e.target.value)} placeholder="Lọc..." />
+      <ul>
+        {filteredItems.map(item => (
+          <ExpensiveItem key={item} item={item} onSelect={handleSelect} />
+        ))}
+      </ul>
+    </>
+  );
+}
+
+
+
+# 5. Use Case Nâng Cao: Custom Hook Với useCallback
+	Encapsulate logic reusable.
+	Ví dụ: useLogger Custom Hook:
+
+import { useCallback } from 'react';
+
+function useLogger(prefix) {
+  // Memoize logger để stable trong deps khác
+  const log = useCallback((message) => {
+    console.log(`${prefix}: ${message}`);
+  }, [prefix]);
+
+  return log;
+}
+
+function Component() {
+  const logger = useLogger('MyComponent');
+
+  // Sử dụng trong effect hoặc callback khác
+  return <button onClick={() => logger('Clicked')}>Log</button>;
+}
+
+
+# Kết Luận Và Best Practices (Mức Chuyên Gia)
+
+	Khi dùng useCallback: Callback pass làm prop, deps trong useEffect, debounce/throttle, context values. Chỉ dùng nếu re-render costly (measure với React Profiler).
+	Tránh: Memoize primitive callbacks đơn giản (overhead > lợi ích); quên deps gây stale data.
+	Tích hợp: Với useMemo cho values, useEffect cho side effects, React.memo cho components.
+	Performance tip: Deps minimum, dùng updater functions (c => c + 1) để tránh deps trên state. Trong TS, type callback với React.FC hoặc generics.
+	Debug: React DevTools inspect memoized functions; console.log check renders.
+	Advanced: Kết hợp Immer/Proxy cho immutable, hoặc libs như ahooks cho pre-built memoized utils.
+
+
+
+https://www.w3schools.com/react/react_usememo.asp
+
+
+
+
+
+
+
+
+
+</pre><a id='backBottom' href='../react-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

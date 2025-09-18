@@ -1,0 +1,106 @@
+<html><head><title>Lesson 185 == Chaining Functional Interfaces ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 185 -- Chaining Functional Interfaces -//</h1><pre>		
+# 1. Function Chaining – Tư duy Senior	
+		
+	andThen: chạy xuôi theo pipeline.
+		f1.andThen(f2) = f2(f1(x)).
+
+	compose: chạy ngược.
+		f2.compose(f1) = f2(f1(x)).
+
+	Thực chất toán học là giống nhau, khác biệt semantic:
+	compose → “tôi muốn áp dụng Y nhưng trước tiên chuẩn hóa X” → hợp với low-level data transform.
+
+	👉 Senior-level: chọn andThen hay compose không phải tùy tiện, mà phụ thuộc cách mô tả business để code dễ đọc/dễ review.
+
+
+# 2. Predicate Logic Composition – Senior-level Boolean Algebra
+
+	and / or / negate thực chất là Boolean algebra operators.
+	Ta có thể xây dựng DSL rule engine bằng cách chain Predicate.
+
+	## Ví dụ: 
+Predicate<Employee> hasEmail = e -> e.getEmail() != null && !e.getEmail().isBlank();
+Predicate<Employee> adult = e -> e.getAge() >= 18;
+Predicate<Employee> active = e -> e.isActive();
+
+Predicate<Employee> valid = hasEmail.and(adult).and(active);
+
+	Senior insight:
+		and/or trong Predicate ngắn gọn hơn if-else.
+		Có thể tái sử dụng rules → tách nhỏ → dễ unit test từng rule.
+		Dễ plug-in thêm rule: .and(e -> e.getSalary() > 5000).	
+		
+	👉 Đây là bước đầu để build rule engine, thay vì nhét hết logic vào service class.
+
+
+# 3. Consumer Chaining – Quản lý Side-Effects
+
+	Consumer là kiểu side-effect function: nó không trả về gì, chỉ thực hiện hành động.
+	c1.andThen(c2) = chạy c1.accept(x) rồi c2.accept(x).
+
+Consumer<Employee> auditLog = e -> auditService.log(e);
+Consumer<Employee> notify = e -> mailService.sendMail(e);
+
+Consumer<Employee> pipeline = auditLog.andThen(notify);
+pipeline.accept(employee);
+
+
+	Cẩn thận exception propagation: nếu c1 ném exception, c2 sẽ không chạy. Trong enterprise cần có cơ chế fallback hoặc try-catch wrapper.
+
+	Thường dùng trong event-driven system (log + notify + update metrics).
+
+
+# 4. Enterprise Example – Validation Chain
+
+	## Thay vì viết một method to đùng:
+	
+boolean isValid(Employee e) {
+    return e.getEmail() != null 
+        && e.getAge() >= 18 
+        && e.isActive();
+}
+
+
+	## Ta tách rule:	
+		
+Predicate<Employee> hasEmail = e -> e.getEmail() != null && !e.getEmail().isBlank();
+Predicate<Employee> adult = e -> e.getAge() >= 18;
+Predicate<Employee> active = Employee::isActive;
+
+Predicate<Employee> isValid = hasEmail.and(adult).and(active);
+
+	- Tách rule → dễ reuse trong nhiều context (ví dụ validate trước khi gửi mail, trước khi ghi DB).
+	- Dễ mở rộng → chỉ cần .and(newRule).
+	- Dễ test unit từng rule thay vì test cả hàm to đùng.
+	- Trong enterprise, kiểu code này thường wrap vào ValidationService hoặc Rule Engine.
+
+
+# 5. Liên hệ thi Silver / Gold
+
+	Java Silver: đề thường hỏi output của function chain (andThen vs compose), hoặc predicate chain.
+
+	Java Gold: họ sẽ chơi bẫy:
+	
+		- Consumer c1 = ...; Consumer c2 = ...; c1.andThen(c2); nhưng quên .accept(x) → không chạy gì cả.
+		- Exception trong Consumer chain → có chạy tiếp không? (Không).
+		- Function chain trong Stream API: map(f1.andThen(f2)).
+
+# 6. Tổng kết Senior-level
+
+
+	Function chaining = data pipeline. Chọn andThen hay compose dựa vào business semantics.
+	
+	Predicate chaining = boolean DSL. Tách nhỏ rules, compose thành rule engine.
+	
+	Consumer chaining = multi side-effect execution, nhưng phải chú ý exception propagation.
+	
+	Enterprise: áp dụng vào validation, logging, auditing, workflow pipeline.
+	
+	Thi Silver: nhớ method signatures (apply, test, accept) + thứ tự chạy.
+	
+	Thi Gold: thêm context enterprise (stream, exception, reuse rules).
+
+
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
