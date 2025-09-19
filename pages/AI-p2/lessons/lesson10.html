@@ -1,0 +1,171 @@
+<html><head><title>Lesson 10 == Phân loại dữ liệu ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../AI-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 10 -- Phân loại dữ liệu -//</h1><pre>
+#Khái niệm 
+		Phân loại dữ liệu là một kỹ thuật quan trọng trong học máy(machine learning) và trí tuệ nhân tạo, giúp chia các đối tượng hoặc mẫu dữ liệu vào các nhóm hoặc nhãn cụ thể. Phân loại được sử dụng rộng rãi trong nhiều ứng dụng thực tế, chẳng hạn như phân loại email spam, nhận diện khuôn mặt, chuẩn đoán y khoa và nhiều hơn thế nữa. 
+		
+		Quá trình phân loại bao gồm việc xây dựng mô hình dựa trên tập dữ liệu huấn luyện, sau đó sử dụng mô hình này để dự đoán nhãn cho các dữ liệu mới. Các mô hình phân loại phổ biến như phân loại nhị phân, phân loại đa lớp, phân loại nhiều nhãn, phân loại thứ tự, phân loại chuỗi thời gian, phân loại đồ thị. 
+		
+# Phân loại nhị phân (Binary Classification)
+
+	## Khái niệm 
+		Phân loại nhị phân là trường hợp đơn giản nhất của phân loại, nơi dữ liệu được phân thành hai nhóm. Ví dụ trong một hệ thống phát hiện email spam, mỗi email được phân loại vào trong một trong hai nhóm spam hoặc không spam 
+		
+	## Mô hình toán học 
+		Mô hình phân loại nhị phân có thể được biểu diễn bằng hàm tuyến tính như sau : 
+		
+					y = o(w^T . x + b )
+				
+				x là vector đặc trưng của mẫu dữ liệu 
+				w là vector trọng số của mô hình  
+				b là hằng số điều chỉnh (bias )
+				o  là hàm sigmoid, dùng để chuẩn hóa đầu ra thành xác suất từ 0 đến 1 
+				
+	## Ứng dụng với Pytorch 
+			PhanLoaiDuLieuByPytorch.py
+		
+			Trong ví dụ này , chúng ta xây dựng một mô hình đơn giản để phân loại dữ liệu XOR thành hai lớp. Dữ liệu XOR là một ví dụ kinh điển,nơi mô hình tuyến tính đơn giản không thể phân loại chính xác. Tuy nhiên với kết nối đầy đủ và hàm kích hoạt sigmoid, mô hình có thể học cách phân loại đúng sau khi được huấn luyện 
+			
+# Phân loại đa lớp(Multiclass Classification)
+	## Khái niệm  
+		Phân loại đa lớp là một mở rộng của phân loại nhị phân, nơi dữ liệu có thể được phân loại vào nhiều nhóm hoặc nhãn khác nhau. Ví dụ trong bài toán phân loại hình ảnh, chúng ta có thể cần phân loại các bức ảnh thành nhiều loại khác nhau, chắng hạn như chó , mèo ,  chim 
+		
+	## Mô hình toán học 
+		Hàm mất mát được sử dụng phổ biến nhất trong phân loại đa lớp là Cross- Entropy Loss, được định nghĩa như sau  
+				
+			L = – \sum_{i=1}^{C} y_i \log(\hat{y}_i)
+			
+			C là số lượng các lớp  (classes)
+			y_i là nhãn thực tế  (dạng one-hot)
+			\hat{y}_i là xác suất dự đoán cho lớp y 
+		
+	## Ứng dụng với Pytorch  
+		Đây là ví dụ về cách xây dựng mô hình phân loại đa lớp bằng PyTorch 
+			MulticlassClassificationPlotByPyTorch.py
+
+# Phân loại nhiều nhãn(Multi-label Classication)
+	
+	## Khái niệm  
+		Phân loại nhiều nhãn là trường hợp mà mỗi mẫu dữ liệu có thể được gán vào nhiều nhãn cùng một lúc. Điều này khác với phân loại đa lớp, nơi mỗi mẫu chỉ được gán vào một lớp. Ví dụ, một bài báo cáo có thể được gán nhiều nhãn như "thể thao" , "bóng đá" , "quốc tế"
+		
+	## Mô hình toán học 
+		Mô hình phổ biến cho phân loại nhiều nhãn là huấn luyện một bộ phân loại nhị phân cho từng nhãn một cách độc lập. Cho từng nhãn l, ta xây dựng một hàm phân loại nhị phân  
+			
+				f_l: \mathbb{R}^d \rightarrow \{0, 1\}
+
+			f_l(x) = 1 nếu mẫu x thuộc về lớp l 
+			f_l(x) = 0 nếu mẫu x không thuộc về lớp l 
+			
+		Do đó, mô hình phân loại nhiều nhãn có thể được biểu diễn dưới dạng: 
+			
+			\hat{Y} = f(x) = \left\{ l \in \{1, 2, \dots, L\} \mid f_l(x) = 1 \right\}
+			
+	## Ứng dụng với Pytorch  
+			file  
+				MultilabelClassificationPlotByPyTorch.py
+
+# Phân loại thứ tự(Ordinal Classification)
+
+	## Khái niệm  
+		Trong lĩnh vực học máy và trí tuệ nhân tạo, phân loại thứ tự(Ordinal Classication) là một phương pháp phân loại đặc biệt, nơi các nhãn(labels) không chỉ đơn thuần là các lớp con riêng biệt mà còn có một thứ tự rõ ràng giữa chúng. Khác với phân loại đa lớp(multiclass classification), nơi các lớp không có thứ tự cố định, phân loại thứ tự đòi hỏi phải tôn trong mỗi quan hệ thứ tự giữa các lớp. Điều này có nghĩa là các lớp có mối liên hệ về mặt định lượng, chẳng hạn như "thấp" , "trung bình" ,"cao"
+		
+	## Mô hình toán học 
+		Giả sử chúng ta có các lớp thứ tự {1,2,...,L} nơi lớp 1 là thấp nhất và lớp L là cao nhất. Để mô hình hóa bài toán phân loại thứ tự, ta thường sử dụng các mô hình hồi quy hoặc mô hình phân loại với một số điều chỉnh để phản ánh thứ tự của các lớp.   
+
+	## Hàm mất mát (Loss Function)
+		
+		Hàm mất mát cho phân loại thứ tự có thể được định nghĩa để phản ánh thứ tự giữa các lớp. Một ví dụ là hàm mất mát độ chính xác trung bình (mean absolute error) giữa dự đoán và thực tế 
+				\mathcal{L}(\theta) = \frac{1}{N} \sum_{i=1}^{N} \left| \hat{y}_i – y_i \right|
+				
+			Trong đó  
+				\hat{y}_i là dự đoán của mô hình cho mẫu i 
+				y_i			là lớp thực tế của mẫu i , và nó được ánh xạ thành giá trị số để phản ánh thứ tự 
+				
+				
+	## Hàm kích hoạt(Actication Function )
+		Các mô hình phân loại thứ tự có thể sử dụng hàm kích hoạt(actication function) như hàm softmax để dự đoán xác suất của từng lớp, sau đó áp dụng các điều chỉnh để phản ánh thứ tự. Hàm softmax cho xác suất của từng lớp được tính như sau  
+			\hat{p}_l = \frac{e^{z_l}}{\sum_{k=1}^{L} e^{z_k}}
+
+			Trong đó  
+				z_l	là đầu ra của mô hình cho lớp l 
+				\hat{p}_l	là xác suất dự đoán của lớp  l 
+				
+	## Sử dụng mô hình hồi quy 
+		Mô hình hồi quy thứ tự có thể được sử dụng để dự đoán điểm số hoặc giá trị liên tục cho mỗi mẫu, sau đó phân loại điểm số đó thành các lớp thứ tự. Ví dụ, một mô hình hồi quy có thể dự đoán một giá trị liên tục y , và sau đó giá trị này được ánh xạ vào lớp thứ tự bằng cách sử dụng các ngưỡng 
+	
+			\text{Class}(y) = \begin{cases}
+			1 & \text{nếu } y \leq \theta_1 \\
+			2 & \text{nếu } \theta_1 < y \leq \theta_2 \\ \vdots \\ L & \text{nếu } y > \theta_{L-1}
+			\end{cases}
+	
+		trong đó 
+				\theta_1, \theta_2, \ldots, \theta_{L-1}	 là các ngưỡng phân chia các lớp.
+	
+	
+	## Ứng dụng với Pytorch 
+			OrdinalClassificationPlotByPyTorch.py
+
+# Phân loại chuỗi thời gian (Time Series Classification)
+
+	## Khái niệm
+		Phân loại chuỗi thời gian (Time Series Classification) là một phương pháp phân loại trong lĩnh vực học máy, nơi dữ liệu đầu vào là các chuỗi thời gian, tức là một tập hợp các điểm dữ liệu được sắp xếp theo thứ tự thời gian. Các chuỗi thời gian có thể đại diện cho bất kỳ hiện tượng nào thay đổi theo thời gian, chẳng hạn như giá cổ phiếu, tin hiệu tâm đồ(ECG), hoặc dữ liệu cảm biến  
+		
+	## Phương pháp phân loại 
+		Phân loại chuỗi thời gian có thể được thực hiện bằng nhiều phương pháp khác nhau bao gồm  
+			
+		### Phương pháp dựa trên đặc trưng 
+			Trích xuất các đặc trưng từ chuỗi thời gian, chẳng hạn như giá trị trung bình , độ lệch chuẩn, hoặc các chỉ số phức tạp hơn như các đặc trưng tần số, sau đó sử dụng các mô hình phân loại truyền thống như SVM hoặc RandomForest 
+
+		### Phương pháp dựa trên mô hình 
+			Sử dụng các mô hình như HMM(Hidden Markov Model) hoặc ARIMA(Autoregressive Integrated Moving Average) để phân tích và phân loại chuỗi thời gian 
+		
+		### Phương pháp Mạng Nơ-ron hồi quy(Recurrent Neural Networks - RNNs)
+			RNNs, đặc biệt là LSTM(Long Short-Term Memory), mà một trong những phương pháp hiện đại và nhiệu quả nhất để phân loại chuỗi thời gian. Những mô hình này có khả năng học từ các chuỗi dữ liệu có độ dài biến đổi và ghi nhớ các thông tin quan trọng qua thời gian dài. 
+			
+	## Ứng dụng với Pytorch 
+		Một ví dụ thực tế về phân loại chuỗi thời gian là phân loại các tín hiệu điện tâm đồ(ECG) để chuẩn đoán các bệnh tim mạch. Trong ví dụ dưới đây, chúng ta sẽ sử dụng PyTorch để xây dựng một mô hình RNN đơn giản nhằm phân loại các chuỗi thời gian thành các lớp khác nhau dựa trên mẫu tín hiệu  
+			
+			TimeSeriesClassificationByPyTorch.py
+# Phân loại đồ thị (Graph Classification)
+
+	# Khái niệm 
+		Phân loại đồ thị(Graph Classification) là một phương pháp trong học máy liên quan đến việc gán nhãn cho toàn bộ đồ thị. Đây là một bài toán quan trọng trong nhiều lĩnh vực, từ hóa học, sinh học đến khoa học xã hội, nơi các đối tượng nghiên cứu có thể được mô hình hóa dưới dạng đồ thị. Ví dụ, một phần tử có thể được biểu diễn dưới dạng đồ thị với các nguyên tử là các đỉnh(nodes) và các liên kết hóa học là các cạnh(edges)
+		
+	# Phương pháp phân loại 
+		Có nhiều phương pháp để phân loại đồ thị, bao gồm: 
+			
+		## Phương pháp dựa trên đặc trưng 
+			Trích xuất các đặc trưng của đồ thị như số đỉnh, số cạnh, hoặc các chỉ số khác như độ tập trung(clustering coefficient), sau đó sử dụng các thuật toán học máy truyền thống như SVM hoặc Random Forest để phân loại. 
+			
+		## Mạng nơ-ron đồ thị (Graph Neural Networks - GNNs)
+			GNNs là phương pháp hiện đại và mạnh mẽ để xử lý và phân loại đồ thị. Chúng học cách biểu diễn các đồ thị dưới dạng vector số(embedding) và sử dụng các vector này để thực hiện phân loại. 
+			
+	## Ứng dụng với Pytorch 
+		Một ví dụ thực tế về phân loại đồ thị là dự đoán tính chất hóa học của các phân tử trong hóa học. Mỗi phân tử có thể được biểu diễn dưới dạng một đồ thị, với các nguyên tử là các đỉnh và các liên kết hóa học là các cạnh. Mục tiêu là xây dựng một mô hình học máy có thể dự đoán các tính chất của phân tử dựa trên cấu trúc đồ thị của nó. 
+		
+		Dưới đây là một ví dụ sử dụng Pytorch Geometric, một thư viện mở rộng của PyTorch dành riêng cho việc xử lý đồ thị. 
+			GraphClassificationByPytorch.py
+		
+		Trong ví dụ này chúng ta sử dụng PyTorch Geometric để xây dựng một mô hình GCN(Graph Convolutional Network) nhằm phân loại các đồ thị trong bộ dữ liệu MUTAG, một bộ dữ liệu phổ biến trong phân loại đồ thị. Mô hình GCN học cách biểu diễn các đồ thị dưới dạng các vector số và sử dụng các vector này để dự đoán lớp của đồ thị. 
+# Kết luận 
+	Phân loại dữ liệu là một trong những nhiệm vụ cốt lõi trong học máy, với ứng dụng rộng rãi trong nhiều lịch vực khác nhau. Dựa trên tính chất và cấu trúc dữ liệu, có nhiều loại phân loại khác nhau, mỗi loại đề có những đặc điểm và ứng dụng riêng  
+	
+	## Phân loại nhị phân 
+		Đây là loại phân loại đơn giản nhất , nơi dữ liệu được chia thành 2 lớp khác nhau, Nó thường được sử dụng trong các bài toán như phát hiện spam, phân loại email hoặc dự đoán bệnh tật 
+		
+	## Phân loại đa lớp 
+		Khi có nhiều hơn 2 lớp, bài toán trở thành phân loại đa lớp. Nó được ứng dụng rộng rãi trong nhận diện hình ảnh, phân loại văn bản, và nhiều bài toán khác trong thực tế 
+		
+	## Phân loại nhiều nhãn  
+		Đây là khi một mẫu dữ liệu có thể thuộc về nhiều lớp cùng lúc. Ví dụ điển hình trong phân loại ảnh, một bức ảnh có thể chứa nhiều đối tượng khác nhua như người, xe , động vật, và mỗi đối tượng đều là một nhãn 
+		
+	## Phân loại thứ tự  
+		Phân loại thứ tự(Ordinal Classification) là khi các lớp có một thứ tự nhất định, ví dụ như mức độ hài lòng từ rất không hài lòng đến rất hài lòng. Điều này thường xuất hiện trong các bài toán khảo sát và phân tích dữ liệu khách hàng . 
+		
+	## Phân loại chuỗi thời gian  
+		Đối với dữ liệu mà các mẫu được sắp xếp theo thời gian, phân loại chuỗi thời gian giúp phát hiện các mẫu và xu hướng trong dữ liệu thay đổi theo thời gian, với ứng dụng trong y tế, tài chính và IoT 
+		
+	## Phân loại đồ thị  
+		Khi dữ liệu được biểu diễn dưới dạng đồ thị, phân loại đồ thị cho phép chúng ta phân tích các đối tượng có cấu trúc phức tạp như phân tử hóa học, mạng xã hội, hoặc hệ thống kết nối mạng 
+		
+	Mỗi phân loại đều có những ưu và nhược điểm riêng, cũng như các phương pháp và kỹ thuật phù hợp. Việc chọn lựa loại phân loại và phương pháp phù hợp phụ thuộc vào bản chất của dữ liệu và mục tiêu của bài toán. Sự phát triển của các phương pháp học máy, đặc biệt là các mạng nơ-ron sâu, đã mở ra nhiều cơ hội mới trong việc xử lý và phân loại dữ liệu phức tạp, giúp cải thiện hiệu suất và khả năng dự đoán trong thực tế. 
+	
+</pre><a id='backBottom' href='../AI-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
