@@ -1,0 +1,103 @@
+<html><head><title>Lesson 187 == Stream API cơ bản ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 187 -- Stream API cơ bản -//</h1><pre>
+# 1. Stream là gì?
+	Stream (ストリーム) trong Java = pipeline xử lý dữ liệu được thiết kế theo functional style.
+	
+	Thay vì dùng for loop, ta mô tả chuỗi thao tác trên data.
+
+	👉 Senior insight: Stream không phải data structure, nó là view/flow trên data. Dùng để khai báo pipeline, không lưu trữ dữ liệu mới.
+
+
+
+# 2. Stream pipeline 
+	
+	## Gồm 3 phần:
+		
+		1. Source (ソース) → Collection, Array, I/O, generator.
+		2. Intermediate operations (中間操作, chūkan-sōsa) → lazy (chỉ định nghĩa pipeline, chưa chạy).
+			map, filter, sorted, distinct, limit…
+		3. Terminal operation (終端操作, shūtan-sōsa) → trigger execution.
+			forEach, collect, reduce, count, findFirst…
+
+
+	## Ví dụ pipeline: 
+
+List<Employee> employees = ...;
+
+List<String> emails = employees.stream()         // source
+    .filter(e -> e.getSalary() > 1000)           // intermediate
+    .map(Employee::getEmail)                     // intermediate
+    .collect(Collectors.toList());               // terminal
+
+
+
+# 3. Intermediate vs Terminal – Senior-level
+
+	- Intermediate = “kế hoạch” xử lý, lazy evaluation.
+	
+	- Terminal = “kích hoạt pipeline”, eager execution.
+	
+	- Senior cần nhớ: nếu bạn chỉ gọi filter hay map mà không có terminal, không có gì chạy cả.
+
+	employees.stream().filter(e -> e.getSalary() > 1000);
+	// Không in gì, vì chưa có terminal
+
+
+
+# 4. Enterprise Example
+	Case: lấy email nhân viên lương > 1000
+
+List<String> emails = employees.stream()
+    .filter(e -> e.getSalary() > 1000)   // lọc theo business rule
+    .map(Employee::getEmail)             // transform sang email
+    .collect(Collectors.toList());       // gom lại thành List
+
+
+	## Senior insight: 
+	
+		- Đây là cách viết “business rule DSL” trong enterprise: code đọc như tiếng Anh, dễ review.
+		- filter tương đương Predicate chaining, map tương đương Function chaining.
+		- collect đưa kết quả về collection quen thuộc (List/Set/Map).
+
+
+
+# 5. Liên hệ thi Silver / Gold
+
+	Silver: thường hỏi output → stream().filter(...).map(...).forEach(...).
+	Gold: sẽ xoáy vào:
+		Lazy vs eager → tại sao filter không chạy nếu không có terminal.
+		Order: map trước filter khác gì filter trước map.
+		collect vs reduce.
+		Parallel stream (並列ストリーム, heiretsu stream) → multi-thread.
+
+
+
+# 6. Senior insight 
+
+	Pipeline trong Stream API = nối Function (map) + Predicate (filter) + Consumer (forEach) → giống như mấy bài trước nhưng chạy trên data set.
+	
+	Viết code theo kiểu declarative (khai báo muốn làm gì), không imperative (for loop).
+	
+	Dễ mở rộng business rule: thêm bước mới trong pipeline thay vì viết thêm if-else.
+	
+	Performance: pipeline chỉ duyệt data một lần (fusion optimization).
+	Pipeline trong Stream API = nối Function (map) + Predicate (filter) + Consumer (forEach) → giống như mấy bài trước nhưng chạy trên data set.
+	
+	Viết code theo kiểu declarative (khai báo muốn làm gì), không imperative (for loop).
+
+	Dễ mở rộng business rule: thêm bước mới trong pipeline thay vì viết thêm if-else.
+
+	Performance: pipeline chỉ duyệt data một lần (fusion optimization).
+
+
+
+# 👉 Tóm lại: Stream API = hiện thực hóa functional pipeline trong Java.
+
+	map = transform (Function).
+	
+	filter = rule (Predicate).
+	
+	forEach = side-effect (Consumer).
+	
+	collect = mang dữ liệu về collection (terminal).
+	
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
