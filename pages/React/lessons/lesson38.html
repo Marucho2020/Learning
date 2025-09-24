@@ -1,0 +1,323 @@
+<html><head><title>Lesson 38 == Custom Hook ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../react-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 38 -- Custom Hook -//</h1><pre>
+	Custom Hooks trong React là cách để tái sử dụng logic trạng thái (stateful logic) giữa các component, giúp code DRY (Don't Repeat Yourself), dễ maintain, và tăng tính tái sử dụng. Chúng là các function JavaScript bắt đầu bằng từ khóa use (theo convention của React) và có thể sử dụng các built-in hooks như useState, useEffect, useRef, useCallback, useMemo, v.v. để đóng gói logic phức tạp. Ở mức độ senior, chúng ta cần hiểu sâu về cách custom hooks hoạt động trong React's reconciliation, cách chia sẻ logic hiệu quả, quản lý lifecycle, tránh memory leaks, tích hợp với TypeScript, và xử lý các edge cases như async operations hoặc context dependencies.
+
+
+# 1. Cơ Chế Hoạt Động Nội Bộ Của Custom Hooks
+
+	## Định nghĩa cơ bản: 
+		Custom hook là một function JavaScript bắt đầu bằng use, sử dụng built-in hooks để quản lý logic, và trả về giá trị (state, functions, refs, v.v.) để component sử dụng. Chúng không chứa JSX mà chỉ đóng gói logic tái sử dụng.
+	
+	
+	## Tại sao cần custom hooks: 
+		
+		- Tái sử dụng logic: Thay vì copy-paste logic (như fetch data, form handling, timers) giữa components, custom hooks gom logic vào một nơi.
+		- Tách biệt concerns: Giữ component UI-focused, logic ở hooks, dễ test và debug.
+		- Composition: Kết hợp nhiều hooks trong một custom hook để xử lý complex scenarios (như form validation + API calls).
+
+	## Lifecycle và Scope: 
+		Custom hooks chạy trong render phase của component gọi chúng, kế thừa lifecycle của component đó. Mỗi instance của custom hook trong component là độc lập (state/refs riêng biệt). Cleanup trong useEffect của hook đảm bảo không leak memory.
+
+	## So sánh với HOCs/Render Props:
+
+		- HOCs: Wrap component, thêm logic qua props, nhưng gây wrapper hell và khó debug.
+		- Render Props: Pass logic qua render function, nhưng verbose và khó share stateful logic.
+		- Custom Hooks: Elegant, native với functional components, dễ compose, không cần wrapper.
+
+
+	## Pitfalls chuyên sâu:
+		
+		- Quên cleanup: useEffect trong hook cần return cleanup để tránh leaks (timers, subscriptions).
+		- Stale closures: Capture state/props cũ nếu không quản lý deps đúng trong useEffect/useCallback.
+		- Over-abstraction: Đừng tạo hook cho logic quá đơn giản (overhead > lợi ích).
+		- Naming: Phải bắt đầu bằng use để React tooling (ESLint, DevTools) nhận diện.
+		- Testing: Test hooks với @testing-library/react-hooks hoặc trong components.
+
+
+
+# Ví dụ cơ bản (từ W3Schools, mở rộng với error handling): Custom hook fetch data.
+
+// useFetch.js
+import { useState, useEffect } from 'react';
+
+const useFetch = (url) => {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    setLoading(true);
+    fetch(url)
+      .then(res => {
+        if (!res.ok) throw new Error('Fetch failed');
+        return res.json();
+      })
+      .then(data => setData(data))
+      .catch(err => setError(err.message))
+      .finally(() => setLoading(false));
+  }, [url]);
+
+  return { data, loading, error }; // Object thay vì array cho readability
+};
+
+// Home.js
+import useFetch from './useFetch';
+
+function Home() {
+  const { data, loading, error } = useFetch('https://jsonplaceholder.typicode.com/todos');
+
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>Error: {error}</p>;
+
+  return (
+    <>
+      {data && data.map(item => <p key={item.id}>{item.title}</p>)}
+    </>
+  );
+}
+
+	Giải thích: useFetch đóng gói logic fetch (state, effect, error handling). Component chỉ lo render UI. Object return thay array tăng readability và dễ destructure.
+
+# 2. Use Case Nâng Cao: Custom Hook Với Form Handling
+	Dùng để quản lý forms phức tạp, validation, và reset.
+	Ví dụ: useForm Hook:
+
+// useForm.js
+import { useState, useCallback } from 'react';
+
+const useForm = (initialValues) => {
+  const [values, setValues] = useState(initialValues);
+  const [errors, setErrors] = useState({});
+
+  const handleChange = useCallback((e) => {
+    const { name, value } = e.target;
+    setValues(prev => ({ ...prev, [name]: value }));
+    setErrors(prev => ({ ...prev, [name]: '' }));
+  }, []);
+
+  const validate = useCallback(() => {
+    const newErrors = {};
+    Object.keys(values).forEach(key => {
+      if (!values[key]) newErrors[key] = `${key} is required`;
+    });
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  }, [values]);
+
+  const reset = useCallback(() => setValues(initialValues), [initialValues]);
+
+  return { values, errors, handleChange, validate, reset };
+};
+
+// LoginForm.js
+import useForm from './useForm';
+
+function LoginForm() {
+  const { values, errors, handleChange, validate, reset } = useForm({
+    username: '',
+    password: '',
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (validate()) {
+      console.log('Submit:', values);
+      reset();
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input name="username" value={values.username} onChange={handleChange} />
+      {errors.username && <p>{errors.username}</p>}
+      <input name="password" type="password" value={values.password} onChange={handleChange} />
+      {errors.password && <p>{errors.password}</p>}
+      <button type="submit">Login</button>
+      <button type="button" onClick={reset}>Reset</button>
+    </form>
+  );
+}
+	Giải thích: useForm quản lý form state, validation, và reset logic. useCallback stable handlers, tránh recreate. Hook reusable cho bất kỳ form nào.
+
+
+# 3. Use Case Nâng Cao: Custom Hook Với Async Operations
+	Dùng để fetch data với retry, cancel, hoặc pagination.
+
+// useAsyncFetch.js
+import { useState, useEffect, useCallback } from 'react';
+
+const useAsyncFetch = (url, maxRetries = 3) => {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [retryCount, setRetryCount] = useState(0);
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('Fetch failed');
+      const result = await res.json();
+      setData(result);
+      setError(null);
+    } catch (err) {
+      if (retryCount < maxRetries) {
+        setRetryCount(prev => prev + 1);
+      } else {
+        setError(err.message);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [url, retryCount, maxRetries]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const retry = useCallback(() => {
+    setRetryCount(0);
+    fetchData();
+  }, [fetchData]);
+
+  return { data, loading, error, retry };
+};
+
+// Posts.js
+import useAsyncFetch from './useAsyncFetch';
+
+function Posts() {
+  const { data, loading, error, retry } = useAsyncFetch('https://jsonplaceholder.typicode.com/posts');
+
+  if (loading) return <p>Loading...</p>;
+  if (error) return (
+    <>
+      <p>Error: {error}</p>
+      <button onClick={retry}>Retry</button>
+    </>
+  );
+
+  return (
+    <ul>
+      {data && data.slice(0, 5).map(post => <li key={post.id}>{post.title}</li>)}
+    </ul>
+  );
+}
+
+
+
+# 4. Use Case Nâng Cao: Custom Hook Với Context Integration
+
+	Dùng để share logic với context, tránh prop drilling.
+	Ví dụ: useAuth Hook Với Context:
+
+// AuthContext.js
+import { createContext, useContext, useState } from 'react';
+
+const AuthContext = createContext();
+
+export function AuthProvider({ children }) {
+  const [user, setUser] = useState(null);
+  return <AuthContext.Provider value={{ user, setUser }}>{children}</AuthContext.Provider>;
+}
+
+// useAuth.js
+import { useContext, useCallback } from 'react';
+import { AuthContext } from './AuthContext';
+
+const useAuth = () => {
+  const { user, setUser } = useContext(AuthContext);
+
+  const login = useCallback(async (credentials) => {
+    // Giả lập API login
+    const response = await new Promise(resolve => setTimeout(() => resolve({ id: 1, name: 'User' }), 1000));
+    setUser(response);
+  }, [setUser]);
+
+  const logout = useCallback(() => setUser(null), [setUser]);
+
+  return { user, login, logout };
+};
+
+// Profile.js
+import { AuthProvider } from './AuthContext';
+import useAuth from './useAuth';
+
+function Profile() {
+  const { user, login, logout } = useAuth();
+
+  return (
+    <>
+      {user ? (
+        <>
+          <p>Welcome, {user.name}</p>
+          <button onClick={logout}>Logout</button>
+        </>
+      ) : (
+        <button onClick={() => login({ username: 'test' })}>Login</button>
+      )}
+    </>
+  );
+}
+
+// App.js
+function App() {
+  return (
+    <AuthProvider>
+      <Profile />
+    </AuthProvider>
+  );
+}
+
+
+# 5. Use Case Nâng Cao: Custom Hook Với useReducer
+
+// useCounter.js
+import { useReducer } from 'react';
+
+const reducer = (state, action) => {
+  switch (action.type) {
+    case 'INCREMENT': return { count: state.count + (action.payload || 1) };
+    case 'DECREMENT': return { count: state.count - (action.payload || 1) };
+    case 'RESET': return { count: action.initialCount };
+    default: return state;
+  }
+};
+
+const useCounter = (initialCount = 0) => {
+  const [state, dispatch] = useReducer(reducer, { count: initialCount });
+
+  const increment = useCallback(() => dispatch({ type: 'INCREMENT' }), []);
+  const decrement = useCallback(() => dispatch({ type: 'DECREMENT' }), []);
+  const reset = useCallback(() => dispatch({ type: 'RESET', initialCount }), [initialCount]);
+
+  return { count: state.count, increment, decrement, reset };
+};
+
+// Counter.js
+import useCounter from './useCounter';
+
+function Counter() {
+  const { count, increment, decrement, reset } = useCounter(5);
+
+  return (
+    <>
+      <h1>Count: {count}</h1>
+      <button onClick={increment}>+1</button>
+      <button onClick={decrement}>-1</button>
+      <button onClick={reset}>Reset</button>
+    </>
+  );
+}
+
+# Kết Luận Và Best Practices (Mức Chuyên Gia)
+
+	Khi dùng custom hooks: Logic tái sử dụng (fetch, forms, timers, auth), complex state management, hoặc context integration.
+	Tránh: Logic quá đơn giản (dùng inline), vi phạm Rules of Hooks, hoặc không cleanup side effects.
+	Tích hợp: Với useState, useEffect, useCallback, useMemo, useReducer, context để xử lý mọi scenario.
+	Performance tip: Stable return values với useCallback/useMemo, cleanup effects, tối ưu deps. Trong TS, type hooks với interfaces/generics.
+	Debug: Test hooks với @testing-library/react-hooks, inspect với React DevTools.
+	Advanced: Dùng libraries như ahooks, react-query (TanStack Query), hoặc zustand để học cách thiết kế hooks.
+
+
+https://www.w3schools.com/react/react_compiler.asp
+</pre><a id='backBottom' href='../react-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
