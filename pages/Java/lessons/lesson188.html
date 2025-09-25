@@ -1,0 +1,64 @@
+<html><head><title>Lesson 188 == map vs flatMap trong Stream ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 188 -- map vs flatMap trong Stream -//</h1><pre>	
+# 1. map() vs flatMap() trong Stream	
+	
+	map(): biến đổi từng phần tử thành một "đối tượng khác", kết quả thường là Stream<Stream<T>> nếu map ra một stream.	
+		👉 ví dụ: dept.map(Department::getEmployees) → Stream<List<Employee>>.
+	
+	flatMap(): vừa map, vừa "flatten" (フラット化), ép tất cả "tầng" xuống còn 1 cấp.
+	
+	👉 ví dụ: dept.flatMap(d -> d.getEmployees().stream()) → Stream<Employee>.
+	
+	⚠️ Điểm senior cần nhớ: flatMap chính là cách "nối pipeline" tránh nesting rối rắm. Nó là chìa khóa để làm việc với data nhiều tầng (tree, graph, object nesting).
+	
+	
+	
+# 	2. Optional.map vs Optional.flatMap
+	Optional trong Java chính là một monad container giống Stream nhưng chỉ chứa 0 hoặc 1 giá trị.
+	
+		Optional.map(): biến đổi giá trị bên trong, kết quả bọc thêm một Optional mới.
+			👉 employee.map(Employee::getManager) → Optional<Optional<Manager>> (lồng nhau).
+	
+		Optional.flatMap(): mở gói một lớp, tránh Optional<Optional<T>>.
+		👉 employee.flatMap(Employee::getManager) → Optional<Manager>.
+	
+		⚠️ Senior point:
+		Optional.map tạo nested container (入れ子コンテナ), Optional.flatMap phá bỏ nesting, giữ pipeline gọn.
+	
+	
+	
+# 3. Enterprise example	
+	Giả sử có Department → Employees → Manager.	
+		map: nếu dùng map liên tiếp, anh sẽ có 
+		Stream<Stream<Employee>> hoặc Optional<Optional<Manager>>.
+		
+		flatMap: gộp tất cả nhân viên thành một stream duy nhất để tiếp tục pipeline.
+	
+		Trong Optional: employee.flatMap(Employee::getManager).map(Manager::getEmail) → xử lý an toàn null-safe pipeline cho email của Manager.
+	
+
+
+# 4. Pipeline tư duy chung
+	Trong lập trình nói chung:
+
+		map = apply transformation, có thể sinh ra layer mới.
+		
+		flatMap = map + flatten, giữ pipeline phẳng, dễ thao tác.
+		
+		Trong Java Stream/Optional: đây chính là cách chúng ta control data flow, không để rối bởi nested containers.
+
+
+# 👉 Nói ngắn gọn kiểu senior:
+
+	map = transform (変換).
+	
+	flatMap = transform + flatten (変換＋平坦化).
+	
+	Optional + Stream đều là monadic pipelines: map giữ container, flatMap tháo container.
+
+
+
+
+
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
