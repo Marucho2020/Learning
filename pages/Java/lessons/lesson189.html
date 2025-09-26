@@ -1,0 +1,103 @@
+<html><head><title>Lesson 189 == Collectors nâng cao ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 189 -- Collectors nâng cao -//</h1><pre>
+# 1. Collectors.toMap
+
+	Biến Stream thành Map<K,V>.
+
+Map<Integer, String> map = employees.stream()
+    .collect(Collectors.toMap(Employee::getId, Employee::getName));
+
+
+	⚠️ Senior point: phải để ý key collision (キー衝突).
+	Nếu 2 Employee cùng id → IllegalStateException.
+	Giải pháp: truyền merge function:
+
+toMap(Employee::getId, Employee::getName, (oldVal, newVal) -> oldVal)
+
+hoặc chọn theo rule (newVal ghi đè oldVal, hoặc concat).
+
+
+# 2. groupingBy
+
+	Giống SQL GROUP BY.
+	Trả về Map<K, List<T>> hoặc với downstream collector → Map<K, SomethingElse>.
+	Ví dụ: group theo department, rồi tính tổng lương:
+
+Map<String, Integer> salaryByDept = employees.stream()
+    .collect(Collectors.groupingBy(Employee::getDepartment,
+             Collectors.summingInt(Employee::getSalary)));
+
+⚠️ Senior point:
+
+	groupingByConcurrent tối ưu parallel stream.
+	Downstream collector có thể lồng → powerful như multi-level aggregation (多段集約).
+
+
+
+# 3. partitioningBy
+
+	Special case của groupingBy → key là boolean.
+	Dùng khi rule chỉ có 2 trạng thái (二分).
+
+Map<Boolean, List<Employee>> result =
+    employees.stream().collect(Collectors.partitioningBy(e -> e.getSalary() > 1000));
+
+	⚠️ Dùng partitioningBy thay vì groupingBy khi chỉ cần true/false để code clear.
+
+
+# 4. joining
+
+	Gom các String thành một chuỗi.
+	joining(", ") = CSV output.
+
+String csv = employees.stream()
+    .map(Employee::getName)
+    .collect(Collectors.joining(","));
+
+⚠️ Senior point: joining có overload cho prefix/suffix, hữu ích khi xuất ra JSON-like string, CSV, log format.
+
+
+
+
+# 5. reducing
+
+	Collector thấp nhất, giống reduce() nhưng để trong collect.
+	Dùng khi muốn full control.
+
+	Ví dụ tính tổng lương:
+
+int total = employees.stream()
+    .collect(Collectors.reducing(0, Employee::getSalary, Integer::sum));
+
+	⚠️ Senior point: reducing linh hoạt nhưng verbose. Thường thay bằng summingInt, counting… cho readable. Nhưng biết reducing là bắt buộc ở level Gold, vì nó cho thấy bản chất "monoid accumulation" (モノイド畳み込み).
+
+
+# 6. Enterprise insight
+
+	Trong enterprise system, Collectors = report generator.
+		- groupingBy → thống kê nhân viên theo phòng ban, status, role.
+		- toMap → build dictionary cache (id → object).
+		- joining → tạo CSV export.
+		- reducing → tính KPI, tổng lương, max/min salary.
+
+	⚠️ Ở level senior: luôn nhớ Collectors ≈ SQL aggregation nhưng trong code. Chọn collector không chỉ để ra kết quả, mà còn để code readable, maintainable, scalable.
+
+
+	## 👉 Tóm gọn kiểu senior:
+
+		toMap: key-value dictionary.
+		groupingBy: SQL GROUP BY.
+		partitioningBy: boolean split.
+		joining: concat string.
+		reducing: tổng hợp tuỳ biến, hiểu được monoid pattern.
+
+
+
+
+
+
+
+
+
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
