@@ -1,0 +1,125 @@
+<html><head><title>Lesson 190 == Unary/BinaryOperator ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 190 -- Unary/BinaryOperator -//</h1><pre>
+	là bước “kết tinh” của toàn bộ functional pipeline: từ dữ liệu rời rạc → gom thành một giá trị duy nhất (reduce), hoặc transform bản thân (UnaryOperator). Ở level senior, phải hiểu rõ reduce không chỉ là “cộng tổng” mà là một monoid accumulation pattern (モノイド畳み込みパターン), và Unary/BinaryOperator chính là cách biểu diễn những phép toán “tự thân” trên cùng một kiểu dữ liệu.
+
+
+
+# 1. UnaryOperator<T>
+
+	Ký hiệu: T → T (self-transform function).
+	Là specialization của Function<T,T>.
+	Dùng khi input và output cùng type → code rõ ràng hơn.
+
+	Ví dụ:
+
+UnaryOperator<String> upper = s -> s.toUpperCase();
+String result = upper.apply("hello"); // "HELLO"
+
+	## Enterprise insight: 
+		
+		Normalize dữ liệu: trim, toLowerCase, validate format.
+		
+		Trong pipeline: .map(UnaryOperator.identity()) = không đổi nhưng dùng làm placeholder.
+
+
+# 2. BinaryOperator<T> 
+
+	Ký hiệu: (T, T) → T.
+	Specialization của BiFunction<T,T,T>.
+	Thường dùng trong reduce/aggregate.
+	Ví dụ:
+
+BinaryOperator<Integer> sum = Integer::sum;
+BinaryOperator<Integer> max = Integer::max;
+
+	Enterprise insight:
+
+	Merge rule: combine hai bản ghi nhân viên trùng ID → chọn record mới hơn.
+	Trong Collectors.toMap: (oldVal, newVal) -> newVal chính là BinaryOperator.
+
+
+
+# 3. Stream.reduce()
+
+	## 3.1 Kiểu đơn giản 
+		
+Optional<Integer> total = employees.stream()
+    .map(Employee::getSalary)
+    .reduce(Integer::sum);
+
+		- reduce(BinaryOperator<T>) → trả về Optional<T> (vì stream có thể empty).
+		- Đây là fold: nối tất cả phần tử bằng một BinaryOperator.
+
+
+	## 3.2 Với identity 
+
+int total = employees.stream()
+    .map(Employee::getSalary)
+    .reduce(0, Integer::sum);
+
+	Identity (0) đảm bảo không trả Optional.
+	Đây là accumulator: bắt đầu từ seed, cộng dần từng phần tử.
+
+
+
+	## 3.3 Với combiner (song song)
+	
+	int total = employees.stream()
+    .parallel()
+    .reduce(0,
+            Integer::sum,   // accumulator
+            Integer::sum);  // combiner (khi gộp kết quả giữa threads)
+
+	
+		⚠️ Senior phải nhớ: accumulator + combiner phải associative (結合的) → để kết quả song song đúng.
+		
+		Ví dụ: cộng, nhân, concat string thì ok; trừ, chia thì không.	
+	
+	
+# 	4. Enterprise examples
+
+	## 1.Tính tổng lương
+
+int totalSalary = employees.stream()
+    .map(Employee::getSalary)
+    .reduce(0, Integer::sum);
+
+
+	## 2.Tìm max salary
+
+int maxSalary = employees.stream()
+    .map(Employee::getSalary)
+    .reduce(Integer.MIN_VALUE, Integer::max);
+
+
+	## Combine báo cáo dạng string
+
+String report = employees.stream()
+    .map(Employee::getName)
+    .reduce("", (a, b) -> a + ", " + b);
+
+
+	👉 Nhưng senior nên dùng Collectors.joining(", ") vì hiệu quả hơn (StringBuilder).
+
+
+
+
+# 5. Điểm senior cần nhớ
+	
+	- reduce = fold (数学的な畳み込み).
+	- Identity phải là neutral element (trung tính): 0 với cộng, 1 với nhân, "" với chuỗi.
+	- Associativity quan trọng cho parallel stream.
+	- UnaryOperator = "self-map", BinaryOperator = "self-combine".
+	- Nếu aggregation phổ biến (sum, avg, count), dùng Collectors sẽ ngắn gọn và tối ưu hơn reduce. Nhưng biết reduce là nền tảng để hiểu Collectors được implement như thế nào.
+	- Trong enterprise: reduce thường áp dụng cho KPI aggregation, log merge, statistical report.
+
+
+
+
+
+
+
+
+
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
