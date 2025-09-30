@@ -1,0 +1,96 @@
+<html><head><title>Lesson 191 == Parallel Stream ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 191 -- Parallel Stream -//</h1><pre>
+# 1. parallel() là gì?
+
+	stream().parallel() biến sequential stream thành parallel stream.
+	
+	Parallel stream chia công việc thành task nhỏ → phân phối trên nhiều thread trong ForkJoinPool.commonPool().
+	
+	Tất cả task chạy song song rồi merge kết quả theo reduce/collect.
+
+	👉 Tư duy: parallel() không làm phép toán nhanh hơn "mặc định". Nó chỉ chia workload. Nếu task nhỏ và dataset ít → overhead còn tốn hơn.
+
+
+# 2. ForkJoinPool concept
+	
+	Fork: chia task lớn thành subtask nhỏ.
+	Join: ghép kết quả subtask thành kết quả cuối.
+	Parallel stream dùng ForkJoinPool.commonPool (số thread ≈ số CPU core).
+
+	⚠️ Senior point:
+
+		- Có thể custom pool bằng ForkJoinPool riêng, nhưng phải submit task thủ công.
+
+		- Nếu không kiểm soát, toàn bộ parallel stream trong app dùng chung commonPool → dễ nghẽn (thread starvation) khi nhiều service chạy đồng thời.
+
+
+# 3. Thread safety & Shared mutable state 
+
+	Rule tuyệt đối: Không đụng tới mutable shared state trong parallel stream.
+Ví dụ nguy hiểm:
+
+	List<Integer> list = new ArrayList<>();
+	numbers.parallelStream().forEach(list::add); // ❌ race condition
+
+	→ Kết quả unpredictable vì nhiều thread cùng sửa 1 list.
+	
+		Dùng collector thread-safe (toConcurrentMap, groupingByConcurrent).
+		Hoặc chỉ dùng reduce / collect – vốn được thiết kế để an toàn trong parallel.
+
+
+# 4. Reduce trong parallel stream
+
+	reduce(identity, accumulator, combiner) cực quan trọng:
+
+		identity = giá trị trung tính.
+		accumulator = cách xử lý 1 phần tử.
+		combiner = cách gộp kết quả từ nhiều thread.
+
+
+	## Ví dụ tính tổng doanh số (total sales):
+
+int total = orders.parallelStream()
+    .map(Order::getAmount)
+    .reduce(0, Integer::sum, Integer::sum);
+
+		- Accumulator: cộng vào subtotal.
+		- Combiner: merge subtotal từ các thread.
+		- Associativity (結合則) đảm bảo kết quả đúng.
+		
+
+# 5. Enterprise example
+
+	List<Order> có hàng triệu record (log giao dịch, order, KPI).
+	Dùng parallelStream để tính tổng doanh số nhanh hơn (multi-core).
+	Nhưng chỉ khi:
+
+		Dataset đủ lớn (10⁵+ elements).
+		Operation tốn CPU.
+		Không phụ thuộc IO (vì IO bottleneck không scale tốt bằng parallel).
+
+	👉 Nếu tính sum/avg/min/max → parallel stream phù hợp.
+	👉 Nếu update DB hay API call → ❌, vì thread safety và overhead pool.
+
+
+# 6. Điểm senior cần nhớ
+
+	- parallel() không magic → benchmark mới biết nhanh hay chậm.
+	- shared mutable state = kẻ thù, luôn tránh.
+	- ForkJoinPool.commonPool là global → cẩn thận khi app có nhiều phần dùng song song.
+	- Dùng reduce hoặc collector an toàn cho parallel.
+	- Enterprise: parallel stream phù hợp cho batch processing, reporting, analytics — không phù hợp cho logic transactional hoặc online request nhỏ.
+
+
+	## 👉 Tóm gọn kiểu senior:
+
+		parallel() = chia việc → ForkJoinPool.
+		Đúng khi workload lớn & CPU-bound.
+		Không an toàn nếu mutable shared state.
+		reduce/collect là cách duy nhất để tránh race condition.
+		Trong enterprise, xem parallel stream như “SQL parallel execution” → có lúc lợi, có lúc hại.
+
+
+
+
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
