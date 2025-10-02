@@ -1,0 +1,294 @@
+<html><head><title>Lesson 5 == Command Line Usage ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../NodeJS-learning.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 5 -- Command Line Usage -//</h1><pre>
+# Mục tiêu: Hướng dẫn cách sử dụng CLI để:
+
+	- Chạy file JavaScript (node app.js).
+	- Tương tác với REPL (môi trường tương tác).
+	- Xử lý command line arguments (process.argv).
+	- Sử dụng environment variables (process.env).
+	- Debug ứng dụng bằng Chrome DevTools.
+	- Quản lý phiên bản Node.js (nvm) và package (npm).
+	- Dùng các flag CLI để tùy chỉnh hành vi Node.js.
+
+	Tại sao quan trọng? Node.js không có giao diện đồ họa như browser, nên CLI là cách chính để vận hành và kiểm soát ứng dụng. Hiểu các lệnh CLI giúp bạn làm việc hiệu quả hơn, từ chạy server đến debug lỗi phức tạp.
+
+	Môi trường chạy lệnh:
+	
+		- Windows: Command Prompt, PowerShell, hoặc Windows Terminal.
+		- macOS/Linux: Terminal (hoặc iTerm2 trên macOS).
+		- Lưu ý: Đảm bảo bạn đã cài Node.js (xem lại phần "Get Started") và terminal đang ở thư mục chứa file code.
+
+
+# 1. Basic Node.js Commands (Lệnh Cơ Bản)
+
+	Tài liệu liệt kê các lệnh cơ bản để chạy file JavaScript. Đây là điểm khởi đầu cho mọi ứng dụng Node.js.
+
+# Run a JavaScript file
+node app.js
+
+# Run with additional arguments
+node app.js arg1 arg2
+
+# Run in watch mode (restarts on file changes)
+node --watch app.js
+
+
+	## node app.js 
+		- Lệnh chạy file JavaScript (ví dụ: app.js) bằng Node.js runtime.
+		- Ví dụ thực tế: Nếu bạn có file app.js chứa console.log('Hello World!');, chạy node app.js sẽ in Hello World!.
+		- Ngữ cảnh: Dùng để khởi động server (như trong phần "Get Started") hoặc chạy script xử lý dữ liệu.	
+	
+	## node app.js arg1 arg2
+		- Cho phép truyền tham số vào script. Các tham số được truy cập qua process.argv (xem phần Command Line Arguments).
+		- Ví dụ: node app.js hello world truyền hai tham số: hello và world.
+		
+	## node --watch app.js
+	
+		- Chạy file ở watch mode, tự động restart khi file thay đổi (từ Node.js 18.x).
+		- Ngữ cảnh: Rất hữu ích khi phát triển, ví dụ: chỉnh sửa server code và kiểm tra ngay mà không cần chạy lại lệnh.
+		- Lưu ý: Watch mode là experimental trước Node.js 20.x, nhưng ổn định ở LTS hiện tại (20.19.5).
+
+
+# 2. Using the REPL (Read-Eval-Print Loop)
+
+> const name = 'Node.js';
+> console.log(`Hello, ${name}!`);
+> .help // Show available commands
+> .exit // Exit REPL
+
+	## Giải thích chi tiết: 
+
+		REPL là gì? REPL (Read-Eval-Print Loop) là môi trường tương tác, cho phép chạy code JavaScript dòng một, giống Console trong browser.
+
+		Cách khởi động: Gõ node trong terminal, bạn sẽ vào REPL với dấu nhắc >.
+
+
+		Cách hoạt động:
+		
+		Read: Đọc input của bạn (code JavaScript).
+		Eval: Thực thi code.
+		Print: In kết quả.
+		Loop: Lặp lại cho dòng tiếp theo.
+
+
+
+# 3. Command Line Arguments (Tham Số Dòng Lệnh)
+
+	Code ví dụ từ tài liệu:
+
+// args.js
+console.log('All arguments:', process.argv);
+console.log('First argument:', process.argv[2]);
+console.log('Second argument:', process.argv[3]);
+
+
+# Example usage:
+node args.js hello world
+
+
+	## Giải thích chi tiết:
+		process.argv: Một mảng chứa các tham số dòng lệnh
+
+			- Index 0: Đường dẫn đến Node.js binary (ví dụ: /usr/bin/node).
+			- Index 1: Đường dẫn đến file JavaScript (ví dụ: /home/user/args.js).
+			- Index 2 trở đi: Các tham số người dùng truyền vào (hello, world).
+
+		Ngữ cảnh: Dùng để cấu hình script động. Ví dụ, bạn có thể chạy node server.js 3000 để chỉ định port server.
+
+	Ví dụ thực tế:
+
+	Ngữ cảnh: Dùng để cấu hình script động. Ví dụ, bạn có thể chạy node server.js 3000 để chỉ định port server.
+
+
+
+# 4. Environment Variables (Biến Môi Trường)
+
+// env.js
+console.log('Environment:', process.env.NODE_ENV || 'development');
+console.log('Custom variable:', process.env.MY_VARIABLE);
+console.log('Database URL:', process.env.DATABASE_URL || 'Not set');
+
+# Example usage:
+NODE_ENV=production MY_VARIABLE=test node env.js
+
+
+	## Giải thích chi tiết:
+		process.env: Một object chứa các biến môi trường hệ thống. Dùng để cấu hình ứng dụng mà không hard-code (ví dụ: port, database URL).
+
+	## Cách hoạt động
+
+		- NODE_ENV: Thường dùng để xác định môi trường (development, production). Nếu không set, code dùng giá trị mặc định ('development').
+		- MY_VARIABLE, DATABASE_URL: Biến tùy chỉnh, thường set trong file .env hoặc CLI.
+
+
+	##  Cú pháp set biến:
+		- Windows (Command Prompt): set NODE_ENV=production && node env.js
+		- macOS/Linux: NODE_ENV=production node env.js
+		- Cross-platform: Dùng package dotenv (xem phần --require dưới đây).
+
+		Ngữ cảnh: Biến môi trường rất quan trọng trong deployment, ví dụ: lưu API key, database credentials.
+
+
+	## Thực hành:
+		Tạo env.js như trên, chạy: NODE_ENV=production MY_VARIABLE=hello node env.js.
+
+		Cài dotenv: npm install dotenv, tạo file .env
+
+		NODE_ENV=production
+		MY_VARIABLE=hello
+
+		Sửa env.js:
+			require('dotenv').config();
+			console.log(process.env.NODE_ENV, process.env.MY_VARIABLE);		
+		
+		Chạy: node env.js.
+		
+
+
+
+# 5. Debugging Node.js Applications
+	Code ví dụ từ tài liệu:
+
+# Start with inspector
+node --inspect app.js
+
+# Break on first line
+node --inspect-brk app.js
+
+# Specify a custom port
+node --inspect=9222 app.js
+
+# Enable remote debugging
+node --inspect=0.0.0.0:9229 app.js
+
+
+	## Giải thích chi tiết:
+		Debugging trong Node.js: Node.js tích hợp V8 Inspector, cho phép debug bằng Chrome DevTools, tương tự debug browser JavaScript.
+
+	Các lệnh:
+
+		node --inspect app.js: Khởi động server với inspector trên port mặc định (9229). Bạn có thể kết nối Chrome để debug.
+		node --inspect-brk app.js: Dừng ngay dòng đầu tiên, hữu ích để kiểm tra code từ đầu.
+		node --inspect=9222 app.js: Chỉ định port tùy chỉnh nếu 9229 bị chiếm.
+		node --inspect=0.0.0.0:9229 app.js: Cho phép debug từ máy khác (cẩn thận trong production vì rủi ro bảo mật).
+
+
+	## Cách debug với Chrome DevTools 
+
+		- Chạy node --inspect app.js.
+		- Mở Chrome, truy cập chrome://inspect.
+		- Click "Open dedicated DevTools for Node".
+		- Đặt breakpoint, xem biến, stack trace, v.v.
+
+		Ngữ cảnh: Debugging rất quan trọng khi xử lý lỗi phức tạp, như logic bất đồng bộ hoặc performance issue.
+
+
+
+
+# 6. Common CLI Tools
+
+	## 6.1. Node Version Manager (nvm) 
+		
+# Install specific version
+nvm install 18.16.0
+# Switch to version
+nvm use 18.16.0
+# List installed versions
+nvm ls
+
+	## Giải thích chi tiết: 
+	
+		nvm: Công cụ quản lý nhiều phiên bản Node.js trên cùng một máy.
+		Tại sao cần? Các dự án khác nhau có thể yêu cầu phiên bản khác nhau (ví dụ: legacy code cần Node.js 16.x).		
+
+		### Cài đặt nvm
+
+			Windows: Dùng nvm-windows.
+			macOS/Linux: curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash.
+			Ngữ cảnh: Hữu ích khi làm việc với dự án cũ hoặc test tính năng mới.
+
+		Cài nvm, chạy nvm install 18.16.0, rồi nvm use 18.16.0.
+		Kiểm tra: node --version.
+
+
+
+	## 6.2. npm (Node Package Manager)
+	
+# Initialize a new project
+npm init
+# Install dependencies
+npm install
+# Update packages
+npm update
+# Check for vulnerabilities
+npm audit	
+	
+	## Giải thích chi tiết: 
+		npm: Công cụ quản lý package, cài đặt thư viện (như Express, Lodash).
+	
+			npm init: Tạo file package.json (metadata dự án).
+			npm install: Cài các dependency từ package.json.
+			npm update: Cập nhật package lên phiên bản mới nhất (tuân theo version range trong package.json).
+			npm audit: Kiểm tra lỗ hổng bảo mật trong dependency.	
+				
+	
+	
+# 	7. Common Command Line Flags (Cờ CLI)
+	
+# Show Node.js version
+node --version
+# Show V8 version
+node --v8-options
+# Show command-line help
+node --help
+
+# Check syntax without executing
+node --check app.js
+# Show stack traces for warnings
+node --trace-warnings app.js
+# Set max memory
+node --max-old-space-size=4096 app.js
+# Preload a module
+node --require dotenv/config app.js
+
+# Enable ES module loader
+node --experimental-modules app.mjs
+# Enable experimental features
+node --experimental-repl-await
+# Enable experimental worker threads
+node --experimental-worker	
+	
+	
+	## 	Giải thích chi tiết:
+	
+		## Version & Help:
+	
+			node --version hoặc -v: Hiển thị phiên bản Node.js (ví dụ: v20.19.5).
+			node --v8-options: Liệt kê các cờ của V8 engine (ít dùng trực tiếp).
+			node --help: Hiển thị tất cả cờ CLI.
+
+		## Runtime Behavior:
+		
+			node --check app.js: Kiểm tra cú pháp mà không chạy code, hữu ích để phát hiện lỗi sớm.
+			node --trace-warnings app.js: In stack trace cho warning, giúp debug.
+			node --max-old-space-size=4096 app.js: Giới hạn bộ nhớ heap (4GB), dùng khi xử lý dữ liệu lớn.
+			node --require dotenv/config app.js: Tải module dotenv trước khi chạy, tự động load biến từ .env.		
+		
+		
+		## Experimental Features
+		
+			node --experimental-modules: Kích hoạt ES Modules (không cần từ Node.js 14.x nếu có type: "module").
+			node --experimental-repl-await: Cho phép dùng await trực tiếp trong REPL.
+			node --experimental-worker: Kích hoạt Worker Threads (ổn định từ Node.js 12.x).	
+		
+		
+https://www.w3schools.com/nodejs/nodejs_v8_engine.asp		
+		
+		
+		
+		
+		
+		
+		
+		
+
+</pre><a id='backBottom' href='../NodeJS-learning.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

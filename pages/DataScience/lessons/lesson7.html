@@ -1,0 +1,142 @@
+<html><head><title>Lesson 7 == Functions ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../DataScience-learning.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 7 -- Functions -//</h1><pre>
+# 1. Tập Dữ Liệu Sức Khỏe (The Sports Watch Data Set)
+
+	Định nghĩa chính: Bài sử dụng bảng dữ liệu sức khỏe từ đồng hồ thể thao, với 6 biến số (variables) và 10 quan sát (observations), tương tự bảng trong bài "Database Table". Mỗi cột là một biến số:
+
+		- Duration: Thời gian tập (phút).
+		- Average_Pulse: Nhịp tim trung bình (bpm - beats per minute).
+		- Max_Pulse: Nhịp tim tối đa.
+		- Calorie_Burnage: Calo đốt cháy.
+		- Hours_Work: Giờ làm việc trước khi tập.
+		- Hours_Sleep: Giờ ngủ đêm trước.
+
+	## Giải thích chi tiết và chuyên sâu:
+		Cấu trúc dữ liệu: Đây là structured data, được tổ chức thành bảng (như bài "Database Table" đã giải thích). Mỗi cột là một biến số có thể đo lường (quantitative), mỗi hàng là một observation (một buổi tập).
+	
+
+		Tên biến số: Sử dụng dấu gạch dưới (_) thay vì khoảng trắng (ví dụ: Calorie_Burnage thay vì "Calorie Burnage") vì Python không chấp nhận khoảng trắng trong tên biến. Đây là quy tắc quan trọng khi đặt tên cột trong Pandas hoặc tên biến trong code.
+
+		Minh họa chuyên sâu: Bảng này có thể được đọc vào DataFrame (như bài "Python DataFrame") để phân tích:
+		
+import pandas as pd
+data = {
+    'Duration': [30, 30, 45, 45, 45, 60, 60, 60, 75, 75],
+    'Average_Pulse': [80, 85, 90, 95, 100, 105, 110, 115, 120, 125],
+    'Max_Pulse': [120, 120, 130, 130, 140, 140, 145, 145, 150, 150],
+    'Calorie_Burnage': [240, 250, 260, 270, 280, 290, 300, 310, 320, 330],
+    'Hours_Work': [10, 10, 8, 8, 0, 7, 7, 8, 0, 8],
+    'Hours_Sleep': [7, 7, 7, 7, 7, 8, 8, 8, 8, 8]
+}
+df = pd.DataFrame(data)
+print(df.describe())
+
+
+	Output (tóm tắt):
+
+
+       Duration  Average_Pulse  Max_Pulse  Calorie_Burnage  Hours_Work  Hours_Sleep
+count    10.0         10.0      10.0           10.0        10.0        10.0
+mean     52.5        102.5     137.0          285.0         6.6         7.5
+std      16.2         15.1      11.6           29.5         3.5         0.5
+min      30.0         80.0     120.0          240.0         0.0         7.0
+max      75.0        125.0     150.0          330.0        10.0         8.0
+
+
+	Phân tích: describe() cho thấy thống kê cơ bản (count, mean, std, min, max, quartiles), bao gồm cả min(), max(), và mean() mà bài này giới thiệu. Đây là bước đầu trong data exploration.
+
+
+	Kết nối với bài trước: Bảng này chính là dữ liệu trong data.csv của bài đầu tiên (hồi quy tuyến tính) và bài "Database Table". Chúng ta sẽ dùng các hàm max(), min(), mean() để phân tích cột như Average_Pulse, Calorie_Burnage.
+
+	Ứng dụng thực tế: Dữ liệu này giống output từ thiết bị như Fitbit. Data Scientist dùng các hàm thống kê để tìm patterns (ví dụ: calo đốt cao hơn khi nhịp tim cao).
+
+
+# 2. Hàm max() (The max() function)
+
+	Định nghĩa chính: Hàm max() của Python tìm giá trị lớn nhất trong một mảng (array/list).
+	Mã ví dụ từ bài:
+
+Average_pulse_max = max(80, 85, 90, 95, 100, 105, 110, 115, 120, 125)
+print(Average_pulse_max)  # Output: 125
+
+
+	##   Giải thích chi tiết và chuyên sâu:
+		Chức năng: max() là hàm built-in của Python, nhận một iterable (như list) và trả về giá trị lớn nhất. Trong ví dụ, nó tìm nhịp tim trung bình cao nhất (125 bpm) từ cột Average_Pulse.
+
+		Minh họa với DataFrame: Dùng Pandas để tính max cho cột Average_Pulse:
+
+		average_pulse_max = df['Average_Pulse'].max()
+		print(average_pulse_max)  # Output: 125
+
+		Phân tích: Kết quả giống hàm max() trên list, nhưng dùng Pandas tiện hơn vì không cần liệt kê thủ công. df['Average_Pulse'].max() áp dụng trực tiếp trên cột.
+
+		Ứng dụng thực tế: Trong phân tích doanh thu, max() tìm ngày bán hàng cao nhất (ví dụ: doanh thu tối đa trong Black Friday).
+
+		Chuyên sâu: max() có thể dùng với key function để tìm max theo tiêu chí phức tạp (ví dụ: max(df['Average_Pulse'], key=lambda x: abs(x-100)) tìm giá trị gần 100 nhất). Kiểm tra max trên nhiều cột:
+
+		Chuyên sâu: max() có thể dùng với key function để tìm max theo tiêu chí phức tạp (ví dụ: max(df['Average_Pulse'], key=lambda x: abs(x-100)) tìm giá trị gần 100 nhất). Kiểm tra max trên nhiều cột:
+
+	max_values = df[['Average_Pulse', 'Calorie_Burnage']].max()
+print(max_values)
+# Output:
+# Average_Pulse      125
+# Calorie_Burnage    330
+
+		Lưu ý: Đảm bảo dữ liệu không có missing values (NaN), nếu không max() sẽ lỗi. Dùng df['Average_Pulse'].max(skipna=True) để bỏ qua NaN.
+		
+		
+		
+# 3. Hàm min() (The min() function)		
+			
+	Định nghĩa chính: Hàm min() của Python tìm giá trị nhỏ nhất trong một mảng.	
+		Mã ví dụ từ bài:
+		
+	Average_pulse_min = min(80, 85, 90, 95, 100, 105, 110, 115, 120, 125)
+	print(Average_pulse_min)  # Output: 80	
+		
+	Giải thích chi tiết và chuyên sâu:	
+		
+		Chức năng: min() tương tự max(), trả về giá trị nhỏ nhất. Trong ví dụ, nhịp tim trung bình thấp nhất là 80 bpm.
+		
+	## Minh họa với DataFrame: 
+		
+average_pulse_min = df['Average_Pulse'].min()
+print(average_pulse_min)  # Output: 80	
+		
+		Phân tích: Pandas min() nhanh và tiện lợi hơn khi làm việc với cột lớn. Có thể áp dụng cho nhiều cột: df[['Average_Pulse', 'Calorie_Burnage']].min()
+		
+	Ứng dụng thực tế: Trong logistics, min() tìm thời gian giao hàng ngắn nhất để tối ưu hóa lộ trình.	
+		
+	Chuyên sâu: Kiểm tra hàng có nhịp tim thấp nhất:	
+		
+min_pulse_row = df[df['Average_Pulse'] == df['Average_Pulse'].min()]
+print(min_pulse_row)
+# Output: Row 0 (Duration=30, Average_Pulse=80, Calorie_Burnage=240, ...)		
+		
+	Lưu ý: Tương tự max(), kiểm tra NaN trước khi dùng min().	
+		
+		
+# 	4. Hàm mean() (The mean() function)	
+		
+	Định nghĩa chính: Hàm mean() của NumPy tính giá trị trung bình của một mảng.	
+		
+import numpy as np
+Calorie_burnage = [240, 250, 260, 270, 280, 290, 300, 310, 320, 330]
+Average_calorie_burnage = np.mean(Calorie_burnage)
+print(Average_calorie_burnage)  # Output: 285.0		
+		
+	Chức năng: np.mean() tính trung bình cộng (sum chia cho số phần tử). Cần import numpy as np vì mean() thuộc thư viện NumPy (đã giới thiệu ở bài "Python Libraries").	
+		
+	Mở rộng thống kê: Dùng Pandas để tính thêm median, std:
+	
+	print(f"Median: {df['Calorie_Burnage'].median()}")  # 285.0
+	print(f"Std: {df['Calorie_Burnage'].std()}")     # 29.58
+
+	Phân tích: Median = mean (285) cho thấy dữ liệu khá đối xứng, không có outliers lớn. Std=29.58 cho biết calo dao động khoảng ±30 calo quanh mean.
+	
+	Lưu ý: np.mean() nhanh hơn list Python với dữ liệu lớn nhờ vectorization. Dùng skipna=True để bỏ qua NaN.
+	
+https://www.w3schools.com/datascience/ds_analyze_data.asp	
+	
+		
+		
+</pre><a id='backBottom' href='../DataScience-learning.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

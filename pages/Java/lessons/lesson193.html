@@ -1,0 +1,99 @@
+<html><head><title>Lesson 193 == Reactive Streams – Intro ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 193 -- Reactive Streams – Intro -//</h1><pre>
+# 1. Reactive Streams: bức tranh lớn
+
+
+	- Streams (Java 8): pull-based, nghĩa là consumer (terminal op) chủ động kéo data từ upstream khi cần. Ví dụ forEach sẽ iterate và lấy từng item.
+	
+	- Reactive Streams (Java 9 Flow API): push-based + backpressure. Publisher đẩy data xuống Subscriber, nhưng Subscriber có thể kiểm soát tốc độ qua cơ chế request(n). Đây là điểm game-changer: thay vì flood dữ liệu (risk OOM), hệ thống sẽ điều tiết (flow control).
+
+	=> Đây chính là lý do reactive streams quan trọng khi dữ liệu đến liên tục (real-time events, messaging, IoT, logs...).
+
+
+# 2. Flow API (Java 9) – foundation của reactive programming
+
+
+	Publisher<T>: nguồn dữ liệu (event source).
+	
+	Subscriber<T>: đối tượng tiêu thụ dữ liệu, định nghĩa onNext, onError, onComplete.
+	
+	Subscription: cầu nối giữa 2 thằng trên, cho phép Subscriber request bao nhiêu data.
+	
+	Processor<T,R>: vừa là Subscriber, vừa là Publisher (để transform/pipe).
+	
+	👉 Đây chính là pipeline reactive (giống Stream API nhưng với push-based + async + backpressure).
+
+
+
+# 3. Backpressure – "nghệ thuật kiểm soát lưu lượng"
+
+	Không có backpressure: Subscriber dễ bị Publisher flood dữ liệu (classic vấn đề trong messaging, Kafka consumer slow, RabbitMQ overflow).
+	
+	Reactive Streams solve bằng request(n): Subscriber chỉ nhận n phần tử, khi xử lý xong có thể request thêm.
+
+
+	## Ví dụ: 
+
+SubmissionPublisher<String> publisher = new SubmissionPublisher<>();
+
+publisher.subscribe(new Subscriber<>() {
+    private Subscription subscription;
+
+    @Override
+    public void onSubscribe(Subscription subscription) {
+        this.subscription = subscription;
+        subscription.request(1); // yêu cầu item đầu tiên
+    }
+
+    @Override
+    public void onNext(String item) {
+        System.out.println("Received: " + item);
+        subscription.request(1); // chỉ request thêm khi xử lý xong
+    }
+
+    @Override
+    public void onError(Throwable throwable) {
+        throwable.printStackTrace();
+    }
+
+    @Override
+    public void onComplete() {
+        System.out.println("Done");
+    }
+});
+
+	Ở đây, request(1) chính là cách tránh bị "ngộp thở".
+
+
+# 4. Enterprise Example – Employee event stream
+
+	## Tưởng tượng hệ thống HR có EmployeeEventPublisher stream ra events: employee được hire, resign, hoặc update salary.
+
+		- Publisher phát stream event liên tục (Kafka, JMS, hay SubmissionPublisher).
+		- Processor lọc: chỉ lấy event khi salary < threshold hoặc status = "RESIGNED".
+		- Subscriber notify manager (send mail, log alert, trigger workflow).
+
+
+	## Lợi ích:
+		- Không cần batch cron-job query DB mỗi 5 phút.
+		- Dữ liệu real-time, push-based.
+		- Có backpressure → tránh việc mail service bị spam khi hàng loạt resign events nổ ra.
+
+
+
+# 5. Senior-level insight
+
+	Pull vs Push: Stream API phù hợp batch, finite datasets. Reactive Stream phù hợp infinite/unbounded event flow.
+	
+	Backpressure = critical trong enterprise (chẳng khác gì circuit breaker, rate limiter trong hệ thống distributed).
+	
+	SubmissionPublisher chỉ là demo tool, thực tế enterprise dùng Reactor (Project Reactor, Spring WebFlux) hoặc RxJava, Akka Streams. Flow API là chuẩn chung (JSR 266) mà các lib reactive implement.
+	
+	Architecture shift: Reactive Streams chính là nền tảng cho Reactive Microservices → non-blocking, responsive, resilient systems.
+
+
+# Tóm gọn theo pipeline analogy:
+
+	Stream API: giống như query dữ liệu từ DB rồi loop → bạn kiểm soát lúc nào lấy, và dữ liệu finite.
+	
+	Reactive Streams: giống như subscribe vào Kafka topic → dữ liệu đến push vào bạn, bạn cần backpressure để không bị “chết đuối”.
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
