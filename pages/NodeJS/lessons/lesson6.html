@@ -1,0 +1,137 @@
+<html><head><title>Lesson 6 == Node.js V8 Engine ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../NodeJS-learning.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 6 -- Node.js V8 Engine -//</h1><pre>
+# 1. What is the V8 Engine?
+		
+	## Tài liệu nêu:	
+		
+		- V8 là engine JavaScript mã nguồn mở của Google, dùng trong Chrome và Node.js.
+		- Nó biên dịch JavaScript thành mã máy (machine code) để thực thi nhanh.		
+		
+		Origin: Ra mắt năm 2008 cho Chrome.
+		Integration: Node.js dùng V8 để chạy JavaScript trên server.
+		Features: JIT Compilation, Garbage Collection hiệu quả, hỗ trợ ES6+.		
+		
+		
+	## Giải thích chi tiết:  	
+		
+		- V8 là gì? V8 là một JavaScript engine, chuyển code JavaScript thành mã máy mà CPU hiểu trực tiếp. Không như các engine cũ (như SpiderMonkey của Firefox), V8 biên dịch (compile) thay vì thông dịch (interpret), nên rất nhanh.
+		- Vai trò trong Node.js: Node.js không tự chạy JavaScript mà dựa vào V8 để thực thi. V8 xử lý logic JavaScript, còn Node.js cung cấp các API (như fs, http) để tương tác với hệ thống.
+		- So sánh với browser: Trong Chrome, V8 chạy code để render UI, xử lý DOM. Trong Node.js, V8 chạy code để xử lý file, network, hoặc database.
+		- Ví dụ thực tế: Khi bạn chạy node app.js, V8 biên dịch code JavaScript thành mã máy, rồi Node.js dùng các module C++ để kết nối với hệ điều hành.		
+		
+		
+# 	2. Why V8 Makes Node.js Fast	
+	Tài liệu liệt kê các kỹ thuật giúp V8 nhanh:	
+		
+		- Just-In-Time (JIT) Compilation
+		- Hidden Classes
+		- Efficient Garbage Collection
+		- Inline Caching		
+		
+	## 	Just-In-Time (JIT) Compilation:
+		
+		- Cách hoạt động: V8 không chạy JavaScript trực tiếp mà biên dịch nó thành mã máy trước hoặc trong lúc chạy. JIT kết hợp biên dịch (compile-time) và thông dịch (run-time) để tối ưu tốc độ.
+		- Ví dụ: Code như const sum = (a, b) => a + b; được biên dịch thành mã máy, thay vì đọc từng dòng như thông dịch.
+		- Ngữ cảnh: JIT giúp Node.js xử lý hàng nghìn request HTTP mỗi giây mà không chậm.		
+		
+		
+	## 	Hidden Classes:
+		Cách hoạt động: V8 tạo các "hidden classes" để theo dõi cấu trúc của object JavaScript. Nếu bạn thêm/xóa thuộc tính của object, V8 cập nhật hidden class để tối ưu truy cập.
+		
+		Ví dụ
+		
+			const obj = {};
+			obj.x = 1; // Hidden class 1
+			obj.y = 2; // Hidden class 2		
+			V8 ghi nhớ cấu trúc của obj để truy cập obj.x nhanh hơn.
+		Ngữ cảnh: Trong Node.js, hidden classes giúp xử lý JSON hoặc dữ liệu database nhanh hơn.
+
+
+	## Efficient Garbage Collection
+
+		- Cách hoạt động: V8 tự động thu hồi bộ nhớ từ các object không còn dùng (garbage collection), tránh memory leak.
+		- Ví dụ: Nếu bạn tạo hàng nghìn object trong vòng lặp, V8 sẽ dọn dẹp những object không còn tham chiếu.
+		- Ngữ cảnh: Quan trọng trong server Node.js chạy lâu dài, đảm bảo không hết bộ nhớ.
+
+	## Inline Caching:
+
+		- Cách hoạt động: V8 lưu cache vị trí của thuộc tính trong object để giảm thời gian truy cập.
+		- Ví dụ: Trong obj.x, V8 nhớ rằng x ở offset nào trong hidden class, nên lần sau truy cập nhanh hơn.
+		- Ngữ cảnh: Hữu ích khi bạn lặp lại các thao tác trên object, như xử lý request trong server.
+
+
+# 3. Check V8 Version in Node.js
+
+	console.log(`V8 version: ${process.versions.v8}`);
+
+	Giải thích chi tiết:
+
+		- process.versions: Một object chứa thông tin phiên bản của Node.js và các thành phần liên quan.
+		- process.versions.v8: Trả về phiên bản V8 đang dùng (ví dụ: 10.8.168.25-node.20).
+		- Tại sao cần? Kiểm tra phiên bản V8 giúp bạn biết liệu một tính năng JavaScript mới (như Array.prototype.at) có được hỗ trợ không.
+		- Ngữ cảnh: Mỗi phiên bản Node.js gắn với một phiên bản V8. Ví dụ, Node.js 20.19.5 dùng V8 10.8, hỗ trợ đầy đủ ES2023.
+
+
+# 4. Understanding V8's Role in Node.js
+
+	V8 cung cấp môi trường thực thi JavaScript cho Node.js.
+
+	Cho phép
+
+		- Chạy JavaScript ngoài browser.
+		- Truy cập hệ thống (file, network) qua các module Node.js.
+		- Tận dụng cùng engine với Chrome, đảm bảo tính nhất quán.
+
+	## Giải thích chi tiết:
+		- Môi trường thực thi: V8 xử lý logic JavaScript (như tính toán, vòng lặp, hàm). Node.js bổ sung các binding C++ để kết nối V8 với hệ điều hành (ví dụ: đọc file qua fs).
+
+		- Khác browser: Trong browser, V8 tương tác với DOM và Web APIs. Trong Node.js, V8 kết hợp với Libuv (thư viện C cho event loop) và các module để xử lý I/O.
+		
+		- Tính nhất quán: Code JavaScript viết cho Chrome thường chạy được trên Node.js (trừ DOM/Web APIs), nhờ cùng V8.
+
+
+
+# 5. V8 Memory Usage
+
+	const v8 = require('v8');
+	const heapStats = v8.getHeapStatistics();
+	console.log('Heap size limit:', (heapStats.heap_size_limit / 1024 / 1024).toFixed(2), 'MB');
+	console.log('Total heap size:', (heapStats.total_heap_size / 1024 / 1024).toFixed(2), 'MB');
+	console.log('Used heap size:', (heapStats.used_heap_size / 1024 / 1024).toFixed(2), 'MB');
+
+
+		Module v8: Cung cấp API để truy cập thông tin về V8 engine, như thống kê bộ nhớ (heap).
+		v8.getHeapStatistics(): Trả về object chứa thông tin về heap:
+		
+		heap_size_limit: Giới hạn bộ nhớ tối đa (thường ~4GB trên 64-bit, có thể điều chỉnh bằng --max-old-space-size).
+		total_heap_size: Tổng bộ nhớ heap được cấp phát.
+		used_heap_size: Bộ nhớ đang dùng.
+
+
+
+
+# 6. V8's Update Cycle
+
+		- V8 liên tục được cập nhật với tính năng JavaScript mới và tối ưu hiệu suất.
+		- Node.js thường xuyên update V8.
+		- V8 hỗ trợ chuẩn ECMAScript và WebAssembly.
+
+	## Giải thích chi tiết:
+		
+		- Cập nhật V8: Google phát triển V8 cho Chrome, và Node.js tích hợp các phiên bản V8 mới trong mỗi bản phát hành (6 tháng/lần). Ví dụ, Node.js 20.x dùng V8 10.8, hỗ trợ ES2023.
+		
+		- ECMAScript: V8 triển khai các tính năng mới như Promise.any, Array.prototype.at. Khi ECMAScript chuẩn hóa tính năng, V8 sẽ thêm vào, đồng bộ giữa Chrome và Node.js.
+		
+		- WebAssembly: V8 cũng chạy WebAssembly (code nhị phân hiệu suất cao), nhưng ít dùng trong Node.js cơ bản.
+		
+		- Ngữ cảnh: Nếu bạn cần tính năng mới (như String.prototype.replaceAll), kiểm tra phiên bản V8 qua process.versions.v8.
+
+
+https://www.w3schools.com/nodejs/nodejs_architecture.asp
+
+
+
+
+
+
+
+</pre><a id='backBottom' href='../NodeJS-learning.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

@@ -1,0 +1,137 @@
+<html><head><title>Lesson 194 == Functional design patterns & best practices ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 194 -- Functional design patterns & best practices -//</h1><pre>
+# 1. Functional mindset trong enterprise
+
+	Functional design không đơn giản là “dùng lambda cho gọn code”, mà là:
+
+		- Chia nhỏ function: mỗi function làm một việc duy nhất (Single Responsibility).
+		- Compose: ghép lại thành pipeline, dễ test, dễ thay đổi rule.
+		- Immutability & no side-effects: pipeline thread-safe, dễ parallelize, không lo race condition.
+		- Declarative style: code mô tả cái gì cần làm, không phải làm thế nào.
+
+	👉 Đây chính là "functional design pattern" — thay vì design OOP bằng class hierarchy, ta design bằng function composition.
+
+
+
+# 2. Patterns quan trọng
+
+	## (a) Pipeline pattern
+
+		Tư duy: dữ liệu chảy qua nhiều function nhỏ, mỗi function transform 1 bước.
+		
+		Thay vì if-else khổng lồ, ta có Predicate chain + Function chain.
+		
+		Code dễ maintain: thay rule = inject thêm function.
+
+	Ví dụ validate → transform → aggregate:
+
+List<Employee> employees = ...;
+
+String report = employees.stream()
+    .filter(e -> e.getSalary() > 1000)                  // validate rule
+    .map(Employee::getEmail)                            // transform
+    .collect(Collectors.joining(", "));                 // aggregate
+
+System.out.println("Report: " + report);
+
+	Đây là functional pipeline pattern: tách từng concern thành stage.
+
+
+
+# (b) Composition over inheritance
+
+	Trong OOP, ta hay extend class để thêm behavior. Functional approach: compose function.
+
+		Function<Employee, String> normalizeEmail =
+			e -> e.getEmail().toLowerCase();
+		
+		Function<Employee, String> format =
+			normalizeEmail.andThen(email -> "Mail: " + email);
+		
+	Không cần subclass EmployeeFormatter → chỉ cần compose function.
+
+
+
+# (c) Predicate logic composition
+
+	Thay vì viết:
+		if (age > 18 && status.equals("ACTIVE") && email != null) { ... }
+
+	Ta viết:
+
+		Predicate<Employee> valid = 
+			e -> e.getAge() > 18;
+		valid = valid.and(e -> "ACTIVE".equals(e.getStatus()))
+					.and(e -> e.getEmail() != null);
+		
+
+	Ưu điểm: 
+
+		Dễ tái sử dụng, test riêng từng rule.
+		Dễ add/remove rule trong runtime (plug-and-play).	
+
+
+
+	## (d) Exception handling functional style
+
+		Streams không “ăn” checked exception, nên best practice:
+
+			Wrap vào Optional: fail → empty.
+			Custom wrapper: try-catch lambda.
+
+
+Function<String, Optional<Integer>> safeParse =
+    s -> {
+        try { return Optional.of(Integer.parseInt(s)); }
+        catch (NumberFormatException e) { return Optional.empty(); }
+    };
+
+
+
+# 3. Enterprise example – Report pipeline
+
+Predicate<Employee> isValid =
+    e -> e.getSalary() > 1000 &&
+         "ACTIVE".equals(e.getStatus()) &&
+         e.getEmail() != null;
+
+Function<Employee, String> toEmail = 
+    Employee::getEmail;
+
+Function<String, String> toLower = 
+    String::toLowerCase;
+
+String report = employees.stream()
+    .filter(isValid)                         // validate
+    .map(toEmail.andThen(toLower))           // transform
+    .collect(Collectors.joining(", "));      // aggregate
+
+System.out.println("Report: " + report);
+
+
+Pipeline này có thể extend rất dễ:
+
+	Add stage maskSensitiveData.
+	Add stage sendToExternalSystem.
+	Không cần rewrite core logic.
+	
+
+# 4. Senior-level best practices
+
+	Avoid side-effects trong lambda → thread-safe khi parallel.
+	
+		Tệ: .forEach(list::add) (shared mutable state).
+		Tốt: dùng collect.	
+	
+	Prefer composition over inheritance → giảm coupling.
+	Use Optional + wrapper để xử lý exception, không throw lung tung trong stream.
+	Unit-test từng function nhỏ thay vì test pipeline khổng lồ.
+	Think in algebra: Function + Predicate + Collector = building blocks. Tư duy như Lego: build pipeline từ khối nhỏ, thay vì viết procedural code dài dòng.	
+	
+	
+	
+	
+	
+	
+	
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
