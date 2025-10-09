@@ -1,0 +1,157 @@
+<html><head><title>Lesson 11 == Linear Slope ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../DataScience-learning.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 11 -- Linear Slope -//</h1><pre>
+# 1. Slope và Intercept (Slope and Intercept)
+
+	Định nghĩa chính: Bài giải thích cách tìm slope và intercept của hàm tuyến tính f(x) = 2x + 80, dùng để dự đoán Calorie_Burnage từ Average_Pulse. Slope biểu thị độ dốc của đường thẳng, intercept là giá trị của y khi x = 0 (điểm cắt trục y).
+
+	## Giải thích chi tiết và chuyên sâu:
+		Hàm tuyến tính: f(x) = 2x + 80
+
+			- x: Average_Pulse (biến độc lập).
+			- f(x): Calorie_Burnage (biến phụ thuộc).
+			- 2 (slope): Độ dốc, cho biết Calorie_Burnage tăng bao nhiêu khi Average_Pulse tăng 1 đơn vị.
+			- 80 (intercept): Giá trị Calorie_Burnage khi Average_Pulse = 0.
+			
+		Minh họa đồ thị: Đường thẳng màu xanh (blue line) từ bài trước được tiếp tục (màu đỏ) để chỉ slope (độ dốc) và intercept (điểm cắt y-axis tại y=80).
+
+
+
+
+# 2. Tìm Slope (Find The Slope)
+
+	Định nghĩa chính: Slope là mức tăng của Calorie_Burnage khi Average_Pulse tăng 1 đơn vị. Bài tính slope bằng cách lấy hai điểm trên đồ thị và sử dụng công thức:
+		Slope = (f(x2) - f(x1)) / (x2 - x1).
+
+
+	Mã ví dụ từ bài
+
+		def slope(x1, y1, x2, y2):
+			s = (y2 - y1) / (x2 - x1)
+			return s
+		print(slope(80, 240, 90, 260))  # Output: 2
+
+
+	## Cách tính thủ công:
+
+		Lấy hai điểm: (x1=80, y1=240) và (x2=90, y2=260).
+		Tăng Average_Pulse từ 80 → 90 (10 đơn vị) → Calorie_Burnage tăng từ 240 → 260 (20 đơn vị).
+		Slope = (260 - 240) / (90 - 80) = 20 / 10 = 2.
+		Ý nghĩa: Mỗi khi nhịp tim tăng 1 bpm, calo đốt cháy tăng 2 đơn vị.
+		
+
+	Hàm slope(): Hàm Python tính slope từ hai điểm bất kỳ. Công thức đảm bảo tính toán chính xác nếu chọn điểm đúng thứ tự.
+	
+	Minh họa chuyên sâu: Tính slope bằng toàn bộ dữ liệu với np.polyfit
+
+
+import pandas as pd
+import numpy as np
+health_data = pd.DataFrame({
+    'Average_Pulse': [80, 85, 90, 95, 100, 105, 110, 115, 120, 125],
+    'Calorie_Burnage': [240, 250, 260, 270, 280, 290, 300, 310, 320, 330]
+})
+slope, intercept = np.polyfit(health_data['Average_Pulse'], health_data['Calorie_Burnage'], 1)
+print(f"Slope: {slope}, Intercept: {intercept}")
+
+
+import pandas as pd
+import numpy as np
+health_data = pd.DataFrame({
+    'Average_Pulse': [80, 85, 90, 95, 100, 105, 110, 115, 120, 125],
+    'Calorie_Burnage': [240, 250, 260, 270, 280, 290, 300, 310, 320, 330]
+})
+slope, intercept = np.polyfit(health_data['Average_Pulse'], health_data['Calorie_Burnage'], 1)
+print(f"Slope: {slope}, Intercept: {intercept}")
+
+	Output: Slope ≈ 2, Intercept ≈ 80.
+
+		Phân tích: np.polyfit(x, y, 1) tính slope và intercept cho hàm tuyến tính (độ 1). Kết quả khớp với tính thủ công và công thức y = 2x + 80.
+
+
+		- Ứng dụng thực tế: Trong tài chính, slope cho biết doanh thu tăng bao nhiêu khi chi phí quảng cáo tăng 1 đô la. Slope lớn (như 10) cho thấy tác động mạnh.
+		- Lưu ý chuyên sâu: Slope âm (như -2) có thể xảy ra nếu y giảm khi x tăng (ví dụ: Hours_Work tăng → Calorie_Burnage giảm). Luôn kiểm tra thứ tự điểm để tránh sai số.
+
+
+
+# 3. Tìm Intercept (Find The Intercept) 
+
+	Định nghĩa chính: Intercept là giá trị của y (Calorie_Burnage) khi x (Average_Pulse) = 0, tức điểm đường thẳng cắt trục y. Trong y = 2x + 80, intercept = 80.
+
+	## Giải thích chi tiết và chuyên sâu:
+		Ý nghĩa của intercept: Intercept = 80 nghĩa là khi Average_Pulse = 0, Calorie_Burnage = 80. Tuy nhiên, bài lưu ý:
+
+		Average_Pulse = 0 không thực tế (nhịp tim 0 → không sống, không đốt calo).
+		
+		Intercept vẫn cần thiết để hoàn thiện hàm tuyến tính và dự đoán chính xác trong phạm vi dữ liệu (80-125 bpm).
+		
+			Doanh thu (y) khi chi phí marketing (x) = 0: Công ty vẫn có doanh thu từ khách hàng hiện tại.
+			
+			Nhiên liệu (y) khi tốc độ (x) = 0: Xe vẫn tiêu thụ nhiên liệu khi đứng yên.
+
+
+	Tính intercept: Từ công thức y = ax + b, khi x=0, y=b. Dùng một điểm và slope để tính:
+
+
+
+# 4. Tính Slope và Intercept Bằng Python (Find the Slope and Intercept Using Python)
+
+import pandas as pd
+import numpy as np
+health_data = pd.read_csv("data.csv", header=0, sep=",")
+x = health_data["Average_Pulse"]
+y = health_data["Calorie_Burnage"]
+slope_intercept = np.polyfit(x, y, 1)
+print(slope_intercept)  # Output: [2. 80.]
+
+
+	## Giải thích chi tiết và chuyên sâu:
+
+		Hàm np.polyfit(x, y, 1): Tính toán slope và intercept cho hàm tuyến tính (độ 1). Trả về mảng [slope, intercept].
+
+			x, y: Dữ liệu từ cột Average_Pulse và Calorie_Burnage.
+			1: Độ của đa thức (1 = tuyến tính).
+
+			Kết quả: Slope=2, Intercept=80, xác nhận công thức y = 2x + 80.
+
+
+
+
+# 5. Dự Đoán Giá Trị Mới (Task: Predict Calorie_Burnage for Average_Pulse = 135)
+
+	Định nghĩa chính: Dùng hàm f(x) = 2x + 80 để dự đoán Calorie_Burnage khi Average_Pulse = 135.
+
+def my_function(x):
+    return 2 * x + 80
+print(my_function(135))  # Output: 350
+
+
+	Tính toán: f(135) = 2 * 135 + 80 = 270 + 80 = 350. Khi nhịp tim trung bình là 135 bpm, dự đoán đốt 350 calo.
+
+
+	Phân tích: Dự đoán hợp lý vì dữ liệu gốc cho thấy Calorie_Burnage tăng tuyến tính với Average_Pulse. Tuy nhiên, giá trị ngoài phạm vi dữ liệu (80-125 bpm) cần kiểm tra thêm (extrapolation có thể không chính xác).
+
+	Ứng dụng thực tế: Dự đoán calo giúp huấn luyện viên thiết kế chương trình tập luyện. Trong kinh doanh, dự đoán doanh thu từ số lượng khách hàng mới.
+	
+	Lời khuyên chuyên gia: Kiểm tra độ tin cậy của dự đoán bằng confidence intervals (từ linregress trong bài đầu). Tránh extrapolation xa (như x=200) nếu không có dữ liệu hỗ trợ.
+
+
+
+# 6. Vẽ Đồ Thị Mới (Plot a New Graph in Python)
+
+	## Mã ví dụ từ bài: 
+import matplotlib.pyplot as plt
+plt.scatter(health_data['Average_Pulse'], health_data['Calorie_Burnage'], label='Data')
+plt.plot(health_data['Average_Pulse'], 2 * health_data['Average_Pulse'] + 80, color='blue', label='Linear Function')
+plt.xlabel('Average_Pulse')
+plt.ylabel('Calorie_Burnage')
+plt.xlim(xmin=0, xmax=150)
+plt.ylim(ymin=0, ymax=400)
+plt.legend()
+plt.show()
+
+	Phân tích: Đồ thị vẽ điểm dữ liệu (scatter) và đường y = 2x + 80. Trục x mở rộng đến 150, trục y đến 400 để chứa dự đoán mới (như x=135 → y=350).
+
+
+
+https://www.w3schools.com/datascience/ds_stat_intro.asp
+
+</pre><a id='backBottom' href='../DataScience-learning.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

@@ -1,0 +1,316 @@
+<html><head><title>Lesson 9 == Async ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../NodeJS-learning.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 9 -- Async -//</h1><pre>
+
+# Tổng Quan Phần "Node.js Asynchronous Programming"
+
+	Mục tiêu: Hiểu cách viết code bất đồng bộ trong Node.js, bao gồm:
+
+
+		- Asynchronous là gì? Cách Node.js xử lý các tác vụ I/O (như đọc file, request mạng) mà không chặn luồng chính.
+		- Sync vs Async: So sánh synchronous (đồng bộ) và asynchronous (bất đồng bộ).
+		- Callback Hell: Vấn đề của callback lồng nhau và cách giải quyết bằng Promises/async/await.
+		- Modern Async Patterns: Sử dụng Promises và async/await để viết code dễ đọc, hiệu quả.
+		- Best Practices: Cách viết code bất đồng bộ đúng cách.
+		- Tại sao cần? Giải thích lợi ích của bất đồng bộ trong việc xử lý nhiều kết nối.
+
+
+
+	Tại sao quan trọng? Node.js được thiết kế cho các tác vụ I/O-heavy (như server API, streaming), và bất đồng bộ là chìa khóa để đạt hiệu suất cao. Hiểu các pattern này giúp bạn viết code không chặn event loop, dễ maintain, và xử lý lỗi tốt hơn.
+
+
+
+# 1. What is Asynchronous Programming?
+
+	Asynchronous operations cho phép chương trình làm việc khác trong khi chờ các tác vụ như file I/O hoặc network requests hoàn tất.
+	
+	Mô hình non-blocking này giúp Node.js xử lý hàng nghìn kết nối đồng thời hiệu quả.
+
+	## Giải thích chi tiết:
+
+		Asynchronous là gì? Trong Node.js, các tác vụ như đọc file, query database, hoặc gửi HTTP request có thể mất thời gian (I/O-bound). Thay vì chờ, Node.js giao việc cho hệ thống (qua Libuv) và tiếp tục xử lý tác vụ khác. Khi I/O hoàn tất, callback/Promise được gọi để xử lý kết quả.
+
+		Non-blocking: Event loop (đã học ở phần trước) đảm bảo luồng chính không bị chặn, giúp server tiếp tục nhận request mới.
+
+		Ví dụ thực tế: Một server API Node.js có thể trả response cho client A trong khi chờ database trả dữ liệu cho client B.
+
+		Ngữ cảnh: Bất đồng bộ là cốt lõi của các ứng dụng như chat (WebSocket), streaming video, hoặc REST API.
+		
+		
+		
+		
+		Synchronous: Đợi đọc file xong mới chạy dòng code tiếp theo → Chậm nếu file lớn.
+		
+		Asynchronous: Gửi lệnh đọc file, tiếp tục chạy code khác, xử lý kết quả sau → Nhanh, hiệu quả.		
+		
+		
+		
+# 2. Sync vs Async: Key Differences		
+		
+	## Synchronous:	
+		- Chặn thực thi cho đến khi hoàn tất.
+		- Dễ hiểu, nhưng gây chậm trễ.
+		- Ví dụ: fs.readFileSync.		
+		
+		
+		
+	## 	Asynchronous:
+		
+Không chặn, hiệu suất cao.
+Phức tạp hơn, cần xử lý callback/Promise.
+Ví dụ: fs.readFile.		
+		
+		
+		
+	## 	2.1. Synchronous File Read
+	
+const fs = require('fs');
+
+console.log('1. Starting sync read...');
+const data = fs.readFileSync('myfile.txt', 'utf8');
+console.log('2. File contents:', data);
+console.log('3. Done reading file');	
+	
+1. Starting sync read...
+2. File contents: Hello!
+3. Done reading file
+	
+	
+	
+	
+	## 	2.2. Asynchronous File Read
+	
+const fs = require('fs');
+
+console.log('1. Starting async read...');
+fs.readFile('myfile.txt', 'utf8', (err, data) => {
+  if (err) throw err;
+  console.log('2. File contents:', data);
+});
+console.log('3. Done starting read operation');	
+	
+	
+	fs.readFile: Hàm bất đồng bộ, giao việc đọc file cho Thread Pool (Libuv), không chặn main thread.
+	
+	Luồng thực thi:
+	
+		- In 1.
+		- fs.readFile gửi lệnh đọc file, callback được xếp vào Callback Queue.
+		- In 3 ngay lập tức.
+		- Khi file đọc xong, event loop chạy callback, in 2.	
+	
+	Ưu điểm: Main thread tiếp tục xử lý request khác, lý tưởng cho server.
+	Ngữ cảnh: Dùng fs.readFile trong API để đọc file mà không làm chậm response
+	
+	
+		
+# 3. Avoiding Callback Hell
+
+	## 3.1. Problem: Nested Callbacks (Callback Hell)
+
+getUser(userId, (err, user) => {
+  if (err) return handleError(err);
+  getOrders(user.id, (err, orders) => {
+    if (err) return handleError(err);
+    processOrders(orders, (err) => {
+      if (err) return handleError(err);
+      console.log('All done!');
+    });
+  });
+});
+
+	Callback Hell: Các callback lồng nhau (nested callbacks) khiến code khó đọc, khó bảo trì, và dễ lỗi (như bỏ sót xử lý lỗi).
+
+		- Lồng nhiều cấp (ở đây là 3 cấp).
+		- Xử lý lỗi lặp lại ở mỗi callback.
+		- Khó debug nếu có lỗi ở cấp trong cùng.
+
+	Ngữ cảnh: Thường gặp khi gọi API, query database liên tiếp (như lấy user, rồi orders, rồi xử lý).
+
+
+	## 3.2. Solution: Use Promises 
+
+
+getUser(userId)
+  .then(user => getOrders(user.id))
+  .then(orders => processOrders(orders))
+  .then(() => console.log('All done!'))
+  .catch(handleError);
+
+
+		Promises: Chuyển callback thành chuỗi .then(), dễ đọc hơn. Một .catch() xử lý lỗi cho toàn chuỗi.
+
+			- getUser(userId) trả về Promise.
+			- Khi resolve, gọi getOrders(user.id).
+			- Tiếp tục với processOrders(orders).
+			- In All done! hoặc xử lý lỗi trong .catch.
+
+			Ưu điểm: Code tuyến tính, xử lý lỗi tập trung.
+			Ngữ cảnh: Dùng trong API hiện đại (như fetch, mongoose).
+
+
+		## 3.3. Even Better: Async/Await
+		
+async function processUser(userId) {
+  try {
+    const user = await getUser(userId);
+    const orders = await getOrders(user.id);
+    await processOrders(orders);
+    console.log('All done!');
+  } catch (err) {
+    handleError(err);
+  }
+}		
+		
+		
+		Hàm async trả về Promise.
+		await tạm dừng cho đến khi Promise resolve, nhưng không chặn event loop.
+		try/catch xử lý lỗi tương tự .catch.		
+		
+		Ưu điểm: Code rõ ràng như synchronous, dễ maintain.
+		Ngữ cảnh: Chuẩn hiện đại cho Node.js, dùng trong Express.js, database queries		
+		
+const getUser = (id) => Promise.resolve({ id, name: 'Alice' });
+const getOrders = (userId) => Promise.resolve([{ id: 1, item: 'Book' }]);
+const processOrders = (orders) => Promise.resolve(orders);
+const handleError = (err) => console.error('Error:', err);
+
+async function processUser(userId) {
+  try {
+    const user = await getUser(userId);
+    const orders = await getOrders(user.id);
+    await processOrders(orders);
+    console.log('All done!');
+  } catch (err) {
+    handleError(err);
+  }
+}
+processUser(1);
+
+
+
+# 4. Modern Async Patterns
+
+	## 4.1. Promises
+
+const fs = require('fs').promises;
+
+console.log('1. Reading file...');
+fs.readFile('myfile.txt', 'utf8')
+  .then(data => {
+    console.log('3. File content:', data);
+  })
+  .catch(err => console.error('Error:', err));
+console.log('2. This runs before file is read!');
+
+
+1. Reading file...
+2. This runs before file is read!
+3. File content: Hello!
+
+
+	- fs.promises: Phiên bản Promise của module fs, thay vì callback truyền thống.
+	- Luồng: fs.readFile trả về Promise, .then xử lý dữ liệu, .catch xử lý lỗi.
+	- Ưu điểm: Tránh callback, code rõ ràng hơn.
+	- Ngữ cảnh: Dùng khi làm việc với API Promise-based (như fetch, fs.promises)
+
+
+	## 4.2. Async/Await (Recommended)
+
+const fs = require('fs').promises;
+
+async function readFiles() {
+  try {
+    console.log('1. Starting to read files...');
+    const data1 = await fs.readFile('file1.txt', 'utf8');
+    const data2 = await fs.readFile('file2.txt', 'utf8');
+    console.log('2. Files read successfully!');
+    return { data1, data2 };
+  } catch (error) {
+    console.error('Error reading files:', error);
+  }
+}
+readFiles();		
+
+
+	- Async/Await: Dùng fs.promises để đọc file tuần tự, try/catch xử lý lỗi.
+	- Luồng: await chờ từng file, nhưng không chặn event loop. Kết quả được trả về dưới dạng object.
+	- Ưu điểm: Code dễ đọc, giống synchronous, phù hợp cho flow phức tạp.
+	- Ngữ cảnh: Chuẩn cho ứng dụng hiện đại (như Express.js với MongoDB).	
+
+
+
+
+# 5. Best Practices
+
+
+async function getUserData(userId) {
+  try {
+    const user = await User.findById(userId);
+    const orders = await Order.find({ userId });
+    return { user, orders };
+  } catch (error) {
+    console.error('Failed to fetch user data:', error);
+    throw error;
+  }
+}
+
+	Not This:
+
+User.findById(userId, (err, user) => {
+  if (err) return console.error(err);
+  Order.find({ userId }, (err, orders) => {
+    if (err) return console.error(err);
+    // Process orders...
+  });
+});
+
+
+
+	✅ Dùng async/await để code dễ đọc.
+	✅ Luôn xử lý lỗi với try/catch.
+	✅ Dùng Promise.all cho tác vụ song song.
+	❌ Tránh mix sync và async code.
+	❌ Không quên await với Promise.
+
+
+	## Example: Parallel Execution
+
+async function fetchAllData() {
+  try {
+    const [users, products, orders] = await Promise.all([
+      User.find(),
+      Product.find(),
+      Order.find()
+    ]);
+    return { users, products, orders };
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    throw error;
+  }
+}
+
+
+	- Promise.all: Chạy nhiều Promise song song, trả về mảng kết quả khi tất cả hoàn tất.
+	- Ưu điểm: Tăng tốc độ vì không chờ từng Promise tuần tự.
+	- Ngữ cảnh: Dùng khi lấy dữ liệu từ nhiều nguồn (như database queries).
+
+
+
+# 	7. Summary
+
+	- Node.js dùng event loop cho non-blocking I/O.
+	- Dùng async/await với Promises để code hiện đại.
+	- Luôn xử lý lỗi trong async code.
+	- Dùng Promise.all cho tác vụ song song.
+	- Tránh callback hell bằng Promises/async/await.	
+
+
+
+	- Event Loop: Đảm bảo non-blocking, cốt lõi của asynchronous.
+	- Async/Await: Chuẩn hiện đại, dễ đọc, dễ maintain.
+	- Lỗi: try/catch hoặc .catch là bắt buộc để tránh crash.
+	- Song song: Promise.all tối ưu khi cần chạy nhiều tác vụ cùng lúc.
+
+
+
+https://www.w3schools.com/nodejs/nodejs_promises.asp
+</pre><a id='backBottom' href='../NodeJS-learning.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

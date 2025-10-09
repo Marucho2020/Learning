@@ -1,0 +1,159 @@
+<html><head><title>Lesson 197 == Pure Function, Immutability & Referential Transparency ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 197 -- Pure Function, Immutability & Referential Transparency -//</h1><pre>
+# Định nghĩa:
+
+	## Một pure function là hàm mà:
+
+		Không có side-effect (không thay đổi trạng thái bên ngoài, không I/O, không log, không ghi DB).
+		
+		Kết quả chỉ phụ thuộc vào input.
+		→ Nghĩa là: cùng input → luôn output y như nhau.
+
+
+int add(int a, int b) {
+    return a + b;
+}
+
+	Pure vì không ghi log, không đổi biến toàn cục.
+	
+	
+	## Còn hàm này là impure:
+
+int addAndLog(int a, int b) {
+    System.out.println(a + b);
+    return a + b;
+}
+
+
+
+# 💡 Ứng dụng thực tế:
+
+
+Trong enterprise, pure function = predictability.(khả năng dự đoạn)
+Nó giúp bạn:
+
+	- Dễ cache (memoization).
+	- Dễ test (không cần mock).
+	- Dễ song song hóa (parallel) — vì không sợ conflict state.
+	- Dễ compose — vì chỉ quan tâm input/output, không context.
+
+🧠 Một pipeline validation, transform, scoring trong finance/banking chỉ an toàn khi mỗi bước là pure — vì bạn có thể chạy lại hoặc song song mà không phá dữ liệu.
+
+
+
+# 🧊 2. Immutability — “Không bao giờ thay đổi vật chất gốc”
+
+	## Định nghĩa: 
+		Dữ liệu sau khi tạo ra không bị thay đổi, mà khi cần cập nhật, bạn tạo bản sao mới.
+
+
+List<String> original = List.of("A", "B");
+List<String> modified = Stream.concat(original.stream(), Stream.of("C"))
+                              .collect(Collectors.toList());
+
+
+		original không đổi. modified là list mới.
+
+
+	## 	Trong OOP cũ:
+		Bạn hay viết:
+		
+		employee.setSalary(2000);
+		→ state bị thay đổi → khó debug khi multi-thread.
+
+	Functional design:
+		Employee updated = employee.withSalary(2000);
+		→ Tạo bản mới, dễ reasoning, dễ rollback, dễ audit.
+
+
+
+
+
+# 💡 Enterprise ứng dụng:
+
+	Trong hệ thống tài chính, bảo hiểm, banking:
+
+		Transaction log, audit log → chỉ append (không mutate).
+		Versioning → chỉ thêm bản mới (event sourcing).
+		Dễ kiểm soát concurrency, tránh dirty read.
+
+Rule: Immutability + pure function = safe parallelism + deterministic behavior.
+
+
+
+# 🔁 3. Referential Transparency — “Thay hàm bằng giá trị không đổi logic”
+
+	## Định nghĩa:
+
+		Một biểu thức có referential transparency nếu ta có thể thay lời gọi hàm bằng giá trị trả về mà không đổi kết quả của chương trình.
+
+		int x = add(2, 3) + add(2, 3);
+
+			Nếu add(2,3) là pure → ta có thể thay bằng 5 + 5.
+			Nếu add(2,3) ghi log hoặc dùng random → kết quả khác nhau, không thể thay.
+
+
+		
+	## 💡 Enterprise ý nghĩa:
+		Referential transparency cho phép:
+
+			- Caching (memoization): vì hàm nào cũng deterministic.
+			- Lazy evaluation: vì kết quả không phụ thuộc thời điểm chạy.
+			- Optimization engine: như Spark hoặc Stream fusion trong Java có thể reorder, merge step an toàn.
+
+
+
+# ⚙️ 4. Ví dụ trong Java Stream
+
+
+List<String> activeEmails =
+    employees.stream()
+             .filter(Employee::isActive)
+             .map(Employee::getEmail)
+             .collect(Collectors.toList());
+			 
+			 
+		Mỗi bước (filter, map) là pure function:
+
+			Không ghi DB.
+			Không log.
+			Không đổi dữ liệu gốc.
+			→ employees ban đầu vẫn nguyên.
+
+
+
+# 💼 Enterprise Example: Validation & Rule Engine
+
+	## Tư duy cũ (OOP):
+
+		EmployeeValidator validator = new EmployeeValidator();
+		validator.validateAge(emp);
+		validator.validateEmail(emp);
+		validator.validateStatus(emp);
+
+	## Functional style: 
+
+Predicate<Employee> isValid =
+    isValidAge.and(isValidEmail).and(isValidStatus);
+
+boolean result = isValid.test(emp);
+
+
+→ Tất cả các rule là pure predicate, có thể:
+
+	Compose (and, or, negate),
+	Cache,
+	Chạy song song,
+	Không làm thay đổi emp.
+	
+
+
+
+# 🔩 5. Kết nối triết lý: Functional = Mathematical Thinking
+
+| Thuộc tính                   | Lợi ích kỹ thuật      | Tác động kiến trúc                    |
+| ---------------------------- | --------------------- | ------------------------------------- |
+| **Pure Function**            | Dễ test, dễ debug     | Tách biệt business logic khỏi hạ tầng |
+| **Immutability**             | Thread-safe           | Dễ scale, không lock                  |
+| **Referential Transparency** | Caching, optimization | Hỗ trợ reactive, lazy, parallel       |
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
