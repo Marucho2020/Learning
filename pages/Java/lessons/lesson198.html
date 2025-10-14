@@ -1,0 +1,178 @@
+<html><head><title>Lesson 198 == Function Composition & Currying ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 198 -- Function Composition & Currying -//</h1><pre>
+# 🧩 1. Function Composition — “Ghép hàm như pipeline”
+
+	Function composition = kết hợp nhiều hàm nhỏ (pure functions) thành một hàm lớn, nơi output của hàm trước là input của hàm sau.
+
+	Trong toán học: (f ∘ g)(x) = f(g(x))
+	Trong Java: f.compose(g) hoặc f.andThen(g)
+
+
+	## 🔹 Hai hướng ghép trong Java: 
+
+		Function<Employee, String> getName = Employee::getName;
+		Function<String, String> toEmailFormat = name -> name.toLowerCase() + "@company.com";
+
+	👉 andThen – chạy f rồi g:
+	
+		Function<Employee, String> emailFn = getName.andThen(toEmailFormat);
+
+		andThen: f(x) → g(f(x))
+		Thứ tự chạy: getName → toEmailFormat.
+
+	👉 compose – chạy g rồi f:
+
+		Function<String, Integer> parseInt = Integer::parseInt;
+		Function<Integer, Boolean> isEven = n -> n % 2 == 0;
+		
+		Function<String, Boolean> checkEven = isEven.compose(parseInt);
+
+
+	## 🔹 Enterprise hình dung:
+	
+	Thay vì code procedural:
+		String email = toEmailFormat(getName(emp));
+
+
+	ta dùng composition:
+		Function<Employee, String> emailFn = getName.andThen(toEmailFormat);
+
+	→ Ta đóng gói cả logic pipeline vào một function tái sử dụng được.
+	Có thể inject, chain, hoặc test riêng từng bước.
+
+
+
+# 🧱 2. Chuyển sang tư duy “lego logic”
+
+
+	Thay vì viết 1 function dài 200 dòng,
+	senior functional design chia nhỏ:
+
+| Step                   | Mục tiêu                | Kiểu function |
+| ---------------------- | ----------------------- | ------------- |
+| validate input         | Predicate<Employee>     | boolean       |
+| transform data         | Function<Employee, DTO> | object        |
+| compute business value | Function<DTO, Report>   | object        |
+| output                 | Consumer<Report>        | void          |
+
+
+	Rồi ghép lại:
+		→ Mỗi khối pure, testable, reusable.
+
+Function<Employee, Report> pipeline =
+    validate
+      .andThen(transform)
+      .andThen(compute);
+
+
+
+
+# 🧮 3. Currying — “Biến hàm n tham số thành chuỗi hàm 1 tham số”
+
+	Currying = biến hàm nhiều tham số thành chuỗi các hàm nhận 1 tham số và trả về 1 hàm mới.
+
+	## Ví dụ: 
+		BiFunction<Integer, Integer, Integer> add = (a, b) -> a + b;
+
+	Currying thủ công:	
+	
+Function<Integer, Function<Integer, Integer>> curriedAdd =
+    a -> (b -> a + b);
+
+
+	Sử dụng:
+
+		Function<Integer, Integer> add5 = curriedAdd.apply(5);
+		int result = add5.apply(3); // = 8
+	→ Ta “ghim” trước một phần tham số để tạo function mới — gọi là partial application.
+
+
+	## 💡 Enterprise ý nghĩa: 
+
+Function<String, Function<Employee, Boolean>> buildValidator =
+    field -> (emp -> validateField(emp, field));
+
+
+
+
+# 🏢 4. Enterprise Example: Validation & Transformation Pipeline
+
+	Check employee valid
+	Transform thành DTO
+	Format email
+
+	## Functional style:
+
+Predicate<Employee> isActive = Employee::isActive;
+Function<Employee, DTO> toDTO = emp -> new DTO(emp.getId(), emp.getName());
+Function<DTO, String> toEmail = dto -> dto.name().toLowerCase() + "@corp.com";
+
+Function<Employee, String> pipeline =
+    toDTO.compose(isActiveFilter(isActive)).andThen(toEmail);
+
+
+	## Hoặc tách dynamic parameter bằng currying:
+
+
+
+
+
+	→ Functional style cho phép tạo logic động, thay đổi runtime mà không viết if/else spaghetti.
+
+Function<String, Function<Employee, Boolean>> hasField =
+    field -> emp -> !getField(emp, field).isEmpty();
+
+Predicate<Employee> hasEmail = hasField.apply("email");
+
+
+
+
+# ⚙️ 5. Khác biệt tư duy: OOP vs Functional Composition
+
+
+| So sánh         | OOP Layered                   | Functional Pipeline   |
+| --------------- | ----------------------------- | --------------------- |
+| Cấu trúc        | Class, method                 | Function chain        |
+| Tổ chức         | Service → Mapper → Repository | map → filter → reduce |
+| State           | mutable object                | immutable data        |
+| Kết hợp         | Call tuần tự                  | Compose logic         |
+| Test            | cần mock dependency           | test từng function    |
+| Tái sử dụng     | kế thừa (inheritance)         | composition           |
+| Dễ parallel hóa | Khó (shared state)            | Dễ (pure)             |
+
+
+
+
+# ⚔️ 6. Khi nào nên dùng functional composition
+
+| Tình huống                                  | Nên dùng functional                   |
+| ------------------------------------------- | ------------------------------------- |
+| **Business logic phức tạp, nhiều rule**     | ✅ compose dễ đọc, test tốt            |
+| **Data processing, analytics, ETL, stream** | ✅ pipeline cực tự nhiên               |
+| **Reactive flow (WebFlux, Kafka stream)**   | ✅ native pattern                      |
+| **Stateful API, transaction, workflow**     | ⚠️ vẫn cần OOP layer để quản lý state |
+
+🧠 Triết lý: Functional để build logic, OOP để model world.
+
+
+
+
+# 🧩 7. Liên hệ với các ngôn ngữ khác
+
+| Ngôn ngữ       | Composition tools                 | Currying support                |
+| -------------- | --------------------------------- | ------------------------------- |
+| **JavaScript** | `pipe()`, `compose()` (Ramda)     | native function return function |
+| **Kotlin**     | `let`, `run`, `also`              | hỗ trợ trực tiếp                |
+| **Scala**      | `andThen`, `compose`              | built-in currying               |
+| **Haskell**    | `.` (compose)                     | currying mặc định               |
+| **Python**     | `functools.partial`               | simulate currying               |
+| **Java**       | `Function.andThen()`, `compose()` | currying thủ công               |
+
+
+
+
+
+
+
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

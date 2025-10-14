@@ -1,0 +1,358 @@
+<html><head><title>Lesson 10 == Promises ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../NodeJS-learning.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 10 -- Promises -//</h1><pre>
+# Tổng Quan Phần "Node.js Promises"
+
+	Mục tiêu: Hiểu Promises trong Node.js, bao gồm:
+
+
+		- Promises là gì? Một cơ chế để xử lý bất đồng bộ, đại diện cho kết quả của một tác vụ (thành công hoặc thất bại).
+		- Lợi ích: So sánh với callback, tránh callback hell, xử lý lỗi dễ hơn.
+		- Cách tạo và sử dụng: Sử dụng Promise constructor, then, catch, finally.
+		- Promise Methods: Các phương thức như Promise.all, Promise.race, Promise.allSettled.
+		- Xử lý lỗi: Cách đảm bảo không bỏ sót lỗi trong Promises.
+		- Tại sao quan trọng? Promises là bước đệm để hiểu async/await và là chuẩn cho các thư viện Node.js hiện đại.
+
+		Tại sao quan trọng? Promises giúp viết code bất đồng bộ dễ đọc, dễ debug, và xử lý lỗi tập trung. Chúng là nền tảng cho các API như fs.promises, fetch, và các thư viện như mongoose, đồng thời là bước chuyển tiếp sang async/await.
+
+
+# 1. Introduction to Promises
+
+	- Promises cung cấp cách xử lý bất đồng bộ sạch hơn so với callback.
+	- Promises đại diện cho sự hoàn thành (hoặc thất bại) của một tác vụ bất đồng bộ.
+
+
+	## Promise States 
+		
+		- Pending: Tác vụ chưa hoàn thành.
+		- Fulfilled: Tác vụ thành công.
+		- Rejected: Tác vụ thất bại.
+
+		Một khi Promise "settled" (fulfilled hoặc rejected), trạng thái không thể thay đổi.
+
+
+
+	## Giải thích chi tiết:
+
+		- Promises là gì? Promise là một object JavaScript đại diện cho kết quả tương lai của một tác vụ bất đồng bộ. Nó cho phép bạn gắn callback (then, catch) để xử lý kết quả hoặc lỗi khi tác vụ hoàn tất.
+		
+		- So với callback: Callback truyền thống dẫn đến code lồng nhau (callback hell). Promises cho phép viết code tuyến tính, dễ đọc hơn.
+
+
+	## Promise States:
+	
+		- Pending: Khi Promise được tạo, ví dụ: đang đọc file.
+		- Fulfilled: Tác vụ thành công, ví dụ: file đọc xong và trả dữ liệu.
+		- Rejected: Tác vụ thất bại, ví dụ: file không tồn tại.	
+	
+		Tính bất biến: Một Promise chỉ settle một lần, không thể chuyển từ fulfilled sang rejected hoặc ngược lại.
+		Ngữ cảnh: Promises được dùng trong các API như fs.promises.readFile, fetch, hoặc query database với mongoose.
+	
+		Một Promise như fs.promises.readFile('data.txt') bắt đầu ở trạng thái Pending, sau đó chuyển sang Fulfilled (trả nội dung file) hoặc Rejected (lỗi nếu file không tồn tại).
+	
+	
+	
+	
+# 	2. Benefits of Using Promises
+	
+	
+	## With Callbacks:
+	
+getUser(id, (err, user) => {
+  if (err) return handleError(err);
+  getOrders(user.id, (err, orders) => {
+    if (err) return handleError(err);
+    // Process orders...
+  });
+});	
+	
+	
+	## 	
+	
+getUser(id)
+  .then(user => getOrders(user.id))
+  .then(orders => processOrders(orders))
+  .catch(handleError);
+
+
+	## Key Advantages:
+
+	- Cấu trúc code phẳng (flatter), tránh callback hell.
+	- Xử lý lỗi tập trung với một .catch().
+	- Dễ dàng chain các tác vụ bất đồng bộ.
+	- Hỗ trợ chạy song song (parallel) với Promise.all.
+
+
+	Callback Hell: Code callback lồng nhau khó đọc, khó debug, và phải xử lý lỗi ở mỗi cấp.
+
+		- Code tuyến tính: Mỗi .then() nhận kết quả từ bước trước.
+		- Xử lý lỗi: Một .catch() bắt lỗi cho toàn chuỗi.
+		- Chain: Có thể nối nhiều tác vụ (như lấy user, rồi orders, rồi xử lý).
+		- Song song: Promise.all cho phép chạy nhiều tác vụ cùng lúc.
+
+	Ví dụ thực tế: Trong một API, bạn lấy thông tin user, sau đó lấy orders của user, và xử lý dữ liệu. Promises làm flow này rõ ràng hơn callback.
+
+
+
+#	3. Creating and Using Promises
+
+	## 3.1. Basic Promise Creation
+
+const myPromise = new Promise((resolve, reject) => {
+  setTimeout(() => {
+    const success = Math.random() > 0.5;
+    if (success) {
+      resolve('Operation completed successfully');
+    } else {
+      reject(new Error('Operation failed'));
+    }
+  }, 1000);
+});
+
+myPromise
+  .then(result => console.log('Success:', result))
+  .catch(error => console.error('Error:', error.message));
+
+
+
+# 3.2. Reading a File with Promises
+
+
+const fs = require('fs').promises;
+
+const promise1 = Promise.resolve('First result');
+const promise2 = new Promise((resolve) => setTimeout(() => resolve('Second result'), 1000));
+const promise3 = fs.readFile('myfile.txt', 'utf8');
+
+Promise.all([promise1, promise2, promise3])
+  .then(results => {
+    console.log('Results:', results);
+  })
+  .catch(error => {
+    console.error('Error in one of the promises:', error);
+  });
+
+
+	fs.promises: Phiên bản Promise của module fs, trả về Promise thay vì callback.
+	Promise.all: Chạy song song nhiều Promise, trả về mảng kết quả khi tất cả fulfilled.
+
+	Results: ['First result', 'Second result', 'Hello!']
+	
+	
+
+# 4. Promise Chaining
+
+
+function getUser(userId) {
+  return new Promise((resolve) => {
+    setTimeout(() => resolve({ id: userId, name: 'John' }), 1000);
+  });
+}
+
+function getUserPosts(user) {
+  return new Promise((resolve) => {
+    setTimeout(() => resolve(['Post 1', 'Post 2', 'Post 3']), 1000);
+  });
+}
+
+getUser(123)
+  .then(user => {
+    console.log('User:', user);
+    return getUserPosts(user);
+  })
+  .then(posts => {
+    console.log('Posts:', posts);
+  })
+  .catch(error => {
+    console.error('Error:', error);
+  });
+
+
+	Promise Chaining: Mỗi .then nhận kết quả từ Promise trước và trả về một Promise mới.
+
+		getUser(123) trả về Promise, resolve sau 1s với { id: 123, name: 'John' }.
+		.then đầu tiên in User và gọi getUserPosts, trả về Promise mới.
+		.then thứ hai nhận kết quả từ getUserPosts, in Posts.
+		.catch xử lý lỗi cho toàn chuỗi
+
+	Ngữ cảnh: Dùng để xử lý các tác vụ tuần tự, như lấy user rồi lấy posts từ database.
+
+# 5. Promise Methods
+
+	## Instance Methods:
+		
+		then(onFulfilled, onRejected): Xử lý fulfilled hoặc rejected.
+		catch(onRejected): Xử lý rejected, tương đương then(null, onRejected).
+		finally(onFinally): Chạy bất kể fulfilled hay rejected.
+		
+		
+			- then: Xử lý kết quả hoặc lỗi. Có thể nhận hai callback, nhưng thường dùng .catch riêng.
+			- catch: Chỉ xử lý lỗi, gọn hơn.
+			- finally: Dùng để cleanup (như đóng kết nối) sau khi Promise settle.		
+
+	## Static Methods:
+
+		Promise.all(iterable): Chờ tất cả Promise resolve.
+		Promise.race(iterable): Lấy Promise settle đầu tiên.
+		Promise.allSettled(iterable): Chờ tất cả Promise settle (fulfilled hoặc rejected).
+		Promise.resolve(value): Tạo Promise fulfilled ngay.
+		Promise.reject(reason): Tạo Promise rejected ngay.
+
+			- Promise.all: Chạy song song, reject ngay nếu một Promise reject.
+			- Promise.race: Lấy kết quả của Promise nhanh nhất (dùng cho timeout).
+			- Promise.allSettled: Trả mảng trạng thái của tất cả Promise, kể cả rejected.
+			- Promise.resolve/reject: Tạo Promise với trạng thái cố định, hữu ích để test hoặc chuẩn hóa flow.
+
+		Ngữ cảnh: Promise.all dùng khi cần dữ liệu từ nhiều nguồn (như API calls). Promise.race dùng để set timeout cho tác vụ.
+
+
+
+# 6. Promise.then()
+
+myPromise
+  .then(
+    result => console.log(result),
+    error => console.error(error)
+  );
+
+	then: Nhận hai callback:
+
+		onFulfilled: Chạy khi Promise fulfilled.
+		onRejected: Chạy khi Promise rejected (ít dùng, nên thay bằng .catch).
+
+	Ngữ cảnh: Dùng khi bạn muốn xử lý cả thành công và lỗi trong một method.
+
+
+
+const myPromise = new Promise((resolve) => resolve('Success'));
+myPromise.then(
+  result => console.log(result),
+  error => console.error(error)
+);
+
+
+
+
+# 7. Promise.catch()
+
+myPromise
+  .then(result => console.log(result))
+  .catch(error => console.error(error));
+
+
+	catch: Chuyên xử lý lỗi, gọn hơn then(null, errorHandler).
+	Tại sao cần? Nếu không có .catch, lỗi unhandled có thể làm crash ứng dụng.
+	Ngữ cảnh: Dùng sau chuỗi .then để bắt lỗi từ bất kỳ bước nào.
+
+
+const myPromise = new Promise((_, reject) => reject(new Error('Fail')));
+myPromise.then(result => console.log(result)).catch(error => console.error(error.message));
+
+
+
+# 8. Promise.finally()
+
+myPromise
+  .then(result => console.log(result))
+  .catch(error => console.error(error))
+  .finally(() => console.log('Operation completed'));
+
+
+		finally: Chạy bất kể Promise fulfilled hay rejected.
+		Ngữ cảnh: Dùng để cleanup (như đóng file, giải phóng tài nguyên).
+		Lưu ý: Không nhận kết quả hay lỗi, chỉ chạy logic cố định.
+		
+	Thêm finally vào code error.js từ trên, kiểm tra output.
+
+
+
+# 9. Promise.all() for Parallel Execution
+
+const fs = require('fs').promises;
+
+const promise1 = Promise.resolve('First result');
+const promise2 = new Promise((resolve) => setTimeout(() => resolve('Second result'), 1000));
+const promise3 = fs.readFile('data.txt', 'utf8');
+
+Promise.all([promise1, promise2, promise3])
+  .then(results => {
+    console.log('Results:', results);
+  })
+  .catch(error => {
+    console.error('Error in one of the promises:', error);
+  });
+
+
+
+	Promise.all: Chạy song song tất cả Promise, trả mảng kết quả khi tất cả fulfilled.
+	Fail-fast: Nếu một Promise reject, .catch chạy ngay, bỏ qua các Promise khác.
+	Ngữ cảnh: Dùng khi cần lấy dữ liệu từ nhiều nguồn (như đọc nhiều file, gọi nhiều API).
+
+
+
+
+# 10. Promise.race() for First Result
+
+const promise1 = new Promise(resolve => setTimeout(() => resolve('First result'), 1000));
+const promise2 = new Promise(resolve => setTimeout(() => resolve('Second result'), 500));
+
+Promise.race([promise1, promise2])
+  .then(result => {
+    console.log('Fastest result:', result);
+  });
+
+	Fastest result: Second result
+	
+	
+
+	Promise.race: Trả kết quả của Promise settle đầu tiên (fulfilled hoặc rejected).
+	Ngữ cảnh: Dùng cho timeout (như chờ API 5s, nếu không trả thì báo lỗi).
+	Ví dụ thực tế: Gọi API, nếu chậm thì trả về cached data.
+
+const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 700));
+Promise.race([promise1, promise2, timeout]).then(...).catch(...);
+
+
+
+
+# 11. Error Handling in Promises
+
+function fetchData() {
+  return new Promise((_, reject) => {
+    reject(new Error('Network error'));
+  });
+}
+
+fetchData()
+  .then(data => console.log('Data:', data))
+  .catch(error => console.log('Error handled in catch:', error.message));
+function fetchData() {
+  return new Promise((_, reject) => {
+    reject(new Error('Network error'));
+  });
+}
+
+fetchData()
+  .then(data => console.log('Data:', data))
+  .catch(error => console.log('Error handled in catch:', error.message));
+
+Error handled in catch: Network error
+
+
+Tầm quan trọng: Không xử lý lỗi có thể gây crash hoặc memory leak.
+Cách xử lý:
+
+	Dùng .catch sau chuỗi .then.
+	Có thể dùng try/catch với async/await (phần sau).
+	Best Practice: Luôn thêm .catch để bắt lỗi unhandled.
+	
+
+
+
+
+
+
+
+
+
+
+
+</pre><a id='backBottom' href='../NodeJS-learning.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
