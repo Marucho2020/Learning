@@ -1,0 +1,148 @@
+<html><head><title>Lesson 199 == Pipeline Pattern ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 199 -- Pipeline Pattern -//</h1><pre>
+
+# 🎯 Mục tiêu:
+
+	Thay vì code kiểu OOP phân lớp như:
+
+		EmployeeService -> EmployeeMapper -> EmployeeRepository
+
+	→ Ta “dẹp” hết các lớp trung gian đó, chỉ giữ chuỗi các hàm thuần (pure functions) nối tiếp nhau, mỗi hàm thực hiện một bước biến đổi dữ liệu.
+	
+	Kết quả là một pipeline: dữ liệu đầu vào → đi qua chuỗi các transform → ra kết quả cuối cùng.
+
+
+# 🧠 Vấn đề của kiến trúc Layered OOP truyền thống
+	Ví dụ cổ điển:
+
+class EmployeeService {
+    private EmployeeRepository repo;
+    private EmployeeMapper mapper;
+    private NotificationService notifier;
+
+    public void processActiveEmployees() {
+        List<Employee> employees = repo.findAll();
+        List<EmployeeDTO> dtos = mapper.toDTOs(employees);
+        for (EmployeeDTO dto : dtos) {
+            if (dto.isActive()) {
+                notifier.send(dto);
+            }
+        }
+    }
+}
+
+	## Nó có 3 lớp:
+
+		Repository: truy xuất dữ liệu
+		
+		Mapper: chuyển đổi entity ↔ DTO
+		
+		Service: điều phối logic
+
+	## Nhược điểm:
+	
+		Cồng kềnh, nhiều class boilerplate.
+		
+		Ràng buộc cứng (tight coupling).
+		
+		Khó test riêng từng phần.
+		
+		Không dễ mở rộng theo chiều ngang (composition).
+		
+
+# ⚙️ Giải pháp: Pipeline Functional
+
+	Ta chuyển tất cả thành hàm thuần, mỗi hàm làm 1 việc:
+
+		List<Employee> fetchAll()
+		boolean isActive(Employee e)
+		EmployeeDTO toDTO(Employee e)
+		void sendNotification(EmployeeDTO dto)
+
+	Rồi nối chúng lại bằng pipeline:
+	
+	fetchAll().stream()
+    .filter(e -> isActive(e))
+    .map(e -> toDTO(e))
+    .forEach(dto -> sendNotification(dto));
+	
+	
+		.filter thay thế cho if (isActive)
+		.map thay thế cho Mapper
+		.forEach thay thế cho Service gọi notifier
+	
+	
+	Tất cả đều pure functions, dễ test, dễ thay thế.
+
+
+
+# 🔍 So sánh với kiến trúc Layered 
+
+| Kiến trúc Layered                | Pipeline Functional         |
+| -------------------------------- | --------------------------- |
+| Nhiều lớp: Service, Mapper, Repo | Một chuỗi hàm nối tiếp      |
+| Khó tái sử dụng từng bước        | Dễ compose lại, hoán đổi dễ |
+| Cần mock nhiều thứ để test       | Test từng function độc lập  |
+| Code “imperative”                | Code “declarative”          |
+| Nặng về cấu trúc class           | Nhẹ, tập trung vào dữ liệu  |
+
+
+
+# 🧩 Pipeline trong thực tế (Enterprise Use Case)
+	Functional pipeline thường dùng trong:
+
+| Trường hợp                   | Mô tả                                                 |
+| ---------------------------- | ----------------------------------------------------- |
+| **ETL Pipeline**             | Extract → Transform → Load dữ liệu từ nhiều nguồn     |
+| **Message Processing**       | Nhận message → validate → enrich → persist → publish  |
+| **Audit & Logging Pipeline** | Dòng event đi qua chuỗi xử lý log, filter, mask, save |
+| **Data Analytics**           | Dòng dữ liệu sensor/IoT được xử lý qua nhiều bước     |
+
+
+
+# 💡 Ví dụ nâng cao — Message Processing Pipeline
+
+Function<Message, Message> validate = msg -> { /* check */ return msg; };
+Function<Message, Message> enrich = msg -> { /* add metadata */ return msg; };
+Function<Message, Message> persist = msg -> { /* save */ return msg; };
+Consumer<Message> publish = msg -> { /* send to Kafka */ };
+
+List<Message> messages = fetchMessages();
+
+messages.stream()
+        .map(validate)
+        .map(enrich)
+        .map(persist)
+        .forEach(publish);
+
+
+
+	→ Không cần Service/Mapper/DAO gì cả. Mỗi bước là một pure function, ghép thành functional pipeline.
+
+
+# 🧠 Tư duy cốt lõi cần nắm
+
+	Dữ liệu là dòng chảy (flow).
+	Code là chuỗi biến đổi.
+	Mỗi function chỉ nên:
+	nhận input → trả output,
+	không lưu state,
+	không tác dụng phụ (nếu có, đưa ra ngoài forEach cuối).
+	
+
+	
+# 🧱 Mở rộng tư duy
+
+
+Sau khi nắm pipeline pattern, ta có thể nâng cấp lên:
+
+	Reactive Pipeline (Project Reactor, RxJava) — xử lý bất đồng bộ, event-driven.
+	Parallel Stream — tận dụng đa luồng.
+	Composable Pipelines — gộp nhiều pipeline nhỏ thành pipeline lớn.
+
+
+
+
+
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
