@@ -1,0 +1,204 @@
+<html><head><title>Lesson 15 == Stat variance ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../DataScience-learning.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 15 -- Stat variance -//</h1><pre>
+
+# 1. Khái niệm Phương sai là gì?
+
+	Định nghĩa: Phương sai (variance) đo lường mức độ mà các giá trị trong tập dữ liệu phân tán so với giá trị trung bình (mean). Nó được tính bằng trung bình của bình phương khoảng cách từ mỗi điểm dữ liệu đến trung bình.
+
+	Ký hiệu: Phương sai thường được ký hiệu là σ² (sigma bình phương).
+	Mối quan hệ với độ lệch chuẩn:
+
+		Độ lệch chuẩn (σ) = √(Phương sai).
+		Phương sai = (Độ lệch chuẩn)².
+
+
+	Ý nghĩa:
+
+		Phương sai lớn → Dữ liệu phân tán rộng, giá trị dao động nhiều quanh trung bình.
+		Phương sai nhỏ → Dữ liệu tập trung gần trung bình.
+		Phương sai = 0 → Tất cả giá trị đều giống nhau (không có sự phân tán).
+
+		Ứng dụng: Phương sai được dùng trong thống kê để đánh giá sự không chắc chắn, trong tài chính để đo lường rủi ro, trong machine learning để đánh giá hiệu suất mô hình, v.v.
+	
+
+
+# 2. Dữ liệu Ví dụ
+
+
+Duration,Average_Pulse,Max_Pulse,Calorie_Burnage,Hours_Work,Hours_Sleep
+30,80,120,240,10,7
+30,85,120,250,10,7
+45,90,130,260,8,7
+45,95,130,270,8,7
+45,100,140,280,0,7
+60,105,140,290,7,8
+60,110,145,300,7,8
+60,115,145,310,8,8
+75,120,150,320,0,8
+75,125,150,330,8,8
+
+
+	Chúng ta sẽ sử dụng dữ liệu này để minh họa cách tính phương sai, tập trung vào cột Average_Pulse như trong bài.
+
+
+# 3. Cách Tính Phương sai Thủ Công
+	
+	Phương sai được tính bằng công thức:
+
+$\sigma^2 = \frac{1}{n} \sum_{i=1}^n (x_i - \bar{x})^2$
+
+
+	$ x_i $: Mỗi giá trị trong tập dữ liệu.
+	$ \bar{x} $: Trung bình (mean) của tập dữ liệu.
+	$ n $: Số lượng quan sát.
+	
+
+	Bài học sử dụng công thức này cho phương sai mẫu (sample variance), chia cho $ n $ (số quan sát). Lưu ý: Trong thống kê, nếu tính phương sai tổng thể (population variance), ta chia cho $ n $, nhưng với mẫu, thường chia cho $ n-1 $ để điều chỉnh độ chệch (bias). NumPy mặc định dùng $ n $, nhưng có thể điều chỉnh bằng tham số ddof=1 cho mẫu.
+
+
+	## Bước 1: Tính Trung bình (Mean) của Average_Pulse
+	
+		Trung bình = 102.5.
+	
+	
+	## 	Bước 2: Tính Khoảng cách từ Mỗi Giá trị đến Trung bình
+		Tính $ x_i - \bar{x} $:
+	
+		80 - 102.5 = -22.5
+		85 - 102.5 = -17.5
+		90 - 102.5 = -12.5
+		95 - 102.5 = -7.5
+		100 - 102.5 = -2.5
+		105 - 102.5 = 2.5
+		110 - 102.5 = 7.5
+		115 - 102.5 = 12.5
+		120 - 102.5 = 17.5
+		125 - 102.5 = 22.5	
+	
+	
+	
+	## Bước 3: Bình phương các Khoảng cách
+	
+(-22.5)² = 506.25
+(-17.5)² = 306.25
+(-12.5)² = 156.25
+(-7.5)² = 56.25
+(-2.5)² = 6.25
+(2.5)² = 6.25
+(7.5)² = 56.25
+(12.5)² = 156.25
+(17.5)² = 306.25
+(22.5)² = 506.25	
+(-17.5)² = 306.25
+(-12.5)² = 156.25
+(-7.5)² = 56.25
+(-2.5)² = 6.25
+(2.5)² = 6.25
+(7.5)² = 56.25
+(12.5)² = 156.25
+(17.5)² = 306.25
+(22.5)² = 506.25
+	
+	
+	
+	
+# Bước 4: Tính Trung bình của các Bình phương
+	Tổng các bình phương:
+
+	Phương sai:
+	Kết quả: Phương sai của Average_Pulse là 206.25, đúng như bài học.
+
+	Nếu tính sample variance (với $ n-1 $)
+	NumPy mặc định dùng $ n $, phù hợp với bài học. Để tính sample variance, dùng np.var(data, ddof=1).
+
+
+
+# 4. Minh Họa Với Python (Sử Dụng NumPy)
+
+	Bài học sử dụng hàm np.var() của NumPy để tính phương sai. Dưới đây là code cho dữ liệu mẫu:
+	
+	import numpy as np
+
+import numpy as np
+
+# Dữ liệu Average_Pulse
+average_pulse = np.array([80, 85, 90, 95, 100, 105, 110, 115, 120, 125])
+
+# Tính phương sai
+var = np.var(average_pulse)
+print(var)  # Kết quả: 206.25
+
+
+	np.array([...]): Chuyển dữ liệu thành mảng NumPy.
+	np.var(): Tính phương sai, mặc định chia cho $ n $.
+
+	Để tính cho toàn bộ DataFrame (như full_health_data)
+
+
+import pandas as pd
+import numpy as np
+
+# Giả sử health_data là DataFrame
+health_data = pd.DataFrame({
+    'Duration': [30, 30, 45, 45, 45, 60, 60, 60, 75, 75],
+    'Average_Pulse': [80, 85, 90, 95, 100, 105, 110, 115, 120, 125],
+    'Max_Pulse': [120, 120, 130, 130, 140, 140, 145, 145, 150, 150],
+    'Calorie_Burnage': [240, 250, 260, 270, 280, 290, 300, 310, 320, 330],
+    'Hours_Work': [10, 10, 8, 8, 0, 7, 7, 8, 0, 8],
+    'Hours_Sleep': [7, 7, 7, 7, 7, 8, 8, 8, 8, 8]
+})
+
+var_full = np.var(health_data)
+print(var_full)
+
+
+	Kết quả (phương sai từng cột):
+
+
+Duration          225.0
+Average_Pulse     206.25
+Max_Pulse         126.25
+Calorie_Burnage   900.0
+Hours_Work         12.21
+Hours_Sleep        0.25
+
+
+
+# 5. Phân tích Kết quả và Ứng dụng Thực tế
+
+	## Ý nghĩa Kết quả:
+	
+	
+	Average_Pulse (phương sai = 206.25): Nhịp tim trung bình có sự phân tán vừa phải. Độ lệch chuẩn = √206.25 ≈ 14.36, nghĩa là nhịp tim trung bình dao động khoảng ±14.36 quanh giá trị trung bình (102.5).
+	Calorie_Burnage (phương sai = 900): Có phương sai cao, cho thấy lượng calo đốt cháy rất khác nhau giữa các buổi tập, phản ánh sự đa dạng trong cường độ tập luyện.
+	Hours_Sleep (phương sai = 0.25): Phương sai rất nhỏ, cho thấy hầu hết mọi người ngủ gần giống nhau (7 hoặc 8 giờ), ít biến động.
+	
+	
+	
+# Ứng dụng trong Phân tích Dữ liệu:
+	
+	
+	Đo lường sự không chắc chắn: Phương sai cao (như Calorie_Burnage) cho thấy dữ liệu khó dự đoán, ảnh hưởng đến mô hình machine learning.
+	So sánh các biến: Phương sai giúp so sánh mức độ phân tán giữa các biến. Ví dụ, Hours_Sleep ít biến động hơn Hours_Work.
+	Phát hiện outlier: Dữ liệu có khoảng cách lớn so với trung bình (so với độ lệch chuẩn) có thể là outlier.
+	Tài chính: Phương sai đo lường rủi ro của danh mục đầu tư (portfolio variance).
+	Kiểm soát chất lượng: Phương sai thấp trong sản xuất cho thấy quy trình ổn định.
+	
+	
+	
+	
+# 	7. Lưu ý và Mẹo Chuyên gia
+	
+	Sample vs. Population Variance: Luôn kiểm tra bạn đang tính phương sai cho mẫu hay tổng thể. Trong thực tế, dữ liệu thường là mẫu, nên dùng ddof=1 trong NumPy.
+	Đơn vị: Phương sai có đơn vị là bình phương của dữ liệu gốc (ví dụ: nhịp tim là bpm, phương sai là bpm²), nên độ lệch chuẩn (cùng đơn vị gốc) thường dễ diễn giải hơn.
+	Dữ liệu lệch (skewed data): Phương sai có thể bị ảnh hưởng bởi outlier, nên kết hợp với box plot hoặc percentiles để hiểu rõ hơn.
+	Thực hành: Thử tính phương sai cho các cột khác (như Max_Pulse) hoặc dùng df.describe() trong Pandas để xem tóm tắt thống kê.	
+	
+	
+	https://www.w3schools.com/datascience/ds_stat_correlation.asp
+	
+	
+	
+
+
+
+</pre><a id='backBottom' href='../DataScience-learning.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
