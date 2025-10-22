@@ -1,0 +1,215 @@
+<html><head><title>Lesson 201 == Monoid & Reduce Pattern ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 201 -- Monoid & Reduce Pattern -//</h1><pre>
+# 🎯 MỤC TIÊU
+	reduce() không chỉ là “tính tổng” — mà là một pattern trừu tượng để tổng hợp dữ liệu bất biến.
+
+	Khái niệm Monoid — nền tảng toán học giúp “reduce” luôn an toàn, có thể song song hóa, và có tính kết hợp (associative).
+
+
+# 🧩 1. Giải thích dễ hiểu — “Reduce” là gì?
+
+	List<Integer> nums = List.of(1, 2, 3, 4);
+
+	Muốn tính tổng:
+
+		int sum = nums.stream()
+              .reduce(0, (a, b) -> a + b);
+
+		reduce bắt đầu với identity (ở đây là 0).
+		Lần lượt kết hợp từng phần tử bằng binary operator (a, b) -> a + b.
+		Trả về một kết quả duy nhất.
+
+	reduce không cần biết bạn tính tổng, nhân, nối chuỗi, gộp map… — miễn là phép kết hợp có tính kết hợp (associative).
+
+
+# ⚙️ 2. Monoid là gì?
+	Monoid là cấu trúc toán học rất đơn giản, nhưng cực kỳ mạnh:
+	Một tập hợp và hai yếu tố:
+
+		1.Phép kết hợp (combine): ⊕
+		2.Phần tử trung lập (identity):2
+
+	Thỏa mãn 2 luật:
+
+		Associativity:
+			(a ⊕ b) ⊕ c = a ⊕ (b ⊕ c)
+
+		Identity:
+			a ⊕ e = e ⊕ a = a
+
+	Ví dụ trong Java:
+
+| Dạng dữ liệu | Phép kết hợp | Identity                  |
+| ------------ | ------------ | ------------------------- |
+| `Integer`    | `+`          | `0`                       |
+| `String`     | `concat`     | `""`                      |
+| `BigDecimal` | `add`        | `BigDecimal.ZERO`         |
+| `List<T>`    | `addAll`     | `Collections.emptyList()` |
+
+	➡️ Tức là mỗi kiểu dữ liệu có thể có 1 Monoid riêng.
+
+
+# 🧠 3. Tại sao Monoid quan trọng?
+
+	Bởi vì:
+
+		Khi phép kết hợp là associative và có identity, ta có thể:
+		Chia nhỏ dữ liệu để tính song song (parallel) rồi gộp lại.
+		Không lo mất dữ liệu hay lệch kết quả.
+		Không cần thứ tự (→ phù hợp cho distributed computing).
+
+	Ví dụ parallelStream():
+
+BigDecimal total = employees.parallelStream()
+    .map(Employee::getSalary)
+    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+	Cả ngàn thread có thể cộng riêng phần của mình rồi reduce lại — đảm bảo đúng vì + là phép kết hợp có tính Monoid-safe.
+
+# 🧮 4. Reduce trong thực tế enterprise
+
+
+	## a) Báo cáo tổng hợp
+
+BigDecimal totalRevenue =
+    orders.stream()
+          .map(Order::getAmount)
+          .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+
+
+
+	## b) Gộp chuỗi log
+
+String auditTrail =
+    logs.stream()
+        .map(Log::toString)
+        .reduce("", (a, b) -> a + "\n" + b);
+
+
+
+
+	## c) Merge cấu trúc phức tạp
+
+
+Map<String, Integer> totalByDept =
+    employees.stream()
+        .collect(Collectors.groupingBy(
+            Employee::getDepartment,
+            Collectors.reducing(
+                0,
+                Employee::getSalary,
+                Integer::sum
+            )
+        ));
+
+
+
+# 🔍 5. Monoid cho Object phức tạp
+
+	Bạn có thể tạo “Monoid riêng” cho domain object.
+
+record Report(int count, BigDecimal total) {}
+
+static Report combine(Report a, Report b) {
+    return new Report(
+        a.count() + b.count(),
+        a.total().add(b.total())
+    );
+}
+
+Report empty = new Report(0, BigDecimal.ZERO);
+
+Report finalReport = reports.stream()
+    .reduce(empty, Report::combine);
+
+	💡 Đây chính là Monoid pattern: có identity (empty) và combine (Report::combine).
+
+
+# 🧱 6. Mối liên hệ với Functional Pipeline
+
+	Trong OOP truyền thống:
+		for (...) { total += item.getPrice(); }
+		→ biến total bị mutation.
+
+	Functional:
+		stream.reduce(identity, combine)
+		
+
+# 🧩 7. So sánh Monoid vs Reduce thường
+
+| Tiêu chí         | Reduce thường        | Monoid pattern                      |
+| ---------------- | -------------------- | ----------------------------------- |
+| Kết hợp dữ liệu  | Có                   | Có                                  |
+| Có identity      | Có thể có hoặc không | Luôn có                             |
+| Có tính kết hợp  | Không bắt buộc       | Bắt buộc                            |
+| Dễ song song     | Có thể lỗi           | Luôn an toàn                        |
+| Dễ tổng quát hóa | Không                | Có thể áp dụng cho mọi kiểu dữ liệu |
+
+
+# 🚀 8. Functional Mindset
+
+	Hãy hình dung Monoid như “nguyên tử” của aggregation trong functional design:
+
+		- Stream.reduce() → hoạt động được vì mỗi phần tử thuộc 1 Monoid.
+		- Collectors.groupingBy() → thực chất là reduce theo nhóm.
+		- map-reduce trong big data → chính là Monoid pattern mở rộng.
+		- Reactive systems → các flow aggregation (combineLatest, scan) đều là reduce/monoid.
+
+
+# 🧩 9. Ví dụ nâng cao — Reduce cho security audit
+
+→ Mỗi log merge theo logic domain (combine events, timestamps, counters).
+→ Không mutation, log-safe, scale ra multi-thread hoặc microservice vẫn đúng.
+
+
+
+# ⚡ 10. Kết luận
+
+| Concept               | Ý nghĩa thực tế                                               |
+| --------------------- | ------------------------------------------------------------- |
+| **Reduce**            | Tổng hợp mọi dữ liệu về 1 kết quả duy nhất                    |
+| **Monoid**            | Bảo đảm reduce luôn hợp lệ, có thể song song, thread-safe     |
+| **Ứng dụng**          | Báo cáo, audit, log aggregation, reactive summary, map-reduce |
+| **Functional ưu thế** | Không mutation, dễ test, có thể phân tán                      |
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

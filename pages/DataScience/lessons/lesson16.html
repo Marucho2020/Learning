@@ -1,0 +1,147 @@
+<html><head><title>Lesson 16 == Correlation ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../DataScience-learning.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 16 -- Correlation -//</h1><pre>
+# 1. Khái niệm Tương quan là gì?
+	Định nghĩa: Tương quan (correlation) đo lường mức độ và hướng của mối quan hệ tuyến tính (linear relationship) giữa hai biến số. Nó cho biết khi một biến thay đổi, biến kia có xu hướng thay đổi như thế nào.
+
+	## Hệ số tương quan (Correlation Coefficient):
+		Ký hiệu: $ r $ (thường là Pearson correlation coefficient).
+
+		Phạm vi: Từ -1 đến 1.
+
+			- $ r = 1 $: Mối quan hệ tuyến tính hoàn hảo (perfect positive linear relationship). Khi biến $ x $ tăng, biến $ y $ tăng theo một đường thẳng.
+			- $ r = 0 $: Không có mối quan hệ tuyến tính. Các biến không liên quan theo cách tuyến tính.
+			- $ r = -1 $: Mối quan hệ tuyến tính âm hoàn hảo (perfect negative linear relationship). Khi biến $ x $ tăng, biến $ y $ giảm theo một đường thẳng.
+
+
+		Ý nghĩa: Tương quan không ngụ ý nhân quả (correlation does not imply causation). Ví dụ, nếu nhịp tim và calo đốt cháy có tương quan cao, không có nghĩa nhịp tim gây ra calo đốt cháy hoặc ngược lại.
+
+
+		- Mối quan hệ dương hoàn hảo (r = 1): Giữa Average_Pulse (nhịp tim trung bình) và Calorie_Burnage (calo đốt cháy) trong tập dữ liệu nhỏ (10 quan sát).
+		- Mối quan hệ âm hoàn hảo (r = -1): Giữa Hours_Work_Before_Training (số giờ làm việc trước khi tập) và Calorie_Burnage trong dữ liệu giả lập.
+		- Không có mối quan hệ (r = 0): Giữa Duration (thời gian tập) và Max_Pulse (nhịp tim tối đa) trong tập dữ liệu lớn (full_health_data).
+
+
+	
+# 2. Dữ liệu Ví dụ
+
+Duration,Average_Pulse,Max_Pulse,Calorie_Burnage,Hours_Work,Hours_Sleep
+30,80,120,240,10,7
+30,85,120,250,10,7
+45,90,130,260,8,7
+45,95,130,270,8,7
+45,100,140,280,0,7
+60,105,140,290,7,8
+60,110,145,300,7,8
+60,115,145,310,8,8
+75,120,150,320,0,8
+75,125,150,330,8,8
+
+
+	## Dữ liệu giả lập (âm tương quan): 
+	
+
+Hours_Work_Before_Training,Calorie_Burnage
+10,220
+9,240
+8,260
+7,280
+6,300
+5,320
+4,340
+3,360
+2,380
+1,400
+
+
+
+# 3. Tính Hệ số Tương quan (Pearson) Thủ Công
+	Hệ số tương quan Pearson được tính bằng công thức:
+
+		$r = \frac{\sum (x_i - \bar{x})(y_i - \bar{y})}{\sqrt{\sum (x_i - \bar{x})^2 \sum (y_i - \bar{y})^2}}$
+
+	$ x_i, y_i $: Các giá trị của hai biến.
+	$ \bar{x}, \bar{y} $: Trung bình của hai biến.
+	Tử số: Tổng tích của các khoảng cách từ trung bình.
+	Mẫu số: Căn bậc hai của tích các phương sai.
+
+
+
+
+# 4. Minh Họa Với Python (Sử Dụng Matplotlib và Pandas)
+
+	Bài học sử dụng scatter plot để trực quan hóa mối quan hệ. Dưới đây là code và giải thích:
+	Scatter Plot: Average_Pulse vs. Calorie_Burnage (r = 1)
+
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Dữ liệu mẫu
+health_data = pd.DataFrame({
+    'Average_Pulse': [80, 85, 90, 95, 100, 105, 110, 115, 120, 125],
+    'Calorie_Burnage': [240, 250, 260, 270, 280, 290, 300, 310, 320, 330]
+})
+
+health_data.plot(x='Average_Pulse', y='Calorie_Burnage', kind='scatter')
+plt.title('Scatter Plot: Average_Pulse vs. Calorie_Burnage')
+plt.show()
+
+
+
+	## Scatter Plot: Hours_Work_Before_Training vs. Calorie_Burnage (r = -1)
+
+negative_corr = pd.DataFrame({
+    'Hours_Work_Before_Training': [10, 9, 8, 7, 6, 5, 4, 3, 2, 1],
+    'Calorie_Burnage': [220, 240, 260, 280, 300, 320, 340, 360, 380, 400]
+})
+
+negative_corr.plot(x='Hours_Work_Before_Training', y='Calorie_Burnage', kind='scatter')
+plt.title('Scatter Plot: Hours_Work vs. Calorie_Burnage')
+plt.show()
+	Kết quả: Các điểm nằm trên một đường thẳng đi xuống, xác nhận $ r = -1 $.
+
+
+
+	## Scatter Plot: Duration vs. Max_Pulse (r = 0)
+
+# Giả sử full_health_data là DataFrame lớn
+# full_health_data.plot(x='Duration', y='Max_Pulse', kind='scatter')
+# plt.show()
+
+	Kết quả: Các điểm rải rác, không tạo thành đường thẳng, xác nhận $ r \approx 0 $.
+
+
+
+# 6. Ứng dụng Thực tế và Lưu ý Chuyên gia
+
+	## Ứng dụng: 
+
+		- Dự đoán: Tương quan cao (gần 1 hoặc -1) cho thấy một biến có thể dự đoán biến kia tốt trong mô hình tuyến tính.
+		- Phân tích dữ liệu: Xác định các cặp biến có liên quan để giảm chiều dữ liệu (feature selection) trong machine learning.
+		- Khoa học: Trong y học, tương quan giữa nhịp tim và calo đốt cháy có thể giúp thiết kế chương trình tập luyện.
+		- Tài chính: Tương quan âm giữa các tài sản giúp đa dạng hóa danh mục đầu tư để giảm rủi ro.
+
+
+	## Lưu ý:
+	
+		- Tương quan không phải nhân quả: Ví dụ, tương quan giữa Average_Pulse và Calorie_Burnage không có nghĩa nhịp tim cao gây ra đốt nhiều calo.
+		- Chỉ đo lường quan hệ tuyến tính: Nếu mối quan hệ là phi tuyến (non-linear), Pearson correlation có thể gần 0 dù hai biến vẫn liên quan.
+		- Outlier: Các giá trị ngoại lai có thể làm sai lệch hệ số tương quan. Dùng scatter plot để kiểm tra.
+		- Kích thước mẫu: Với mẫu nhỏ (như 10 quan sát), kết quả có thể không ổn định. Với full_health_data, kết quả sẽ đáng tin cậy hơn.	
+	
+	
+	## Mẹo chuyên gia:
+	
+		- Dùng seaborn.heatmap(df.corr()) để visualize ma trận tương quan cho tất cả các cặp biến.
+		- Nếu muốn khám phá tương quan phi tuyến, thử Spearman hoặc Kendall correlation.
+		- Kiểm tra phân phối dữ liệu trước khi tính tương quan (dùng histogram hoặc df.hist()).		
+	
+	
+	
+https://www.w3schools.com/datascience/ds_stat_correlation_matrix.asp	
+	
+	
+	
+	
+	
+
+
+</pre><a id='backBottom' href='../DataScience-learning.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
