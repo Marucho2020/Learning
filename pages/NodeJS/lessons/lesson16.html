@@ -1,0 +1,300 @@
+<html><head><title>Lesson 16 == Package json ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../NodeJS-learning.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 16 -- Package json -//</h1><pre>
+# package.json là gì?
+
+	package.json là một file JSON nằm ở thư mục gốc của dự án Node.js, chứa:
+
+		- Metadata: Tên, phiên bản, mô tả, tác giả, giấy phép, v.v.
+		- Dependencies: Danh sách các package cần cho dự án.
+		- Scripts: Các lệnh tùy chỉnh để chạy, build, test, hoặc deploy ứng dụng.
+		- Cấu hình khác: Như loại module (CommonJS hay ESM), yêu cầu phiên bản Node.js, hoặc thông tin repository.
+
+	File này giúp:
+
+		- Quản lý dự án: NPM dùng package.json để cài đặt phụ thuộc và chạy script.
+		- Chia sẻ dự án: Người khác có thể chạy npm install để tái tạo môi trường dự án.
+		- Tự động hóa: Các script trong package.json giúp tự động hóa task như test, build.
+
+	Insight: package.json không chỉ là file cấu hình mà còn là "hợp đồng" giữa dự án và các công cụ như NPM, Yarn, hoặc CI/CD systems. Một package.json được cấu hình tốt giúp dự án dễ scale và maintain.
+
+
+# Tạo package.json
+
+	Để tạo package.json, bạn chạy lệnh sau trong thư mục dự án:
+	
+	npm init
+
+	Lệnh này hỏi bạn một loạt câu hỏi (tên, phiên bản, mô tả, v.v.) để tạo file.
+	Ví dụ (khi chạy npm init và trả lời):
+
+		name: my-app
+		version: 1.0.0
+		description: A simple Node.js app
+		main: index.js
+
+	Tạo nhanh với giá trị mặc định:
+		npm init -y
+
+	Tạo file 	package.json với các giá trị mặc định, không cần trả lời câu hỏi.
+	Output (file package.json):
+
+{
+  "name": "my-app",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
+
+Insight: npm init -y tiết kiệm thời gian cho dự án nhỏ, nhưng với dự án lớn, hãy trả lời đầy đủ câu hỏi hoặc chỉnh sửa package.json sau để thêm metadata như keywords, repository.
+
+
+# Ví dụ package.json
+
+	Dưới đây là một ví dụ đơn giản từ bài học:
+{
+  "name": "my-node-app",
+  "version": "1.0.0",
+  "description": "A simple Node.js app",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "author": "Your Name",
+  "license": "ISC"
+}
+
+
+	- name: Tên dự án, phải unique nếu publish lên npmjs.com.
+	- version: Phiên bản dự án (theo chuẩn Semantic Versioning: major.minor.patch).
+	- description: Mô tả ngắn gọn về dự án.
+	- main: File chính (entry point) của dự án, thường là index.js.
+	- scripts: Định nghĩa lệnh npm start để chạy node index.js.
+	- author: Tên người tạo dự án.
+	- license: Loại giấy phép (ISC là mặc định, tương tự MIT).
+
+	Insight: Đảm bảo name không trùng với package trên npmjs.com nếu bạn định publish. main rất quan trọng khi dự án được dùng như một package (e.g., require('my-node-app') sẽ load file index.js).
+
+
+
+
+# Thêm Dependencies
+
+	Khi cài package bằng NPM, nó tự động được thêm vào package.json.
+	Ví dụ: Cài Express
+		npm install express
+
+	Output trong package.json:
+{
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}
+
+express: Package được cài.
+^5.1.0: Phiên bản, cho phép cập nhật minor/patch (e.g., 5.x.x, nhưng không lên 6.0.0).
+
+
+	Insight: Luôn kiểm tra package.json sau khi cài package để đảm bảo version đúng. Dùng npm install trong thư mục có package.json để cài lại tất cả phụ thuộc, rất hữu ích khi clone dự án từ Git.
+
+
+# Các trường phổ biến trong package.json
+
+	## 1. Basic Metadata
+
+{
+  "name": "my-package",
+  "version": "1.0.0",
+  "description": "A brief description of your package",
+  "main": "index.js",
+  "type": "module",
+  "keywords": ["example", "package", "node"],
+  "author": "Your Name <email@example.com>",
+  "license": "MIT",
+  "homepage": "https://example.com/my-package"
+}
+
+type: "module" (ESM) hoặc "commonjs" (mặc định). Quyết định cách Node.js xử lý file .js.
+keywords: Từ khóa giúp tìm kiếm package trên npmjs.com.
+homepage: URL trang chủ của dự án.
+
+
+
+	## 2. Scripts
+		Định nghĩa các lệnh chạy bằng npm run <script-name>.
+
+{
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "test": "jest",
+    "build": "webpack --mode production",
+    "lint": "eslint .",
+    "prepare": "husky install"
+  }
+}
+
+
+	start: Chạy server bằng npm start.
+	dev: Dùng nodemon để tự động restart khi code thay đổi.
+	test: Chạy test với Jest.
+	build: Build code với Webpack.
+	lint: Kiểm tra code style với ESLint.
+	prepare: Chạy khi cài package, thường dùng cho Git hooks (Husky).
+
+	Insight: Scripts là nơi tự động hóa workflow. Ví dụ, thêm "pretest": "npm run lint" để chạy linter trước khi test. Trong dự án lớn, tổ chức scripts theo nhóm (e.g., test:unit, test:integration).
+
+
+	## 3. Dependencies
+		Liệt kê package cần cho runtime.
+
+{
+  "dependencies": {
+    "express": "^4.18.2",
+    "mongoose": "~7.0.0",
+    "lodash": "4.17.21"
+  }
+}
+
+
+
+	## 4. Dev Dependencies
+		Package chỉ dùng trong phát triển (không cài ở production).
+
+{
+  "devDependencies": {
+    "nodemon": "^2.0.22",
+    "jest": "^29.5.0",
+    "eslint": "^8.38.0"
+  }
+}
+
+
+	## 5. Version Ranges
+
+		^4.17.21: Cập nhật minor/patch (4.x.x, không lên 5.0.0).
+		~4.17.21: Chỉ cập nhật patch (4.17.x).
+		4.17.21: Version cố định.
+		latest: Luôn lấy version mới nhất.
+		git+https://...: Lấy từ Git repository.
+
+		Insight: Dùng ^ cho dự án phát triển, nhưng cố định version (4.17.21) cho production để đảm bảo ổn định. Check breaking changes trong changelog trước khi update major version.
+		
+		
+	## 	6. Engines
+		
+		Chỉ định phiên bản Node.js và NPM.
+		
+{
+  "engines": {
+    "node": ">=14.0.0 <17.0.0",
+    "npm": ">=6.0.0"
+  }
+}		
+		Insight: engines giúp đảm bảo dự án chạy trên đúng phiên bản. CI/CD pipeline thường kiểm tra engines để tránh lỗi môi trường.
+		
+		
+		
+	## 7. Repository và Bugs	
+		
+{
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/username/repo.git"
+  },
+  "bugs": {
+    "url": "https://github.com/username/repo/issues"
+  }
+}		
+		
+		Insight: Thêm repository và bugs để người dùng biết nơi báo lỗi hoặc xem source code. Điều này đặc biệt quan trọng khi publish gói lên npmjs.com.
+		
+		
+# Làm việc với package.json		
+		
+	Thêm Dependencies	
+	
+		Cài và lưu vào dependencies:
+			npm install express
+		
+		Cài vào devDependencies	
+			npm install --save-dev nodemon
+		
+		Cài version cụ thể
+			npm install express@4.18.2	
+		
+		
+		
+	Cập nhật Dependencies
+			Cập nhật package cụ thể:
+				npm update express
+		
+			Cập nhật tất cả:
+				npm update
+		
+			Kiểm tra package lỗi thời:
+				npm outdated
+		
+		
+	Chạy Scripts
+		Chạy script tùy chỉnh:
+			npm run dev
+
+		Chạy script mặc định:
+
+			npm start
+			npm test
+
+		Insight: Script start và test không cần run. Trong CI/CD, dùng npm ci thay vì npm install để cài phụ thuộc dựa trên package-lock.json, đảm bảo build nhất quán
+
+
+
+# Best Practices
+
+	Cố định version cho production:
+		"express": "4.18.2"
+		Tránh lỗi do update tự động.
+
+
+	Dùng npm ci trong CI/CD
+		npm ci
+		Cài chính xác version từ package-lock.json.
+
+	Commit package-lock.json:
+		File này khóa version phụ thuộc, đảm bảo tất cả môi trường dùng cùng version.
+		Luôn thêm vào Git.
+
+	Dùng .npmignore
+
+		Khi publish package, tạo file .npmignore để loại bỏ file không cần (e.g., node_modules, tests).
+		Ví dụ .npmignore:
+
+			node_modules
+			tests
+			.gitignore
+			
+
+	Cập nhật thường xuyên
+
+		Chạy npm outdated định kỳ để kiểm tra bản cập nhật, đặc biệt là security patches.
+		Dùng công cụ như npm audit để phát hiện lỗ hổng bảo mật.
+
+		Insight: Trong dự án lớn, dùng Dependabot (GitHub) hoặc Snyk để tự động kiểm tra và đề xuất cập nhật. Luôn test kỹ sau khi update để tránh breaking changes.
+
+
+
+https://www.w3schools.com/nodejs/nodejs_scripts.asp
+
+
+
+
+
+
+
+
+
+</pre><a id='backBottom' href='../NodeJS-learning.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
