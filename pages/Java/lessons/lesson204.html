@@ -1,0 +1,220 @@
+<html><head><title>Lesson 204 == Higher-Order Function ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 204 -- Higher-Order Function -//</h1><pre>
+# 🔹 1. Tư duy nền tảng — Higher-Order Function là gì?
+
+	Higher-Order Function (HOF) là hàm nhận function khác làm tham số hoặc trả về một function mới.
+
+		Trong OOP, ta tiêm logic bằng class/interface.
+		Trong Functional, ta tiêm logic bằng hàm.
+
+
+Function<Integer, Integer> doubleFn = x -> x * 2;
+Function<Integer, Integer> squareFn = x -> x * x;
+
+// HOF: hàm nhận function khác và bọc thêm logic
+Function<Function<Integer, Integer>, Function<Integer, Integer>> withLogging =
+    fn -> x -> {
+        System.out.println("Input: " + x);
+        Integer result = fn.apply(x);
+        System.out.println("Output: " + result);
+        return result;
+    };
+
+Function<Integer, Integer> loggedDouble = withLogging.apply(doubleFn);
+loggedDouble.apply(5); // log input/output
+
+	→ Giống hệt Decorator pattern, nhưng functional, ngắn gọn, không cần class.
+
+
+
+# 🔸 2. Tại sao functional có thể “thay thế” các OOP pattern?
+
+	## 2.1 Strategy Pattern (OOP)
+
+interface PaymentStrategy {
+    void pay(Order order);
+}
+class PaypalPayment implements PaymentStrategy { ... }
+class CreditCardPayment implements PaymentStrategy { ... }
+	
+	→ Quá nhiều class chỉ để thay đổi logic.
+
+
+
+	-> Functional style: 
+
+Consumer<Order> paypal = o -> processPaypal(o);
+Consumer<Order> creditCard = o -> processCard(o);
+
+void checkout(Order order, Consumer<Order> strategy) {
+    strategy.accept(order);
+}
+
+	Chỉ cần truyền hàm — không cần Strategy interface.
+	
+	
+	
+	
+	
+	## 	2.2 Decorator Pattern (OOP)
+	
+class LoggingService implements Service {
+    private final Service delegate;
+    public void execute() {
+        System.out.println("Start");
+        delegate.execute();
+        System.out.println("End");
+    }
+}
+	
+		-> Functional style:
+	
+Function<Runnable, Runnable> withLogging =
+    fn -> () -> {
+        System.out.println("Start");
+        fn.run();
+        System.out.println("End");
+    };
+
+Runnable secured = withLogging.apply(() -> performBusinessLogic());
+secured.run();
+	
+		→ Giống hệt Decorator nhưng thuần hàm, không cần subclass.
+	
+	
+	
+	
+	
+	
+	## 2.3 Template Method Pattern (OOP)
+	OOP version:
+	
+abstract class DataImporter {
+    void importData() {
+        readSource();
+        transform();
+        writeTarget();
+    }
+    abstract void transform();
+}
+	
+	
+	Functional version:
+	
+Runnable importData = () -> {
+    readSource();
+    transform.apply(data);
+    writeTarget();
+};
+	
+	→ Chỉ cần tiêm transform function — không cần abstract class.
+	
+	
+	
+
+
+# 🔹 3. Policy Injection = Functional Dependency Injection
+
+	Trong enterprise Java (Spring, Micronaut...), dependency injection dùng container (IoC) để tiêm phụ thuộc runtime.
+
+	Nhưng trong functional, ta tiêm logic bằng hàm — compile-time safe, thread-safe, không cần container.
+
+	Ví dụ:
+
+Function<Data, Data> baseLogic = d -> process(d);
+
+Function<Function<Data, Data>, Function<Data, Data>> withTransaction =
+    fn -> d -> {
+        startTx();
+        Data result = fn.apply(d);
+        commitTx();
+        return result;
+    };
+
+Function<Function<Data, Data>, Function<Data, Data>> withLogging =
+    fn -> d -> {
+        System.out.println("Executing...");
+        return fn.apply(d);
+    };
+
+Function<Data, Data> secured = withLogging.apply(withTransaction.apply(baseLogic));
+secured.apply(new Data());
+
+
+
+→ withLogging và withTransaction là policy injectors.
+→ Ta có thể thêm hoặc bỏ policy như lego — không cần AOP, không cần Spring Proxy.
+
+
+
+# ⚙️ 4. Enterprise Use Cases
+
+| Use Case                    | Functional Policy Injection                                        | OOP Equivalent         |
+| --------------------------- | ------------------------------------------------------------------ | ---------------------- |
+| **Logging / Auditing**      | `fn -> data -> { log(); return fn(data); }`                        | AOP Aspect             |
+| **Transaction Management**  | `fn -> data -> { beginTx(); var r=fn(data); commit(); return r; }` | Spring @Transactional  |
+| **Security Context**        | `fn -> user -> checkPermission(user); return fn(user);`            | Interceptor            |
+| **Caching Layer**           | `fn -> input -> cache.computeIfAbsent(input, fn)`                  | Proxy Decorator        |
+| **Retry / Circuit Breaker** | `fn -> input -> retry(fn, input)`                                  | Resilience4j / Hystrix |
+
+	→ Mỗi policy chỉ là một function wrapper. Không reflection, không annotation, không runtime proxy.
+
+
+
+
+
+
+# 🧩 5. Kết hợp HOF với Stream & Pipeline
+	Ta có thể inject policy trực tiếp vào functional pipeline:
+
+
+Function<Employee, Employee> validate = withAudit(withRetry(transform));
+employees.stream()
+    .filter(isActive)
+    .map(validate)
+    .forEach(send);
+
+
+→ Toàn bộ policy (audit, retry, transform) được compose thành pipeline.
+Không class, không annotation, không magic.
+
+
+# 🧠 6. Ưu điểm vượt trội của Functional HOF Design
+
+| Tiêu chí             | OOP DI / AOP                 | Functional Policy Injection |
+| -------------------- | ---------------------------- | --------------------------- |
+| **Tính rõ ràng**     | Ẩn logic (annotation, proxy) | Minh bạch, nhìn thấy chain  |
+| **Testability**      | Cần mock container           | Test thuần hàm, dễ stub     |
+| **Thread-safety**    | Có thể stateful              | Pure function, thread-safe  |
+| **Runtime overhead** | Reflection, proxy            | Zero-cost lambda chain      |
+| **Reusability**      | Phụ thuộc interface          | Compose như lego            |
+
+
+# 💡 7. Ứng dụng thực tế
+
+	Spring Cloud Gateway Filter → có thể viết lại hoàn toàn theo HOF style.
+	
+	Middleware pipeline trong WebFlux, Micronaut → mỗi filter là một HOF.
+	
+	Reactive Policy Injection → dùng Mono.defer(() -> policy.apply(fn)) để inject runtime policy.
+	
+	Java Security → policy-driven authentication/authorization chain (pure functional).
+
+
+#✅ Kết luận 
+
+
+| Khía cạnh                            | HOF đem lại                   |
+| ------------------------------------ | ----------------------------- |
+| **Thay thế class-level abstraction** | Bằng function composition     |
+| **Thay thế DI container**            | Bằng function injection       |
+| **Thay thế AOP proxy**               | Bằng function wrapper         |
+| **Tăng testability, predictability** | Vì pure và transparent        |
+| **Đơn giản hóa enterprise logic**    | Giảm boilerplate, vẫn modular |
+
+
+
+
+
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
