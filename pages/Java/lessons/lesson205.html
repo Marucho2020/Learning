@@ -1,0 +1,184 @@
+<html><head><title>Lesson 205 == Reactive Stream & Backpressure Pattern ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 205 -- Reactive Stream & Backpressure Pattern -//</h1><pre>
+# 🔹 1. Reactive Stream là gì?
+	Reactive Stream là Functional Pipeline có thời gian (time dimension) — thay vì xử lý một lần với dữ liệu tĩnh, ta xử lý liên tục với dữ liệu động.
+
+
+	Nói ngắn gọn:
+		Stream API trong Java: xử lý list đã có sẵn.
+		
+		Reactive Stream: xử lý dòng dữ liệu sinh ra theo thời gian (event, message, sensor data, log...).
+
+	Cốt lõi là 4 interface trong java.util.concurrent.Flow (Java 9+):
+Publisher<T>
+Subscriber<T>
+Subscription
+Processor<T, R>
+
+
+
+# 🔸 2. Vai trò từng thành phần
+
+| Thành phần       | Vai trò                       | Tương tự OOP / Stream |
+| ---------------- | ----------------------------- | --------------------- |
+| **Publisher**    | Nguồn dữ liệu (emit item)     | Stream source         |
+| **Subscriber**   | Nhận dữ liệu (consume)        | forEach / Consumer    |
+| **Subscription** | Kênh kết nối + điều tiết      | Iterator + control    |
+| **Processor**    | Vừa nhận vừa phát (transform) | map/filter            |
+
+
+	## Ví dụ đơn giản: 
+		
+SubmissionPublisher<String> publisher = new SubmissionPublisher<>();
+
+publisher.subscribe(new Subscriber<>() {
+    public void onSubscribe(Subscription s) {
+        s.request(1); // yêu cầu gửi 1 item
+    }
+    public void onNext(String item) {
+        System.out.println("Received: " + item);
+    }
+    public void onError(Throwable t) { t.printStackTrace(); }
+    public void onComplete() { System.out.println("Done"); }
+});
+
+publisher.submit("Hello");
+publisher.close();
+
+	Đây là reactive pipeline push-based: Publisher đẩy dữ liệu sang Subscriber.
+
+
+
+# 🔹 3. So sánh với Java Stream
+
+| Đặc điểm         | Java Stream                  | Reactive Stream                         |
+| ---------------- | ---------------------------- | --------------------------------------- |
+| **Kiểu xử lý**   | Pull (bộ xử lý lấy data)     | Push (nguồn đẩy data)                   |
+| **Dữ liệu**      | Finite (có giới hạn)         | Infinite (có thể vô hạn)                |
+| **Thời gian**    | Không có khái niệm thời gian | Có khái niệm “event theo thời gian”     |
+| **Thread model** | Đồng bộ                      | Bất đồng bộ (asynchronous)              |
+| **Backpressure** | Không có                     | Có, điều tiết tốc độ dữ liệu            |
+| **Ứng dụng**     | Xử lý batch                  | Real-time stream, message-driven system |
+
+
+# 🔸 4. Backpressure — “van điều áp” của hệ thống dữ liệu
+
+	Trong hệ thống reactive, Producer (Publisher) có thể phát ra dữ liệu nhanh hơn Subscriber tiêu thụ được.
+
+	→ Nếu không kiểm soát, ta sẽ bị OOM, timeout hoặc mất dữ liệu.
+
+	Giải pháp:
+		Dùng cơ chế Backpressure:
+
+		Subscriber chủ động yêu cầu Publisher gửi dữ liệu theo tốc độ mà nó chịu được.
+
+onSubscribe(Subscription s) {
+    this.subscription = s;
+    s.request(1); // yêu cầu 1 item
+}
+
+onNext(T item) {
+    process(item);
+    subscription.request(1); // sau khi xử lý xong, yêu cầu tiếp
+}
+
+
+	Cơ chế này chính là Reactive Pull — ngược với Stream API (Pull từ đầu), ở đây Subscriber điều tiết luồng push.
+
+
+
+
+# 🔹 5. Ứng dụng trong Enterprise
+
+	## 5.1 Streaming API / Event-driven Microservice 
+	
+	Các hệ thống Kafka, RabbitMQ, Pulsar… đều tuân theo mô hình Reactive Publisher → Subscriber.
+	
+	OrderService (Publisher) phát event “OrderCreated”.
+	
+	BillingService (Subscriber) nhận event và xử lý thanh toán.
+	
+	Backpressure bảo đảm: nếu BillingService chậm, OrderService không flood hệ thống.
+
+
+
+	## 5.2 Data Ingestion Pipelines
+
+	Trong hệ thống Big Data / ETL:
+
+		Publisher: luồng log / sensor data / IoT stream.
+		Processor: parse → enrich → transform.
+		Subscriber: lưu vào DB / data lake.
+
+	Nếu pipeline downstream (DB) quá tải, Backpressure cho phép “nén tốc độ upstream”.
+	
+	→ Đây chính là hình thức flow control tự nhiên, không cần thread pool tuning thủ công.
+
+
+
+
+	## 5.3 Reactive Database Access
+		Spring WebFlux, R2DBC, Reactor, Mutiny… đều dựa trên reactive stream.
+		Ví dụ trong Reactor:
+
+Flux<Employee> flux = employeeRepo.findAll();
+flux.filter(e -> e.isActive())
+    .map(Employee::getEmail)
+    .subscribe(System.out::println);
+
+
+
+	Flux = Publisher nhiều phần tử.
+	.subscribe() = Subscriber.
+	Reactor sẽ tự động quản lý Backpressure, không bao giờ bắn dữ liệu nhanh hơn khả năng xử lý.
+	
+
+
+# 🔸 6. Reactive trong Security & API Gateway
+
+	Functional Reactive Pattern cực mạnh trong Java Security, đặc biệt:
+
+		Reactive Authentication Pipeline: mỗi bước là 1 function (User) -> Mono<User> (validate → authorize → audit).
+		
+		Rate Limiting / Throttling: thực thi dựa trên backpressure hoặc token bucket.
+		
+		API Gateway Filters (Spring Cloud Gateway) là reactive chain (ServerRequest → Mono<ServerResponse>).
+
+	Ví dụ:
+		Function<ServerRequest, Mono<ServerResponse>> secured =
+			withRateLimit(withAudit(withAuth(baseHandler)));
+
+		→ Đây là functional pipeline + reactive backpressure = cực kỳ mạnh cho hệ thống phân tán.
+
+
+
+
+# 🔹 7. Reactor vs Flow API
+
+| Tiêu chí                | Java Flow API        | Project Reactor                                     |
+| ----------------------- | -------------------- | --------------------------------------------------- |
+| **Mức độ trừu tượng**   | Thô (manual control) | Cao (Flux/Mono)                                     |
+| **Async Scheduler**     | Không có             | Có (`publishOn`, `subscribeOn`)                     |
+| **Operator**            | Không có             | Hàng trăm operator như map, flatMap, zip, buffer... |
+| **Backpressure hỗ trợ** | Có (manual)          | Có (tự động, tối ưu)                                |
+| **Use case**            | Low-level system     | Enterprise reactive apps                            |
+
+	→ Trong enterprise, ta thường dùng Reactor (Spring WebFlux) thay vì Flow API gốc vì Reactor xử lý toàn bộ vòng đời luồng dữ liệu, scheduler, backpressure, error flow.
+
+
+
+# 🔸 8. Tổng kết cho senior
+
+| Kiến thức                  | Ý nghĩa trong thiết kế                                         |
+| -------------------------- | -------------------------------------------------------------- |
+| **Reactive Stream**        | Mở rộng Functional Stream thành dạng liên tục (push-based)     |
+| **Backpressure**           | Bảo vệ hệ thống khỏi overload — cơ chế điều tiết luồng dữ liệu |
+| **Publisher–Subscriber**   | Thay thế cho Layered Architecture, hướng event-driven          |
+| **Functional Composition** | Xây dựng pipeline transform dữ liệu động                       |
+| **Enterprise Value**       | Tăng throughput, giảm coupling, dễ scale theo load             |
+
+
+# 💡 Tư duy cuối:
+
+	Functional pipeline giúp bạn xử lý batch dữ liệu.
+Reactive stream giúp bạn xử lý dòng dữ liệu sống, có nhịp điệu, có tốc độ, và có khả năng chịu tải.
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
