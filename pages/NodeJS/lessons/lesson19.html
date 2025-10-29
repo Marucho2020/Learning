@@ -1,0 +1,70 @@
+<html><head><title>Lesson 19 == Publish Package ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../NodeJS-learning.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 19 -- Publish Package -//</h1><pre>
+# 1. Publish Package Nghĩa Là Gì? (What Does it Mean to Publish a Package?)
+	
+	Định nghĩa: Đưa module Node.js của bạn lên npm registry (npmjs.com), nơi công chúng có thể install qua npm install your-package-name. Đây là cách chia sẻ libraries, tools, CLI apps với cộng đồng Node.js.
+
+
+	## Lợi ích sâu sắc:
+
+		- Open-source contribution: Giúp người khác xây dựng nhanh hơn (ví dụ: Express.js được millions downloads).
+		- Personal branding: Tăng visibility trên GitHub/NPM, cơ hội job.
+		- Monetization: Scoped packages (@paid/package) hoặc private registries cho enterprise.
+		- Version control: Users có thể pin versions cụ thể, tránh breaking changes.
+
+	Rủi ro: Nếu package popular, bạn chịu trách nhiệm maintain, handle issues, security. Ví dụ: left-pad incident (2016) khi author unpublish gây chaos toàn ecosystem – NPM giờ có safeguards như 72h grace period.
+
+
+
+# 2. Chuẩn Bị Package (Preparing Your Package)
+
+	## Bước 1: Initialize: 
+
+mkdir my-package
+cd my-package
+npm init -y  // Tạo package.json cơ bản
+	-y flag skip prompts, dùng cho quick start. Sau đó edit package.json thủ công.
+
+
+	## Bước 2: Essential Files (các file cần thiết):
+
+		- package.json: Metadata chính (name, version, description, main, scripts, keywords, author, license).
+		- README.md: Docs chi tiết với examples, installation, API usage. Hỗ trợ Markdown, ảnh, code blocks.
+		- index.js: Entry point (hoặc chỉ định "main": "dist/index.js" cho built packages).
+		- LICENSE: MIT (permissive), ISC (simple), Apache 2.0 (patent grants). Chọn phù hợp – MIT phổ biến nhất cho open-source.
+		- .gitignore: Exclude node_modules/, .env, builds, logs.
+		- .npmignore: Tương tự .gitignore nhưng cho publish – exclude files không cần (như tests, docs dài) để giảm bundle size. Nếu không có, NPM dùng .gitignore.
+	
+	
+		Ví dụ package.json minimum (từ bài):
+	
+{
+  "name": "your-unique-package-name",  // Phải unique, lowercase, no spaces (dùng - thay)
+  "version": "1.0.0",
+  "description": "Brief desc",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"  // Placeholder, thay bằng jest/mocha
+  },
+  "keywords": ["node", "utility", "helper"],  // Giúp search trên npmjs.com
+  "author": "Your Name <email@example.com><a href="https://github.com/yourusername" target="_blank" rel="noopener noreferrer nofollow"></a>",
+  "license": "MIT",
+  "repository": {  // Optional nhưng recommended
+    "type": "git",
+    "url": "git+https://github.com/yourusername/my-package.git"
+  },
+  "bugs": { "url": "https://github.com/yourusername/my-package/issues" },
+  "homepage": "https://github.com/yourusername/my-package#readme"
+}	
+	
+	
+	
+#3. Tạo NPM Account (Creating an npm Account)
+	
+	Sign up: Tại npmjs.com/signup.
+	Verify email: Bắt buộc.
+	CLI login: npm login – nhập username, password, email, 2FA nếu enable (khuyến khích cho security).
+	Check: npm whoami (hiển thị username nếu logged in).
+	Sâu sắc: NPM hỗ trợ 2FA (TOTP app như Authy). Paid accounts cho private packages/unlimited collaborators. Trong enterprise, dùng NPM Organizations hoặc Verdaccio (self-hosted registry).	
+	
+	
+</pre><a id='backBottom' href='../NodeJS-learning.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

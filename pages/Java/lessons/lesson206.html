@@ -1,0 +1,211 @@
+<html><head><title>Lesson 206 == Functional Architecture & Hybrid Design ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 206 -- Functional Architecture & Hybrid Design -//</h1><pre>
+# 🔹 1. Functional ≠ Anti-OOP
+
+	Sai lầm phổ biến: nghĩ rằng functional là “chống lại” hướng đối tượng.
+		→ Thực ra: functional và OOP giải quyết hai tầng khác nhau của cùng một hệ thống.
+
+| Tầng                               | Tư duy                                        | Ngôn ngữ thiết kế |
+| ---------------------------------- | --------------------------------------------- | ----------------- |
+| **Structural (Cấu trúc hệ thống)** | Quan hệ giữa module, entity, service          | **OOP**           |
+| **Behavioral (Logic xử lý)**       | Dòng biến đổi dữ liệu, tính toán, rule engine | **Functional**    |
+
+
+→ Tức là:
+
+	OOP: định nghĩa nó là ai (Entity, Repository, Controller...).
+	FP: định nghĩa nó làm gì (validate, transform, enrich, aggregate...).
+
+	Hai tư duy này ghép lại thành kiến trúc lai (hybrid architecture), cực kỳ phổ biến ở enterprise hiện đại.
+
+
+
+# 🔸 2. Nguyên lý nền tảng của Hybrid Design
+
+
+	✅ OOP cho structure (骨格 / こっかく — khung xương)
+	
+		Entity, DTO, Repository, Service class.
+		Dễ mô hình hóa domain, có thể mapping sang database.
+		Dễ maintain khi domain thay đổi.
+	
+	✅ Functional cho behavior (挙動 / きょどう — hành vi)
+	
+		Mọi logic transform đều là pure function.
+		Tái sử dụng cao, test dễ, không cần state.
+		Có thể chain / compose để tạo pipeline xử lý phức tạp.
+
+
+
+# 🔹 3. Cấu trúc kiến trúc kiểu hybrid trong Java Enterprise
+
+
+┌────────────────────┐
+│  Controller Layer  │  → nhận request
+└────────┬───────────┘
+         │
+┌────────▼───────────┐
+│   Service Layer    │  → orchestrator (điều phối)
+│  - gọi repository  │
+│  - gọi pipeline fn │
+└────────┬───────────┘
+         │
+┌────────▼───────────┐
+│  Functional Core   │  → thuần hàm
+│  - validateFn      │
+│  - transformFn     │
+│  - enrichFn        │
+│  - aggregateFn     │
+└────────┬───────────┘
+         │
+┌────────▼───────────┐
+│   Repository       │  → lưu DB, không business logic
+└────────────────────┘
+
+
+@Service
+public class EmployeeService {
+    private final EmployeeRepository repo;
+
+    public EmployeeService(EmployeeRepository repo) {
+        this.repo = repo;
+    }
+
+    public List<EmployeeDTO> getActiveEmployees() {
+        return repo.findAll().stream()
+            .filter(isActive)
+            .map(toDTO)
+            .map(enrichEmail)
+            .collect(Collectors.toList());
+    }
+}
+
+
+
+	EmployeeService = OOP orchestration layer.
+	isActive, toDTO, enrichEmail = pure functional pipeline.
+
+	→ Không cần inheritance, không cần strategy pattern, vẫn đạt polymorphic behavior thông qua function composition.
+
+
+
+# 🔸 4. Functional pipeline thay thế OOP pattern cũ như thế nào?
+
+| OOP Pattern         | Vấn đề                              | Functional Replacement                         |
+| ------------------- | ----------------------------------- | ---------------------------------------------- |
+| **Strategy**        | Đổi logic bằng class khác → rườm rà | Dùng function injection                        |
+| **Decorator**       | Gói thêm behavior                   | Dùng `andThen()` hoặc higher-order function    |
+| **Template Method** | Override từng bước xử lý            | Dùng pipeline chain (map/filter/flatMap)       |
+| **Command**         | Mỗi hành động là 1 object           | Mỗi hành động là 1 function `(State) -> State` |
+
+
+	→ Giảm boilerplate, không cần 10 class chỉ để đổi cách xử lý 1 rule.
+
+
+
+# 🔹 5. Enterprise ứng dụng: Microservice domain
+
+	## 🧱 OOP phần “orchestrator”
+
+		Ví dụ EmployeeService hay OrderProcessor — đây là nơi điều phối:
+
+			Gọi repository.
+			Gọi function pipeline.
+			Gọi external service.
+			
+
+	## ⚙️ Functional phần “core logic” 
+		
+Function<Order, Order> validate =
+    o -> (o.getPrice() > 0) ? o : throw new InvalidOrderException();
+
+Function<Order, Order> applyTax =
+    o -> o.withPrice(o.getPrice() * 1.1);
+
+Function<Order, Order> finalizeOrder =
+    validate.andThen(applyTax);
+
+
+	→ Dòng dữ liệu (Order) đi qua pipeline logic:
+		validate → transform → enrich → save.
+		Khi muốn thêm rule, chỉ cần .andThen(newRule) → không ảnh hưởng code khác.
+
+
+
+
+# 🔸 6. Functional Architecture trong Security
+	Spring Security Reactive (WebFlux) là ví dụ rõ nhất:
+
+		Mỗi filter = 1 function (ServerRequest) -> Mono<ServerResponse>.
+		Compose các filter bằng function chain thay vì XML config hay subclass.
+		
+	Function<ServerRequest, Mono<ServerResponse>> secured =
+    withAuth(withRateLimit(withAudit(baseHandler)));
+
+	→ Đây là functional dependency injection, không cần @Autowired Strategy hay Template class.
+	
+	
+	
+	
+	
+# 	🔹 7. Hybrid Design = Clean, Scalable, Testable
+	
+	
+| Lợi ích                 | Giải thích                                              |
+| ----------------------- | ------------------------------------------------------- |
+| **Clear separation**    | OOP quản lý *data & module*, FP quản lý *logic & flow*. |
+| **Tái sử dụng**         | Các function nhỏ có thể compose lại pipeline khác.      |
+| **Test dễ dàng**        | Mỗi function test độc lập (input → output).             |
+| **Không mutable state** | Ít bug race condition, dễ parallel hóa.                 |
+| **Chuẩn hóa behavior**  | Tất cả xử lý đều đi qua function chain rõ ràng.         |
+	
+	
+	
+	
+	
+# 🔸 8. Ví dụ thực tế ngoài Java	
+	
+| Ngôn ngữ                 | Kiểu kiến trúc Hybrid                                   |
+| ------------------------ | ------------------------------------------------------- |
+| **Scala / Akka**         | Actor (OOP) + Pure Function (FP)                        |
+| **Kotlin**               | Class domain + inline lambda pipelines                  |
+| **C#**                   | OOP domain + LINQ functional processing                 |
+| **Python**               | OOP class + `map/filter/reduce` logic chain             |
+| **JavaScript (Node.js)** | Express Router (OOP-ish) + RxJS hoặc Promise chain (FP) |
+	
+	→ Dù ngôn ngữ nào, pattern hybrid này đều phổ biến vì nó giữ lại tính tổ chức của OOP nhưng mang sức mạnh khai báo của FP.	
+	
+	
+	
+# 	🔹 9. Mindset của senior developer
+	
+	
+	“Dữ liệu có thể là class. Logic thì nên là function.”
+	“OOP là khung xương. Functional là dòng máu.”
+	“Đừng ép mọi thứ thành object — behavior nên flow, không nên mutate.”	
+
+
+# 🔸 10. Tóm tắt tinh gọn
+
+
+| Tầng                 | Dạng | Mục tiêu                        |
+| -------------------- | ---- | ------------------------------- |
+| Entity / DTO         | OOP  | Data modeling                   |
+| Service / Controller | OOP  | Orchestration                   |
+| Business logic       | FP   | Transform, validation, pipeline |
+| Stream / Reactive    | FP   | Parallelism, async, event flow  |
+
+
+	Khi viết code enterprise:
+	
+		Class chỉ để gom nhóm logic.
+		Function mới là “động cơ” chạy hệ thống.
+
+
+
+
+
+
+
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

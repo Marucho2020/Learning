@@ -1,0 +1,282 @@
+<html><head><title>Lesson 20 == Http Module ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../NodeJS-learning.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 20 -- Http Module -//</h1><pre>
+# 1. HTTP Module Là Gì?
+	
+	const http = require('http');	
+	
+Đây là module tích hợp sẵn (built-in) của Node.js, cho phép bạn:
+
+	- Tạo web server (nhận request, trả response)
+	- Gửi HTTP request đến server khác
+	- Xử lý header, body, method, URL, query, streaming, v.v.	
+	
+	Không cần cài gì cả — chỉ cần require('http').
+	
+	
+	
+# 2. Tạo HTTP Server Cơ Bản (Hello World)
+	
+const http = require('http');
+
+const server = http.createServer((req, res) => {
+  res.writeHead(200, { 'Content-Type': 'text/plain' });
+  res.end('Hello, World!\n');
+});
+
+server.listen(3000, 'localhost', () => {
+  console.log('Server running at http://localhost:3000/');
+});
+	
+	
+	## Giải thích từng dòng (sâu sắc):
+	
+
+		- http.createServer(...)Tạo một server instance dựa trên event-driven architecture
+		- (req, res) => {}Callback chạy mỗi khi có request đến
+		- req (IncomingMessage)Object chứa thông tin request: URL, method, headers, body
+		- res (ServerResponse)Object để gửi response: status, headers, body
+		- res.writeHead(200, {...})Gửi status code + headers
+		- res.end(...)Gửi body + kết thúc response
+		- server.listen(port, host, callback)
+	
+	Node.js là non-blocking: Server có thể xử lý hàng nghìn request đồng thời nhờ Event Loop.
+	
+	
+# 	3. HTTP Headers – "Metadata" Của Request & Response
+	
+	Response Headers (gửi từ server)
+	
+res.writeHead(200, {
+  'Content-Type': 'text/html',
+  'X-Powered-By': 'Node.js',
+  'Cache-Control': 'no-cache',
+  'Set-Cookie': 'session=abc123; HttpOnly'
+});	
+	
+	
+Header,Ý nghĩa
+Content-Type,"Kiểu dữ liệu trả về: text/html, application/json, image/png"
+Cache-Control,"Kiểm soát cache: no-cache, max-age=3600"
+Set-Cookie,Gửi cookie về client
+Location,"Dùng cho redirect (301, 302)"
+
+
+	## Request Headers (client gửi lên)
+		console.log(req.headers['user-agent']);
+		console.log(req.headers['authorization']);
+
+
+
+# 4. Xử Lý URL & Query Parameters
+
+	## 4.1. Dùng req.url
+		console.log(req.url); // "/users?id=123&name=John"
+
+
+	## 4.2. Dùng url.parse() (cũ) → Không khuyến khích
+	
+		const url = require('url');
+		const parsed = url.parse(req.url, true);
+		console.log(parsed.pathname); // "/users"
+		console.log(parsed.query.id);  // "123"
+		
+
+	## 4.3. Dùng new URL() (mới, chuẩn WHATWG) → KHUYẾN KHÍCH
+	
+const { URL } = require('url');
+const myURL = new URL(req.url, `http://${req.headers.host}`);
+
+console.log(myURL.pathname);      // "/users"
+console.log(myURL.searchParams.get('id')); // "123"	const { URL } = require('url');
+const myURL = new URL(req.url, `http://${req.headers.host}`);
+
+console.log(myURL.pathname);      // "/users"
+console.log(myURL.searchParams.get('id')); // "123"
+	
+	
+		Parse chính xác, an toàn
+		Hỗ trợ Unicode, IPv6
+		Dễ lấy từng param: searchParams.get(), searchParams.has()	
+	
+	
+	
+# 5. Xử Lý Các HTTP Methods (REST API Cơ Bản)
+
+Method		Mục đích		Idempotent?
+GET			Lấy dữ liệu			Yes
+POST		,Tạo mới			,No
+PUT			,Cập nhật toàn bộ	,Yes
+PATCH		,Cập nhật một phần	,No
+DELETE		,Xóa				,Yes
+
+
+
+# Ví dụ: API quản lý Todo (full CRUD)
+
+let todos = [
+  { id: 1, task: "Học Node.js", completed: false }
+];
+
+const server = http.createServer((req, res) => {
+  const { method, url } = req;
+  const parsed = new URL(url, `http://${req.headers.host}`);
+  const path = parsed.pathname;
+
+  // CORS (cho dev)
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+
+  if (method === 'OPTIONS') {
+    res.writeHead(204);
+    res.end();
+    return;
+  }
+
+  // GET /todos
+  if (method === 'GET' && path === '/todos') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(todos));
+  }
+
+  // POST /todos
+  else if (method === 'POST' && path === '/todos') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      try {
+        const newTodo = JSON.parse(body);
+        newTodo.id = todos.length + 1;
+        todos.push(newTodo);
+        res.writeHead(201, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(newTodo));
+      } catch {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Invalid JSON' }));
+      }
+    });
+  }
+
+  // 404
+  else {
+    res.writeHead(404);
+    res.end();
+  }
+});
+
+server.listen(3000);
+
+
+	Lưu ý: Đây là raw HTTP server — bạn sẽ thấy Express.js làm mọi thứ gọn hơn rất nhiều.
+
+
+
+# 6. Xử Lý Request Body (POST, PUT)
+
+let body = '';
+req.on('data', chunk => {
+  body += chunk.toString();
+});
+req.on('end', () => {
+  const data = JSON.parse(body);
+  // xử lý...
+});
+
+	Dễ bị Buffer Overflow nếu không giới hạn
+	Không xử lý multipart/form-data (upload file)
+
+
+
+
+	## Giải pháp chuyên nghiệp:
+
+
+// Giới hạn kích thước body
+server.on('clientError', (err, socket) => {
+  if (err.code === 'HPE_INVALID_CONTENT_LENGTH') {
+    socket.end('HTTP/1.1 413 Payload Too Large\r\n\r\n');
+  }
+});
+
+// Hoặc dùng middleware (Express) hoặc thư viện như `busboy` cho file upload
+
+
+
+
+# 7. Streaming – Xử Lý File Lớn, Video, Log
+
+	Ví dụ: Stream file lớn (không load toàn bộ vào RAM)
+
+const fs = require('fs');
+const path = require('path');
+
+http.createServer((req, res) => {
+  const filePath = path.join(__dirname, 'big-video.mp4');
+
+  fs.stat(filePath, (err, stat) => {
+    if (err) {
+      res.writeHead(404);
+      res.end();
+      return;
+    }
+
+    res.writeHead(200, {
+      'Content-Type': 'video/mp4',
+      'Content-Length': stat.size
+    });
+
+    const stream = fs.createReadStream(filePath);
+    stream.pipe(res); // <<<< Magic: streaming!
+  });
+}).listen(3000);
+
+
+
+	- Không tốn RAM (xử lý theo chunk)
+	- Tự động backpressure (nếu client chậm, stream sẽ pause)
+	- Dùng cho: video streaming, file download, log tailing, proxy
+
+
+
+
+# 8. Best Practices Khi Dùng HTTP Module
+
+
+Best Practice,Giải thích
+Dùng new URL(),Thay vì url.parse()
+Luôn set Content-Type,Tránh lỗi hiển thị
+Giới hạn body size,Tránh DoS attack
+Xử lý lỗi req.on('error'),Tránh crash server
+Không dùng trong production,Dùng Express.js cho real app
+Dùng HTTPS trong production,Dùng https module hoặc reverse proxy (Nginx)
+
+
+
+
+
+# 9. So Sánh: HTTP Module vs Express.js
+
+
+Tính năng,HTTP Module,Express.js
+Cú pháp,Dài dòng,Ngắn gọn
+Routing,Manual if/else,"app.get('/users', ...)"
+Middleware,Không có,"Có (body-parser, cors, auth)"
+Error handling,Manual,next(err)
+Phù hợp,"Học cơ chế, tool nhỏ","Web app, API thực tế"
+
+
+HTTP Module = học cách xe hơi hoạt động
+Express.js = lái xe hơi
+
+
+
+
+
+https://www.w3schools.com/nodejs/nodejs_https.asp
+
+
+
+
+
+
+
+
+</pre><a id='backBottom' href='../NodeJS-learning.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
