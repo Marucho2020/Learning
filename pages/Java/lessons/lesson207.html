@@ -1,0 +1,171 @@
+<html><head><title>Lesson 207 == Functional System Integration & Resilience Pattern ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 207 -- Functional System Integration & Resilience Pattern -//</h1><pre>
+# 🎯 Mục tiêu
+
+Hiểu cách tích hợp hệ thống (integration) và đảm bảo resilience (chống lỗi, retry, timeout, circuit breaker) mà vẫn giữ nguyên tinh thần functional — tức là:
+
+	Không phụ thuộc vào annotation như @Retryable, @CircuitBreaker.
+	Không ẩn logic trong framework magic (Resilience4j, Spring Retry).
+	Mọi cơ chế resilience đều là function thuần (pure, composable, testable).
+	
+	
+
+# 🔍 1. Functional System Integration là gì?
+
+	Trong enterprise, "integration" nghĩa là kết nối giữa các service hoặc API bên ngoài.
+	Thông thường trong OOP/Spring style, ta làm như sau:
+
+
+
+	@Service
+public class OrderService {
+    @Retryable
+    public OrderResult process(Order order) {
+        return externalPaymentApi.call(order);
+    }
+}
+
+	Cách này dễ, nhưng ẩn logic retry trong annotation.
+		Functional design thì minh bạch hóa toàn bộ pipeline retry/timeout, và ta có thể compose các policy như lego.
+
+
+# ⚙️ 2. Functional Resilience — Bản chất
+
+	Ta định nghĩa các hàm resilience như Higher-Order Functions (HOF):
+	Hàm nhận vào “core function” và trả về “wrapped function có resilience”.
+
+Function<T, R> withRetry(Function<T, R> fn, int maxRetries);
+Function<T, R> withTimeout(Function<T, R> fn, Duration timeout);
+Function<T, R> withCircuitBreaker(Function<T, R> fn, CircuitState state);
+
+	Sau đó, ta compose:
+
+Function<Order, Result> processOrder =
+    withCircuitBreaker(
+        withTimeout(
+            withRetry(externalPaymentCall, 3),
+            Duration.ofSeconds(2)
+        ),
+        circuitState
+    );
+
+	💡 Mọi logic resilience trở thành pure functional layer, không phụ thuộc framework, dễ unit test, dễ tái sử dụng.
+
+
+# 🧠 3. Ví dụ thực tế — Payment API Integration
+
+	## Trước: OOP kiểu Spring Boot
+
+@Retryable
+@CircuitBreaker
+public PaymentResponse call(PaymentRequest req) {
+    return restTemplate.postForObject(apiUrl, req, PaymentResponse.class);
+}
+
+
+
+	## Sau: Functional 
+		→ Không cần framework, logic rõ ràng, có thể compose linh hoạt, log, test từng lớp resilience riêng.
+
+
+Function<PaymentRequest, PaymentResponse> apiCall = req -> restClient.send(req);
+
+Function<PaymentRequest, PaymentResponse> resilientApiCall =
+    withCircuitBreaker(
+        withRetry(
+            withTimeout(apiCall, Duration.ofSeconds(3)),
+            5
+        ),
+        state
+    );
+
+PaymentResponse response = resilientApiCall.apply(req);
+
+
+	→ Không cần framework, logic rõ ràng, có thể compose linh hoạt, log, test từng lớp resilience riêng.
+
+
+# 🧩 4. Backpressure + Retry phối hợp thế nào?
+
+	Khi kết hợp reactive (ví dụ Reactor, Flow, Akka Streams), resilience có thể được nhúng vào pipeline:
+
+Flux.from(publisher)
+    .flatMap(request -> Mono.fromCallable(() -> apiCall.apply(request))
+                             .timeout(Duration.ofSeconds(2))
+                             .retryWhen(Retry.max(3))
+    )
+    .onErrorContinue((err, req) -> log.warn("failed {}", req))
+    .subscribe();
+
+
+	→ Đây là functional reactive resilience:
+	Mỗi policy là một operator, tất cả đều pure và composable — không “ẩn” bên trong annotation.
+
+
+
+
+# 🔒 5. Enterprise Pattern Mapping
+
+| OOP/Imperative Pattern   | Functional Equivalent              |
+| ------------------------ | ---------------------------------- |
+| `@Retryable`, `@Timeout` | `withRetry`, `withTimeout` (HOF)   |
+| `CircuitBreakerAspect`   | `withCircuitBreaker(fn, state)`    |
+| `Bulkhead pattern`       | `limitConcurrency(fn, permits)`    |
+| `Fallback method`        | `fn.orElse(fallbackFn)`            |
+| `@Transactional`         | `withTransaction(fn)`              |
+| `try/catch`              | `Try<T>` hoặc `Either<L, R>` Monad |
+
+
+
+
+# 💼 6. Enterprise Application — Resilient ETL Pipeline
+
+	Một ETL service cần tải dữ liệu từ nhiều nguồn API không ổn định, và gửi sang Kafka.
+
+	Functional pipeline:
+
+Flux.fromIterable(sources)
+    .flatMap(source ->
+        Mono.fromCallable(() -> fetchData(source))
+            .transform(withRetryFn(3))
+            .transform(withTimeoutFn(Duration.ofSeconds(5)))
+            .onErrorResume(ex -> Mono.just(FallbackData.EMPTY))
+    )
+    .map(transformToUnifiedFormat)
+    .flatMap(sendToKafka)
+    .subscribe();
+
+
+	→ Không framework magic, toàn bộ resilience logic compose từ pure function.
+	→ Unit test dễ: test từng withRetryFn, withTimeoutFn riêng biệt.
+
+
+
+# 🧩 7. Tư duy Functional Resilience
+
+	Không giấu lỗi, không ẩn logic
+		→ Functional = minh bạch và có thể reasoning.
+	
+	Composability > Configuration
+		→ Dùng function composition, không config YAML.
+	
+	Determinism > Magic
+		→ Ta có thể dự đoán chính xác pipeline sẽ làm gì — không phụ thuộc runtime annotation.
+
+
+
+# 🔚 Kết luận
+
+Functional System Integration & Resilience Pattern là bước tiến của enterprise Java:
+
+	- Biến resilience thành pure logic, dễ compose.
+	- Dễ kiểm thử, dễ logging, dễ reuse.
+	- Loại bỏ dependency vào framework, annotation, AOP.
+	- Giúp reactive + functional pipeline đạt deterministic reliability.
+
+
+
+
+
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

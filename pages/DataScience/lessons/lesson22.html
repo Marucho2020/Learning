@@ -1,0 +1,140 @@
+<html><head><title>Lesson 22 == COEFFICIENTS PART ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../DataScience-learning.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 22 -- COEFFICIENTS PART -//</h1><pre>
+	Trong bảng hồi quy (results.summary()), phần Coefficients là TR ƯU TIÊN SỐ 1 bạn cần hiểu – vì nó chứa công thức dự đoán thực tế.
+	Đây là "trái tim" của mô hình hồi quy tuyến tính!
+
+
+=================================================================================
+                    coef    std err          t      P>|t|      [0.025      0.975]
+---------------------------------------------------------------------------------
+Intercept       -100.5     20.1    -5.00      0.000    -140.4     -60.6
+Average_Pulse      3.2      0.186    17.18      0.000       2.83       3.57
+==============================================================================
+Omnibus:                        1.234   Durbin-Watson:                   1.95
+Prob(Omnibus):                  0.540   Jarque-Bera (JB):                1.12
+Skew:                          -0.15    Prob(JB):                        0.57
+Kurtosis:                       2.78   Cond. No.                         500.
+
+
+
+
+# 2. Công thức hồi quy được viết lại:
+
+	\text{Calorie_Burnage} = 0.3296 \times \text{Average_Pulse} + 346.8662
+
+Thành phần,Giá trị,Ý nghĩa thực tế
+Hệ số góc (Slope),0.3296,"Mỗi khi nhịp tim tăng 1, calo đốt cháy tăng 0.33"
+Hệ số chặn (Intercept),346.8662,"Khi nhịp tim = 0, calo đốt cháy ≈ 347"
+
+
+	Lưu ý: Nhịp tim = 0 là không thực tế (người chết rồi!), nhưng toán học vẫn cần hệ số chặn để đường thẳng "đúng vị trí".
+
+
+
+
+
+# 3. Giải thích ý nghĩa hệ số:
+
+
+Câu hỏi,Trả lời
+Average_Pulse tăng 1 → Calorie_Burnage tăng bao nhiêu?,+0.3296 ≈ 0.33 calo
+Average_Pulse = 0 → Calorie_Burnage = ?,346.8662 ≈ 347 calo
+
+
+	Intercept không phải lúc nào cũng có nghĩa thực tế, nhưng luôn cần để mô hình chính xác.
+
+
+# 4. Câu hỏi then chốt: "Do you think that this is a good model?"
+
+	R-squared (giải thích bao nhiêu % biến thiên?)
+	p-value (hệ số có ý nghĩa không?)
+	Số lượng dữ liệu
+	Phân phối phần dư
+
+
+
+# PHẦN 3: DỰ ĐOÁN BẰNG HÀM TRONG PYTHON
+
+def Predict_Calorie_Burnage(Average_Pulse):
+    return 0.3296 * Average_Pulse + 346.8662
+
+print(Predict_Calorie_Burnage(120))  # → 386.4182
+print(Predict_Calorie_Burnage(130))  # → 389.7142
+print(Predict_Calorie_Burnage(150))  # → 396.3062
+print(Predict_Calorie_Burnage(180))  # → 406.1942
+
+
+Average_Pulse,Dự đoán Calorie_Burnage
+120,386.4
+130,389.7
+150,396.3
+180,406.2
+
+
+
+
+
+# PHẦN 4: GIẢI THÍCH CHUYÊN SÂU (NÂNG CAO)
+
+
+	##1. Tại sao hệ số là 0.3296, không phải số tròn?
+		→ Vì OLS tính toán chính xác đến chữ số thập phân để giảm sai số tối đa.
+
+
+
+	## 2. Intercept có thực tế không?
+	
+Trường hợp,Giải thích
+Không thực tế,Nhịp tim = 0 → không thể xảy ra
+Vẫn cần thiết,Giúp đường thẳng đi qua đúng vùng dữ liệu	
+	
+Calorie_Burnage
+↑
+400 |           o o o
+    |         o     o
+350 |       o         o
+    |     o             o
+300 |   o
+    +-------------------→ Average_Pulse
+      0  100  120  140  160	
+	
+	
+→ Nếu không có intercept, đường thẳng có thể lệch xuống dưới, dự đoán sai.	
+	
+	
+	
+	
+# 	3. Cách lấy hệ số tự động từ statsmodels (thay vì gõ tay)
+import statsmodels.formula.api as smf
+
+model = smf.ols('Calorie_Burnage ~ Average_Pulse', data=df).fit()
+
+# Lấy hệ số tự động
+slope = model.params['Average_Pulse']      # → 0.3296
+intercept = model.params['Intercept']      # → 346.8662
+
+print(f"Calorie_Burnage = {slope:.4f} * Average_Pulse + {intercept:.4f}")	
+	
+	
+	
+# 	TÓM TẮT NHỚ NHANH (CHEAT SHEET)
+
+Thành phần,Ý nghĩa,Ví dụ
+Slope (hệ số góc),Tăng 1 đơn vị X → Y tăng bao nhiêu?,+0.33 calo
+Intercept,"Khi X = 0, Y = ?",347 calo
+Công thức,Y = slope * X + intercept,Calorie = 0.33 * Pulse + 347
+Dự đoán,Dùng hàm Python,predict(150) → 396.3
+
+
+https://www.w3schools.com/datascience/ds_linear_regression_pvalue.asp
+
+
+
+
+
+
+
+
+
+
+	
+</pre><a id='backBottom' href='../DataScience-learning.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
