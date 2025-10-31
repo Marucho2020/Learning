@@ -1,0 +1,105 @@
+<html><head><title>Lesson 23 == Linear Regression Pvalue ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../DataScience-learning.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 23 -- Linear Regression Pvalue -//</h1><pre>
+# PHẦN 1: MỤC ĐÍCH CỦA PHẦN "STATISTICS OF COEFFICIENTS"
+
+	Bạn muốn biết:
+"Liệu Average_Pulse có thực sự ảnh hưởng đến Calorie_Burnage không? Hay chỉ là ngẫu nhiên?"
+
+	→ P-value chính là câu trả lời!
+
+=================================================================================
+                    coef    std err          t      P>|t|      [0.025      0.975]
+---------------------------------------------------------------------------------
+Intercept       -100.5     20.1    -5.00      0.000    -140.4     -60.6
+Average_Pulse      3.2      0.186    17.18      0.000       2.83       3.57
+==============================================================================
+Omnibus:                        1.234   Durbin-Watson:                   1.95
+Prob(Omnibus):                  0.540   Jarque-Bera (JB):                1.12
+Skew:                          -0.15    Prob(JB):                        0.57
+Kurtosis:                       2.78   Cond. No.                         500.
+
+
+
+# PHẦN 2: 4 CỘT TRONG BẢNG HỆ SỐ (COEFFICIENTS)
+
+Cột,Tên,Ý nghĩa
+std err,Standard Error,Độ không chắc chắn của hệ số
+t,t-value,Hệ số chia cho std err
+`P>,t,`
+[0.025 0.975],95% Confidence Interval,Khoảng hệ số có thể nằm vào với 95% xác suất
+
+
+	Hôm nay ta tập trung vào P>|t| – P-value
+
+
+
+
+# PHẦN 3: P-VALUE LÀ GÌ? (GIẢI THÍCH DỄ HIỂU NHẤT)
+	Ví dụ đời thường:
+
+	Bạn nói: "Tập thể dục 30 phút giúp giảm 1kg/tuần!"
+	Bạn bè nghi ngờ: "Làm sao chắc? Có khi ngẫu nhiên thôi!"
+
+→ Bạn làm thí nghiệm với 100 người → kết quả ủng hộ bạn.
+→ Bạn tính P-value = 0.01
+
+
+P-value = 0.01 nghĩa là:
+	"Chỉ có 1% khả năng kết quả này là do ngẫu nhiên. 99% là do tập thể dục thực sự hiệu quả!"
+
+
+
+Câu hỏi,P-value trả lời
+Average_Pulse có ảnh hưởng đến Calorie_Burnage không?,→ Xem P-value của hệ số Average_Pulse
+
+
+# PHẦN 4: GIẢ THUYẾT (HYPOTHESIS TESTING) – TOÀN BỘ QUY TRÌNH
+
+Bước 1: Đặt giả thuyết
+
+Giả thuyết,Ý nghĩa
+H₀ (Null Hypothesis),Không có mối quan hệ → Hệ số = 0
+Hₐ (Alternative Hypothesis),Có mối quan hệ → Hệ số ≠ 0
+
+H₀: β_Average_Pulse = 0
+Hₐ: β_Average_Pulse ≠ 0
+
+
+
+# Bước 2: Tính P-value
+	→ Dùng công thức t-statistic:
+
+	$t = \frac{\text{coef}}{\text{std err}}$
+	→ Tra bảng t hoặc dùng phần mềm → ra P-value
+
+
+# Bước 3: Ra quyết định
+
+P-value,Kết luận
+< 0.05,Bác bỏ H₀ → Có mối quan hệ ý nghĩa
+> 0.05,Không đủ bằng chứng bác bỏ H₀ → Không kết luận được
+
+	0.05 = ngưỡng phổ biến (5% rủi ro sai)
+
+
+
+# PHẦN 7: INTERCEPT – CÓ NÊN XEM P-VALUE KHÔNG?
+
+	Intercept là điểm neo của đường thẳng
+	Dù P-value cao, vẫn cần giữ để mô hình chính xác
+	Chỉ quan tâm P-value của biến giải thích (X)
+
+
+
+# TÓM TẮT NHỚ NHANH (CHEAT SHEET)
+
+Khái niệm,Ý nghĩa,Ví dụ
+P-value < 0.05,Có mối quan hệ ý nghĩa,Bác bỏ H₀
+P-value > 0.05,Không đủ bằng chứng,Không kết luận
+H₀,Hệ số = 0 (không ảnh hưởng),β = 0
+Hₐ,Hệ số ≠ 0 (có ảnh hưởng),β ≠ 0
+0.05,Ngưỡng chấp nhận rủi ro 5%,Tiêu chuẩn
+
+
+
+https://www.w3schools.com/datascience/ds_linear_regression_rsquared.asp
+</pre><a id='backBottom' href='../DataScience-learning.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
