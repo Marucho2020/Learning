@@ -1,0 +1,181 @@
+<html><head><title>Lesson 210 == Functional Fallback & Recovery Pattern ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 210 -- Functional Fallback & Recovery Pattern -//</h1><pre>
+
+# ⚙️ 1. Vấn đề của try/catch trong hệ thống lớn
+
+Trong hệ thống thực tế (ví dụ: thanh toán, email, ETL):
+
+
+	Hầu như tất cả các call đều có thể fail.
+	Bạn cần fallback (chuyển hướng sang phương án dự phòng) — ví dụ:
+		Payment fail → thử backup provider.
+		Email service down → gửi qua queue để retry sau.
+
+	Nếu ta dùng try/catch khắp nơi, code sẽ trở thành:
+
+try {
+    payment.charge();
+} catch (Exception e1) {
+    try {
+        backupPayment.charge();
+    } catch (Exception e2) {
+        logger.error("Both providers failed");
+    }
+}
+
+
+→ Vô cùng rối, khó test, khó compose, và tệ hơn: logic resilience bị lẫn vào logic nghiệp vụ.
+
+Functional approach giúp ta tách biệt hoàn toàn hai tầng này.
+
+
+
+# 🧩 2. Giới thiệu Try<T> Monad (hoặc Either<Error, T>)
+
+	Try<T> là một container biểu diễn kết quả có thể thành công hoặc thất bại, thay thế hoàn toàn cho try/catch.
+
+	Giống như Optional<T>, nhưng có thêm error info:
+
+	Try<T> = Success<T> | Failure<Throwable>
+
+	Ví dụ minh họa đơn giản:
+
+
+class Try<T> {
+    private final T value;
+    private final Throwable error;
+
+    private Try(T value, Throwable error) {
+        this.value = value;
+        this.error = error;
+    }
+
+    public static <T> Try<T> of(Supplier<T> fn) {
+        try {
+            return new Try<>(fn.get(), null);
+        } catch (Throwable t) {
+            return new Try<>(null, t);
+        }
+    }
+
+    public boolean isSuccess() { return error == null; }
+    public T getOrElse(T fallback) { return isSuccess() ? value : fallback; }
+    public Try<T> recoverWith(Supplier<T> fallbackFn) {
+        return isSuccess() ? this : Try.of(fallbackFn);
+    }
+}
+
+
+	## Bây giờ, không cần try/catch, ta viết: 
+
+var result = Try.of(() -> payment.charge())
+                .recoverWith(() -> backupPayment.charge());
+
+
+
+	## 💡 Điểm mạnh: 
+
+		Không throw exception.
+		Dễ chain logic fallback.
+		Có thể log, map, transform kết quả như stream.
+
+
+
+# 🧠 3. Either<Error, Result> — mô hình Monad mạnh hơn Try
+
+	Nếu bạn muốn phân biệt lỗi có loại cụ thể (ví dụ: network fail, validation fail, provider fail), ta dùng Either<L, R>.
+
+
+	Either<Error, PaymentResponse> result = payment.charge();
+
+		Left = lỗi
+		Right = kết quả
+
+	Sau đó:
+		result.orElse(() -> backupPayment.charge());
+
+	Cách này an toàn hơn, vì error type là kiểu cụ thể (có thể sealed interface trong Java 17+).
+
+
+
+# 🔗 4. Policy chaining: withRetry().recoverWith(fallback)
+	Bây giờ ta kết hợp bài trước (Resilience composition) với fallback functional.
+
+Supplier<CompletableFuture<String>> resilient =
+    withRetry(3)
+    .andThen(withTimeout(Duration.ofSeconds(2)))
+    .apply(() -> callPaymentProvider())
+    .recoverWith(() -> callBackupProvider());
+
+	→ Khi callPaymentProvider() thất bại sau retry, fallback tự động chạy — không try/catch, không annotation.
+
+
+# 🏢 5. Ứng dụng thực tế: ETL và Payment Pipeline
+
+	ETL Pipelines:
+		Trong pipeline data transformation:
+
+		Một job có thể fail ở một stage (ví dụ parse JSON).
+		Dùng Try hoặc Either để fallback sang parsing “lenient” mode.
+
+	Kết quả: pipeline vẫn chạy tiếp, không crash toàn bộ.
+
+
+	## Payment Orchestration:
+Try<PaymentResult> payment =
+    Try.of(() -> stripe.charge(request))
+       .recoverWith(() -> paypal.charge(request))
+       .recoverWith(() -> square.charge(request));
+
+	Ta có thể chain vô hạn provider fallback.
+	Và toàn bộ pipeline bất biến, test dễ dàng:
+		assertTrue(payment.isSuccess());
+
+	Không có try/catch, không throw exception — code pure functional.
+
+
+
+# 🧰 6. Kết hợp Try + Logging + Metrics
+	Bạn có thể kết hợp log hoặc metrics mà vẫn giữ functional purity:
+
+Try.of(() -> stripe.charge(request))
+   .peekSuccess(r -> metrics.increment("payment.success"))
+   .peekFailure(e -> metrics.increment("payment.fail"))
+   .recoverWith(() -> paypal.charge(request));
+
+	→ Xử lý observability ngay trong pipeline, không phá vỡ purity.
+
+
+# 💡 7. So sánh với cách truyền thống
+
+| Mô hình     | Truyền thống        | Functional Monad                         |
+| ----------- | ------------------- | ---------------------------------------- |
+| Cấu trúc    | try/catch lồng nhau | Chain `.recoverWith()`                   |
+| Testability | Khó mock, throw     | Pure function, dễ test                   |
+| Logging     | Rải rác             | Centralized `.peekFailure()`             |
+| Compose     | Không thể           | `.map()`, `.flatMap()`, `.recoverWith()` |
+| Readability | Rối                 | Rõ pipeline                              |
+
+
+
+# 🔮 8. Triết lý cuối cùng
+
+Resilience thật sự không nằm ở framework, mà nằm ở cách bạn tổ chức luồng xử lý lỗi một cách có kiểm soát.
+Functional fallback cho phép:
+
+	Cấu trúc lỗi thành dữ liệu.
+	Compose logic như pipeline.
+	Không rơi vào callback hell hay AOP magic.
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

@@ -1,0 +1,161 @@
+<html><head><title>Lesson 24 == Module OS ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../NodeJS-learning.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 24 -- Module OS -//</h1><pre>
+# 1. What is the OS Module?
+	Định nghĩa: Built-in module cung cấp utilities để interact với OS: lấy info về CPU, memory, platform, user, network. Cross-platform, nghĩa là code chạy giống nhau trên Windows/Linux/macOS.
+
+	Key Features (mở rộng):
+
+		- System Info: Platform, arch, release – hữu ích cho conditional code (e.g., Windows-specific paths).
+		- Resources: Memory, CPU usage – cho monitoring apps.
+		- User/Network: Username, homedir, interfaces – cho auth hoặc diagnostics.
+		- Signals/Errors: Handle OS signals (e.g., SIGINT) cho graceful shutdown.
+		- Cross-platform Tasks: EOL constants, tmpdir cho portable file ops.
+
+
+
+# 2. Getting Started with the OS Module
+
+	## Import:
+const os = require('os');  // CommonJS
+// Destructure: const { platform, cpus } = require('os');
+
+// ESM (package.json: "type": "module")
+import os from 'os';
+// Hoặc import { platform, cpus } from 'os';
+
+
+	## Basic Usage:
+const os = require('os');
+console.log(`Platform: ${os.platform()}`);  // 'win32', 'darwin', 'linux'
+console.log(`Type: ${os.type()}`);  // 'Windows_NT', 'Darwin', 'Linux'
+console.log(`Release: ${os.release()}`);  // e.g., '10.0.19045'
+console.log(`Arch: ${os.arch()}`);  // 'x64', 'arm64'
+console.log(`Hostname: ${os.hostname()}`);
+console.log(`Total Memory: ${(os.totalmem() / (1024 ** 3)).toFixed(2)} GB`);
+console.log(`Free Memory: ${(os.freemem() / (1024 ** 3)).toFixed(2)} GB`);
+console.log(`User: ${os.userInfo().username}`);
+console.log(`Home Dir: ${os.homedir()}`);
+
+
+	Chuyên gia: Methods synchronous, nên cache results (e.g., const cores = os.cpus().length;) để tránh gọi lặp. Useful cho CLI tools như diagnostic scripts.
+
+
+# 3. OS Module Reference (Methods)
+	Tất cả methods sync, trả giá trị ngay. Tôi nhóm theo loại cho dễ theo dõi.
+	System Information:
+
+		- arch(): CPU arch ('x64', 'arm64').
+		- platform(): OS platform ('win32', 'darwin', 'linux').
+		- type(): OS name ('Windows_NT', 'Darwin', 'Linux').
+		- release(): OS version.
+		- version(): Kernel info (e.g., Windows build, Linux kernel).
+
+	Ví dụ:
+		if (os.platform() === 'win32') console.log('Running on Windows');
+
+
+	CPU Information:
+
+		cpus(): Array CPU cores với model, speed (MHz), times (usage).
+		loadavg(): Load average [1m, 5m, 15m] (Unix-like only; Windows luôn [0,0,0]).
+
+
+	Ví dụ:
+		const cpus = os.cpus();
+		console.log(`Cores: ${cpus.length}`);
+		console.log(`Model: ${cpus[0].model}`);
+		console.log(`Speed: ${cpus[0].speed} MHz`);
+
+		Sâu: Tính usage %: So sánh times.user/idle giữa intervals. Useful cho worker pools (e.g., cluster module fork dựa trên cores).
+
+
+
+	Memory Information:
+		totalmem() / freemem(): Total/free memory (bytes).
+
+	Ví dụ:
+		const usage = ((os.totalmem() - os.freemem()) / os.totalmem() * 100).toFixed(1);
+		console.log(`Memory Usage: ${usage}%`);
+
+	Mẹo: Kết hợp process.memoryUsage() cho app-specific memory.
+
+
+	User Information:
+		userInfo(): { uid, gid, username, homedir, shell } (Unix-like full; Windows limited).
+		homedir(): User home dir.
+		Security Note: Tránh expose sensitive info (e.g., uid) trong web apps.
+
+
+	Network Information:
+		networkInterfaces(): Object interfaces với IPs (IPv4/IPv6).
+const interfaces = os.networkInterfaces();
+console.log(interfaces['eth0'][0].address);  // IP của interface	
+const interfaces = os.networkInterfaces();
+console.log(interfaces['eth0'][0].address);  // IP của interface	
+	
+		Sâu: Lọc IPv4: interfaces[ifname].find(i => i.family === 'IPv4').
+	
+	
+	
+	
+	Other Utilities:
+	
+		- uptime(): System uptime (seconds).
+		- tmpdir(): Temp dir (cross-platform).
+		- endianness(): CPU endianness ('BE'/'LE').
+		- EOL: Line ending (\n or \r\n).
+		- constants: Signals, errors (e.g., os.constants.signals.SIGINT).	
+	
+const days = Math.floor(os.uptime() / 86400);
+console.log(`Uptime: ${days} days`);
+
+
+
+
+# 4. Advanced Usage Examples
+
+	Resource Monitoring
+
+const os = require('os');
+setInterval(() => {
+  const load = os.loadavg();
+  console.log(`Load Avg: ${load[0].toFixed(2)} (1m)`);
+  // Alert nếu load > cores * 2
+  if (load[0] > os.cpus().length * 2) console.warn('High load!');
+}, 1000);
+
+	Integration: Kết hợp Prometheus/Node exporter cho metrics in production.
+	
+	
+	
+	Platform-Specific Behavior:
+	
+function getAppDataPath(appName) {
+  const p = os.platform();
+  if (p === 'win32') return path.join(process.env.APPDATA, appName);
+  if (p === 'darwin') return path.join(os.homedir(), 'Library/Application Support', appName);
+  return path.join(os.homedir(), `.config/${appName}`);
+}	
+	
+	Sâu: Cho open files: Dùng child_process.exec(${openCmd} file) với openCmd từ platform.
+	Memory/CPU Adjust: Nếu freemem < 512MB, reduce cache; nếu cores > 4, increase workers.	
+	
+	
+	
+	
+	
+https://www.w3schools.com/nodejs/nodejs_url.asp	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+</pre><a id='backBottom' href='../NodeJS-learning.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
