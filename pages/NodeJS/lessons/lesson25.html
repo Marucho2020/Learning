@@ -1,0 +1,186 @@
+<html><head><title>Lesson 25 == Module URL ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../NodeJS-learning.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 25 -- Module URL -//</h1><pre>	
+# 1. URL Module Là Gì?	
+	
+	const { URL } = require('url');
+	Đây là module tích hợp sẵn (built-in) của Node.js, cung cấp 2 API:
+	
+	
+API,Mô tả,Khuyến nghị
+"Legacy API (url.parse, url.format)","Cũ, từ Node.js v0.x",Không dùng cho code mới
+"WHATWG URL API (new URL(), URLSearchParams)","Hiện đại, chuẩn web, mạnh mẽ",DÙNG CHO MỌI CODE MỚI	
+	
+	Từ Node.js 10+: URL class được ưu tiên hoàn toàn.	
+	
+	
+	
+# 2. Tại Sao Phải Dùng URL Module?	
+	Vấn đề khi tự xử lý URL bằng string:	
+	
+const url = 'https://example.com/search?q=node.js&lang=en#section1';
+
+// Tự cắt tay → DỄ LỖI
+const query = url.split('?')[1].split('#')[0]; // 'q=node.js&lang=en'	
+	
+	## 	→ Rủi ro: 
+		Lỗi khi URL có # trước ?
+		Không xử lý Unicode, encoded chars
+		Không validate protocol, domain
+		Dễ bị URL injection, open redirect	
+			
+	
+	## Giải pháp: Dùng new URL()
+const myURL = new URL('https://example.com/search?q=node.js&lang=en#section1');	
+	→ An toàn, chuẩn, tự động xử lý mọi thứ.
+	
+	
+	
+# 	3. Cấu Trúc Của URL Object
+	
+Thuộc tính,Giá trị,Mô tả
+href,https://user:pass@example.com:8080/p/a/t/h?query=string#hash,Toàn bộ URL
+origin,https://example.com:8080,Protocol + host
+protocol,https:,Giao thức
+username,user,Tên đăng nhập
+password,pass,Mật khẩu
+host,example.com:8080,Host + port
+hostname,example.com,Tên miền
+port,8080,Cổng
+pathname,/p/a/t/h,Đường dẫn
+search,?query=string,Query string (có ?)
+searchParams,URLSearchParams,Object để thao tác query
+hash,#hash,Fragment (có #)	
+	
+	
+# 	4. URLSearchParams – "Query String Master"
+
+const url = new URL('https://example.com/?name=Kai&age=30&city=Tokyo');
+const params = url.searchParams;
+
+
+Phương thức,Mô tả
+get('name'),'Kai'
+getAll('name'),['Kai'] (nếu có nhiều)
+has('age'),true
+"append('role', 'admin')",Thêm param
+"set('age', '31')",Cập nhật
+delete('city'),Xóa
+toString(),'name=Kai&age=31&role=admin'
+
+
+
+	## Ví dụ: Xây dựng query động
+function buildSearchURL(base, filters) {
+  const url = new URL(base);
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value) url.searchParams.append(key, value);
+  });
+  return url.toString();
+}
+
+console.log(buildSearchURL('https://api.example.com/search', {
+  q: 'node.js',
+  lang: 'en',
+  page: 2
+}));
+// → https://api.example.com/search?q=node.js&lang=en&page=2
+
+
+# 5. So Sánh: Legacy API vs WHATWG API
+
+Tính năng,Legacy (url.parse),WHATWG (new URL)
+Chuẩn,Node.js cũ,Web standard (browser)
+Xử lý Unicode,Không tốt,Tốt
+Query parsing,String hoặc object đơn giản,URLSearchParams mạnh mẽ
+Error handling,Không throw,Throw nếu URL không hợp lệ
+Khuyến nghị,Không dùng,DÙNG CHO MỌI CODE MỚI
+
+
+
+# 6. Ứng Dụng Thực Tế: File Server Dùng URL Parsing
+
+	Tạo 2 file HTML
+<h1>Summer</h1><p>I love the sun!</p>	
+	
+	winter.html 
+<h1>Winter</h1><p>I love the snow!</p>	
+	
+	
+	
+# File server (demo_fileserver.js)
+	
+const http = require('http');
+const url = require('url');
+const fs = require('fs');
+const path = require('path');
+
+http.createServer((req, res) => {
+  const parsedUrl = url.parse(req.url, true);
+  const filename = "." + parsedUrl.pathname;
+
+  // Bảo mật: Ngăn path traversal
+  const safePath = path.resolve(__dirname, filename);
+  if (!safePath.startsWith(__dirname)) {
+    res.writeHead(400);
+    return res.end('Invalid path');
+  }
+
+  fs.readFile(safePath, (err, data) => {
+    if (err) {
+      res.writeHead(404, { 'Content-Type': 'text/html' });
+      return res.end('404 Not Found');
+    }
+    res.writeHead(200, { 'Content-Type': 'text/html' });
+    res.write(data);
+    res.end();
+  });
+}).listen(8080);
+
+console.log('Server running at http://localhost:8080/');	
+	
+	
+	
+	http://localhost:8080/summer.html → Hiển thị Summer
+http://localhost:8080/winter.html → Hiển thị Winter
+	
+	
+
+
+# 7. Best Practices Khi Dùng URL Module
+
+Best Practice,Giải thích
+Luôn dùng new URL(),Thay vì url.parse()
+Dùng URLSearchParams,Thao tác query an toàn
+Validate URL,Dùng try-catch
+Ngăn path traversal,Dùng path.resolve() + kiểm tra __dirname
+Encode user input,encodeURIComponent() khi xây URL
+Không expose password,Xóa password trước khi log
+
+
+
+# 8. URL Module vs Browser
+
+
+Tính năng,Node.js,Browser
+new URL(),Có,Có
+URLSearchParams,Có,Có
+URL.canParse() (Node 18+),Có,Không
+Xử lý file://,Hạn chế,Không
+
+Node.js 18+: Có URL.canParse(urlString) — kiểm tra URL hợp lệ mà không throw.
+
+if (URL.canParse(userInput)) {
+  const url = new URL(userInput);
+}
+
+https://www.w3schools.com/nodejs/nodejs_events.asp
+
+
+
+
+
+
+
+
+
+
+</pre><a id='backBottom' href='../NodeJS-learning.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
