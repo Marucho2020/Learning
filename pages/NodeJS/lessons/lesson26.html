@@ -1,0 +1,255 @@
+<html><head><title>Lesson 26 == Events ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../NodeJS-learning.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 26 -- Events -//</h1><pre>
+
+# 1. Events Là Gì? Tại Sao Quan Trọng?
+	Mọi thứ trong Node.js đều là event:
+
+Sự kiện,Ví dụ
+Có kết nối mới,"server.on('connection', ...)"
+Có request đến,"req.on('data', ...)"
+File đọc xong,"readStream.on('end', ...)"
+Lỗi xảy ra,"emitter.on('error', ...)"
+
+	→ EventEmitter là class giúp bạn tạo ra các event riêng và phản hồi khi event xảy ra.
+
+const EventEmitter = require('events');
+const myEmitter = new EventEmitter();
+
+
+
+# 2. Cấu Trúc Cơ Bản Của EventEmitter
+
+const EventEmitter = require('events');
+const emitter = new EventEmitter();
+
+// 1. Đăng ký listener (nghe event)
+emitter.on('tên_event', () => {
+  console.log('Event xảy ra!');
+});
+
+// 2. Kích hoạt event
+emitter.emit('tên_event'); // → In ra: Event xảy ra!
+
+
+
+# 3 Phương Thức Quan Trọng Nhất
+
+Phương thức,Mô tả,Ví dụ
+"on(event, listener)",Nghe event (có thể nhiều lần),"emitter.on('data', handler)"
+"once(event, listener)",Nghe chỉ 1 lần,"emitter.once('connect', handler)"
+"emit(event, ...args)",Kích hoạt event,"emitter.emit('userJoined', 'John')"
+"off(event, listener)",Gỡ listener,"emitter.off('data', handler)"
+
+
+
+
+# 3. Ví Dụ Thực Tế: Chat Room Dùng EventEmitter
+
+const EventEmitter = require('events');
+
+class ChatRoom extends EventEmitter {
+  join(username) {
+    console.log(`${username} đã vào phòng chat`);
+    this.emit('join', username);
+  }
+
+  sendMessage(username, message) {
+    console.log(`[${username}]: ${message}`);
+    this.emit('message', { username, message, time: new Date() });
+  }
+
+  leave(username) {
+    console.log(`${username} đã rời phòng`);
+    this.emit('leave', username);
+  }
+}
+
+const chat = new ChatRoom();
+
+// Đăng ký các listener
+chat.on('join', (user) => {
+  console.log(`Chào mừng ${user} đến với phòng chat!`);
+});
+
+chat.on('message', (data) => {
+  console.log(`Tin nhắn mới: ${data.message} từ ${data.username}`);
+});
+
+chat.once('leave', (user) => {
+  console.log(`Tạm biệt ${user}! Hy vọng gặp lại!`);
+});
+
+// Sử dụng
+chat.join('Alice');
+chat.sendMessage('Alice', 'Xin chào mọi người!');
+chat.sendMessage('Bob', 'Chào Alice!');
+chat.leave('Alice');
+chat.leave('Alice'); // Không in "Tạm biệt" lần 2 vì dùng once()
+
+
+Alice đã vào phòng chat
+Chào mừng Alice đến với phòng chat!
+[Alice]: Xin chào mọi người!
+Tin nhắn mới: Xin chào mọi người! từ Alice
+[Bob]: Chào Alice!
+Tin nhắn mới: Chào Alice! từ Bob
+Alice đã rời phòng
+Tạm biệt Alice! Hy vọng gặp lại!
+
+
+
+
+# 4. EventEmitter Trong Các Module Core
+
+Bạn đã dùng EventEmitter hàng ngày mà không biết!
+
+Module,Dùng EventEmitter
+http.Server,"server.on('request', ...)"
+fs.ReadStream,"stream.on('data', ...)"
+net.Socket,"socket.on('data', ...)"
+process,"process.on('exit', ...)"
+
+	→ Tất cả đều kế thừa từ EventEmitter!
+
+const http = require('http');
+const server = http.createServer();
+
+server.on('request', (req, res) => {
+  res.end('Hello World');
+});
+
+server.on('connection', (socket) => {
+  console.log('Có kết nối mới!');
+});
+
+
+
+
+# 5. Best Practices – Những Điều CHUYÊN GIA Luôn Làm
+
+	## 1. Luôn xử lý event 'error' 
+	
+emitter.on('error', (err) => {
+  console.error('Lỗi:', err.message);
+  // Gửi log, alert, hoặc graceful shutdown
+});
+
+// Nếu không có listener cho 'error' → Node.js sẽ crash!
+emitter.emit('error', new Error('Boom!')); // Unhandled error → crash
+
+	Quy tắc vàng: Mọi EventEmitter phải có listener cho 'error'
+
+
+
+	## Quy tắc vàng: Mọi EventEmitter phải có listener cho 'error'
+
+// XẤU
+emitter.on('data', (data) => { ... });
+
+// TỐT
+function handleData(data) {
+  console.log('Data:', data);
+}
+emitter.on('data', handleData);
+
+// Dễ debug, dễ gỡ listener
+emitter.off('data', handleData);
+
+
+
+	## 3. Gỡ listener khi không cần nữa (tránh memory leak)
+
+const interval = setInterval(() => {
+  emitter.emit('tick');
+}, 1000);
+
+// Sau 10 giây, gỡ listener
+setTimeout(() => {
+  clearInterval(interval);
+  emitter.off('tick', onTick); // QUAN TRỌNG!
+}, 10000);
+
+
+
+
+	## 4. Giới hạn số listener (mặc định 10)
+	
+emitter.setMaxListeners(20); // Tăng giới hạn
+console.log(emitter.getMaxListeners()); // 20
+
+// Kiểm tra số listener hiện tại
+console.log(emitter.listenerCount('data'));
+console.log(emitter.listeners('data')); // Array các function
+
+
+
+
+
+
+# 6. Nâng Cao: Tạo Custom Event Emitter Class
+
+const EventEmitter = require('events');
+
+class Logger extends EventEmitter {
+  log(message) {
+    console.log(`[LOG] ${message}`);
+    this.emit('log', { message, timestamp: new Date() });
+  }
+
+  error(err) {
+    console.error(`[ERROR] ${err.message}`);
+    this.emit('error', err);
+  }
+}
+
+const logger = new Logger();
+
+logger.on('log', (data) => {
+  // Gửi log đến file, database, Slack, v.v.
+  console.log('Đã ghi log:', data);
+});
+
+logger.on('error', (err) => {
+  // Gửi alert đến monitoring system
+  console.log('Đã ghi lỗi:', err.message);
+});
+
+logger.log('Server khởi động');
+logger.error(new Error('Database connection failed'));
+
+
+
+# 7. So Sánh: Callback vs Event vs Promise
+
+Cách,Ưu điểm,Nhược điểm,Dùng khi
+Callback,Đơn giản,Callback hell,I/O đơn
+Promise,"Clean, chainable",Không tốt cho stream,HTTP request
+EventEmitter,"Real-time, nhiều listener",Phức tạp hơn,"Stream, server, real-time"
+
+	## Kết hợp tốt nhất:
+
+// Stream (Event) → Promise
+function readFileAsPromise(path) {
+  return new Promise((resolve, reject) => {
+    const stream = fs.createReadStream(path);
+    let data = '';
+    stream.on('data', chunk => data += chunk);
+    stream.on('end', () => resolve(data));
+    stream.on('error', reject);
+  });
+}
+
+
+
+
+https://www.w3schools.com/nodejs/nodejs_streams.asp
+
+
+
+
+
+
+
+
+
+
+</pre><a id='backBottom' href='../NodeJS-learning.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
