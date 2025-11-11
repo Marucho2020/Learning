@@ -1,0 +1,164 @@
+<html><head><title>Lesson 27 == Stream ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../NodeJS-learning.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 27 -- Stream -//</h1><pre>
+
+# 1. Streams Là Gì? (What are Streams?)
+	Định nghĩa: Streams là cách xử lý dữ liệu theo chunks (miếng nhỏ), thay vì load toàn bộ vào memory. Giống như dòng chảy dữ liệu: đọc/ghi dần dần, không chờ hết. Không phải array/buffer lớn, mà là sequence of data over time.
+
+
+	## Tại Sao Dùng Streams? (Why Use Streams?)
+		- Memory Efficiency: Xử lý file 10GB trên server 1GB RAM – chỉ load chunk 64KB/lần.
+		- Time Efficiency: Bắt đầu process ngay (e.g., stream video: xem ngay không chờ download hết).
+		- Composability: Kết nối streams thành pipeline (e.g., read file → compress → write).
+		- Better UX: Real-time data (e.g., HTTP streaming responses).	
+
+	Sâu sắc: Trong production (e.g., Netflix-like apps), streams giảm latency và CPU. Năm 2025, với edge computing (Vercel/Cloudflare), streams tích hợp tốt với Web APIs cho serverless.
+
+	Ví dụ Basic (copy file dùng streams):
+
+const fs = require('fs');
+const readable = fs.createReadStream('input.txt', 'utf8');
+const writable = fs.createWriteStream('output.txt');
+readable.pipe(writable);  // Magic: tự động copy!
+writable.on('finish', () => console.log('Done!'));
+readable.on('error', err => console.error(err));
+writable.on('error', err => console.error(err));
+
+
+# 2. Core Stream Types
+	Node.js có 4 loại streams chính, tất cả kế thừa EventEmitter:
+
+Type,Mô tả,Examples
+Readable,Đọc data từ source (push data ra),"fs.createReadStream, process.stdin, http.IncomingMessage"
+Writable,Ghi data vào destination (pull data vào),"fs.createWriteStream, process.stdout, http.ServerResponse"
+Duplex,Cả read & write (two-way),"net.Socket (TCP), zlib (compress/decompress)"
+Transform,"Duplex nhưng transform data (e.g., compress)","zlib.createGzip, crypto.createCipher"
+
+	Sâu: Readable/Writable là base; Duplex/Transform là specialized. Năm 2025, dùng pipeline() (từ stream.promises) cho async handling.
+
+
+
+# 3. Events Trong Streams
+	Streams emit events để control flow:
+
+
+Event,Type,Mô tả
+'data',Readable,Chunk mới sẵn sàng (pause/resume flow)
+'end',Readable,Hết data
+'error',All,Lỗi xảy ra
+'finish',Writable,Đã ghi hết
+'drain',Writable,"Buffer empty, có thể write tiếp"
+'pipe',Readable,Được pipe vào writable
+
+
+	## Ví dụ Readable:
+
+const fs = require('fs');
+const stream = fs.createReadStream('file.txt');
+stream.on('data', chunk => console.log(chunk.toString()));  // Chunk là Buffer
+stream.on('end', () => console.log('Done'));
+stream.on('error', err => console.error(err));
+
+	Backpressure: Nếu writable chậm, readable pause tự động – tránh overflow.
+
+
+
+# 4. Piping Streams
+	pipe(): Kết nối readable → writable, tự handle flow/backpressure.
+	
+	readable.pipe(transform).pipe(writable);  // Pipeline: read → transform → write
+
+	## Ví dụ Compress File: 
+	
+const fs = require('fs');
+const zlib = require('zlib');
+fs.createReadStream('input.txt')
+  .pipe(zlib.createGzip())  // Transform: compress
+  .pipe(fs.createWriteStream('input.txt.gz'));
+  
+  
+	## Async Pipeline (Node 15+): 
+const { pipeline } = require('stream/promises');
+await pipeline(readable, transform, writable);  // Handle errors cleanly	
+	
+	Sâu: Pipeline tốt cho ETL (Extract-Transform-Load) như process logs: read → filter → write DB.
+	
+	
+# 	5. Custom Streams (Advanced)
+	Tạo Readable/Writable custom bằng extend class.
+	Custom Readable (push data manually):
+
+const { Readable } = require('stream');
+class RandomNumberStream extends Readable {
+  constructor(options) {
+    super(options);
+    this._max = 10;
+    this._index = 0;
+  }
+  _read(size) {
+    if (this._index++ < this._max) {
+      this.push(Math.random().toString());
+    } else {
+      this.push(null);  // End stream
+    }
+  }
+}
+const stream = new RandomNumberStream();
+stream.on('data', num => console.log(num));
+
+
+
+	##	Custom Transform (upper case text):
+	
+const { Transform } = require('stream');
+class UpperCaseTransform extends Transform {
+  _transform(chunk, encoding, callback) {
+    this.push(chunk.toString().toUpperCase());
+    callback();
+  }
+}
+process.stdin.pipe(new UpperCaseTransform()).pipe(process.stdout);
+
+	Sâu: Dùng cho custom pipelines (e.g., real-time data processing trong IoT).
+
+
+
+
+# 6. Real-World Examples
+
+	## HTTP Streaming (video server):
+	
+	
+const http = require('http');
+const fs = require('fs');
+http.createServer((req, res) => {
+  const stat = fs.statSync('video.mp4');
+  res.writeHead(200, { 'Content-Length': stat.size, 'Content-Type': 'video/mp4' });
+  fs.createReadStream('video.mp4').pipe(res);  // Stream trực tiếp
+}).listen(3000);
+
+
+	## Processing Large CSV (dùng csv-parser):
+	
+const fs = require('fs');
+const csv = require('csv-parser');  // npm i csv-parser
+const results = [];
+fs.createReadStream('large.csv')
+  .pipe(csv())
+  .on('data', row => results.push(row))
+  .on('end', () => console.log(results.length));
+	
+	
+# 	7. Best Practices
+	
+	- Error Handling: Luôn on('error') cho tất cả streams.
+	- Dùng pipeline(): Tự cleanup nếu error.
+	- Backpressure: Kiểm tra writable.write() return false → chờ 'drain'.
+	- End Streams: Gọi end() cho writable khi done.
+	- Avoid Sync: Không sync ops trong handlers (block Event Loop).
+	- Buffer Size: Set highWaterMark cho custom (default 64KB readable, 16KB writable).
+	- Warning: Không handle 'error' → crash app. Memory leaks nếu không destroy streams.Common Pitfalls: Quên pause/resume → overflow; pipe multiple writables → data duplicate.	
+	
+	
+	
+	
+	
+</pre><a id='backBottom' href='../NodeJS-learning.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

@@ -1,0 +1,131 @@
+<html><head><title>Lesson 213 == Resilient Event Stream (Reactive Integration) ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 213 -- Resilient Event Stream (Reactive Integration) -//</h1><pre>
+# 🧠 1. Vấn đề thực tế
+	Trong hệ thống microservices hoặc data pipeline, event stream (dòng sự kiện) là xương sống:
+
+		Kafka, RabbitMQ, hoặc gRPC-stream gửi liên tục hàng ngàn event/giây.
+		
+		Mỗi event cần được xử lý: validate → enrich → save → publish.
+		
+		Nhưng sự cố xảy ra thường xuyên: network timeout, payload lỗi, service downstream chết tạm thời.
+
+	Nếu chỉ xử lý tuần tự (synchronous retry, try/catch), bạn sẽ nghẽn thread pool và mất tính phản ứng.
+	
+	Giải pháp: Reactive Resilience — resilience áp dụng vào Flux/Flow thay vì hàm đơn lẻ.
+
+
+
+# ⚙️ 2. Reactive Resilience Core
+
+	## ① Flux.retryWhen()
+		Giống như withRetry(fn, n) ở functional, nhưng cho stream:
+
+Flux<Event> source = kafkaFlux()
+    .flatMap(this::processEvent)
+    .retryWhen(Retry.backoff(3, Duration.ofSeconds(1)))
+    .onErrorContinue((err, obj) -> log.warn("Skip bad event: {}", obj));
+
+	→ Nếu processEvent lỗi, retry tối đa 3 lần với exponential backoff.
+		Nếu vẫn lỗi, skip và xử lý tiếp event kế tiếp → không ngắt cả pipeline.
+
+
+
+
+	## ② onErrorResume()
+		Tương đương fallback trong functional.
+
+Flux<Event> result = processFlux()
+    .onErrorResume(e -> backupFlux());
+
+	→ Khi có lỗi, chuyển sang stream khác (fallback), ví dụ: backup provider, cache local, hoặc requeue.
+
+
+
+
+	## ③ timeout()
+		Giống withTimeout(fn, Duration), nhưng reactive native:
+	
+		→ Event nào xử lý quá 2 giây bị bỏ qua, không làm tắc luồng.
+	
+	
+	
+	
+# 	🧩 3. Backpressure-Aware Resilience
+	
+	Backpressure = cơ chế “giới hạn dòng chảy” — nếu downstream (consumer) chậm, upstream (producer) phải giảm tốc.
+	Reactive Streams chuẩn hóa điều này qua Subscription.request(n).
+	
+	Khi kết hợp resilience, ta không dùng blocking retry mà là non-blocking operator, ví dụ:
+	
+	Flux<Event> resilientFlux = kafkaFlux()
+    .limitRate(100)
+    .retryWhen(Retry.fixedDelay(5, Duration.ofMillis(500)))
+    .onBackpressureDrop(e -> log.warn("Dropped: {}", e));
+
+		- limitRate(100) tránh consumer bị overload.
+		- onBackpressureDrop giữ cho hệ thống ổn định, không out of memory khi event vào quá nhanh.
+	
+	
+	
+# 	🧠 4. Composable Resilience Operators
+	Reactive pipeline cho phép compose resilience operators:
+
+kafkaFlux()
+  .timeout(Duration.ofSeconds(3))
+  .retryWhen(Retry.backoff(3, Duration.ofMillis(500)))
+  .onErrorContinue(...)
+  .onBackpressureBuffer(1000)
+
+	→ Tương tự như withRetry().andThen(withTimeout()).andThen(withFallback()) trong bài 13.
+	Chỉ khác là ở đây ta decorator hóa dòng dữ liệu thay vì function.
+
+
+
+# 🏢 5. Ứng dụng Enterprise
+
+	## 🧾 Trường hợp: Kafka Consumer resilient 
+		Giả sử có consumer xử lý order:
+		
+Flux<Order> orders = kafkaReceiver.receive()
+    .map(record -> deserialize(record.value()))
+    .flatMap(this::processOrder)
+    .retryWhen(Retry.backoff(3, Duration.ofSeconds(1)))
+    .onErrorContinue((err, order) -> {
+        log.error("Failed order {}, skipping", order);
+        deadLetter(order);
+    });
+
+
+	Nếu 1 order lỗi → retry 3 lần.
+	Nếu vẫn lỗi → gửi sang Dead Letter Queue (DLQ).
+	Không hề block thread, pipeline vẫn tiếp tục.
+	
+	✅ Không cần Spring Retry, không cần annotation, thuần reactive operator.	
+
+
+# 🧱 6. Triết lý sâu hơn
+	Reactive Resilience là:
+
+		“Dòng dữ liệu có thể tự phục hồi — từng phần, không làm gián đoạn tổng thể.”
+
+	Trong functional world, resilience = “decorated function”.
+	Trong reactive world, resilience = “decorated stream”.
+
+	Cả hai đều tuân theo triết lý:
+
+		No try/catch imperative.
+		Không block.
+		Composable (retry + timeout + fallback + bulkhead có thể ghép tùy ý).
+		Declarative DSL style — “chính sách” chứ không “câu lệnh”.
+
+
+
+
+
+
+
+
+
+
+
+	
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
