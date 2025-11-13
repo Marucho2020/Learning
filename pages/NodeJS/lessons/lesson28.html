@@ -1,0 +1,197 @@
+<html><head><title>Lesson 28 == Buffer ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../NodeJS-learning.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 28 -- Buffer -//</h1><pre>
+# 1. Buffer là gì? Tại sao cần nó?
+
+	-Trong browser JavaScript: chỉ làm việc với chuỗi (string), không có cách xử lý dữ liệu nhị phân (binary) trực tiếp.
+	-Trong Node.js: bạn phải đọc file, nhận dữ liệu từ mạng, xử lý ảnh, video, mã hóa… → cần làm việc với dữ liệu thô (raw binary).
+	-Buffer chính là mảng các byte (0-255) được cấp phát ngoài V8 heap → nhanh, không bị garbage collector quấy rầy.
+
+	Buffer = Array của số nguyên 0-255, đại diện cho 1 đoạn bộ nhớ thô.
+
+	Buffer là global, không cần require():
+
+const buf = Buffer.from('Hello');
+console.log(buf); // <Buffer 48 65 6c 6c 6f>
+
+
+
+# 2. 3 cách tạo Buffer (QUAN TRỌNG NHẤT)
+
+	1. Buffer.alloc(size),
+	Rất an toàn,
+	Luôn dùng khi tạo buffer mới
+	
+	
+	2. Buffer.allocUnsafe(size),
+	Không an toànRất nhanh,
+	Chỉ dùng khi cần tốc độ cực cao và bạn sẽ ghi đè ngay
+	
+	
+	3. Buffer.from(data),
+	An toàn,Nhanh,
+	"Tạo từ string, array, buffer khác"
+	
+
+	## Ví dụ thực tế:
+
+// 1. An toàn nhất - luôn dùng cái này khi bắt đầu
+const buf1 = Buffer.alloc(10);        // 10 byte = 0
+// 2. Nhanh nhưng nguy hiểm (có thể chứa dữ liệu cũ)
+const buf2 = Buffer.allocUnsafe(10);  // có thể chứa password cũ của ai đó!
+// 3. Từ dữ liệu có sẵn
+const buf3 = Buffer.from('Xin chào'); // UTF-8
+const buf4 = Buffer.from([65,66,67]); // ABC
+
+	Lời khuyên chuyên gia: 99% trường hợp dùng Buffer.alloc() hoặc Buffer.from(). Chỉ dùng allocUnsafe trong server siêu cao tải và bạn chắc chắn sẽ ghi đè toàn bộ.
+
+
+
+# 3. Đọc & Ghi Buffer
+
+
+const buf = Buffer.alloc(20);
+
+buf.write('Hello');        // ghi từ vị trí 0
+buf.write('World', 6);     // ghi từ vị trí 6
+console.log(buf.toString()); // "Hello World"
+
+// Ghi từng byte
+buf[0] = 72; // 'H' trong ASCII
+
+
+	## Đọc từng phần
+
+const buf = Buffer.from('Node.js rất hay!');
+
+console.log(buf.toString());           // toàn bộ
+console.log(buf.toString('utf8', 0, 4)); // "Node"
+console.log(buf[0]);                   // 78 (byte đầu)
+
+
+
+
+
+# 4. Các phương thức hay dùng
+
+
+| Phương thức                                             | Mô tả                       | Ví dụ                  |
+| ------------------------------------------------------- | --------------------------- | ---------------------- |
+| `buf.toString([encoding], [start], [end])`              | Chuyển buffer → string      | `buf.toString('hex')`  |
+| `Buffer.concat(list, [totalLength])`                    | Nối nhiều buffer            | `Buffer.concat([a,b])` |
+| `buf.slice(start, end)`                                 | Cắt buffer (cùng vùng nhớ!) | `buf.slice(0,5)`       |
+| `buf.copy(target, targetStart, sourceStart, sourceEnd)` | Copy dữ liệu                | —                      |
+| `buf.equals(other)`                                     | So sánh nội dung            | —                      |
+| `buf.indexOf(value)`                                    | Tìm vị trí byte hoặc chuỗi  | `buf.indexOf('Node')`  |
+
+
+	Cảnh báo slice: slice không copy mà trỏ cùng vùng nhớ → sửa slice sẽ sửa luôn buffer gốc!
+
+
+const orig = Buffer.from('Hello');
+const slice = orig.slice(0,3); // "Hel"
+slice[0] = 88; // 'X'
+console.log(orig.toString()); // "Xello" ← bị thay đổi!
+
+
+
+
+# 5. Encoding (Mã hóa) - Siêu quan trọng
+
+
+const str = 'Xin chào';
+
+// String → Buffer
+const utf8 = Buffer.from(str, 'utf8');
+const base64 = utf8.toString('base64');
+console.log(base64); // "WGluIGNow6Bv"
+
+// Buffer → String
+const back = Buffer.from(base64, 'base64').toString('utf8');
+console.log(back); // "Xin chào"
+
+
+	## Các encoding hay gặp: 
+	
+		utf8 (mặc định)
+		hex (mỗi byte → 2 ký tự hex)
+		base64 (dùng trong email, JWT)
+		ascii, latin1
+
+
+
+# 6. Buffer với File System & Stream
+
+const fs = require('fs');
+
+// Ghi file
+fs.writeFileSync('test.txt', Buffer.from('Hello Buffer'));
+
+// Đọc file → tự động trả về Buffer
+const data = fs.readFileSync('test.txt');
+console.log(data.toString());
+
+
+	##Stream cũng dùng Buffer:
+
+readStream.on('data', chunk => {
+  console.log(chunk); // ← là Buffer
+});
+
+
+
+
+#7. Bảo mật - ĐIỀU QUAN TRỌNG NHẤT khi đi làm
+
+	1.Không dùng allocUnsafe nếu không cần thiết
+	2. Xóa dữ liệu nhạy cảm ngay sau khi dùng
+
+
+function hashPassword(pw) {
+  const buf = Buffer.from(pw);
+  const hash = require('crypto').createHash('sha256').update(buf).digest('hex');
+  
+  buf.fill(0); // XÓA MẬT KHẨU KHỎI BỘ NHỚ
+  return hash;
+}
+
+
+# 8. Tối ưu hiệu năng (dành cho senior)
+
+// Buffer pool cho server nhận hàng nghìn request/giây
+class FastBufferPool {
+  constructor(size, count) {
+    this.size = size;
+    this.pool = [];
+    for (let i = 0; i < count; i++) {
+      this.pool.push(Buffer.allocUnsafe(size));
+    }
+  }
+  get() { return this.pool.pop() || Buffer.allocUnsafe(this.size); }
+  release(buf) { buf.fill(0); this.pool.push(buf); }
+}
+
+
+# 9. Tóm tắt nhanh
+
+
+Bạn cần làm gì?,Dùng lệnh nào?
+Tạo buffer rỗng an toàn,Buffer.alloc(n)
+Tạo từ string/array,Buffer.from(...)
+Chuyển buffer → string,buf.toString()
+Chuyển string → buffer,Buffer.from(str)
+Nối nhiều buffer,"Buffer.concat([a,b])"
+Cắt buffer (cùng nhớ),buf.slice()
+Copy an toàn,source.copy(target)
+Xóa dữ liệu nhạy cảm,buf.fill(0)
+
+
+
+
+
+
+
+
+
+
+
+
+</pre><a id='backBottom' href='../NodeJS-learning.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
