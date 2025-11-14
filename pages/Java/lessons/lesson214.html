@@ -1,0 +1,192 @@
+<html><head><title>Lesson 214 == Functional Circuit Breaker Cluster ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 214 -- Functional Circuit Breaker Cluster -//</h1><pre>
+“Distributed State mà không đánh mất Functional Purity”
+
+
+# 1️⃣ Vấn đề thực sự cần giải quyết
+
+	Circuit Breaker local trong 1 JVM thì đơn giản:
+
+		- lỗi 5 lần → “open”
+		- chờ 30s → “half-open”
+		- thử lại 1 req → nếu OK → “closed”
+		
+	Nhưng khi hệ thống có 10 instance chạy song song, mỗi cái có breaker riêng →
+	→ Kết quả: 10 breaker chạy 10 kiểu, không đồng bộ, spam lên downstream, phá luôn resilience.
+
+	Do đó cần có breaker state chung toàn cluster.	
+
+	## Nhưng ta không muốn: 
+
+		lock phân tán phức tạp
+		state mutable everywhere
+		framework magic như Resilience4j Cluster Mode (không đơn giản)
+
+
+	## Giải pháp functional: 
+
+		tất cả state được “tính toán thuần hàm” → cập nhật vào kho chung (Redis hoặc in-memory distributed).
+		
+		read → computeNextState(currentState, event) → write.
+		
+
+
+# 2️⃣ Dùng AtomicStampedReference để giữ state + version
+
+	Trong local JVM, ta không bao giờ lưu state bằng biến thường.
+	Ta dùng:
+		AtomicStampedReference<CircuitState>
+
+			AtomicReference không đủ để tránh ABA problem.
+			Stamped giúp track version → khi update không nhầm state cũ.
+		Đây chính là cách tránh race-condition mà không cần lock.
+
+	## Ví dụ local state: 
+	
+AtomicStampedReference<CircuitState> breaker =
+    new AtomicStampedReference<>(CircuitState.closed(), 0);
+
+
+
+# 3️⃣ Mở rộng state ra Distributed Cache (Redis / Hazelcast)
+	Functional ở đây nghĩa là mọi thứ là pure function:
+
+		newState = transition(oldState, event)
+
+	Chỉ khác là:
+		oldState = đọc từ Redis
+		newState = ghi vào Redis
+
+
+	Không concept “sửa state”.
+	Chỉ append event → derive state.
+
+	Pseudo:
+
+		CircuitState applyEvent(Event evt) {
+			CircuitState old = redis.get("breaker-state");
+			CircuitState new = transition(old, evt);
+			redis.cas("breaker-state", old, new); // compare-and-set
+			return new;
+		}
+
+CAS (compare-and-set) chính là functional update versioned
+→ không lock
+→ không race
+→ không dirty write.
+
+
+
+# 4️⃣ Event-based reset logic (functional, không imperative timer)
+	Breaker “tự reset” dựa vào event, không chạy timer ẩn.
+
+	Event có thể là:
+
+		SUCCESS
+		
+		FAILURE
+		
+		TIMEOUT
+		
+		RESET_TIMER elapsed
+		
+		ADMIN_OVERRIDE
+		
+		DOWNSTREAM_HEALTHCHECK_PASS
+
+	Pure function:
+(nextState, sideEffects) = transition(currentState, event)
+
+	Ví dụ rule:
+		if state=open AND event=RESET_TIMER_EXPIRED → half-open
+
+
+	Functional hơn rất nhiều so với code imperative kiểu:
+		if (System.currentMillis() > openTimestamp + waitDuration) ...
+		(đây là thứ làm hệ thống dễ lỗi race).
+	
+	
+# 	5️⃣ Làm sao emit event RESET_TIMER_EXPIRED?
+	Thay vì scheduled task (imperative), functional approach dùng event pump:
+	
+		mỗi lần state chuyển sang OPEN → emit event “open-with-expiration-timestamp”
+		một process khác (stateless) check những event này → emit RESET event.	
+	
+	Kiểu như CQRS:
+		State storage tách khỏi Event logic.	
+	
+	
+# 	6️⃣ Functional caching — không phải cache value, mà cache state logic
+	
+	Nhiều người hiểu sai:
+		“breaker shared state = để cache kết quả”.
+
+	Sai.
+		Shared state là cache của trạng thái breaker, không liên quan đến caching response.
+
+	Ví dụ Redis key:
+
+breaker:payment-api → {
+  state: "OPEN",
+  failureCount: 8,
+  lastFailureAt: 173.233ms,
+  version: 195
+}
+	Functional cluster breaker chỉ cần key đó.
+
+
+
+
+# 7️⃣ Enterprise use-case: API Gateway multi-instance
+
+	Giả sử API Gateway có 20 instance:
+	Tất cả gọi đến Payment Service.
+
+	## Nếu Payment Service chết:
+		Instance A detect failure → state OPEN
+		Instance B, C, D,… đọc Redis → thấy OPEN → ngừng gọi ngay lập tức
+
+	## Điều này tạo ra:
+		shock absorption (giảm load)
+		
+		fast-fail toàn cluster
+		
+		throttle không cần lock
+
+	Tức là bạn đã đạt được true distributed resilience.
+
+
+
+# 🧠 8️⃣ Triết lý Functional đằng sau Distributed Breaker
+
+✔ Không sửa state, chỉ build state mới từ oldState + event
+
+→ mọi thứ deterministic, audit-friendly.
+
+✔ Shared state không đồng nghĩa shared mutation
+
+→ vì bản chất update là CAS versioned.
+
+✔ Không cần annotation, không cần “magic” framework
+
+→ logic resilience có thể test độc lập 100%.
+
+✔ Logic breaker trở thành “pure state machine”
+
+→ dễ mô phỏng, dễ kiểm chứng, dễ chạy trên nhiều node.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
