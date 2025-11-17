@@ -1,0 +1,176 @@
+<html><head><title>Lesson 215 == Observability Functional Style ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 215 -- Observability Functional Style -//</h1><pre>
+# 1. VẤN ĐỀ
+	Trong Java truyền thống:
+	
+		Logging dùng logger.info(...) → side-effect.
+		Tracing dùng ThreadLocal (OpenTelemetry) → side-effect.
+		Metrics (Micrometer/Prometheus) → side-effect.
+		
+	➡️ Functional pipeline thì side-effect làm “bẩn” luồng xử lý. Hàm không còn thuần, không còn predictable.
+
+	Ta cần thêm telemetry mà không đụng vào logic cốt lõi.
+	
+
+
+# 2. GIẢI PHÁP: Higher-Order Function Decorator
+
+	Thay vì nhét logger.info() vào trong hàm, ta “bọc” (decorate) một hàm bằng một hàm khác.
+
+	## Ví dụ chuẩn functional: 
+
+Function<T, R> withLogging(Function<T, R> fn) {
+    return (T input) -> {
+        log.info("Input: {}", input);
+        R result = fn.apply(input);
+        log.info("Output: {}", result);
+        return result;
+    };
+}
+
+Function<T, R> withMetrics(Function<T, R> fn) {
+    return (T input) -> {
+        metrics.counter("call_count").increment();
+        return fn.apply(input);
+    };
+}
+
+Function<T, R> withTracing(Function<T, R> fn) {
+    return (T input) -> {
+        var span = tracer.start("my-span");
+        try {
+            return fn.apply(input);
+        } finally {
+            span.end();
+        }
+    };
+}
+
+	Đây chính là functional decorator pattern.
+
+		Không có AOP.
+		Không có annotation magic.
+		Không có “logger rải rác”.
+
+	Chỉ là thuần FP: hàm nhận hàm.
+
+
+# 3. COMPOSE — XÂY PIPELINE TELEMETRY
+
+	Đây là điểm vàng của functional style:
+
+var pipeline =
+    withLogging(
+      withMetrics(
+        withTracing(coreLogic)
+      )
+    );
+
+	## Hoặc đẹp hơn, dùng Function.andThen() / mã functional: 
+
+var decorated =
+    withTracing
+        .andThen(withMetrics)
+        .andThen(withLogging)
+        .apply(coreLogic);
+
+	→ Telemetry nằm bên ngoài logic nghiệp vụ.
+	Logic chính (coreLogic) hoàn toàn không biết có chuyện log/trace/metrics đang diễn ra.
+
+
+
+
+# 4. TELEMETRY THUẦN HÀM LÀ THẾ NÀO?
+
+	Không phải “không có side-effect”.
+	Side-effect đo lường vẫn xảy ra.
+	Nhưng:
+		Side-effect được gom lại một chỗ
+		Không rò rỉ vào logic nghiệp vụ
+		Không breaking purity (không thay đổi input/output)
+		Có thể mock, test, thay thế dễ dàng
+
+	Tức là: Ta cô lập impurity chứ không loại bỏ impurity.
+
+
+
+# 5. JSON STRUCTURED LOG + PIPELINE
+
+	Ở môi trường enterprise:
+
+		Log phải ở dạng JSON
+		Log phải đưa về ELK / Loki / Cloud Logging
+		Log phải có metadata: traceId, spanId, requestId, actorId, timing…
+		
+	Nhưng logic nghiệp vụ không được biết những thứ này.
+
+	## Functional decorator giải quyết: 
+
+Function<T, R> withStructuredLog(Function<T, R> fn) {
+    return input -> {
+        var ctx = TelemetryContext.current(); // chứa traceId, span, request metadata
+        log.info(Json.of(
+            "event", "request_in",
+            "traceId", ctx.traceId(),
+            "payload", input
+        ));
+
+        var result = fn.apply(input);
+
+        log.info(Json.of(
+            "event", "request_out",
+            "traceId", ctx.traceId(),
+            "result", result
+        ));
+        return result;
+    };
+}
+
+	→ Mọi log thống nhất, structured, phù hợp ingest vào hệ thống log tập trung.
+
+
+
+# 6. ENTERPRISE MICROservice OBSERVABILITY (Không AOP)
+	Nhiều công ty cố chồng AOP:
+
+	@Around("controller()")
+
+	##	Nhưng AOP:
+
+		khó trace từng bước pipeline
+		không nhìn rõ thứ tự decorator
+		khó test
+		ngầm định (too much magic)
+		coupling với Spring lifecycle
+
+
+	## Functional decorator thì ngược lại:
+	
+		pipeline rõ ràng
+		thứ tự telemetry minh bạch
+		test từng phần đơn giản
+		không phụ thuộc Spring
+		compile-time safe
+		dùng được cho pure Java microservices (Micronaut, Quarkus, Helidon)	
+	
+	Functional approach làm observability trở thành dataflow pipeline, không phải side-effect ngẫu nhiên.
+	
+	
+	
+# 	7. KẾT LUẬN — TẦM NHÌN XA TRONG RÕ RÀNG
+	Nếu muốn microservice chạy minh bạch, dễ debug, dễ scale, không bị AOP bủa vây, thì functional decorator là chìa khóa:	
+	
+		Logic thuần → ổn định, dễ test
+		Telemetry tách biệt → chuẩn hoá, kiểm soát, giám sát tốt
+		Structured logs → tiêu chuẩn ELK
+		Tracing theo pipeline → không bị rối vì Spring magic
+		Metrics có thể bật/tắt theo decorator	
+	
+	Functional observability chính là cách các team backend lớn (Netflix, Uber, Shopify…) đang chuyển dần sang: mọi thứ là pipeline, không là side-effect rải rác.
+	
+	
+
+
+
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

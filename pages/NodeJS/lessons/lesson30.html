@@ -1,0 +1,165 @@
+<html><head><title>Lesson 30 == Timer ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../NodeJS-learning.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 30 -- Timer -//</h1><pre>	Timers = Các hàm giúp bạn lên lịch chạy code sau một khoảng thời gian hoặc lặp lại định kỳ.
+
+	Node.js có 4 hàm chính giống như trong trình duyệt:
+
+Hàm,Dùng để
+setTimeout(),Chạy 1 lần sau X giây
+setInterval(),Chạy lặp lại mỗi X giây
+setImmediate(),Chạy ngay sau vòng lặp hiện tại
+clearTimeout() / clearInterval(),Hủy timer
+
+
+
+
+#	1. setTimeout(callback, delay) – Chạy sau X ms 
+
+const timeoutId = setTimeout(() => {
+  console.log('Hello sau 2 giây!');
+}, 2000);
+
+// Hủy nếu chưa chạy
+// clearTimeout(timeoutId);
+
+	## Lưu ý quan trọng:
+		delay là tối thiểu, không phải chính xác.
+		Nếu CPU bận, code có thể chạy trễ hơn.
+
+
+
+
+# 2. setInterval(callback, delay) – Lặp lại mỗi X ms
+
+
+const intervalId = setInterval(() => {
+  console.log('Tick:', new Date().toLocaleTimeString());
+}, 1000);
+
+// Dừng sau 5 giây
+setTimeout(() => {
+  clearInterval(intervalId);
+  console.log('Dừng đếm giờ!');
+}, 5000);
+
+
+	## Khi nào dùng? 
+	
+Cập nhật đồng hồ
+Kiểm tra API định kỳ
+Gửi heartbeat
+
+
+
+# 3. setImmediate(callback) – Chạy NGAY SAU vòng lặp hiện tại
+
+
+console.log('Bắt đầu');
+
+setImmediate(() => {
+  console.log('setImmediate chạy!');
+});
+
+console.log('Kết thúc');
+
+	Kết quả:
+
+Bắt đầu
+Kết thúc
+setImmediate chạy!
+
+	So sánh với setTimeout(0)?
+
+Hàm,Thứ tự chạy
+"setTimeout(fn, 0)",Chạy sau I/O callbacks
+setImmediate(fn),Chạy trước I/O callbacks
+
+
+setTimeout(() => console.log('Timeout'), 0);
+setImmediate(() => console.log('Immediate'));
+
+// Kết quả: Immediate → Timeout
+
+	Chuyên gia khuyên: Dùng setImmediate khi muốn chạy ngay sau code đồng bộ, không cần chờ I/O.
+
+
+
+# 4. clearTimeout() / clearInterval() – Hủy timer
+
+const id = setTimeout(() => {
+  console.log('Sẽ không in!');
+}, 1000);
+
+clearTimeout(id); // Hủy thành công
+
+
+
+# THỰC TẾ: Event Loop & Thứ tự chạy code
+	Node.js dùng Event Loop → thứ tự chạy rất quan trọng!
+
+console.log('1. Đồng bộ');
+
+setTimeout(() => console.log('2. Timeout 0ms'), 0);
+
+setImmediate(() => console.log('3. Immediate'));
+
+process.nextTick(() => console.log('4. nextTick'));
+
+console.log('5. Đồng bộ cuối');
+
+
+
+1. Đồng bộ
+5. Đồng bộ cuối
+4. nextTick
+3. Immediate
+2. Timeout 0ms
+
+
+	## Thứ tự ưu tiên trong Event Loop:
+
+		process.nextTick() → chạy ngay lập tức
+		Promises (.then) → microtasks
+		setImmediate()
+		setTimeout(0), setInterval
+		
+
+# process.nextTick() – SIÊU QUAN TRỌNG (không có trong browser)
+
+process.nextTick(() => {
+  console.log('Chạy ngay, trước mọi thứ!');
+});
+
+
+
+	Dùng khi nào?
+		Tránh blocking Event Loop
+		Chạy code sau đồng bộ, trước I/O
+
+
+function apiCall(callback) {
+  // Giả lập I/O
+  setTimeout(() => {
+    callback(null, 'data');
+  }, 100);
+
+  process.nextTick(() => {
+    console.log('Chuẩn bị xử lý...'); // chạy trước khi I/O hoàn thành
+  });
+}
+
+
+
+# TÓM TẮT NHANH – BẢNG CHEAT SHEET
+
+Hàm,Chạy khi nào?,Dùng để
+"setTimeout(fn, delay)",Sau ít nhất delay ms,"Delay, schedule"
+"setInterval(fn, delay)",Lặp mỗi delay ms,"Clock, polling"
+setImmediate(fn),Ngay sau vòng lặp hiện tại,Chạy trước I/O
+process.nextTick(fn),Ngay lập tức (microtask),Tránh block
+clearTimeout(id),Hủy timeout,Dừng thực thi
+
+
+
+
+https://www.w3schools.com/nodejs/nodejs_dns.asp
+
+</pre><a id='backBottom' href='../NodeJS-learning.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
