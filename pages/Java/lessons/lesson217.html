@@ -1,0 +1,182 @@
+<html><head><title>Lesson 217 == GitOps + Functional Config Loading ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 217 -- GitOps + Functional Config Loading -//</h1><pre>
+# 1. VẤN ĐỀ 
+
+	Enterprise gặp 3 đau đầu:
+	
+		Policy thay đổi liên tục (timeout, retry, circuit breaker…)
+		Deploy lại service để đổi 1 con số → phí, rủi ro, mất time.
+		Nhiều team → nhiều dịch vụ → policy drift (mỗi nơi một kiểu).
+
+	GitOps giải pháp:
+		Mọi config nằm trong Git → CI/CD sync → service tự load mà không restart.
+
+	Functional approach giải quyết:
+		Pipeline policy là hàm → chỉ cần thay data model rồi regenerate function.
+	
+
+	Không framework magic. Không AOP. Không hot-reload hacky.
+
+
+# 2. CẤU TRÚC GITOPS CHUẨN
+
+/resilience/
+    service-a/
+        policy.json
+    service-b/
+        policy.json
+
+
+	Ví dụ policy.json:
+
+{
+  "retry": 3,
+  "timeout": "2s",
+  "circuitBreaker": { "fails": 5 }
+}
+
+
+# 3. PARSE → POLICY OBJECT (functional, bất biến)
+
+public class PolicyParser {
+
+    public static Policy fromJson(JsonNode n) {
+        List<Policy> list = new ArrayList<>();
+
+        if (n.has("retry"))
+            list.add(Policy.retry(n.get("retry").asInt()));
+
+        if (n.has("timeout"))
+            list.add(Policy.timeout(parseDuration(n.get("timeout").asText())));
+
+        if (n.has("circuitBreaker"))
+            list.add(Policy.circuitBreaker(
+                n.get("circuitBreaker").get("fails").asInt()
+            ));
+
+        return compose(list.toArray(Policy[]::new));
+    }
+}
+
+	## Đúng tinh thần functional design: 
+	
+		parse JSON → pure data
+		combine policy → pure function
+		output = một object bất biến thể hiện đầy đủ resilience rule
+		
+
+# 4. FUNCTIONAL LIVE-RELOAD
+
+	Không restart.
+	Không Spring Cloud Config nặng nề.
+	Không đẩy config vào environment variable.
+
+	## Ta chỉ cần: 
+		Flux.interval (Reactor)
+		hoặc
+		
+		Watcher (Java NIO WatchService)
+
+
+	## 
+
+Flux.interval(Duration.ofSeconds(10))
+    .flatMap(tick -> loadPolicyFileFromGit())
+    .map(PolicyParser::fromJson)
+    .subscribe(newPolicy -> {
+        PolicyRegistry.set(newPolicy);
+        log.info("Policy updated live!");
+    });
+
+	## Nơi PolicyRegistry là: 
+
+public class PolicyRegistry {
+    private static final AtomicReference<Policy> current = new AtomicReference<>();
+
+    public static void set(Policy p) { current.set(p); }
+    public static Policy get() { return current.get(); }
+}
+
+	→ Toàn bộ service dùng resilience thông qua:
+
+var safeCall = PolicyRegistry.get().apply(apiCall);
+safeCall.get();
+
+
+Khi GitOps đẩy commit mới → file update → service reload → policy thay đổi ngay lập tức.
+
+	Không downtime. Không redeploy.
+
+
+
+# 5. TÍNH CHẤT QUAN TRỌNG (CHỈ ISR CHUYÊN NGHIỆP MỚI ƯA CHUỘNG)
+
+
+A. Policy là pure data → dễ reload
+	Không state, không custom logic lẫn với nghiệp vụ.
+
+
+B. Policy apply trả về function → mapping rất đơn giản
+	Config thay đổi → generate function mới → pipeline mới.
+
+
+C. Không ảnh hưởng logic đang chạy (idempotent reload)
+
+	Request cũ vẫn dùng policy cũ.
+	Request mới dùng policy mới.
+	Không crash, không race condition.
+
+D. Debug dễ
+
+Log: “Policy updated @ timestamp”
+→ ai commit, ai thay đổi, trace 100% trong Git.
+
+
+
+# 6. ENTERPRISE LEVEL — PHỔI NHỮNG HỆ THỐNG LỚN NHẤT ĐANG LÀM GIỐNG VẬY
+
+Netflix, Stripe, Uber… đều dùng cách tương tự:
+
+	Resilience policy khai báo dưới dạng config as data
+	Deploy qua GitOps / ArgoCD / FluxCD
+	Service tự reload không downtime
+	Pipeline resilience thuần hàm → xếp lớp rõ ràng → không dính framework
+
+
+Vì không team nào muốn:
+
+	đổi retry từ 3 → 2 mà phải deploy lại 32 service
+	restart service trong lúc đang peak traffic
+	rollback rối tung khi 1 con số sai
+
+
+	Cách functional + GitOps giải quyết một cách gọn đẹp.
+
+
+#7. TẦM NHÌN XA — NẾU MUỐN LÀM KIẾN TRÚC SƯ
+
+
+Đây là cấp độ “system evolves without redeploy”.
+
+	Logic nghiệp vụ → thuần
+	Resilience → pure configuration
+	Pipeline → pure composition
+	Reload policy → pure swap function
+
+
+Hệ thống trở nên:
+
+	dễ kiểm soát
+	dễ audit
+	dễ rollback
+	không downtime
+	không lệ thuộc Spring
+	
+	Đây là tương lai của microservices chạy ở môi trường cloud-native.
+
+# 8. TÓM GỌN CỐT LÕI
+
+GitOps cung cấp dữ liệu, functional config cung cấp pipeline. Cập nhật policy runtime không cần restart vì pipeline là hàm bất biến tạo lại từ config mới.
+
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
