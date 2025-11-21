@@ -1,0 +1,150 @@
+<html><head><title>Lesson 33 == Utils ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../NodeJS-learning.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 33 -- Utils -//</h1><pre>
+# TOP 7 HÀM BẠN SẼ DÙNG MÃI MÃI (90% giá trị nằm đây)
+
+
+# util.promisify() 
+		Biến callback → Promise , Dùng async/await với fs, dns, child_process… 
+
+	. util.promisify() – “Siêu anh hùng” của Node.js hiện đại
+	
+	## Trước đây: 
+	
+fs.readFile('data.txt', 'utf8', (err, data) => {
+  if (err) throw err;
+  console.log(data);
+});
+
+	## Sau khi có promisify → code đẹp như mơ:
+
+const fs = require('fs');
+const util = require('util');
+const readFile = util.promisify(fs.readFile);
+
+async function main() {
+  const data = await readFile('data.txt', 'utf8');
+  console.log(data);
+}
+main();
+
+
+
+	## Các hàm hay được promisify nhất: 
+		fs tất cả (readFile, writeFile, mkdir, …)
+		dns.lookup, dns.resolve…
+		child_process.exec
+		crypto.randomBytes, crypto.pbkdf2
+
+
+
+# util.format() console.log thông minh
+		Như printf, console.log thông minh , Log đẹp, debug nhanh
+
+
+console.log(util.format('%s có %d tuổi', 'Grok', 1));
+// → Grok có 1 tuổi
+
+console.log(util.format('Error: %j', {code: 500, msg: 'Server error'}));
+// → Error: {"code":500,"msg":"Server error"}
+	
+	## Rất hay dùng khi viết logger: 
+function log(level, msg, meta) {
+  console.log(util.format('[%s] %s %j', level, msg, meta));
+}
+
+
+
+# util.debuglog() 
+		Log có điều kiện theo NODE_DEBUG, Debug production mà không làm ngập log
+
+
+const debug = util.debuglog('my-app');
+
+debug('Chỉ hiện khi chạy: NODE_DEBUG=my-app node app.js');
+// → my-app:12345: User login từ IP 127.0.0.1 +123ms
+
+
+	## Cách dùng thực tế: 
+	
+const debug = util.debuglog('http');
+
+http.createServer((req, res) => {
+  debug('Request:', req.method, req.url);
+  // chỉ hiện khi NODE_DEBUG=http
+});	
+	
+	
+# 	util.inspect() – In object đẹp như Postman 
+		In object cực đẹp, có màu, có depth , Debug object lồng nhau
+	
+	
+const user = {
+  id: 1,
+  profile: { name: 'Grok', hobbies: ['code', 'học'] },
+  buffer: Buffer.from('secret')
+};
+
+console.log(util.inspect(user, {
+  colors: true,     // có màu trong terminal
+  depth: 10,        // in sâu bao nhiêu cấp
+  showHidden: true  // hiện cả property không enumerable
+}));
+	
+		→ In ra cực đẹp, dễ debug object lồng sâu.
+	
+	
+	
+# 	util.types  – Kiểm tra kiểu chính xác
+		Kiểm tra kiểu dữ liệu chính xác , isPromise, isAsyncFunction, isMap…
+	
+	
+util.types.isPromise(p)              // true nếu là Promise
+util.types.isAsyncFunction(fn)       // true nếu là async function
+util.types.isMap(obj)                // true nếu là Map
+util.types.isSet(obj)                // true nếu là Set
+util.types.isDate(obj)               // true nếu là Date thật	
+	
+	
+	## Rất hay dùng khi viết middleware:
+	
+if (!util.types.isAsyncFunction(handler)) {
+  throw new Error('Handler phải là async function');
+}	
+	
+	
+
+	
+
+# util.callbackify() 
+	– Khi phải hỗ trợ cả callback lẫn Promise
+		Biến Promise → callback , Khi phải tương thích API cũ 
+
+
+const readFileAsync = util.promisify(fs.readFile);
+
+const readFileCallback = util.callbackify(readFileAsync);
+
+readFileCallback('data.txt', 'utf8', (err, data) => {
+  // vẫn hoạt động với code cũ
+});
+
+
+	
+	
+# util.inherits() 
+		Kế thừa class kiểu cũ (rất ít dùng nay) , Chỉ còn trong legacy code
+	
+	// Cũ (trước ES6 class)
+		util.inherits(MyError, Error);
+	
+	→ Giờ dùng class MyError extends Error là xong, ít dùng.
+	
+	
+	
+https://www.w3schools.com/nodejs/nodejs_readline.asp	
+	
+	
+	
+	
+	
+	
+</pre><a id='backBottom' href='../NodeJS-learning.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
