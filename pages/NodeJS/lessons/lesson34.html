@@ -1,0 +1,139 @@
+<html><head><title>Lesson 34 == Readline ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../NodeJS-learning.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 34 -- Readline -//</h1><pre>	
+Readline = cách duy nhất để tương tác với người dùng trong terminal bằng Node.js
+(CLI tool, hỏi mật khẩu, confirm “có chắc chắn deploy không?”, REPL…)
+	
+const readline = require('node:readline');  // Node.js 14+ khuyên dùng kiểu này
+// hoặc const rl = require('readline');	
+	
+	
+	
+	
+# 	6 CÁCH DÙNG THỰC CHIẾN (bạn sẽ dùng mãi)
+
+
+	## 1. Hỏi bình thường (cơ bản nhất)
+
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
+});
+
+rl.question('Bạn tên gì? ', (name) => {
+  console.log(`Xin chào ${name}!`);
+  rl.close();   // BẮT BUỘC close, không thì Node không thoát
+});
+
+
+
+
+	## 2. Dùng async/await (code sạch như React)
+
+const rl = readline.createInterface(process.stdin, process.stdout);
+
+const ask = (question) => new Promise(resolve => rl.question(question, resolve));
+
+(async () => {
+  const name = await ask('Tên bạn là gì? ');
+  const age  = await ask('Bạn bao nhiêu tuổi? ');
+  console.log(`Chào ${name}, ${age} tuổi!`);
+  rl.close();
+})();
+
+
+
+
+	## 3. Nhập mật khẩu KHÔNG HIỆN CHỮ (login, sudo)
+
+const askPassword = () => new Promise(resolve => {
+  rl.question('Mật khẩu: ', { hideEchoBack: true }, (pass) => {
+    console.log();     // xuống dòng cho đẹp
+    resolve(pass);
+  });
+});
+
+const pass = await askPassword();
+
+
+
+	## 4. Confirm Yes/No siêu gọn
+
+const confirm = async (msg = 'Bạn có chắc chắn?') => {
+  const ans = await ask(`${msg} (y/N): `);
+  return ['y', 'yes', 'Y', 'YES'].includes(ans.trim());
+};
+
+if (await confirm('Xóa toàn bộ database?')) {
+  console.log('Đã xóa xong (đùa thôi)!');
+}
+
+
+
+	## 5. CLI đẹp như npm (có prompt, autocomplete, lịch sử)
+
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+  prompt: 'my-cli> ',
+  completer: (line) => {
+    const cmds = ['help', 'deploy', 'status', 'exit', 'clear'];
+    const hits = cmds.filter(c => c.startsWith(line));
+    return [hits.length ? hits : cmds, line];
+  }
+});
+
+rl.prompt();
+
+rl.on('line', (line) => {
+  const cmd = line.trim();
+  switch (cmd) {
+    case 'help':   console.log('Các lệnh: help, deploy, exit'); break;
+    case 'deploy': console.log('Đang deploy lên production...'); break;
+    case 'exit':   rl.close(); break;
+    default:       if (cmd) console.log(`Lệnh không tồn tại: ${cmd}`);
+  }
+  rl.prompt();   // hiện lại dấu >
+});
+
+rl.on('close', () => {
+  console.log('Tạm biệt!');
+  process.exit(0);
+});
+
+
+	
+	
+	## 6. REPL siêu nhanh (như Node REPL)
+
+readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+  prompt: 'node> '
+}).on('line', (code) => {
+  try {
+    console.log(eval(code));   // nguy hiểm, chỉ dùng dev
+  } catch (e) { console.error(e); }
+}).prompt();
+
+
+
+
+https://www.w3schools.com/nodejs/nodejs_es6.asp
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+</pre><a id='backBottom' href='../NodeJS-learning.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

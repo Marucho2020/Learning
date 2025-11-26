@@ -1,0 +1,218 @@
+<html><head><title>Lesson 219 == thiết kế API dùng generic functional interfaces (汎用関数インターフェース ) ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 219 -- thiết kế API dùng generic functional interfaces (汎用関数インターフェース ) -//</h1><pre>
+# 🔥 Mục tiêu cấp senior
+
+Khi bạn thiết kế API, bạn không bao giờ hardcode behavior.
+Bạn xuất hiện dưới dạng pipeline và để user truyền vào Function/Predicate/Supplier/Consumer để tự cấu hình hành vi.
+
+Đó là cách các thư viện lớn như Reactor, Spring WebFlux, Guava, Java Stream được thiết kế.
+
+
+
+
+# 1. VẤN ĐỀ THỰC SỰ (mà junior không thấy)
+
+	## Junior thường viết API kiểu này: 
+
+public List<User> filterActiveUsers(List<User> users) {
+    List<User> result = new ArrayList<>();
+    for (User u : users) {
+        if (u.isActive()) result.add(u);
+    }
+    return result;
+}
+
+→ Hardcode filter logic
+→ Không tái dùng
+→ Mỗi thay đổi = sửa mã nguồn
+
+	Senior thấy ngay:
+	Cần expose predicate, không cần function đặc thù.
+
+
+
+
+
+# 2. GIẢI PHÁP CHUẨN SENIOR
+
+	API chỉ nên làm “framework”, còn logic là thứ user tự đưa vào.
+
+
+public <T> List<T> filter(List<T> list, Predicate<T> predicate) {
+    return list.stream().filter(predicate).toList();
+}
+
+	Giờ behavior là plugin vào, không dính vào core logic.
+	
+	## User tự inject:
+
+var activeUsers = filter(users, User::isActive);
+var vipUsers    = filter(users, u -> u.getRank() >= 5);
+
+
+	API thuần sạch — logic nằm ngoài.
+
+
+
+
+
+# 3. MỞ RỘNG: PIPELINE DẠNG FUNCTION
+
+Cấp độ cao hơn:
+	Expose API theo kiểu pipeline, giống Reactor hoặc Resilience4j.
+
+
+public <T> Function<T, T> withLogging(Function<T, T> fn) {
+    return (t) -> {
+        log.info("Input: {}", t);
+        var r = fn.apply(t);
+        log.info("Output: {}", r);
+        return r;
+    };
+}
+
+
+
+	## User inject vào: 
+
+var pipeline =
+        withLogging(
+                withTracing(
+                        withValidation(x -> x > 10,    // predicate
+                                      x -> x * 2)      // function
+                )
+        );
+
+API không chứa logic nghiệp vụ.
+API chỉ chứa khung (framework).
+
+
+
+
+# 4. DESIGN PATTERN CHUẨN: Higher-Order Function API
+
+	Đây là bản chất Functional:
+	
+	Function nhận function → trả ra function.
+
+
+	## Ưu điểm lớn:
+
+		Dễ test (test function độc lập)
+		Không cần subclass
+		Không cần override
+		Không cần AOP để chèn behavior
+		Có thể compose linh hoạt
+
+
+
+# 5. GIẢI PHÁP ENTERPRISE — “Behavior Injection DSL”
+
+	Senior tạo DSL cho behavior.
+
+	## Ví dụ: DSL cho xử lý thanh toán
+
+
+public class PaymentFlow {
+
+    private Predicate<Payment> fraudCheck = p -> true;
+    private Function<Payment, Payment> discountFn = p -> p;
+    private Consumer<Payment> audit = p -> {};
+
+    public PaymentFlow fraud(Predicate<Payment> pred) {
+        this.fraudCheck = pred;
+        return this;
+    }
+
+    public PaymentFlow discount(Function<Payment, Payment> fn) {
+        this.discountFn = fn;
+        return this;
+    }
+
+    public PaymentFlow audit(Consumer<Payment> consumer) {
+        this.audit = consumer;
+        return this;
+    }
+
+    public Function<Payment, Payment> build() {
+        return (p) -> {
+            if (!fraudCheck.test(p))
+                throw new RuntimeException("Fraud detected");
+            var discounted = discountFn.apply(p);
+            audit.accept(discounted);
+            return discounted;
+        };
+    }
+}
+
+
+
+
+	## User dùng:
+var pipeline =
+    new PaymentFlow()
+        .fraud(p -> p.amount() < 10000)
+        .discount(p -> p.withAmount(p.amount() * 0.9))
+        .audit(p -> logger.info("AUDIT {}", p))
+        .build();
+
+
+Thay behavior = change lambda.
+Không cần sửa lõi.
+Đúng chuẩn configurability của microservice enterprise.
+
+
+
+# 6. TẠI SAO DESIGN NÀY LÀ ĐIỂM CỘNG LỚN TRONG SYSTEM DESIGN INTERVIEW?
+
+	Decoupling hoàn toàn
+	Behavior injection không cần framework
+	Không hardcode logic trong API
+	Dễ tạo DSL (Domain-Specific Language)
+	Dễ thực hiện GitOps + runtime configuration
+	Thích hợp cho:	
+	
+		- Resilience
+		- Validation
+		- Routing
+		- Observability
+		- Policy-driven pipeline
+		
+	Bản chất microservice hiện đại là chạy theo policy (config), không chạy theo code cứng.
+
+
+
+# 7. TẦM NHÌN XA — LÝ DO FUNCTION/PREDICATE LÀ CHUẨN KIẾN TRÚC SƯ
+
+	“API tinh gọn = behavior bên ngoài, khung bên trong.”
+	Nếu bạn muốn hệ thống tiến hóa mà không phải sửa code,
+		thì function interface là cầu nối:
+
+		- Behavior từ config
+		- Behavior từ GitOps
+		- Behavior từ DSL
+		- Behavior dynamic runtime
+
+	Từ retry policy đến logging, tracing, rate limiting…
+		tất cả đều là Function decorator.
+
+
+
+# 8. TÓM GỌN (thẳng vào cốt lõi)
+
+Expose function, không expose logic.
+API của bạn chỉ là pipeline.
+User tự inject behavior bằng Function/Predicate.
+Không subclass, không override, không AOP.
+
+	Đó là cách viết API mang tầm senior – sạch, rõ, mở rộng không cần đập code.
+
+
+
+
+
+
+
+
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
