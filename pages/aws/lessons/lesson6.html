@@ -1,8 +1,219 @@
-<html><head><title>Lesson 5 == Cloud Practitioner ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 5 -- Cloud Practitioner -//</h1><pre>
-Scalability
+<html><head><title>Lesson 6 == Cloud Practitioner ====Bài 3-Edge Location ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 6 -- Cloud Practitioner ----Bài 3-Edge Location -//</h1><pre>
 
-Elasticity
+------------- Edge Location -----------
 
+# Edge Location là gì?
+
+	Edge Location là máy chủ đặt gần người dùng nhất để phân phối nội dung nhanh hơn.
+	Nó thường dùng trong CDN (Content Delivery Network).
+		Trong Amazon Web Services,
+		Edge Location chủ yếu được dùng bởi dịch vụ:
+
+	👉 Amazon CloudFront
+
+
+
+
+# Vấn đề nếu không có Edge Location
+
+	Giả sử server của bạn nằm ở:
+		👉 AWS Asia Pacific (Tokyo) Region
+
+	Nhưng user ở:
+		- Brazil
+		- Europe
+		- Mỹ
+
+	Request sẽ phải đi:
+		User (Brazil)
+			↓
+		Internet
+			↓
+		Tokyo Server	
+		
+		Khoảng cách rất xa → latency cao.
+	
+		Kết quả:
+			- website chậm
+			- video load chậm
+			- game lag	
+	
+	
+# 	Edge Location giải quyết vấn đề này
+	
+	## Edge Location là server cache đặt khắp thế giới.
+	Ví dụ:
+	
+		User (Brazil)
+			↓
+		Edge Location (Brazil)
+			↓
+		Tokyo Server	
+	
+	## Quá trình hoạt động:
+	
+		1️ User request nội dung
+		2️ Edge Location kiểm tra cache	
+		
+			Nếu đã có sẵn → trả về ngay
+			
+			Nếu chưa có  
+						→ lấy từ origin server (Tokyo)
+						→ lưu vào cache		
+	
+	## Kiến trúc thật 
+	
+		User
+		↓
+		Edge Location
+		↓
+		CloudFront
+		↓
+		Origin Server (EC2 / S3)	
+	
+				Origin server thường là:
+				Amazon EC2
+				Amazon S3	
+	
+
+# So sánh Region vs AZ vs Edge Location 
+
+| Thành phần        | Vai trò                  |
+| ----------------- | ------------------------ |
+| Region            | khu vực cloud lớn        |
+| Availability Zone | data center trong region |
+| Edge Location     | server cache gần user    |
+
+
+
+	## Cấu trúc: 
+
+		Region
+		↓
+		Availability Zone
+		↓
+		Servers
+		
+		Edge Location
+		↓
+		near users
+
+
+# Ví dụ thực tế  
+	
+Website video.
+Server ở Tokyo.
+User ở Mỹ.
+
+	## Không có CDN:
+
+		User (US)
+		↓
+		Tokyo server
+
+
+	## Có CDN:
+		Sau request đầu tiên:
+		Edge Location sẽ cache video.
+		User tiếp theo → load cực nhanh.
+		
+		
+		
+# 	Khi nào dùng Edge Location?	
+		
+	- website tĩnh
+	- ảnh
+	- video
+	- game patch
+	- file download		
+		
+		
+		
+------------ Bản tiếng Nhật ------------ 
+
+
+# Edge Locationとは
+
+	ユーザーに近い場所に配置されたコンテンツ配信用サーバーです。
+	主に CDN（Content Delivery Network） で使われます。
+	AWSではこの仕組みを提供するサービスが：Amazon CloudFront です。
+
+
+
+# なぜEdge Locationが必要か
+
+	もしサーバーが👉 AWS Asia Pacific (Tokyo) Regionにあり、ユーザーが
+		- ヨーロッパ
+		- アメリカ
+		- 南米
+	にいる場合：
+
+		User (US)
+		↓
+		Internet
+		↓
+		Tokyo Server
+
+	距離が遠い → レイテンシーが高い。
+
+
+
+# Edge Locationの仕組み
+
+	Edge Locationは
+	ユーザーに近い場所でコンテンツをキャッシュします。
+
+	## 例：
+		User
+		↓
+		Edge Location
+		↓
+		Tokyo Server
+
+
+
+	## 処理の流れ：
+		1️ ユーザーがリクエスト
+		2️ Edge Locationがキャッシュ確認
+
+	キャッシュあり → 即レスポンス
+		Origin serverから取得 → キャッシュ保存
+
+
+
+# 構成例 
+
+	User
+	↓
+	Edge Location
+	↓
+	CloudFront
+	↓
+	Origin Server
+
+
+	Origin serverは通常：
+		Amazon EC2
+		Amazon S3
+
+	などです。
+
+
+# Region / AZ / Edge Location
+
+
+| 要素                | 役割               |
+| ----------------- | ---------------- |
+| Region            | 地理的クラウドエリア       |
+| Availability Zone | Region内のデータセンター  |
+| Edge Location     | ユーザー近くのキャッシュサーバー |
+
+
+
+
+
+		
+		
 
 
 </pre><a id='backBottom' href='../aws-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
