@@ -1,10 +1,103 @@
-<html><head><title>Lesson 9 == Cloud Practitioner ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 9 -- Cloud Practitioner -//</h1><pre>
+<html><head><title>Lesson 9 == Cloud Practitioner ===High Availability ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 9 -- Cloud Practitioner --=High Availability -//</h1><pre>
+# 1. High Availability (HA)
+
+	High Availability = Hệ thống luôn sẵn sàng “gần như mọi lúc”	
+		Nếu có lỗi → hệ thống vẫn chạy, nhưng có thể bị gián đoạn rất ngắn.
+
+
+# Bản chất
+
+		- Giảm downtime (thời gian chết)
+		- Không cần 100% uptime
+		- Cho phép fail + recovery nhanh
+
+
+# Ví dụ thực tế
+
+	Bạn có 2 server:
+		- Server A (chính)
+		- Server B (dự phòng)
+
+	Khi A chết:
+		→ chuyển sang B (mất vài giây)
+	
+	User có thể bị:
+		reload lại trang
+		request bị fail 1 lần	
+	
+	=> Đây là High Availability	
+	
+
+# Trong AWS
+
+	Thường thiết kế kiểu:
+		deploy nhiều instance trên nhiều AZ
+
+	Ví dụ:
+		Amazon EC2 ở 2 AZ
+		Elastic Load Balancing để phân phối traffic
 
 
 
-High Availability
+	Ví dụ kiến trúc
 
-Fault tolerance
+		  User
+			↓
+		Load Balancer
+		 ↓        ↓
+		AZ1       AZ2
+		EC2       EC2
 
+
+	Nếu AZ1 chết:
+		→ traffic chuyển sang AZ2
+
+
+
+# Ví dụ đời thường
+
+	Giống như:
+		bạn có 2 cửa hàng
+		1 cái đóng → khách qua cái còn lại
+		
+	=> vẫn bán được, nhưng hơi gián đoạn
+
+
+
+
+------------------ 日本語----------
+
+**High Availability（高可用性）**とは：
+		システムがほぼ常に利用可能である状態
+
+
+
+# ポイント 	
+
+	ダウンタイムを最小化する
+	完全に停止しないわけではない
+	障害後にすぐ復旧できる
+
+
+
+# 例
+	サーバーAが落ちたら：
+		→ サーバーBに切り替え
+
+	数秒の影響あり
+
+
+# AWSでの実装
+	Amazon EC2 を複数AZに配置
+	Elastic Load Balancing を使用
+	
+	
+	
+	
+
+	
+	
+	
+	
 
 </pre><a id='backBottom' href='../aws-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

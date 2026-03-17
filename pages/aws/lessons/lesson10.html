@@ -1,6 +1,92 @@
-<html><head><title>Lesson 10 == Cloud Practitioner ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 10 -- Cloud Practitioner -//</h1><pre>
+<html><head><title>Lesson 10 == Cloud Practitioner ====Fault tolerance ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 10 -- Cloud Practitioner ----Fault tolerance -//</h1><pre>
 
-IaaS / PaaS / SaaS
+# Fault Tolerance
+
+	Fault Tolerance = Hệ thống vẫn hoạt động ngay cả khi có lỗi xảy ra	
+		Không gián đoạn. Không downtime. Không ai biết là có lỗi xảy ra.
+
+
+
+# Bản chất
+
+	- Không được phép gián đoạn
+	- Không mất dữ liệu
+	- hệ thống vẫn chạy bình thường
+
+
+# Ví dụ thực tế
+	2 server chạy song song:
+		Server A + Server B (active-active)
+
+	Nếu A chết:
+		→ B vẫn xử lý ngay lập tức
+		→ user KHÔNG bị ảnh hưởng
+
+	=> không cần failover → vì đã chạy song song
+
+# Khác biệt cực quan trọng
+
+	High Availability: fail → rồi recover
+	Fault Tolerance: fail → nhưng không ai nhận ra
+
+
+
+# Trong AWS
+
+
+Thiết kế kiểu:
+
+	multi-AZ
+	replication
+	active-active
+	
+		Amazon RDS Multi-AZ
+		Amazon S3 (replicate nhiều AZ)
+
+# Ví dụ đời thường 
+
+	Máy bay:
+		có 2–3 động cơ
+		1 cái hỏng → vẫn bay bình thường
+	=> đó là Fault Tolerance
+
+
+
+------------ 日本語 -----------
+
+Fault Tolerance（耐障害性）**とは：障害が発生してもシステムが止まらずに動き続ける能力
+
+
+# ポイント
+
+	- ダウンタイムなし
+	- ユーザーに影響なし
+	- 常に稼働し続ける
+
+# 例
+		サーバーA + サーバーB（同時稼働）
+	
+	Aが落ちても：
+		→ Bがそのまま処理
+		ユーザーは気づかない
+	
+
+AWSサービス例
+
+	Amazon RDS（Multi-AZ）
+	Amazon S3（自動レプリケーション）
+
+
+
+3. So sánh (đây là câu hỏi bẫy trong đề thi)
+
+|                   | High Availability  | Fault Tolerance   |
+| ----------------- | ------------------ | ----------------- |
+| Downtime          | Có thể có (rất ít) | Không có          |
+| Cách xử lý        | Fail → recover     | Không cần recover |
+| User bị ảnh hưởng | Có thể có          | Không             |
+| Độ khó            | Trung bình         | Cao               |
+| Chi phí           | Thấp hơn           | Cao hơn           |
 
 
 </pre><a id='backBottom' href='../aws-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
