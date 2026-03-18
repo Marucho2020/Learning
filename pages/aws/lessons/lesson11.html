@@ -1,4 +1,251 @@
-<html><head><title>Lesson 11 == Cloud Practitioner ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 11 -- Cloud Practitioner -//</h1><pre>Load Balancing
+<html><head><title>Lesson 11 == Cloud Practitioner ====Load Balancing ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 11 -- Cloud Practitioner ----Load Balancing -//</h1><pre>
+
+# 1. Load Balancing là gì
+
+	Load Balancing = phân phối request đến nhiều server
+	Không để 1 server bị quá tải trong khi server khác rảnh.
+
+
+
+	## Ví dụ đơn giản 
+
+	Bạn có 3 server:
+		A   B   C
+
+	User gửi request:
+			Nếu không có Load Balancer: → tất cả dồn vào A → chết
+
+
+		Có Load Balancer:
+			→ chia đều A / B / C
+
+
+	## AWS dùng gì
+
+	Elastic Load Balancing (ELB)
+
+
+
+	## Vai trò thực tế
+
+	Load Balancer đứng giữa:
+		User → Load Balancer → Servers
+
+
+	## Lợi ích
+
+	tăng performance
+	tránh quá tải
+	hỗ trợ High Availability
+	tự động route request
+
+
+
+
+# 2. Cách Load Balancer hoạt động
+
+	Nó quyết định: request này đi server nào
+
+
+	## Các thuật toán phổ biến 
+
+		### 1.Round Robin → chia đều
+			A → B → C → A → B → C
+
+
+
+		### 2. Least Connections
+			→ server nào ít request nhất → nhận
+
+
+
+		### 3. IP Hash 
+			→ user A luôn vào server A
+			
+			👉 Trong AWS bạn không cần config sâu như Nginx
+			→ AWS xử lý sẵn.
+
+
+
+
+# 3. Các loại Load Balancer trong AWS
+
+
+	## 1️⃣ Application Load Balancer (ALB)
+		Dùng khi:
+			HTTP / HTTPS
+
+
+
+		Đặc điểm
+			- hiểu request (URL, path, header)
+			- routing thông minh
+
+
+		Ví dụ
+			/api → server A
+			/image → server B
+
+
+
+
+
+	## 2️⃣ Network Load Balancer (NLB)
+
+		Dùng khi:
+			- TCP / UDP
+			- cần tốc độ cao
+
+
+		Đặc điểm
+			rất nhanh (low latency)
+			không hiểu HTTP
+
+
+
+
+	3️⃣ Gateway Load Balancer (GWLB)
+
+		Dùng khi:
+
+			- security appliance
+			- firewall, IDS
+
+
+
+
+
+# 4. Load Balancing + Auto Scaling (combo hay ra đề)
+
+	## Khi traffic tăng:
+		- Auto Scaling → thêm server
+		- Load Balancer → phân phối
+
+	
+	## Flow chuẩn AWS
+	
+		User
+		↓
+		Load Balancer
+		↓
+		Auto Scaling Group
+		↓
+		EC2 instances
+		
+		
+		
+		
+	## 	Service liên quan
+		- AWS Auto Scaling
+		- Amazon EC2		
+		
+		
+	
+		
+		
+# 	5. Health Check 
+		
+	Load Balancer sẽ:
+	
+		check server còn sống không
+		Nếu chết:
+			→ không gửi request vào
+
+		Ví dụ
+			- Server A (OK)
+			- Server B (DOWN)
+
+		→ chỉ gửi vào A
+
+
+
+# đề AWS
+
+
+	route request based on URL
+		=> Application Load Balancer
+
+
+	ultra-low latency, TCP traffic
+		=> Network Load Balancer
+
+
+	distribute traffic across instances
+		=> Load Balancer
+
+	
+		
+		
+
+
+--------------日本語 -----------
+
+**Load Balancing（ロードバランシング）**とは：
+		複数のサーバーにリクエストを分散する仕組み
+
+
+
+
+# イメージ
+	ユーザー → Load Balancer → サーバー群
+
+
+
+# 主なアルゴリズム
+
+	Round Robin
+	Least Connections
+	IP Hash
+	
+	※ AWSでは基本的に自動管理
+
+
+
+	## 1️⃣ Application Load Balancer (ALB)
+	
+		HTTP/HTTPS専用
+		URLやパスでルーティング可能
+
+
+
+
+	## 2️⃣ Network Load Balancer (NLB)
+
+		- 高速（低レイテンシ）
+		- TCP/UDP対応
+
+
+
+
+	## 3️⃣ Gateway Load Balancer (GWLB) 
+		セキュリティ機器向け
+
+
+# 4. Load Balancing + Auto Scaling
+
+
+	## トラフィック増加時：
+
+		Auto Scaling → インスタンス追加
+		Load Balancer → 負荷分散	
+
+
+
+
+
+# 	5. Health Check 
+
+	ヘルスチェック機能：
+		正常なサーバーのみトラフィック送信
+
+
+
+
+
+
+
+
+
 
 
 </pre><a id='backBottom' href='../aws-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
