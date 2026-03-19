@@ -1,4 +1,282 @@
-<html><head><title>Lesson 12 == Cloud Practitioner ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 12 -- Cloud Practitioner -//</h1><pre>Disaster Recovery (RTO / RPO — cực hay ra đề)
+<html><head><title>Lesson 12 == Cloud Practitioner ====Disaster Recovery ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 12 -- Cloud Practitioner ----Disaster Recovery -//</h1><pre>
+# 1. Disaster Recovery (DR) là gì
+	Kế hoạch khôi phục hệ thống sau khi xảy ra thảm họa
+
+
+	## “Thảm họa” là gì?
+		- Data center bị cháy
+		- Region AWS bị down
+		- Database bị mất dữ liệu
+		- Hacker phá hệ thống
+
+
+
+	## Mục tiêu DR
+	
+		- khôi phục hệ thống nhanh nhất có thể
+		- mất dữ liệu ít nhất có thể
+		👉 Và đây là lúc xuất hiện:
+	
+	
+	
+
+# 2. RTO (Recovery Time Objective)
+
+	RTO = Thời gian tối đa cho phép hệ thống bị down
+		Bao lâu thì hệ thống phải hoạt động lại?
+
+
+
+
+	## Ví dụ
+		RTO = 1 giờ
+			→ trong vòng 1 giờ phải khôi phục xong
+
+
+
+	## Hiểu bản chất
+	
+		RTO nhỏ → cần hệ thống mạnh, tốn tiền
+		RTO lớn → chấp nhận downtime lâu hơn
+
+
+
+# 3. RPO (Recovery Point Objective) 
+
+		RPO = Mức dữ liệu tối đa có thể bị mất
+			Bạn chấp nhận mất bao nhiêu dữ liệu?
+
+		
+		##	Ví dụ 
+			RPO = 10 phút
+			→ nếu hệ thống sập:
+			→ có thể mất dữ liệu trong 10 phút gần nhất
+
+
+
+
+		## Hiểu bản chất
+		
+			RPO nhỏ → cần backup liên tục
+			RPO lớn → backup ít hơn
+
+
+
+			
+		## Ví dụ đời thường
+
+			Ngân hàng:
+				RPO ≈ 0 (không được mất tiền)
+			Game online:
+				RPO vài phút (rollback nhẹ)
+
+
+# 4. Phân biệt RTO vs RPO (CỰC QUAN TRỌNG)
+
+|         | RTO                | RPO                 |
+| ------- | ------------------ | ------------------- |
+| Ý nghĩa | Thời gian downtime | Lượng data mất      |
+| Câu hỏi | Bao lâu khôi phục? | Mất bao nhiêu data? |
+| Đơn vị  | phút / giờ         | phút / giờ          |
+
+
+
+RTO = khi nào sống lại
+RPO = mất bao nhiêu ký ức
+
+
+
+
+# 6. DR Strategies trong AWS
+
+	Có 4 chiến lược chính trong Amazon Web Services:
+
+	## 1️⃣ Backup & Restore
+
+		### Cách làm
+			backup data (S3, Glacier)
+			khi crash → restore lại
+
+
+		### AWS service 
+		
+			Amazon S3
+			Amazon S3 Glacier
+	
+	
+		### Đặc điểm 
+			RTO: rất lâu
+			RPO: phụ thuộc backup	
+	
+	
+		👉 Rẻ nhất nhưng chậm nhất
+	
+	
+	
+	
+	## 2️⃣ Pilot Light
+	
+		## Cách làm
+			giữ core system luôn chạy (DB)
+			app server → bật khi cần
+	
+	
+		## Đặc điểm
+
+			RTO: vài phút → giờ
+			RPO: thấp
+			👉 giống “giữ lửa nhỏ”
+		
+
+
+	## 3️⃣ Warm Standby 
+	
+		### Cách làm
+			chạy full system nhưng nhỏ
+	
+
+		### Đặc điểm 
+			RTO: vài phút
+			RPO: thấp			
+
+		👉 gần như ready
+
+
+	## 4️⃣ Multi-Site (Active-Active)
+
+		## Cách làm 
+			2 region chạy cùng lúc
+
+		## Đặc điểm
+		
+			RTO ≈ 0
+			RPO ≈ 0		
+		
+		👉 mạnh nhất, đắt nhất	
+		
+		
+# 	7. Mapping RTO/RPO với Strategy
+		
+		
+| Strategy     | RTO        | RPO   | Cost    |
+| ------------ | ---------- | ----- | ------- |
+| Backup       | cao        | cao   | thấp    |
+| Pilot Light  | trung bình | thấp  | trung   |
+| Warm Standby | thấp       | thấp  | cao     |
+| Multi-site   | gần 0      | gần 0 | rất cao |
+		
+		
+		
+		
+=========================
+🇯🇵 日本語版（完全翻訳）
+=========================		
+		
+		
+# 1. Disaster Recovery（災害復旧）とは
+		
+	**Disaster Recovery（DR）**とは：
+		災害発生後にシステムを復旧するための計画		
+		
+		
+		
+	## 災害の例 	
+		
+		データセンター障害
+		AWSリージョン障害
+		データ消失
+		サイバー攻撃		
+		
+		
+	## 	目的
+		
+		できるだけ早く復旧する
+		データ損失を最小化する		
+		
+		
+		
+# 	2. RTO（Recovery Time Objective）	
+		
+	RTOとは：	
+		システム停止が許容される最大時間
+		
+	RTO = 1時間	
+		→ 1時間以内に復旧する必要がある	
+		
+		
+	## 	ポイント
+		
+		RTOが短い → コストが高い
+		RTOが長い → コストが低い		
+		
+		
+# 	3. RPO（Recovery Point Objective）	
+		
+	RPOとは：	許容できるデータ損失量
+		
+		RPO = 10分
+		→ 最大10分のデータが失われる可能性
+		
+		
+		
+	ポイント	
+		RPOが小さい → 頻繁なバックアップが必要
+		RPOが大きい → バックアップ頻度が低い		
+		
+		
+# 4. RTOとRPOの違い		
+		
+|    | RTO     | RPO      |
+| -- | ------- | -------- |
+| 意味 | 復旧時間    | データ損失    |
+| 質問 | いつ復旧する？ | どれくらい失う？ |
+		
+
+
+# イメージ
+
+RTO = いつ復活するか
+RPO = 記憶をどれだけ失うか
+
+
+
+# 5. AWSのDR戦略
+
+	# ① Backup & Restore
+
+		Amazon S3
+		Amazon S3 Glacier
+		
+	特徴：
+
+		RTO：長い
+		RPO：高い
+
+
+
+	## ② Pilot Light
+		最小限のシステムのみ稼働
+
+
+	## 最小限のシステムのみ稼働 
+		小規模でシステムを常時稼働
+
+
+	## ④ Multi-Site
+		複数リージョンで同時稼働
+
+
+
+# 6. まとめ 
+
+	RTO = 復旧スピード
+	RPO = データ損失許容
+
+
+
+
+		
+	
 
 
 </pre><a id='backBottom' href='../aws-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
