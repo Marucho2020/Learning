@@ -1,6 +1,291 @@
 <html><head><title>Lesson 14 == Cloud Practitioner ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 14 -- Cloud Practitioner -//</h1><pre>
 
-IaaS / PaaS / SaaS
 
+# IaaS là gì? (Infrastructure as a Service) 
+
+	IaaS = bạn thuê hạ tầng, còn lại tự lo
+	
+		AWS cho bạn: VM, network, storage
+		Bạn tự quản:
+
+			- OS
+			- runtime
+			- app
+			- security config (phần lớn)
+
+	👉 Nói thẳng:
+	Bạn vẫn là DevOps, AWS chỉ là “thợ điện + phòng server”
+	giống thuê vps 
+
+
+# PaaS là gì?(Platform as a Service)
+
+	PaaS = AWS lo OS + runtime, bạn chỉ code
+		Bạn chỉ deploy code
+	
+		AWS lo:
+		
+			OS
+			patch
+			scaling (một phần)
+	
+	👉 Nói thẳng:
+	Bạn tập trung logic, không đụng infra	
+	Giống Vercel
+
+
+
+
+#	SaaS (Software as a Service)
+
+	SaaS = dùng luôn, không quản gì
+
+		- Mở ra là dùng
+		- Không deploy, không config infra
+
+	👉 Nói thẳng:
+	Bạn là user, không phải engineer
+	
+
+
+
+# II. SO SÁNH GỐC RỄ (CÁI QUAN TRỌNG NHẤT)
+
+
+| Layer    | IaaS | PaaS | SaaS |
+| -------- | ---- | ---- | ---- |
+| App code | bạn  | bạn  | ❌    |
+| Runtime  | bạn  | AWS  | ❌    |
+| OS       | bạn  | AWS  | ❌    |
+| Infra    | AWS  | AWS  | AWS  |
+
+
+
+	👉 Insight cực quan trọng:
+	Càng lên cao → càng ít control → càng ít trách nhiệm
+
+
+# III. MAPPING AWS
+
+		## IaaS
+				- EC2
+				- EBS
+				- VPC
+			👉 Bạn SSH vào server → IaaS
+
+
+	
+		## PaaS
+		
+			- Elastic Beanstalk
+			- AWS Lambda (serverless)
+			- RDS (semi-managed)	
+			
+			👉 Bạn không quản OS → PaaS
+		
+		
+			
+		## SaaS
+			- Gmail
+			- Slack
+			- AWS QuickSight		
+				👉 Không deploy gì → SaaS
+				
+				
+				
+				
+# IV. VÍ DỤ THỰC TẾ 			
+				
+	Case 1: Startup nhỏ, cần control cao	
+				
+		👉 chọn IaaS
+		
+		EC2 + Docker
+		tự config everything
+		
+		👉 lý do:
+		
+		linh hoạt
+		nhưng tốn công				
+				
+				
+				
+	Case 2: Dev muốn deploy nhanh
+
+		👉 chọn PaaS
+		
+		code → push → chạy
+		
+		👉 ví dụ:
+		
+		Elastic Beanstalk auto scale
+
+
+
+	Case 3: Công ty chỉ cần tool
+
+		👉 chọn SaaS
+		
+		dùng CRM, email
+		
+		👉 không cần dev
+
+
+
+
+VI. BẪY AWS HAY GÀI
+
+	## Bẫy 1: RDS là gì?
+		👉 nhiều người nghĩ SaaS → SAI
+		
+		RDS = PaaS (managed DB)
+		
+
+	## Bẫy 2: Lambda là gì?
+
+		👉 Serverless ≠ SaaS
+		
+		Lambda = PaaS Bạn vẫn viết code
+	
+				
+				
+	## 	Bẫy 3: EC2 auto scaling → có phải PaaS?		
+				
+		👉 KHÔNG
+		
+		vẫn phải quản OS → vẫn là IaaS				
+						
+				
+	## 	Bẫy 4: “Managed” ≠ SaaS		
+				
+		Managed DB = PaaS
+		SaaS = không deploy gì				
+				
+				
+VIII. CÁCH AWS RA ĐỀ				
+				
+	AWS không hỏi:
+		“IaaS là gì?”
+	
+	Nó hỏi:
+		“Bạn muốn control tới đâu?”				
+			
+
+	👉 Rule:
+		Muốn control sâu → IaaS
+		Muốn dev nhanh → PaaS
+		Không muốn dev → SaaS
+
+
+	👉 Trick:
+	
+		Có “manage OS” → IaaS
+		Có “no need OS” → PaaS
+		Có “end-user tool” → SaaS
+
+
+
+IX. TRADE-OFF(THỨ AWS MUỐN BẠN HIỂU)
+
+
+|             | IaaS | PaaS  | SaaS     |
+| ----------- | ---- | ----- | -------- |
+| Control     | cao  | trung | thấp     |
+| Effort      | cao  | thấp  | rất thấp |
+| Flexibility | cao  | trung | thấp     |
+
+
+	👉 Nhận định thẳng:
+		Junior hay chọn SaaS/PaaS
+		Senior phải biết khi nào cần IaaS
+			
+				
+
+
+----------------------- 🇯🇵 日本語版----------------
+
+# IaaSとは？
+
+	インフラだけ提供、残りは自分で管理
+
+		- EC2など
+		- OS・アプリは自分で管理
+	👉 フルコントロール
+
+
+
+# PaaSとは？
+
+	OSやランタイムはAWSが管理
+		開発者はコードだけ
+
+	👉 インフラ管理不要
+
+
+
+# SaaSとは？
+	すぐ使えるサービス
+	設定・デプロイ不要
+	👉 エンドユーザー向け
+
+
+			
+# II. 比較 
+
+| 項目     | IaaS | PaaS | SaaS |
+| ------ | ---- | ---- | ---- |
+| コントロール | 高    | 中    | 低    |
+| 管理負担   | 高    | 低    | ほぼなし |
+
+
+
+
+# III. AWSサービス対応
+
+	- IaaS：EC2
+	- PaaS：Elastic Beanstalk / Lambda / RDS
+	- SaaS：QuickSight
+
+
+# IV. 試験キーワード
+
+
+	## IaaS 
+		- full control
+		- manage OS		
+
+	## PaaS
+		- deploy application
+		- no OS management
+
+	## SaaS
+		- ready to use
+		- no setup
+
+
+# V. トラップ
+
+	- RDS = PaaS（SaaSではない）
+	- Lambda = PaaS
+	- Auto Scaling EC2 = IaaS
+
+
+# VI. 出題パターン
+
+	AWSはこう聞く：
+		「どこまで管理したい？」
+
+			
+			
+# 	VII. 結論		
+			
+	- control重視 → IaaS
+	- 開発スピード → PaaS
+	- 利用のみ → SaaS			
+			
+			
+			
+				
+				
 
 </pre><a id='backBottom' href='../aws-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

@@ -2,4 +2,257 @@
 
 
 
+# Multi-AZ là gì?
+	Multi-AZ = nhiều Data Center trong cùng 1 Region
+	
+		- AZ (Availability Zone) = 1 data center vật lý độc lập
+		- Multi-AZ = deploy system trên ≥2 AZ trong cùng region
+
+	👉 Mục tiêu:
+	
+			- High Availability (HA) – tránh chết do 1 data center hỏng
+			- KHÔNG phải disaster recovery toàn diện
+
+
+# Multi-Region là gì?
+
+	Multi-Region = deploy system ở nhiều Region khác nhau (Tokyo + Osaka + Singapore...)
+
+	👉 Mục tiêu:
+	
+		- Disaster Recovery (DR) cấp cao
+		- Chịu được thảm họa lớn (region chết)
+
+	👉 Tóm lại:
+| Khái niệm    | Bảo vệ khỏi cái gì |
+| ------------ | ------------------ |
+| Multi-AZ     | chết 1 data center |
+| Multi-Region | chết cả region     |
+
+
+
+
+# II. SO SÁNH THẲNG
+
+
+
+| Tiêu chí | Multi-AZ                   | Multi-Region        |
+| -------- | -------------------------- | ------------------- |
+| Phạm vi  | trong 1 region             | nhiều region        |
+| Độ trễ   | thấp                       | cao hơn             |
+| Cost     | trung bình                 | cao                 |
+| Setup    | đơn giản                   | phức tạp            |
+| DR level | thấp                       | cao                 |
+| Use case | production app bình thường | hệ critical, global |
+
+
+
+
+
+# III. VÍ DỤ THỰC TẾ
+
+# Case 1: Web App bình thường
+
+		EC2 + RDS (Multi-AZ)
+		ALB distribute traffic
+
+	👉 Khi 1 AZ chết:
+
+		- AWS tự failover sang AZ khác
+		- user gần như không biết
+
+	👉 Mapping AWS:
+		- Amazon Web Services EC2
+		- RDS Multi-AZ
+		- ALB
+
+	👉 Đây là default best practice
+	
+	
+	
+# 	Case 2: Fintech / Banking / Game global
+	
+	Tokyo Region (primary)
+	Osaka Region (DR site)	
+	
+	
+	👉 Khi Tokyo chết:
+		chuyển traffic sang Osaka
+	
+	👉 Mapping:
+		- Route 53 (failover routing)
+		- DynamoDB Global Table / Aurora Global DB	
+	
+	👉 Đây mới là Multi-Region
+	
+	
+# 	IV. KEYWORD TRONG ĐỀ THI
+
+	## Multi-AZ keywords
+
+
+		- “high availability”
+		- “automatic failover”
+		- “within a region”
+		- “minimal latency”
+		- “no downtime”
+
+		👉 => 90% là Multi-AZ
+
+
+
+
+	## Multi-Region keywords
+
+		- “disaster recovery”
+		- “region failure”
+		- “business continuity”
+		- “cross-region replication”
+		- “global users”
+		👉 => Multi-Region
+
+
+
+
+# V. BẪY AWS HAY GÀI
+
+	Bẫy 1: “High availability” vs “Disaster Recovery”
+
+			HA → Multi-AZ
+			
+			DR → Multi-Region
+
+
+
+	Bẫy 2: “automatic failover”
+
+			RDS Multi-AZ → auto
+			
+			Cross-region → thường phải setup thêm
+			
+			👉 Thấy “automatic” → nghiêng về Multi-AZ
+
+
+
+
+	Bẫy 3: “lowest latency”
+	
+			Multi-AZ → thấp
+			
+			Multi-Region → cao hơn
+
+			👉 đề hỏi “low latency” mà chọn multi-region = sai
+
+
+	Bẫy 4: Cost optimization
+		
+		Multi-Region = đắt
+	
+		👉 nếu đề có “cost-effective” → tránh Multi-Region	
+
+
+
+-------------------- 🇯🇵 日本語版（試験対策） -----------------------
+
+# I. 本質 Multi-AZとは？
+
+	Multi-AZ = 同一リージョン内の複数データセンター
+
+		AZ = 独立したデータセンター
+		目的：高可用性（HA）
+
+	👉 1つのAZが落ちてもシステムは継続
+
+
+
+# I. 本質 Multi-Regionとは？
+
+	Multi-Region = 複数リージョンにデプロイ
+
+	👉 目的：
+
+		災害対策（Disaster Recovery）
+		リージョン全体障害への対応
+
+
+
+# II. 比較
+
+| 項目    | Multi-AZ   		| Multi-Region |
+| -----   | --------   		| ------------ |
+| 範囲    | 同一リージョン 		|   複数リージョン |
+| レイテンシ | 低い        		|   高い        |
+| コスト    | 中         		|	高         |
+| DRレベル  | 低         		| 	高         |
+
+
+
+
+# III. 具体例
+
+
+	## 通常Webアプリ
+
+		- EC2 + RDS (Multi-AZ)
+		- ALB
+
+		👉 AZ障害でも自動フェイルオーバー
+
+	## 金融システム
+	
+		東京 + 大阪
+
+		👉 東京リージョン障害 → 大阪へ切替
+
+
+
+
+
+# IV. 試験キーワード
+
+
+	## Multi-AZ
+
+		- high availability
+		- automatic failover
+		- low latency
+
+
+	## Multi-Region
+		- disaster recovery
+		- region failure
+		- business continuity
+
+
+
+# V. よくあるトラップ
+
+		- HA ≠ DR
+		- automatic failover → Multi-AZ
+		- low latency → Multi-AZ
+		- cost重視 → Multi-AZ
+
+
+
+
+# VI. 出題パターン
+
+	AWSはこう聞く：「何を守りたい？」
+
+		- AZ障害 → Multi-AZ
+		- リージョン障害 → Multi-Region
+
+
+VII. 結論 
+
+		通常は Multi-AZ で十分
+		
+		Multi-Region は本当に必要な場合のみ
+
+
+
+
+
+
+
 </pre><a id='backBottom' href='../aws-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
