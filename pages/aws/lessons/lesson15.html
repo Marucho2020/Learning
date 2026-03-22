@@ -1,5 +1,304 @@
-<html><head><title>Lesson 15 == Cloud Practitioner ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 15 -- Cloud Practitioner -//</h1><pre>
+<html><head><title>Lesson 15 == Cloud Practitioner ===Shared responsibility model ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 15 -- Cloud Practitioner --=Shared responsibility model -//</h1><pre>
 Shared responsibility model
+
+# Shared Responsibility Model là gì?
+	AWS và bạn cùng chịu trách nhiệm bảo mật – nhưng KHÔNG chia đều.
+
+	👉 Nói thẳng:
+		- AWS bảo vệ “cloud” (hạ tầng)
+		- Bạn bảo vệ “trong cloud” (data + config + access)
+
+	Câu chốt phải thuộc lòng:
+		- AWS = Security OF the cloud
+		- You = Security IN the cloud
+
+
+# II. PHÂN TÁCH RÕ TRÁCH NHIỆM
+
+	## AWS chịu trách nhiệm 
+		
+		- Data center (physical security)
+		- Hardware
+		- Network infrastructure
+		- Hypervisor
+
+
+	##  Bạn chịu trách nhiệm
+
+		- Data (mã hóa hay không)
+		- IAM (ai được access)
+		- OS (nếu dùng EC2)
+		- App security
+
+
+
+# III. SO SÁNH THEO MODEL
+
+	Quan trọng nhất: trách nhiệm thay đổi theo service
+
+
+| Layer | IaaS (EC2) | PaaS (RDS) | SaaS |
+| ----- | ---------- | ---------- | ---- |
+| Data  | bạn        | bạn        | bạn  |
+| OS    | bạn        | AWS        | AWS  |
+| App   | bạn        | bạn        | ❌    |
+| Infra | AWS        | AWS        | AWS  |
+
+
+	👉 Insight cực quan trọng:
+		- Dùng càng “managed” → AWS lo càng nhiều
+		- Nhưng Data luôn là của bạn
+
+
+
+
+# IV. MAPPING AWS
+
+
+	## IaaS (EC2)
+
+		👉 Bạn phải:
+		
+			- patch OS
+			- config firewall
+			- manage IAM
+		
+		👉 AWS chỉ lo:
+		
+			- server vật lý
+
+
+
+
+	## PaaS (RDS)
+		👉 AWS lo:
+		
+			- OS
+			- DB patching
+		
+		👉 Bạn lo:
+		
+			- query
+			- schema
+			- data encryption
+
+
+
+	## Serverless (Lambda)
+
+		👉 AWS lo gần hết
+		
+		👉 Nhưng bạn vẫn:
+		
+			- control IAM
+			- viết code secure
+
+
+
+# V. VÍ DỤ THỰC TẾ
+
+	## Case 1: EC2 bị hack 
+		👉 Nguyên nhân:
+		
+		bạn mở port 22 public
+		password yếu
+		
+		👉 Lỗi của ai?
+		👉 Bạn (customer)
+
+
+
+
+	## Case 2: AWS data center bị cháy
+
+		👉 Lỗi của ai?
+		👉 AWS
+
+
+
+	## Case 3: RDS bị leak data 
+
+		👉 Nếu:
+		
+		không bật encryption
+		IAM config sai
+		
+		👉 => lỗi của bạn
+
+
+# VI. KEYWORD TRONG ĐỀ THI 
+
+
+
+	## AWS responsibility
+		- “physical security”
+		- “data center”
+		- “hardware failure”
+	
+
+
+	## Customer responsibility
+
+		- “data encryption”
+		- “access control”
+		- “configuration”
+		- “patching OS” (EC2)
+
+
+
+# VII. BẪY AWS HAY GÀI
+
+	Bẫy 1: “AWS chịu trách nhiệm bảo mật toàn bộ”
+
+			👉 SAI
+				AWS chỉ lo infra
+
+
+	Bẫy 2: “Dùng RDS thì không cần lo security”
+			👉 SAI
+				Bạn vẫn phải:
+					- IAM
+					- data encryption
+	
+
+
+	Bẫy 3: “Serverless = không cần security”
+			👉 SAI
+			
+				Bạn vẫn:
+					control permission
+
+
+	Bẫy 4: OS patching
+			EC2 → bạn
+			RDS → AWS
+
+
+
+# IX. CÁCH AWS RA ĐỀ
+
+	AWS hỏi kiểu:
+	
+	“Ai chịu trách nhiệm?”
+	
+	👉 nhưng nó sẽ:
+	
+		- đổi service (EC2 vs RDS vs Lambda)
+		- đổi layer (OS vs data vs infra)
+	
+	👉 Rule sống còn:
+
+		- Hỏi về hardware → AWS
+		- Hỏi về data → bạn
+		- Hỏi về OS:
+		- EC2 → bạn
+		- RDS → AWS
+
+
+# X. TRADE-OFF
+
+| Service | Control | Trách nhiệm |
+| ------- | ------- | ----------- |
+| EC2     | cao     | nhiều       |
+| RDS     | trung   | vừa         |
+| Lambda  | thấp    | ít          |
+
+
+
+
+
+
+
+
+
+	AWS hỏi kiểu:
+	
+		“Ai chịu trách nhiệm?”
+		
+		👉 nhưng nó sẽ:
+		
+		đổi service (EC2 vs RDS vs Lambda)
+		đổi layer (OS vs data vs infra)
+	
+	
+	
+		👉 Nhận định thẳng:
+		
+		Dùng EC2 = tự gánh nhiều risk
+		Dùng managed service = giảm risk, nhưng không về 0
+
+
+
+----------------🇯🇵 日本語版----------
+
+
+# I. 本質  Shared Responsibility Modelとは？
+
+	AWSとユーザーが責任を分担するモデル
+
+	👉 重要
+		- AWS → クラウドのセキュリティ
+		- ユーザー → クラウド内のセキュリティ
+
+
+
+
+# II. 責任範囲
+
+	## AWSの責任
+		- データセンター
+		- ハードウェア
+		- ネットワーク
+
+
+	## ユーザーの責任 
+		- データ
+		- IAM
+		- OS（EC2の場合）
+
+
+
+# III. サービス別の違い
+
+| 項目   | EC2  | RDS  | Lambda |
+| ---- | ---- | ---- | ------ |
+| OS管理 | ユーザー | AWS  | AWS    |
+| データ  | ユーザー | ユーザー | ユーザー   |
+
+
+# IV. 例
+
+
+	- EC2の脆弱性 → ユーザー責任
+	- データセンター障害 → AWS責任
+
+
+
+# V. キーワード
+
+	- AWS側：physical security, hardware
+	- ユーザー側：data, IAM, encryption
+
+
+# VI. トラップ
+
+	- 「AWSが全部守る」→誤り
+	- 「RDSは完全に安全」→誤り
+
+
+
+# VII. 出題パターン
+
+	AWSはこう聞く：
+		「誰の責任か？」
+
+
+
+# VIII. 結論
+
+	データは常にユーザー責任
+	マネージドサービスでも責任は残る
+
 
 
 
