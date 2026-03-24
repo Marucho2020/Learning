@@ -1,18 +1,253 @@
-<html><head><title>Lesson 16 == Cloud Practitioner ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 16 -- Cloud Practitioner -//</h1><pre>
-Compute (máy chủ)
+<html><head><title>Lesson 16 == Cloud Practitioner ====Compute EC2 & Instance ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 16 -- Cloud Practitioner ----Compute EC2 & Instance -//</h1><pre>
+# 1. EC2 là gì
 
-Service quan trọng nhất:
+	máy chủ ảo (virtual server) chạy trong cloud của AWS.
+	1 cái máy tính thật trong data center → được chia nhỏ → bạn thuê 1 phần → chạy OS + app như server bình thường
+	
+	👉 Điểm mấu chốt:
+		Bạn toàn quyền control (CPU, RAM, disk, OS, network)
+		Bạn phải tự quản lý (patch OS, security, scaling logic…)
 
-Amazon EC2
 
-AWS Lambda
+# 2. Instance là gì
+
+	Instance = 1 máy ảo cụ thể đang chạy trên EC2
+		- EC2 = dịch vụ
+		- Instance = tài nguyên bạn tạo ra từ dịch vụ đó
+	👉 So sánh:
+| Khái niệm | Thực tế                  |
+| --------- | ------------------------ |
+| EC2       | hãng cho thuê server     |
+| Instance  | cái server bạn đang thuê |
 
 
 
-EC2 là gì
+# 3. Ví dụ thực tế 
 
-instance là gì
+	## Scenario 1 (rất hay ra)
 
+		- Bạn deploy web Java:
+			- 1 server chạy backend
+			- 1 server chạy DB
+		👉 Bạn sẽ:
+			Tạo 2 EC2 instance
+			Cài Java / MySQL
+			Tự config network
+		👉 Đây là	: IaaS (Infrastructure as a Service)
+
+
+
+	## Scenario 2
+		Web traffic rất thấp ban ngày, cao ban đêm.
+
+	👉 Nếu dùng EC2:
+		- Bạn phải scale manually hoặc Auto Scaling
+		- Trả tiền cả lúc idle
+
+	👉 Nếu dùng AWS Lambda:
+		- Không cần server
+		- Chỉ chạy khi có request
+		- Không trả tiền khi idle
+
+
+
+# 4. Mapping AWS
+
+| Thành phần             | AWS service        |
+| ---------------------- | ------------------ |
+| Máy chủ ảo             | EC2                |
+| Chạy code không server | Lambda             |
+| Tự scale EC2           | Auto Scaling Group |
+| Load balancing         | ELB                |
+| Storage cho EC2        | EBS                |
+
+
+# 5. Từ khóa trong đề thi
+
+	- “full control over OS” → EC2
+	- “custom software / legacy app” → EC2
+	- “no server management” → Lambda
+	- “event-driven” → Lambda
+	- “pay per request” → Lambda
+
+
+
+# 6. Bẫy (trap) AWS hay gài
+
+	❌ Trap 1: “Không cần quản lý server”
+		→ Đáp án KHÔNG BAO GIỜ là EC2
+		→ phải là Lambda
+
+
+	❌ Trap 2: “Ứng dụng chạy liên tục 24/7”
+		→ Lambda không phù hợp
+		→ phải dùng EC2
+
+
+	❌ Trap 3: “Cần custom OS / cài phần mềm đặc biệt”
+		→ Lambda không làm được
+		→ chỉ có EC2
+
+
+	❌ Trap 4: “Chi phí thấp nhất khi workload không ổn định”
+		→ Lambda thắng EC2
+
+
+
+7. So sánh EC2 vs Lambda (cực kỳ hay ra)
+
+| Tiêu chí       | EC2             | Lambda       |
+| -------------- | --------------- | ------------ |
+| Control        | Full            | Không        |
+| Quản lý server | Có              | Không        |
+| Scaling        | Tự config       | Auto         |
+| Billing        | Theo giờ        | Theo request |
+| Use case       | app lớn, legacy | event-driven |
+
+
+
+
+# 8. Trade-off (đây là chỗ senior hiểu khác junior)
+
+	EC2:
+		👍 Linh hoạt cực cao
+		👎 Tốn công vận hành
+	Lambda:
+		👍 Không cần nghĩ về server
+		👎 Bị giới hạn (timeout, runtime)
+	
+	👉 Không có cái nào tốt hơn — chỉ có phù hợp hơn
+
+
+
+
+# 9. Cách AWS ra đề
+
+	Pattern 1
+		“Cần toàn quyền control server”
+		→ EC2 (đừng suy nghĩ nhiều)
+	
+	Pattern 2
+		“Không muốn quản lý infrastructure”
+		→ Lambda
+	
+	Pattern 3 (bẫy)
+		“Ứng dụng thỉnh thoảng mới chạy”
+		→ 90% là Lambda
+	
+	Pattern 4 (bẫy nặng)
+		“Ứng dụng chạy lâu + cần state”
+		→ EC2 (Lambda sẽ bị timeout)
+	
+	
+	
+	
+=========================
+🇯🇵 日本語版（試験対策）
+=========================	
+	
+# 	1. EC2とは（本質）
+	
+		AWS上の仮想サーバー	
+	
+	要するに：
+		物理サーバーを仮想化して、その一部を借りるサービス
+	
+	
+	ポイント：
+		OSやソフトウェアを自由に設定できる
+		ただし、運用は自分でやる必要がある	
+	
+	
+	
+# 	2. インスタンスとは
+	
+	インスタンス = EC2上で起動している仮想サーバー1台
+	
+	
+| 用語     | 意味        |
+| ------ | --------- |
+| EC2    | サービス      |
+| インスタンス | 実際に使うサーバー |
+	
+	
+# 	3. 例（試験でよく出る）
+	
+	
+	ケース1
+		Webアプリ（Java + DB）を構築
+		→ EC2を2台作成して運用
+		👉 IaaS
+		
+	
+	
+	ケース2（Lambdaとの比較）	
+		トラフィックが不安定
+		
+		→ **AWS Lambda**を使う：
+			リクエスト時のみ実行
+			サーバー管理不要	
+	
+	
+	
+# 	4. AWSサービス対応
+	
+| 機能       | サービス         |
+| -------- | ------------ |
+| 仮想サーバー   | EC2          |
+| サーバーレス実行 | Lambda       |
+| 自動スケール   | Auto Scaling |
+| ロード分散    | ELB          |
+	
+	
+	
+# 	5. 試験キーワード
+	
+	
+	フルコントロール → EC2
+	サーバー管理不要 → Lambda
+	イベント駆動 → Lambda
+	常時稼働 → EC2	
+		
+	
+# 6. よくあるトラップ 	
+	
+	- 「サーバー管理したくない」→ EC2はNG
+	- 「長時間処理」→ LambdaはNG
+	- 「コスト最適（断続的処理）」→ Lambda
+	
+	
+# 	7. EC2 vs Lambda
+	
+| 項目 | EC2  | Lambda  |
+| -- | ---- | ------- |
+| 制御 | 高い   | 低い      |
+| 運用 | 必要   | 不要      |
+| 課金 | 時間単位 | リクエスト単位 |
+
+
+
+
+# 8. AWSの出題パターン 
+
+	- フル制御 → EC2
+	- 管理不要 → Lambda
+	- 不定期処理 → Lambda
+	- 長時間処理 → EC2
+
+
+
+Kết luận (nói thẳng)
+EC2 = quyền lực + trách nhiệm
+Lambda = tiện lợi + bị giới hạn
+
+👉 Thi AWS không hỏi bạn “cái nào mạnh hơn”
+👉 Nó hỏi: “use case này nên chọn cái nào”
+
+
+
+	
+	
 
 
 </pre><a id='backBottom' href='../aws-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
