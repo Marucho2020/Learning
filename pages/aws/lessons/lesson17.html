@@ -1,8 +1,262 @@
-<html><head><title>Lesson 17 == Cloud Practitioner ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 17 -- Cloud Practitioner -//</h1><pre>
+<html><head><title>Lesson 17 == Cloud Practitioner ===EC2 pricing ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 17 -- Cloud Practitioner --=EC2 pricing -//</h1><pre>
+# 1. EC2 Pricing 
 
-EC2 pricing
+	Amazon EC2 pricing = cách bạn trả tiền cho “thời gian + tài nguyên” của instance
+	
+	👉 AWS không bán server. Nó bán:
+		thời gian sử dụng (compute time)
+		option giảm giá nếu bạn commit / chấp nhận rủi ro
 
-on-demand / reserved / spot
+
+	👉 3 model chính:
+		On-Demand → trả tiền theo giờ/giây
+		Reserved → commit để giảm giá
+		Spot → đấu giá tài nguyên dư thừa
+
+
+
+
+# 2. On-Demand — đơn giản nhưng đắt
+
+	Bản chất
+		Dùng bao nhiêu → trả bấy nhiêu, không cam kết
+
+	Khi nào dùng
+
+		Dev/test
+		workload ngắn hạn
+		chưa predict được traffic
+
+
+	Ví dụ thực tế
+		Bạn deploy API mới:
+		chưa biết user có nhiều không
+		→ dùng On-Demand để tránh lock-in
+
+	Từ khóa đề thi
+		- “no upfront cost”
+		- “flexibility”
+		- “short-term workload”
+		- “unpredictable traffic”
+
+
+	## Bẫy
+		❌ Dùng On-Demand cho hệ thống chạy 24/7 → sai về cost
+
+
+
+#	3. Reserved Instance (RI) — giảm giá đổi lấy cam kết
+
+	##	Bản chất
+		Bạn hứa dùng lâu dài → AWS giảm giá mạnh
+
+			commit: 1 năm hoặc 3 năm
+			giảm: ~30% → 70%
+
+	## 2 kiểu hay gặp
+
+		Standard RI
+			rẻ nhất
+			không đổi instance type
+
+
+		Convertible RI
+			đắt hơn chút
+			có thể đổi instance type
+
+
+
+	## Ví dụ thực tế
+		Hệ thống production:
+			- chạy 24/7
+			- traffic ổn định
+		→ mua Reserved để tiết kiệm chi phí dài hạn
+
+
+
+	Từ khóa đề thi
+		“steady-state workload”
+		“long-term commitment”
+		“cost optimization”
+
+	Bẫy
+		❌ Chưa chắc workload mà đi mua RI → lock tiền ngu
+
+
+
+
+# 4. Spot Instance — rẻ nhưng có thể chết bất cứ lúc nào
+
+	Bản chất
+		Bạn dùng tài nguyên dư của AWS → cực rẻ → nhưng AWS có thể reclaim bất cứ lúc nào
+		
+			- giảm giá: lên đến ~90%
+			- có thể bị terminate trong vài phút
+
+	Ví dụ thực tế
+			Render video:
+				chạy 100 instance
+				chết 10 cái cũng không sao
+
+	→ dùng Spot để tiết kiệm cực mạnh
+
+
+	Từ khóa đề thi
+		- “fault-tolerant”
+		- “interruptible”
+		- “batch processing”
+		- “stateless”
+
+
+	Bẫy
+		❌ Dùng Spot cho:
+			database
+			production critical system
+
+	→ auto fail câu này
+
+
+
+# 5. So sánh 3 loại (rất hay ra)
+| Tiêu chí     | On-Demand | Reserved   | Spot     |
+| ------------ | --------- | ---------- | -------- |
+| Giá          | Cao nhất  | Trung bình | Rẻ nhất  |
+| Cam kết      | Không     | Có         | Không    |
+| Ổn định      | Cao       | Cao        | Thấp     |
+| Bị terminate | Không     | Không      | Có       |
+| Use case     | linh hoạt | lâu dài    | chịu lỗi |
+
+
+# 6. Scenario giống đề thi AWS
+
+	Case 1
+		App chạy 24/7, traffic ổn định, muốn giảm cost
+		👉 Reserved Instance
+
+	Case 2
+		Startup chưa biết traffic, cần linh hoạt
+		👉 On-Demand
+
+	Case 3
+		Batch processing, có thể restart job
+		👉 Spot Instance
+
+	Case 4 (bẫy)
+		Database production cần uptime cao + cost thấp
+			👉 Không chọn Spot
+			👉 chọn Reserved + On-Demand mix		
+		
+
+
+# 7. Trade-off
+	On-Demand:
+	
+		👍 linh hoạt
+		👎 đắt
+	Reserved:
+	
+		👍 rẻ dài hạn
+		👎 mất linh hoạt
+	Spot:
+		👍 siêu rẻ
+		👎 không ổn định
+		
+	👉 Senior sẽ:
+		mix cả 3 loại
+	
+
+
+=========================
+🇯🇵 日本語版（試験対策）
+=========================
+
+
+# 1. EC2料金の本質
+
+
+	- Amazon EC2 の料金 = インスタンスの使用時間＋リソースに対する課金
+	- AWSはサーバーを売っているのではなく：
+		使用時間
+		コスト最適化の選択肢
+		
+	を売っている
+
+
+
+
+# 2. On-Demand
+
+	本質
+		使った分だけ支払う（コミットなし）
+
+	キーワード
+		- 初期費用なし
+		- 柔軟性
+		- 短期利用
+
+
+
+# 3. Reserved Instance
+
+	本質
+		長期利用を約束すると割引
+			1年 / 3年契約
+			最大70%割引
+
+	キーワード
+		長期利用
+		安定したワークロード
+
+
+
+# 4. Spot Instance
+
+	本質
+		余剰リソースを格安で使う（中断される可能性あり）
+
+
+	キーワード
+		中断可能
+		バッチ処理
+		フォールトトレラント
+
+
+
+
+# 5. 比較
+
+
+| 項目  | On-Demand | Reserved | Spot |
+| --- | --------- | -------- | ---- |
+| 価格  | 高い        | 中        | 最安   |
+| 安定性 | 高い        | 高い       | 低い   |
+| 中断  | なし        | なし       | あり   |
+
+
+
+
+# 6. 試験パターン
+
+	- 最安＋中断OK → Spot
+	- 長期安定 → Reserved
+	- 柔軟性 → On-Demand
+
+
+
+# 7. トラップ
+	
+	- 重要システムにSpot → NG
+	- 不確定な負荷にReserved → NG
+
+
+
+# Kết luận
+
+	On-Demand = không suy nghĩ
+	Reserved = tối ưu dài hạn
+	Spot = đánh cược để tiết kiệm
+
+
 
 
 
