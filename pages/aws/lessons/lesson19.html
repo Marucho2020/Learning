@@ -1,6 +1,276 @@
-<html><head><title>Lesson 19 == Cloud Practitioner ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 19 -- Cloud Practitioner -//</h1><pre>
+<html><head><title>Lesson 19 == Cloud Practitioner ===Elastic Load Balancer ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 19 -- Cloud Practitioner --=Elastic Load Balancer -//</h1><pre>
 
-Elastic Load Balancer
+
+# Elastic Load Balancer
+
+	Elastic Load Balancing = bộ chia traffic vào nhiều server (EC2) để tránh quá tải
+	👉 Không phải “tăng sức mạnh server”
+	👉 Mà là:
+		chia request ra nhiều máy → không cho 1 máy chết
+
+	Hiểu sai phổ biến (rất hay bị gài)
+		❌ ELB không scale server
+		❌ ELB không xử lý business logic
+		✅ ELB chỉ phân phối traffic
+
+
+# 2. Tại sao phải dùng ELB 
+
+	Không có ELB:
+		1 server → 1000 request → chết
+	Có ELB:
+		10 server → mỗi server 100 request → sống
+
+	Scalability = Auto Scaling + Load Balancer (thi cực hay ra combo này)
+
+
+
+
+# 3. Các loại ELB
+
+
+| Loại                 | Layer                | Use case        |
+| -------------------- | -------------------- | --------------- |
+| ALB (Application LB) | Layer 7 (HTTP/HTTPS) | web/app         |
+| NLB (Network LB)     | Layer 4 (TCP)        | performance cao |
+| CLB (Classic LB)     | cũ                   | legacy          |
+
+
+
+# 3.1 ALB — dùng nhiều nhất
+
+	hiểu HTTP
+	routing theo:
+	path (/api, /admin)
+	domain (api.example.com)
+
+	👉 Ví dụ:
+	
+		/api → backend A
+		/image → backend B
+
+
+# 3.2 NLB — performance cực cao
+	TCP level
+	latency cực thấp
+	chịu tải lớn
+
+👉 dùng cho:
+	game server
+	realtime system
+
+
+
+# 3.3 CLB — gần như bỏ
+
+	→ chỉ dùng cho hệ thống cũ
+
+
+# 4. Ví dụ thực tế
+
+	##Scenario 1 (classic)
+
+	Web app:
+		nhiều user
+		nhiều EC2
+
+	👉 setup:
+		ELB ở trước
+		Auto Scaling phía sau	
+		
+	Flow:
+	User → ELB → EC2 (nhiều instance)
+
+
+
+	## Scenario 2
+
+	App có:
+		frontend
+		backend API
+
+	👉 dùng ALB:
+		/ → frontend
+		/api → backend		
+		
+
+
+	## Scenario 3 
+		App cần performance cực cao, TCP traffic
+
+		👉 chọn:
+		
+		NLB (không phải ALB)
+
+
+# 5. Mapping AWS
+
+| Thành phần    | AWS          |
+| ------------- | ------------ |
+| Load balancer | ELB          |
+| Server        | EC2          |
+| Scale         | Auto Scaling |
+| Monitoring    | CloudWatch   |
+
+
+
+# 6. Từ khóa đề thi
+
+	- “distribute traffic” → ELB
+	- “high availability” → ELB + Multi-AZ
+	- “fault tolerance” → ELB
+	- “path-based routing” → ALB
+	- “low latency / high throughput” → NLB
+
+
+
+# 7. Bẫy
+
+	❌ Trap 1
+	
+		ELB giúp giảm cost
+			→ Sai
+			→ ELB giúp availability + scalability, không phải cost trực tiếp
+
+
+	❌ Trap 2
+		Có nhiều EC2 là đủ
+			→ Sai
+			→ phải có ELB để phân phối
+
+
+	❌ Trap 3
+		HTTP routing mà chọn NLB
+		→ sai → phải ALB
+
+
+	❌ Trap 4
+
+		chỉ cần ELB là auto scale
+		→ Sai → cần Auto Scaling riêng
+
+
+
+# 8. So sánh ALB vs NLB
+
+| Tiêu chí    | ALB         | NLB          |
+| ----------- | ----------- | ------------ |
+| Layer       | 7           | 4            |
+| Hiểu HTTP   | Có          | Không        |
+| Routing     | path/domain | không        |
+| Performance | cao         | cực cao      |
+| Use case    | web/app     | TCP/realtime |
+
+
+
+# 9. Trade-off
+
+	ALB:
+		👍 thông minh (routing)
+		👎 chậm hơn NLB
+	NLB:
+		👍 cực nhanh
+		👎 không hiểu HTTP
+	
+	👉 Insight:
+		chọn sai layer = fail câu hỏi
+
+	
+# 10. Scenario giống đề thi AWS
+
+	Web app cần routing theo URL
+		Web app cần routing theo URL
+
+	System cần latency thấp, TCP
+		👉 NLB
+
+	System cần HA
+		👉 ELB + Multi-AZ
+
+
+	Case 4
+		System cần auto scale + HA
+			👉 ELB + Auto Scaling
+			→ thiếu 1 trong 2 là sai
+
+
+=========================
+🇯🇵 日本語版（試験対策）
+=========================
+
+# 1. ELBの本質
+
+	Elastic Load Balancing = トラフィックを複数のサーバーに分散する仕組み
+
+
+
+# 2. なぜ必要か
+
+	1台のサーバーに集中するとダウンする
+	→ 分散すれば安定する
+
+# 3. 種類
+
+| 種類  | 特徴     |
+| --- | ------ |
+| ALB | HTTP対応 |
+| NLB | 高速TCP  |
+| CLB | 旧式     |
+
+
+
+# 4. 例
+
+	/api → APIサーバー
+	/ → フロントエンド
+	→ ALBを使用
+
+
+
+# 5. キーワード
+
+	トラフィック分散 → ELB
+	高可用性 → ELB
+	パスベースルーティング → ALB
+	低遅延 → NLB
+
+
+
+# 6. トラップ
+
+	- ELB = コスト削減 → 誤り
+	- EC2だけでOK → 誤り
+	- ALBとNLBの選択ミス → よくある
+
+
+
+
+# 7. 比較
+
+
+| 項目     | ALB | NLB |
+| ------ | --- | --- |
+| レイヤー   | 7   | 4   |
+| HTTP理解 | あり  | なし  |
+
+
+
+
+# 8. 出題パターン
+
+
+	分散 → ELB
+	URLルーティング → ALB
+	高速処理 → NLB
+
+
+
+
+# 結論（核心）
+
+	ELB = trafficを分けるだけ
+	スケールはしない
+	Auto Scalingとセットで考えろ
 
 
 </pre><a id='backBottom' href='../aws-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

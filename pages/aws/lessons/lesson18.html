@@ -1,5 +1,276 @@
-<html><head><title>Lesson 18 == Cloud Practitioner ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 18 -- Cloud Practitioner -//</h1><pre>
-Auto Scaling
+<html><head><title>Lesson 18 == Cloud Practitioner =====Auto Scaling ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 18 -- Cloud Practitioner ----=Auto Scaling -//</h1><pre>
+# Khái niệm 
+	AWS Auto Scaling = cơ chế tự động tăng/giảm số lượng EC2 instance theo nhu cầu
+	👉 Không phải là “scale server”
+	👉 Mà là:
+		tạo thêm / xóa bớt instance để match với load
+
+	## Hiểu sai phổ biến (và bị đánh trượt)
+
+		❌ Không phải tăng RAM/CPU của 1 máy (đó là vertical scaling)
+		✅ Là tăng số lượng máy (horizontal scaling)
+
+
+
+# 2. Cách nó hoạt động (bản chất kỹ thuật)
+	Auto Scaling Group (ASG) có 3 thứ quan trọng:
+
+| Thành phần | Vai trò               |
+| ---------- | --------------------- |
+| Min        | số instance tối thiểu |
+| Desired    | số instance mong muốn |
+| Max        | số instance tối đa    |
+
+
+	👉 Nó luôn cố giữ:
+		Desired capacity = số instance đang chạy
+
+
+# Trigger scale dựa vào gì?
+
+	- CPU > 70% → scale out
+	- CPU < 30% → scale in
+
+	👉 Thường dùng với:
+	- Amazon EC2
+	- Elastic Load Balancing
+
+
+
+
+# 3. Ví dụ thực tế
+
+	## Scenario 1 (classic) 
+
+		Web app:
+			- ban ngày: 2 instance đủ
+			- giờ cao điểm: cần 10 instance
+
+		👉 Setup:
+		
+		Min = 2
+		Desired = 2
+		Max = 10
+
+		👉 Khi traffic tăng:
+		→ Auto Scaling tự add instance
+
+
+
+
+	## Scenario 2 (rất hay ra)
+		
+		###Flash sale:
+	
+			traffic tăng đột biến
+			sau đó giảm nhanh
+	
+		👉 Nếu không có Auto Scaling:
+			server chết (overload)
+	
+		👉 Nếu có:
+			scale out → chịu tải
+			scale in → tiết kiệm tiền
+	
+	
+	
+# 4. Mapping AWS
+
+| Thành phần        | AWS                |
+| ----------------- | ------------------ |
+| Server            | EC2                |
+| Scale tự động     | Auto Scaling Group |
+| Phân phối traffic | ELB                |
+| Monitoring        | CloudWatch         |
+
+
+
+
+
+# 5. Từ khóa đề thi
+
+	Nếu thấy:
+	
+		- “automatically adjust capacity” → Auto Scaling
+		- “handle variable traffic” → Auto Scaling
+		- “maintain performance” → Auto Scaling
+		- “cost optimization” → Auto Scaling
+
+
+
+
+# 6. Bẫy
+	❌ Trap 1: scale = tăng RAM
+		→ Sai, đó là vertical scaling
+
+
+
+	❌ Trap 2: chỉ dùng ELB là đủ	
+		→ Sai, ELB chỉ distribute, không scale
+
+
+	❌ Trap 3: muốn tiết kiệm cost nhưng không dùng Auto Scaling
+		→ Sai logic AWS
+
+
+	❌ Trap 4:
+		“system phải luôn có ít nhất 2 instance”
+		→ phải set Min = 2 (nhiều người quên)
+
+
+
+# 7. So sánh (Auto Scaling vs không dùng)
+
+
+| Tiêu chí  | Có Auto Scaling | Không có |
+| --------- | --------------- | -------- |
+| Chi phí   | Tối ưu          | Lãng phí |
+| Hiệu năng | Ổn định         | dễ chết  |
+| Ops       | Tự động         | manual   |
+
+
+
+
+# 8. Trade-off 
+
+	- 👍 Tự động hóa, tiết kiệm cost
+	- 👍 chịu tải tốt
+	- 👎 Scale chậm vài phút (không instant)
+	- 👎 cần config đúng (sai là chết)
+	
+	👉 Insight:
+		Auto Scaling không cứu được system design tệ
+
+
+
+
+# 9. Scenario giống đề thi AWS 
+
+	Case 1
+		App có traffic thay đổi liên tục
+		👉 Auto Scaling
+
+
+	Case 2
+		App cần uptime cao + HA
+		👉 Auto Scaling + Multi-AZ
+
+
+	Case 3 (bẫy)
+		App cần phản hồi ngay lập tức khi spike
+		👉 Auto Scaling thôi chưa đủ
+		→ cần pre-warm / scaling policy tốt
+
+	Case 4 Muốn tiết kiệm cost khi idle
+
+		👉 Auto Scaling scale in
+
+
+	dynamic workload”
+		→ Auto Scaling
+
+
+	“cost optimization”
+		→ Auto Scaling
+
+	“high availability”
+		→ Auto Scaling + ELB + Multi-AZ
+
+	“traffic spike nhanh”
+		→ nếu chỉ chọn Auto Scaling → thiếu
+		→ phải nghĩ thêm (pre-scale / buffer)
+
+
+=========================
+🇯🇵 日本語版（試験対策）
+=========================
+
+
+
+# 1. Auto Scalingの本質
+
+	AWS Auto Scaling = EC2インスタンスの数を自動で増減する仕組み
+	ポイント：
+		サーバーのスペックを上げるのではなく、台数を増減する
+
+
+
+# 2. 基本構成
+
+| 項目      | 内容   |
+| ------- | ---- |
+| Min     | 最小台数 |
+| Desired | 目標台数 |
+| Max     | 最大台数 |
+
+
+
+# 3. 動作
+
+	CPU高 → スケールアウト
+	CPU低 → スケールイン
+
+
+# 4. 例
+
+	フラッシュセール：
+
+		- トラフィック急増 → 自動で増加
+		- 終了後 → 自動で減少
+
+
+# 5. サービス連携 
+
+| 機能     | AWS          |
+| ------ | ------------ |
+| サーバー   | EC2          |
+| スケーリング | Auto Scaling |
+| 負荷分散   | ELB          |
+| 監視     | CloudWatch   |
+
+
+
+
+# 6. キーワード
+	- 自動スケーリング
+	- 可変トラフィック
+	- コスト最適化
+
+
+# 7. トラップ
+
+	- スケーリング＝スペックアップ → 誤り
+	- ELBだけでOK → 誤り
+
+
+# 8. 比較
+
+| 項目  | Auto Scalingあり | なし |
+| --- | -------------- | -- |
+| コスト | 最適             | 無駄 |
+| 可用性 | 高い             | 低い |
+
+
+
+
+# 9. 出題パターン
+
+	- 変動負荷 → Auto Scaling
+	- 高可用性 → Auto Scaling + ELB
+	- コスト削減 → Auto Scaling
+
+
+
+
+# 結論（核心）
+	Auto Scaling = 負荷に合わせてサーバー数を調整する武器
+
+		ただし：
+		
+		設計ミスは救えない
+		即時スケールはできない
+
+
 
 
 
