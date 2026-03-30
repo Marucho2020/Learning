@@ -1,6 +1,251 @@
 <html><head><title>Lesson 20 == Cloud Practitioner ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 20 -- Cloud Practitioner -//</h1><pre>
 
-Health check (ELB hoạt động thế nào khi server chết)
+
+# 1. Health Check
+	
+	Trong context AWS, đặc biệt là với Elastic Load Balancing:
+		Health Check = cơ chế kiểm tra server còn “sống và phục vụ được request” hay không
+
+
+	👉 Không phải ping cho vui
+	👉 Mà là:
+	
+		quyết định có gửi traffic vào server đó hay không
+
+
+# 2. Hiểu đúng vs hiểu sai
+
+| Hiểu sai                    | Thực tế |
+| --------------------------- | ------- |
+| server còn chạy là OK       | sai     |
+| CPU thấp là healthy         | sai     |
+| trả HTTP 200 mới là healthy | đúng    |
+
+
+👉 Insight:
+	Server “alive” ≠ server “healthy”
+
+
+# 3. Cách Health Check hoạt động
+
+	ELB sẽ:
+		gửi request định kỳ (ví dụ: /health)
+
+		check response:
+			HTTP 200 → healthy
+			timeout / lỗi → unhealthy
+
+
+
+# Các tham số quan trọng 
+| Tham số             | Ý nghĩa                            |
+| ------------------- | ---------------------------------- |
+| Interval            | bao lâu check 1 lần                |
+| Timeout             | chờ bao lâu                        |
+| Healthy threshold   | bao nhiêu lần OK thì coi là sống   |
+| Unhealthy threshold | bao nhiêu lần fail thì coi là chết |
+
+
+
+	👉 Đây là chỗ AWS gài:
+	
+		không phải fail 1 lần là chết ngay
+		phải fail nhiều lần liên tiếp
+
+
+
+# 4. Ví dụ thực tế (giống đề thi)
+
+
+	Scenario 1
+	
+		App có 3 EC2:
+		
+		EC2-1: OK
+		EC2-2: OK
+		EC2-3: DB chết → trả 500
+	
+	👉 ELB sẽ:
+	
+		loại EC2-3
+		chỉ route vào 1 & 2
+
+
+
+	Scenario 2 (bẫy)
+
+	Server:
+		vẫn chạy
+		nhưng API lỗi
+	
+	👉 nếu không có health check:
+		user vẫn bị lỗi
+	
+	👉 nếu có:
+		server bị loại
+
+
+
+
+# 5. Mapping AWS 
+
+
+| Thành phần    | AWS                    |
+| ------------- | ---------------------- |
+| Load balancer | Elastic Load Balancing |
+| Server        | Amazon EC2             |
+| Monitoring    | CloudWatch             |
+| DNS failover  | Route 53               |
+
+
+
+
+# 7. Bẫy (trap cực kỳ nguy hiểm)
+	❌ Trap 1
+	
+		server running = healthy
+		→ Sai
+		→ phải check application level
+	
+	❌ Trap 2
+	
+		EC2 tự phát hiện lỗi
+		→ Sai
+		→ ELB hoặc Route53 mới làm
+	
+	❌ Trap 3
+	
+		health check chỉ cần ping
+		→ Sai
+		→ phải check HTTP/app logic
+	
+	❌ Trap 4 (rất hay ra)
+	
+		health check sai endpoint
+		→ tất cả instance bị đánh là unhealthy
+		→ hệ thống chết toàn bộ
+
+
+	
+# 8. So sánh: ELB vs Route53 Health Check
+
+
+| Tiêu chí           | ELB Health Check | Route 53 Health Check |
+| ------------------ | ---------------- | --------------------- |
+| Scope              | instance level   | region / endpoint     |
+| Mục tiêu           | load balancing   | DNS failover          |
+| Thời gian phản ứng | nhanh            | chậm hơn              |
+| Use case           | loại server lỗi  | chuyển region         |
+
+
+👉 Insight:
+
+	ELB = xử lý trong 1 region
+	Route53 = xử lý global
+
+
+
+# 9. Trade-off (level SAA)
+	Health check quá nhạy:
+	👍 detect nhanh
+	👎 false positive
+	Health check quá chậm:
+	👍 ổn định
+	👎 failover chậm
+	
+	👉 Đây là tuning problem, không có config “đúng tuyệt đối”
+
+
+
+
+
+# 10. Scenario giống đề thi AWS
+	Case 1
+	
+		App cần tự động loại server lỗi
+		👉 ELB Health Check
+	
+	Case 2
+	
+		Multi-region failover
+		👉 Route 53 Health Check
+	
+	Case 3 (bẫy)
+	
+		Server vẫn chạy nhưng trả lỗi
+		👉 phải dùng HTTP health check
+	
+	Case 4 (bẫy nặng)
+	
+		Tất cả instance bị marked unhealthy
+		👉 check lại endpoint /health
+
+
+=========================
+🇯🇵 日本語版（試験対策）
+=========================
+	
+# 1. Health Checkの本質
+	Elastic Load Balancing におけるHealth Check = インスタンスが正常にリクエストを処理できるかを確認する仕組み
+
+
+
+# 2. よくある誤解
+
+| 誤解        | 正しい理解 |
+| --------- | ----- |
+| 起動していればOK | NG    |
+| CPUが低い    | NG    |
+| HTTP 200  | OK    |
+
+
+# 3. 動作
+
+
+	定期的にリクエスト送信
+	200 OK → 正常
+	エラー → 異常
+
+
+# 4. 例 
+
+	1台がエラーを返す場合
+	→ ELBはそのインスタンスを除外
+
+
+
+# 5. キーワード
+
+	正常インスタンスのみ
+	フェイルオーバー
+	ヘルスチェック
+
+
+7. 比較
+
+| 項目 | ELB    | Route53  |
+| -- | ------ | -------- |
+| 対象 | インスタンス | リージョン    |
+| 用途 | 負荷分散   | フェイルオーバー |
+
+
+
+
+# 8. 出題パターン
+
+	- 正常なインスタンスのみ → ELB
+	- リージョン切替 → Route53
+	- アプリレベル障害 → HTTPチェック
+
+
+# 結論（核心）
+
+	- Health Check = システムの生死判定
+	- 設計ミスすると：
+	- 全部落ちる
+	- または壊れたサーバーに流れ続ける
+
+
 
 
 </pre><a id='backBottom' href='../aws-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

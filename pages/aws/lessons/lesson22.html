@@ -1,6 +1,340 @@
-<html><head><title>Lesson 22 == Cloud Practitioner ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 22 -- Cloud Practitioner -//</h1><pre>
+<html><head><title>Lesson 22 == Cloud Practitioner ====Lambda ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 22 -- Cloud Practitioner ----Lambda -//</h1><pre>
+# I. Lambda là gì
 
-So sánh EC2 vs Lambda
+	## 🔥 Định nghĩa (nói thẳng)
+		AWS Lambda = chạy code mà không cần quản lý server PAAS 
+
+		Nhưng hiểu như vậy vẫn còn nông.
+		👉 Bản chất thật:
+		Lambda là một compute service event-driven — chỉ chạy khi có event, 
+		và AWS tự lo toàn bộ hạ tầng phía dưới (server, scaling, OS).
+
+
+
+# 💡 Hiểu kiểu thực tế
+
+	Bạn có 1 shop online:
+		Có đơn hàng → xử lý (gửi mail, lưu DB)
+		Không có đơn → không làm gì
+
+		👉 Nếu dùng server EC2:
+		Server vẫn chạy 24/7 → tốn tiền
+		
+		👉 Nếu dùng Lambda:
+		Chỉ khi có đơn hàng (event) → chạy code
+		Không có → không tốn tiền compute
+
+
+
+# 🧠 Mapping với AWS
+
+
+| Thành phần      | AWS Service                               |
+| --------------- | ----------------------------------------- |
+| Code xử lý      | Lambda                                    |
+| Trigger (event) | S3 / API Gateway / DynamoDB / EventBridge |
+| Storage         | S3 / DynamoDB                             |
+| Auth            | IAM                                       |
+
+
+
+# 📌 Các từ khóa trong đề thi
+
+	- event-driven
+	- serverless
+	- no server management
+	- auto scaling
+	- pay-per-use
+	- short-lived execution
+
+
+# ⚠️ Bẫy (trap)
+
+	❌ Bẫy 1: “Không có server”
+		→ Sai. Vẫn có server, nhưng AWS quản lý.
+
+	❌ Bẫy 2: Dùng cho long-running task
+	
+		→ Sai.
+		Lambda timeout max: 15 phút
+		Task dài → dùng ECS / EC2 / Step Functions
+
+	❌ Bẫy 3: State
+	
+		→ Lambda là stateless
+		Không giữ trạng thái giữa các lần chạy
+		Muốn lưu → DynamoDB / S3
+
+
+
+# II. Serverless là gì
+
+	## 🔥 Định nghĩa bản chất 
+		Serverless = bạn không quản lý server, không phải là “không có server”
+
+		👉 AWS lo:
+		
+			Provision
+			Scaling
+			OS patch
+			Infra
+		
+		👉 Bạn chỉ lo:
+		
+			Code
+			Logic
+		
+		
+		
+# 💡 Ví dụ system design
+
+	Case: Upload ảnh
+		User upload ảnh → cần resize
+
+
+	❌ Cách cũ (EC2)
+		EC2 chạy service resize
+		Phải scale, monitor
+
+
+	✅ Serverless
+		Upload ảnh → S3
+		S3 trigger → Lambda
+		Lambda resize → lưu lại S3
+	
+	👉 Không có server nào bạn phải quản lý
+
+
+
+# 🧠 Mapping AWS Serverless
+
+| Use case | Service     |
+| -------- | ----------- |
+| Compute  | Lambda      |
+| API      | API Gateway |
+| DB       | DynamoDB    |
+| Event    | EventBridge |
+| Storage  | S3          |
+
+
+
+
+# 📌 Keyword hay ra đề
+
+fully managed
+no infrastructure management
+automatic scaling
+high availability built-in
+pay-per-request
+
+
+
+
+⚠️ Bẫy cực hay gặp
+
+	❌ “Serverless = rẻ hơn”
+		→ Không hẳn
+
+| Case                 | Serverless | EC2 |
+| -------------------- | ---------- | --- |
+| Traffic thấp         | 👍 rẻ      |     |
+| Traffic cao liên tục | 👎 đắt     |     |
+
+👉 AWS hay gài câu này
+
+
+	❌ Cold Start
+		Lần đầu chạy → chậm
+		Java, .NET → bị nặng nhất	
+
+		👉 Đề thi có thể hỏi:
+		“low latency required” → Lambda có thể không phù hợp
+
+
+
+
+# III. So sánh dễ nhầm 
+
+| Tiêu chí       | Lambda       | EC2            |
+| -------------- | ------------ | -------------- |
+| Quản lý server | ❌            | ✅              |
+| Scaling        | Auto         | Tự làm         |
+| Cost           | Theo request | Theo giờ       |
+| Runtime        | max 15 phút  | Không giới hạn |
+| Use case       | Event-driven | Long-running   |
+
+
+
+
+# Lambda vs ECS (Fargate)
+
+| Tiêu chí | Lambda | Fargate      |
+| -------- | ------ | ------------ |
+| Control  | Thấp   | Trung bình   |
+| Runtime  | Ngắn   | Dài          |
+| Use case | Event  | Microservice |
+
+
+IV. Scenario giống đề thi AWS
+
+
+🧪 Câu hỏi
+
+	Một hệ thống cần:
+	
+	Xử lý file upload từ user
+	Tự động scale
+	Không muốn quản lý server
+	Tải không đều (lúc nhiều lúc ít)
+	
+	👉 Chọn gì?
+	
+	✅ Đáp án:
+	S3 + Lambda
+
+
+
+# V. Cách AWS ra đề
+
+	🎯 Pattern 1: “Không muốn quản lý server”
+	
+		👉 90% đáp án:
+		Lambda
+		Fargate
+		
+	🎯 Pattern 2: “Event-driven”
+	
+		👉 Gần như chắc:
+		Lambda
+		
+	🎯 Pattern 3: “High traffic ổn định”
+	
+		👉 Không chọn Lambda
+	
+	
+	🎯 Pattern 4: “Low latency cực thấp”
+	
+		👉 Cẩn thận:
+		Lambda có cold start
+	
+
+
+
+
+# VI. Kết luận (nói thẳng)
+	Lambda = tool cực mạnh, nhưng không phải “dùng mọi lúc”
+	Serverless = shift trách nhiệm sang AWS, đổi lại mất control + có cost trade-off
+
+	👉 Nếu bạn không hiểu WHEN NOT to use Lambda, bạn sẽ fail SAA.
+
+
+
+
+
+
+---------------- 🇯🇵 日本語版----------
+
+
+#	I. Lambdaとは何か（本質） 
+
+	AWS Lambda = サーバー管理不要でコードを実行するサービス	
+
+	イベント駆動型のコンピューティングサービス
+
+
+
+	## 💡 例
+
+		ECサイト：
+		
+		注文が来た時だけ処理する
+		
+		→ Lambdaなら：
+		
+		イベント発生時のみ実行
+		常時起動不要
+		
+		
+		
+		
+		
+	## 	🧠 AWSマッピング
+		
+| 役割   | サービス             |
+| ---- | ---------------- |
+| 処理   | Lambda           |
+| トリガー | S3 / API Gateway |
+| DB   | DynamoDB         |
+	
+		
+		
+	## 	📌 キーワード
+		
+		- event-driven
+		- serverless
+		- auto scaling
+		- pay-per-use		
+		
+		
+		
+	## ⚠️ 試験トラップ 	
+		
+		- 「サーバーがない」→ ❌
+		- 長時間処理 → ❌（最大15分）
+		- 状態保持 → ❌（stateless）		
+		
+		
+		
+		
+# II. Serverlessとは 		
+		
+	## 	🔥 定義
+		サーバーを管理しないアーキテクチャ	
+		
+		
+			
+		
+	## 	💡 例
+	
+		画像アップロード：
+			- S3アップロード
+			- Lambdaで処理
+	
+	
+	
+	## 📌 キーワード
+	
+		fully managed
+		no infrastructure management
+		automatic scaling	
+	
+	
+	## ⚠️ トラップ
+	
+		常に安い → ❌
+		コールドスタート問題あり	
+	
+	
+# 	III. 比較
+	
+	
+| 項目     | Lambda | EC2 |
+| ------ | ------ | --- |
+| サーバー管理 | 不要     | 必要  |
+| 実行時間   | 最大15分  | 無制限 |
+		
+		
+		
+# IV. 試験パターン
+
+	- サーバー管理したくない → Lambda
+	- イベント駆動 → Lambda
+	- 長時間処理 → EC2 / ECS
+
+
+
+
+
 
 
 

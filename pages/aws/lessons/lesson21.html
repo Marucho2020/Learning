@@ -1,7 +1,308 @@
-<html><head><title>Lesson 21 == Cloud Practitioner ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 21 -- Cloud Practitioner -//</h1><pre>
-Lambda là gì
+<html><head><title>Lesson 21 == Cloud Practitioner ===Route53 ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 21 -- Cloud Practitioner --=Route53 -//</h1><pre>
 
-serverless
+
+# 1. Route 53
+
+	Amazon Route 53 = hệ thống DNS + routing traffic thông minh của AWS
+
+	👉 Đừng hiểu sai:
+	
+		❌ không phải chỉ “trỏ domain”
+		✅ là:
+		quyết định user sẽ đi tới server nào (theo rule)
+
+
+
+	
+# 2. DNS là gì trong context AWS (nói thẳng) 
+
+	Khi user gõ:
+		example.com
+
+	👉 Route 53 quyết định:
+		- trả về IP nào?
+		- trả về endpoint nào?
+		- có failover không?
+
+	👉 Insight quan trọng:
+		Route 53 không route request — nó route “địa chỉ”
+
+
+
+# 3. Các routing policy
+
+	## 3.1 Simple Routing
+
+		1 domain → 1 endpoint
+		
+			👉 dùng khi:
+			system đơn giản
+		
+
+
+
+	## 3.2 Weighted Routing
+		chia traffic theo % (80% / 20%)
+
+		👉 dùng:
+			- A/B testing
+			- deploy version mới
+
+
+
+	## 3.3 Latency-based Routing
+		user → region gần nhất (latency thấp nhất)
+
+		👉 ví dụ:
+		
+		user Nhật → Tokyo
+		user US → Virginia
+
+
+
+	## 3.4 Failover Routing (rất hay ra)
+		primary chết → chuyển sang secondary
+
+		👉 cần:
+		
+		health check
+
+
+	## 3.5 Geolocation Routing
+
+		route theo location user
+		
+		👉 ví dụ:
+			Nhật → tiếng Nhật
+			Việt → tiếng Việt
+
+
+
+
+
+# 4. Ví dụ thực tế
+
+
+	Scenario 1 (classic)
+	
+		App deploy ở:
+			Tokyo
+			Singapore
+		
+			👉 dùng:
+			latency routing
+	
+
+	Scenario 2
+		Deploy version mới:
+			v1: 90%
+			v2: 10%
+		
+		👉 dùng:
+			weighted routing	
+
+
+
+
+	Scenario 3 (rất hay ra)
+
+		System cần:
+	
+			primary region
+			backup region
+		👉 dùng:
+		failover routing + health check
+
+
+
+5. Mapping AWS
+
+| Thành phần     | AWS                    |
+| -------------- | ---------------------- |
+| DNS            | Route 53               |
+| Server         | Amazon EC2             |
+| Load balancing | Elastic Load Balancing |
+| Monitoring     | CloudWatch             |
+
+
+
+
+# 6. Từ khóa đề thi (must nhớ)
+
+	“DNS routing” → Route 53
+	“failover” → Route 53
+	“latency-based” → Route 53
+	“weighted traffic” → Route 53
+	“health check” → Route 53
+	
+
+
+
+# 7. Bẫy (trap cực kỳ quan trọng)
+	❌ Trap 1
+	
+		Route 53 thay thế ELB
+		
+		→ Sai
+		→ Route53 = DNS
+		→ ELB = distribute request
+	
+	❌ Trap 2
+	
+		Route 53 route real-time traffic
+		
+		→ Sai
+		→ DNS có delay (TTL)
+	
+	❌ Trap 3
+	
+		Failover ngay lập tức
+		
+		→ Sai
+		→ phụ thuộc TTL + health check
+	
+	❌ Trap 4 (rất hay ra)
+	
+		muốn cân bằng load trong 1 region
+		
+		→ KHÔNG dùng Route53
+		→ dùng ELB
+
+
+
+# 8. So sánh: Route53 vs ELB
+
+| Tiêu chí  | Route53        | ELB            |
+| --------- | -------------- | -------------- |
+| Level     | DNS            | Application    |
+| Routing   | IP / endpoint  | request        |
+| Real-time | Không          | Có             |
+| Use case  | global routing | load balancing |
+
+
+	👉 Insight:
+		Route53 = “chọn server nào”
+		ELB = “chia request vào server”
+
+
+
+
+# 9. Trade-off (level SAA)
+	Route53:
+	👍 global routing
+	👎 không real-time
+	ELB:
+	👍 real-time balancing
+	👎 chỉ trong region
+	
+	👉 Muốn chuẩn:
+	
+	dùng cả 2
+
+
+
+# 10. Scenario giống đề thi AWS
+
+	Case 1
+	
+		Multi-region, user gần đâu dùng đó
+		👉 Latency routing
+	
+	Case 2
+	
+		A/B testing
+		👉 Weighted routing
+	
+	Case 3
+	
+		Disaster recovery
+		👉 Failover routing + health check
+	
+	Case 4 (bẫy nặng)
+	
+		Load balancing trong 1 region
+		👉 ELB (không phải Route53)
+	
+
+=========================
+🇯🇵 日本語版（試験対策）
+=========================
+
+
+# 1. Route53の本質
+
+	Amazon Route 53 = DNS + トラフィック制御サービス
+
+
+
+# 2. 本質理解
+
+	Route53は：
+		- リクエストを処理しない
+		- 行き先（IP）を決めるだけ
+
+
+
+
+# 3. ルーティング種類
+
+| 種類       | 用途      |
+| -------- | ------- |
+| Simple   | 単純      |
+| Weighted | A/Bテスト  |
+| Latency  | 最短レイテンシ |
+| Failover | DR      |
+| Geo      | 地域別     |
+
+
+
+# 4. 例
+
+
+	- 東京 / シンガポール → Latency
+	- 新旧バージョン → Weighted
+	- 障害対応 → Failover
+	
+	
+	
+	
+# 	5. キーワード
+	
+	DNS
+	フェイルオーバー
+	レイテンシ
+	重み付け
+		
+	
+# 6. トラップ		
+	
+	- ELBと混同 → NG
+	- リアルタイム制御と思う → NG	
+	
+	
+# 	7. 比較
+	
+| 項目     | Route53 | ELB |
+| ------ | ------- | --- |
+| レベル    | DNS     | アプリ |
+| リアルタイム | ×       | ○   |
+	
+	
+# 8. 出題パターン
+	
+	最短ルート → Latency
+	トラフィック分割 → Weighted
+	DR → Failover
+
+
+
+
+# 結論（核心）
+
+	Route53 = どこに行くか決める
+	ELB = どう分けるか決める
+
+
 
 
 </pre><a id='backBottom' href='../aws-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
