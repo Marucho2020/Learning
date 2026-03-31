@@ -1,6 +1,318 @@
-<html><head><title>Lesson 23 == Cloud Practitioner ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 23 -- Cloud Practitioner -//</h1><pre>
+<html><head><title>Lesson 23 == Cloud Practitioner ===EC2 vs Lambda ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 23 -- Cloud Practitioner --=EC2 vs Lambda -//</h1><pre>
 
-So sánh EC2 vs Lambda
+# I. BẢN CHẤT: EC2 vs Lambda
+
+
+|          | EC2                          | Lambda                                    |
+| -------- | ---------------------------- | ----------------------------------------- |
+| Bản chất | **Thuê server (VM)**         | **Thuê execution (chạy code theo event)** |
+| Control  | Full control OS              | Không có OS                               |
+| Scaling  | Tự lo (ASG)                  | AWS lo hoàn toàn                          |
+| Billing  | Theo thời gian chạy instance | Theo số request + thời gian chạy          |
+| Use case | System lâu dài, stateful     | Event-driven, stateless                   |
+
+
+
+		👉 Hiểu 1 câu:
+		EC2 = bạn làm DevOps
+		Lambda = AWS làm DevOps cho bạn
+
+
+
+
+# II. GIẢI THÍCH SÂU
+
+	## 1. EC2 = bạn đang quản lý hạ tầng thật
+
+		Bạn có:
+
+			OS (Linux/Windows)
+			RAM, CPU
+			SSH vào được
+			Cài gì cũng được
+
+		👉 Nghĩ như: bạn thuê VPS
+
+		Ví dụ thực tế:
+		Bạn deploy:
+			Java Spring Boot API
+			Database local
+			Game server (MU Online)
+
+		👉 BẮT BUỘC dùng EC2 (hoặc ECS/EKS)
+
+
+
+
+	## 2. Lambda = chỉ chạy function
+
+		Bạn không có:
+			OS
+			Server
+			Control infra
+
+		Bạn chỉ có:
+			function (Java, Node, Python…)
+			trigger (API Gateway, S3, EventBridge…)
+
+
+		👉 Nó giống:
+
+		handleRequest(event) {
+			// xử lý rồi trả kết quả
+		}
+
+
+
+# III. VÍ DỤ SYSTEM DESIGN (giống đề thi)
+
+	## Scenario 1 (classic AWS exam)
+
+			Một hệ thống cần xử lý ảnh upload lên S3, resize và lưu lại
+
+		👉 Đáp án:
+			S3 trigger → Lambda → xử lý ảnh
+
+		❌ Sai nếu chọn EC2:
+			Overkill
+			Không auto scale tốt
+			Phải tự quản lý
+
+
+
+	## Scenario 2 (tricky) 
+
+		Một hệ thống API có traffic ổn định, cần response nhanh, có state
+
+		👉 Đáp án:
+				EC2 / ECS
+
+		❌ Sai nếu chọn Lambda:
+				Cold start
+				Stateless → không giữ session
+
+
+
+
+
+
+# IV. MAPPING AWS SERVICES 
+
+
+| Use case           | Service      |
+| ------------------ | ------------ |
+| Web server lâu dài | EC2          |
+| Batch job          | EC2 / Lambda |
+| Event-driven       | Lambda       |
+| Microservice nhẹ   | Lambda       |
+| Legacy system      | EC2          |
+| High custom infra  | EC2          |
+
+
+
+
+# V. KEYWORDS TRONG ĐỀ 
+
+	Nếu thấy → chọn Lambda
+		event-driven
+		serverless
+		auto scaling without management
+		intermittent traffic
+		cost optimization
+		S3 trigger / DynamoDB stream
+
+
+	Nếu thấy → chọn EC2 
+
+
+
+
+
+# VI. BẪY (TRAP) AWS RẤT HAY GÀI
+
+	❌ Trap 1: "Auto scaling" → chọn Lambda
+
+		Sai.
+			👉 EC2 + Auto Scaling cũng scale được
+
+
+	❌ Trap 2: "Cost optimization" → luôn chọn Lambda Sai.
+		👉 Nếu chạy 24/7:
+
+			EC2 Reserved Instance rẻ hơn Lambda
+
+
+	❌ Trap 3: "Simple architecture" → chọn Lambda 	Sai.
+	
+		👉 Lambda:
+
+			Debug khó
+			Cold start
+			Timeout (max ~15 phút)
+
+	❌ Trap 4: "High performance API"
+		👉 Nhiều người chọn Lambda → SAI
+
+			Lambda có cold start
+			latency không ổn định
+
+		👉 EC2/ECS mới đúng
+
+
+# VII. SO SÁNH SÂU (LEVEL SENIOR)
+
+| Yếu tố        | EC2            | Lambda                        |
+| ------------- | -------------- | ----------------------------- |
+| Startup time  | ~ phút         | ms (nhưng có cold start)      |
+| Scaling speed | chậm hơn       | cực nhanh                     |
+| Cost pattern  | ổn định        | biến động                     |
+| Debug         | dễ             | khó                           |
+| State         | giữ được       | không                         |
+| Max runtime   | không giới hạn | ~15 phút                      |
+| Networking    | full control   | hạn chế (VPC config phức tạp) |
+
+
+
+
+
+# VIII. TRADE-OFF 
+
+	Lambda không phải "xịn hơn"
+	👉 Nó chỉ phù hợp khi:
+		Traffic không đều
+		Event-driven
+		Không cần state
+
+
+
+	EC2 không phải "lỗi thời"
+		👉 Nó vẫn là:
+			nền tảng của mọi thứ (ECS, EKS cũng chạy trên EC2)
+
+
+
+
+# IX. CÁCH AWS RA ĐỀ
+
+	Pattern 1: So sánh cost
+		“Ứng dụng có traffic không ổn định, giảm chi phí”
+
+		👉 chọn Lambda
+
+
+	Pattern 2: Control vs Convenience
+		“Cần control OS”
+		👉 EC2
+
+
+	Pattern 3: Event-driven
+
+		“Trigger từ S3”
+		👉 99% là Lambda		
+
+
+	Pattern 4: Performance ổn định
+		“Low latency consistent”
+			👉 EC2
+
+
+
+# X. KẾT LUẬN
+
+
+		Lambda = scale nhanh, ít quản lý, nhưng hạn chế
+		EC2 = full control, mạnh, nhưng phải tự vận hành
+		👉 Nếu không hiểu rõ:
+			AWS sẽ dụ bạn chọn Lambda vì “nghe hiện đại”
+		👉 Nhưng:
+			70% production system lớn vẫn dùng EC2/ECS/EKS
+
+
+
+
+
+-------------------- 🇯🇵 日本語版-----------
+
+
+# I. 本質
+
+
+|        | EC2                | Lambda      |
+| ------ | ------------------ | ----------- |
+| 本質     | 仮想サーバー             | イベント駆動の関数実行 |
+| 管理     | 自分で管理              | AWSが管理      |
+| スケーリング | 手動 or Auto Scaling | 自動          |
+| 課金     | インスタンス時間           | 実行回数＋時間     |
+
+
+
+	👉 一言で：
+		EC2 = インフラ管理する
+		Lambda = インフラを捨てる
+		
+		
+		
+# 	II. 実例	
+		
+	例1（試験頻出）
+		S3に画像アップ → リサイズ
+		👉 S3 → Lambda
+
+
+
+	例2
+		常時稼働API
+		👉 EC2
+
+
+
+
+# III. キーワード 
+
+	Lambda
+		- サーバーレス
+		- イベント駆動
+		- コスト最適化
+		- 可変トラフィック
+
+	EC2
+		- フルコントロール
+		- 長時間実行
+		- ステートフル
+		- レガシー
+
+
+# IV. トラップ
+
+		❌ Auto Scaling → Lambda
+		❌ コスト最適化 → Lambda
+		👉 文脈が重要
+
+
+
+
+# V. 試験パターン
+
+| 問題パターン | 答え     |
+| ------ | ------ |
+| S3トリガー | Lambda |
+| OS必要   | EC2    |
+| 安定性能   | EC2    |
+| イベント処理 | Lambda |
+
+
+
+# VI. 結論
+
+	Lambda = 軽くて便利だが制限あり
+	EC2 = 重いが強力
+
+	👉 試験では「状況判断」が全て
+
+
+
+
+
 
 
 
