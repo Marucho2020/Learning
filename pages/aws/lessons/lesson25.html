@@ -1,6 +1,299 @@
-<html><head><title>Lesson 25 == Cloud Practitioner ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 25 -- Cloud Practitioner -//</h1><pre>
+<html><head><title>Lesson 25 == Cloud Practitioner ===S3 Storage Class ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 25 -- Cloud Practitioner --=S3 Storage Class -//</h1><pre>
+# 1. Bản chất S3 Storage Class
 
-object storage
+	S3 Storage Class =
+		→ chiến lược tối ưu chi phí dựa trên tần suất truy cập dữ liệu
+
+	Bạn đang trả tiền cho 3 thứ:
+		- Storage (GB/tháng)
+		- Request (GET/PUT)
+		- Retrieval (lấy data từ lớp archive)
+
+		👉 Không có chuyện “càng rẻ càng tốt”
+		→ rẻ = đánh đổi latency + phí lấy dữ liệu + thời gian chờ
+
+
+
+
+# 2. Các loại Storage Class 
+
+	## Nhóm 1: Truy cập thường xuyên
+	
+		| Class                  | Bản chất                            |
+		| ---------------------- | ----------------------------------- |
+		| S3 Standard            | Default, dùng cho data hay truy cập |
+		| S3 Intelligent-Tiering | Auto chuyển class                   |
+			
+			
+		👉 Dùng khi:
+			Không biết pattern truy cập
+			Hoặc truy cập thường xuyên	
+			
+	
+	
+	
+	## 	Nhóm 2: Truy cập ít
+	
+		| Class          | Bản chất                          |
+		| -------------- | --------------------------------- |
+		| S3 Standard-IA | Ít truy cập nhưng cần access ngay |
+		| S3 One Zone-IA | Rẻ hơn, nhưng mất AZ là mất data  |
+
+	
+		👉 Trade-off:
+
+			Rẻ hơn Standard
+			Nhưng:
+				có phí retrieval
+				minimum storage 30 ngày
+				
+	
+	
+	
+	## Nhóm 3: Archive (rẻ cực, chậm cực)
+	
+| Class                | Thời gian lấy data |
+| -------------------- | ------------------ |
+| Glacier Instant      | milliseconds       |
+| Glacier Flexible     | minutes → hours    |
+| Glacier Deep Archive | 12 giờ             |
+
+
+		👉 Dùng cho:
+
+			- Backup lâu dài
+			- Compliance
+			- Log cũ
+
+
+
+
+# 3. Ví dụ thực tế (system design)
+
+	## Scenario:
+
+		Hệ thống log:
+			- Log 7 ngày đầu → debug liên tục
+			- Log 1–3 tháng → lâu lâu mới xem
+			- Log >1 năm → chỉ audit
+
+		hiết kế đúng:
+
+		S3 Standard (0-7 ngày)
+			→ S3 Standard-IA (7-90 ngày)
+			→ Glacier (90+ ngày)
+			→ Deep Archive (1 năm+)
+
+		👉 Dùng Lifecycle Policy để auto chuyển
+
+
+
+# 4. Mapping AWS
+
+	| Nhu cầu                | Storage Class          |
+	| ---------------------- | ---------------------- |
+	| Web content            | Standard               |
+	| Unknown access pattern | Intelligent-Tiering    |
+	| Backup ngắn hạn        | Standard-IA            |
+	| Archive dài hạn        | Glacier / Deep Archive |
+
+
+
+# 5. Từ khóa trong đề thi
+
+	- infrequently accessed
+	- cost optimization
+	- archive
+	- long-term retention
+	- unknown access pattern
+	- minimum storage duration
+
+
+
+
+# 6. Bẫy (trap) cực hay gặp
+
+
+	## Trap 1: “Rẻ nhất” ≠ đúng
+
+		Đề:
+			want lowest cost
+		Sai lầm:
+			→ chọn Deep Archive
+		Nhưng:
+			nếu cần access ngay → sai
+
+
+
+	## Trap 2: Intelligent-Tiering bị hiểu sai
+
+		Nhiều người nghĩ:
+			→ auto tiết kiệm 100%
+
+		Sai:
+			có phí monitoring
+			chỉ đáng khi pattern không rõ
+
+
+
+
+	## Trap 3: One Zone-IA
+	
+		Rẻ → hấp dẫn
+		Nhưng:
+			→ mất AZ = mất dữ liệu
+
+		👉 Đề có:
+			“critical data” → không chọn
+			
+	
+	
+	## 	Trap 4: Glacier retrieval time
+	
+		Đề hay gài:
+
+		access immediately
+		
+		→ Glacier Flexible ❌
+		→ phải dùng:
+
+			Standard-IA hoặc
+			Glacier Instant	
+
+
+# Trap 5: Minimum storage duration
+
+	| Class        | Min      |
+	| ------------ | -------- |
+	| IA           | 30 ngày  |
+	| Glacier      | 90 ngày  |
+	| Deep Archive | 180 ngày |
+
+	👉 Xóa sớm vẫn bị tính tiền
+
+
+
+
+# 7. So sánh tổng hợp
+| Class            | Giá      | Speed    | Use case                |
+| ---------------- | -------- | -------- | ----------------------- |
+| Standard         | cao      | nhanh    | truy cập thường         |
+| Intelligent      | trung    | nhanh    | không biết pattern      |
+| Standard-IA      | thấp     | nhanh    | ít truy cập             |
+| One Zone-IA      | rất thấp | nhanh    | data không critical     |
+| Glacier Instant  | thấp     | nhanh    | archive nhưng cần nhanh |
+| Glacier Flexible | rất thấp | chậm     | backup                  |
+| Deep Archive     | rẻ nhất  | rất chậm | lưu lâu                 |
+
+
+
+
+# 8. Trade-off
+
+
+| Bạn muốn    | Bạn phải trả giá        |
+| ----------- | ----------------------- |
+| Rẻ          | latency cao             |
+| Lưu lâu     | retrieval chậm          |
+| Auto tối ưu | trả thêm phí monitoring |
+
+
+----------------- Tiếng Nhật --------------
+
+# ■ S3 Storage Classの本質 
+
+	S3 Storage Class =
+		データのアクセス頻度に応じたコスト最適化の仕組み
+
+
+	👉 本質：
+		安いほど遅い
+		取得時にコストがかかる場合あり
+
+
+# ■ 種類
+
+	## ① 頻繁アクセス
+		S3 Standard
+		Intelligent-Tiering（自動最適化）
+			
+
+	## ② 低頻度アクセス
+		Standard-IA
+		One Zone-IA（AZ障害でデータ消失リスク）	
+			
+	
+	
+	## ③ アーカイブ
+		Glacier Instant
+		Glacier Flexible
+		Deep Archive	
+			
+	
+# 	■ ユースケース
+	
+		- Webコンテンツ → Standard
+		- アクセスパターン不明 → Intelligent-Tiering
+		- バックアップ → IA / Glacier
+		- 長期保存 → Deep Archive	
+	
+	
+	
+# 	■ 試験キーワード
+	
+	
+		- 低頻度アクセス
+		- コスト削減
+		- アーカイブ
+		- 長期保存
+		- 即時アクセス	
+			
+	
+# ■ よくある罠 
+
+
+		## ① 最安＝正解ではない
+			→ アクセス要件を確認
+
+
+		## ② One Zone-IA
+			→ データ損失リスクあり
+		
+		
+		## ③ Glacierの取り出し時間
+			→ 即時アクセス不可の場合あり	
+		
+		
+		## ④ 最低保存期間
+			→ 早期削除でも課金
+		
+		
+		
+# 	■ 出題パターン	
+		
+		「アクセス頻度不明」
+			→ Intelligent-Tiering
+		「低頻度＋即時アクセス」
+			→ Standard-IA
+		「長期保存＋低コスト」
+			→ Glacier / Deep Archive		
+				
+		
+# ■ 試験問題 
+
+		バックアップデータはほとんどアクセスされないが、必要な時は数分以内に取得したい。
+			→ 正解：Glacier Flexible Retrieval
+
+
+# Kết luận (nói thẳng)
+
+		Nếu bạn không đọc kỹ:
+
+		“access frequency”
+		“retrieval time”
+
+		→ 90% sẽ chọn sai Storage Class
+
 
 
 

@@ -1,10 +1,251 @@
-<html><head><title>Lesson 24 == Cloud Practitioner ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 24 -- Cloud Practitioner -//</h1><pre>
-Service chính:
+<html><head><title>Lesson 24 == Cloud Practitioner ==Amazon S3 ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 24 -- Cloud Practitioner --Amazon S3 -//</h1><pre>
 
-Amazon S3
+# 1. S3 là gì?
 
-S3 là gì
+	Amazon S3 (Simple Storage Service) =
+		→ Một object storage (lưu file dạng object), không phải filesystem, không phải block storage
 
+
+	Nói thẳng:
+		S3 không phải ổ đĩa như EC2 (EBS)
+		S3 là kho chứa file khổng lồ trên cloud
+			Bạn chỉ có thể:
+				PUT (upload)
+				GET (download)
+				DELETE
+				→ Không có khái niệm sửa file trực tiếp (update = overwrite)
+
+
+
+# 2. Bản chất kiến trúc
+	S3 lưu theo cấu trúc:
+	
+		Bucket (giống folder gốc)
+		 └── Object (file)
+			   ├── Key (tên file + path)
+			   ├── Data (nội dung)
+			   └── Metadata (thông tin)
+
+
+		Bucket = global unique (toàn AWS không trùng tên)
+		Object size: 0 byte → 5TB
+		Unlimited storage (gần như vô hạn)
+
+
+
+
+# 3. Ví dụ thực tế
+
+	## Scenario:
+		Bạn build hệ thống upload ảnh cho app mobile:
+
+		User upload ảnh
+			1 triệu user
+				cần:
+					- scale vô hạn
+					- không downtime
+					- giá rẻ
+
+
+		Giải pháp:
+			→ Dùng S3
+
+		Flow:
+			- Mobile → API → S3 (upload ảnh)
+			- Frontend → S3 (load ảnh trực tiếp)
+
+		Tối ưu hơn:
+			Dùng Pre-signed URL
+			→ client upload trực tiếp lên S3 (không qua backend)
+
+
+
+# 4. Mapping AWS dịch vụ
+
+| Use case                      | AWS Service |
+| ----------------------------- | ----------- |
+| Lưu file (ảnh, video, backup) | S3          |
+| Disk cho EC2                  | EBS         |
+| File system shared            | EFS         |
+
+👉 Đây là câu hỏi classic:
+“Which service for storing large static files?” → S3
+
+
+# 5. Từ khóa trong đề thi
+
+	- durability 99.999999999% (11 nines)
+	- static content
+	- backup
+	- archive
+	- object storage
+	- high scalability
+	- low cost storage
+	- store and retrieve any amount of data
+
+
+# 6. Bẫy (trap) AWS cực hay gài
+
+	## Trap 1: S3 vs EBS
+
+		| S3                   | EBS             |
+		| -------------------- | --------------- |
+		| Object storage       | Block storage   |
+		| Không attach vào EC2 | Attach vào EC2  |
+		| HTTP access          | OS-level access |
+
+
+	👉 Nếu đề có:
+	
+		“mount vào EC2” → ❌ S3 (sai)
+		“shared file system” → ❌ S3 → phải là EFS
+
+
+
+
+	## Trap 2: S3 không phải database
+
+		Đề hay kiểu:
+
+		cần query dữ liệu nhanh
+			→ Không chọn S3
+			→ chọn RDS / DynamoDB
+
+
+
+
+	## Trap 3: Update file 
+		S3:
+			Không edit file
+			Upload lại → overwrite
+
+
+
+
+
+	## Trap 4: Latency thấp real-time
+		S3 không phải low-latency system như cache
+
+		→ Nếu đề cần:
+
+			microsecond latency
+			→ dùng ElastiCache
+
+
+
+# 7. So sánh dễ nhầm
+
+| Service | Dùng khi nào               |
+| ------- | -------------------------- |
+| S3      | Lưu file                   |
+| EBS     | Disk cho EC2               |
+| EFS     | Shared filesystem          |
+| Glacier | Archive (rất rẻ, rất chậm) |
+
+
+
+
+# 8. Trade-off 
+
+| Ưu điểm            | Nhược điểm                |
+| ------------------ | ------------------------- |
+| Scale vô hạn       | Không edit file trực tiếp |
+| Rất bền (11 nines) | Latency không cực thấp    |
+| Rẻ                 | Không query như DB        |
+
+
+-------------- Bản dịch tiếng Nhật------------
+
+
+# ■ S3とは何か（本質）
+
+	Amazon S3 = オブジェクトストレージサービス
+
+		- ファイルをそのまま保存するサービス
+		- EC2のディスクではない
+		- ファイルシステムでもない
+
+		👉 本質：
+
+			PUT / GET / DELETE のみ
+			更新 = 上書き
+
+
+# ■ 構造
+
+		Bucket
+		 └── Object
+			   ├── Key
+			   ├── Data
+			   └── Metadata
+
+			- Bucket名はグローバルで一意
+			- 最大サイズ：5TB
+			- 容量はほぼ無制限
+
+
+# ■ ユースケース
+
+		- 画像・動画保存
+		- バックアップ
+		- 静的コンテンツ配信
+
+
+# ■ 試験キーワード
+
+	- 高耐久性（99.999999999%）
+	- スケーラブル
+	- 低コスト
+	- オブジェクトストレージ
+	- 静的コンテンツ
+
+
+# ■ よくある罠
+
+	① EC2にアタッチできる？ (Attach)
+		→ ❌ S3
+		→ ✅ EBS
+
+
+
+	② 複数EC2で共有？
+		→ ❌ S3
+		→ ✅ EFS
+
+
+	③ データベース用途？
+		→ ❌ S3
+		→ ✅ RDS / DynamoDB
+
+
+
+# ■ 比較
+
+| サービス    | 用途       |
+| ------- | -------- |
+| S3      | ファイル保存   |
+| EBS     | EC2用ディスク |
+| EFS     | 共有ファイル   |
+| Glacier | アーカイブ    |
+
+
+# ■ AWSの出題パターン
+
+	「大量データ」「高耐久」「低コスト」
+		→ S3
+	「EC2にアタッチ」
+		→ EBS
+	「共有ファイル」
+		→ EFS
+
+■ 試験問題例
+
+	ユーザーがアップロードする大量の画像を保存する必要がある。高耐久性・スケーラビリティ・低コストが必要。
+	→ 正解：S3
+
+
+Nếu hiểu S3 mà vẫn mơ hồ, nghĩa là bạn đang nghĩ nó như “ổ cứng cloud”. Sai hoàn toàn.
+S3 = dịch vụ lưu file qua API, không phải storage gắn vào server
 
 
 
