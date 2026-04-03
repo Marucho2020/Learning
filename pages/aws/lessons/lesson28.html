@@ -1,6 +1,277 @@
-<html><head><title>Lesson 28 == Cloud Practitioner ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 28 -- Cloud Practitioner -//</h1><pre>
-storage classes
+<html><head><title>Lesson 28 == Cloud Practitioner ==object storage ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 28 -- Cloud Practitioner --object storage -//</h1><pre>
+# I. Giải thích bản chất
 
+
+	Object Storage = lưu file dạng “object”, không có cấu trúc thư mục thật
+		Mỗi file = 1 object
+		Object = data + metadata + key (ID duy nhất)
+		Không có folder thật → chỉ là prefix (giả thư mục)
+
+	👉 Nói thẳng:
+		Object Storage không phải file system → nó là key-value storage cho file
+
+
+
+
+	## So sánh nhanh 
+
+		| Loại storage        | Bản chất           | Dùng khi nào            |
+		| ------------------- | ------------------ | ----------------------- |
+		| Object Storage (S3) | key-value (file)   | ảnh, video, backup      |
+		| Block Storage (EBS) | ổ cứng             | OS, database            |
+		| File Storage (EFS)  | shared file system | nhiều server dùng chung |
+
+		👉 Sai 1 câu là trượt mindset luôn
+
+
+# II. Ví dụ thực tế
+
+	## Ví dụ đời thường 
+
+		Bạn upload ảnh Facebook:
+
+			Ảnh = object data
+			URL = key
+			Metadata = userId, timestamp
+
+			👉 Facebook không lưu ảnh bằng kiểu “folder/user123/img.png”
+			→ nó lưu dạng key kiểu:
+			user123/2026/04/img_abc123.jpg
+			(chỉ là string, không phải folder thật)
+
+
+
+
+	## Ví dụ system design
+	
+		Một app upload video
+	
+			Yêu cầu:
+
+				- Scale vô hạn
+				- Không mất dữ liệu
+				- Truy cập từ internet
+				- Solution chuẩn:
+				- Upload → S3
+				- Serve → CloudFront
+				- Metadata → DynamoDB
+			👉 Vì:
+
+				- S3 = durable (11 số 9)
+				- Không cần quản lý server	
+	
+	
+# 	III. Mapping với AWS
+		
+	| Khái niệm      | AWS Service |
+	| -------------- | ----------- |
+	| Object Storage | S3          |
+	| CDN            | CloudFront  |
+	| Metadata DB    | DynamoDB    |
+	| Event trigger  | S3 → Lambda |
+		
+		
+	
+# IV. Các từ khóa trong đề thi	
+	
+	- “Highly durable”
+	- “Store large amount of unstructured data”
+	- “Static website hosting”
+	- “Backup & archive”
+	- “Media files (image, video)”
+	- “11 9 durability”	
+	
+	
+# 	V. Các bẫy (trap) cực hay gặp
+	
+	Trap 1: Nhầm với EBS
+
+	Đề:
+		cần storage cho EC2 để chạy database
+		👉 Chọn S3 = sai
+		✔ Đúng: EBS
+		→ vì DB cần block storage	
+		
+	
+
+	Trap 2: Nhầm với EFS
+
+		Đề:
+
+		nhiều EC2 cần share file
+
+		👉 Chọn S3 = sai
+
+		✔ Đúng: EFS
+			→ vì cần file system
+
+
+
+	Trap 3: tưởng S3 có folder thật
+	
+		👉 Không có
+			/images/2026/abc.jpg = key string thôi
+
+
+
+	Trap 4: latency
+
+		👉 S3 không dành cho:
+		low latency read/write (DB)
+
+
+
+# VI. Trade-off
+
+| Ưu điểm         | Nhược điểm               |
+| --------------- | ------------------------ |
+| Scale vô hạn    | Không sửa file từng phần |
+| Durable cực cao | Latency cao hơn EBS      |
+| Rẻ              | Không mount như disk     |
+| Serverless      | Không dùng cho DB        |
+
+
+
+# VII. Cách AWS ra đề
+
+	Pattern 1: hỏi loại storage
+		“store images, videos, backups”
+		→ chọn S3
+
+
+
+	Pattern 2: hỏi cost + scale
+		“cost-effective + large scale + no management”
+		→ S3
+
+	Pattern 3: hỏi kiến trúc	
+		upload file → xử lý → lưu trữ
+		→ S3 + Lambda
+
+
+	Pattern 4: đánh lừa bằng EC2
+
+		App chạy EC2 nhưng storage là gì?
+			👉 Đừng auto chọn EBS
+			→ nếu là file/media → S3
+
+
+
+# VIII. Mini Scenario
+
+	Câu hỏi:
+
+	Một công ty cần:
+
+		Lưu trữ hàng triệu ảnh
+		Truy cập qua internet
+		Không cần chỉnh sửa từng byte
+		Chi phí thấp
+	👉 Chọn gì?
+
+		Phân tích:
+			Nhiều file → Object storage
+			Không edit → OK với S3
+			Public access → S3 + CloudFront
+
+		✔ Đáp án: S3
+		S3 = “dump file vào đó, scale vô hạn, đừng dùng cho DB”
+		
+		
+		
+		
+		
+---------- 🇯🇵 日本語版 --------------
+
+# 	I. 本質
+	Object Storage = ファイルを「オブジェクト」として保存する仕組み		
+		
+		- 各ファイル = Object
+		- Object = データ + メタデータ + Key
+		- フォルダは実体なし（prefixのみ）		
+				
+	👉 本質：
+		Object Storage = ファイルのためのKey-Valueストレージ		
+		
+		
+#	II. ストレージ比較
+		
+| 種類  | 特徴             | 用途           |
+| --- | -------------- | ------------ |
+| S3  | Object Storage | 画像・動画・バックアップ |
+| EBS | Block Storage  | OS・DB        |
+| EFS | File Storage   | 複数EC2共有      |
+		
+		
+		
+		
+# 	III. 実例	
+		
+		
+	システム設計
+
+		動画アップロードサービス：
+			- 保存 → S3
+			- 配信 → CloudFront
+			- メタデータ → DynamoDB
+
+		理由：
+			- 高耐久性（11 9）
+			- スケーラブル
+			- サーバ不要		
+		
+		
+		
+# IV. 試験キーワード		
+			
+	高耐久性（11 9 durability）
+	非構造データ
+	静的Webホスティング
+	バックアップ
+	メディアファイル		
+		
+		
+		
+# V. よくある罠		
+		
+		
+	罠1：EBSと混同
+
+		DB用途 → S3 ❌ → EBS ⭕
+
+	罠2：EFSと混同
+
+		共有ファイル → S3 ❌ → EFS ⭕
+
+	罠3：フォルダがあると思う
+		→ 実際はただの文字列
+
+	罠4：低レイテンシ用途
+
+		→ S3は不向き		
+		
+		
+		
+VII. AWSの出題パターン 		
+		
+		
+	パターン1
+		画像・動画保存 → S3
+
+	パターン2
+		低コスト + 大規模 → S3
+
+	パターン3
+		アップロード処理 → S3 + Lambda
+
+	パターン4
+		EC2が出ても騙されるな
+		→ ファイルならS3		
+			
+		
+		
+		
+		
 
 
 </pre><a id='backBottom' href='../aws-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

@@ -1,7 +1,300 @@
-<html><head><title>Lesson 26 == Cloud Practitioner ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 26 -- Cloud Practitioner -//</h1><pre>
+<html><head><title>Lesson 26 == Cloud Practitioner =S3 Versioning + Encryption ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 26 -- Cloud Practitioner =S3 Versioning + Encryption -//</h1><pre>
 
-S3 Versioning + Encryption (bẫy rất nhiều)
+# 🔥 1. Bản chất 
+	S3 Versioning là gì?
+	Không phải backup
+		Nó là:
+			- 👉 Lưu nhiều phiên bản của cùng 1 object trong S3
+			- Nghĩa là: bạn ghi đè file → AWS KHÔNG xóa file cũ → chỉ tạo version mới
+
+
+
+	S3 Encryption là gì?
+		👉 Bảo vệ dữ liệu khỏi bị đọc trái phép (at-rest hoặc in-transit)
+
+
+
+# ⚠️ Nhìn thẳng vấn đề
+
+	| Feature    | Giải quyết vấn đề gì                        |
+	| ---------- | ------------------------------------------- |
+	| Versioning | Lỗi con người (delete nhầm, overwrite nhầm) |
+	| Encryption | Bị leak dữ liệu / bị truy cập trái phép     |
+
+	👉 2 cái này KHÔNG thay thế nhau. AWS rất hay gài bẫy chỗ này.			
+
+
+
+# 📦 2. Ví dụ thực tế (rất giống đề thi)
+
+	## Scenario 1 (classic AWS trap)
+
+		- Một dev upload file config.json lên S3
+		- Sau đó sửa nhầm và overwrite
+		- Công ty muốn rollback về version cũ
+
+	👉 Đáp án đúng:
+		Enable Versioning
+		
+	❌ Sai lầm phổ biến:
+		Backup bằng Glacier (quá nặng)
+		Dùng Lifecycle (không giúp rollback ngay)
+
+
+
+
+
+	## Scenario 2 (security)
+
+		Công ty lưu thông tin user (PII) trong S3
+		Yêu cầu: dữ liệu phải được mã hóa
+
+		👉 Đáp án:
+			Enable S3 Encryption (SSE-S3 hoặc SSE-KMS)
+
+
+
+
+	## Scenario 3 (đề nâng cao)
+
+	Công ty cần:
+
+		Bảo vệ dữ liệu khỏi delete nhầm
+		Đáp ứng compliance (audit, encryption)
+
+	👉 Đáp án:
+
+		Versioning + Encryption
+
+
+
+# ⚙️ 3. Mapping AWS Services
+
+	## S3 Versioning 
+
+	| Thành phần        | Ý nghĩa                    |
+	| ----------------- | -------------------------- |
+	| Version ID        | Mỗi object có ID riêng     |
+	| Delete Marker     | Xóa giả (không xóa thật)   |
+	| Suspend vs Enable | Suspend vẫn giữ version cũ |
+
+
+
+
+	## S3 Encryption (3 loại chính) 	
+
+	| Loại    | Ai quản key | Dùng khi nào       |
+	| ------- | ----------- | ------------------ |
+	| SSE-S3  | AWS         | Đơn giản, default  |
+	| SSE-KMS | AWS KMS     | Cần audit, control |
+	| SSE-C   | User        | Hiếm dùng          |
+
+
+
+# 🔑 4. Keywords trong đề thi
+
+	Nhìn thấy mấy từ này → phải nghĩ ngay:
+	
+		Versioning
+			- accidental deletion
+			- rollback
+			- recover previous version
+			- protect against overwrite
+
 			
+		Encryption
+			- sensitive data
+			- compliance
+			- encrypted at rest
+			- KMS key
+			- audit / access control
 
 
+
+
+# ⚠️ 5. Bẫy (trap) AWS rất hay gài
+
+	## Trap 1: Nhầm Versioning với Backup
+
+		“backup data in S3”
+			👉 KHÔNG phải versioning
+			👉 Backup = cross-region replication / snapshot / glacier
+
+
+
+
+	## Trap 2: Encryption ≠ Access Control
+	
+		Encryption → data unreadable
+		IAM / Bucket Policy → control access	
+			
+		👉 Đề hay đánh lừa:
+			"secure access"
+			→ có thể là IAM, KHÔNG phải encryption		
+
+
+
+
+
+	## Trap 3: SSE-S3 vs SSE-KMS 
+
+		| Nếu đề nói             | Đáp án  |
+		| ---------------------- | ------- |
+		| simple encryption      | SSE-S3  |
+		| audit / control / logs | SSE-KMS |
+
+
+
+	## Trap 4: Delete thật hay delete giả? 
+
+		Versioning ON:
+			Delete → tạo delete marker
+		Versioning OFF:
+			Delete → mất luôn
+
+		👉 Đây là câu hỏi cực hay ra
+
+
+# ⚖️ 6. So sánh nhanh
+
+| Feature      | Versioning  | Encryption |
+| ------------ | ----------- | ---------- |
+| Mục tiêu     | Recovery    | Security   |
+| Giải quyết   | Human error | Data leak  |
+| Có rollback? | ✅           | ❌          |
+| Có bảo mật?  | ❌           | ✅          |
+
+
+
+
+# 🧠 7. Cách AWS ra đề (quan trọng nhất)
+
+	Pattern 1
+		“recover deleted object”
+		👉 Versioning
+
+
+	Pattern 2
+		“protect sensitive data”
+		👉 Encryption
+
+
+	Pattern 3 (combo)
+		“prevent accidental deletion AND ensure encryption”
+		👉 Versioning + Encryption
+
+
+	Pattern 4 (bẫy khó)
+		“restrict access”
+		👉 IAM / Bucket Policy (KHÔNG phải encryption)
+
+
+
+# 🎯 8. Tóm lại (đừng học vẹt)
+
+	Versioning = undo button
+	Encryption = lock dữ liệu
+
+		👉 Một cái cứu sai lầm
+		👉 Một cái chống hacker
+
+
+
+
+
+----------- 🇯🇵 日本語版------------
+
+
+# 🔥 本質
+
+	S3 Versioning
+		👉 同じオブジェクトの複数バージョンを保存する仕組み
+		（上書きしても古いデータが残る）
+
+
+	S3 Encryption
+		👉 データを暗号化して不正アクセスを防ぐ
+
+
+
+	## ⚠️ 本質の違い
+
+
+		| 機能         | 目的         |
+		| ---------- | ---------- |
+		| Versioning | 誤削除・誤上書き対策 |
+		| Encryption | セキュリティ対策   |
+
+
+
+# 📦 例（試験っぽい）
+
+	ケース1
+		誤ってファイルを上書き → 元に戻したい
+		👉 Versioning
+
+
+	ケース2
+		個人情報を保存 → 暗号化が必要
+		👉 SSE-S3 / SSE-KMS
+
+
+	ケース3
+
+		削除対策 + セキュリティ
+		👉 Versioning + Encryption
+
+
+
+# 🔑 キーワード
+
+	Versioning
+		- rollback
+		- recover
+		- accidental deletion
+		
+	Encryption
+		- sensitive data
+		- encrypted at rest
+		- KMS
+
+
+# ⚠️ 試験の罠
+
+	① Versioning ≠ Backup
+		Backup → Glacier / replication
+
+
+	② Encryption ≠ Access Control
+		アクセス制御 → IAM / Bucket Policy
+		
+		
+		
+# ③ SSE-S3 vs SSE-KMS 		
+		
+		
+| 条件    | 選択      |
+| ----- | ------- |
+| シンプル  | SSE-S3  |
+| 監査・制御 | SSE-KMS |
+	
+		
+		
+		
+# 🧠 出題パターン 		
+		
+			
+	| 項目     | Versioning | Encryption |
+	| ------ | ---------- | ---------- |
+	| 目的     | 復元         | セキュリティ     |
+	| ロールバック | 可能         | 不可         |
+			
+		
+		- recover → Versioning
+		- secure data → Encryption
+		- 両方 → Versioning + Encryption		
+				
+		
+		
+		
 </pre><a id='backBottom' href='../aws-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

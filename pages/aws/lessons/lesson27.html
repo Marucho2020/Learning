@@ -1,8 +1,248 @@
-<html><head><title>Lesson 27 == Cloud Practitioner ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 27 -- Cloud Practitioner -//</h1><pre>
+<html><head><title>Lesson 27 == Cloud Practitioner =Encryption==at-rest & in-transit ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 27 -- Cloud Practitioner =Encryption--at-rest & in-transit -//</h1><pre>
 
-object storage
+# 	🔥 1. Bản chất 
+
+	## 🔐 Encryption at-rest là gì?
+
+		👉 Dữ liệu được mã hóa khi đang nằm yên trong storage
+
+			S3 lưu file → file đó đã bị mã hóa trên disk
+			Hacker lấy được disk → không đọc được
+
+	
+	## 🔐 Encryption in-transit là gì?
+	
+		👉 Dữ liệu được mã hóa khi đang di chuyển trên mạng
+
+			Client upload file → S3
+			Nếu không mã hóa → có thể bị sniff (MITM)	
+	
+	
+	
+	
+	
+# ⚠️ Nói thẳng dễ hiểu	
+	
+| Trạng thái dữ liệu       | Nguy cơ                | Cách bảo vệ        |
+| ------------------------ | ---------------------- | ------------------ |
+| Đang lưu (at rest)       | Bị đọc trộm từ storage | Encryption at-rest |
+| Đang truyền (in transit) | Bị nghe lén            | HTTPS / TLS        |
+	
+	
+	
+	 
+	
+# 	📦 2. Ví dụ thực tế (rất sát đề thi)
+	
+	## Scenario 1 (at-rest) 
+		- Công ty lưu dữ liệu khách hàng trên S3
+		- Auditor yêu cầu: dữ liệu phải được mã hóa khi lưu trữ
+
+	👉 Đáp án:
+		SSE-S3 hoặc SSE-KMS
+		
+	
+	## Scenario 2 (in-transit)
+	
+		- Client upload file lên S3 qua internet
+		- Công ty yêu cầu: dữ liệu không được bị sniff
+	
+		
+	👉 Đáp án:
+		HTTPS (TLS)	
+		
+	
+	
+	## Scenario 3 (combo - rất hay ra)
+	
+		- Dữ liệu phải được mã hóa khi lưu
+		- Và khi truyền
+
+		👉 Đáp án:
+
+		SSE + HTTPS	
+	
+
+# ⚙️ 3. Mapping AWS
+
+	## 🔐 At-rest trong S3
+		| Cách                   | Dịch vụ         |
+		| ---------------------- | --------------- |
+		| SSE-S3                 | AWS tự quản key |
+		| SSE-KMS                | AWS KMS         |
+		| Client-side encryption | App tự encrypt  |
 
 
+
+
+	## 🔐 In-transit
+
+		| Cách        | Ý nghĩa            |
+		| ----------- | ------------------ |
+		| HTTPS       | TLS encryption     |
+		| S3 endpoint | luôn support HTTPS |
+
+
+		👉 AWS mặc định hỗ trợ HTTPS, nhưng:
+			Nếu client dùng HTTP → fail requirement
+			
+	
+	
+# 🔑 4. Keywords trong đề
+
+		At-rest
+			- encrypted at rest
+			- stored securely
+			- data at rest compliance
+
+		In-transit
+			- encrypted in transit
+			- secure transmission
+			- HTTPS / TLS	
+
+
+# ⚠️ 5. Bẫy (trap cực hay gặp)
+
+	## Trap 1: Chỉ encrypt at-rest nhưng quên in-transit
+		Đề nói:
+		"secure data"
+		👉 Có thể cần CẢ 2
+
+
+	## Trap 2: Nhầm IAM với encryption 
+		“secure access”
+			
+		👉 Không phải encryption
+		👉 Là IAM / policy	
+	
+	
+	## Trap 3: Nghĩ HTTPS là đủ
+	
+		Sai.
+			- HTTPS → chỉ bảo vệ lúc truyền
+			- Storage vẫn có thể bị đọc nếu không encrypt	
+			
+	
+	
+	## Trap 4: SSE-KMS không tự động bảo vệ in-transit 
+			- SSE-KMS → chỉ at-rest
+			- In-transit → vẫn cần HTTPS	
+				
+	
+# 	⚖️ 6. So sánh cực gọn
+	
+|             | At-rest            | In-transit     |
+| ----------- | ------------------ | -------------- |
+| Khi nào     | Lưu trữ            | Truyền         |
+| Công nghệ   | SSE, KMS           | TLS            |
+| AWS service | S3, EBS encryption | HTTPS endpoint |
+| Bảo vệ khỏi | disk leak          | network sniff  |
+	
+	
+# 	🧠 7. Cách AWS ra đề
+	
+	
+	
+	Pattern 1
+
+		- “data must be encrypted when stored”
+		- 👉 At-rest
+
+	Pattern 2
+
+		- “data must be encrypted during transfer”
+		- 👉 In-transit
+
+	Pattern 3 (rất hay)
+
+		- “data must be secure at all times”
+		- 👉 BOTH
+
+	Pattern 4 (bẫy khó)
+
+		- “prevent unauthorized access”
+		- 👉 IAM, KHÔNG phải encryption
+
+#🎯 8. Tóm lại (cực thẳng)
+
+		At-rest = đĩa bị hack vẫn không đọc được
+		In-transit = network bị sniff vẫn không đọc được
+		👉 Nếu đề không nói rõ → mặc định nghĩ:
+		có thể cần cả 2	
+	
+	
+	
+	
+	
+--------------🇯🇵 日本語版 ------------
+
+# 🔥 本質	
+	
+	## 	At-rest 暗号化
+		👉 データが保存されている状態での暗号化
+	
+	
+	## In-transit 暗号化
+		👉 データ通信中の暗号化（TLS）
+	
+	
+# 📦 例
+
+	## ケース1 
+		保存時の暗号化
+		👉 SSE-S3 / SSE-KMS
+
+
+	## ケース2
+		通信の保護
+		👉 HTTPS
+
+
+	## ケース3 
+		両方必要
+		👉 SSE + HTTPS
+
+# 🔑 キーワード
+
+	At-rest
+		- encrypted at rest
+		- storage encryption
+	
+	
+	In-transit 
+		- in transit
+		- HTTPS / TLS
+	
+
+# ⚠️ 試験の罠	
+	
+	
+		
+	① HTTPSだけでは不十分
+		→ 保存時は別
+
+	② SSE-KMSは通信を守らない
+		→ TLSが必要
+
+	③ アクセス制御と混同
+		→ IAM / Bucket Policy	
+	
+	
+	
+# ⚖️ 比較	
+	
+	
+| 項目    | At-rest   | In-transit |
+| ----- | --------- | ---------- |
+| タイミング | 保存時       | 通信時        |
+| 技術    | SSE / KMS | TLS        |
+	
+	
+# 	🧠 出題パターン
+	
+保存 → at-rest
+通信 → in-transit
+常に安全 → 両方
 
 
 
