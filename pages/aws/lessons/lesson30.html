@@ -1,6 +1,292 @@
-<html><head><title>Lesson 30 == Cloud Practitioner ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 30 -- Cloud Practitioner -//</h1><pre>
-lifecycle policy
+<html><head><title>Lesson 30 == Cloud Practitioner ==versioning ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 30 -- Cloud Practitioner --versioning -//</h1><pre>
+# 🧠 1. Bản chất của Versioning
 
 
+	👉 Versioning = giữ lại tất cả các phiên bản của object (file)
+
+			Upload file A → version 1
+			Upload lại file A → version 2
+			Xóa file A → KHÔNG mất, chỉ tạo “delete marker”
+
+	👉 Bản chất thật:
+		Không bao giờ overwrite thật sự — chỉ tạo version mới
+
+
+
+# 🔥 2. Tại sao cần Versioning?
+
+| Vấn đề          | Versioning giải quyết |
+| --------------- | --------------------- |
+| User xóa nhầm   | khôi phục lại         |
+| Overwrite nhầm  | quay về version cũ    |
+| Data corruption | rollback              |
+
+
+👉 Nói thẳng:
+	Versioning = “undo” cho S3
+
+
+
+# 📦 3. Behavior quan trọng
+	1. Delete KHÔNG phải delete thật
+
+	👉 Khi xóa:
+		- tạo delete marker
+		- file cũ vẫn tồn tại
+
+
+
+	2. Mỗi version có ID riêng
+	👉 GET:
+		- không chỉ định version → lấy latest
+		- chỉ định version → lấy bản cụ thể
+
+
+
+	3. Không thể “disable hoàn toàn”
+		👉 chỉ có:
+
+		Enable
+		Suspend
+
+		👉 Suspend ≠ tắt hẳn	
+			
+			
+# 🧪 4. Ví dụ thực tế			
+			
+				
+	## Scenario 1
+
+		Dev overwrite file config gây crash hệ thống
+
+		👉 Có versioning:
+		→ rollback ngay
+
+		👉 Không có:
+		→ toang			
+					
+				
+			
+	## Scenario 2 			
+			
+		User xóa nhầm file quan trọng
+
+		👉 Có versioning:
+			→ remove delete marker → file quay lại			
+						
+					
+			
+	## Scenario 3 (bẫy classic) 			
+		Cần backup data	
+
+		👉 Sai nếu chọn versioning
+		👉 Versioning ≠ backup
+		
+		
+# 	🔗 5. Mapping với AWS Services
+
+
+| Use case             | Service                  |
+| -------------------- | ------------------------ |
+| File version control | S3 Versioning            |
+| Backup               | S3 + Glacier             |
+| DR                   | Cross-Region Replication |
+| Audit                | CloudTrail               |
+
+
+
+
+# 🔑 6. Từ khóa trong đề thi
+
+| Keyword                  | Ý nghĩa    |
+| ------------------------ | ---------- |
+| accidentally deleted     | versioning |
+| overwrite                | versioning |
+| recover previous version | versioning |
+| rollback                 | versioning |
+| protect against deletion | versioning |
+
+
+
+# ⚠️ 7. Bẫy AWS hay gài
+
+	❌ Bẫy 1: Versioning ≠ Backup
+
+		👉 Versioning:
+			cùng bucket
+			không chống region failure
+
+		👉 Backup:
+			thường sang region khác
+
+
+
+
+	❌ Bẫy 2: Versioning ≠ Replication
+
+| Feature            | Versioning  | Replication  |
+| ------------------ | ----------- | ------------ |
+| Mục đích           | recovery    | DR           |
+| Location           | same bucket | cross region |
+| Failure protection | thấp        | cao          |
+
+
+
+	❌ Bẫy 3: Delete là mất luôn
+	
+		👉 Sai
+		→ chỉ là delete marker
+			
+			
+	❌ Bẫy 4: Cost	
+		👉 Versioning:
+			lưu nhiều version → tốn tiền
+
+		👉 đề hay hỏi:
+			“optimize cost”
+			→ phải combine lifecycle			
+						
+
+
+# ⚖️ 8. So sánh dễ nhầm
+
+| Feature  | Versioning | Lifecycle         |
+| -------- | ---------- | ----------------- |
+| Mục đích | recovery   | cost optimization |
+| Trigger  | action     | time              |
+| Delete   | giữ lại    | xóa thật          |
+
+
+
+# 🧠 9. Cách AWS ra đề 
+
+	AWS KHÔNG hỏi:
+		❌ Versioning là gì?
+		
+				
+		AWS hỏi kiểu:
+
+		🧪 Example 1
+		Người dùng thường xuyên overwrite file và cần khôi phục bản cũ
+		👉 Đáp án:
+		→ Versioning		
+				
+						
+		🧪 Example 2 (trap)
+			Cần bảo vệ dữ liệu khỏi region failure
+			👉 Versioning ❌
+			→ Replication		
+		
+		
+		🧪 Example 3 (bẫy cost)
+			Bucket có versioning gây tăng chi phí
+			👉 Đáp án:
+			→ Lifecycle để xóa version cũ		
+		
+		
+# 🎯 10. Trade-off		
+		
+| Yếu tố     | Trade-off |
+| ---------- | --------- |
+| Safety     | cao       |
+| Cost       | tăng      |
+| Complexity | tăng      |
+| Recovery   | nhanh     |
+
+
+🧠 11. Tóm tắt 1 dòng
+	👉 Versioning = giữ lịch sử file để rollback
+
+
+
+
+----------- 🇯🇵 日本語版-----------
+
+# 🧠 バージョニングの本質
+
+
+	👉 オブジェクトの全履歴を保存する仕組み
+		上書き → 新しいバージョン
+		削除 → delete marker
+
+	👉 本質：
+		実際には削除されない
+
+
+
+
+# 🔥 なぜ必要？
+
+	誤削除対策
+	上書きミス対策
+	ロールバック
+
+# 📦 重要ポイント
+
+	- delete = 完全削除ではない
+	- version IDあり
+	- disable不可（suspendのみ）
+
+
+# 🧪 試験シナリオ 
+
+
+	ケース1
+
+		上書きミス
+		→ Versioning
+
+	ケース2
+
+		誤削除
+		→ Versioning
+
+	ケース3（トラップ）
+		バックアップ目的
+		→ Versioningではない
+
+
+
+# 🔑 キーワード
+
+	- accidentally deleted
+	- overwrite
+	- rollback
+	- previous version
+
+
+# ⚠️ トラップ
+
+	❌ Versioning = Backupではない
+	❌ Versioning = DRではない
+	❌ delete = 完全削除ではない
+
+
+# ⚖️ 比較
+
+| 項目   | Versioning | Lifecycle |
+| ---- | ---------- | --------- |
+| 目的   | 復元         | コスト削減     |
+| トリガー | 操作         | 時間        |
+
+
+# 🧠 出題パターン
+
+
+	👉 「誤削除・上書き対策」
+		→ Versioning
+
+	👉 「災害対策」
+		→ Replication
+		
+		
+# 	🎯 最重要まとめ	
+		
+		
+	- 復元 → Versioning
+	- コスト削減 → Lifecycle
+	- DR → Replication		
+			
+		
 
 </pre><a id='backBottom' href='../aws-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

@@ -1,5 +1,289 @@
-<html><head><title>Lesson 29 == Cloud Practitioner ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 29 -- Cloud Practitioner -//</h1><pre>
-storage classes
+<html><head><title>Lesson 29 == Cloud Practitioner ===lifecycle policy ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 29 -- Cloud Practitioner --=lifecycle policy -//</h1><pre>
+# 🧠 1. Bản chất của Lifecycle Policy
+
+	👉 Lifecycle Policy = rule tự động di chuyển hoặc xóa dữ liệu theo thời gian
+	Không có gì cao siêu:
+
+		- Sau X ngày → chuyển storage class
+		- Sau Y ngày → delete
+
+	👉 Bản chất thật:
+		Tối ưu cost bằng automation, không phải quản lý thủ công
+
+
+# 🔥 2. Tại sao nó tồn tại?
+
+
+	AWS không ngu:
+
+		Standard đắt
+		Glacier rẻ
+
+	👉 Nhưng user:
+
+		Quên chuyển
+		Hoặc không biết khi nào chuyển
+
+	👉 Lifecycle Policy giải quyết:
+		→ “set 1 lần, AWS tự lo”
+
+
+
+# 📦 3. Cấu trúc một Lifecycle Rule
+	Một rule gồm:
+
+| Thành phần | Ý nghĩa                           |
+| ---------- | --------------------------------- |
+| Scope      | áp dụng cho bucket / prefix / tag |
+| Transition | chuyển class                      |
+| Expiration | xóa                               |
+| Versioning | xử lý version cũ                  |
+
+
+# 🧪 4. Ví dụ thực tế
+
+	Scenario 1
+		Log data:
+			30 ngày đầu: truy cập thường xuyên
+			Sau đó: hiếm khi dùng
+			Sau 1 năm: xóa
+
+
+	👉 Giải pháp:
+
+		Day 0–30 → Standard
+		Day 30 → Standard-IA
+		Day 90 → Glacier
+		Day 365 → Delete
+
+	👉 Đây là Lifecycle Policy chuẩn sách giáo khoa
+
+
+
+
+	Scenario 2 (real system design)
+
+		Hệ thống upload ảnh user
+
+	👉 Thực tế:
+
+		7 ngày đầu: user hay xem lại → Standard
+		Sau đó: ít dùng → IA
+		Sau 6 tháng: gần như không ai xem → Glacier
+
+	👉 Không có lifecycle = tiền bay mỗi tháng
+
+
+
+# 🔗 5. Mapping với AWS Services
+
+| Feature            | Service     |
+| ------------------ | ----------- |
+| Lifecycle policy   | S3          |
+| Archive            | Glacier     |
+| Monitoring         | CloudWatch  |
+| Trigger automation | EventBridge |
+
+
+
+
+# 🔑 6. Từ khóa trong đề thi
+	Nhìn thấy mấy từ này → bật ngay lifecycle:
+	
+	
+| Keyword            | Ý nghĩa      |
+| ------------------ | ------------ |
+| automatically move | lifecycle    |
+| after X days       | lifecycle    |
+| cost optimization  | lifecycle    |
+| transition         | chuyển class |
+| expiration         | xóa          |
+| retention          | giữ bao lâu  |
+	
+	
+# 	⚠️ 7. Bẫy AWS hay gài
+
+
+	❌ Bẫy 1: Manual vs Automatic
+
+		“Developer periodically moves data”
+
+		👉 Sai
+
+		👉 Đúng:
+			→ Lifecycle
+
+
+
+	❌ Bẫy 2: Storage class vs Lifecycle
+
+	👉 Đề hỏi:
+		“chọn storage” → chọn class
+		“tự động chuyển” → lifecycle
+
+	👉 Nhầm cái này là toang
+
+
+
+	❌ Bẫy 3: Delete vs Archive
+		Archive ≠ delete
+		Glacier vẫn tốn tiền
+	👉 đề hay gài:
+		“reduce cost as much as possible”
+		→ phải delete, không phải archive
+
+
+
+	❌ Bẫy 4: Immediate vs delayed
+
+	Lifecycle:
+
+		không real-time
+		chạy theo rule (daily)
+
+	👉 không dùng cho:
+
+		xử lý event ngay lập tức
+			
+	
+# ⚖️ 8. So sánh dễ nhầm
+
+
+	| Feature  | Lifecycle         | Event-driven (Lambda) |
+	| -------- | ----------------- | --------------------- |
+	| Trigger  | time-based        | event-based           |
+	| Use case | cost optimization | real-time processing  |
+	| Delay    | có                | gần real-time         |
+
+
+	👉 Câu hỏi:
+
+		“after 30 days” → Lifecycle
+		“when file uploaded” → Lambda
+
+
+# 🧠 9. Cách AWS ra đề 
+
+	AWS KHÔNG hỏi:
+		❌ Lifecycle là gì?
+
+
+	AWS hỏi kiểu:
+
+
+		🧪 Example 1
+			Dữ liệu cần tự động chuyển sang lớp lưu trữ rẻ hơn sau 60 ngày
+		👉 Đáp án:
+			→ Lifecycle
+
+		🧪 Example 2 (trap)
+				Khi file upload, cần xử lý ngay
+			👉 Không phải lifecycle
+				→ Lambda trigger
+
+		🧪 Example 3 (bẫy cost)
+				Data phải giữ 7 năm nhưng ít truy cập
+			👉 Đúng:
+				Lifecycle → Glacier Deep Archive
+
+
+# 🎯 10. Trade-off
+
+
+| Yếu tố     | Trade-off                 |
+| ---------- | ------------------------- |
+| Automation | tiện nhưng không realtime |
+| Cost       | giảm mạnh                 |
+| Control    | ít linh hoạt hơn code     |
+| Delay      | có delay                  |
+
+
+
+# 🧠 11. Tóm tắt 1 dòng
+	👉 Lifecycle = automation theo thời gian để tiết kiệm tiền
+	
+	
+	
+------------- 🇯🇵 日本語版-------	
+	
+# 🧠 ライフサイクルポリシーの本質	
+
+	👉 時間ベースでデータを自動的に移動・削除する仕組み
+		X日後 → ストレージ変更
+		Y日後 → 削除
+
+	👉 本質：
+		コスト最適化のための自動化	
+		
+	
+	
+# 📦 仕組み	
+	
+	Transition（クラス変更）
+	Expiration（削除）
+	Scope（適用範囲）
+		
+	
+	
+# 🧪 試験シナリオ	
+
+	ケース1
+		ログデータ：
+
+			30日後 → IA
+			90日後 → Glacier
+			365日後 → 削除
+		→ Lifecycle	
+	
+	
+	ケース2	
+		ユーザー画像：
+		→ 時間経過で自動的にコスト削減	
+			
+			
+	
+# 🔑 キーワード 	
+	automatically
+	after X days
+	transition
+	expiration
+	retention	
+	
+	
+	
+# 	⚠️ トラップ
+	
+		
+	❌ 手動で移動 → NG
+	❌ archive = delete → NG
+	❌ 即時処理 → Lifecycleではない	
+		
+		
+# 	⚖️ 比較
+	
+| 項目   | Lifecycle | Lambda   |
+| ---- | --------- | -------- |
+| トリガー | 時間        | イベント     |
+| 用途   | コスト削減     | リアルタイム処理 |
+	
+	
+	
+#🧠 出題パターン
+	
+	AWSはこう聞く：
+		👉 「一定期間後に自動で移動したい」
+	→ Lifecycle	
+	
+	
+# 	🎯 最重要まとめ
+
+
+	👉 一行で：
+
+	時間ベース → Lifecycle
+	イベントベース → Lambda
+
+
 
 
 

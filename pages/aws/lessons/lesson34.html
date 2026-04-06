@@ -1,11 +1,321 @@
-<html><head><title>Lesson 34 == Cloud Practitioner ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 34 -- Cloud Practitioner -//</h1><pre>
-Hai dịch vụ cần nhớ:
+<html><head><title>Lesson 34 == Cloud Practitioner ==S3 Batch Operations ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 34 -- Cloud Practitioner --S3 Batch Operations -//</h1><pre>
+#1. Định nghĩa bản chất
+	S3 Batch Operations = tool để thực hiện thao tác hàng loạt trên hàng triệu object trong S3 một cách tự động
 
-Amazon RDS
+	Nếu bạn đang nghĩ:
+		“Lifecycle cũng làm hàng loạt mà?” → Sai bối cảnh.
 
-Amazon DynamoDB
 
-database trên cloud
+	Bản chất thật:
+		Bạn chủ động tạo job
+		AWS chạy job đó trên list object bạn chỉ định
+		Có thể:
+			copy
+			tag
+			restore
+			invoke Lambda
+			change ACL
+			encrypt
+
+		👉 Nó giống:
+
+		“cron job + script xử lý S3 nhưng AWS làm thay bạn, scale cực lớn”
+
+
+# 2. Ví dụ thực tế
+
+	Scenario 1 (chuẩn đề thi)
+
+		Công ty có:
+				100 triệu object trong S3
+			Cần:
+				add tag project=archive
+				hoặc chuyển sang Glacier
+
+		❌ Không thể:
+			loop bằng script → chết
+			dùng Lifecycle → không đủ control
+
+		✅ Đáp án:
+			→ S3 Batch Operations
+
+
+
+
+
+
+	Scenario 2 (nâng cao hơn)
+
+		Có list object cần xử lý trong file CSV
+		
+		Muốn:
+			invoke Lambda để resize ảnh
+			
+		👉 Flow:
+			Upload CSV manifest
+			Create Batch Job
+			Batch → call Lambda từng object
+
+
+
+
+# 3. Mapping với AWS services
+
+| Thành phần                 | Vai trò                   |
+| -------------------------- | ------------------------- |
+| S3 Batch Operations        | engine chạy job           |
+| Manifest (CSV / Inventory) | danh sách object          |
+| S3 Inventory               | generate danh sách object |
+| Lambda                     | xử lý custom logic        |
+| IAM Role                   | cấp quyền chạy job        |
+
+
+
+
+# 4. Từ khóa trong đề thi
+
+	“millions of objects”
+	“perform operation on existing objects”
+	“apply action at scale”
+	“one-time bulk operation”
+	“custom processing via Lambda”
+
+
+
+# 5. Bẫy (trap cực nguy hiểm)
+
+
+	Trap 1: Nhầm với Lifecycle
+
+| Batch Operations      | Lifecycle                  |
+| --------------------- | -------------------------- |
+| manual job            | tự động theo rule          |
+| chạy 1 lần / theo job | chạy liên tục              |
+| xử lý cụ thể list     | dựa vào rule (age, prefix) |
+
+
+	👉 Nếu đề nói:
+
+		“after 30 days” → Lifecycle
+		“apply now to selected objects” → Batch
+
+
+
+
+	Trap 2: Nhầm với CLI script
+	
+		Đề sẽ cho:
+			“script using AWS CLI”
+
+		👉 Đây là bẫy:
+
+			CLI không scale tốt
+			không retry tốt
+			không tracking job
+
+		→ Batch Operations là managed solution
+
+
+	Trap 3: Nhầm với S3 Inventory
+
+		Inventory = chỉ list object
+		Batch = dùng list đó để hành động
+
+		👉 Inventory ≠ xử lý
+
+
+	Trap 4: Nhầm với Replication
+
+		Replication = tự động copy sang bucket khác
+		Batch = bạn tự trigger
+
+
+
+# 6. So sánh tổng thể
+
+| Feature      | Batch Ops   | Lifecycle   | Replication |
+| ------------ | ----------- | ----------- | ----------- |
+| Trigger      | manual      | rule-based  | automatic   |
+| Scale        | cực lớn     | lớn         | lớn         |
+| Custom logic | có (Lambda) | không       | không       |
+| One-time job | YES         | NO          | NO          |
+| Cross-region | có          | không focus | YES         |
+
+
+
+
+# 7. Trade-off
+
+
+	Ưu điểm
+		Scale cực lớn
+		tracking job status
+		retry built-in
+		tích hợp Lambda
+		
+	Nhược điểm
+		cần chuẩn bị manifest
+		không real-time
+		không phải automation lâu dài
+
+	👉 Nói thẳng:
+		Batch = “phẫu thuật 1 lần”
+		Lifecycle = “chế độ tự động lâu dài”
+
+
+# 8. Cách AWS ra đề
+
+
+	Pattern 1
+		“A company needs to update metadata for millions of objects immediately”
+		→ Đáp án: S3 Batch Operations
+
+
+
+	Pattern 2
+		“Process objects using custom logic”
+
+	→ phải có:
+		Lambda + Batch Ops
+
+
+	Pattern 3 (bẫy Lifecycle)
+	
+		“after 30 days move to Glacier”
+		→ Lifecycle (KHÔNG phải Batch)
+
+
+# 9. Kết luận 
+
+	Nếu:
+		1 lần
+		hàng loạt
+		có control cụ thể
+		→ chọn Batch Ops
+	Nếu:
+		theo thời gian
+		→ Lifecycle
+
+
+
+--------------- 🇯🇵 日本語版-------------
+
+# 1. 本質的な定義 
+
+	S3 Batch Operations = S3内の大量オブジェクトに対して、一括で処理を実行するマネージドサービス
+
+	ポイント：
+
+		- 自分でJobを作成する（自動ではない）
+		- 指定したオブジェクト一覧に対して処理
+
+
+# 2. 実務例
+
+	例1（試験によく出る）
+		数千万〜数億のオブジェクト
+		タグ追加・アーカイブ化
+		→ S3 Batch Operationsが正解
+
+
+	例2
+		CSVで対象オブジェクトを指定
+		Lambdaで画像処理
+
+			→ Batch + Lambda
+
+
+# 3. AWSサービス対応
+
+| 要素               | 内容     |
+| ---------------- | ------ |
+| Batch Operations | 実行エンジン |
+| Manifest         | 対象リスト  |
+| S3 Inventory     | リスト生成  |
+| Lambda           | カスタム処理 |
+| IAM Role         | 権限     |
+
+
+
+
+# 4. 試験キーワード
+	“millions of objects”
+	“bulk operation”
+	“at scale”
+	“custom processing”
+
+
+
+# 5. よくある罠
+
+	## Lifecycleとの混同
+
+| Batch | Lifecycle |
+| ----- | --------- |
+| 手動    | 自動        |
+| 一回    | 継続        |
+| 柔軟    | ルールベース    |
+
+
+
+
+	## CLIとの混同
+
+		→ CLIはスケールしない
+		→ Batchが正解
+
+
+	## Inventoryとの混同 
+
+		Inventory = 一覧
+		Batch = 実行
+	
+
+# 6. 比較
+
+	| 項目   | Batch | Lifecycle | Replication |
+| ---- | ----- | --------- | ----------- |
+| 実行   | 手動    | 自動        | 自動          |
+| カスタム | 可能    | 不可        | 不可          |
+| 用途   | 一括処理  | ライフ管理     | コピー         |
+
+
+
+# 7. トレードオフ
+
+
+	メリット：
+		大規模処理
+		再試行・管理あり
+
+	デメリット：
+		即時性なし
+		継続処理には不向き
+
+
+
+# 8. 試験の出題パターン
+
+
+	パターン1
+
+		大量オブジェクトに対して即時処理
+		→ Batch
+
+	パターン2
+
+		Lambdaで処理
+		→ Batch + Lambda
+
+	パターン3
+
+		時間ベース
+		→ Lifecycle（罠）
+
+# 9. 結論
+
+	一括・一回 → Batch
+	自動・継続 → Lifecycle
 
 
 </pre><a id='backBottom' href='../aws-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

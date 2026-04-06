@@ -1,6 +1,352 @@
-<html><head><title>Lesson 33 == Cloud Practitioner ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 33 -- Cloud Practitioner -//</h1><pre>
+<html><head><title>Lesson 33 == Cloud Practitioner =S3 Batch Replication ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 33 -- Cloud Practitioner =S3 Batch Replication -//</h1><pre>
+# 🧠 1. Định nghĩa bản chất
+	S3 Batch Replication = công cụ để replicate “dữ liệu cũ (existing objects)” mà CRR/SRR không tự làm.
 
-review tuần
+	👉 Nói rõ hơn:
+
+		CRR/SRR chỉ replicate object mới sau khi bật rule
+		Batch Replication = backfill dữ liệu cũ
+		Chạy theo kiểu job (batch), không phải continuous
+
+	👉 Nếu không hiểu điểm này → chắc chắn dính bẫy
+
+
+
+# ⚙️ 2. Mapping AWS 
+| Thành phần             | Dịch vụ                  |
+| ---------------------- | ------------------------ |
+| Replication real-time  | S3 CRR / SRR             |
+| Replication dữ liệu cũ | **S3 Batch Replication** |
+| Engine chạy job        | S3 Batch Operations      |
+
+
+👉 Batch Replication thực chất chạy trên:
+	S3 Batch Operations + manifest list
+
+# 🔥 3. Ví dụ thực tế
+
+
+	Scenario 1 — classic trap
+		Bạn có S3 bucket chứa 10TB data
+		Hôm nay mới bật CRR
+		
+		👉 Vấn đề:
+			10TB data cũ → KHÔNG được replicate
+		👉 Giải pháp:
+			Dùng S3 Batch Replication để copy toàn bộ data cũ
+
+
+
+
+	Scenario 2 — migration
+		Di chuyển hệ thống từ Tokyo → Osaka
+		
+		Muốn:
+			Data cũ → copy hết
+			Data mới → auto replicate
+
+		👉 Combo chuẩn:
+
+			Batch Replication → xử lý data cũ
+			CRR → xử lý data mới	
+			
+			
+
+
+	Scenario 3 — compliance audit
+
+		AWS hỏi:
+			“Ensure all objects are replicated, including existing ones”
+
+		👉 Keyword “including existing objects”
+			→ chỉ có Batch Replication xử lý được
+
+
+
+
+
+# ⚠️ 4. Bản chất kỹ thuật
+
+
+	| Yếu tố     | Thực tế                    |
+	| ---------- | -------------------------- |
+	| Real-time  | ❌ Không                    |
+	| Continuous | ❌ Không                    |
+	| Scope      | Chỉ objects trong manifest |
+	| Versioning | ✅ BẮT BUỘC                 |
+	| Trigger    | Manual job                 |
+
+	👉 Nó là:
+		one-time job hoặc scheduled job, không phải replication tự động
+
+
+# 🧨 5. Keywords trong đề
+
+		- “existing objects”
+		- “previously uploaded data”
+		- “backfill”
+		- “replicate historical data”
+		- “batch job”
+
+	👉 thấy mấy từ này → auto chọn Batch Replication
+
+
+
+
+# 💣 6. Bẫy AWS hay gài
+
+
+
+	Trap 1 — tưởng CRR là đủ
+
+		👉 Câu hỏi:
+			replicate all objects
+
+		👉 nhưng không nói “new objects”
+
+			❌ chọn CRR
+			✅ phải nghĩ:
+			existing + new → Batch + CRR
+
+
+
+
+
+
+	Trap 2 — nghĩ là automatic
+
+		👉 Batch Replication:
+
+			❌ không tự chạy
+			❌ không continuous
+			→ phải trigger job
+
+
+
+
+	Trap 3 — nghĩ là backup
+	
+		👉 Nó vẫn là replication, không phải backup
+			→ không có point-in-time restore
+
+
+
+
+	Trap 4 — không hiểu manifest
+
+		👉 Batch Replication cần:
+			list object (manifest)
+
+		→ AWS đôi khi hỏi indirect:
+			“list of objects to process”
+
+
+
+# ⚔️ 7. So sánh cực quan trọng
+
+
+| Feature     | CRR/SRR    | Batch Replication    |
+| ----------- | ---------- | -------------------- |
+| Dữ liệu mới | ✅          | ❌                    |
+| Dữ liệu cũ  | ❌          | ✅                    |
+| Real-time   | Gần như    | ❌                    |
+| Continuous  | ✅          | ❌                    |
+| Trigger     | Auto       | Manual               |
+| Use case    | DR ongoing | Migration / backfill |
+
+👉 Nhìn bảng này là giải được 80% câu hỏi
+
+
+
+# 🧪 8. Scenario giống đề thi AWS
+
+
+	Câu 1
+		Một công ty:
+			Đã có dữ liệu trong S3
+			Bật replication sau đó
+			Muốn replicate toàn bộ data
+
+			👉 Đáp án:
+			✅ S3 Batch Replication
+
+
+
+
+	Câu 2 (combo)
+		Replicate toàn bộ data (old + new)
+			👉 Đáp án:
+			✅ Batch Replication + CRR
+
+
+	Câu 3 (bẫy)
+		“automatically replicate objects going forward”
+
+		👉 Đáp án:
+			❌ Batch Replication
+			✅ CRR
+
+
+
+# 🧠 9. Cách AWS ra đề
+
+	AWS không hỏi:
+		“Batch Replication là gì?”
+
+	Nó hỏi kiểu:
+
+
+	Pattern 1 — Existing data
+
+		“Objects were uploaded before enabling replication…”
+		👉 keyword “before”
+		→ chọn Batch Replication
+
+
+
+	Pattern 2 — Migration
+
+		“migrate all data to another region”
+		→ 90% là Batch Replication
+
+
+
+	Pattern 3 — Full coverage
+		“ensure all objects are replicated”
+		→ nghĩ ngay:
+			old + new
+			→ Batch + CRR
+
+
+
+# 🧠 10. Trade-off
+
+| Ưu điểm                | Nhược điểm                  |
+| ---------------------- | --------------------------- |
+| Replicate được data cũ | Không tự động               |
+| Control tốt            | Phải quản lý job            |
+| Dùng cho migration     | Tốn cost (batch + transfer) |
+
+
+
+
+# 🔥 Chốt 1 câu
+
+	👉 CRR = tương lai (future)
+	👉 Batch Replication = quá khứ (past)
+
+		Không hiểu câu này → fail SAA.
+
+
+
+------------------🇯🇵 日本語版------------
+
+# 🧠 本質の定義
+
+	既存データ（過去にアップロードされたオブジェクト）を一括でレプリケーションするための仕組み。
+
+	👉 ポイント：
+		CRR/SRRは「新規データのみ」
+		Batch Replicationは「既存データ用」
+		バッチジョブとして実行される（自動ではない）
+
+
+# ⚙️ AWSサービス対応
+
+| 種類    | サービス                 |
+| ----- | -------------------- |
+| 新規データ | CRR / SRR            |
+| 既存データ | S3 Batch Replication |
+
+
+
+
+# 🔥 具体例
+
+	移行シナリオ
+		東京 → 大阪へデータ移行
+		既存データも含めたい
+
+	👉 解決：
+		Batch Replication（既存）
+		CRR（新規）
+
+
+
+
+# ⚠️ 技術ポイント
+
+
+| 項目         | 内容 |
+| ---------- | -- |
+| リアルタイム     | ❌  |
+| 継続処理       | ❌  |
+| トリガー       | 手動 |
+| Versioning | 必須 |
+
+
+
+# 💣 試験キーワード
+
+	existing objects
+	previously uploaded
+	backfill
+	batch job
+
+
+# 🧨 よくある罠
+
+	CRRだけで全部コピーできると思う
+		→ 既存データは対象外
+	自動処理だと思う
+		→ 手動ジョブ
+	Backupと混同
+		→ 復元機能はない
+
+
+# ⚔️ 比較
+
+| 項目    | CRR | Batch Replication |
+| ----- | --- | ----------------- |
+| 新規データ | ✅   | ❌                 |
+| 既存データ | ❌   | ✅                 |
+| 自動    | ✅   | ❌                 |
+
+
+
+
+# 🧪 試験問題パターン
+
+
+	👉 「過去データもコピー」
+		→ Batch Replication
+
+	👉 「今後自動でコピー」
+		→ CRR
+
+	👉 「すべてのデータ」
+		→ Batch + CRR
+
+
+
+# 🧠 AWSの出題パターン
+
+	「before enabling replication」→ Batch
+	「all objects」→ Batch + CRR
+	「automatically going forward」→ CRR
+
+
+# 🔥 最後に 
+
+	Batch Replicationは：
+
+	👉 「過去を埋めるツール」
+		これを理解してないと、確実に引っかかる。
+
+
+
+
+
 
 
 </pre><a id='backBottom' href='../aws-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

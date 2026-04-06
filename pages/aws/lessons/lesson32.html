@@ -1,5 +1,323 @@
-<html><head><title>Lesson 32 == Cloud Practitioner ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 32 -- Cloud Practitioner -//</h1><pre>
+<html><head><title>Lesson 32 == Cloud Practitioner ==Replication ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 32 -- Cloud Practitioner --Replication -//</h1><pre>	
 
-use case S3
+
+
+# 🧠 1. Định nghĩa bản chất
+	Replication = copy dữ liệu sang nơi khác một cách tự động, bất đồng bộ (async), 
+	để phục vụ HA / DR / compliance.
+
+
+	👉 Nói rõ hơn:
+
+		Không phải backup (không dùng để restore point-in-time)
+		Không phải sync real-time tuyệt đối (có delay)
+		Là copy liên tục object mới từ source → destination
+
+	👉 Trong AWS:
+
+		Chủ yếu là S3 Replication
+
+
+# ⚙️ 2. Mapping AWS cụ thể
+
+| Loại                          | Dịch vụ                               |
+| ----------------------------- | ------------------------------------- |
+| Replication trong cùng region | **S3 Same-Region Replication (SRR)**  |
+| Replication khác region       | **S3 Cross-Region Replication (CRR)** |
+
+
+
+# 🔥 3. Ví dụ thực tế
+
+
+
+	Scenario 1 — DR (Disaster Recovery)
+		Bạn deploy app ở Tokyo
+		Muốn backup sang Osaka
+		👉 Giải pháp:
+			S3 bucket Tokyo → enable CRR → replicate sang Osaka
+
+		👉 Khi Tokyo chết:
+			Switch sang Osaka
+
+
+
+	Scenario 2 — Compliance (luật dữ liệu)
+			EU yêu cầu data phải nằm trong EU
+
+		👉 Bạn:
+			Upload vào S3 US
+			Replicate sang S3 EU
+
+
+
+
+	Scenario 3 — Multi-region read
+		User Nhật đọc từ Tokyo
+		User US đọc từ Virginia
+
+		👉 replicate data sang nhiều region
+
+
+
+# ⚠️ 4. Bản chất kỹ thuật
+
+| Yếu tố           | Thực tế                           |
+| ---------------- | --------------------------------- |
+| Timing           | ❌ Không real-time (async)         |
+| Versioning       | ✅ BẮT BUỘC phải bật               |
+| Existing objects | ❌ Không replicate mặc định        |
+| Delete           | ⚠️ Có thể replicate delete marker |
+	
+	👉 Nếu không bật Versioning → replication KHÔNG chạy			
+
+
+
+
+
+
+# 🧨 5. Các từ khóa trong đề thi
+	- “automatically replicate objects”
+	- “across regions”
+	- “disaster recovery”
+	- “compliance requirement”
+	- “low latency global access”
+	- “versioning enabled”
+
+
+# 💣 6. Bẫy (trap) AWS hay gài
+
+	Trap 1 — Nhầm với Backup
+
+		👉 Câu hỏi:
+		Need to restore previous version?
+			❌ Replication
+			✅ Versioning / Backup
+
+
+
+	Trap 2 — Existing data
+		👉 Câu hỏi:
+
+			replicate existing objects
+
+			❌ CRR mặc định không làm
+			✅ phải dùng:
+				S3 Batch Replication
+
+
+	Trap 3 — Real-time
+
+		👉 Câu hỏi:
+
+			immediate consistency / no delay
+				❌ Replication
+				✅ dùng:
+				Multi-AZ (khác concept)
+
+
+
+	Trap 4 — Versioning
+
+		👉 Câu hỏi không nói versioning
+
+		👉 90% là bẫy
+			→ Replication REQUIRE versioning
+
+
+
+	Trap 5 — Delete behavior
+		Delete object ở source:
+			Không xóa object thật ở dest
+		Chỉ replicate delete marker (nếu config)
+			👉 nhiều người tưởng là sync 2 chiều → sai
+
+
+# ⚔️ 7. So sánh dễ nhầm
+
+
+| Concept       | Replication | Backup           | Sync tool        |
+| ------------- | ----------- | ---------------- | ---------------- |
+| Mục tiêu      | HA / DR     | Restore          | Đồng bộ          |
+| Delay         | Có          | Không quan trọng | Thường real-time |
+| Version       | Bắt buộc    | Có thể           | Không            |
+| Restore point | ❌           | ✅                | ❌                |
+| 2 chiều       | ❌           | ❌                | Có thể           |
+
+
+# 🧪 8. Scenario kiểu đề thi AWS
+
+	Câu hỏi mẫu:
+
+		Một công ty cần:
+
+			Dữ liệu phải được copy sang region khác
+			Tự động
+			Không cần real-time
+			Phục vụ DR
+			👉 Đáp án đúng:
+			✅ S3 Cross-Region Replication
+
+
+
+	Câu hỏi bẫy:
+		Need to replicate ALL existing + new objects
+
+	👉 Đáp án:
+		✅ CRR + S3 Batch Replication
+
+
+	Câu hỏi tricky:
+		Need lowest latency access globally
+
+		👉 Đáp án KHÔNG phải replication
+		✅ CloudFront / Multi-region architecture
+
+
+
+# 🧠 9. Cách AWS ra đề 
+
+
+	Nó hỏi kiểu:
+		“A company needs to automatically copy objects to another region for compliance…”
+
+	👉 dấu hiệu:
+		automatic
+		cross-region
+		compliance
+		→ chọn replication
+
+
+	👉 Nhưng nếu thêm:
+		“with minimal delay / real-time”
+		→ loại replication ngay
+
+
+
+	👉 Nếu thêm:
+		“restore previous version”
+			→ loại replication
+
+
+
+# 🧠 10. Trade-off
+
+
+| Ưu điểm      | Nhược điểm                           |
+| ------------ | ------------------------------------ |
+| Tự động      | Không real-time                      |
+| DR tốt       | Không backup                         |
+| Multi-region | Tốn cost (double storage + transfer) |
+
+
+------------------ 🇯🇵 日本語版-------------
+
+# 🧠 本質の定義
+	データを別の場所へ自動的にコピーする仕組み（非同期）であり、主にDRやコンプライアンス目的で使用される。
+
+	👉 ポイント：
+
+		バックアップではない
+		リアルタイム同期ではない（遅延あり）
+		新規オブジェクトを自動コピーする
+
+
+
+#⚙️ AWSサービス対応 
+
+
+	| 種類      | サービス   |
+	| ------- | ------ |
+	| 同一リージョン | S3 SRR |
+	| 別リージョン  | S3 CRR |
+
+
+
+# 🔥 具体例
+
+	DR対策
+
+		東京 → 大阪へデータコピー
+		→ 東京障害時に大阪で復旧
+
+
+	コンプライアンス
+		US → EUへデータコピー
+		→ データ所在制約対応
+
+
+⚠️ 技術ポイント
+
+| 項目         | 内容                   |
+| ---------- | -------------------- |
+| 同期         | 非同期                  |
+| Versioning | 必須                   |
+| 既存データ      | デフォルトでは対象外           |
+| 削除         | Delete Markerのみコピー可能 |
+
+
+# 💣 試験キーワード
+
+	- automatically replicate
+	- cross-region
+	- disaster recovery
+	- compliance
+	- versioning enabled
+
+
+🧨 よくある罠
+
+	Backupと混同
+		→ Replicationは復元用途ではない
+	既存データ
+		→ Batch Replicationが必要
+	リアルタイム
+		→ Replicationは不可
+	Versioning必須
+		→ 記載なし＝罠
+		
+		
+		
+# 	⚔️ 比較
+
+| 概念        | Replication | Backup |
+| --------- | ----------- | ------ |
+| 目的        | DR          | 復元     |
+| リアルタイム    | ❌           | -      |
+| Version管理 | 必須          | 任意     |
+
+
+
+
+# 🧪 試験問題パターン
+
+	👉 「別リージョンへ自動コピー」
+	→ CRR
+
+	👉 「既存データも含む」
+	→ CRR + Batch Replication
+
+	👉 「低レイテンシ」
+	→ CloudFront（Replicationではない）
+
+
+# 🧠 AWSの出題パターン
+
+
+		定義は聞かない
+		ユースケースで判断させる
+
+		👉 キーワード検出ゲーム：
+
+		cross-region → CRR
+		compliance → CRR
+		DR → CRR
+
+
+# 🔥 最後に一言
+
+	Replicationを「backup」だと思ってるなら、試験は落ちる。
+	Nó là data distribution mechanism, không phải recovery mechanism.
+
 
 </pre><a id='backBottom' href='../aws-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
