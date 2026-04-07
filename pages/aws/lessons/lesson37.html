@@ -1,7 +1,300 @@
-<html><head><title>Lesson 37 == Cloud Practitioner ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 37 -- Cloud Practitioner -//</h1><pre>
+<html><head><title>Lesson 37 == Cloud Practitioner ==Object Lock ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 37 -- Cloud Practitioner --Object Lock -//</h1><pre>
+
+# 🧠 1. Bản chất của Object Lock
+
+	S3 Object Lock = cơ chế khóa object để KHÔNG AI có thể xóa hoặc sửa trong một khoảng thời gian
 
 
-Object Lock (compliance trap)
+	👉 Kể cả:
+		root user
+		admin
+		hacker
+
+	➡️ Nó enforce:
+		Write Once Read Many (WORM)
+
+
+
+# 🔥 Nói thẳng: 
+
+
+		Không phải backup
+		Không phải versioning
+		Không phải lifecycle
+
+	👉 Nó là:
+		“Không cho phép thay đổi – dù bạn có quyền cao nhất”
+
+
+
+
+# 📦 2. Ví dụ thực tế 
+
+
+	Case: Compliance / pháp lý
+
+		Một công ty tài chính cần:
+
+		Lưu log giao dịch
+		Không được phép sửa hoặc xóa trong 7 năm (theo luật)
+		
+	❌ Không dùng:
+		Lifecycle → có thể delete
+		Versioning → vẫn overwrite
+
+	✅ Phải dùng:
+		👉 Object Lock (Compliance mode)
+
+
+	Flow thực tế:
+
+Application → S3 (Object Lock enabled)
+                ↓
+         Retention period (7 years)
+                ↓
+    No delete / No overwrite
+
+
+# ⚙️ 3. Mapping với AWS services
+
+| Thành phần       | Vai trò             |
+| ---------------- | ------------------- |
+| S3 Object Lock   | Lock object         |
+| Versioning       | Bắt buộc phải bật   |
+| Retention Period | Thời gian lock      |
+| Legal Hold       | Lock vô thời hạn    |
+| IAM              | Không override được |
+
+
+
+# 🔑 4. Keywords trong đề thi
+
+
+	- "compliance requirement"
+	- "regulatory requirement"
+	- "cannot be deleted"
+	- "cannot be modified"
+	- "immutable"
+	- "WORM"
+	- "financial / legal data"
+	- "audit logs retention"
+
+
+# ⚠️ 5. Bẫy (trap) cực nặng
+
+	❌ Trap 1: Nhầm với Versioning
+
+| Versioning         | Object Lock |
+| ------------------ | ----------- |
+| Cho phép overwrite | ❌           |
+| Giữ version cũ     | ✅           |
+| Có thể delete      | ✅           |
+| Immutable          | ❌           |
+
+👉 Versioning = backup nhẹ
+👉 Object Lock = cấm động vào
+
+
+	❌ Trap 2: Nhầm với Lifecycle
+
+| Lifecycle   | Object Lock |
+| ----------- | ----------- |
+| Auto delete | ✅           |
+| Compliance  | ❌           |
+| Rule-based  | ✅           |
+| Lock        | ❌           |
+
+👉 Lifecycle dùng để XÓA
+👉 Object Lock dùng để KHÔNG CHO XÓA
+
+
+
+	❌ Trap 3: Nhầm với Backup
+
+		👉 Backup vẫn có thể:
+			overwrite
+			delete
+			restore
+
+		👉 Object Lock:
+			Không đụng được
+
+
+
+	❌ Trap 4: Không phân biệt 2 mode
+
+
+		🔐 Governance mode
+			Admin có thể bypass
+			Dùng nội bộ
+		🔒 Compliance mode
+			KHÔNG AI bypass được
+			Dùng cho luật pháp
+
+		👉 Thi hay hỏi:
+			"even root user cannot delete"
+			→ Compliance mode
+
+
+# ⚖️ 6. Trade-off
+
+
+| Ưu điểm            | Nhược điểm     |
+| ------------------ | -------------- |
+| Bảo vệ tuyệt đối   | Không thể sửa  |
+| Đáp ứng compliance | Khó rollback   |
+| Chống ransomware   | Setup cẩn thận |
+
+
+	👉 Nói thẳng:
+	Bật sai = tự khóa chính mình
+
+
+#🧪 7. Scenario giống đề thi AWS
+
+
+📝 Question
+
+Một công ty:
+
+Lưu log tài chính
+Phải giữ nguyên dữ liệu 5 năm
+Không ai được xóa, kể cả admin
+🤔 Option:
+
+A. Enable Versioning
+B. Use Lifecycle Policy
+C. Enable S3 Object Lock (Compliance mode)
+D. Backup sang Glacier
+
+✅ Đáp án:
+
+👉 C
+
+
+
+#🎯 8. Cách AWS ra đề
+
+	Pattern 1: Compliance
+		"must not be deleted or modified"
+		👉 Object Lock
+
+	Pattern 2: Root cũng không được xóa
+		👉 Compliance mode
+
+	Pattern 3: Long retention
+		"7 years", "legal retention"
+		👉 Object Lock
+
+	Pattern 4: Bẫy Lifecycle
+		👉 Nếu có từ "delete after X days"
+		→ Lifecycle (NOT Object Lock)
+
+
+
+# 🧠 9. So sánh tổng hợp
+
+| Feature        | Object Lock | Versioning | Lifecycle |
+| -------------- | ----------- | ---------- | --------- |
+| Immutable      | ✅           | ❌          | ❌         |
+| Delete allowed | ❌           | ✅          | ✅         |
+| Compliance     | ✅           | ❌          | ❌         |
+| Auto cleanup   | ❌           | ❌          | ✅         |
+
+
+# 🔥 10. Kết luận (nói thẳng)
+
+
+	Nếu đề nói:
+		“không được xóa” → Object Lock
+		“backup” → Versioning
+		“auto delete” → Lifecycle
+
+	👉 Nhầm 1 cái → mất điểm ngay
+
+
+
+---------------- 🇯🇵 日本語版 ---------------
+
+
+# 🧠 1. 本質
+	S3 Object Lock = オブジェクトを削除・変更不可にする仕組み
+	👉 本質：
+		WORM（Write Once Read Many）
+
+
+# 2. 実務例
+
+	金融システム：
+
+		ログを7年間保持
+		削除・変更不可
+
+	👉 Object Lock（Compliance mode）
+
+
+# ⚙️ 3. 構成
+
+	S3 Object Lock
+	Versioning（必須）
+	Retention Period
+	Legal Hold
+
+# 🔑 4. キーワード
+
+
+	コンプライアンス
+	削除不可
+	変更不可
+	WORM
+	法的要件
+
+# ⚠️ 5. トラップ 
+
+	❌ Versioningと混同
+		→ Versioningは削除可能
+
+	❌ Lifecycleと混同
+		→ Lifecycleは削除用
+
+
+
+# 🔒 モード 
+
+
+| モード        | 特徴       |
+| ---------- | -------- |
+| Governance | 管理者は解除可能 |
+| Compliance | 誰も解除不可   |
+
+
+
+
+#⚖️ 6. トレードオフ 
+
+| メリット  | デメリット |
+| ----- | ----- |
+| 強力な保護 | 柔軟性なし |
+
+
+#🧪 7. 試験問題 
+
+👉 削除不可 + 法的要件
+→ Object Lock（Compliance mode）
+
+
+# 🎯 8. 出題パターン 
+
+	compliance → Object Lock
+	rootでも削除不可 → Compliance mode
+	長期保持 → Object Lock
+
+
+# 🔥 結論 
+
+	Object Lock = 絶対に変更できない保護機能
+
+
 
 
 

@@ -1,6 +1,268 @@
-<html><head><title>Lesson 36 == Cloud Practitioner ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 36 -- Cloud Practitioner -//</h1><pre>
+<html><head><title>Lesson 36 == Cloud Practitioner ===Manifest ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 36 -- Cloud Practitioner --=Manifest -//</h1><pre>
 
-Manifest
+
+# 🧠 1. Bản chất của Manifest 
+	Manifest = file chỉ định danh sách các object cần xử lý
+
+			👉 Nó KHÔNG chứa dữ liệu
+			👉 Nó KHÔNG phải metadata
+			👉 Nó KHÔNG tự tạo ra object
+
+		➡️ Nó chỉ là:
+			“Danh sách object để một job AWS xử lý”
+
+
+# 📦 2. Ví dụ thực tế
+
+	Case chuẩn AWS
+
+		Bạn có:
+			100 triệu object
+			Nhưng chỉ muốn:
+			Delete 10 triệu object cũ
+			Hoặc copy một subset sang bucket khác
+
+		❌ Cách ngu:
+			Loop từng object bằng code → chết
+
+		✅ Cách đúng:
+			Tạo Manifest file
+			Feed vào S3 Batch Operations
+
+
+
+
+	Flow chuẩn:
+
+		Manifest file (CSV)
+		   ↓
+		S3 Batch Operations
+		   ↓
+		Apply action (copy / delete / tag / encrypt)
+
+
+
+	Ví dụ nội dung Manifest:
+
+		bucket-name,object-key
+		my-bucket,file1.txt
+		my-bucket,file2.txt
+		👉 Đơn giản vậy thôi. Nhưng cực kỳ mạnh.
+
+
+# ⚙️ 3. Mapping với AWS services 
+
+| Thành phần          | Vai trò                          |
+| ------------------- | -------------------------------- |
+| Manifest            | Danh sách object                 |
+| S3 Batch Operations | Thực thi action                  |
+| S3 Inventory        | Có thể dùng để generate manifest |
+| Lambda              | Optional custom logic            |
+| IAM                 | Permission                       |
+
+
+# 🔑 4. Keywords trong đề thi 
+
+
+	Thấy mấy từ này → nghĩ ngay Manifest:
+		"subset of objects"
+		"specific objects"
+		"list of objects to process"
+		"bulk operation"
+		"apply action to selected objects"
+		"batch processing"
+
+
+
+# ⚠️ 5. Bẫy (trap) cực nguy hiểm
+
+	❌ Trap 1: Nhầm với S3 Inventory
+| Manifest        | Inventory     |
+| --------------- | ------------- |
+| Input cho job   | Output report |
+| Chủ động define | AWS generate  |
+| Chọn subset     | Full bucket   |
+
+		👉 Nhìn câu hỏi:
+			"generate report" → Inventory
+			"apply action" → Manifest
+
+
+
+
+
+	❌ Trap 2: Nhầm với Metadata
+| Metadata          | Manifest         |
+| ----------------- | ---------------- |
+| Thuộc tính object | Danh sách object |
+| gắn vào object    | file riêng       |
+
+
+
+
+	❌ Trap 3: Nghĩ AWS tự chọn object	
+		👉 Sai hoàn toàn
+			Nếu không có manifest → AWS không biết xử lý object nào
+
+
+
+	❌ Trap 4: Nhầm với real-time processing
+		👉 Manifest = batch
+			Không dùng cho event-driven
+			Không dùng cho real-time
+
+
+
+	⚖️ 6. Trade-off
+
+| Ưu điểm                 | Nhược điểm             |
+| ----------------------- | ---------------------- |
+| Xử lý hàng triệu object | Phải chuẩn bị manifest |
+| Chính xác (subset)      | Không real-time        |
+| Automation mạnh         | Setup phức tạp hơn     |
+
+
+
+# 🧪 7. Scenario giống đề thi AWS
+
+		📝 Question
+
+		Một công ty:
+
+			Có 200 triệu object
+			Chỉ muốn:
+			encrypt những object chưa mã hóa
+			Không muốn scan toàn bộ mỗi lần
+			🤔 Option:
+
+		A. Lambda scan từng object
+		B. S3 Inventory + Athena
+		C. S3 Batch Operations + Manifest
+		D. ListObjects API
+
+		✅ Đáp án:
+			👉 C
+
+
+
+
+# 🎯 8. Cách AWS ra đề 
+
+	Pattern 1: Subset
+		"only specific objects"
+		👉 Manifest
+
+
+	Pattern 2: Bulk action
+
+		"apply action to millions of objects"
+		👉 Manifest + Batch Operations
+
+	Pattern 3: Avoid full scan
+		👉 Manifest
+
+
+	Pattern 4: Kết hợp Inventory
+		Inventory → tạo danh sách → dùng làm manifest
+		👉 Combo bẫy rất hay
+
+
+
+# 🧠 9. So sánh nhanh 
+
+
+| Feature  | Manifest     | Inventory |
+| -------- | ------------ | --------- |
+| Vai trò  | Input        | Output    |
+| Dữ liệu  | list object  | metadata  |
+| Scope    | subset       | full      |
+| Use case | batch action | audit     |
+
+
+---------------🇯🇵 日本語版------------
+
+# 🧠 1. 本質
+
+	Manifest = 処理対象オブジェクトの一覧ファイル
+
+		データではない
+		メタデータではない
+		単なるリスト
+
+		👉 本質：
+			バッチ処理の入力として使うリスト
+
+
+
+	
+
+# 📦 2. 実務例 
+
+
+	数億オブジェクトの中から一部だけ処理したい
+		👉 Manifestを作成
+		👉 S3 Batch Operationsで処理
+
+
+
+
+# ⚙️ 3. 構成 
+
+	- Manifest
+	- S3 Batch Operations
+	- S3 Inventory（生成用）
+	- IAM
+
+
+
+# 🔑 4. キーワード
+
+
+	- subset
+	- specific objects
+	- bulk operation
+	- selected objects
+	- batch processing
+
+
+# ⚠️ 5. トラップ 
+
+	❌ Inventoryと混同
+		Inventory = 出力
+		Manifest = 入力
+	
+	❌ メタデータと混同
+		Manifestはただのリスト
+	
+	❌ 自動選択と誤解
+		明示的に指定が必要
+
+
+
+# ⚖️ 6. トレードオフ
+
+| メリット  | デメリット    |
+| ----- | -------- |
+| 大規模処理 | 準備必要     |
+| 精密制御  | リアルタイム不可 |
+
+
+# 🧪 7. 試験問題
+
+
+	👉 特定オブジェクト + 大量 + 一括処理
+		→ Manifest + S3 Batch Operations
+
+
+# 🎯 8. 出題パターン 
+
+	subset → Manifest
+	bulk action → Manifest
+	full scan回避 → Manifest
+
+# 🔥 結論 
+	Manifest = バッチ処理のための入力リスト
+
 
 
 
