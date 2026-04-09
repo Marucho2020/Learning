@@ -1,5 +1,290 @@
-<html><head><title>Lesson 38 == Cloud Practitioner ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 38 -- Cloud Practitioner -//</h1><pre>
-use case S3
+<html><head><title>Lesson 38 == Cloud Practitioner ==List API ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 38 -- Cloud Practitioner --List API -//</h1><pre>
+# 🧠 1. Bản chất
+
+	List API = API dùng để lấy danh sách dữ liệu (resources) từ hệ thống
+
+	Nhưng vấn đề không nằm ở “list”
+		→ mà nằm ở cách list khi dữ liệu rất lớn
+
+
+	👉 Nếu không thiết kế đúng:
+
+		Query chậm
+		Tốn tiền (scan nhiều)
+		Timeout
+		UX tệ
+
+	👉 AWS quan tâm:
+
+		Pagination
+		Filtering
+		Indexing
+		Consistency
+
+
+# ⚙️ 2. Ví dụ thực tế 
+
+Scenario:
+
+	Bạn làm API:
+		GET /users
+
+		Ban đầu có 100 user → OK
+
+		Nhưng sau 1 năm:
+			10 triệu user
+			mỗi request load hết → 💥 chết hệ thống
+
+
+	Cách đúng (production-ready)
+		GET /users?limit=20&lastKey=abc123
+
+
+
+{
+  "items": [...],
+  "lastKey": "xyz789"
+}
+
+	GET /users?limit=20&lastKey=xyz789
+		➡️ Đây chính là Pagination (phân trang)
+
+
+
+
+# ☁️ 3. Mapping với AWS
+
+	## DynamoDB (rất hay ra thi)
+
+| Khái niệm  | AWS              |
+| ---------- | ---------------- |
+| List data  | Scan / Query     |
+| Pagination | LastEvaluatedKey |
+| Limit      | Limit parameter  |
+| Filter     | FilterExpression |
+
+
+	## S3
+
+| Khái niệm   | AWS               |
+| ----------- | ----------------- |
+| List object | ListObjectsV2     |
+| Pagination  | ContinuationToken |
+| Limit       | MaxKeys           |
+
+
+
+	## API Gateway + Lambda
+		API Gateway expose /users
+		Lambda xử lý pagination logic
+		Backend: DynamoDB
+
+
+# 🔑 4. Keyword hay gặp trong đề 
+
+	“return large number of items”
+	“efficiently retrieve data”
+	“minimize latency”
+	“pagination”
+	“avoid full table scan”
+	“optimize cost”
+
+👉 Nhìn thấy mấy từ này = 90% là List API design
+
+
+# ⚠️ 5. Bẫy
+
+	❌ Trap 1: Dùng Scan thay vì Query
+		Scan = đọc toàn bộ table → rất tốn tiền
+		Query = dùng key → nhanh + rẻ
+
+
+	👉 Đề thi sẽ gài:
+
+		“retrieve items by userId”
+		→ phải dùng Query, không phải Scan
+
+
+	❌ Trap 2: Không pagination
+			Trả về toàn bộ data
+			→ timeout / memory crash
+
+			👉 AWS luôn thích:
+			✔ pagination
+			✔ incremental load
+
+
+	❌ Trap 3: Offset pagination (SQL style)
+		LIMIT 20 OFFSET 10000
+	
+		👉 Với data lớn → cực chậm
+
+		👉 AWS prefer:
+		✔ Key-based pagination (LastEvaluatedKey)
+
+
+	❌ Trap 4: Filter sai chỗ
+		Filter sau khi scan → vẫn tốn tiền
+		Filter bằng key → efficient
+
+
+
+# ⚖️ 6. So sánh các kiểu pagination
+
+
+| Kiểu      | Cách hoạt động | Ưu điểm         | Nhược điểm        |
+| --------- | -------------- | --------------- | ----------------- |
+| Offset    | skip N record  | dễ hiểu         | chậm khi data lớn |
+| Key-based | dùng lastKey   | nhanh, scalable | khó implement hơn |
+| Cursor    | token opaque   | secure          | debug khó         |
+
+	👉 AWS = thích Key-based / Cursor
+
+
+
+# 🧪 7. Scenario giống đề thi AWS
+
+	Question:
+
+		Một ứng dụng cần list hàng triệu record từ DynamoDB với:
+
+		latency thấp
+		cost thấp
+
+	👉 Chọn gì?
+
+		Options:
+
+		A. Scan toàn bộ table
+		B. Query + pagination
+		C. Export ra S3 rồi đọc
+		D. Load toàn bộ vào memory
+
+	👉 Đáp án: B
+
+
+
+# 🎯 8. Cách AWS ra đề
+
+
+	AWS không hỏi:
+		List API là gì?
+
+	AWS hỏi kiểu:
+		“A system needs to retrieve large datasets efficiently with low latency and cost”
+
+
+	👉 Bạn phải map ngay:
+		large dataset → pagination
+		low cost → Query (not Scan)
+		efficient → index / key
+
+
+# 🔥 9. Insight (level senior)
+
+
+	List API = bottleneck số 1 khi scale system
+	90% system chết vì:
+		query ngu
+		pagination sai
+		
+	AWS exam đánh vào:
+		tư duy scale
+		cost awareness
+
+	👉 Nếu bạn thấy:
+		“large data”
+		“performance issue”
+		“optimize cost”
+
+	→ nghĩ ngay:
+		✔ pagination
+		✔ Query (not Scan)
+		✔ indexing
+
+
+
+
+
+------------------- 🇯🇵 日本語版 ---------------- 
+
+# 🧠 本質 
+	List APIとは：
+		👉 大量のデータを効率よく取得するための仕組み
+			単なる一覧取得ではなく：
+
+			スケーラビリティ
+			パフォーマンス
+			コスト最適化が	本質
+
+
+
+# ⚙️ 具体例 
+
+	NG例：GET /users
+		→ 全件取得 → 大量データで崩壊
+
+	OK例： GET /users?limit=20&lastKey=abc
+		→ ページネーション
+
+
+
+# ☁️ AWS対応
+
+	DynamoDB
+		- Query（推奨）
+		- Scan（NGケース多い）
+		- LastEvaluatedKey（ページネーション）
+
+	S3
+		ListObjectsV2
+		ContinuationToken
+
+
+
+# 🔑 試験キーワード 
+
+	- large dataset
+	- pagination
+	- low latency
+	- cost optimization
+	- efficient retrieval
+
+
+
+# ⚠️ よくある罠 
+
+	❌ Scanを使う
+	❌ paginationなし
+	❌ OFFSET使用
+	❌ filterを後処理
+
+
+
+#⚖️ 比較
+
+
+	🧪 試験パターン
+		👉 「大量データを効率よく取得」
+	→ 正解：
+		✔ Query + Pagination
+
+
+#🎯 出題パターン 
+
+	AWSは直接聞かない：
+
+		❌「List APIとは何か」
+
+		✔「どうやって効率よく取得するか」
+
+
+# 🔥 まとめ
+
+	- List API = スケーラビリティ問題
+	- AWS = pagination前提
+	- Query > Scan（ほぼ常に）
+
 
 
 

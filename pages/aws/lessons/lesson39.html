@@ -1,10 +1,333 @@
-<html><head><title>Lesson 39 == Cloud Practitioner =Thực hành dùng thử ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 39 -- Cloud Practitioner =Thực hành dùng thử -//</h1><pre>
-			Enable Versioning
-			Enable Replication
-			Add Lifecycle
-			Object Lock
+<html><head><title>Lesson 39 == Cloud Practitioner ==ListAPI - Master ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 39 -- Cloud Practitioner --ListAPI - Master -//</h1><pre>
+# 🧠 1. Bản chất thật của List API trong DynamoDB
+
+
+	❗ Sai lầm phổ biến
+		Mọi người nghĩ:
+			List API = lấy danh sách
+	
+	👉 Sai. Với DynamoDB:
+		List API = đọc dữ liệu theo “stream phân đoạn” (segmented stream), không phải một query đầy đủ
 
 
 
+
+
+	## 🔥 Sự thật quan trọng 
+		DynamoDB KHÔNG BAO GIỜ trả hết data cho bạn trong 1 lần
+
+	Nó hoạt động kiểu:
+		Client → Request → DynamoDB trả 1 CHUNK (~1MB) → STOP
+
+		👉 Và nó nói:
+			“Muốn nữa thì đưa tao cái key này”
+			→ đó chính là LastEvaluatedKey
+
+
+
+
+# ⚙️ 2. LastEvaluatedKey là gì
+
+		👉 Nó không phải offset
+		👉 Nó không phải page number
+
+	👉 Nó là:
+
+		“Vị trí vật lý cuối cùng trong partition đã đọc xong”
+
+
+
+
+	## 🧬 Internal behavior 
+		DynamoDB lưu data theo:
+
+			Partition Key → Sorted by Sort Key
+
+
+			1.Nó đọc sequential trong partition
+			2.Đến ~1MB → dừng
+			3.Trả về:
+				- items
+				- LastEvaluatedKey = key của record cuối cùng
+
+
+
+
+	## 🔍 Ví dụ thực tế 
+		Giả sử data:
+			
+| PK (userId) | SK (timestamp) |
+| ----------- | -------------- |
+| A           | 1              |
+| A           | 2              |
+| A           | 3              |
+| A           | 4              |
+| A           | 5              |
+	
+	
+	
+		### Query lần 1:
+	
+{
+  "Limit": 2
+}	
+	
+	👉 Kết quả:
+	
+{
+  "Items": [1, 2],
+  "LastEvaluatedKey": {
+    "userId": "A",
+    "timestamp": 2
+  }
+}	
+	
+	
+	
+		### Query lần 2:
+	
+{
+  "ExclusiveStartKey": {
+    "userId": "A",
+    "timestamp": 2
+  }
+}	
+	
+
+	👉 DynamoDB hiểu:
+		“Bắt đầu sau record này”
+
+
+
+# 💀 3. Điểm nguy hiểm (90% dev không hiểu) 
+
+
+	❗ 1. LastEvaluatedKey ≠ “còn data”
+		👉 Có LastEvaluatedKey → chắc chắn còn data
+		👉 KHÔNG có → chưa chắc hết (vì filter có thể loại hết)
+
+
+	❗ 2. FilterExpression gây ảo giác
+		Query → đọc 100 item → filter còn 2 item
+
+		👉 Nhưng:
+			DynamoDB vẫn tính cost = 100 item
+			LastEvaluatedKey vẫn dựa trên 100 item
+
+		👉 Nghĩa là:
+			Pagination của bạn có thể “trống” dù vẫn còn data phía sau
+
+
+
+	❗ 3. Data thay đổi trong lúc pagination
+
+		👉 Nếu có write/update:
+			Item có thể:
+			xuất hiện lại
+			bị skip
+
+		👉 Vì:
+			DynamoDB KHÔNG đảm bảo snapshot consistency cho toàn bộ pagination
+
+
+	
+# ⚖️ 4. Trade-off cực quan trọng 
+
+
+| Feature     | DynamoDB           |
+| ----------- | ------------------ |
+| Consistency | eventual (default) |
+| Pagination  | key-based          |
+| Snapshot    | ❌ không có         |
+| Performance | cực nhanh          |
+
+
+
+		👉 Nghĩa là: 
+			Bạn đổi consistency để lấy performance + scale
+
+
+
+
+# 🧪 5. Scenario thực chiến 
+
+	Case: Timeline (Facebook-like)
+	
+		GET /posts?userId=A
+
+		❌ Sai design
+			Scan table
+			Filter userId
+			→ chết chắc
+
+		✅ Đúng design
+			PK = userId
+			SK = timestamp
+
+		→ Query theo:
+			userId = A
+			ORDER BY timestamp DESC
+		→ Pagination bằng LastEvaluatedKey
+
+		⚠️ Nhưng chưa đủ (level master)
+
+			Vấn đề:
+
+			User có:
+				1 triệu posts
+				👉 Query 1 partition → HOT PARTITION
+
+
+	💡 Giải pháp nâng cao	
+		1. Write sharding
+			- userId#1
+			- userId#2
+			- userId#3
+			
+		→ distribute load
+
+
+		2. Fan-out read
+			- Query nhiều partition
+			- merge result
+			
+		👉 Đây là level mà AWS exam KHÔNG nói
+		nhưng production bắt buộc phải nghĩ			
+					
+			
+			
+# 🔑 6. Keyword trong đề thi 			
+			
+		- “pagination token”
+		- “exclusive start key”
+		- “efficient retrieval”
+		- “avoid scanning entire dataset”
+		- “large-scale data access”			
+			
+			
+			
+# ⚠️ 7. Trap cực sâu 			
+			
+			
+		❌ Nhầm LastEvaluatedKey với offset
+
+			→ AWS sẽ cho option kiểu:
+
+			“use page number”
+			“use offset”
+
+		👉 Sai hết			
+			
+			
+		❌ Dùng Scan + pagination
+			→ vẫn tốn tiền
+
+		❌ Expect consistent snapshot
+			→ DynamoDB không đảm bảo			
+
+
+
+# 🎯 8. Cách AWS ra đề 
+
+	AWS sẽ không nói:
+			“LastEvaluatedKey là gì”
+
+
+	Application needs to retrieve large dataset incrementally with minimal latency
+		👉 Mapping:
+
+		incrementally → pagination
+		minimal latency → Query (not Scan)
+		large dataset → LastEvaluatedKey
+
+
+# 🔥 9. Insight level MASTER 
+
+	👉 List API trong DynamoDB =
+
+		“Iterator trên distributed storage”
+			Không phải query truyền thống
+
+	👉 LastEvaluatedKey =
+		“Iterator pointer”
+
+
+	👉 Nếu bạn design sai:
+
+		mất consistency
+		duplicate data
+		missing data
+		tốn tiền vô hạn
+
+	👉 Nếu design đúng:
+
+		scale vô hạn
+		cost predictable
+		latency ổn định
+
+
+----------🇯🇵 日本語版------------
+
+# 🧠 本質
+
+	List API（DynamoDB）とは：
+		👉 分散ストレージ上のイテレータ処理
+
+	⚙️ LastEvaluatedKey
+		👉 単なるページ番号ではない
+		👉 「最後に読み取った物理キー」
+
+
+
+# 🔁 動作
+
+		最大1MBまで取得
+		停止
+		LastEvaluatedKey返却
+		
+		→ 次回：
+		ExclusiveStartKey
+
+
+
+# 💀 注意点
+
+	1. Filterの罠
+		- 読み取り後にフィルタ
+		- コストは減らない
+
+
+	2. 一貫性なし
+		pagination中にデータ変更
+		→ 重複・欠損あり得る
+
+
+	3. Scanは危険
+		高コスト
+		遅い
+
+
+# ⚖️ トレードオフ 
+
+| 項目      | DynamoDB |
+| ------- | -------- |
+| 一貫性     | 弱い       |
+| スケール    | 強い       |
+| パフォーマンス | 高い       |
+
+
+# 🧪 試験パターン
+	👉 「大量データを効率的に取得」
+		→ 正解：
+	✔ Query + LastEvaluatedKey
+
+
+#🔥 まとめ（重要） 
+
+	LastEvaluatedKey = iterator pointer
+	pagination = 必須
+	Query > Scan
+	
+	
 
 </pre><a id='backBottom' href='../aws-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
