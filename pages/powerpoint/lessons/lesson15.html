@@ -31,8 +31,78 @@ https://chatgpt.com/g/g-p-69ca16640e24819184be0b039f98e49b-hoc-powerpoint/c/69d4
 🔁 BÀI 2 – “運用 vs 自動化” (level mid → gần senior)
 ■ 要件
 承認が3日以内に行われない場合、自動で次の承認者へ進めたい
+
 ただし、重要な申請は必ず人が確認する必要がある
 運用負荷は増やしたくない
+
+
+	-> Thêm tự động hóa nếu trong vòng 3 ngày chưa làm thì tự động triển khai 
+		! Người xác nhận bị xung đột với luồng tự động xác nhận, cho nên cần làm 
+		khi luồng tự động xác nhận chuẩn bị chạy thì sẽ lock lại không cho người làm thủ công 
+		và ngược lại . khi người làm thủ công mà task này sẽ chuẩn bị chạy (khoảng 1 tiếng sau sẽ chạy )
+		
+		Vì có thời điểm cụ thể là 3 ngày (72 tiếng) thì sẽ làm thêm 1 bộ đếm ngược đến trước khi tự động chạy 
+		và chia luồng như sau : Đang đợi  ->  Chuẩn bị tự động chạy -> Khóa thao tác -> Tự động chạy -> Chạy hoàn tất 
+							                   1 tiếng 		
+								khi ở giai đoạn chuẩn bị tự động chạy thì có thể gỡ , trì hoãn chức năng tự động chạy 
+								
+		
+		thì sẽ hiển thị ô check không cho tự động chạy. 
+		Hoặc task này cần xử lý xác nhận thêm và không cho tự động chạy thì sẽ có chức năng trì hoãn thêm 
+		thời gian tự động chạy,
+		Chức năng khóa không cho tự động chạy 
+		
+		Và sau khi tự động chạy . sẽ phải có chức năng thu hồi lại kết quả tự động chạy 
+		trong vòng 3 ngày nếu muốn đổi lại là thay vì tự động mà người sẽ làm 
+		
+		Tự động chạy sẽ cần phải ghi log audit đầy đủ, thông báo cho người phụ trách, người quản lý và những người được đăng ký trong fỏm đó 
+		
+		thêm chức năng đánh dấu không tự động hóa khi đăng ký , hoặc chỉnh sau khi đăng ký để đảm bảo nhưng form quan trọng không được tự động hóa 
+		
+		để giảm thiếu chi vận hành và nhân sự (cost) thì chúng ta về nguyên tắc sử dụng các chức năng cơ bản của Service Now
+		và tránh cho việc tự động hóa tạo nên thêm cost, xử lý tự động hay k tự động khi đăng ký form sẽ cần 
+		và chỉ tự động hóa những tác vụ không cần xác nhận , lặp lại , không phải toàn bộ 
+		
+		Ai là người đánh giá đây là đơn đăng ký quan trọng? : là người có quyền quản lý 承認 
+		
+
+■要件再定義
+　- 承認プロセスが3日を超過した場合、事前に定義された条件（申請種別・金額閾値・リスクレベル）を満たす申請に限り、自動承認を実施する
+　- 自動承認の適用範囲は管理者により定義可能とし、設定変更は監査ログに記録する
+　- 重要な申請（高リスク・高金額・特定種別）は自動承認の対象外とし、必ず手動承認を行う
+　- 自動承認の実行プロセスおよび結果はすべて記録し、監査可能とする
+　- 承認リードタイム短縮のため、SLAを定義し、一定時間内の承認を必須とする
+　- セキュリティおよび統制を確保しつつ、運用負荷およびコストを最小化する
+
+■対応方針
+　- 承認フローはServiceNow標準のFlow Designerを用いて実装する
+　- 承認プロセスが3日を超過した場合、事前定義された条件に一致する申請のみ自動承認を実行する
+　- 自動承認処理はステータスベースで制御し、「処理中」ステータス時は手動操作を制限する（時間ベースのロックは行わない）
+　- 承認済データの直接編集は禁止とし、訂正が必要な場合は取消および再申請により対応する
+　- 自動承認の条件設定および権限付与は管理者ロールのみに限定し、操作履歴を記録する
+　- 承認状況の可視化はDashboard機能によりリアルタイムに提供する
+　- 承認遅延防止のため、SLAおよびNotification機能を組み合わせてリマインド通知を実施する
+　- 標準機能で対応可能な範囲で実装し、カスタマイズは原則最小限とする
+
+■リスクと対策
+　- 自動承認の誤判定リスク  
+　　→ 承認条件（申請種別・金額・リスクレベル）を明確に定義し、定期的に見直しを実施する  
+
+　- 不正操作（権限悪用）リスク  
+　　→ 自動承認設定は管理者ロールのみに制限し、すべての操作を監査ログに記録する  
+
+　- データ整合性リスク  
+　　→ 承認済データの直接編集を禁止し、取消および再申請による履歴管理を徹底する  
+
+　- 処理競合リスク  
+　　→ ステータスベースで排他制御を行い、同時操作を防止する  
+
+　- 自動化過多による統制低下リスク  
+　　→ 高リスク申請は自動承認対象外とし、手動承認を必須とする  
+
+
+
+
 ⚠️ Bẫy
 Auto approve vs Human check → conflict
 “重要な申請” → define chưa?
@@ -50,19 +120,12 @@ Biết chia rule theo condition
 Có tư duy compliance / audit
 📊 Cách luyện (đừng làm ẩu)
 
-Mỗi bài:
-
-10–15 dòng là đủ
-Không viết dài → viết sắc
-Mỗi câu phải có:
-decision
-hoặc rule
 
 
 
 
 
-
+https://chatgpt.com/g/g-p-69ca16640e24819184be0b039f98e49b-hoc-powerpoint/c/69d45709-574c-83e8-ac3c-09d25d3e81bb
 
 
 

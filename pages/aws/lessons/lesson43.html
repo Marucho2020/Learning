@@ -1,6 +1,351 @@
 <html><head><title>Lesson 43 == Cloud Practitioner ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 43 -- Cloud Practitioner -//</h1><pre>
+# I. Định nghĩa bản chất
 
-		ListObjectsV2
-		ContinuationToken
+	1. ListObjectsV2 + ContinuationToken
+		- S3 KHÔNG bao giờ trả hết object nếu nhiều
+		- Giới hạn: max 1000 objects / request
+		- Nếu còn dữ liệu:
+			ContinuationToken
+
+		👉 Dùng token này để gọi tiếp → đọc tiếp từ vị trí trước
+
+
+	2. DynamoDB Query + LastEvaluatedKey 
+	
+		👉 LastEvaluatedKey = cursor của DynamoDB
+		DynamoDB trả tối đa ~1MB
+		Nếu chưa hết → trả key	
+	
+	
+	
+	Tóm lại (bản chất chung)
+	
+| Service  | Cursor            |
+| -------- | ----------------- |
+| S3       | ContinuationToken |
+| DynamoDB | LastEvaluatedKey  |
+	
+	
+		👉 Bản chất giống nhau:
+	“đọc tiếp từ chỗ trước đó, không scan lại từ đầu”
+		
+		
+		
+# 	II. Ví dụ thực tế
+	
+	## Scenario (giống đề thi)
+	
+	Bạn build hệ thống:
+
+		S3 chứa 10 triệu file ảnh
+		DynamoDB chứa metadata ảnh
+		API:
+			GET /images?cursor=xxx
+
+		Yêu cầu:
+			- Load ảnh dạng infinite scroll
+			- Không lag
+			- Không duplicate
+			- Scale tốt
+
+		 Thiết kế đúng (chuẩn AWS)
+			Step 1: Lấy metadata từ DynamoDB
+				Query → trả Items + LastEvaluatedKey
+
+			Step 2: Lấy file từ S3
+				ListObjectsV2 → trả objects + ContinuationToken
+
+
+		Flow
+			Client → API
+					→ Query DynamoDB (cursor 1)
+					→ List S3 (cursor 2)
+					→ trả data + 2 cursor
+			👉 Client giữ 2 cursor riêng
+
+
+		Sai lầm chết người
+			Dùng offset → chết performance
+			List toàn bộ S3 → timeout
+			Không lưu cursor → lặp data
+			
+			
+# III. Mapping AWS cụ thể 			
+			
+			
+| Use case       | Service              | Cursor            |
+| -------------- | -------------------- | ----------------- |
+| List file      | S3 ListObjectsV2     | ContinuationToken |
+| Query data     | DynamoDB Query       | LastEvaluatedKey  |
+| API pagination | API Gateway + Lambda | cursor param      |
+			
+			
+			
+			
+# IV. Từ khóa đề thi 
+
+
+Nhìn thấy → nghĩ ngay cursor:
+
+	list millions of objects
+	paginate results
+	efficient retrieval
+	avoid full scan
+	resume listing
+	ContinuationToken
+	LastEvaluatedKey
+
+
+
+# V. Bẫy 
+
+
+	1. Nghĩ S3 list hết
+
+		❌ Sai
+		👉 S3 luôn limit 1000
+
+				
+			
+	2. Nhầm Marker vs ContinuationToken 	
+	
+| API               | Token             |
+| ----------------- | ----------------- |
+| ListObjects (old) | Marker            |
+| ListObjectsV2     | ContinuationToken |
+
+		👉 Thi → luôn chọn V2
+
+
+	3. Dùng Scan DynamoDB 
+		👉 Đề ghi:
+
+		“efficient + large dataset”
+
+		→ phải chọn:
+			Query + LastEvaluatedKey
+
+
+
+
+	4. Không sync giữa S3 và DynamoDB
+		👉 Đây là bẫy design:
+			S3 và DynamoDB pagination độc lập
+			Không có guarantee cùng order
+
+		👉 Nếu join → phải handle logic riêng
+			
+			
+			
+			
+	5. Consistency trap 		
+			
+| Service        | Consistency       |
+| -------------- | ----------------- |
+| S3 List        | Eventual          |
+| DynamoDB Query | Strong / Eventual |
+			
+			
+			
+			
+	👉 Có thể:
+		Missing object
+		Duplicate nhẹ		
+			
+			
+			
+			
+# VI. So sánh quan trọng 			
+			
+|             | S3 ListObjectsV2  | DynamoDB Query   |
+| ----------- | ----------------- | ---------------- |
+| Limit       | 1000 objects      | 1MB              |
+| Cursor      | ContinuationToken | LastEvaluatedKey |
+| Performance | High              | High             |
+| Consistency | Eventual          | Optional         |
+			
+			
+			
+# VII. Scenario dạng đề thi AWS			
+			
+	Câu hỏi kiểu này:
+
+		Một ứng dụng cần list hàng triệu file trong S3 và hiển thị theo từng page.
+			Giải pháp nào hiệu quả nhất?
+
+		Đáp án đúng:
+			S3 ListObjectsV2
+			ContinuationToken			
+			
+			
+		Câu bẫy:
+
+		Load page 1000 nhanh nhất
+			❌ OFFSET
+			✅ Cursor			
+			
+			
+		Câu nâng cao:
+
+		Kết hợp metadata DynamoDB + S3 object
+			👉 Đáp án:
+
+			Query DynamoDB (LastEvaluatedKey)
+			List S3 (ContinuationToken)			
+				
+			
+			
+# 	VIII. Cách AWS ra đ		
+			
+			
+	Pattern 1
+		“list large number of S3 objects efficiently”
+		👉 ContinuationToken
+
+	Pattern 2
+		“process DynamoDB data in chunks”
+		👉 LastEvaluatedKey
+
+	Pattern 3 (bẫy nặng)
+		“retrieve specific page number”
+		👉 Không chọn offset
+		👉 chọn cursor
+
+	Pattern 4 (system design)
+
+		“combine S3 + DynamoDB”
+		👉 phải dùng 2 cursor riêng			
+			
+			
+			
+# IX. Kết luận (level senior) 			
+			
+			
+	Cursor không phải optional → bắt buộc khi scale
+	AWS design tất cả pagination theo cursor
+	S3 và DynamoDB hoạt động độc lập → phải hiểu rõ			
+			
+	👉 Nếu thấy:
+		“large scale + pagination + efficiency”			
+			
+	→ chọn:		
+		S3 → ContinuationToken
+		DynamoDB → LastEvaluatedKey			
+			
+		
+------------- 🇯🇵 日本語版-------------
+
+
+# I. 本質の定義 
+
+	1. S3 ListObjectsV2
+		最大1000件まで取得
+		続きがある場合：
+		
+			ContinuationToken = Cursor
+
+	2. DynamoDB Query
+		最大1MBまで
+		続き：	LastEvaluatedKey = Cursor
+
+
+
+	共通本質
+		Cursor = 前回の続きから取得するための位置情報
+
+
+
+# II. 実務例
+
+	システム：
+		S3：画像10M件
+		DynamoDB：メタデータ
+
+	API：	
+		GET /images?cursor=xxx
+		
+				
+	正しい設計	
+		DynamoDB → Query + LastEvaluatedKey
+		S3 → ListObjectsV2 + ContinuationToken
+			👉 クライアントは2つのCursorを管理
+
+
+
+# III. 試験キーワード 
+
+	- list millions of objects
+	- pagination
+	- efficient retrieval
+	- ContinuationToken
+	- LastEvaluatedKey
+
+	
+	
+# IV. よくある罠
+
+	1. S3は全部返すと思う
+		❌ 間違い → 最大1000件	
+	
+	
+	2. Scanを使う
+		❌ 非効率
+		→ Queryが正解
+	
+	
+	3. Offsetを選ぶ
+		❌ NG
+		→ Cursorが正解	
+	
+	4. S3とDynamoDBの同期誤解
+		→ 並び順保証なし
+	
+	
+# 	V. 比較 
+
+|        | S3                | DynamoDB         |
+| ------ | ----------------- | ---------------- |
+| Cursor | ContinuationToken | LastEvaluatedKey |
+| Limit  | 1000              | 1MB              |
+
+
+
+
+# VI. 出題パターン 
+
+	パターン1
+		「大量のS3オブジェクト」
+		→ ContinuationToken
+
+	パターン2
+		「DynamoDBの大量データ」
+		→ LastEvaluatedKey
+
+	パターン3（罠）
+		「特定ページ取得」
+		→ OffsetはNG
+
+
+
+
+
+
+# VII. まとめ
+
+	AWSはCursor前提設計
+	大規模データでは必須
+
+	👉 キーワード：
+		「大規模 + ページング」＝ Cursor確定
+
+
+
+
+
+
+
+
+			
+			
 
 </pre><a id='backBottom' href='../aws-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

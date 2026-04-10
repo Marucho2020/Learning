@@ -1,5 +1,338 @@
-<html><head><title>Lesson 42 == Cloud Practitioner ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 42 -- Cloud Practitioner -//</h1><pre>
+<html><head><title>Lesson 42 == Cloud Practitioner ==Cursor ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 42 -- Cloud Practitioner --Cursor -//</h1><pre>
+# I. Giải thích bản chất
 
-Cursor
+	Cursor = con trỏ giữ vị trí đọc dữ liệu hiện tại
+		👉 Nó KHÔNG phải dữ liệu
+		👉 Nó KHÔNG phải offset
+		👉 Nó là state (trạng thái) để biết:
+
+	“Lần trước mày đọc đến đâu rồi → lần này đọc tiếp từ đó”
+
+
+
+	## So sánh nhanh 
+
+| Cách                    | Bản chất       | Vấn đề            |
+| ----------------------- | -------------- | ----------------- |
+| Offset (LIMIT + OFFSET) | Skip n bản ghi | Chậm, không scale |
+| Cursor                  | Nhớ vị trí     | Nhanh, scalable   |
+
+	👉 AWS gần như luôn dùng cursor-based pagination vì:
+		Distributed system → không thể skip hiệu quả
+		Data thay đổi liên tục → offset dễ sai
+
+
+# II. Mapping AWS thực tế
+
+# 1. DynamoDB → Cursor = LastEvaluatedKey
+
+	## Bản chất:
+		- DynamoDB không trả hết dữ liệu 1 lần
+		- Trả về tối đa ~1MB
+		- Nếu còn → trả thêm: LastEvaluatedKey
+	👉 Đây chính là cursor
+
+	Flow đúng:
+
+		Query lần 1 → nhận Items + LastEvaluatedKey
+		Query lần 2 → dùng ExclusiveStartKey = LastEvaluatedKey
+		👉 Đọc tiếp, không đọc lại
+
+
+
+
+	## Ví dụ thực tế 
+
+		Bạn có bảng Orders (10 triệu record)
+			Query theo userId
+			Không thể load hết
+
+		👉 Bạn phải:
+			Lấy page 1
+			Lưu cursor (LastEvaluatedKey)
+			User scroll → load tiếp
+
+
+
+
+# 2. S3 ListObjectsV2 → ContinuationToken 
+	Bản chất:
+		ContinuationToken = cursor
+	S3 trả tối đa 1000 object
+	
+
+# 3. API Gateway / Backend pagination 
+
+	Khi design API:
+		GET /orders?cursor=abc123
+		👉 Backend chỉ việc pass cursor xuống DynamoDB
+
+
+
+# III. Ví dụ System Design 
+
+
+	## Scenario
+
+	Một hệ thống ecommerce:
+
+		User scroll danh sách orders
+		Dữ liệu rất lớn (hàng triệu record)
+		Yêu cầu:
+			- Response nhanh
+			- Không bị duplicate hoặc missing
+
+		Sai lầm phổ biến
+			SELECT * LIMIT 10 OFFSET 10000
+	
+		❌ Sai vì:
+			Slow (scan toàn bộ)
+			Data thay đổi → mất đồng bộ
+
+	Cách đúng (AWS style)
+
+			- Dùng DynamoDB Query
+			- Dùng LastEvaluatedKey
+
+		👉 Ưu điểm:
+			O(1) pagination
+			Scale vô hạn
+			Không lệch data
+
+
+
+# IV. Từ khóa đề thi 
+
+	Nhìn thấy mấy từ này → nghĩ ngay CURSOR:
+	
+		pagination
+		large dataset
+		continuous reading
+		resume from last position
+		LastEvaluatedKey
+		ContinuationToken
+		avoid full scan
+		efficient data retrieval
+
+
+
+
+# V. Bẫy (trap cực hay gặp)
+
+
+	## 1. Nhầm cursor với offset
+
+		👉 Đề ghi:
+		“retrieve next page efficiently”
+			→ chọn cursor
+			→ KHÔNG chọn offset
+
+
+
+
+	## 2. Nghĩ DynamoDB trả hết data 
+	
+		❌ Sai
+
+			👉 DynamoDB:
+				Luôn có limit (1MB)
+				Phải loop	
+				
+	
+	
+	
+	## 3. Quên truyền cursor 
+	
+		👉 Không truyền ExclusiveStartKey
+			→ lặp lại page đầu
+
+
+
+	## 4. Nhầm Scan vs Query 
+	
+|           | Query | Scan |
+| --------- | ----- | ---- |
+| Cursor    | Có    | Có   |
+| Hiệu năng | Tốt   | Tệ   |
+	
+		👉 Đề thích gài:
+	
+		“large dataset + efficient”
+			→ Query + Cursor	
+			
+	
+	
+	## 5. Consistency misunderstanding 
+	
+		👉 Cursor KHÔNG đảm bảo:
+			Data không thay đổi
+			Không missing nếu write xảy ra
+				
+	
+		👉 Đây là trade-off:
+		|             | Cursor   |
+		| ----------- | -------- |
+		| Performance | Cao      |
+		| Consistency | Eventual |
+			
+	
+# VI. So sánh quan trọng 	
+	
+| Concept        | Cursor | Offset |
+| -------------- | ------ | ------ |
+| Performance    | O(1)   | O(n)   |
+| Scale          | Tốt    | Kém    |
+| Real-time data | Ổn     | Dễ sai |
+| AWS dùng       | YES    | NO     |
+	
+	
+	
+#VII. Cách AWS ra đề 
+
+	Pattern 1	
+		“Ứng dụng cần load dữ liệu lớn theo từng phần, đảm bảo hiệu năng”
+	
+	
+		👉 Đáp án:
+			- DynamoDB Query
+			- LastEvaluatedKey	
+				
+	
+	Pattern 2
+
+		“User scroll infinite list”
+		👉 Đáp án:
+			Cursor-based pagination	
+		
+	
+	
+	Pattern 3 (bẫy)
+
+		“retrieve page 1000 quickly”
+		👉 Nếu thấy OFFSET → bẫy
+			→ chọn cursor	
+	
+	
+	
+	
+	Pattern 4 (S3)
+		👉 Đáp án:
+			ContinuationToken	
+	
+	
+#  VIII. Kết luận (level senior) 	
+	
+		Cursor không phải optional → bắt buộc trong distributed system
+		AWS design tất cả service theo cursor:
+			DynamoDB
+			S3
+			API pagination
+
+	👉 Nếu bạn thấy:
+		“large scale + pagination”
+		→ 90% đáp án = cursor-based	
+		
+	
+	
+------------------ 	🇯🇵 日本語版---------------
+
+# I. 本質の定義
+
+	Cursor = データの読み取り位置を保持するポインタ
+
+		- データではない
+		- Offsetではない
+		- 「どこまで読んだか」を記録する状態
+
+
+# II. AWSでの対応 	
+
+	1. DynamoDB
+		- 最大1MBまでしか返さない
+		- 続きがある場合：
+			LastEvaluatedKey = Cursor
+
+		次回：
+			ExclusiveStartKey に設定
+
+
+
+	 2. S3 
+		ContinuationToken = Cursor
+
+
+# III. 実務例
+
+	ECサイト：
+		注文データが数百万件
+		無限スクロール
+		→ Cursorでページング
+
+
+
+
+# IV. 試験キーワード
+
+	- pagination
+	- large dataset
+	- efficient retrieval
+	- LastEvaluatedKey
+	- ContinuationToken
+
+
+
+# V. よくある罠
+
+	1. Offsetを選ぶ
+		❌ NG
+			→ Cursorが正解
+
+
+	2. DynamoDBは全部返すと思う
+		❌ NG
+			→ 必ずページング必要
+
+
+	3. Query vs Scan
+		→ 大量データなら：
+		✅ Query + Cursor
+
+
+# VI. 比較 
+
+|      | Cursor | Offset |
+| ---- | ------ | ------ |
+| 性能   | 高い     | 低い     |
+| スケール | 良い     | 悪い     |
+
+
+# VII. AWSの出題パターン 
+
+	パターン1
+		「大量データを効率的に取得」
+		→ Cursor
+
+
+
+	パターン2
+		「無限スクロール」
+		→ Cursor
+
+
+
+	パターン3（罠）
+		「特定ページを高速取得」
+		→ OffsetはNG → Cursor
+
+
+VIII. まとめ 
+	AWSは基本すべてCursorベース
+	分散システムでは必須設計
+
+	「大規模データ + ページング」＝ Cursor確定
+
+
+
+
 
 </pre><a id='backBottom' href='../aws-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
