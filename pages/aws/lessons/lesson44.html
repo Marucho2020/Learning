@@ -1,8 +1,314 @@
-<html><head><title>Lesson 44 == Cloud Practitioner ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 44 -- Cloud Practitioner -//</h1><pre>
+<html><head><title>Lesson 44 == Cloud Practitioner ==CloudTrail ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 44 -- Cloud Practitioner --CloudTrail -//</h1><pre>
+# 1. Bản chất
+	CloudTrail = Nhật ký “Ai đã làm gì trong AWS”
+	
+	
+		- Không phải log hệ thống (CPU, memory…)
+		- Không phải log ứng dụng (business log)
+		- 👉 Nó ghi lại API calls / hành động quản trị (control plane)	
+			
+		
+	Ví dụ:
+		Ai tạo EC2?
+		Ai xoá S3 bucket?
+		Ai thay đổi IAM policy?
+
+		👉 CloudTrail trả lời câu hỏi:
+			“Ai đã làm gì, khi nào, từ đâu, bằng cách nào?”
+			
+# 2. Ví dụ thực tế 			
+	
+	Scenario 1 (chuẩn đề thi)
+
+		Một công ty bị mất dữ liệu trong S3.
+
+		Câu hỏi:
+			Làm sao biết ai đã xóa file?
+
+		👉 Đáp án đúng:
+			CloudTrail
+
+		👉 Không phải:
+			CloudWatch Logs ❌ (log runtime)
+			S3 Access Logs ❌ (chỉ request level, không full context)
+				
+		
+	Scenario 2 (security audit)
+
+		Bạn cần:
+			audit toàn bộ hành vi admin
+			phục vụ compliance (ISO, SOC2)
+
+		👉 CloudTrail + lưu vào S3 (immutable)		
+			
+			
+# 3. Mapping với AWS Services 		
+		
+		
+| Mục tiêu                   | Service         |
+| -------------------------- | --------------- |
+| Track API calls            | CloudTrail      |
+| Monitor metrics (CPU, RAM) | CloudWatch      |
+| Log ứng dụng               | CloudWatch Logs |
+| Query log                  | Athena          |
+| Alert từ event             | EventBridge     |
+		
+		
+		
+	👉 Combo thường gặp:
+		CloudTrail → S3 → Athena (query)
+		CloudTrail → EventBridge → Lambda (auto response)		
+				
+			
+# 4. Keyword trong đề thi (cực kỳ quan trọng) 
+
+	Gặp các từ này → nghĩ ngay CloudTrail:
+
+		audit
+		compliance
+		governance
+		API activity
+		track user actions
+		who did what
+		security investigation
+		account activity history
+				
+		
+# 5. Bẫy (trap AWS hay gài) 
+
+	## Trap 1: Nhầm với CloudWatch 
+
+| CloudTrail     | CloudWatch               |
+| -------------- | ------------------------ |
+| API log        | Metrics + logs           |
+| Ai làm gì      | System hoạt động thế nào |
+| Security focus | Performance focus        |
 
 
-CloudTrail
+	👉 Đề thi rất thích gài:
+		“monitor system activity” → CloudWatch
+		“track API calls” → CloudTrail
 
 
 
+	## Trap 2: Nhầm với S3 Access Logs 
+	
+| CloudTrail      | S3 Access Logs         |
+| --------------- | ---------------------- |
+| Full AWS API    | Chỉ S3 request         |
+| Có IAM identity | Không rõ user chi tiết |
+	
+		
+	👉 Nếu đề hỏi:
+
+		“who deleted bucket” → CloudTrail
+		“access pattern S3” → S3 access log
+			
+			
+		
+	## Trap 3: Nghĩ CloudTrail là real-time monitoring 
+	
+	👉 Sai
+			CloudTrail ≠ monitoring real-time
+			Nó là log + history
+
+		Muốn real-time:
+			CloudTrail + EventBridge	
+			
+	
+	
+	
+# 6. Trade-off	
+	
+	
+| Điểm       | CloudTrail                              |
+| ---------- | --------------------------------------- |
+| Ưu điểm    | Audit cực mạnh, compliance              |
+| Nhược điểm | Không phải real-time monitoring         |
+| Cost       | Tăng nếu log nhiều region + data events |
+
+
+	👉 Data events (S3 object-level) = đắt → đề thi hay hỏi cost optimization
+		
+		
+		
+		
+# 	7. Scenario giống đề thi AWS
+		
+	Câu hỏi:
+
+		Một công ty cần:
+			Theo dõi ai đã thay đổi security group
+			Lưu log lâu dài
+			Query log khi cần
+
+		👉 Đáp án:
+			CloudTrail + S3 + Athena		
+				
+		
+		
+	Câu hỏi bẫy:	
+		
+		monitor CPU EC2
+		👉 CloudWatch (không phải CloudTrail)		
+		
+		
+# 8. Cách AWS ra đề (rất quan trọng) 		
+		
+		
+	AWS KHÔNG hỏi:
+
+		CloudTrail là gì?
+
+	Nó hỏi kiểu:
+
+		Pattern 1
+			“Track changes to AWS resources”
+			→ CloudTrail
+
+		Pattern 2
+			“Ensure audit trail for compliance”
+			→ CloudTrail + S3
+
+		Pattern 3 (bẫy)
+			“Monitor application logs”
+			→ CloudWatch Logs ❌ (không phải CloudTrail)
+
+		Pattern 4 (nâng cao)
+			“Trigger action when API call happens”
+			→ CloudTrail + EventBridge		
+			
+		
+		
+# 9. So sánh nhanh		
+		
+| Service    | Dùng khi nào                             |
+| ---------- | ---------------------------------------- |
+| CloudTrail | Ai làm gì                                |
+| CloudWatch | System ra sao                            |
+| Config     | Resource thay đổi thế nào theo thời gian |
+| GuardDuty  | Detect threat                            |
+		
+		
+👉 Nhìn sâu:
+
+CloudTrail = raw log
+Config = trạng thái resource
+GuardDuty = phân tích security		
+		
+		
+		
+# 10. Tóm lại (level senior) 		
+		
+	CloudTrail không phải monitoring tool.
+
+	Nó là:
+		“forensic tool” (công cụ điều tra sau khi sự cố xảy ra)	
+			
+			
+		
+		
+--------------- 🇯🇵 日本語版--------------
+	
+	
+	
+# 	1. 本質
+	
+	CloudTrail = 「AWSで誰が何をしたか」を記録するログサービス
+
+		システムログではない
+		アプリログでもない
+		👉 API操作（Control Plane）を記録する	
+		
+	
+# 2. 具体例 	
+	
+	
+	シナリオ
+		S3のデータが削除された
+		→ 誰が削除したか知りたい
+
+	👉 答え：
+		CloudTrail
+	
+	
+	
+# 3. AWSサービスとの対応
+
+
+| 目的       | サービス            |
+| -------- | --------------- |
+| API操作の追跡 | CloudTrail      |
+| メトリクス監視  | CloudWatch      |
+| アプリログ    | CloudWatch Logs |
+| ログ分析     | Athena          |
+
+
+
+# 4. 試験キーワード
+
+		audit
+		compliance
+		API activity
+		user actions
+		who did what
+
+	👉 出たらCloudTrail
+	
+	
+	
+# 5. よくある罠 	
+	
+	
+	## 罠① CloudWatchと混同
+		CloudTrail → APIログ
+		CloudWatch → メトリクス監視	
+		
+		
+	## 罠② S3 Access Logsと混同
+		CloudTrail → 誰が操作したか
+		S3 Logs → アクセス記録のみ	
+	
+	## 罠③ リアルタイム監視と思う
+		CloudTrailは履歴ログ
+		リアルタイム → EventBridge連携	
+	
+	
+# 6. トレードオフ 
+		メリット：監査・コンプライアンスに最適
+		デメリット：リアルタイムではない
+		コスト：Data Eventsは高い	
+	
+	
+# 	7. 試験パターン
+	
+	パターン①
+		「AWSリソース変更を追跡したい」
+		→ CloudTrail
+
+	パターン②
+		「監査ログを保存したい」
+		→ CloudTrail + S3
+
+	パターン③（罠）
+		「アプリログ監視」
+		→ CloudWatch Logs	
+	
+	
+	
+	
+	
+	
+# 	8. まとめ（重要）
+	
+	CloudTrailは：
+		👉 監査・証跡（forensic）のためのサービス
+	
+		
+	NOT：
+		monitoring
+		performance analysis	
+	
+	
+	
 </pre><a id='backBottom' href='../aws-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

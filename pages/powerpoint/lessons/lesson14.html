@@ -1,436 +1,131 @@
-<html><head><title>Lesson 13 == ===要件==標準機能===カスタマイズ ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../powerpoint-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 13 -- --=要件--標準機能--=カスタマイズ -//</h1><pre>
+<html><head><title>Lesson 13 == ====案件概要 練習 ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../powerpoint-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 13 -- ----案件概要 練習 -//</h1><pre>
+🔁 BÀI 1 – “曖昧 + 権限バグ”
 
-要件（requirement）
-標準機能（standard function）
-カスタマイズ
+	■ 要件(考え方)
+		承認状況は関係者が確認できるようにしたい
+		一部のユーザは全ての申請を確認できるようにしたい
+		承認はできるだけ早くしたい
+
+		➞
+		“関係者” là ai? → không define = bug quyền　-> Chỉ user đã đăng nhập, và có quyền đọc tình trạng 
+		“一部ユーザ” → ai quyết định? -> Chỉ user có quyền thêm quyền đọc toàn bộ cho user khác 
+		“早く” → không có SLA ->
+	
+	(回答)
+	■ 要件
+		- 承認状況の参照は、申請者・承認者および権限付与されたユーザに限定する
+		- 全申請の参照権限は、管理者ロールにより付与可能とし、付与操作は監査ログに記録する
+		- 承認リードタイム短縮のため、SLAを定義し、一定時間内の承認を必須とする
+	■ 対応方針
+		- 権限管理はロールベースで制御し、閲覧権限と編集権限を明確に分離する
+		- 全申請の参照権限は、管理者ロールのみ付与可能とし、権限付与履歴を記録する
+		- 承認状況の可視化は、標準のDashboard機能を用いて実現する
+		- 承認遅延防止のため、SLAおよびNotification機能を組み合わせてリマインド通知を実施する
+		- 標準機能で対応可能な範囲で実装し、カスタマイズは原則行わない
 
 
-# 1. Ý nghĩa (trong dự án IT)
-
-	■ 要件（ようけん）
-	→ “Khách hàng muốn gì” (business + system expectation)
-		Không phải solution.
-		Sai lầm phổ biến: viết luôn cách làm → lẫn với thiết kế
 
 
+https://chatgpt.com/g/g-p-69ca16640e24819184be0b039f98e49b-hoc-powerpoint/c/69d45709-574c-83e8-ac3c-09d25d3e81bb
 
-	■ 標準機能
-		→ Những gì hệ thống đã có sẵn (ví dụ: ServiceNow workflow, approval, notification)
+🔁 BÀI 2 – “運用 vs 自動化” (level mid → gần senior)
+■ 要件
+承認が3日以内に行われない場合、自動で次の承認者へ進めたい
+
+ただし、重要な申請は必ず人が確認する必要がある
+運用負荷は増やしたくない
+
+
+	-> Thêm tự động hóa nếu trong vòng 3 ngày chưa làm thì tự động triển khai 
+		! Người xác nhận bị xung đột với luồng tự động xác nhận, cho nên cần làm 
+		khi luồng tự động xác nhận chuẩn bị chạy thì sẽ lock lại không cho người làm thủ công 
+		và ngược lại . khi người làm thủ công mà task này sẽ chuẩn bị chạy (khoảng 1 tiếng sau sẽ chạy )
 		
-			Ở Nhật:
-			→ ưu tiên 100% standard trước
-			→ vì: cost thấp, maintain dễ, upgrade không chết
-
-
-	■ カスタマイズ
-		→ Những gì phải code thêm / chỉnh sửa vì standard không đáp ứng
-
-		Bị ghét nếu lạm dụng
-		→ vì: upgrade = dễ vỡ hệ thống
-
-
-
-
-# 2. Ví dụ thực tế (ServiceNow)
-
-	要件
-		申請は2段階承認とすること
-		承認状況をリアルタイムで確認できること
-
-
-	判断
-
-| 要件        | 対応               |
-| --------- | ---------------- |
-| 2段階承認     | 標準Workflowで対応可能  |
-| リアルタイム可視化 | 標準Dashboardで対応可能 |
-	→ Không cần customize
-
-
-	Nếu có yêu cầu khó hơn:
-
-		承認条件が複雑（部署＋金額＋役職）
-		→ 標準 không đủ → cần カスタマイズ
-
-
-# 3. Đoạn tài liệu
-
-
-本要件に対して、可能な限りServiceNowの標準機能を活用する方針とする。
-
-申請の承認プロセスについては、標準のWorkflow機能により2段階承認を実現する。
-また、承認状況の可視化については、標準のDashboard機能を利用することで対応可能である。
-
-一方で、承認条件が複雑なケースについては、標準機能では対応が困難なため、
-一部カスタマイズを実施することを検討する。
-
-
-
-# 4. Slide (PowerPoint style)
-
-
-	■ Title
-		👉 要件に対する対応方針（標準機能優先）
-	■ Nội dung
-		基本方針
-			標準機能を優先的に利用
-			
-		要件①：2段階承認　
-			標準Workflowで対応　
-			
-		要件②　：承認状況の可視化　
-			標準DashBoardで対応
-			
-		例外対応
-			複雑な承認条件　→カスタマイズ検討　
-			
-			
-			
-＃5. NG vs OK
-
-	❌ NG (junior viết)
-		ServiceNowを使って色々対応します。
-		必要に応じてカスタマイズします。
-
-
-	👉 Vấn đề:
-		Mơ hồ
-		Không có quyết định
-		Không có logic
-
-
-	✅ OK (chuẩn Nhật)
-		本要件に対しては、保守性およびコスト観点から標準機能を優先的に利用する。
-
-		標準機能で対応できない要件についてのみ、
-		影響範囲を考慮した上でカスタマイズを実施する。
-			👉 Điểm mạnh:
-
-			Có 方針 (policy)
-			Có 判断基準
-			Có lý do (保守性・コスト)
-
-# 6. Góc nhìn senior (nói thẳng) 
-
-	Nếu mày viết tài liệu mà:
-
-		Không phân biệt 要件 vs 設計
-		Không nói rõ standard hay customize
-
-		→ Trong mắt Nhật:
-		= chưa hiểu dự án, chưa đủ level làm設計
-
-		Cái họ cần không phải là “biết ServiceNow”
-		→ mà là:
-
-		biết khi nào KHÔNG nên customize
-
-
-		Nếu muốn lên level nhanh:
-		→ Mỗi lần viết, tự hỏi:
-
-		Đây là 要件 hay 設計?
-		Có standard không?
-		Nếu customize → justify chưa?
-
-
-# Bài tập 
-
-	■ Context dự án (ServiceNow)
-
-		Công ty đang dùng email để xử lý申請・承認。
-		Vấn đề:
-			承認が遅い
-			状況が見えない
-			誰が止めているか不明
-
-
-	■ 要件 (cố tình viết kiểu business – mơ hồ như khách Nhật)
-
-		- 申請は必ず上長の承認を得ること
-		- 一定金額以上の場合は追加承認が必要
-		- 承認状況を誰でも確認できるようにしたい
-		- 承認が一定時間止まった場合、通知したい
-
-
-	Viết 1 đoạn tài liệu (8–12 dòng) theo format:
-
-
-⚠️ Bẫy (nếu dính là bị chửi)
-❌ Viết lại 要件 (copy đề bài)
-❌ Không nói rõ dùng standard hay customize
-❌ “検討する” nhưng không có 
-❌ Không có 方針
-❌ Viết kiểu dev (technical quá) thay vì document cho business
-
-	■ カスタマイズ方針
-		Khi nào được phép customize?
-		Khi nào KHÔNG?
-
-	💀 Gợi ý nhỏ (nhưng nếu lạm dụng là chết)
-		ServiceNow có:
-			Workflow / Flow Designer
-			Notification
-			SLA
-			Dashboard
-		→ Nhưng không phải cái nào cũng nên dùng bừa
-
-	Đừng cố viết “hay”
-	→ Viết rõ decision + reasoning
-
-
-■背景
-　- メールで業務プロセスが管理されている
-　- 対応状況の可視化ができていない
-
-■課題
-　- 承認対応に遅延が発生している
-　- 対応状況の可視化が不十分
-　- 承認停止の原因が不明確
-
-■要件
-　- 承認フローを標準化すること
-　- 一定金額を超える場合に承認条件を追加すること
-　- 承認状況を可視化すること
-　- 承認停止時の情報連携を行うこと
-
-■対応方針
-　- 保守性およびコスト観点から、ServiceNowの標準機能を優先的に利用する
-　- 承認フローはFlow Designerにより実装し、金額条件による分岐は標準機能で対応する
-　- 承認状況の可視化は、Dashboard機能を用いてリアルタイムに確認可能とする
-　- 承認停止時の通知は、NotificationおよびSLA機能を組み合わせて実現する
-　- 標準機能で対応困難な場合に限り、影響範囲を考慮した上で最小限のカスタマイズを実施する
-
-■効果
-　- 承認リードタイムの短縮
-　- 承認状況の可視化による業務の透明性向上
-　- 承認停止原因の明確化による対応迅速化
-
-
-
-
-
-	本案件に対しては、保守性およびコスト観点から、
-	ServiceNowの標準機能を最優先的に利用する方針とする。
-	
-	承認フローについては、標準のFlowDesignerを用いて実装し、
-	上長承認および金額条件に応じた分岐を実現する。
-	
-	承認状況の可視化については、標準のDashbard機能を活用することで、
-	リアルタイムでの状況把握を可能とする。
-	
-	また、承認が一定時間停滞した場合の通知については、
-	標準のNotification機能およびSLA機能を組み合わせて対応する。
-	
-	なお、標準機能で対応困難な複雑な条件分岐が発生した場合に限り、
-	影響範囲を考慮した上で、最小限のカスタマイズを実施する。
-	
-	
-------- Bài tập 2 -----------------
-
-■ Context (ServiceNow / SaaS)
-
-	Hệ thống quản lý申請・承認 nội bộ.
-
-	Công ty muốn:
-		Tăng tốc xử lý
-		Minh bạch hóa
-		Nhưng không muốn tăng chi phí vận hành
-
-
-	■ 要件 (cố tình “クソ曖昧” + có bẫy)
-		承認状況は誰でも確認できるようにしたい 	 -> 業務範囲の考慮した上で可視化　➞セキュリティともバランス必要　
-		緊急の場合は承認をスキップできるようにしたい　➞　寛容性　、スキップ必須ではないが、ないと注意追加、誰が許可？、log? 
-		できるだけ早く承認できるようにしたい			➞　承認待機の通知、 SLA遵守されている？、一時待機の申請を再通知
-		セキュリティはちゃんと守りたい				➞　承認状況誰が確認できる、誰が編集・対応できる？
+		Vì có thời điểm cụ thể là 3 ngày (72 tiếng) thì sẽ làm thêm 1 bộ đếm ngược đến trước khi tự động chạy 
+		và chia luồng như sau : Đang đợi  ->  Chuẩn bị tự động chạy -> Khóa thao tác -> Tự động chạy -> Chạy hoàn tất 
+							                   1 tiếng 		
+								khi ở giai đoạn chuẩn bị tự động chạy thì có thể gỡ , trì hoãn chức năng tự động chạy 
+								
 		
-		隠ぺい要件：コスト最小限、保守性向上　➞カスタマイズができるだけ控えるよう　標準化優先
-
-Workflow / Flow Designer
-Notification
-SLA
-Dashboard　
-
-Khách muốn gì -> làm thế nào 
-
-	■案件内容
-		本案件に対しては保守性およびコスト観点から、
-		ServiceNowの標準機能を優先的に内部業務に利用方針とする
+		thì sẽ hiển thị ô check không cho tự động chạy. 
+		Hoặc task này cần xử lý xác nhận thêm và không cho tự động chạy thì sẽ có chức năng trì hoãn thêm 
+		thời gian tự động chạy,
+		Chức năng khóa không cho tự động chạy 
 		
-		承認の業務の速度向上にServiceNowの標準FlowDesignerを用いて実装し、
-		上長承認の状況に応じた分岐を実現する。
-		緊急対応に権限者の許可を得た上および特定履歴作成した上で承認条件の緩和を実現する。
+		Và sau khi tự động chạy . sẽ phải có chức năng thu hồi lại kết quả tự động chạy 
+		trong vòng 3 ngày nếu muốn đổi lại là thay vì tự động mà người sẽ làm 
 		
-		承認状況の可視化については、Dashboardを活用したことで
-		リアルタイムの状況把握の可能とする。
+		Tự động chạy sẽ cần phải ghi log audit đầy đủ, thông báo cho người phụ trách, người quản lý và những người được đăng ký trong fỏm đó 
 		
-		承認対応の速度向上については、
-		承認待機の通知および一時待再通知を実現し、
-		標準Notification機能およびSLA機能を組み合わせて対応する。
+		thêm chức năng đánh dấu không tự động hóa khi đăng ký , hoặc chỉnh sau khi đăng ký để đảm bảo nhưng form quan trọng không được tự động hóa 
 		
-		標準セキュリティ遵守については観覧者と編集者の権限付与を十分に考慮した上で
-		申請、承認状況の可視化および通知機能追加に実現する。
+		để giảm thiếu chi vận hành và nhân sự (cost) thì chúng ta về nguyên tắc sử dụng các chức năng cơ bản của Service Now
+		và tránh cho việc tự động hóa tạo nên thêm cost, xử lý tự động hay k tự động khi đăng ký form sẽ cần 
+		và chỉ tự động hóa những tác vụ không cần xác nhận , lặp lại , không phải toàn bộ 
 		
-		なお、標準機能で対応困難な複雑条件分岐が発生した場合に限り、
-		影響範囲を考慮した上で最小限のカスタマイズを実施する。
-	
-
-	■背景
-		- メールで申請および承認を対応されている
-		- 緊急承認の対策が不足
-		- 承認状況の可視化が不十分
-	■課題
-		- 緊急時の承認遅延が発生
-		- 承認状況の可視化されていない
-	■要件
-		- 承認状況の可視化によるの透明性を向上
-		- 緊急時に承認スキップ可能
-		- 承認業務の対応速度を向上
-		- 標準セキュリティ遵守
-	
-	■対応方針
-		ー　保守性とコスト観点からServiceNowの標準機能を優先的に導利用する。
-		- 　承認フローは標準FlowDesignerにより、緊急状況による分岐は標準機能で対応する。
-		ー　緊急承認対応は条件責任者の許可されたおよび履歴作成した上で承認条件の一部緩和可能とすることで対応する。
-		ー　承認状況の可視化はDashboardを用いてリアルタイム確認可能とする。
-		- 　申請および承認対応のチケット可視化権限は標準セキュリティを考慮した上で権限あり方のみ観覧、編集可能とする。
-		- 　承認速度向上に対しては標準Notificationの初期通知とタイマー通知の機能とSLA機能を組み合わせて対応する。
-		-  標準機能で対応困難な場合に限り、最小限のカスタマイズを実施する。
+		Ai là người đánh giá đây là đơn đăng ký quan trọng? : là người có quyền quản lý 承認 
 		
-	■効果
-		ー　標準機能の最優先でコスト観点に最適
-		- 承認対応速度向上
-		- 承認状況の可視化　
-		- 緊急時の許可範囲内で承認スキップ可能
-		- セキュリティーリスクが減少
-
-
-💀 Đập thẳng các lỗi NGUY HIỂM
-	1. ❌ Mày chưa “再定義 要件”
-
-	Đề bài:
-		誰でも確認できる
-		❌ Mày viết:
-			標準セキュリティ遵守
-			👉 Đây là né tránh vấn đề
-			👉 Không trả lời câu hỏi:
-
-		“誰でも” = ai?
-		phạm vi đâu?
-		
-		
-	✅ Senior phải viết kiểu này:
-		認証済ユーザに限定
-		または 部署内ユーザのみ
-	👉 Không define = security hole		
-	
-	
-	
-	
-	
-	
-	
-	
-2. ❌ Conflict xử lý nửa vời
-	Conflict:
-		誰でも見れる
-		セキュリティ守る
-		❌ Mày:
-
-		権限あり方のみ観覧、編集可能
-
-		👉 Câu này:
-			sai ngữ pháp
-			không rõ nghĩa
-			không giải conflict	
-		
-		👉 Reviewer sẽ hỏi:
-			「誰に何の権限を付与するのか？」
-			→ mày không trả lời được = fail
-	
-		
-
-3. ❌ “承認スキップ” vẫn cực kỳ nguy hiểm
-	❌ Mày viết:
-
-		許可されたおよび履歴作成した上で
-
-			👉 Nghe có vẻ đúng, nhưng thiếu:
-			Ai được quyền?
-			Có audit log không?
-			Có giới hạn không?
-
-		⚠️ Đây là chỗ production chết:
-
-			Nếu không kiểm soát:
-			→ nhân viên bypass approval → fraud
-
-
-		✅ Senior phải có:
-			実行者限定（役職 or ロール）
-			実行理由の入力必須
-			全操作ログ記録
-
-
-
-4. ❌ Văn phong Nhật = chưa pass review
-
-	Ví dụ:
-
-		❌
-		利用方針とする (sai)
-		観覧者 (sai kanji → 閲覧者)
-		可視化によるの透明性 (sai ngữ pháp)
-		導利用する (???)
-
-		👉 Đây là level:
-		→ đọc phát biết “外国人 junior”
-
-5. ❌ Lặp + structure rối
-	Có 2 phần giống nhau:
-	案件内容
-	対応方針
-
-	👉 Nhật ghét duplication
-	→ tài liệu phải 1 source of truth
-
-
-
-
-
-✅ Tao rewrite l(LEVEL SENIOR – đọc kỹ)
-
-
-■背景
-　- メールベースで申請・承認業務が行われている
-　- 緊急時の承認手段が未整備
-　- 承認状況の可視化が不十分
-
-■課題
-　- 承認遅延の発生（特に緊急時）
-　- 承認状況および滞留箇所の把握が困難
-　- セキュリティ統制の不明確さ
 
 ■要件再定義
-　- 承認状況の参照は「認証済ユーザ」かつ「権限付与された範囲内」に限定する
-　- 緊急時の承認スキップは、特定ロールに限定し、監査ログを必須とする
-　- 承認リードタイム短縮のため、通知および可視化を強化する
-　- セキュリティと利便性のバランスを確保する
+　- 承認プロセスが3日を超過した場合、事前に定義された条件（申請種別・金額閾値・リスクレベル）を満たす申請に限り、自動承認を実施する
+　- 自動承認の適用範囲は管理者により定義可能とし、設定変更は監査ログに記録する
+　- 重要な申請（高リスク・高金額・特定種別）は自動承認の対象外とし、必ず手動承認を行う
+　- 自動承認の実行プロセスおよび結果はすべて記録し、監査可能とする
+　- 承認リードタイム短縮のため、SLAを定義し、一定時間内の承認を必須とする
+　- セキュリティおよび統制を確保しつつ、運用負荷およびコストを最小化する
 
 ■対応方針
-　- 保守性およびコスト観点から、ServiceNowの標準機能を優先的に利用する
-　- 承認フローはFlow Designerにより実装し、条件分岐は標準機能で対応する
+　- 承認フローはServiceNow標準のFlow Designerを用いて実装する
+　- 承認プロセスが3日を超過した場合、事前定義された条件に一致する申請のみ自動承認を実行する
+　- 自動承認処理はステータスベースで制御し、「処理中」ステータス時は手動操作を制限する（時間ベースのロックは行わない）
+　- 承認済データの直接編集は禁止とし、訂正が必要な場合は取消および再申請により対応する
+　- 自動承認の条件設定および権限付与は管理者ロールのみに限定し、操作履歴を記録する
 　- 承認状況の可視化はDashboard機能によりリアルタイムに提供する
-　- 通知はNotificationおよびSLA機能を組み合わせて実現する
-　- 緊急時の承認スキップは、特定ロールに限定し、実行理由入力および操作ログ記録を必須とする
-　- 権限管理はロールベースで制御し、閲覧・編集範囲を明確に分離する
-　- 標準機能で対応困難な場合に限り、影響範囲を考慮した上で最小限のカスタマイズを実施する
+　- 承認遅延防止のため、SLAおよびNotification機能を組み合わせてリマインド通知を実施する
+　- 標準機能で対応可能な範囲で実装し、カスタマイズは原則最小限とする
 
-■効果
-　- 承認リードタイムの短縮
-　- 承認状況の可視化による業務透明性の向上
-　- 緊急時対応の迅速化と統制の両立
-　- セキュリティリスクの低減
+■リスクと対策
+　- 自動承認の誤判定リスク  
+　　→ 承認条件（申請種別・金額・リスクレベル）を明確に定義し、定期的に見直しを実施する  
+
+　- 不正操作（権限悪用）リスク  
+　　→ 自動承認設定は管理者ロールのみに制限し、すべての操作を監査ログに記録する  
+
+　- データ整合性リスク  
+　　→ 承認済データの直接編集を禁止し、取消および再申請による履歴管理を徹底する  
+
+　- 処理競合リスク  
+　　→ ステータスベースで排他制御を行い、同時操作を防止する  
+
+　- 自動化過多による統制低下リスク  
+　　→ 高リスク申請は自動承認対象外とし、手動承認を必須とする  
+
+
+
+
+⚠️ Bẫy
+Auto approve vs Human check → conflict
+“重要な申請” → define chưa?
+Automation quá → risk compliance
+🎯 Yêu cầu
+
+Viết:
+
+■ 要件再定義
+■ 対応方針
+（できれば）■ リスクと対策
+🎯 Mục tiêu luyện
+Biết khi nào KHÔNG nên auto
+Biết chia rule theo condition
+Có tư duy compliance / audit
+📊 Cách luyện (đừng làm ẩu)
+
+
+
+
+
+
+https://chatgpt.com/g/g-p-69ca16640e24819184be0b039f98e49b-hoc-powerpoint/c/69d45709-574c-83e8-ac3c-09d25d3e81bb
 
 
 

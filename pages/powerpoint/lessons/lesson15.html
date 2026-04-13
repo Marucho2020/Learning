@@ -1,135 +1,140 @@
-<html><head><title>Lesson 14 == ====案件概要 練習 ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../powerpoint-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 14 -- ----案件概要 練習 -//</h1><pre>
-🔁 BÀI 1 – “曖昧 + 権限バグ”
-
-	■ 要件(考え方)
-		承認状況は関係者が確認できるようにしたい
-		一部のユーザは全ての申請を確認できるようにしたい
-		承認はできるだけ早くしたい
-
-		➞
-		“関係者” là ai? → không define = bug quyền　-> Chỉ user đã đăng nhập, và có quyền đọc tình trạng 
-		“一部ユーザ” → ai quyết định? -> Chỉ user có quyền thêm quyền đọc toàn bộ cho user khác 
-		“早く” → không có SLA ->
+<html><head><title>Lesson 14 == ====検証結果, 制約 ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../powerpoint-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 14 -- ----検証結果, 制約 -//</h1><pre>	検証結果（result）
+	制約（limitation）
 	
-	(回答)
-	■ 要件
-		- 承認状況の参照は、申請者・承認者および権限付与されたユーザに限定する
-		- 全申請の参照権限は、管理者ロールにより付与可能とし、付与操作は監査ログに記録する
-		- 承認リードタイム短縮のため、SLAを定義し、一定時間内の承認を必須とする
-	■ 対応方針
-		- 権限管理はロールベースで制御し、閲覧権限と編集権限を明確に分離する
-		- 全申請の参照権限は、管理者ロールのみ付与可能とし、権限付与履歴を記録する
-		- 承認状況の可視化は、標準のDashboard機能を用いて実現する
-		- 承認遅延防止のため、SLAおよびNotification機能を組み合わせてリマインド通知を実施する
-		- 標準機能で対応可能な範囲で実装し、カスタマイズは原則行わない
+	
+# 	1. 検証結果 (result） 
+	
+	Ý nghĩa (trong IT project)
 
-
-
-
-https://chatgpt.com/g/g-p-69ca16640e24819184be0b039f98e49b-hoc-powerpoint/c/69d45709-574c-83e8-ac3c-09d25d3e81bb
-
-🔁 BÀI 2 – “運用 vs 自動化” (level mid → gần senior)
-■ 要件
-承認が3日以内に行われない場合、自動で次の承認者へ進めたい
-
-ただし、重要な申請は必ず人が確認する必要がある
-運用負荷は増やしたくない
-
-
-	-> Thêm tự động hóa nếu trong vòng 3 ngày chưa làm thì tự động triển khai 
-		! Người xác nhận bị xung đột với luồng tự động xác nhận, cho nên cần làm 
-		khi luồng tự động xác nhận chuẩn bị chạy thì sẽ lock lại không cho người làm thủ công 
-		và ngược lại . khi người làm thủ công mà task này sẽ chuẩn bị chạy (khoảng 1 tiếng sau sẽ chạy )
+		Không phải “kết quả chung chung”
+		→ Là output có căn cứ từ test / PoC / kiểm chứng kỹ thuật	
+			
+		👉 Nhật họ đọc cái này để quyết định:
+			- Có deploy không
+			- Có scale không
+			- Có risk không		
 		
-		Vì có thời điểm cụ thể là 3 ngày (72 tiếng) thì sẽ làm thêm 1 bộ đếm ngược đến trước khi tự động chạy 
-		và chia luồng như sau : Đang đợi  ->  Chuẩn bị tự động chạy -> Khóa thao tác -> Tự động chạy -> Chạy hoàn tất 
-							                   1 tiếng 		
-								khi ở giai đoạn chuẩn bị tự động chạy thì có thể gỡ , trì hoãn chức năng tự động chạy 
-								
+	
+	Ví dụ thực tế (ServiceNow)
+	
+		- Kiểm chứng workflow approval khi concurrent request
+		- Test performance khi 1000 request/phút
+		- Kiểm tra integration với external API	
+			
+	Đoạn tài liệu (report style)		
+	
+		本検証では、ServiceNowの承認ワークフローに対して同時リクエストを送信し、
+		処理性能および競合発生有無を確認した。
+		その結果、同時100件までは遅延なく処理可能であることを確認したが、
+		200件を超えた場合、一部の承認処理において最大5秒の遅延が発生した。	
+					
+		👉 Điểm mấu chốt:
+			Có điều kiện (100件, 200件)
+			Có số liệu (5秒)
+			Có kết luận rõ	
+				
+	
+	
+	##Slide (PowerPoint) 
+
 		
-		thì sẽ hiển thị ô check không cho tự động chạy. 
-		Hoặc task này cần xử lý xác nhận thêm và không cho tự động chạy thì sẽ có chức năng trì hoãn thêm 
-		thời gian tự động chạy,
-		Chức năng khóa không cho tự động chạy 
 		
-		Và sau khi tự động chạy . sẽ phải có chức năng thu hồi lại kết quả tự động chạy 
-		trong vòng 3 ngày nếu muốn đổi lại là thay vì tự động mà người sẽ làm 
-		
-		Tự động chạy sẽ cần phải ghi log audit đầy đủ, thông báo cho người phụ trách, người quản lý và những người được đăng ký trong fỏm đó 
-		
-		thêm chức năng đánh dấu không tự động hóa khi đăng ký , hoặc chỉnh sau khi đăng ký để đảm bảo nhưng form quan trọng không được tự động hóa 
-		
-		để giảm thiếu chi vận hành và nhân sự (cost) thì chúng ta về nguyên tắc sử dụng các chức năng cơ bản của Service Now
-		và tránh cho việc tự động hóa tạo nên thêm cost, xử lý tự động hay k tự động khi đăng ký form sẽ cần 
-		và chỉ tự động hóa những tác vụ không cần xác nhận , lặp lại , không phải toàn bộ 
-		
-		Ai là người đánh giá đây là đơn đăng ký quan trọng? : là người có quyền quản lý 承認 
-		
+		- ServiceNow承認WFの同時実行検証を実施
+		- 100件までは遅延無しで処理可能
+		- 200件以上で最大5秒の遅延発生
+		- 高負荷時のパフォーマンス劣化を確認
+	
+	## Title chuẩn Nhật 	
 
-■要件再定義
-　- 承認プロセスが3日を超過した場合、事前に定義された条件（申請種別・金額閾値・リスクレベル）を満たす申請に限り、自動承認を実施する
-　- 自動承認の適用範囲は管理者により定義可能とし、設定変更は監査ログに記録する
-　- 重要な申請（高リスク・高金額・特定種別）は自動承認の対象外とし、必ず手動承認を行う
-　- 自動承認の実行プロセスおよび結果はすべて記録し、監査可能とする
-　- 承認リードタイム短縮のため、SLAを定義し、一定時間内の承認を必須とする
-　- セキュリティおよび統制を確保しつつ、運用負荷およびコストを最小化する
-
-■対応方針
-　- 承認フローはServiceNow標準のFlow Designerを用いて実装する
-　- 承認プロセスが3日を超過した場合、事前定義された条件に一致する申請のみ自動承認を実行する
-　- 自動承認処理はステータスベースで制御し、「処理中」ステータス時は手動操作を制限する（時間ベースのロックは行わない）
-　- 承認済データの直接編集は禁止とし、訂正が必要な場合は取消および再申請により対応する
-　- 自動承認の条件設定および権限付与は管理者ロールのみに限定し、操作履歴を記録する
-　- 承認状況の可視化はDashboard機能によりリアルタイムに提供する
-　- 承認遅延防止のため、SLAおよびNotification機能を組み合わせてリマインド通知を実施する
-　- 標準機能で対応可能な範囲で実装し、カスタマイズは原則最小限とする
-
-■リスクと対策
-　- 自動承認の誤判定リスク  
-　　→ 承認条件（申請種別・金額・リスクレベル）を明確に定義し、定期的に見直しを実施する  
-
-　- 不正操作（権限悪用）リスク  
-　　→ 自動承認設定は管理者ロールのみに制限し、すべての操作を監査ログに記録する  
-
-　- データ整合性リスク  
-　　→ 承認済データの直接編集を禁止し、取消および再申請による履歴管理を徹底する  
-
-　- 処理競合リスク  
-　　→ ステータスベースで排他制御を行い、同時操作を防止する  
-
-　- 自動化過多による統制低下リスク  
-　　→ 高リスク申請は自動承認対象外とし、手動承認を必須とする  
+	👉 承認ワークフローの同時実行に関する検証結果	
+	
+	
+	##	NG vs OK
+	
+		❌ NG (junior)
+			検証の結果、問題は特にありませんでした。
+	
+		👉 Sai ở:
+			Không số liệu
+			Không điều kiện
+			Không ai tin
+	
+	
+		✅ OK (senior)	
+			同時100件までの処理において性能劣化が確認されなかったが、200件以上では最大5秒の遅延が発生した。
+	
 
 
 
+# 2. 制約（limitation） 
 
-⚠️ Bẫy
-Auto approve vs Human check → conflict
-“重要な申請” → define chưa?
-Automation quá → risk compliance
-🎯 Yêu cầu
+	Ý nghĩa (trong IT project)
+		Không phải “hạn chế chung chung”
+		→ Là điều kiện hệ thống KHÔNG thể vượt qua
 
-Viết:
-
-■ 要件再定義
-■ 対応方針
-（できれば）■ リスクと対策
-🎯 Mục tiêu luyện
-Biết khi nào KHÔNG nên auto
-Biết chia rule theo condition
-Có tư duy compliance / audit
-📊 Cách luyện (đừng làm ẩu)
+	👉 Đây là thứ:
+		Dev phải biết để design
+		PM phải biết để tránh overpromise
 
 
 
+	## Ví dụ thực tế (ServiceNow / SaaS) 
 
+		- API rate limit (1000 req/min)
+		- Không xử lý real-time
+		- Không hỗ trợ transaction multi-record
+			
+			
+		本システムでは、ServiceNowの標準APIを利用して外部連携を行うため、
+		API呼び出し回数は1分あたり最大1000回の制限がある。
+		そのため、大量データの一括処理においては、バッチ分割またはキューイング処理の導入が必要となる。			
+					
+				
+			👉 Điểm mấu chốt:
+				Nêu rõ constraint
+				Nêu impact
+				Nêu hướng xử lý			
+						
+			
+	## Slide (PowerPoint)		
+			
+			- ServiceNow標準APIにより外部連携を実施
+			- API呼び出しは最大1000回/分の制限あり
+			- 大量処理時は制限超過リスクあり
+			- バッチ分割またはキュー処理が必要			
+						
+			
+	## Title chuẩn Nhật 		
+			👉 外部連携におけるAPI利用制約について
+			
+			
+			
+	## NG vs OK 
+	
+		❌ NG (junior)		
+			
+		APIに制限があります。		
+			👉 Vô dụng. Không ai dùng được.
+			
+			
+		✅ OK (senior)	
+			API呼び出しは1分あたり最大1000回に制限されているため、大量データ処理時にはバッチ分割が必要となる。
+			
+			
+# Tổng kết (đừng hiểu sai) 			
+			
+	検証結果 = “Sự thật đã test → dùng để quyết định”
+	制約 = “Giới hạn hệ thống → bắt buộc phải sống chung”			
+				
+	👉 Sai lầm phổ biến của dev:
+		Viết 検証結果 như cảm nhận
+		Viết 制約 mà không gắn với impact
 
-
-https://chatgpt.com/g/g-p-69ca16640e24819184be0b039f98e49b-hoc-powerpoint/c/69d45709-574c-83e8-ac3c-09d25d3e81bb
-
-
-
-
-
-
+	👉 Level senior:
+		Luôn có số liệu + điều kiện + hậu quả + hướng xử lý
+					
+			
+Nếu muốn lên level nữa:
+https://chatgpt.com/g/g-p-69ca16640e24819184be0b039f98e49b-hoc-powerpoint/c/69dc426a-36c0-83e8-b182-97a014b58656
+Tôi sẽ cho bạn bài tập kiểu reviewer Nhật chấm thẳng tay (rất khó, gần giống thực tế genba).			
 </pre><a id='backBottom' href='../powerpoint-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

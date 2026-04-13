@@ -1,6 +1,334 @@
-<html><head><title>Lesson 45 == Cloud Practitioner ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 45 -- Cloud Practitioner -//</h1><pre>
+<html><head><title>Lesson 45 == Cloud Practitioner ==CloudWatch ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 45 -- Cloud Practitioner --CloudWatch -//</h1><pre>
+	
+#	1. Bản chất
+	CloudWatch = Hệ thần kinh theo dõi “hệ thống đang sống thế nào”
 
-review tuần
+	Không phải:
+		❌ audit (CloudTrail)
+		❌ chỉ log
+
+	👉 Nó là:
+		Monitoring + Observability + Alerting
+
+	Cụ thể:
+		Metrics (CPU, RAM, request count…)
+		Logs (application/system)
+		Events (trigger automation)
+
+
+
+
+
+# 2. Ví dụ thực tế 
+
+
+	Scenario 1 (chuẩn đề thi)
+
+	Hệ thống EC2:
+
+		CPU tăng đột biến
+		cần auto scale
+
+		👉 Flow:
+			EC2 → CloudWatch Metrics (CPUUtilization)
+			CloudWatch Alarm → Auto Scaling Group scale out
+
+		👉 Không có CloudWatch → bạn “mù”
+
+
+
+	Scenario 2 (debug production)
+		App crash nhưng không biết vì sao
+
+	👉 Dùng:
+		CloudWatch Logs (xem log)
+		CloudWatch Metrics (xem spike)
+
+
+
+# 3. Mapping AWS Services 
+
+| Use case           | Service            |
+| ------------------ | ------------------ |
+| Monitor CPU/RAM    | CloudWatch Metrics |
+| Log ứng dụng       | CloudWatch Logs    |
+| Alert              | CloudWatch Alarm   |
+| Trigger automation | EventBridge        |
+| Audit              | CloudTrail         |
+
+
+👉 Combo phổ biến:
+
+CloudWatch Alarm → SNS → Email
+CloudWatch → Auto Scaling
+
+
+# 4. Keyword trong đề thi
+
+	monitor
+	metrics
+	CPU utilization
+	memory usage
+	threshold
+	alarm
+	trigger scaling
+	application logs
+
+
+
+# 5. Bẫy (trap)
+	
+	Trap 1: Nhầm với CloudTrail
+
+
+| CloudWatch      | CloudTrail    |
+| --------------- | ------------- |
+| System behavior | User activity |
+| Metrics + Logs  | API logs      |
+| Real-time       | History       |
+
+
+	👉 Câu hỏi:
+
+		“Ai xoá EC2?” → CloudTrail
+		“CPU EC2 bao nhiêu?” → CloudWatch
+
+
+	Trap 2: Nghĩ CloudWatch auto scaling 
+
+
+	👉 Sai
+
+	CloudWatch:
+		chỉ phát hiện (detect)
+
+	Auto Scaling:
+		mới hành động (act)
+
+
+
+
+	Trap 3: Nhầm Logs vs Metrics
+
+| Logs          | Metrics    |
+| ------------- | ---------- |
+| Text chi tiết | Số liệu    |
+| Debug         | Monitoring |
+
+👉 Logs → debug
+👉 Metrics → alert
+
+
+
+	Trap 4: Memory metric mặc định
+
+	👉 Cực kỳ hay ra đề
+		EC2 KHÔNG có memory metric mặc định
+
+	Muốn có:
+		phải cài CloudWatch Agent
+
+
+
+
+
+
+# 6. Trade-off
+
+| Điểm        | CloudWatch                     |
+| ----------- | ------------------------------ |
+| Ưu          | Real-time monitoring mạnh      |
+| Nhược       | Log nhiều → cost tăng          |
+| Hidden cost | Custom metrics + log ingestion |
+
+
+👉 Sai lầm:
+	spam logs → bill nổ
+
+
+
+
+
+# 7. Scenario giống đề thi
+
+
+	Case 1
+
+		Cần:
+			auto scale khi CPU > 80%
+
+		👉 Đáp án:
+			CloudWatch Alarm + Auto Scaling
+
+
+	Case 2 (bẫy)
+
+		Cần:
+			biết ai thay đổi security group
+
+		👉 Đáp án:
+			CloudTrail (không phải CloudWatch)
+
+
+	Case 3
+
+		Cần:
+		gửi email khi error log xuất hiện
+
+	👉 Đáp án:
+		CloudWatch Logs + Metric Filter + Alarm + SNS
+
+
+
+
+
+# 8. So sánh cực dễ nhầm
+
+| Service    | Bản chất       |
+| ---------- | -------------- |
+| CloudWatch | Monitoring     |
+| CloudTrail | Audit          |
+| Config     | Tracking state |
+| X-Ray      | Tracing        |
+
+
+
+👉 Nhìn sâu:
+
+CloudWatch = “hiện tại”
+CloudTrail = “quá khứ”
+
+
+# 9. Cách AWS ra đề 
+
+
+	Pattern 1
+		“Monitor application performance”
+		→ CloudWatch
+
+	Pattern 2
+		“Trigger action when threshold exceeded”
+		→ CloudWatch Alarm
+
+	Pattern 3 (bẫy)
+		“Track user activity”
+		→ CloudTrail ❌
+
+	Pattern 4 (nâng cao)
+		“Analyze logs and detect patterns”
+		→ CloudWatch Logs + Metric Filter
+
+
+
+# 10. Tóm lại (level senior) 
+
+	CloudWatch là:
+		“Real-time observability system”
+
+	Không có nó:
+		bạn không biết hệ thống đang chết hay sống
+
+
+
+---------------------🇯🇵 日本語版----------------
+
+
+# 1. 本質
+
+	CloudWatch = 「システムが今どう動いているか」を監視するサービス
+		監査ではない（CloudTrail）
+		ログだけでもない
+		👉 Monitoring + Observability + Alert
+
+
+
+# 2. 具体例 
+
+
+	シナリオ
+
+		EC2のCPUが上昇
+		→ 自動スケーリングしたい
+
+	👉 Flow:
+		CloudWatch Metrics → Alarm → Auto Scaling
+
+
+# 3. サービス対応 
+
+
+| 目的    | サービス               |
+| ----- | ------------------ |
+| CPU監視 | CloudWatch Metrics |
+| ログ    | CloudWatch Logs    |
+| アラート  | CloudWatch Alarm   |
+
+
+
+# 4. 試験キーワード 
+
+	monitor
+	metrics
+	CPU utilization
+	alarm
+	threshold
+
+
+# 5. よくある罠 
+
+	罠① CloudTrailと混同
+		CloudWatch → システム監視
+		CloudTrail → 操作ログ
+
+
+	罠② Auto Scalingと混同
+		CloudWatch → 検知
+		Auto Scaling → 実行
+
+
+	罠③ メモリ監視
+
+		👉 デフォルトでは不可
+		→ Agentが必要
+
+
+
+# 6. トレードオフ
+
+	メリット：リアルタイム監視
+	デメリット：コスト増加（ログ）
+	
+	
+	
+
+
+# 7. 試験パターン
+
+
+	パターン①
+		「パフォーマンス監視」
+		→ CloudWatch
+
+	パターン②
+		「閾値で通知」
+		→ CloudWatch Alarm
+
+
+	パターン③（罠）
+		「ユーザー操作追跡」
+		→ CloudTrail
+
+
+# 8. まとめ 
+	👉 リアルタイム監視の中核サービス
+
+
+
+
+
+
+
+
 
 
 </pre><a id='backBottom' href='../aws-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
