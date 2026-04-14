@@ -137,4 +137,191 @@
 Nếu muốn lên level nữa:
 https://chatgpt.com/g/g-p-69ca16640e24819184be0b039f98e49b-hoc-powerpoint/c/69dc426a-36c0-83e8-b182-97a014b58656
 Tôi sẽ cho bạn bài tập kiểu reviewer Nhật chấm thẳng tay (rất khó, gần giống thực tế genba).			
+
+
+------------------ Bài tập --------------------
+
+	## Context (giống genba thật)
+
+	Bạn đang làm dự án ServiceNow導入 cho một công ty.
+			- Có chức năng: 承認ワークフロー（approval workflow）
+			- Có integration với hệ thống ngoài qua API
+			- Bạn đã làm:
+				- 負荷テスト (load test)
+				- API連携テスト
+
+
+
+	## Yêu cầu 
+
+		👉 Viết 1 đoạn tài liệu (10–15 dòng) bao gồm:
+
+		1. 検証結果
+			Kết quả load test workflow
+			Có:
+			Số lượng request (ví dụ: 100件, 500件…)
+			Có hoặc không có delay
+			Có hoặc không có lỗi
+			
+		2. 制約
+			API external có giới hạn (tự giả định số)
+			Phải:
+			Nêu rõ limit
+			Nêu impact
+			Nêu hướng xử lý (quan trọng)
+
+		■検証結果(result)
+
+			##  Đoạn văn  
+
+			本検証では、ServiceNowの標準承認ワークフローに対して同時実行負荷テストを実施し、
+			処理性能および競合発生有無を確認した。
+			その結果、1分あたり300件までの同時実行においては遅延およびエラーは発生しなかったが、
+			400件以上では最大30秒の遅延および一部処理エラーが発生することを確認した。
+		
+		
+	
+			##  PowerPoint 
+				- ServiceNowの標準承認フローにより同時に実行検証を実施
+				- 300件/分までは遅延無で処理可能
+				- 400件/分以上は30秒の遅延および処理エラー発生
+				- 高負荷時のパフォーマンス劣化を確認
+
+
+		■制約
+		
+			##  Đoạn văn  
+			本システムではServiceNow標準のAPIを利用して外部連携を行うため、
+			API呼び出し回数は1分あたり最大1000回の制限がある。
+			そのため、大量データの一括処理においてはバッチ分割およびキューイングの導入が必要となる。
+			
+			
+			本システムでは、ServiceNowの標準APIを用いた外部連携を行うため、
+			API呼び出し回数は1分あたり最大1000回に制限されている。
+			そのため、大量データを一括処理した場合、API制限超過によりリクエストエラーが発生するリスクがある。
+			この対策として、バッチ分割およびキューイング処理の導入が必要となる。
+			
+			
+			
+			##  PowerPoint 
+			- ServiceNowの標準APIにより外部連携を実施する
+			- API呼び出しは最大1000回/分の制限があり
+			- 最大処理時は制限超過のリスクあり
+			-　標準APIおよび承認ワークフローはキューイングを利用する必要
+			
+			
+			
+			
+			
+
+
+		⚠️ Rule (rất quan trọng)
+
+			Nếu vi phạm → tôi chấm fail thẳng:
+
+		❌ Không được viết mơ hồ kiểu:
+			「問題なし」
+			「遅延が発生した可能性がある」
+		❌ Không được thiếu:
+			Số liệu
+			Điều kiện
+		❌ Không được tách rời:
+			制約 mà không có impact → FAIL
+
+
+
+	## 🎯 Level tôi expect (rất cao) 
+	
+		Bạn phải viết kiểu này:
+			Có logic:
+				なぜ → 何が起きた → だからどうする
+	
+			Có mindset:
+				Dev đọc hiểu được
+				PM đọc quyết định được	
+		
+	🚨 Cách tôi chấm
+
+		Tôi sẽ chấm theo 4 tiêu chí:
+			Độ cụ thể (số liệu, điều kiện)
+			Logic (có flow hay không)
+			Độ “Japanese IT style”
+			Tư duy senior (có impact + solution không)	
+			
+		
+#🎯 Câu hỏi của bạn
+	
+	Tại sao 承認 (workflow) ở 検証結果
+		còn API lại ở 制約?
+	👉 Vì bản chất 2 thứ này KHÁC NHAU:
+		
+	## 1. 承認ワークフロー → 検証結果 
+	
+		👉 Đây là thứ bạn CHỦ ĐỘNG test
+			Bạn tạo load
+			Bạn đo performance
+			Bạn quan sát behavior
+
+		=> Nó tạo ra fact (sự thật đo được)	
+			➡️ Vì vậy nó thuộc:
+			👉 検証結果 (result)
+				
+	
+	## 2. API制限 → 制約 
+	
+		👉 Đây là thứ bạn KHÔNG thể thay đổi
+			ServiceNow quy định sẵn
+			Bạn không control được
+			Không cần test cũng biết (doc đã ghi)
+
+		=> Nó là hard limit của system
+
+		➡️ Vì vậy nó thuộc:
+		👉 制約 (limitation)
+
+
+
+	## ⚠️ Nếu bạn viết ngược lại thì sao? 
+
+		❌ Sai tư duy phổ biến
+			Viết API limit vào 検証結果
+			→ reviewer sẽ nghĩ:
+			👉 “Ơ cái này doc có rồi, test làm gì?”
+			
+		Viết workflow vào 制約
+			→ reviewer sẽ nghĩ:
+			👉 “Ơ cái này là behavior, sao lại gọi là limitation?”
+
+
+
+
+	## 💥 Insight quan trọng 
+
+		👉 Phân biệt bằng câu hỏi:
+			“Cái này mình test ra hay bị ép phải chấp nhận?”
+
+| Loại    | Bản chất           | Thuộc |
+| ------- | ------------------ | ----- |
+| Test ra | Có thể thay đổi    | 検証結果  |
+| Bị ép   | Không thể thay đổi | 制約    |
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 </pre><a id='backBottom' href='../powerpoint-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
