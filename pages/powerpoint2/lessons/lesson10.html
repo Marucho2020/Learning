@@ -1,0 +1,237 @@
+<html><head><title>Lesson 9 == =======エスカレーション（Escalation） ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../powerpoint-learning-2-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 9 -- ------=エスカレーション（Escalation） -//</h1><pre>
+# ① ELI5
+
+
+	Hiểu cực thẳng:
+		👉 Escalation = đẩy vấn đề lên người “cao hơn / giỏi hơn” khi bạn không xử lý được
+
+	Ví dụ đời thường:
+		Bạn là nhân viên → gặp khách khó → gọi quản lý
+		→ đó chính là escalation
+
+
+	Trong IT:
+		Dev không fix được bug → gọi senior
+		Support không xử lý được → chuyển team khác
+
+	👉 Nói đơn giản:
+		“Tôi không xử lý nổi → nhờ người cấp cao hơn”
+
+
+
+# ② Trong dự án thực tế
+	Trong project ServiceNow / ITSM ở Nhật:
+		👉 Escalation là một bước trong workflow, không phải hành động tùy hứng
+
+	Có 2 loại chính: 
+
+	## 1. Functional Escalation（機能的エスカレーション） 
+		→ Chuyển sang team khác giỏi hơn
+			Ví dụ:
+
+			L1 support không fix được → chuyển L2
+			App issue → chuyển sang infra team
+
+
+	## 2. Hierarchical Escalation（階層的エスカレーション） 
+		→ Đẩy lên cấp quản lý
+
+		Ví dụ:
+			SLA sắp vi phạm → báo manager
+			Khách hàng complain → escalate lên PM
+
+
+
+
+	## Ví dụ trong project: 
+		Tài liệu:
+			SLA違反の可能性がある場合、自動的にマネージャーへエスカレーションを行う。
+
+		Meeting:
+			このチケットはL2にエスカレーションしてください。
+
+
+
+# Flow thực tế (rất hay gặp):
+
+
+	1.User báo lỗi → tạo Incident
+	2.L1 nhận
+	3.Không xử lý được →
+	4.👉 Escalate lên L2
+	5.Nếu vẫn fail →
+	6.👉 Escalate lên vendor / architect
+
+	👉 Đây là flow chuẩn, không phải “fail”
+	→ mà là thiết kế hệ thống ngay từ đầu
+
+
+#③ Level senior (bản chất) 
+
+	Nói thẳng:
+		👉 Escalation = cơ chế chống “tắc nghẽn hệ thống”
+
+
+	## Nó giải quyết vấn đề gì? 
+
+		Giới hạn năng lực con người
+			Không ai biết hết mọi thứ
+			
+		Giảm bottleneck
+			Nếu cứ giữ ticket → hệ thống tắc
+			
+		Đảm bảo SLA
+			Không escalate → trễ deadline
+
+
+	## Nếu không có escalation?
+	
+	
+			- Ticket bị “ôm” bởi người không xử lý được
+			- Delay dây chuyền
+			- User chờ vô hạn
+			- Không ai biết issue đang stuck ở đâu
+
+		👉 Hệ thống sẽ chết vì im lặng + trì hoãn	
+			
+	
+	
+	
+	
+# Bản chất sâu hơn 	
+	Escalation = routing thông minh
+	
+	
+	Giống như:
+		API Gateway route request
+		Queue push job sang worker phù hợp
+
+	👉 ITSM:
+		Ticket = request
+		Escalation = routing	
+			
+		
+# Liên kết concept: 
+	
+	
+	可視化（Visualization）
+		→ thấy ticket đang bị stuck
+	
+	SLA（Service Level Agreement）
+		→ trigger escalation
+	
+	自動化（Automation）
+		→ auto escalate khi quá thời gian
+	
+	一元化（Centralization）
+		→ tất cả escalation phải track trong 1 system	
+
+
+
+# Ví dụ tài liệu
+
+	本システムでは、SLA違反を防止するため、
+	一定時間未対応のインシデントに対して
+	自動エスカレーション機能を実装する。
+
+	また、対応レベルに応じて、
+	L1からL2への機能的エスカレーションを行う。
+
+
+
+
+# Slide
+
+
+	エスカレーション目的
+		- 対応遅延の防止
+		- SLA遵守
+		- 適切なリソースへの振り分け
+
+	種類
+		- 機能的エスカレーション（L1 → L2）
+		- 階層的エスカレーション（担当 → 管理者）
+	効果
+		- ボトルネック解消
+		- 対応品質向上
+		- 可視化強化
+
+
+	Meeting phrase
+	
+		このままだとSLAに間に合わないので、エスカレーションします。
+		一度L2にエスカレーションした方がいいと思います。
+
+
+
+# So sánh & bẫy 
+
+	## 1. Escalation vs Assignment 
+
+|          | Escalation             | Assignment            |
+| -------- | ---------------------- | --------------------- |
+| Bản chất | Đẩy lên level cao hơn  | Giao việc             |
+| Trigger  | Không xử lý được / SLA | Phân công bình thường |
+
+
+	👉 Sai lầm junior:
+
+		Chuyển ticket = escalation ❌
+		→ Không. Đó chỉ là assign
+
+
+	##2. Escalation ≠ “báo cáo”
+		NG: escalate = báo cáo cho sếp ❌
+		OK: escalate = chuyển trách nhiệm xử lý + visibility ✅
+
+
+
+
+	## 3. Không dám escalate 
+
+		Junior hay bị:
+			Sợ bị đánh giá kém
+			Cố ôm ticket
+
+		👉 Đây là hành vi phá hệ thống
+
+
+# Mindset senior 
+
+	1. Escalation là trách nhiệm, không phải thất bại
+
+		Senior nghĩ:
+			“Escalate đúng lúc = bảo vệ hệ thống”
+
+
+	2. Timing là tất cả
+
+		Escalate quá sớm → lãng phí resource
+		Escalate quá muộn → SLA fail
+		👉 Senior cực nhạy cảm với timing này
+
+	3. Luôn thiết kế escalation trước
+	
+			Không phải chờ issue mới nghĩ:
+
+			- SLA bao lâu thì escalate?
+			- Escalate lên ai?
+			- Auto hay manual?
+
+
+	4. Xuất hiện ở đâu trong tài liệu?
+
+		運用設計（operation design）
+		SLA定義
+		ワークフロー設計
+
+
+
+	## 5. Góc nhìn thực chiến 
+
+		「エスカレーションルールを決めましょう」
+		「どのタイミングでエスカレーションしますか？」
+
+			👉 Đây không phải câu hỏi nhỏ
+			→ Đây là thiết kế xương sống của vận hành
+</pre><a id='backBottom' href='../powerpoint-learning-2-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
