@@ -1,0 +1,386 @@
+<html><head><title>Lesson 4 == Navigation　& Ticket flow ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../service-now-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 4 -- Navigation　& Ticket flow -//</h1><pre>
+
+# 1. 🧠 Big Picture — Nó nằm ở đâu trong hệ thống? 
+
+	Bạn đang nhìn thấy phần “UI + Flow”, nhưng thực chất nó là entry point của toàn bộ hệ thống backend.
+
+	## Mapping toàn hệ thống:
+
+| Thành phần                          | Vai trò trong flow                  |
+| ----------------------------------- | ----------------------------------- |
+| **Navigation**                      | Entry point (UI trigger)            |
+| **Table (incident, task, request)** | Nơi lưu state của ticket            |
+| **Business Rule**                   | Logic auto khi data thay đổi        |
+| **Flow Designer / Workflow**        | Orchestration (điều phối flow)      |
+| **ACL**                             | Ai được thấy / sửa ticket           |
+| **API**                             | External system tạo / update ticket |
+
+👉 Nói thẳng:
+	Navigation chỉ là cửa vào. Ticket flow mới là hệ thần kinh.
+
+
+# 2. 🔍 Core Concept — Bản chất thực sự là gì? 
+
+	❗ Ticket Flow KHÔNG phải là UI flow
+
+	Nó là:
+		State machine + event-driven system
+
+
+	Một ticket (incident/request) thực chất là:
+		- 1 record trong table (incident, sc_request, task)
+		- Có field state (New, In Progress, Resolved...)
+		- Mỗi lần state đổi → trigger logic
+
+
+
+	❓ Nó giải quyết vấn đề gì?
+
+		Trong enterprise:
+			Không thể xử lý thủ công từng request
+			Không thể rely vào con người nhớ quy trình
+
+		👉 Cần một hệ thống:
+			Track trạng thái
+			Auto assign
+			Auto escalate
+			Audit đầy đủ
+
+
+	❌ Nếu không có Ticket Flow?
+
+		Mail loạn xạ
+		Không biết ai đang xử lý
+		Không audit được
+		Không scale được
+
+		👉 Nói thẳng:
+			Không có ticket flow = không có ITSM
+
+
+
+# 3. ⚙️ Mapping sang Java / Backend 
+
+	Nếu bạn build bằng Spring Boot:
+		Ticket = Entity
+
+class Ticket {
+    String id;
+    String status; // NEW, APPROVED, RESOLVED
+    String assignee;
+}
+
+
+
+	Flow = State Machine + Event
+	
+if (ticket.status == "NEW") {
+    assignToApprover(ticket);
+}
+
+if (approved) {
+    ticket.status = "APPROVED";
+}
+
+
+	## Nhưng ServiceNow khác ở chỗ:
+| Java System                     | ServiceNow                    |
+| ------------------------------- | ----------------------------- |
+| Bạn tự code flow                | Flow có sẵn (low-code)        |
+| Event xử lý bằng Kafka/RabbitMQ | Built-in event engine         |
+| State machine tự build          | Có sẵn concept task lifecycle |
+
+
+	👉 Insight quan trọng:
+		ServiceNow = “Backend framework disguised as SaaS UI”
+					(framework được nguy trang dưới dạng UI SaaS)
+
+
+
+# 4. 🔄 Flow thực tế (quan trọng)
+
+	User → Ticket → Approve → Resolve
+		Nghe đơn giản, nhưng thực tế backend như này:
+
+
+
+	## Step-by-step 
+		1. User tạo ticket
+			User → UI Form → Insert record vào table (incident)
+
+			👉 Trigger:
+				Business Rule (onInsert)
+				Default assignment
+
+
+
+		2. System xử lý
+			Insert → BR chạy → set assignee / priority
+
+			Có thể:
+				Auto assign team
+				Set SLA
+
+
+
+
+
+		3. Approval
+		
+			State = "Waiting for approval"
+			→ Flow Designer trigger
+			→ tạo record trong approval table
+			
+		👉 Không phải chỉ đổi state — mà còn tạo data mới
+
+
+
+
+		4. Approver action
+		
+			Approver click Approve
+			→ update approval record
+			→ trigger Flow
+			→ update ticket state		
+					
+					
+		
+		5. Resolve	
+			State → Resolved
+			→ trigger SLA stop
+			→ trigger notification		
+		
+		
+		
+		
+		
+		Tổng flow chuẩn:
+		
+			User 
+			→ Create Ticket (DB insert)
+			→ Business Rule chạy
+			→ Flow trigger
+			→ Approval record tạo
+			→ Approver action
+			→ State update
+			→ Resolve
+			→ Close
+			
+			
+			👉 Đây là event chain, không phải linear flow
+					chuỗi sự kiện 				luồng tuyến tính 
+
+
+
+
+
+# 5. ⚠️ Sai lầm phổ biến
+
+	❌ 1. Nghĩ flow = UI click
+
+		Sai.
+		👉 UI chỉ trigger → logic nằm backend
+
+
+	❌ 2. Hardcode logic kiểu Java
+
+	Ví dụ:
+		Viết Script Include xử lý hết
+
+	👉 Sai mindset:
+		ServiceNow là configuration-driven (hướng cấu hình )
+		Không phải “viết code là chính”
+
+
+	❌ 3. Không hiểu state machine
+	
+			Update state lung tung
+			Không theo lifecycle
+
+		👉 Hậu quả:
+			Flow bị break
+			SLA sai
+			Approval không chạy
+
+
+	❌ 4. Không hiểu data model
+	
+			Không biết approval là table riêng
+			Nghĩ chỉ là field
+
+		👉 Hậu quả:
+			Không trace được flow
+			Debug cực khó	
+			
+	
+	
+# 	6. 🏢 Ví dụ thực tế (production)
+	
+	Ví dụ 1: Incident (lỗi hệ thống)	
+	
+		User báo lỗi VPN
+		→ Ticket tạo (incident)
+		→ Auto assign Network team
+		→ State = In Progress
+		→ Fix xong → Resolved
+		→ User confirm → Closed	
+			
+	
+	
+	
+	
+	Ví dụ 2: Request (xin quyền)
+	
+		User request quyền DB
+		→ Ticket tạo (sc_request)
+		→ Flow trigger approval
+		→ Manager approve
+		→ IT cấp quyền
+		→ Done	 → Closed	
+			
+			
+		👉 Điểm khác:
+
+			Incident: xử lý sự cố
+			Request: có approval flow		
+				
+				
+			
+# 	7. 🧪 Câu hỏi kiểm tra tư duy		
+			
+			
+	Nếu user update state trực tiếp từ “New → Resolved” thì hệ thống sẽ bỏ qua những gì?
+			❌ Business Rule theo từng state
+			❌ Flow trigger (Flow Designer)
+			❌ Approval record creation
+			❌ SLA start/stop
+			❌ Notification (email/slack)
+			❌ Audit trail theo từng bước
+		
+		
+		
+		
+	Approval trong ServiceNow là field hay là table? Vì sao thiết kế như vậy?
+			1 ticket có thể có nhiều approver
+			
+			Mỗi approver có trạng thái riêng:
+				requested
+				approved
+				rejected
+				
+			Approval là process độc lập, không phải thuộc tính
+		
+	👉 Nếu là field:
+			ticket.approver = "A"
+			ticket.status = "approved"
+
+		👉 Không thể:
+			track nhiều approver
+			track lịch sử
+			track từng decision	
+				
+	👉 Thiết kế đúng:
+		ticket (1)
+		→ approval (N records) 
+			👉 Đây là 1-N relationship chuẩn backend
+
+				
+		
+	Nếu không dùng Flow Designer mà chỉ dùng Business Rule, hệ thống sẽ thiếu gì?
+			❌ Orchestration layer
+			❌ Visual flow control
+			❌ Maintainability
+			❌ Non-dev có thể config	
+			👉 Nếu chỉ dùng Business Rule:
+				Logic bị phân tán
+				Khó debug
+				Khó hiểu flow tổng thể
+
+			👉 Insight:
+				Business Rule = local logic
+				Flow = global orchestration
+	
+	
+	Tại sao nói Ticket Flow là event-driven chứ không phải linear flow?
+			Bạn trả lời:
+				vì có thể rollback
+
+			👉 Sai trọng tâm.
+				Bản chất event-driven:
+				Mỗi hành động = 1 event
+				Event → trigger nhiều thứ
+				
+			Ticket updated
+			→ trigger SLA
+			→ trigger notification
+			→ trigger approval
+			→ trigger integration	
+	
+			Event → multiple handlers
+	
+	
+	
+	Nếu SLA không stop khi ticket resolved → bạn debug ở đâu?			
+			Check field:
+				state = resolved chưa?
+				
+			Check SLA record:
+				có record SLA attach chưa?
+				SLA definition đúng condition chưa?
+				
+			Check trigger:
+				SLA stop condition config đúng chưa?
+				
+			Check Business Rule / Flow:
+				có override state không?	
+			
+		👉 Insight:
+			Debug = follow data + event, không phải đoán logic
+
+
+
+# ⚡ 2.2 Event Chain là gì?
+
+Nói thẳng:
+	Chuỗi các event nối tiếp nhau, mỗi event trigger event khác
+
+
+	User create ticket
+	→ Event: INSERT
+
+	→ Business Rule trigger
+	→ Event: ASSIGN
+
+	→ Flow trigger
+	→ Event: APPROVAL_REQUESTED
+
+	→ Approver action
+	→ Event: APPROVED
+
+	→ Ticket update
+	→ Event: RESOLVED
+
+
+	👉 Đây không phải flow tuyến tính
+	👉 Đây là:
+
+	Graph của events
+
+	So với Java system:
+		- giống Kafka event chain
+		- giống microservice event-driven
+
+
+		Insight cực quan trọng:
+			Bạn không “chạy flow”
+			Bạn “kích hoạt event và để hệ thống tự lan ra”
+
+	🧠 Tổng kết brutal
+	Configuration-driven
+		→ Control bằng data, không phải code
+		
+	Event chain
+		→ Hệ thống vận hành bằng trigger, không phải step-by-step
+
+
+</pre><a id='backBottom' href='../service-now-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
