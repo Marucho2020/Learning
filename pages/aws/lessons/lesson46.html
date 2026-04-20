@@ -1,11 +1,388 @@
-<html><head><title>Lesson 46 == Cloud Practitioner ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 46 -- Cloud Practitioner -//</h1><pre>
-Hai dịch vụ cần nhớ:
+<html><head><title>Lesson 46 == Cloud Practitioner ===Amazon RDS　& Amazon DynamoDB ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 46 -- Cloud Practitioner --=Amazon RDS　& Amazon DynamoDB -//</h1><pre>
+# 1. Amazon RDS
 
-Amazon RDS
 
-Amazon DynamoDB
+	✅ Bản chất (nói thẳng)
+		RDS = Database quan hệ (SQL) được AWS quản lý
+		Bạn vẫn dùng MySQL / PostgreSQL / Oracle / SQL Server
+		AWS lo: backup, patch, replication, failover
 
-database trên cloud
+	👉 Nói đơn giản:
+		RDS = “Database truyền thống nhưng thuê AWS vận hành hộ”
+
+
+	📌 Ví dụ thực tế 
+
+	Scenario:
+
+	Bạn làm hệ thống quản lý nhân sự:
+
+		User
+		Phòng ban
+		Quan hệ: user thuộc phòng ban
+
+		👉 Bạn cần:
+
+		JOIN
+		Transaction (ACID)
+		Consistency cao
+
+		→ Dùng RDS (MySQL/PostgreSQL)
+
+# 🔗 Mapping AWS 
+
+| Nhu cầu          | Dịch vụ      |
+| ---------------- | ------------ |
+| SQL, JOIN        | RDS          |
+| Transaction mạnh | RDS          |
+| Schema rõ ràng   | RDS          |
+| Multi-AZ HA      | RDS Multi-AZ |
+| Read scaling     | Read Replica |
+
+
+# 🧠 Keyword thi 
+
+	ACID
+	Relational
+	SQL
+	JOIN
+	Multi-AZ
+	Read Replica
+	Transaction consistency
+
+
+# ⚠️ Trap (bẫy) 
+
+
+| Bẫy                     | Thực tế                |
+| ----------------------- | ---------------------- |
+| Multi-AZ = scale read   | ❌ Sai → chỉ HA         |
+| Read Replica = HA       | ❌ Sai → chỉ read scale |
+| RDS auto scale infinite | ❌ Không → có limit     |
+| RDS = NoSQL             | ❌ Sai hoàn toàn        |
+
+
+
+# ⚖️ Trade-off
+
+
+| Ưu điểm            | Nhược điểm                      |
+| ------------------ | ------------------------------- |
+| Strong consistency | Scale khó                       |
+| Query linh hoạt    | Chi phí cao khi scale           |
+| Transaction chuẩn  | Không phù hợp big traffic NoSQL |
+
+
+
+
+# 2. Amazon DynamoDB
+
+
+	✅ Bản chất (nói thẳng)
+		DynamoDB = NoSQL (Key-Value + Document)
+		Không JOIN
+		Scale cực mạnh (serverless)
+		Latency cực thấp (ms)
+
+		👉 Nói thẳng:
+
+		DynamoDB = “hash map siêu to trên cloud”
+
+
+
+	📌 Ví dụ thực tế 
+
+
+		Scenario:
+		Bạn làm hệ thống:
+			Log user activity
+			Like / view count
+			IoT data stream
+
+		👉 Đặc điểm:
+			Write cực nhiều
+			Không cần JOIN
+			Query đơn giản
+
+		→ DynamoDB là lựa chọn đúng
+
+
+
+	## 🔗 Mapping AWS 	
+
+| Nhu cầu          | Dịch vụ  |
+| ---------------- | -------- |
+| High throughput  | DynamoDB |
+| Serverless       | DynamoDB |
+| Key-value access | DynamoDB |
+| Auto scaling     | DynamoDB |
+| Low latency      | DynamoDB |
+
+
+
+	##🧠 Keyword thi
+
+		Key-value
+		NoSQL
+		Serverless
+		Millisecond latency
+		Partition key
+		Eventually consistent
+		Auto scaling
+
+
+	## ⚠️ Trap 
+
+| Bẫy                        | Thực tế                        |
+| -------------------------- | ------------------------------ |
+| DynamoDB hỗ trợ JOIN       | ❌ Không                        |
+| Strong consistency default | ❌ Default là eventual          |
+| Không cần thiết kế schema  | ❌ Sai → phải design key cực kỹ |
+| Query linh hoạt như SQL    | ❌ Không                        |
+
+
+
+	## ⚖️ Trade-off 
+	
+| Ưu điểm        | Nhược điểm    |
+| -------------- | ------------- |
+| Scale cực mạnh | Không JOIN    |
+| Serverless     | Query hạn chế |
+| Hiệu năng cao  | Thiết kế khó  |
+	
+	
+	
+# ⚔️ SO SÁNH RDS vs DynamoDB 		
+	
+| Tiêu chí    | RDS                     | DynamoDB            |
+| ----------- | ----------------------- | ------------------- |
+| Model       | Relational              | NoSQL               |
+| Query       | SQL                     | Key-based           |
+| JOIN        | ✔                       | ❌                   |
+| Scale       | Vertical + limited read | Horizontal infinite |
+| Consistency | Strong                  | Eventual (default)  |
+| Use case    | ERP, banking            | log, IoT, social    |
+	
+	
+	
+# 🧪 SCENARIO GIỐNG ĐỀ THI	
+	
+	
+	Câu hỏi:
+
+		Một hệ thống cần:
+			Scale hàng triệu request/sec
+			Latency thấp
+			Không cần JOIN
+
+		👉 Đáp án: DynamoDB
+
+
+
+
+		Câu hỏi:
+
+		Một hệ thống cần:
+			Transaction
+			Quan hệ dữ liệu phức tạp
+			JOIN nhiều bảng
+
+		👉 Đáp án: RDS
+
+
+
+# 🎯 CÁCH AWS RA ĐỀ 
+
+		Pattern 1 — “Đánh vào scale”
+			“millions of requests”
+			“low latency”
+			→ DynamoDB
+
+
+		Pattern 2 — “Đánh vào logic business”
+			“complex relationships”
+			“transaction”
+			→ RDS
+
+
+
+		Pattern 3 — Gài bẫy HA vs Scaling
+		
+| Keyword           | Đáp án đúng  |
+| ----------------- | ------------ |
+| High availability | Multi-AZ     |
+| Read scaling      | Read Replica |
+| Massive scaling   | DynamoDB     |
+
+
+
+# 🚨 KẾT LUẬN THẲNG
+Nếu cần quan hệ → RDS
+Nếu cần scale → DynamoDB
+
+👉 90% câu hỏi thi = phân biệt cái này
+
+
+-------------- 日本語-----------
+
+
+# 1. Amazon RDS
+
+	## ✅ 本質
+		RDS = AWSが管理するリレーショナルDB（SQL）
+		MySQL / PostgreSQL などをそのまま使用
+		AWSが運用（バックアップ、パッチ、フェイルオーバー）
+
+	👉 一言で：
+
+	「従来のDBをAWSに任せるサービス」
+
+
+	##📌 例
+
+	社員管理システム：
+		ユーザー
+		部署
+		関係あり（JOIN必要）
+		→ RDS
+
+
+
+	## 🔗 マッピング
+
+| 要件         | サービス         |
+| ---------- | ------------ |
+| SQL / JOIN | RDS          |
+| トランザクション   | RDS          |
+| 高可用性       | Multi-AZ     |
+| 読み取りスケール   | Read Replica |
+
+
+
+	## 🧠 キーワード
+
+		- ACID
+		- SQL
+		- Relational
+		- Multi-AZ
+		- Read Replica
+
+
+	## ⚠️ トラップ 
+
+| 誤解              | 正解       |
+| --------------- | -------- |
+| Multi-AZでスケール   | ❌ HAのみ   |
+| Read ReplicaでHA | ❌ 読み取り専用 |
+| 無制限スケール         | ❌ 制限あり   |
+
+
+
+	## ⚖️ トレードオフ 
+	
+| メリット   | デメリット  |
+| ------ | ------ |
+| 強い整合性  | スケール弱い |
+| 柔軟なクエリ | コスト高   |
+	
+	
+	
+	
+#2. Amazon DynamoDB
+	
+	
+	✅ 本質
+		NoSQL（Key-Value）
+		サーバーレス
+		超高速
+
+	👉 一言：
+		「クラウド上の巨大なハッシュマップ」	
+	
+	📌 例
+		ログ
+		IoTデータ
+		SNSいいね数
+		→ DynamoDB	
+		
+	
+	🔗 マッピング	
+	
+| 要件      | サービス     |
+| ------- | -------- |
+| 高スループット | DynamoDB |
+| 低レイテンシ  | DynamoDB |
+| サーバーレス  | DynamoDB |
+	
+	
+	
+	
+	## 🧠 キーワード
+		NoSQL
+		Key-value
+		Serverless
+		Millisecond latency
+		Partition key	
+			
+	
+	##⚠ トラップ
+	
+| 誤解         | 正解           |
+| ---------- | ------------ |
+| JOIN可能     | ❌ 不可         |
+| 強整合性がデフォルト | ❌ Eventually |
+| 設計不要       | ❌ キー設計が重要    |
+	
+	
+	
+	## ⚖️ トレードオフ 
+	
+| メリット   | デメリット  |
+| ------ | ------ |
+| 無限スケール | JOIN不可 |
+| 高速     | クエリ制限  |
+
+
+
+
+# 	⚔️ 比較
+	
+| 項目   | RDS     | DynamoDB   |
+| ---- | ------- | ---------- |
+| モデル  | リレーショナル | NoSQL      |
+| JOIN | 可       | 不可         |
+| スケール | 限界あり    | 無限         |
+| 整合性  | 強い      | Eventually |
+
+
+
+# 🎯 AWS試験の出題パターン 
+
+
+
+	パターン1
+		大量リクエスト → DynamoDB
+	
+	パターン2
+		複雑な関係 → RDS
+	
+	パターン3
+		HA vs スケールの罠
+
+
+| キーワード   | 正解           |
+| ------- | ------------ |
+| 高可用性    | Multi-AZ     |
+| 読み取り性能  | Read Replica |
+| 大規模スケール | DynamoDB     |
+
+
+
+🚨 最終結論
+
+		関係データ → RDS
+		スケール重視 → DynamoDB
+		👉 試験はこれを見抜けるかだけ。
 
 
 </pre><a id='backBottom' href='../aws-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

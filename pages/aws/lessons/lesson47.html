@@ -1,4 +1,376 @@
-<html><head><title>Lesson 47 == Cloud Practitioner ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 47 -- Cloud Practitioner -//</h1><pre>
-RDS là gì
+<html><head><title>Lesson 47 == Cloud Practitioner ==RDS Master ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 47 -- Cloud Practitioner --RDS Master -//</h1><pre>
+# 1. Amazon RDS — BẢN CHẤT THỰC SỰ 
+
+	✅ Định nghĩa bản chất (nói thẳng)
+		RDS KHÔNG phải chỉ là database.
+
+	👉 Nó là:
+		Stateful compute + storage + replication system được AWS quản lý
+
+		Tức là:
+			Compute: instance (CPU/RAM để chạy DB engine)
+			Storage: EBS
+			Replication: sync / async giữa AZ
+
+		👉 Quan trọng:
+			Compute scale ≠ Storage scale (có thể tách riêng)
+			Failover = chuyển compute, không phải storage
+
+
+	⚠️ Insight mà đề thi hay gài
+		RDS không phải “auto scale vô hạn”
+		
+		RDS vẫn bị giới hạn bởi:
+			- IOPS
+			- connection limit
+			- vertical scaling
+
+
+
+
+# 2. 🧠 ARCHITECTURE NỘI BỘ (THỨ MÀ AWS KHÔNG VIẾT THẲNG)
+
+	## Multi-AZ (HA)
+
+	👉 Bản chất:
+		Synchronous replication
+		1 Primary + 1 Standby (khác AZ)
+
+		Write → Primary → replicate sync → Standby → commit
+
+		👉 Kết luận:
+
+		✔ Không mất dữ liệu
+		❌ Tăng latency write
+		❌ Không scale read
+
+
+
+
+# Read Replica (Scale đọc) 
+
+	👉 Bản chất:
+		Asynchronous replication
+
+	👉 Flow:
+		Primary → async → Replica
+
+
+	👉 Kết luận:
+		✔ Scale read
+		✔ Có thể cross-region
+		❌ Có delay (eventual consistency)
+
+
+
+# 🔥 So sánh cực kỳ quan trọng
+
+
+| Feature      | Multi-AZ | Read Replica |
+| ------------ | -------- | ------------ |
+| Mục đích     | HA       | Scale read   |
+| Replication  | Sync     | Async        |
+| Data loss    | Không    | Có thể       |
+| Read traffic | ❌        | ✔            |
+| Failover     | Auto     | Manual       |
+
+
+	👉 90% câu hỏi thi xoay quanh bảng này
+
+
+
+
+# 3. ⚙️ PERFORMANCE — THỨ SENIOR PHẢI HIỂU 
+
+	## Storage type 
+
+| Type    | Use case  |
+| ------- | --------- |
+| gp2/gp3 | general   |
+| io1/io2 | high IOPS |
+
+	👉 Trap:
+		“High throughput” → chọn io1/io2
+
+
+
+
+
+	## Bottleneck thật sự
+		Disk IOPS
+		Network
+		Connection limit
+
+		👉 Không phải CPU là chính
+
+
+# 4. 📌 USE CASE THỰC TẾ (SYSTEM DESIGN) 
+
+	## 🧪 Scenario 1 — ERP / Banking 
+
+
+		Yêu cầu:
+			Transaction mạnh
+			Consistency cao
+			Quan hệ dữ liệu phức tạp
+
+		👉 Solution:
+			RDS + Multi-AZ
+
+		👉 Vì:
+			Không chấp nhận mất dữ liệu
+			ACID là bắt buộc
+
+
+
+
+
+	## 🧪 Scenario 2 — Web app nhiều read 
+	
+	
+	Yêu cầu:
+		- 90% read
+		- Query phức tạp
+		- Scale read
+
+		👉 Solution:
+			RDS + Read Replica
+
+		👉 Pattern:
+			Write → Primary
+			Read → Replica
+		
+	
+	
+	
+	
+	
+	
+	## 🧪 Scenario 3 — Global app
+	
+	
+		Yêu cầu:
+			User nhiều region
+			Latency thấp
+
+		👉 Solution:
+			RDS + cross-region Read Replica	
+			
+			
+	
+	
+	## 🧪 Scenario 4 — Burst traffic 
+	
+		👉 Sai lầm phổ biến:
+			“Scale RDS để handle traffic”
+
+		👉 Sai.
+
+		👉 Đúng:
+			Cache (ElastiCache)
+			Read replica
+			Queue	
+				
+	
+# 5. 🔗 MAPPING AWS (THỰC TẾ KIẾN TRÚC) 	
+	
+| Problem             | Solution          |
+| ------------------- | ----------------- |
+| HA                  | Multi-AZ          |
+| Read heavy          | Read Replica      |
+| Connection overload | RDS Proxy         |
+| Cache               | ElastiCache       |
+| Analytics           | Export → Redshift |
+	
+	
+	
+# 6. 🧠 KEYWORD THI 	
+	
+ACID
+Multi-AZ
+Read Replica
+Failover
+High availability
+Read scaling
+Transactional workload
+OLTP	
+	
+# 	7. ⚠️ TRAP
+	
+| Bẫy                             | Thực tế                |
+| ------------------------------- | ---------------------- |
+| Multi-AZ = scale                | ❌                      |
+| Read Replica = HA               | ❌                      |
+| RDS auto scaling = như DynamoDB | ❌                      |
+| Failover = không downtime       | ❌ vẫn có vài chục giây |
+| Read replica luôn consistent    | ❌                      |
+
+
+
+
+# 8. ⚖️ TRADE-OFF
+
+| Ưu điểm            | Nhược điểm      |
+| ------------------ | --------------- |
+| Strong consistency | Scale kém       |
+| SQL linh hoạt      | Cost cao        |
+| Managed            | Giới hạn tuning |
+
+
+# 9. ⚔️ SO SÁNH NHẦM LẪN
+
+| Concept                  | Khác nhau            |
+| ------------------------ | -------------------- |
+| Multi-AZ vs Read Replica | HA vs Scale          |
+| RDS vs DynamoDB          | SQL vs NoSQL         |
+| RDS vs Aurora            | Aurora scale tốt hơn |
+
+
+
+
+# 🚨 KẾT LUẬN THẲNG
+Multi-AZ = sống sót
+Read Replica = chịu tải
+
+👉 Nhầm 2 cái này → fail chắc
+
+
+
+---------------- — 日本語----------------
+
+# 1. Amazon RDS — 本質 
+
+
+	✅ 定義
+
+		RDSは単なるDBではない。
+
+	👉 本質：
+		状態を持つコンピュート＋ストレージ＋レプリケーションの管理システム
+		Compute（DBインスタンス）
+		Storage（EBS）
+		Replication（同期・非同期）
+
+	⚠️ 重要ポイント	
+		無限スケールではない
+		IOPS・接続数がボトルネック	
+
+
+
+# 2. アーキテクチャ 
+
+
+	## Multi-AZ 
+	
+			同期レプリケーション
+			自動フェイルオーバー
+
+			👉 特徴：
+				データ損失なし
+				書き込み遅延あり
+				読み取りスケール不可
+
+
+
+	## Read Replica 
+
+			非同期レプリケーション
+
+		👉 特徴：
+			読み取りスケール可能
+			遅延あり（Eventually Consistent）
+
+
+	## 比較 
+
+| 項目       | Multi-AZ | Read Replica |
+| -------- | -------- | ------------ |
+| 目的       | HA       | 読み取りスケール     |
+| 同期       | Sync     | Async        |
+| フェイルオーバー | 自動       | 手動           |
+| 読み取り     | 不可       | 可能           |
+
+
+
+
+# 3. パフォーマンス
+
+	IOPSが重要
+	ストレージタイプ：
+		gp3（一般）
+		io1/io2（高性能）
+
+
+# 4. ユースケース 
+
+	例1：金融システム
+		→ RDS + Multi-AZ
+
+	例2：読み取り多いWeb
+		→ RDS + Read Replica
+
+	例3：グローバル
+		→ Cross-region Replica
+
+
+# 5. マッピング 
+
+| 問題     | 解決           |
+| ------ | ------------ |
+| 高可用性   | Multi-AZ     |
+| 読み取り負荷 | Read Replica |
+| 接続数問題  | RDS Proxy    |
+
+
+
+6. キーワード
+
+ACID
+Multi-AZ
+Read Replica
+Failover
+OLTP
+
+
+
+# 7. トラップ
+
+| 誤解            | 正解 |
+| ------------- | -- |
+| Multi-AZでスケール | ❌  |
+| ReplicaでHA    | ❌  |
+| 無制限スケール       | ❌  |
+
+
+
+# 8. トレードオフ 
+
+| メリット | デメリット  |
+| ---- | ------ |
+| 強整合性 | スケール弱い |
+| SQL  | コスト高   |
+
+
+# 9. 試験パターン 
+
+	パターン1
+		高可用性 → Multi-AZ
+
+	パターン2
+		読み取り負荷 → Replica
+
+	パターン3
+		両方必要
+		→ Multi-AZ + Replica
+
+
+# 🚨 最終結論
+
+	Multi-AZ = 生存性
+	Read Replica = スケール
+
+	👉 ここを間違えると確実に落ちる。
+
+
 
 </pre><a id='backBottom' href='../aws-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

@@ -1,6 +1,273 @@
-<html><head><title>Lesson 48 == Cloud Practitioner ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 48 -- Cloud Practitioner -//</h1><pre>
+<html><head><title>Lesson 48 == Cloud Practitioner ==IOPS ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 48 -- Cloud Practitioner --IOPS -//</h1><pre>
+# 1. IOPS là gì (bản chất thật)
+	Input/Output Operations Per Second）
+	
+	✅ Định nghĩa (nói thẳng)
 
-RDS use cases
+		IOPS = số lần đọc/ghi dữ liệu vào disk trong 1 giây
+
+		👉 Không phải dung lượng
+		👉 Không phải tốc độ mạng
+
+		👉 Nó là:
+			“Tần suất bạn được phép chạm vào ổ đĩa mỗi giây”
+
+
+
+# 2. Hiểu sâu bằng ví dụ
+
+	📌 Ví dụ đời thường
+
+	Bạn có 1 ổ SSD:
+
+	IOPS = 1000
+	👉 nghĩa là mỗi giây:
+	đọc 1000 lần (file nhỏ)
+	hoặc ghi 1000 lần
+
+
+	📌 Ví dụ IT thực tế (RDS)
+		SELECT * FROM users WHERE id = 1;
+		
+		👉 DB phải:
+			đọc index
+			đọc row
+			→ mỗi bước = 1 IO
+
+		👉 Nếu:
+			hệ thống có 10,000 query/sec
+			→ cần IOPS rất cao
+
+
+# 3. Insight quan trọng (90% dev không hiểu) 
+
+	❗ IOPS ≠ Throughput
+
+| Metric     | Ý nghĩa           |
+| ---------- | ----------------- |
+| IOPS       | số lần IO         |
+| Throughput | lượng data (MB/s) |
+
+
+
+
+	📌 Ví dụ:
+		đọc 1 file 1GB → throughput cao, IOPS thấp
+		đọc 100,000 file nhỏ → IOPS cao, throughput thấp
+
+	👉 Database:
+		thường là IOPS bound, không phải throughput
+
+
+
+# 4. Vì sao IOPS quan trọng với RDS 
+
+
+	🎯 Bản chất:
+		RDS = DB → đọc ghi rất nhiều file nhỏ
+
+	👉 Bottleneck chính:
+		Disk IOPS
+
+
+
+	📌 Scenario
+	Case 1 — IOPS thấp
+		Query chậm
+		Latency tăng
+		CPU vẫn idle
+
+	👉 classic problem
+
+
+
+	Case 2 — IOPS đủ
+		Query nhanh
+		System ổn định
+
+	👉 Kết luận:
+		“DB chậm không phải do CPU — thường do IOPS”
+
+
+
+# 5. Mapping AWS
+
+	Với Amazon RDS
+| Storage | IOPS              |
+| ------- | ----------------- |
+| gp2/gp3 | trung bình        |
+| io1/io2 | cao (provisioned) |
+
+
+	Với Amazon EBS
+		gp3: default
+		io1/io2: chọn khi cần IOPS cao
+
+	👉 Keyword:
+		“provisioned IOPS”
+		“high performance database”
+		“IO intensive workload”
+
+# 6. ⚠️ Trap (bẫy thi)
+
+
+| Bẫy                        | Thực tế     |
+| -------------------------- | ----------- |
+| Tăng CPU sẽ nhanh          | ❌           |
+| Tăng RAM sẽ nhanh          | ❌           |
+| Query chậm → optimize code | ❌ chưa chắc |
+| DB slow → check IOPS trước | ✔           |
+
+
+# 7. ⚖️ Trade-off 
+
+| Cao IOPS | Thấp IOPS     |
+| -------- | ------------- |
+| Nhanh    | Chậm          |
+| Đắt      | Rẻ            |
+| Stable   | Latency spike |
+
+
+
+# 8. 🧪 Scenario giống đề thi 
+
+	❓ Câu hỏi
+
+	Một hệ thống:
+		RDS MySQL
+		CPU thấp
+		Query chậm
+		Disk utilization cao
+
+	👉 Hỏi: cải thiện thế nào?
+
+	✅ Đáp án đúng
+		👉 Increase IOPS (chuyển sang io1/io2)
+
+
+	❌ Sai lầm
+		Scale EC2
+		Optimize code (chưa phải root cause)
+		
+		
+		
+		
+# 9. 🎯 CÁCH AWS RA ĐỀ 
+
+	Pattern 1 — Hidden bottleneck
+		CPU low
+		latency high
+
+	👉 → IOPS issue
+
+
+
+	Pattern 2 — Keyword
+		“high transactional workload”
+		“frequent small reads/writes”
+	👉 → cần IOPS cao
+
+
+
+
+	Pattern 3 — Trick
+	đưa nhiều option:
+		increase memory
+		add replica
+		increase IOPS
+
+	👉 đúng: IOPS
+
+
+# 🚨 KẾT LUẬN THẲNG 
+
+		IOPS = nhịp tim của database
+		DB chết không phải vì CPU → mà vì disk
+	👉 Không hiểu IOPS = không thể design system
+
+
+
+
+-------------------- — 日本語-------------
+
+
+# 1. IOPSとは 
+
+		IOPS = 1秒あたりのディスク読み書き回数
+	👉 本質：
+		「1秒間に何回ディスクにアクセスできるか」
+
+
+# 2. 深い理解 
+	❗ IOPS ≠ スループット
+
+| 指標         | 意味   |
+| ---------- | ---- |
+| IOPS       | 回数   |
+| Throughput | データ量 |
+
+
+
+	例：
+		小さいファイル大量 → IOPS重要
+		大きいファイル → Throughput重要
+
+	👉 DBはIOPS依存
+
+
+#3. RDSとの関係
+
+	👉 DBは：
+		小さいIOが多い
+		高IOPSが必要 
+
+
+# 4. AWSマッピング 
+
+| ストレージ   | 特徴    |
+| ------- | ----- |
+| gp3     | 標準    |
+| io1/io2 | 高IOPS |
+
+
+# Amazon EBS 
+
+gp3: 一般用途
+io1/io2: 高性能
+
+
+# 5. トラップ
+
+| 誤解        | 正解 |
+| --------- | -- |
+| CPUを増やす   | ❌  |
+| メモリ増加     | ❌  |
+| IOPS不足が原因 | ✔  |
+
+
+
+# 6. シナリオ
+
+
+	問題
+		CPU低い
+		レイテンシ高い
+		DB遅い
+
+	👉 原因？
+		答え
+
+	👉 IOPS不足
+
+
+# 最終結論 
+		IOPS = DBの生命線
+		CPUではなくディスクがボトルネックになる
+
+	👉 ここ理解しないと設計は崩壊する。
+
+
+
 
 
 
