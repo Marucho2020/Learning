@@ -1,0 +1,179 @@
+<html><head><title>Lesson 13 == 変更管理 ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../powerpoint-learning-2-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 13 -- 変更管理 -//</h1><pre>
+# ① ELI5
+
+
+	Bạn tưởng tượng:
+
+		Bạn đang sống trong một ngôi nhà
+		Muốn sửa điện trong nhà
+		👉 Nếu bạn tự ý sửa:
+		→ có thể cháy nhà
+
+	👉 Nếu bạn:
+		- báo cho mọi người
+		- xem có ảnh hưởng ai không
+		- chuẩn bị phương án nếu hỏng
+
+	→ đó chính là 変更管理
+
+
+	👉 Nói ngu ngốc:
+		“Muốn thay đổi cái gì → phải xin phép + đánh giá + kiểm soát trước khi làm”
+
+
+
+
+	## ② Trong dự án thực tế (ServiceNow / SaaS)
+		Trong project Nhật, 変更管理 = Change Request (CR)
+
+	Flow thực tế:
+
+		1.Dev / Ops tạo Change Request
+		2.Ghi rõ:
+			- 何を変更するか（what）
+			- 影響範囲（impact）
+			- リスク（risk）
+			- 実施日時（when）
+		3.Review (manager / CAB)
+		4.Approve
+		5.Thực hiện change
+		6.Verify
+		7.Close
+
+
+
+
+# Ví dụ trong ServiceNow 
+
+	Table: change_request
+	
+	Type:
+		Standard Change（定型）
+		Normal Change（通常）
+		Emergency Change（緊急）
+
+
+
+	Câu hay dùng trong project
+		- この変更は事前に変更管理プロセスを通していますか？
+		- リスク評価は完了していますか？
+		- CAB承認は取得済みですか？
+
+
+
+# ③ Level senior (bản chất hệ thống)
+
+	Đừng hiểu sai:
+		❌ Change Management ≠ process hành chính
+		✅ Nó là Risk Control System cho Production
+
+
+	Bản chất thật:
+
+		Mọi thay đổi = tạo ra uncertainty (rủi ro)
+		→ Change Management tồn tại để:
+			Giảm unexpected failure
+			Đảm bảo traceability (ai làm gì, khi nào)
+			Bảo vệ production stability
+
+
+	Nếu không có Change Management:
+			
+		Hệ thống sẽ chết theo kiểu:
+			Dev deploy lúc 3h chiều → production down
+			Không ai biết ai làm
+			Không rollback được
+			Không audit được
+
+		👉 Đây là ác mộng trong công ty Nhật	
+			
+	
+	
+	Liên kết concept 
+	
+		- 可視化（Visibility） → biết ai change
+		- 標準化（Standardization） → flow giống nhau
+		- 一元管理（Centralized control） → tất cả change đi qua 1 chỗ
+		- トレーサビリティ（Traceability）	
+			
+	
+	Ví dụ tài liệu (kiểu Nhật)	
+			
+		本番環境への変更は、変更管理プロセスに従い実施する。
+
+		すべての変更は事前にリスク評価を行い、
+		CAB承認を取得した上で実施すること。
+
+		緊急変更の場合でも、事後レビューを必須とする。
+			
+	
+	Slide
+		全変更はChange Requestで管理
+		影響範囲・リスクを事前評価
+		CAB承認必須（例外：緊急変更）
+		実施後レビュー・記録保持
+		
+
+	Meeting phrase
+		この変更、CAB通してますか？
+		本番影響のリスクはどのレベルですか？
+		ロールバックプランありますか？	
+		
+	
+	
+# So sánh & bẫy 	
+	
+	| Từ       | Khác gì            |
+| -------- | ------------------ |
+| Incident | Sự cố đã xảy ra    |
+| Problem  | Nguyên nhân gốc    |
+| Change   | Hành động thay đổi |
+
+	
+	
+	Sai lầm junior
+
+	❌ “Deploy nhỏ nên không cần change”
+		→ Sai. Production = phải control
+
+	❌ “Viết CR cho có”
+		→ Không phân tích risk → vô dụng	
+		
+		
+	NG vs OK
+
+		NG:
+			影響範囲：なし
+			リスク：低
+
+		OK:
+			影響範囲：認証API（全ユーザー影響あり）
+			リスク：ログイン不可の可能性	
+			
+	
+	
+	
+# Mindset senior
+
+		Senior nhìn Change Management như:
+		👉 “Firewall bảo vệ production”# 
+			
+					
+		Khi dùng trong tài liệu:
+			出 hiện ở:
+				- 運用設計
+				- ガバナンス
+				- セキュリティ	
+
+		Khi nào dùng / không dùng
+		
+			Dùng:
+				Production
+				Shared system
+
+			Không dùng:
+				Local dev
+				Sandbox		
+			
+		
+</pre><a id='backBottom' href='../powerpoint-learning-2-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

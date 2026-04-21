@@ -1,10 +1,344 @@
-<html><head><title>Lesson 49 == Cloud Practitioner ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 49 -- Cloud Practitioner -//</h1><pre>
+<html><head><title>Lesson 49 == Cloud Practitioner ===DynamoDB ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 49 -- Cloud Practitioner --=DynamoDB -//</h1><pre>
+# 1. Định nghĩa 
+
+	DynamoDB là:
+		Distributed database managed hoàn toàn, scale ngang tự động, 
+		latency millisecond ổn định, 
+		nhưng đánh đổi bằng việc bạn phải thiết kế schema theo query pattern
+
+	👉 Nói dễ hiểu:
+		Không có JOIN
+		Không query linh hoạt như RDB
+		Muốn query gì → phải design key trước
+
+
+# 2. Core concept (cái này mới là thứ AWS hỏi) 
+
+| Thành phần    | Bản chất                               |
+| ------------- | -------------------------------------- |
+| Partition Key | Quyết định data nằm ở node nào (scale) |
+| Sort Key      | Sắp xếp trong partition                |
+| Partition     | Nơi chứa data thật (scale ngang)       |
+| RCU / WCU     | Đơn vị throughput                      |
+| GSI           | Index để query pattern khác            |
+| Scan vs Query | Scan = ngu, Query = đúng               |
+
+
+
+
+3. Ví dụ thực tế (system design) 
+
+	❌ Sai (dev kiểu RDB mindset)
+
+		User Table
+		- id
+		- name
+
+		Order Table
+		- user_id
+		- order_id
+
+
+		→ Bạn muốn:
+			lấy tất cả order của user
+			→ DynamoDB: KHÔNG JOIN → fail
+
+
+
+
+	✅ Đúng (DynamoDB mindset)
+		PK = USER#123
+		SK = ORDER#2026-01-01
+
+		👉 Query:
+			PK = USER#123
+
+		👉 Đây gọi là:
+			Single Table Design
+
+
+
+
+# 4. Mapping AWS Service 
+
+| Use case             | AWS                 |
+| -------------------- | ------------------- |
+| Real-time API        | DynamoDB            |
+| High scale key-value | DynamoDB            |
+| Complex query        | ❌ RDS               |
+| Analytics            | ❌ Athena / Redshift |
+
+
+
+
+# 5. Từ khóa trong đề thi 
+
+
+	- single-digit millisecond latency
+	- massive scale
+	- serverless
+	- eventually consistent
+	- strongly consistent (optional)
+	- partition key design
+	- hot partition
+	- GSI / LSI
+	- on-demand vs provisioned
+
+
+
+# 6. Bẫy (trap AWS hay gài) 
+
+	❌ Trap 1: chọn DynamoDB cho query phức tạp
+		"user muốn filter nhiều field linh hoạt"
+		→ sai → phải chọn RDS
+
+
+	❌ Trap 2: hot partition
+		PK = "USER"
+		→ tất cả request đập vào 1 partition → chết
+
+
+	❌ Trap 3: Scan
+		Scan = đọc toàn bộ table → tốn tiền + chậm
+		
+
+	❌ Trap 4: consistency
+		Default = eventual
+		Không hiểu → chọn sai trong hệ thống tài chính
+
+
+# 7. So sánh dễ nhầm
+
+| Feature  | DynamoDB        | RDS                  |
+| -------- | --------------- | -------------------- |
+| Scale    | Auto horizontal | Vertical             |
+| Query    | Limited         | Flexible SQL         |
+| Join     | ❌               | ✅                    |
+| Latency  | ~ms             | cao hơn              |
+| Use case | high scale API  | transactional system |
+
+
+
+# 8. Trade-off (cái senior phải hiểu) 
+
+| Ưu           | Nhược            |
+| ------------ | ---------------- |
+| Scale vô hạn | design khó       |
+| serverless   | query hạn chế    |
+| latency thấp | không join       |
+| HA mặc định  | phải denormalize |
+
+
+
+
+# DynamoDB USE CASE
+
+
+	✅ 1. High traffic API (web/mobile)
+
+	Ví dụ:
+		Instagram feed
+		Game leaderboard
+
+	👉 Vì:
+		read/write cực nhiều
+		latency thấp
 
 
 
 
 
-DynamoDB chuyên sâu 
-và DynamoDB UseCase 
+
+	✅ 2. Session store
+		PK = SESSION#abc123
+		👉 TTL auto delete
+
+
+
+
+	✅ 3. IoT / time-series
+
+		PK = DEVICE#1
+		SK = TIMESTAMP
+
+	
+
+	✅ 4. E-commerce cart
+
+		user cart realtime
+		high concurrency
+
+
+
+# 🧠 PHẦN 4 — CÁCH AWS RA ĐỀ 
+
+
+	AWS KHÔNG hỏi:
+
+	DynamoDB là gì?
+
+	AWS hỏi kiểu:
+
+	👉 “Which service is BEST for…”
+	👉 “lowest latency at scale”
+	👉 “fully managed, no operational overhead”
+
+
+	## Pattern nhận diện DynamoDB
+
+		Nếu đề có:
+			cực nhiều traffic
+			cần scale tự động
+			không cần join
+			latency thấp
+
+		→ 90% là DynamoDB
+
+
+	## Pattern loại DynamoDB
+
+		Nếu đề có:
+			complex query
+			reporting
+			relational data
+
+		→ loại ngay
+
+
+---------------------- 🇯🇵-------------- 
+
+# 1. 定義（本質）
+	フルマネージドの分散データベースであり、自動的にスケールし、
+	ミリ秒レベルの低レイテンシを提供するが、クエリパターンに基づいた設計が必須
+
+
+	👉 要するに：
+		JOINできない
+		柔軟な検索は苦手
+		事前にアクセスパターンを設計する必要がある
+
+# 2. コア概念 
+
+| 項目            | 本質                 |
+| ------------- | ------------------ |
+| Partition Key | データの配置とスケールを決定     |
+| Sort Key      | パーティション内の順序        |
+| Partition     | 実際のデータ保存単位         |
+| RCU / WCU     | スループット単位           |
+| GSI           | 別の検索パターン用インデックス    |
+| Query vs Scan | Queryは効率的、Scanは非効率 |
+
+
+
+# 3. 実例
+
+	❌ RDB思考（NG）
+		JOIN前提 → DynamoDBでは不適
+
+
+
+	✅ 正しい設計
+		PK = USER#123
+		SK = ORDER#日時
+
+		→ Queryで一発取得
+			👉 Single Table Design
+
+
+
+# 4. AWSサービスとの対応 
+
+
+| 用途       | サービス              |
+| -------- | ----------------- |
+| 高スケールAPI | DynamoDB          |
+| 複雑な検索    | RDS               |
+| 分析       | Redshift / Athena |
+
+
+
+
+# 5. 試験キーワード 
+
+	低レイテンシ（millisecond）
+	自動スケーリング
+	serverless
+	eventual consistency
+	strong consistency
+	GSI
+	hot partition
+
+
+6. よくあるトラップ
+
+	❌ 複雑検索に使う
+		→ NG（RDS）
+
+	❌ ホットパーティション
+		→ 同じPK集中
+
+	❌ Scan使用
+		→ コスト増・遅い
+
+
+# 7. 比較 
+
+| 項目    | DynamoDB | RDS      |
+| ----- | -------- | -------- |
+| スケール  | 水平       | 垂直       |
+| JOIN  | 不可       | 可        |
+| レイテンシ | 低い       | 高い       |
+| 用途    | API      | トランザクション |
+
+
+
+# 8. トレードオフ 
+
+| メリット    | デメリット   |
+| ------- | ------- |
+| 高スケール   | 設計が難しい  |
+| 低レイテンシ  | 柔軟性が低い  |
+| フルマネージド | 正規化できない |
+
+
+
+# 🚀 Use Case
+
+	適切なケース
+		- 高トラフィックAPI
+		- セッション管理（TTL）
+		- IoTデータ
+		- リアルタイム処理
+
+	不適切なケース
+		分析処理
+		複雑なレポート
+
+
+# 🎯 試験対策
+
+	DynamoDBが正解になるパターン
+
+		- 高トラフィック
+		- 低レイテンシ
+		- スケーラブル
+		- JOIN不要
+
+
+# 除外パターン 
+	- JOIN必要
+	- 複雑な検索
+	- レポート
+
+
+
+
+
+
+
+
+
+
+
 
 </pre><a id='backBottom' href='../aws-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
