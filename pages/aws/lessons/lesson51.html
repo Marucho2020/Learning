@@ -1,4 +1,328 @@
-<html><head><title>Lesson 51 == Cloud Practitioner ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 51 -- Cloud Practitioner -//</h1><pre>
-query pattern 
+<html><head><title>Lesson 51 == Cloud Practitioner ==Query Pattern ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 51 -- Cloud Practitioner --Query Pattern -//</h1><pre>
+# 🔥 1. Định nghĩa bản chất 
+
+	Query Pattern = cách bạn thiết kế data để đọc (read), KHÔNG phải cách bạn ghi (write).
+
+	❗ Sai lầm phổ biến: nghĩ database lưu xong rồi query kiểu gì cũng được 
+		→ sai hoàn toàn trong NoSQL (DynamoDB)
+
+
+	Trong AWS (đặc biệt là DynamoDB):
+
+		👉 Bạn phải biết trước:
+			Query gì?
+			Query theo field nào?
+			Tần suất ra sao?
+
+			→ rồi thiết kế table theo query đó
+
+
+# ⚙️ 2. Ví dụ thực tế (system design) 
+
+	Scenario:
+		Bạn build hệ thống ecommerce.
+
+		Yêu cầu:
+			Lấy danh sách order của user
+			Sort theo thời gian mới nhất
+
+	❌ Thiết kế sai (SQL mindset)
+		Query:
+			SELECT * FROM Orders WHERE userId = 'A' ORDER BY createdAt DESC
+
+
+		👉 Với DynamoDB:
+			Không có index → phải Scan toàn table
+			Cost cao + chậm → fail
+
+
+
+
+	✅ Thiết kế đúng (Query-driven)
+		Partition Key: userId
+		Sort Key: createdAt
+
+			userId = A
+			ORDER BY createdAt DESC
+
+		→ DynamoDB query O(1), cực nhanh
+
+
+# ☁️ 3. Mapping với AWS 
+
+| Pattern         | AWS Service           |
+| --------------- | --------------------- |
+| Key-based query | DynamoDB (Query API)  |
+| Full scan       | DynamoDB Scan (avoid) |
+| Secondary query | DynamoDB GSI / LSI    |
+| Complex query   | Aurora / RDS          |
+| Search flexible | OpenSearch            |
+
+
+# 🔑 4. Các từ khóa trong đề thi 
+
+“Access pattern”
+“Query pattern”
+“Efficient retrieval”
+“Low latency”
+“Avoid full table scan”
+“Design for scale”
+“Single-digit millisecond”
+
+👉 Chỉ cần thấy mấy từ này → nghĩ ngay:
+“Thiết kế lại DynamoDB key chưa?”
+
+
+# ⚠️ 5. Bẫy (trap AWS rất hay gài) 
+
+		❌ Trap 1: Scan vs Query
+			Scan: đọc toàn bộ table
+			Query: đọc theo key
+
+		👉 Đề sẽ viết kiểu:
+			“Retrieve data efficiently”
+
+		→ Đáp án:
+		❌ Scan
+		✅ Query
+
+
+
+		❌ Trap 2: Thiết kế giống SQL
+		Nhiều table + join
+		👉 DynamoDB:
+
+			❌ Không join
+			✅ Denormalization
+
+
+		❌ Trap 3: Thêm index sau
+		
+			Dev hay nghĩ:
+
+				“Sau này thêm GSI là xong”
+
+				👉 Sai:
+
+				GSI tốn tiền
+				Limit throughput
+				Design từ đầu vẫn quan trọng	
+				
+# ⚖️ 6. So sánh dễ nhầm 		
+		
+		
+| Concept        | Bản chất             | Khi dùng                  |
+| -------------- | -------------------- | ------------------------- |
+| Query pattern  | Design theo cách đọc | DynamoDB                  |
+| Schema design  | Structure data       | SQL                       |
+| Access pattern | Use-case đọc         | AWS exam hay dùng synonym |
+| Index          | Tối ưu query         | SQL & DynamoDB (GSI)      |
+
+
+
+
+
+
+# 🎯 7. Scenario kiểu đề thi AWS
+
+
+Câu hỏi:
+
+Một ứng dụng cần:
+
+Lấy tất cả orders của user
+Sắp xếp theo thời gian
+Low latency, scale lớn
+
+👉 Chọn gì?
+
+A. Store in S3 + Athena
+B. DynamoDB + Scan
+C. DynamoDB + partition key userId, sort key createdAt
+D. RDS + index
+
+👉 Đáp án đúng: C
+
+
+
+# 🧠 8. Cách AWS ra đề
+
+
+
+		AWS KHÔNG hỏi:
+
+		“Query pattern là gì?”
+
+		Nó hỏi kiểu:
+			👉 “Which design ensures efficient data retrieval at scale?”
+			👉 “Which solution avoids full table scans?”
+			👉 “How to design DynamoDB for low latency?”
+			👉 Logic giải:
+
+		Có DynamoDB không?
+		Có query pattern rõ không?
+		Có dùng key đúng không?
+
+
+# ⚡ 9. Trade-off
+
+
+
+| Design                     | Ưu điểm      | Nhược điểm          |
+| -------------------------- | ------------ | ------------------- |
+| Query-optimized (DynamoDB) | cực nhanh    | phải design trước   |
+| Flexible (RDS)             | query tự do  | scale kém hơn       |
+| GSI nhiều                  | flexible hơn | tốn tiền + phức tạp |
+
+
+
+
+# 🧠 10. Kết luận (level senior)
+
+	DynamoDB không phải DB → nó là query engine dựa trên key
+	Nếu không biết query trước → design sẽ fail
+	Query pattern = bản thiết kế hệ thống, không phải chi tiết nhỏ
+
+
+------------------- 🇯🇵 日本語版-------------
+
+
+# 🔥 1. 本質の定義 
+
+	Query Pattern = データの「読み方」に基づいた設計（書き方ではない）
+
+
+		❗よくある誤解：
+		「データを保存してから好きに検索できる」
+		→ DynamoDBでは完全に間違い
+
+		👉 先に決めるべき：
+
+		どのように取得するか
+		どのキーで検索するか
+		頻度はどうか
+
+		→ それに基づいてテーブル設計を行う
+
+
+# ⚙️ 2. 実例
+
+
+	ECサイト
+	要件：
+		ユーザーの注文一覧取得
+		時系列順で並べる
+
+
+	❌ 悪い設計（SQL思考）
+			Orders:
+			- orderId
+			- userId
+			- createdAt
+
+
+
+	✅ 正しい設計
+		Partition Key: userId
+		Sort Key: createdAt	
+		→ Queryで高速取得可能		
+	
+	
+	
+	
+# ☁️ 3. AWSマッピング	
+
+	
+| パターン     | サービス           |
+| -------- | -------------- |
+| Key検索    | DynamoDB Query |
+| 全件検索     | DynamoDB Scan  |
+| インデックス   | GSI / LSI      |
+| 複雑検索     | RDS / Aurora   |
+| フルテキスト検索 | OpenSearch     |
+	
+	
+	
+# 🔑 4. 試験キーワード 
+	
+	Access pattern
+	Efficient retrieval
+	Low latency
+	Avoid full scan
+	Single-digit millisecond
+	
+	
+
+# ⚠️ 5. よくあるトラップ 
+	
+		
+	❌ Scan vs Query
+
+	→ Queryが正解
+
+	❌ SQL的設計
+
+	→ DynamoDBは非正規化が必要
+
+	❌ 後からGSI追加
+
+	→ コスト・制限あり
+		
+		
+# ⚖️ 6. 比較 
+
+
+| 概念             | 内容       |
+| -------------- | -------- |
+| Query Pattern  | 読み方ベース設計 |
+| Access Pattern | 同義語      |
+| Index          | 最適化手段    |
+
+
+# 🎯 7. 試験問題例 
+
+
+	要件：
+		ユーザー注文一覧
+		ソート必要
+		低レイテンシ
+
+	→ 正解：
+		DynamoDB + userId + createdAt
+
+
+
+🧠 8. AWSの出題パターン
+
+	直接聞かない：
+
+		👉 「効率的なデータ取得方法は？」
+		👉 「スキャンを避けるには？」
+
+
+
+
+# ⚡ 9. トレードオフ 
+
+
+| 設計       | メリット | デメリット  |
+| -------- | ---- | ------ |
+| DynamoDB | 高速   | 事前設計必要 |
+| RDS      | 柔軟   | スケール弱い |
+| GSI多用    | 柔軟   | コスト増   |
+
+
+
+# 🧠 10. まとめ 
+
+	DynamoDB = KeyベースのQueryエンジン
+	Query Patternがすべてを決める
+	設計ミス = パフォーマンス崩壊
+
+
+
+
+
+
 
 </pre><a id='backBottom' href='../aws-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

@@ -1,6 +1,334 @@
-<html><head><title>Lesson 50 == Cloud Practitioner ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 50 -- Cloud Practitioner -//</h1><pre>
+<html><head><title>Lesson 50 == Cloud Practitioner ===Throughput ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 50 -- Cloud Practitioner --=Throughput -//</h1><pre>
+# I. Throughput là gì (nói thẳng, không vòng vo)
+
+	Throughput = lượng dữ liệu hệ thống xử lý được trong 1 đơn vị thời gian
+
+	👉 Không phải “tốc độ” chung chung
+	👉 Không phải “latency”
+	👉 Là khối lượng công việc/giây
 
 
-Throughput
+
+	Ví dụ:
+		1000 request/giây
+		500 MB/s đọc từ disk
+		10,000 records/giây xử lý
+
+	👉 Công thức tư duy:
+		Throughput = Work / Time
+
+
+
+# II. Bản chất (level senior)
+
+	Throughput không đứng một mình. Nó luôn trade-off với 2 thứ:
+
+
+| Yếu tố      | Ý nghĩa                    |
+| ----------- | -------------------------- |
+| Latency     | 1 request mất bao lâu      |
+| Concurrency | bao nhiêu request cùng lúc |
+
+
+
+	👉 Hiểu sâu:
+		Throughput ≈ Concurrency / Latency
+
+
+		👉 Nghĩa là:
+			Muốn throughput cao:
+			Tăng concurrency (scale out)
+			Giảm latency (optimize)
+
+		👉 AWS exam cực thích đánh vào đây.
+
+
+
+
+
+# III. Ví dụ thực tế (system design)
+
+
+
+	Scenario 1 – Web API
+
+	Bạn có API:
+		xử lý 1 request = 100ms
+		chạy 100 thread
+
+	👉 Throughput:
+		= 100 / 0.1s = 1000 request/sec
+
+
+
+
+
+	Scenario 2 – DynamoDB
+
+			1 item = 1KB
+			1000 writes/sec
+
+		👉 Throughput:
+			= 1000 KB/sec = 1MB/sec
+
+		👉 Đây chính là:
+			Write Capacity Units (WCU)
+
+
+
+
+
+# IV. Mapping với AWS Services
+
+
+	## 1. Amazon DynamoDB 
+		Throughput = Capacity
+
+| Loại | Ý nghĩa          |
+| ---- | ---------------- |
+| RCU  | read throughput  |
+| WCU  | write throughput |
+
+
+
+		👉 Bản chất:
+			Bạn đang mua throughput trước
+
+
+
+
+	## 2. Amazon S3 
+		👉 S3 không nói trực tiếp “throughput”
+		Nhưng thực chất:
+
+		request/sec
+		MB/sec
+
+		👉 Key insight:
+
+		S3 scale automatically
+		Không cần provision throughput
+
+
+
+
+	## 3. Amazon EBS 
+	
+			👉 Có 2 thứ:
+
+			IOPS (số request)
+			Throughput (MB/s)
+
+			👉 Ví dụ:
+
+			gp3:
+			3000 IOPS
+			125 MB/s throughput
+
+			👉 Trap:
+
+			IOPS cao nhưng throughput thấp vẫn choke	
+
+
+
+	## 4. Amazon Kinesis 
+
+		👉 Throughput = shard capacity
+			1 shard:
+			1 MB/s write
+			2 MB/s read
+
+		👉 Muốn scale → tăng shard
+
+
+
+# V. Từ khóa hay xuất hiện trong đề
+
+	high throughput
+	low throughput bottleneck
+	provisioned throughput
+	burst throughput
+	throughput scaling
+	throttling
+
+
+
+# VI. Bẫy (trap) cực kỳ hay gặp 
+
+
+| Sai                          | Đúng |
+| ---------------------------- | ---- |
+| Throughput cao = nhanh       | Sai  |
+| Throughput cao = xử lý nhiều | Đúng |
+	👉 1 request có thể chậm nhưng hệ thống vẫn throughput cao
+
+
+
+
+
+	##Trap 2 – DynamoDB throttling
+
+		👉 Nếu:
+
+			vượt quá RCU/WCU
+
+		→ bị:
+			throttling
+
+		👉 Keyword:
+			ProvisionedThroughputExceededException
+
+
+
+
+
+	## Trap 3 – EBS IOPS vs Throughput 
+
+		👉 AWS rất thích hỏi:
+			workload nhỏ nhiều request → cần IOPS
+			workload file lớn → cần throughput
+
+		👉 Sai lầm phổ biến:
+			chọn sai loại volume
+
+
+
+
+	## Trap 4 – Kinesis shard 
+
+		👉 Không hiểu:
+		throughput tied với shard
+			→ scale sai
+
+
+
+# VII. So sánh dễ nhầm
+
+| Concept    | Ý nghĩa             | Khi dùng            |
+| ---------- | ------------------- | ------------------- |
+| Throughput | lượng xử lý/giây    | big data, streaming |
+| Latency    | thời gian 1 request | realtime            |
+| IOPS       | số operation/giây   | DB / disk           |
+
+
+
+
+# 	VIII. Scenario giống đề thi AWS
+
+	Câu hỏi
+
+	Một hệ thống:
+		xử lý video upload
+		mỗi file ~ 500MB
+		cần tốc độ upload nhanh
+
+		Chọn gì?
+
+		Phân tích
+		👉 Đây là:
+			large file
+			sequential
+
+		👉 cần:
+			high throughput
+			
+			
+			
+	Đáp án đúng
+		Amazon S3
+		hoặc EBS throughput-optimized (st1)			
+			
+			
+			
+		Đáp án sai (trap)
+			DynamoDB ❌ (không phù hợp file lớn)
+			high IOPS disk ❌ (không cần nhiều request nhỏ)			
+						
+			
+			
+			
+			
+# 	X. Tổng kết (nói thẳng)	
+			
+			
+	Throughput = “khả năng gánh tải”
+	Không hiểu cái này → fail DynamoDB, Kinesis, EBS
+	AWS exam = game phân biệt:
+		nhiều request nhỏ → IOPS
+		file lớn → throughput			
+				
+			
+			
+----------------- 日本語版--------------
+			
+			
+# 定義（本質）			
+			
+			
+	Throughputとは：
+
+	👉 単位時間あたりに処理できるデータ量
+			リクエスト数/秒
+			MB/秒			
+					
+			
+	本質理解			
+			Throughput ≈ 同時処理数 / レイテンシ
+							
+			同時処理を増やす → Throughput増加
+			レイテンシを下げる → Throughput増加			
+						
+					
+					
+					
+# AWSサービスとの対応 					
+			
+			
+		Amazon DynamoDB
+			RCU / WCU = Throughputそのもの
+			超えると throttling 発生			
+					
+			
+		Amazon S3
+			自動スケーリング
+			Throughputを意識しなくてよい			
+			
+			
+		Amazon EBS
+			IOPS vs Throughput
+			大きなファイル → Throughput重視	
+						
+			
+		Amazon Kinesis
+			1 shard = Throughput単位
+			shard追加でスケール			
+			
+			
+			
+# よく出るキーワード 			
+			
+		high throughput
+		throttling
+		provisioned throughput
+		scaling			
+	
+
+	
+# 試験トラップ		
+			
+	❌ Throughput = 速い
+	⭕ Throughput = 処理量が多い		
+				
+				
+				
+				
+# 典型問題 				
+					
+	大量の大きなファイル処理 →
+	👉 S3 or 高Throughputストレージ				
+					
+					
+					
+				
 
 </pre><a id='backBottom' href='../aws-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
