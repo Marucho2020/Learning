@@ -1,0 +1,235 @@
+<html><head><title>Lesson 9 == ACL ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../service-now-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 9 -- ACL -//</h1><pre>	
+	ACL (Access Control List) trong ServiceNow
+	= lớp bảo mật thật sự quyết định: ai được làm gì với data
+		
+	
+# 1. Đừng hiểu sai	
+	
+	Role = “có quyền chung”
+	ACL = “được phép hay bị chặn tại data thật”
+	
+		👉 Nếu chỉ có role mà ACL mở → leak data
+		👉 Nếu ACL chặt → dù có role vẫn bị chặn	
+			
+			
+	
+	
+# 2. ACL kiểm soát cái gì?	
+	
+	
+	
+		
+	## ACL trong ServiceNow kiểm soát 4 thứ chính:
+
+	① Table level
+		Có được truy cập table không?
+		
+	② Record level
+		Có được xem record này không?
+		
+	③ Field level
+		Có được xem/sửa field này không?
+		
+	④ Operation level
+		Có được:
+		read (xem)
+		write (sửa)
+		create (tạo)
+		delete (xóa)
+		
+	
+	
+# 3. Ví dụ thực tế 	
+	
+	Case: Incident table
+		Bạn có role itil
+		Nhưng ACL có thể quy định:	
+		
+		read: OK (thấy ticket)
+		write: chỉ ticket assigned cho mình
+		delete: cấm	
+			
+	
+	👉 Kết quả:
+		Bạn thấy incident
+		Nhưng không sửa được ticket của team khác
+		Không xóa được ticket	
+		
+	
+# 4. Cấu trúc của một ACL 
+	Một ACL thường có 3 phần:
+
+	## ① Requires role
+		role: itil
+		→ phải có role này mới vào được
+
+
+
+	## ② Condition 
+		assigned_to == current_user
+		→ chỉ cho sửa ticket của mình
+	
+	③ Script (advanced)	
+		answer = current.priority == 1;
+		Ví dụ thêm quy tắc  chỉ cho thao tác nếu priority = P1 
+	
+		
+	👉 Thực tế:
+		ACL = role + condition + script	
+		
+	
+	
+# 	5. Flow kiểm tra ACL (rất quan trọng)
+	
+	Khi user truy cập data:	
+		User action → Role check → Condition → Script → Result (allow/deny)
+			Nếu fail bất kỳ bước nào → DENY
+		
+	
+	
+# 6. Thứ tự ưu tiên ACL 	
+	
+	
+	ServiceNow check ACL theo thứ tự:
+			Field-level ACL
+			Table-level ACL
+			Generic ACL (*)
+
+		👉 Nếu có 1 ACL deny → chặn luôn
+			
+	
+	
+# 7. Sai lầm cực phổ biến (junior) 	
+	
+	##❌ Sai 1: chỉ hide UI	
+		Ẩn field → tưởng là bảo mật	
+		→ Sai
+	
+	User vẫn có thể:
+		gọi API
+		truy cập URL trực tiếp
+
+		👉 ACL mới là thứ chặn thật	
+			
+			
+			
+	## ❌ Sai 2: cấp role nhưng quên ACL 			
+		User có role itil
+		Nhưng không sửa được ticket				
+		→ Vì ACL chặn			
+					
+			
+			
+	## ❌ Sai 3: mở ACL quá rộng		
+		role: itil
+		condition: none			
+		→ IT support thấy toàn bộ data công ty
+		👉 data leak			
+					
+					
+# 	8. Ví dụ sâu (senior level)
+
+		Case: HR data
+			HR data cực nhạy cảm.
+
+
+
+		ACL có thể:
+			role: hr_admin
+			condition: department == HR
+
+
+		User IT dù có admin vẫn có thể bị hạn chế.
+			👉 Đây là lý do admin không phải toàn năng tuyệt đối.
+
+
+
+
+
+# 9. ACL + Role + Group liên kết thế nào? 
+	
+
+User
+ ↓
+Group
+ ↓
+Role
+ ↓
+ACL (decide final access)
+ ↓
+Data
+	👉 ACL là gate cuối cùng
+
+
+				
+			
+			
+# 10. Debug ACL (cực quan trọng)			
+			
+				
+	Khi bị lỗi access:
+
+	Bước 1
+		Impersonate user
+
+	Bước 2
+		Check:
+		user có role chưa?
+		role từ group hay direct?
+		
+	Bước 3
+		Debug ACL:
+		mở “Debug Security Rules”
+		xem ACL nào deny			
+				
+			
+			
+
+#  	11. Ví dụ câu Nhật trong dự án
+			
+		ACLでアクセス制御を行います	 → kiểm soát access bằng ACL
+			
+			
+		フィールドレベルで制御が必要です	→ cần kiểm soát ở level field
+			
+			
+		条件付きでアクセスを許可します	 	→ cho phép truy cập có điều kiện
+			
+			
+			
+			
+#	12. Bản chất (level architect) 
+		ACL = policy enforcement layer	
+			
+			
+					
+		Nó giải quyết:
+
+		bảo mật dữ liệu
+		phân quyền chi tiết
+		compliance (audit, luật)
+		multi-tenant control			
+					
+			
+			
+# 13. Nói thẳng kiểu senior 			
+			
+			
+		👉 Role chỉ là “vé vào cửa”
+		👉 ACL mới là “cửa khóa thật”
+
+		👉 System mà ACL thiết kế sai:
+
+		hoặc user không làm được việc
+		hoặc data bị leak
+
+		👉 Không có middle ground.			
+			
+			
+# 14. Một câu chốt 			
+			
+	ServiceNow không bị hack bằng UI — nó bị hack khi ACL thiết kế ngu.
+			
+			
+			
+</pre><a id='backBottom' href='../service-now-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
