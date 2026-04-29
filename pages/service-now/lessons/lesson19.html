@@ -1,0 +1,206 @@
+<html><head><title>Lesson 19 == Import Data ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../service-now-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 19 -- Import Data -//</h1><pre>
+#  1. Bức tranh tổng thể (nếu hiểu sai chỗ này → hỏng hết) 
+
+External Data (CSV / Excel / API)
+        ↓
+Import Set Table (staging)
+        ↓
+Transform Map (logic)
+        ↓
+Target Table (production data)
+
+
+
+
+# 2. Sai lầm phổ biến (junior hay mắc) 
+
+Import thẳng vào target table → sai
+Không dùng coalesce → duplicate nổ tung
+Mapping thủ công không kiểm soát → data inconsistency
+Không validate data → garbage in → garbage out
+
+
+
+
+
+
+# 3. Import Set Table (staging layer) 
+
+	👉 Bản chất:
+
+		Là bảng tạm (temporary table)
+		Không dùng cho business logic
+		Chỉ để chứa raw data
+
+	👉 Tư duy senior:
+
+		Xem nó như “data lake mini”
+		Không trust dữ liệu ở đây
+		Không join business logic vào đây
+
+
+
+# 4. Transform Map = nơi bạn thực sự code logic 
+
+
+	👉 Đây mới là “trái tim” của bài toán.
+
+	Transform map làm 3 việc:
+		Mapping field (simple)
+		Data transformation (format, normalize)
+		Decision logic (insert/update/ignore)
+
+
+# 5.Coalesce = thứ quyết định hệ thống sống hay chết 
+
+	👉 Hiểu cực kỳ rõ:
+
+		Import 1 → 100 records
+		Import lại → thêm 100 records nữa (duplicate)
+
+
+	👉 Có coalesce:
+		Import 1 → 100 records
+		Import lại → update 100 records
+
+
+| Junior                  | Senior                   |
+| ----------------------- | ------------------------ |
+| Coalesce là option      | Coalesce là bắt buộc     |
+| Import là copy data     | Import là sync data      |
+| Không nghĩ về re-import | Thiết kế cho idempotency |
+
+
+# 6. Các loại Coalesce (hiểu sâu) 
+
+
+	1. Single-field
+
+	Ví dụ:
+		email
+		serial_number
+
+	👉 dùng khi field đó unique thật
+
+
+	2. Multiple-field
+		first_name + last_name + dob
+		👉 dùng khi không có unique key
+
+
+
+
+	3. Conditional (script)
+			
+		if (source.status == "active") {
+			answer = true;
+		} else {
+			answer = false;
+		}	
+			
+	
+		👉 dùng khi:
+
+		data không sạch
+		rule phức tạp
+		cần business logic	
+			
+	
+# 	7. Mapping
+	
+	
+	❌ Không phải:
+
+		copy field A → field B
+			✅ Thực tế:
+			normalize data
+			convert format
+			enrich data  (làm giàu dữ liệu - thêm thông tin vào cái ban đầu cho nó đầy đủ hơn )
+			validate
+	
+	
+	Ví dụ thực tế:
+		phone: "090-123-4567"
+			→ remove "-"
+			→ chuẩn hóa format
+		
+	
+	
+# 8. Transform Map nâng cao 	(senior mindset)
+
+
+
+	Bạn nên làm thêm:
+		onBefore script → validate
+		onAfter script → trigger logic
+		transform script → xử lý từng field
+
+
+# 9. Data Quality (điểm mà người mới xem nhẹ)
+
+
+	👉 Nếu dữ liệu đầu vào bẩn:
+		duplicate
+		missing field
+		sai format
+
+	👉 thì:
+		system bạn sẽ chết dần theo thời gian
+
+
+
+	## 🧠 Senior sẽ làm gì? 
+
+		validate trước import
+		clean data trong transform
+		reject bad data
+
+
+# 10. Re-import strategy (rất quan trọng)
+
+
+	Bạn phải assume(cho rằng):
+
+		dữ liệu sẽ được import lại nhiều lần
+
+	👉 Vì vậy:
+		coalesce là bắt buộc
+		logic phải idempotent (= chạy 1 lần hay 100 lần → kết quả vẫn như nhau, không bị “phình” thêm tác dụng phụ.)
+
+
+
+# 11. Cleanup
+
+
+	Sau khi transform:
+		xóa import set cũ (nếu cần)
+		audit log
+		kiểm tra record lỗi
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre><a id='backBottom' href='../service-now-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
