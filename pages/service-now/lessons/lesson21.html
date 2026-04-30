@@ -1,0 +1,223 @@
+<html><head><title>Lesson 21 == CSDM ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../service-now-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 21 -- CSDM -//</h1><pre>
+# CSDM THỰC CHẤT LÀ GÌ? (bỏ hết định nghĩa sách vở)
+
+
+	👉 CSDM = cách chuẩn hoá việc bạn mô hình hoá hệ thống IT
+
+	Không phải:
+		tool ❌
+		tính năng ❌
+
+	Mà là:
+		“luật chơi” để bạn không build CMDB ngu”
+
+
+
+# 2. VẤN ĐỀ MÀ CSDM GIẢI QUYẾT 
+
+
+	Trước khi có CSDM:
+		team A: gọi “Payment Service”
+		team B: gọi “Payment App”
+		team C: gọi “Payment System”
+
+	👉 cùng 1 thứ, 3 tên
+
+
+	Hậu quả:
+		Incident → attach sai CI
+		Reporting → sai
+		Impact analysis → vô nghĩa
+
+
+	👉 CSDM xuất hiện để ép:
+		“Tất cả phải gọi đúng tên, đúng tầng”
+
+
+# 3. CORE IDEA CỦA CSDM 
+
+	👉 CSDM chia hệ thống thành layer
+	## 4 tầng chính: 
+		1. Business Layer
+		2. Application Layer
+		3. Technical Layer
+		4. Infrastructure Layer	
+			
+			
+			
+# 4. GIẢI THÍCH TỪNG TẦNG
+	
+		
+	## 1. Business Layer
+
+	👉 thứ business hiểu
+
+	Ví dụ:
+		Internet Banking
+		Payment Service	
+		
+		
+	## 2. Application Layer 	
+	
+		👉 logic hệ thống
+
+		Ví dụ:
+			Payment API
+			Auth Service	
+	
+	
+	## 3. Technical Layer 
+	
+		👉 thành phần kỹ thuật
+
+		Ví dụ:
+			Microservice
+			Database	
+	
+
+	## 4. Infrastructure Layer 
+		👉 hạ tầng
+
+		Ví dụ:
+			VM
+			Kubernetes node
+			Network
+
+
+# 5. ĐIỂM MẤU CHỐT
+	👉 KHÔNG ĐƯỢC TRỘN LẪN TẦNG
+
+
+	Sai:
+		gọi DB là “service”
+		gọi server là “application”
+	
+	Đúng:
+		DB = technical
+		server = infrastructure
+		service = business / application
+
+
+# 6. RELATIONSHIP CHUẨN THEO CSDM 
+
+
+Business Service
+   └── depends on → Application Service
+         └── runs on → Application
+               └── hosted on → Infrastructure
+
+
+
+# 7. CÁCH ÁP DỤNG CSDM 
+
+	Bước 1: xác định Business Service
+		Ví dụ:
+			“Mobile Banking”
+
+
+
+	Bước 2: map Application Service
+		Login Service
+		Payment Service	
+	
+	
+	
+	Bước 3: map Technical	
+		microservice
+		DB	
+	
+	
+	Bước 4: map Infrastructure	
+		server
+		cloud resource	
+			
+	
+	👉 Sau đó connect bằng relationship 	
+		
+	
+	
+# 8. CASE THỰC TẾ (FINTECH) 
+
+	System: Payment
+
+
+Business Service:
+   Payment
+
+Application Service:
+   Payment API
+
+Technical:
+   Payment Microservice
+   Payment DB
+
+Infrastructure:
+   Kubernetes Pod
+   AWS EC2
+
+
+	## Relationship:
+	
+		Payment
+		   → depends on → Payment API
+			   → runs on → Microservice
+				   → connects to → DB
+					   → hosted on → EC2
+
+		👉 Đây là CMDB đúng chuẩn
+
+
+
+# 9. CÁI QUAN TRỌNG NHẤT (KHÔNG AI NÓI CHO BẠN) 
+
+
+	👉 CSDM không phải để “đẹp”
+
+	👉 Nó để:
+		impact analysis đúng
+		incident routing đúng
+		change không phá production
+
+
+# 10. SAI LẦM PHỔ BIẾN 
+
+
+	❌ Nhét tất cả vào 1 layer
+		→ CMDB = rác
+
+	❌ Không define Business Service
+		→ IT không nói chuyện được với business
+
+	❌ Relationship lung tung
+		→ dependency map vô nghĩa
+
+
+
+# 11. TƯ DUY LEVEL CAO 
+
+
+	👉 Bạn không còn hỏi:
+		“CI này là gì?”
+
+	👉 Bạn hỏi:
+		“CI này nằm ở layer nào trong CSDM?”
+
+	
+
+
+# 12. KẾT LUẬN THẲNG 
+
+
+	CSDM = chuẩn hoá cách bạn nghĩ về hệ thống
+	CMDB không theo CSDM = sớm muộn cũng fail
+	Relationship phải đi theo layer
+
+
+
+
+
+
+
+
+
+</pre><a id='backBottom' href='../service-now-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
