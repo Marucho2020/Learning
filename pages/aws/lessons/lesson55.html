@@ -1,5 +1,282 @@
-<html><head><title>Lesson 55 == Cloud Practitioner ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 55 -- Cloud Practitioner -//</h1><pre>
-SQL vs NoSQL
+<html><head><title>Lesson 55 == Cloud Practitioner ===GSI Design pattern ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 55 -- Cloud Practitioner --=GSI Design pattern -//</h1><pre>
+(Global Secondary Index Design Pattern trong DynamoDB)
+
+# 1. Bản chất thật sự của GSI
+
+	## Junior thường nghĩ
+		GSI = Index để tăng tốc query
+	Sai nhưng chưa đủ.
+
+
+	## Senior hiểu
+
+	GSI thực chất là:
+		Một bản sao dữ liệu được tổ chức theo khóa khác.
+
+
+	Nói thẳng:
+
+	Trong DynamoDB:
+		Bạn chỉ query cực nhanh bằng:
+
+
+
+	Nếu muốn query theo khóa khác:
+
+email
+status
+createdAt
+country
+
+
+	thì DynamoDB không làm được.
+	GSI sinh ra để giải quyết chuyện này.
+
+
+# Hãy tưởng tượng
+
+| UserId | Email                             | Name |
+| ------ | --------------------------------- | ---- |
+| U001   | [a@gmail.com](mailto:a@gmail.com) | Bao  |
+| U002   | [b@gmail.com](mailto:b@gmail.com) | Nam  |
+
+
+PK:UserId
+
+	WHERE UserId='U001'
+	rất nhanh.
+
+	Nhưng:
+	WHERE Email='a@gmail.com'
+	
+	DynamoDB không hỗ trợ.
+
+	Lúc này tạo:
+	GSI_Email
+
+	PK: Email
+
+	## AWS âm thầm tạo thêm: 
+	
+	| Email                             | UserId |
+| --------------------------------- | ------ |
+| [a@gmail.com] | U001   |
+| [b@gmail.com] U002   |
+
+		
+	để query.
+	Đó chính là bản chất GSI.	
+		
+	
+	
+	
+# 	2. Cách nhìn của Master
+	
+	
+	GSI không phải Index.
+
+	Nó gần giống:
+	Materialized View
+	hơn là Index của MySQL.
+		
+		
+	MySQL		INDEX(email)
+		chỉ tạo metadata.
+	
+	
+	DynamoDB	GSI(email)
+		AWS thực sự copy dữ liệu.
+	
+	
+	Cho nên:
+		tốn storage
+		tốn write capacity
+		eventual consistency	
+		
+	
+	
+# 3. AWS Services Mapping
+
+
+
+| Khái niệm                  | AWS           |
+| -------------------------- | ------------- |
+| Primary Access Pattern     | PK/SK         |
+| Alternative Access Pattern | GSI           |
+| Sorting                    | Sort Key      |
+| Search nhiều field         | Composite GSI |
+| Full Text Search           | OpenSearch    |
+
+
+
+# 4. GSI Design Pattern quan trọng nhất 
+
+
+	## Pattern 1: Lookup Pattern
+
+		User Table	PK = UserId 
+		Yêu cầu:	Tìm user theo email
+
+		Tạo:	PK = Email
+		Query	email → user
+		AWS exam cực thích pattern này.
+
+
+
+
+	## Pattern 2: Status Pattern
+		Order System
+
+	Table	PK = OrderId
+	Business hỏi:	Tất cả order đang PENDING
+
+	Không query được.
+		Tạo	PK = Status
+		
+		Query
+		Status=PENDING
+
+
+
+
+	## Pattern 3: Time Series Pattern
+		Log System
+	
+	PK	LogId
+	
+	Business hỏi		Tất cả log hôm nay
+	
+	Tạo
+		PK = Date
+		SK = Timestamp
+
+
+	Query
+		Date=2026-05-30
+		rất nhanh.
+
+
+
+
+
+	## Pattern 4: User Orders Pattern
+		E-commerce
+
+	Primary	PK=OrderId
+	
+	Yêu cầu	Lấy toàn bộ order của User123
+	
+	GSI
+		PK=User123
+		SK=CreatedAt
+
+	Query
+		User123
+		Sort theo thời gian.
+
+
+
+
+
+	## Pattern 5: Leaderboard Pattern 
+		Game
+
+
+	Business:	Top Score
+		PK = GameId
+		SK = Score	
+
+	Query
+		ScanIndexForward=false
+
+
+
+
+# 5. Composite GSI Pattern
+	Đây là kỹ thuật Senior rất hay dùng.
+
+	Business:
+		PENDING orders của Tokyo
+
+
+	Nếu tạo
+		Status
+		City
+
+		riêng biệt
+		sẽ query khó.
+
+
+	Thay vào đó:
+		PK = Status#City
+
+	Ví dụ:
+		PENDING#TOKYO
+
+	Query
+		1 lần.
+		Single Table Design dùng kỹ thuật này liên tục.
+
+
+
+
+# 6. Sparse GSI Pattern
+	Pattern cực hay xuất hiện trong interview.
+	Table	User
+
+	Chỉ VIP User mới có field:	VIP=true
+
+	GSI:	PK=VIP
+
+	Kết quả:
+		Chỉ VIP user xuất hiện trong GSI.
+
+	Không cần:
+		Scan toàn table
+
+
+# 8. GSI vs LSI
+
+| GSI           | LSI                    |
+| ------------- | ---------------------- |
+| PK khác       | PK giống               |
+| SK khác       | SK khác                |
+| Tạo sau được  | Phải tạo lúc tạo table |
+| Scale độc lập | Không                  |
+| Phổ biến      | Hiếm                   |
+
+| GSI           | LSI                    |
+| ------------- | ---------------------- |
+| PK khác       | PK giống               |
+| SK khác       | SK khác                |
+| Tạo sau được  | Phải tạo lúc tạo table |
+| Scale độc lập | Không                  |
+| Phổ biến      | Hiếm                   |
+
+
+
+# 9. Trade-off mà Senior phải hiểu
+
+| Ưu điểm              | Nhược điểm           |
+| -------------------- | -------------------- |
+| Query cực nhanh      | Tốn storage          |
+| Nhiều access pattern | Tốn write            |
+| Scale lớn            | Eventual consistency |
+| Không cần Scan       | Thiết kế phức tạp    |
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 </pre><a id='backBottom' href='../aws-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

@@ -1,4 +1,289 @@
-<html><head><title>Lesson 69 == Cloud Practitioner ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 69 -- Cloud Practitioner -//</h1><pre>cost explorer
+<html><head><title>Lesson 69 == Cloud Practitioner ==Knowledge Bases ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 69 -- Cloud Practitioner --Knowledge Bases -//</h1><pre>
+
+# 1. Bản chất thật sự của Knowledge Bases là gì? 
+
+	Định nghĩa sách giáo khoa
+		Knowledge Bases for Amazon Bedrock giúp kết nối LLM với dữ liệu riêng của doanh nghiệp để thực hiện Retrieval-Augmented Generation (RAG).
+
+	Đọc vậy gần như không hiểu.
+
+
+# Định nghĩa bản chất
+
+	Knowledge Base = "Bộ não tìm tài liệu trước khi AI trả lời" 
+
+
+	Thay vì:
+		User
+		 ↓
+		LLM
+		 ↓
+		Answer
+
+	thì sẽ là:
+		User
+		 ↓
+		Knowledge Base tìm dữ liệu liên quan
+		 ↓
+		LLM
+		 ↓
+		Answer
+
+	AI không còn trả lời bằng kiến thức đã học sẵn nữa.
+
+	Nó sẽ:
+		Tìm tài liệu liên quan
+		Lấy nội dung phù hợp
+		Nhét vào Prompt
+		Mới bắt đầu trả lời
+
+
+# Ví dụ đời thường
+
+
+	Bạn hỏi:
+		Chính sách nghỉ phép của công ty là gì?
+
+	LLM bình thường:
+		Tôi không biết công ty bạn.
+
+	hoặc
+		Theo thông lệ thì...
+		=> Hallucination.
+
+	Knowledge Base:
+		Employee Handbook.pdf
+		đã được đưa vào Knowledge Base.
+
+	AI sẽ:
+		Search
+		↓
+		Tìm đúng đoạn nghỉ phép
+		↓
+		Đưa vào Prompt
+		↓
+		Trả lời
+
+	Kết quả:
+		Theo quy định công ty ABC,
+		nhân viên được nghỉ 20 ngày/năm...
+
+
+# 2. Tại sao AWS tạo ra Knowledge Bases?
+	Vì vấn đề lớn nhất của AI doanh nghiệp là:
+
+
+	AI không biết dữ liệu nội bộ
+
+	Ví dụ:
+		Confluence
+		SharePoint
+		S3
+		PDF
+		Word
+		Wiki
+		ServiceNow
+
+	LLM không biết.
+
+	Nếu Fine-tuning:
+		Đắt
+		Chậm
+		Khó update
+
+	Mỗi lần tài liệu đổi phải train lại.
+
+
+	AWS chọn:
+		RAG
+		(Retrieval Augmented Generation)
+
+	Thay vì:
+		Train lại model
+
+	thì:
+		Search dữ liệu mới nhất
+
+
+# 3. AWS Mapping
+	Knowledge Base không phải một service độc lập.
+
+| Thành phần   | AWS Service                    |
+| ------------ | ------------------------------ |
+| LLM          | Bedrock                        |
+| Embedding    | Titan Embeddings               |
+| Vector Store | OpenSearch / Aurora / Pinecone |
+| Data Source  | S3                             |
+| Query Engine | Knowledge Base                 |
+| Security     | IAM                            |
+
+
+
+			PDF
+			DOCX
+			HTML
+			CSV
+			↓
+			S3
+			↓
+			Knowledge Base
+			↓
+			Embedding
+			↓
+			Vector Database
+			↓
+			Bedrock Model
+			↓
+			User
+
+# 4. Ingestion là gì?
+	Đề thi rất thích hỏi.
+
+
+	Khi upload file:
+		PDF 500 trang
+		LLM không đọc trực tiếp.
+
+	AWS sẽ:
+		Chunking
+		↓
+		Embedding
+		↓
+		Store Vector
+
+
+		Ví dụ
+
+		PDF:
+
+		500 trang
+
+		AWS chia:
+			Chunk 1
+			Chunk 2
+			Chunk 3
+		...
+
+		Mỗi chunk:
+			Vector
+
+		ví dụ:
+			[0.22,0.18,0.97,...]
+
+		Đây gọi là:
+			Ingestion
+
+
+
+# 5. Retrieval là gì? (truy xuất)
+
+
+	Khi user hỏi:
+		How many vacation days do employees get?
+
+	Knowledge Base sẽ:
+
+		Convert question
+		↓
+		Embedding
+		↓
+		Similarity Search
+		↓
+		Top K Results
+		↓
+		LLM
+
+
+
+	Thực tế:
+
+			Question
+			↓
+			Vector
+			↓
+			Nearest Neighbor Search
+			↓
+			Relevant Chunks
+			↓
+			Answer
+
+
+# 6. RAG là gì?
+
+		AWS thi cực thích.
+
+		RAG:
+			Retrieval
+			+(And)
+			Generation
+
+
+
+		Không phải:
+			User
+			↓
+			Model
+
+		Mà:
+			User
+			↓
+			Retrieve Documents
+			↓
+			Inject Context
+			↓
+			Generate Answer
+
+
+
+		Lợi ích
+			Giảm Hallucination
+			AI bớt bịa.
+			Dữ liệu mới nhất
+			Không cần retrain.
+			Rẻ hơn Fine-Tuning
+
+		Fine-tuning:
+			Train model
+
+		RAG:
+			Search data
+
+
+# 7. So sánh Fine-Tuning vs Knowledge Base
+
+| Tiêu chí                  | Fine-Tuning        | Knowledge Base   |
+| ------------------------- | ------------------ | ---------------- |
+| Học dữ liệu mới           | Có                 | Không            |
+| Trả lời theo tài liệu mới | Kém                | Tốt              |
+| Chi phí                   | Cao                | Thấp             |
+| Update dữ liệu            | Khó                | Dễ               |
+| Hallucination             | Cao hơn            | Thấp hơn         |
+| AWS khuyến nghị           | Không phải lúc nào | Rất thường xuyên |
+
+
+
+# Góc nhìn Senior Architect
+
+	Knowledge Base không làm AI thông minh hơn.
+	Nó làm AI: Ít bịa hơn
+
+	Đây là điểm rất nhiều người hiểu sai.
+	Fine-tuning giúp model thay đổi hành vi.
+	Knowledge Base giúp model có thêm dữ liệu để tham khảo.
+	Trong doanh nghiệp Nhật (ngân hàng, bảo hiểm, ServiceNow, ERP, CRM), 80-90% use case GenAI thực tế hiện nay đang đi theo hướng:
+
+	Bedrock
+	+
+	Knowledge Bases
+	+
+	S3
+	+
+	OpenSearch Vector
+	chứ không phải train lại model.
+
+
+
+
 
 
 </pre><a id='backBottom' href='../aws-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

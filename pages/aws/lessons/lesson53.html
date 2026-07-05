@@ -1,5 +1,346 @@
-<html><head><title>Lesson 53 == Cloud Practitioner ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 53 -- Cloud Practitioner -//</h1><pre>		
-		
-Single Table Design
+<html><head><title>Lesson 53 == Cloud Practitioner ==Single Table Design ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 53 -- Cloud Practitioner --Single Table Design -//</h1><pre>		
+# 1. Định nghĩa bản chất	
 
+	Single Table Design là kỹ thuật thiết kế dữ liệu trong Amazon DynamoDB bằng cách lưu nhiều loại entity khác nhau — ví dụ User, Order, Product, Payment — trong một bảng duy nhất, rồi dùng PK, SK, GSI để truy vấn theo access pattern đã biết trước. AWS mô tả Single Table Design là pattern lưu nhiều loại dữ liệu trong một DynamoDB table để tối ưu access pattern, performance và cost.
+	
+		
+	Nói thẳng: Single Table Design không phải là “gom tất cả vào một bảng cho gọn”. Nó là cách ép dữ liệu phục vụ đúng câu hỏi mà application cần trả lời, ví dụ:	
+		
+		
+		- “Lấy profile user và 10 đơn hàng mới nhất”
+		- “Lấy tất cả order của một customer”
+		- “Lấy tất cả race result của một racer”
+		- “Lấy tất cả item thuộc cùng một tenant”	
+
+
+	Trong SQL, bạn thiết kế theo relationship rồi dùng JOIN.
+	Trong DynamoDB, bạn thiết kế theo query pattern rồi dùng Query trên key. AWS cũng nhấn mạnh rằng với DynamoDB, không nên bắt đầu schema trước khi biết hệ thống cần trả lời những câu hỏi nào.
+
+
+
+
+# 2. Mapping với AWS service cụ thể
+
+| Thành phần       | AWS service / concept         | Vai trò trong Single Table Design                                     |
+| ---------------- | ----------------------------- | --------------------------------------------------------------------- |
+| Database chính   | Amazon DynamoDB               | NoSQL key-value/document database                                     |
+| Partition key    | `PK`                          | Quyết định dữ liệu được phân phối và nhóm logic chính                 |
+| Sort key         | `SK`                          | Sắp xếp item trong cùng `PK`, tạo hierarchy / timeline / relationship |
+| Item collection  | Items có cùng `PK`            | Nhóm dữ liệu liên quan để query một lần                               |
+| GSI              | Global Secondary Index        | Truy vấn theo access pattern khác với key chính                       |
+| LSI              | Local Secondary Index         | Cùng partition key với table, khác sort key                           |
+| Query            | DynamoDB `Query` API          | Cách đọc dữ liệu đúng trong DynamoDB                                  |
+| Scan             | DynamoDB `Scan` API           | Thường là dấu hiệu thiết kế sai nếu dùng cho traffic chính            |
+| FilterExpression | Lọc sau khi đọc               | Không giúp giảm read capacity, dễ bị đề thi gài                       |
+| Streams + Lambda | DynamoDB Streams + AWS Lambda | Xử lý event-driven khi item thay đổi                                  |
+| TTL              | DynamoDB TTL                  | Tự động hết hạn item như session, token, temporary data               |
+
+DynamoDB với composite primary key sẽ lưu các item cùng PK gần nhau và sắp xếp theo SK, nhờ vậy có thể lấy một nhóm item liên quan bằng Query
+
+
+
+
+# 3. Ví dụ thực tế: hệ thống e-commerce
+
+
+Giả sử app cần các access pattern:
+
+	Lấy thông tin customer
+	Lấy tất cả order của customer theo thời gian mới nhất
+	Lấy chi tiết một order
+	Lấy các order theo status để xử lý backend
+	Lấy product detail
+
+
+
+Thiết kế kiểu SQL truyền thống 
+
+
+| Table      |
+| ---------- |
+| Customers  |
+| Orders     |
+| OrderItems |
+| Products   |
+| Payments   |
+
+	Muốn lấy customer + orders + items, thường phải JOIN.
+
+	Thiết kế Single Table DynamoDB
+
+
+Một bảng: AppTable
+| PK             | SK                      | EntityType | Data          |
+| -------------- | ----------------------- | ---------- | ------------- |
+| `CUSTOMER#123` | `PROFILE`               | Customer   | name, email   |
+| `CUSTOMER#123` | `ORDER#2026-05-20#9001` | Order      | total, status |
+| `CUSTOMER#123` | `ORDER#2026-05-10#8990` | Order      | total, status |
+| `ORDER#9001`   | `ITEM#P001`             | OrderItem  | qty, price    |
+| `ORDER#9001`   | `ITEM#P002`             | OrderItem  | qty, price    |
+| `PRODUCT#P001` | `DETAIL`                | Product    | name, price   |
+
+
+| Muốn lấy gì?        | Cách query                                      |
+| ------------------- | ----------------------------------------------- |
+| Profile customer    | `PK = CUSTOMER#123 AND SK = PROFILE`            |
+| Orders của customer | `PK = CUSTOMER#123 AND begins_with(SK, ORDER#)` |
+| Items trong order   | `PK = ORDER#9001 AND begins_with(SK, ITEM#)`    |
+| Product detail      | `PK = PRODUCT#P001 AND SK = DETAIL`             |
+
+
+	Bản chất: một bảng nhưng nhiều “mini-table logic” nằm trong cùng keyspace.
+
+
+
+# 4. Cách đặt key: phần sống còn
+
+	Một pattern phổ biến:
+PK = <ENTITY>#<ID>
+SK = <RELATION_OR_TYPE>#<TIME_OR_ID>
+
+
+	Ví dụ:
+PK = USER#123
+SK = PROFILE
+
+PK = USER#123
+SK = ORDER#2026-05-20#9001
+
+PK = ORDER#9001
+SK = ITEM#P001
+
+
+	PK trả lời câu hỏi: dữ liệu này thuộc nhóm nào?
+	SK trả lời câu hỏi: trong nhóm đó, item này là loại gì, thứ tự nào, quan hệ nào?
+
+	DynamoDB Query yêu cầu điều kiện trên partition key, và có thể thêm điều kiện trên sort key. Đây là lý do key design quan trọng hơn “schema đẹp”.
+
+
+
+
+# 5. GSI trong Single Table Design
+
+
+	GSI dùng khi access pattern không đi theo PK/SK chính.
+	Ví dụ: Backend cần lấy tất cả order đang PENDING.
+
+	Thêm attributes:
+| PK             | SK                      | GSI1PK           | GSI1SK                  |
+| -------------- | ----------------------- | ---------------- | ----------------------- |
+| `CUSTOMER#123` | `ORDER#2026-05-20#9001` | `STATUS#PENDING` | `ORDER#2026-05-20#9001` |
+| `CUSTOMER#456` | `ORDER#2026-05-20#9002` | `STATUS#PENDING` | `ORDER#2026-05-20#9002` |
+
+
+	Query GSI:
+	
+	
+Nhưng cẩn thận: STATUS#PENDING có cardinality thấp. Nếu toàn bộ hệ thống ghi vào cùng một partition key, có thể tạo hot partition. AWS khuyến nghị thiết kế partition key phân phối workload đều; nếu không, hot partition có thể gây throttling.	
+	
+	
+	Cách cải thiện:
+	
+	
+	GSI1PK = STATUS#PENDING#SHARD#03
+	GSI1SK = ORDER#2026-05-20#9001
+	
+	
+	Hoặc:
+	
+	GSI1PK = STATUS#PENDING#REGION#JP
+	GSI1SK = ORDER#2026-05-20#9001	
+	
+	Trade-off: query phức tạp hơn vì phải query nhiều shard, nhưng ghi phân tán tốt hơn. AWS cũng có pattern write sharding để phân phối workload đều hơn.
+	
+	
+	
+	
+# 6. So sánh dễ nhầm 	
+	
+	Single Table Design vs Multi-table Design
+	
+| Tiêu chí     | Single Table Design                    | Multi-table Design                              |
+| ------------ | -------------------------------------- | ----------------------------------------------- |
+| Tư duy chính | Access pattern trước                   | Entity/table trước                              |
+| Số bảng      | Thường một bảng chính                  | Nhiều bảng                                      |
+| Performance  | Rất tốt nếu key đúng                   | Có thể tốt nhưng nhiều query hơn                |
+| Complexity   | Cao khi thiết kế                       | Dễ hiểu hơn lúc đầu                             |
+| Ad-hoc query | Yếu                                    | Dễ hơn nếu SQL/RDS                              |
+| Phù hợp      | Serverless, high-scale, known patterns | App nhỏ, pattern chưa rõ, hoặc domain tách biệt |
+| Bẫy thi      | Không phải lúc nào cũng chọn           | Không phải cứ nhiều entity là nhiều table       |
+	
+	
+	
+	Quan điểm thực chiến: Single Table Design mạnh nhưng không miễn phí về tư duy. Nếu access pattern chưa rõ, ép single-table quá sớm là tự bắn vào chân.
+	
+	
+	
+	## Query vs Scan 	
+	
+	
+	| Tiêu chí       | Query                  | Scan                               |
+| -------------- | ---------------------- | ---------------------------------- |
+| Cách hoạt động | Đọc theo partition key | Duyệt qua table/index              |
+| Hiệu năng      | Tốt nếu key đúng       | Tệ khi table lớn                   |
+| Trong đề thi   | Thường là đáp án đúng  | Thường là bẫy                      |
+| Cost           | Kiểm soát được         | Dễ tốn capacity                    |
+| Use case       | OLTP request chính     | Admin job, rare batch, small table |
+
+		Cực kỳ quan trọng: FilterExpression không cứu được thiết kế sai. Filter được áp dụng sau khi Query đọc dữ liệu, nên read capacity tiêu thụ vẫn như cũ.
+	
+	
+	##GSI vs LSI
+	
+	
+| Tiêu chí                  | GSI                                     | LSI                                  |
+| ------------------------- | --------------------------------------- | ------------------------------------ |
+| Partition key             | Có thể khác table chính                 | Giống table chính                    |
+| Sort key                  | Có thể khác                             | Khác table chính                     |
+| Tạo sau khi table tồn tại | Có thể                                  | Phải tạo lúc tạo table               |
+| Use case                  | Access pattern hoàn toàn khác           | Cần sort khác trong cùng partition   |
+| Bẫy thi                   | GSI không free, write cũng update index | LSI bị giới hạn theo item collection |
+	
+	
+	
+	GSI là cách phổ biến nhất để hỗ trợ access pattern phụ trong Single Table Design. AWS định nghĩa GSI là index có partition/sort key có thể khác table chính và query có thể span toàn bộ base table.
+	
+	
+	
+# 7. Các từ khóa thường xuất hiện trong đề thi 	
+	
+	Khi thấy các keyword này, nghĩ đến DynamoDB Single Table Design:	
+	
+| Keyword trong đề                      | Ý nghĩa                          |
+| ------------------------------------- | -------------------------------- |
+| `serverless application`              | DynamoDB thường là ứng viên mạnh |
+| `predictable access patterns`         | Thiết kế key theo pattern        |
+| `single-digit millisecond latency`    | DynamoDB phù hợp                 |
+| `high scale`, `millions of requests`  | DynamoDB + partition key tốt     |
+| `retrieve related items in one query` | Item collection / same PK        |
+| `avoid joins`                         | DynamoDB denormalization         |
+| `access pattern first`                | NoSQL design đúng                |
+| `hot partition`                       | Partition key sai                |
+| `Global Secondary Index`              | Query theo chiều khác            |
+| `Scan operation`                      | Thường là bẫy nếu traffic chính  |
+| `FilterExpression`                    | Bẫy: không giảm RCU              |
+	
+	
+	
+# 8. Các trap AWS hay gài 
+	
+	##Trap 1: “Dùng FilterExpression để giảm cost”
+
+		Sai. FilterExpression lọc sau khi dữ liệu đã được đọc. Nó giảm dữ liệu trả về client, không giảm read capacity đã dùng.
+
+	Đáp án đúng thường là:
+
+	Thiết kế lại PK/SK
+	Dùng GSI
+	Dùng sort key condition
+	Tránh Scan
+	
+	
+	## Trap 2: “Có nhiều entity nên phải dùng nhiều table”
+		Không chắc. Với DynamoDB, nhiều entity có thể nằm trong một table nếu chúng phục vụ cùng workflow/access pattern. AWS khuyến nghị hiểu access pattern trước và duy trì ít table nhất có thể khi phù hợp
+	
+	
+	
+	Trap 3: “Single Table Design luôn tốt nhất”
+		Sai. Nếu workload cần ad-hoc query, analytics, joins phức tạp, hoặc access pattern thay đổi liên tục, DynamoDB single-table có thể là lựa chọn tệ.	
+			
+		
+| Nhu cầu                          | Dịch vụ phù hợp hơn        |
+| -------------------------------- | -------------------------- |
+| SQL join, transaction relational | Amazon RDS / Aurora        |
+| Analytics lớn                    | S3 + Athena / Redshift     |
+| Full-text search                 | Amazon OpenSearch Service  |
+| Cache đọc cực nhanh              | ElastiCache / DAX tùy case |
+| Key-value high-scale OLTP        | DynamoDB                   |
+	
+	
+	## Trap 4: “Partition key là status”
+	
+		Ví dụ:
+		PK = STATUS#PENDING
+	
+	Nghe có vẻ query dễ, nhưng nếu nhiều item cùng status, toàn bộ traffic dồn vào một key. Đây là hot partition risk. Cần thêm dimension có cardinality cao hoặc sharding.
+	
+	
+	
+	##Trap 5: “Scan + filter là acceptable vì serverless”
+
+		Serverless không có nghĩa là miễn phí hoặc tự động tối ưu. Scan trên table lớn vẫn đắt và chậm.
+			
+	
+	
+# 9. Cách AWS ra đề 	
+	
+	AWS thường không hỏi: “Single Table Design là gì?”
+
+	AWS sẽ hỏi kiểu scenario:
+	## Scenario 1
+		Một công ty xây serverless e-commerce app. Application thường xuyên cần lấy customer profile và danh sách order mới nhất của customer với latency thấp. Dữ liệu tăng nhanh, cần scale lớn. Giải pháp nào phù hợp nhất?
+		
+	
+	Đáp án mạnh:
+		Use Amazon DynamoDB with a single-table design.
+		Use PK = CUSTOMER#customerId and SK prefixes such as PROFILE and ORDER#timestamp#orderId.
+		Query by partition key and sort key prefix.
+			
+	
+	
+	
+	## Scenario 2 
+		Application cần lấy tất cả order theo status = PENDING. Hiện tại table dùng PK = CUSTOMER#id, SK = ORDER#date#id. Nên làm gì?
+		Đáp án mạnh:
+		
+		Create a GSI with GSI1PK based on order status and GSI1SK based on timestamp/orderId.
+		Consider high-cardinality key design or write sharding if status causes hot partitions.
+	
+	
+		Bẫy: chọn Scan + FilterExpression status = PENDING.
+	
+	
+	## Scenario 3 
+		Công ty muốn chạy báo cáo ad-hoc: “top product by revenue by region by campaign by arbitrary time range”. Query thay đổi liên tục. Có nên dùng Single Table Design không?
+	Đáp án đúng:
+	
+		No. DynamoDB is not ideal for arbitrary analytical queries.
+		Use S3 + Athena, Redshift, or another analytics-oriented solution.
+		Bản chất: DynamoDB mạnh khi access pattern rõ. Không rõ pattern thì single-table dễ thành đống rác khó query.
+		
+		
+		
+# 11. Kết luận cần nhớ cho kỳ thi 		
+		
+	Single Table Design = thiết kế DynamoDB table theo access pattern, dùng PK/SK/GSI để đọc dữ liệu bằng Query, hạn chế Scan và tránh join.		
+		
+		
+	Câu nhớ nhanh:	
+		SQL: model relationships, then query flexibly.
+DynamoDB: know queries first, then model keys for those queries.
+		
+		
+		
+	Trong đề thi SAA, chọn Single Table Design khi thấy:
+
+	Serverless
+	Scale lớn
+	Latency thấp
+	Access pattern rõ
+	Dữ liệu liên quan cần lấy cùng nhau
+	Tránh join
+	Query bằng partition key/sort key
+
+	Không chọn khi thấy:
+
+	Analytics
+	Ad-hoc query
+	Joins phức tạp
+	Reporting linh hoạt
+	Access pattern chưa rõ
+	Cần SQL relational model		
+		
+		
+	
+	
 </pre><a id='backBottom' href='../aws-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

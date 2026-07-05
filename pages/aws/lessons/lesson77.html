@@ -1,0 +1,318 @@
+<html><head><title>Lesson 77 == Cloud Practitioner ===best practices cost ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 77 -- Cloud Practitioner --=best practices cost -//</h1><pre>
+# Bản chất 
+
+	Best Practice Cost nghĩa là:
+		Thiết kế hệ thống sao cho chỉ trả tiền cho đúng lượng tài nguyên cần dùng, đúng thời điểm cần dùng, và luôn theo dõi để tối ưu liên tục.
+
+
+	AWS không coi Cost Optimization là:
+		"Làm mọi thứ rẻ nhất."
+
+	AWS coi Cost Optimization là:
+		Balance giữa Cost và Business Value.
+
+
+	Ví dụ:
+		Nếu một EC2 giá rẻ nhưng downtime khiến công ty mất hàng triệu đô doanh thu thì đó không phải tối ưu chi phí.
+
+
+# 5 nguyên tắc Cost Optimization của AWS
+
+| Best Practice                  | Ý nghĩa                                  |
+| ------------------------------ | ---------------------------------------- |
+| Right-size resources           | Chọn đúng kích thước tài nguyên          |
+| Stop paying for idle resources | Không trả tiền cho tài nguyên không dùng |
+| Use managed services           | Để AWS quản lý thay vì tự vận hành       |
+| Measure everything             | Theo dõi Cost liên tục                   |
+| Choose pricing model wisely    | Chọn mô hình thanh toán phù hợp          |
+
+
+	Đây chính là tư duy xuyên suốt của Cost Optimization Pillar.
+
+
+# 1. Right-size Resources
+
+	Đây là Best Practice xuất hiện nhiều nhất.
+
+	Ví dụ:
+
+	Bạn chạy:
+		EC2 m7i.4xlarge
+		CPU chỉ dùng
+		10%
+		RAM dùng
+		15%
+		=> 85~90% tài nguyên bị lãng phí.
+	AWS sẽ khuyên:
+		↓
+		m7i.large
+		↓
+		m7i.xlarge
+		↓
+		Hoặc Auto Scaling.
+
+
+
+	Dịch vụ hỗ trợ:
+		AWS Compute Optimizer
+		Trusted Advisor
+		CloudWatch Metrics
+
+	Keyword:
+		Right sizing
+		Over-provisioned
+		Underutilized
+
+
+	Ví dụ đời thường
+		Mua xe bus 45 chỗ.
+
+	Ngày nào cũng chỉ chở:
+		2 người.
+
+	Chi phí vẫn như xe bus.
+		Đó chính là over-provisioning.
+
+
+2. Stop Paying for Idle Resources
+
+	AWS tính tiền ngay cả khi:
+		EC2 bật
+		nhưng
+		không ai dùng.
+
+	Ví dụ:
+
+	Developer:
+		Bật EC2
+		18:00 về nhà
+		8:00 sáng hôm sau mới dùng.
+
+	14 tiếng đó:
+
+		vẫn tính tiền.
+		Best Practice:
+		Auto Stop
+		Auto Start
+		Lambda Scheduler
+		Instance Scheduler
+
+
+	Ví dụ khác:
+		EBS Volume không attach
+		Elastic IP không dùng
+		NAT Gateway không có traffic
+		Snapshot cũ
+		ALB không dùng
+
+	Đều tốn tiền.
+
+
+# Ví dụ System Design 
+
+
+		Dev Environment
+			8:00
+			↓
+			Auto Start
+			19:00
+			↓
+			Auto Stop
+
+		Tiết kiệm:
+			70~80%
+
+
+
+# 3. Use Managed Services
+
+
+
+Đây là điểm nhiều người không hiểu.
+
+	AWS luôn thích:
+		Managed Service
+		hơn
+		Self-managed.
+		Ví dụ
+	Thay vì:
+		EC2
+		↓
+		MySQL
+		↓
+		Backup
+		↓
+		Monitoring
+		↓
+		Patch
+		↓
+		HA
+		↓
+		Scaling
+		↓
+		Ops Team
+
+
+
+	AWS muốn:
+
+	Amazon RDS
+
+	Lý do:
+		ít nhân sự
+		ít downtime
+		ít lỗi
+		ít vận hành
+	=> Tổng Cost thấp hơn.
+		Không chỉ là giá EC2.
+
+	Mà là:
+		Total Cost of Ownership (TCO).
+
+
+
+# TCO (Total Cost of Ownership)
+
+
+	Đề thi rất thích.
+
+	TCO gồm:
+		Hardware
+		Software
+		Electricity
+		Data Center
+		Network
+		Maintenance
+		Human
+		Security
+		Monitoring
+
+
+	AWS luôn tối ưu:
+		TCO
+		không chỉ:
+		Monthly Bill.
+
+
+
+# 4. Measure Everything
+
+		Không đo
+		↓
+		Không tối ưu được.
+
+	AWS có rất nhiều dịch vụ.
+
+| Service                | Công dụng            |
+| ---------------------- | -------------------- |
+| Cost Explorer          | Phân tích Cost       |
+| Budgets                | Cảnh báo             |
+| Cost Anomaly Detection | Phát hiện bất thường |
+| CUR                    | Báo cáo chi tiết     |
+| Trusted Advisor        | Gợi ý tiết kiệm      |
+| Compute Optimizer      | Right sizing         |
+
+	Đây là nhóm dịch vụ Cost Management.
+
+	Ví dụ
+
+	Bạn thấy:
+		EC2
+		↓
+		500 USD
+		Nhưng:
+		Không biết instance nào.
+		Không biết team nào.
+		Không biết project nào.
+		=> Không tối ưu được.
+
+	AWS khuyên:
+
+		Tag
+		↓
+		Cost Allocation Tags
+		↓
+		Cost Categories
+
+
+
+# 5. Chọn Pricing Model đúng
+	AWS có rất nhiều model.
+
+
+| Model         | Khi nào dùng         |
+| ------------- | -------------------- |
+| On-Demand     | Không biết workload  |
+| Reserved      | Dùng lâu dài         |
+| Savings Plans | Linh hoạt hơn RI     |
+| Spot          | Chấp nhận bị thu hồi |
+| Free Tier     | Học tập              |
+
+
+	Ví dụ
+		Web server
+		24/24
+		365 ngày
+		Nếu vẫn dùng
+		On-Demand
+		↓
+		Lãng phí.
+	Nên dùng:
+		Reserved
+		hoặc
+		Savings Plans.
+
+
+# Mapping với dịch vụ AWS 
+
+| Mục tiêu             | AWS Service                               |
+| -------------------- | ----------------------------------------- |
+| Theo dõi chi phí     | Cost Explorer                             |
+| Cảnh báo ngân sách   | AWS Budgets                               |
+| Phát hiện bất thường | Cost Anomaly Detection                    |
+| Gợi ý tối ưu         | Trusted Advisor                           |
+| Right sizing         | Compute Optimizer                         |
+| Auto Scale           | Auto Scaling                              |
+| Tự động tắt EC2      | EventBridge + Lambda / Instance Scheduler |
+| Phân bổ chi phí      | Cost Allocation Tags                      |
+| Báo cáo chi tiết     | Cost & Usage Report (CUR)                 |
+
+
+
+# Trade-off
+
+
+| Lựa chọn           | Ưu điểm                        | Nhược điểm                           |
+| ------------------ | ------------------------------ | ------------------------------------ |
+| On-Demand          | Linh hoạt                      | Đắt nhất nếu chạy liên tục           |
+| Reserved Instances | Tiết kiệm lớn                  | Cam kết thời hạn                     |
+| Savings Plans      | Linh hoạt hơn RI               | Vẫn cần cam kết mức chi tiêu         |
+| Spot               | Rẻ nhất (có thể giảm tới ~90%) | Có thể bị AWS thu hồi bất cứ lúc nào |
+| Managed Service    | Giảm chi phí vận hành          | Ít quyền kiểm soát hơn               |
+
+
+
+# Các từ khóa hay gặp trong đề thi
+	Cost Optimization
+	Right sizing
+	Idle resources
+	Cost Explorer
+	AWS Budgets
+	Savings Plans
+	Reserved Instances
+	Spot Instances
+	Compute Optimizer
+	Trusted Advisor
+	TCO
+	Cost Allocation Tags
+	Cost Anomaly Detection
+	Auto Scaling
+	Managed Services
+
+
+
+
+
+
+
+</pre><a id='backBottom' href='../aws-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

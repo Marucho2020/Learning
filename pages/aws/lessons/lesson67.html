@@ -1,5 +1,340 @@
-<html><head><title>Lesson 67 == Cloud Practitioner ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 67 -- Cloud Practitioner -//</h1><pre>
-CloudFront
+<html><head><title>Lesson 67 == Cloud Practitioner =Guardrails ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 67 -- Cloud Practitioner =Guardrails -//</h1><pre>
+#  Guardrails là gì?
+
+	Nhiều người mới học AWS thường nghĩ:
+		Guardrails = Security
+
+	Sai.
+		Guardrails không bảo vệ hạ tầng AWS.
+		Guardrails bảo vệ AI Model Output và AI Input.
+	Nói thẳng:
+		Guardrails là lớp "kiểm duyệt" nằm giữa User ↔ LLM.
+
+
+	User
+	  ↓
+	Guardrails
+	  ↓
+	Claude / Llama / Titan
+	  ↓
+	Guardrails
+	  ↓
+	User
+
+	Guardrails kiểm tra:
+
+	User hỏi gì (Input)
+	AI trả lời gì (Output)
+	trước khi cho phép đi tiếp.
+
+
+# 2.Tại sao AWS tạo ra Guardrails?
+
+
+	Vấn đề của Generative AI:
+
+	Model rất thông minh.
+	Nhưng cũng có thể:
+		Chửi tục
+		Tiết lộ thông tin nhạy cảm
+		Trả lời nội dung độc hại
+		Bịa chuyện (Hallucination)
+		Trả lời vượt phạm vi doanh nghiệp cho phép
+
+	Ví dụ:
+
+		Khách hàng hỏi chatbot ngân hàng:
+		Làm thế nào để hack tài khoản người khác?
+		Claude hoàn toàn có khả năng trả lời.
+		Doanh nghiệp không muốn điều đó.
+
+	=> Cần Guardrails.
+
+
+
+# 3. Guardrails hoạt động như thế nào?
+	## Luồng xử lý
+
+User
+ ↓
+Input Validation
+ ↓
+Foundation Model
+ ↓
+Output Validation
+ ↓
+Response
+
+
+# 4. Các loại Guardrails quan trọng trong đề thi
+
+	##4.1 Content Filters
+
+	Đây là phần xuất hiện nhiều nhất.
+
+	Dùng để chặn:
+		Hate speech
+		Violence
+		Sexual content
+		Insults
+		Harassment
+
+	Ví dụ:
+	User:
+		Hãy hướng dẫn tôi cách chế bom.
+		
+	Guardrails:
+		Blocked
+
+
+	AWS Exam Keywords
+	harmful content
+	inappropriate content
+	toxic content
+	offensive content
+	unsafe AI response
+
+	=> Nghĩ ngay Guardrails
+
+
+
+	## 4.2 Denied Topics
+		Cho phép doanh nghiệp cấm AI trả lời một số chủ đề.
+
+		Ví dụ công ty bảo hiểm:
+			Chatbot chỉ được tư vấn bảo hiểm.
+
+		Không được tư vấn:
+			Chính trị
+			Y tế
+			Đầu tư tài chính
+
+		Khi người dùng hỏi:
+			Nên mua cổ phiếu nào?
+
+		Guardrails:
+			Tôi không được phép trả lời chủ đề này.
+			Bản chất
+			Không phải vì AI không biết.
+			Mà vì doanh nghiệp không muốn AI trả lời.
+
+
+
+	## 4.3 Sensitive Information Filters
+
+	Dùng để phát hiện:
+
+	PII
+		Personally Identifiable Information
+
+	Ví dụ:
+		Email
+		Phone number
+		Passport
+		My Number (Nhật)
+		Credit Card
+
+	Ví dụ:
+		Số thẻ của tôi là
+		4111-1111-1111-1111
+
+	Guardrails:
+		[REDACTED]
+		
+		
+		AWS Exam Keywords
+		PII
+		Personal Information
+		Credit card information
+		Sensitive information
+		=> Guardrails
+
+
+
+	## 4.4 Word Filters
+	
+	Chặn từ khóa cụ thể.
+
+		Ví dụ:
+			hack
+			terrorist
+			bomb
+
+		Khi xuất hiện:
+			Blocked
+
+		Đây là kiểu đơn giản nhất.
+			
+	
+	
+	
+	
+	## 4.5 Contextual Grounding 	(nền tảng theo ngữ cảnh)
+		Đây là phần khó nhất nhưng cực kỳ quan trọng cho SAA tương lai.
+				
+			Vấn đề
+				LLM hay bịa.
+
+			Ví dụ:
+				Knowledge Base chứa:
+
+			Công ty mở cửa:
+			9:00 - 18:00
+
+			User hỏi:
+
+				Mấy giờ đóng cửa?
+
+			Model trả lời:
+				20:00
+				Hallucination.	
+				
+				
+			Contextual Grounding
+				Buộc Model chỉ được trả lời dựa trên dữ liệu cung cấp.
+
+				Knowledge Base
+				↓
+				Guardrails kiểm tra
+				↓
+				Model Output
+
+			Nếu AI tự bịa:
+				Blocked	
+	
+			
+		AWS Exam Keywords
+			Hallucination reduction
+			Grounded response
+			Response based on source data
+			Prevent fabricated answer
+
+		=> Guardrails	
+			
+	
+	
+# 5. Mapping với dịch vụ AWS
+
+| Dịch vụ            | Mục đích              |
+| ------------------ | --------------------- |
+| Bedrock            | Chạy Foundation Model |
+| Bedrock Guardrails | Kiểm soát nội dung AI |
+| Knowledge Bases    | Nguồn dữ liệu cho RAG |
+| Agents             | AI Agent              |
+| IAM                | Phân quyền            |
+| WAF                | Bảo vệ Web App        |
+| GuardDuty          | Phát hiện threat      |
+
+
+
+
+# Guardrails ≠ WAF ≠ GuardDuty
+	Đề thi cực thích gài chỗ này.
+
+
+| Dịch vụ    | Bảo vệ gì        |
+| ---------- | ---------------- |
+| Guardrails | AI Content       |
+| WAF        | HTTP Request     |
+| Shield     | DDoS             |
+| GuardDuty  | Threat Detection |
+| IAM        | Permissions      |
+
+
+
+# 6. Ví dụ System Design thực tế
+	Chatbot ngân hàng.
+
+User
+ ↓
+Bedrock Agent
+ ↓
+Guardrails
+ ↓
+Claude
+ ↓
+Guardrails
+ ↓
+User
+
+	Yêu cầu:
+
+	Không được:
+		Tiết lộ số tài khoản
+		Tư vấn đầu tư
+		Nội dung bạo lực
+
+	Sử dụng:
+		Amazon Bedrock Guardrails
+
+
+
+
+# 7. Scenario giống đề thi
+
+	Câu hỏi
+		Một công ty xây dựng chatbot chăm sóc khách hàng bằng Amazon Bedrock.
+
+	Yêu cầu:
+		Chặn nội dung độc hại
+		Ẩn số thẻ tín dụng
+		Hạn chế AI trả lời một số chủ đề
+
+	Dịch vụ phù hợp nhất?
+
+	Đáp án
+	Amazon Bedrock Guardrails
+
+
+
+	Vì sao không phải WAF?
+
+		WAF:
+			SQL Injection
+			XSS
+			HTTP Attack
+
+	Không hiểu nội dung AI.
+		Vì sao không phải IAM?
+
+	IAM:
+		Who can access
+	Không kiểm soát câu trả lời AI.
+
+
+
+		Pattern 1
+			Filter harmful content
+		=> Guardrails
+
+		Pattern 2
+			Prevent offensive responses
+			=> Guardrails
+
+		Pattern 3
+			Protect PII
+			=> Guardrails
+
+		Pattern 4
+			Restrict topics
+			=> Guardrails
+
+		Pattern 5
+			Reduce hallucination
+			=> Guardrails + Contextual Grounding
+
+
+# 10. Câu thần chú đi thi
+
+harmful content
+unsafe response
+offensive content
+PII protection
+sensitive information
+restricted topics
+hallucination reduction
+AI safety
+responsible AI
 
 
 

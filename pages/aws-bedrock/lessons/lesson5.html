@@ -1,0 +1,338 @@
+<html><head><title>Lesson 5 == Bedrock Agent 2 ===Planning & Reasoning ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 5 -- Bedrock Agent 2 --=Planning & Reasoning -//</h1><pre>
+# 1. Bản chất của Planning & Reasoning là gì?
+
+	Planning = Agent tự chia bài toán lớn thành nhiều bước nhỏ.
+
+	Reasoning = Agent suy nghĩ xem bước nào nên làm trước, bước nào nên làm sau, cần gọi tool nào, rồi tổng hợp kết quả để ra câu trả lời cuối cùng.
+
+
+	Điểm quan trọng nhất:
+		Planning & Reasoning KHÔNG phải AI biết suy nghĩ như con người.
+
+
+	Nó chỉ là:
+		phân tích mục tiêu
+		tạo kế hoạch
+		thực hiện từng bước
+		nếu cần thì điều chỉnh kế hoạch
+		cuối cùng trả lời.
+
+	Trong AWS Bedrock Agent, việc này được LLM thực hiện dựa trên:
+		Prompt
+		Instructions
+		Danh sách Tool (Action Group)
+		Knowledge Base
+		Context
+
+
+	Agent không được lập trình cứng kiểu
+		Step 1
+		↓
+
+		Step 2
+		↓
+
+		Step 3
+
+		mà nó tự quyết định.
+		Đây là điểm khác biệt lớn nhất.
+
+
+
+# 2. Ví dụ đời thường
+
+	Giả sử bạn hỏi:
+		Tôi muốn đi Osaka cuối tuần sau với ngân sách 30,000 yên.
+
+	Một chatbot bình thường sẽ chỉ trả lời:
+		Bạn nên đi Shinkansen.
+
+	Hết.
+
+
+
+	Agent thì khác.
+		Nó sẽ tự lập kế hoạch.
+		Ví dụ trong đầu Agent sẽ là:
+
+		Mục tiêu:
+			↓
+			Tìm chuyến đi Osaka
+			↓
+			Xác định ngày
+			↓
+			Kiểm tra giá vé
+			↓
+			Kiểm tra khách sạn
+			↓
+			Tính tổng tiền
+			↓
+			So sánh với ngân sách
+			↓
+			Đề xuất lịch trình
+
+
+
+		Không ai lập trình các bước này.
+			LLM tự tạo.
+			Đó gọi là
+			Planning.
+
+
+		Sau đó
+			Agent tiếp tục suy luận.
+
+		Ví dụ:
+			Nếu khách sạn quá đắt
+			↓
+			Chọn khách sạn khác
+			↓
+			Nếu vẫn vượt ngân sách
+			↓
+			Đổi sang xe bus
+			↓
+			Nếu vẫn vượt
+			↓
+			Giảm số đêm
+
+
+		Đó gọi là
+			Reasoning.
+
+
+
+# 3. Ví dụ trong System Design
+	Giả sử công ty có AI Support.
+	User hỏi:
+
+		Khách hàng A đã thanh toán chưa?
+		Nếu rồi thì gửi hóa đơn.
+		Nếu chưa thì gửi email nhắc.
+
+
+	Agent sẽ không có API duy nhất.
+		Nó sẽ tự nghĩ.
+
+
+		Goal
+		↓
+		Check Customer
+		↓
+		Call CRM API
+		↓
+		Đã thanh toán?
+		↓
+		YES
+		↓
+		Call Invoice API
+		↓
+		Send Email
+		--------------------
+
+		NO
+		↓
+		Reminder API
+		↓
+		Send Email
+
+
+
+		Không có flow nào được code cứng.
+			Agent quyết định.
+
+
+
+
+# 4. Mapping với AWS
+
+| Thành phần                         | Vai trò                    |
+| ---------------------------------- | -------------------------- |
+| Amazon Bedrock Agent               | Thực hiện Planning         |
+| Foundation Model (Claude, Nova...) | Suy luận                   |
+| Action Group                       | Các Tool có thể gọi        |
+| Lambda                             | Thực hiện Tool             |
+| Knowledge Base                     | Cung cấp dữ liệu           |
+| Prompt                             | Quy định cách lập kế hoạch |
+| Session Memory                     | Ghi nhớ context            |
+
+
+	Planning & Reasoning thường đi cùng các dịch vụ sau:
+	Ví dụ.
+	
+		User
+		↓
+		Bedrock Agent
+		↓
+		Reasoning
+		↓
+		Need Tool?
+		↓
+		Action Group
+		↓
+		Lambda
+		↓
+		Database
+		↓
+		Return
+		↓
+		Reasoning
+		↓
+		Need More Tool?
+		↓
+		YES
+		↓
+		Call Again
+		↓
+		Final Answer
+
+
+
+# 5. Multi-step Reasoning 
+	Đây là keyword rất hay xuất hiện.
+
+
+	Ví dụ.
+		User hỏi
+		Tổng doanh thu tháng này của các khách hàng VIP ở Tokyo là bao nhiêu?
+
+		Agent sẽ chia thành nhiều bước.
+			Step 1
+				Lấy danh sách VIP
+				↓
+
+			Step 2
+				Lọc Tokyo
+				↓
+
+			Step 3
+				Lấy doanh thu
+				↓
+
+			Step 4
+				Cộng
+				↓
+
+			Step 5
+				Tạo báo cáo
+
+		Không cần developer viết từng bước.
+
+
+
+# 6. Dynamic Planning 
+	Điểm mạnh của Agent.
+	Kế hoạch có thể thay đổi.
+
+		Tool A lỗi
+		↓
+		Agent thử Tool B
+		↓
+		Tool B lỗi
+		↓
+		Knowledge Base
+		↓
+		Không có
+		↓
+		Xin lỗi user
+
+
+
+	Không cần
+		if else
+		do developer viết.
+
+
+
+
+# 7. ReAct Pattern 
+	AWS Bedrock thực tế dùng ý tưởng gần giống
+	ReAct (Reason + Act).
+	
+	Chu trình:
+		Reason
+		↓
+		Action
+		↓
+		Observation
+		↓
+		Reason
+		↓
+		Action
+		↓
+		Observation
+		↓
+		Final Answer
+
+
+	Ví dụ.
+		Reason
+		"Tôi cần giá cổ phiếu"
+		↓
+		Action
+		Call API
+		↓
+		Observation
+		"200 USD"
+		↓
+		Reason
+		"Tính lợi nhuận"
+		↓
+		Action
+		Calculator
+		↓
+		Observation
+		Done
+		↓
+		Answer
+
+		Đây chính là cách đa số AI Agent hiện đại hoạt động.
+		
+		
+		
+# 8. Trade-off 		
+		
+| Ưu điểm                          | Nhược điểm                                 |
+| -------------------------------- | ------------------------------------------ |
+| Không cần lập trình flow cố định | Có thể suy luận sai                        |
+| Linh hoạt                        | Chi phí Token cao hơn                      |
+| Dễ mở rộng                       | Latency lớn hơn                            |
+| Thích hợp workflow phức tạp      | Debug khó hơn                              |
+| Tự chọn Tool                     | Kết quả không phải lúc nào cũng giống nhau |
+		
+		
+		
+# 9. So sánh dễ nhầm 		
+		
+| Workflow Engine      | AI Agent                       |
+| -------------------- | ------------------------------ |
+| Step cố định         | Step động                      |
+| Developer quyết định | LLM quyết định                 |
+| Flow không đổi       | Flow thay đổi                  |
+| Logic nằm trong code | Logic nằm trong Prompt + Model |
+| Deterministic        | Probabilistic                  |
+
+
+
+
+# 10. Từ khóa thường gặp trong đề thi
+
+
+Rất hay gặp:
+	Multi-step reasoning
+	Planning
+	Tool selection
+	Autonomous decision making
+	Dynamic workflow
+	Agent orchestration
+	Context-aware
+	ReAct
+	Chain of Thought (khái niệm nền tảng, không nhất thiết được nhắc trực tiếp trong sản phẩm)
+	Action Group
+	Knowledge Base
+	Tool Invocation
+
+
+
+
+
+</pre><a id='backBottom' href='../aws-bedrock-agent-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

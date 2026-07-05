@@ -1,5 +1,329 @@
-<html><head><title>Lesson 60 == Cloud Practitioner ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 60 -- Cloud Practitioner -//</h1><pre>
-internet gateway
+<html><head><title>Lesson 60 == Cloud Practitioner ====Route Table. ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 60 -- Cloud Practitioner ----Route Table. -//</h1><pre>
+# 1. Route Table là gì?
+
+	Định nghĩa sách giáo khoa
+		Route Table là tập hợp các rule định tuyến (routing rules) quyết định traffic sẽ đi đâu.
+
+
+# Định nghĩa bản chất (quan trọng)
+
+
+	Route Table chính là Google Maps của VPC.
+
+		Khi một packet rời khỏi EC2:
+			"Tôi muốn đi tới địa chỉ IP này."
+
+		Route Table sẽ trả lời:
+			"Muốn đi IP đó thì đi qua cổng nào?"
+
+
+
+| Destination | Target   |
+| ----------- | -------- |
+| 10.0.0.0/16 | local    |
+| 0.0.0.0/0   | igw-xxxx |
+
+
+	Nghĩa là:
+		Nếu muốn tới IP nằm trong VPC → đi nội bộ
+		Nếu muốn ra Internet → đi Internet Gateway
+
+
+# Điều AWS muốn bạn hiểu
+
+	AWS không quan tâm EC2 nằm Public hay Private.
+
+	AWS chỉ nhìn:
+		"Subnet này có Route Table gì?"
+		Đây là bẫy rất hay gặp.
+
+
+# 2. Route Table hoạt động thế nào?
+
+VPC
+	10.0.0.0/16
+
+	Có:
+
+	Public Subnet
+	10.0.1.0/24
+
+	Private Subnet
+	10.0.2.0/24
+
+
+	## Public Route Table: 
+	
+| Destination | Target |
+| ----------- | ------ |
+| 10.0.0.0/16 | local  |
+| 0.0.0.0/0   | IGW    |
+
+
+Private Route Table:
+
+| Destination | Target |
+| ----------- | ------ |
+| 10.0.0.0/16 | local  |
+
+
+Kết quả:
+
+	## EC2 trong Public Subnet
+		EC2
+		 ↓
+		Route Table
+		 ↓
+		Không thấy đường
+		 ↓
+		Drop
+	Không ra Internet được.
+
+
+# Bản chất thực sự
+	Subnet Public hay Private không phải thuộc tính AWS gắn sẵn.
+		AWS không có checkbox:
+			☐ Public
+			☐ Private
+
+
+	AWS chỉ suy luận:
+		Nếu subnet có route:
+		0.0.0.0/0
+		→ Internet Gateway
+		⇒ Public Subnet
+
+	Nếu không có route đó
+		⇒ Private Subnet
+
+
+
+# 3. Thành phần quan trọng nhất trong Route Table
+
+	local route
+		AWS tự động tạo.
+		
+	Ví dụ:
+	10.0.0.0/16
+		→ local
+
+	Ý nghĩa:
+		Cho phép các subnet trong VPC nói chuyện với nhau.
+
+
+	Ví dụ:
+		10.0.1.x
+		⇔
+		10.0.2.x
+
+
+	Không cần:
+		NAT
+		IGW
+		VPN
+	vẫn giao tiếp được.
+
+
+
+# 4. Route Table và Internet Gateway
+
+| Destination | Target |
+| ----------- | ------ |
+| 10.0.0.0/16 | local  |
+| 0.0.0.0/0   | IGW    |
+
+	Ý nghĩa:
+
+	Không biết đi đâu
+	↓
+	Đẩy ra Internet
+
+
+	0.0.0.0/0 nghĩa là:
+		ALL IPv4
+
+
+	IPv6:
+		::/0
+
+
+	AWS rất thích hỏi:
+
+	"Muốn hỗ trợ IPv6 thì cần gì?"
+		Đáp án:
+			::/0
+			→ IGW
+
+
+
+
+# 5. Route Table và NAT Gateway
+
+| Destination | Target      |
+| ----------- | ----------- |
+| 10.0.0.0/16 | local       |
+| 0.0.0.0/0   | NAT Gateway |
+
+
+Flow:
+
+	Private EC2
+	 ↓
+	NAT Gateway
+	 ↓
+	Internet Gateway
+	 ↓
+	Internet
+
+
+	Kết quả:
+		Outbound
+		Được.
+
+
+	Inbound
+		Không được.
+		Internet không thể chủ động truy cập EC2.
+		Đây là lý do NAT Gateway tồn tại.
+
+
+
+
+# So sánh IGW và NAT Gateway
+
+|                         | IGW   | NAT Gateway |
+| ----------------------- | ----- | ----------- |
+| Cho phép outbound       | Có    | Có          |
+| Cho phép inbound        | Có    | Không       |
+| Dùng cho Public Subnet  | Có    | Không       |
+| Dùng cho Private Subnet | Không | Có          |
+
+
+
+
+# 6. Route Table Association
+
+	Một Route Table không tự hoạt động.
+		Nó phải được gắn với subnet.
+
+
+	Ví dụ:
+		Public RT
+		↓
+		Associate
+		↓
+		Public Subnet
+
+
+	Nếu quên Associate
+
+	AWS dùng:
+		Main Route Table
+		Đây là lỗi production cực kỳ phổ biến.
+
+
+
+# 7. Main Route Table
+
+	Mỗi VPC có:
+		1 Main Route Table
+
+
+	Nếu subnet không gắn Route Table nào:
+		Subnet
+		↓
+		Main Route Table
+
+
+	AWS rất thích ra đề kiểu:
+		Một subnet mới được tạo nhưng không associate Route Table.
+		Traffic dùng gì?
+
+		Đáp án:
+		Main Route Table
+
+
+
+# 8. Longest Prefix Match
+	Đây là kiến thức Senior và cũng xuất hiện trong SAA.
+
+| Destination | Target |
+| ----------- | ------ |
+| 0.0.0.0/0   | IGW    |
+| 10.0.1.0/24 | NAT GW |
+
+	Packet muốn đi:
+		10.0.1.50
+		AWS chọn gì?
+
+
+	Đáp án:
+	10.0.1.0/24
+	Vì:
+		/24
+	cụ thể hơn:
+		/0
+
+	Nguyên tắc:
+
+	AWS luôn chọn route cụ thể nhất.
+	(Longest Prefix Match)
+	Đây là kiến thức mạng rất quan trọng.
+
+
+# Cách AWS ra đề 
+
+	AWS thường không hỏi:
+
+	Route Table là gì?
+	AWS hỏi:
+	
+	Vì sao EC2 không ra Internet được?
+	Lúc đó phải kiểm tra:
+		Route Table
+		IGW
+		NAT Gateway
+		Public IP
+		NACL
+		Security Group
+
+
+	Từ khóa
+		Private Subnet
+		Download updates
+		Outbound only
+		No inbound
+	=> NAT Gateway
+
+
+	Từ khóa
+		Public access
+		Internet-facing
+		Web server
+	=> IGW + Public Subnet
+
+
+# Tóm tắt 30 giây trước khi vào phòng thi
+
+| Khái niệm            | Ghi nhớ                              |
+| -------------------- | ------------------------------------ |
+| Route Table          | Bản đồ chỉ đường của VPC             |
+| local                | Giao tiếp nội bộ VPC                 |
+| 0.0.0.0/0            | Mọi địa chỉ IPv4                     |
+| IGW                  | Internet cho Public Subnet           |
+| NAT GW               | Internet outbound cho Private Subnet |
+| Main Route Table     | Route mặc định của VPC               |
+| Association          | Gắn Route Table với Subnet           |
+| Longest Prefix Match | AWS chọn route cụ thể nhất           |
+| Public Subnet        | Có route tới IGW                     |
+| Private Subnet       | Không có route tới IGW               |
+
+
+
+
+
+
+
 
 
 

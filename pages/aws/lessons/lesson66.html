@@ -1,6 +1,319 @@
-<html><head><title>Lesson 66 == Cloud Practitioner ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 66 -- Cloud Practitioner -//</h1><pre>
+<html><head><title>Lesson 66 == Cloud Practitioner ===GuardDuty ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 66 -- Cloud Practitioner --=GuardDuty -//</h1><pre>
+# 1. Bản chất của GuardDuty là gì? 
 
-CDN concept
+	Rất nhiều người mới học AWS hiểu GuardDuty là:
+		"Một Firewall bảo vệ AWS"
+
+	Sai.
+		"Một Antivirus quét EC2"
+	Cũng sai.
+
+	Bản chất thực sự:
+		GuardDuty là dịch vụ Threat Detection (phát hiện mối đe dọa) sử dụng Machine Learning, Threat Intelligence và Log Analysis để phát hiện hành vi bất thường trong AWS Account.
+
+	Nói ngắn gọn:
+		CloudTrail = Camera ghi hình
+		VPC Flow Log = Camera giao thông
+		DNS Log = Camera DNS
+		GuardDuty = Nhân viên an ninh xem camera và báo động khi thấy dấu hiệu tấn công
+
+
+	GuardDuty KHÔNG chặn.
+	GuardDuty KHÔNG sửa.
+	GuardDuty chỉ:
+		Detect
+		↓
+		Alert
+		↓
+		Finding
+
+
+# 2. GuardDuty theo dõi những gì?
+
+	Đây là thứ AWS rất thích hỏi.
+	GuardDuty tự động phân tích:
+
+| Nguồn dữ liệu      | Mục đích                 |
+| ------------------ | ------------------------ |
+| CloudTrail         | Theo dõi API Call        |
+| VPC Flow Logs      | Theo dõi network traffic |
+| DNS Logs           | Theo dõi DNS Query       |
+| EKS Audit Logs     | Theo dõi Kubernetes      |
+| S3 Data Events     | Theo dõi truy cập S3     |
+| Runtime Monitoring | Theo dõi hành vi EC2/EKS |
+
+
+
+	Ví dụ:
+
+	Một hacker lấy được Access Key.
+
+	Hacker thực hiện:
+		aws iam create-user
+		aws iam attach-policy
+
+	CloudTrail ghi lại.
+	GuardDuty phát hiện:
+		Credential Abuse
+		Privilege Escalation
+		và tạo Finding.
+
+
+
+
+# 3. GuardDuty không làm gì?
+
+| Chức năng      | GuardDuty |
+| -------------- | --------- |
+| Detect Threat  | ✅         |
+| Generate Alert | ✅         |
+| Block Traffic  | ❌         |
+| Patch EC2      | ❌         |
+| Remove Malware | ❌         |
+| Encrypt Data   | ❌         |
+
+
+
+	AWS rất thích đánh lừa:
+		Threat detection
+	với
+		Threat prevention
+	
+	GuardDuty chỉ là:
+		Detection
+
+	không phải
+		Protection
+
+
+
+# 4. Ví dụ thực tế
+
+
+	Giả sử:
+
+		Internet
+			 ↓
+			 ALB
+			 ↓
+			EC2
+
+		Một botnet từ Nga quét port liên tục.
+
+	22
+	3389
+	8080
+
+	VPC Flow Logs ghi nhận.
+	GuardDuty phát hiện:
+		Recon:EC2/Portscan
+		và tạo cảnh báo.
+
+
+	Nhưng:
+
+	Botnet vẫn đang scan
+	GuardDuty không chặn.
+
+	Muốn chặn cần:
+	Security Group
+		NACL
+		AWS WAF
+
+
+# 5. GuardDuty vs Security Hub
+
+|                            | GuardDuty | Security Hub |
+| -------------------------- | --------- | ------------ |
+| Threat Detection           | ✅         | ❌            |
+| Tổng hợp Security Findings | ❌         | ✅            |
+| Machine Learning           | ✅         | ❌            |
+| Phân tích Log              | ✅         | ❌            |
+| Dashboard Security         | ❌         | ✅            |
+
+
+
+Hiểu đơn giản:
+
+	GuardDuty
+	=
+	Người phát hiện sự cố
+
+	Security Hub
+	=
+	Bảng điều khiển tập trung
+
+
+
+
+# 6. GuardDuty vs Inspector
+
+|                         | GuardDuty | Inspector |
+| ----------------------- | --------- | --------- |
+| Phát hiện tấn công      | ✅         | ❌         |
+| Vulnerability Scan      | ❌         | ✅         |
+| CVE Detection           | ❌         | ✅         |
+| Runtime Threat          | ✅         | ❌         |
+| EC2 Security Assessment | ❌         | ✅         |
+
+
+	GuardDuty:
+		Có người đang tấn công server
+
+	Inspector:
+		Server đang có lỗ hổng Log4j
+
+	Một bên nhìn:
+		Attack
+
+	Một bên nhìn:
+		Weakness
+
+
+
+
+
+# 7. GuardDuty vs Detective
+
+
+|                     | GuardDuty | Detective |
+| ------------------- | --------- | --------- |
+| Phát hiện sự cố     | ✅         | ❌         |
+| Điều tra sự cố      | ❌         | ✅         |
+| Tạo Finding         | ✅         | ❌         |
+| Root Cause Analysis | ❌         | ✅         |
+
+
+
+	Ví dụ:
+
+	GuardDuty báo:
+		EC2 bị nghi ngờ bị compromise
+
+	Detective giúp điều tra:
+
+		Từ IP nào?
+		Lúc nào?
+		User nào?
+		API nào?
+
+
+
+# 8. Mapping hệ sinh thái Security AWS
+
+
+CloudTrail
+VPC Flow Logs
+DNS Logs
+        ↓
+
+    GuardDuty
+        ↓
+
+    Findings
+        ↓
+
+   Security Hub
+        ↓
+
+ EventBridge
+        ↓
+
+ Lambda
+        ↓
+
+ Auto Remediation
+Đây là architecture xuất hiện cực nhiều trong SAA.
+
+
+# 9. Scenario giống đề thi
+
+	Công ty muốn:
+		Phát hiện tài khoản AWS bị đánh cắp
+		Phát hiện EC2 bị scan port
+		Không muốn tự phân tích log
+
+	Dịch vụ phù hợp?
+	Đáp án
+		✅ GuardDuty
+
+
+	Scenario 2
+
+	Công ty muốn:
+		Quét CVE
+		Tìm package lỗi thời
+		Đánh giá lỗ hổng EC2
+		Đáp án
+
+	✅ Inspector
+
+
+	Scenario 3
+	Công ty muốn:
+		Tổng hợp toàn bộ cảnh báo bảo mật
+		Một dashboard duy nhất
+	Đáp án
+	✅ Security Hub
+
+
+
+# 10. Các từ khóa nhận diện GuardDuty
+
+	Threat Detection
+	Malicious Activity
+	Compromised Credentials
+	Anomalous Behavior
+	Machine Learning
+	Threat Intelligence
+	Port Scan
+	Crypto Mining
+	Unauthorized API Calls
+
+	=> nghĩ ngay tới:
+		GuardDuty
+
+
+# Trade-off
+
+	Ưu điểm
+		Managed Service
+		Không cần cài Agent (đa số trường hợp)
+		Machine Learning tự động
+		Phát hiện Credential Theft
+		Phát hiện Crypto Mining
+		Phát hiện Port Scan
+		Tích hợp Security Hub
+
+	Nhược điểm
+		Không chặn tấn công
+		Không vá lỗi
+		Không sửa cấu hình
+		Chỉ phát hiện và cảnh báo
+		Có thể phát sinh chi phí khi phân tích log lớn
+
+
+# Câu thần chú đi thi
+
+
+	GuardDuty
+		= Threat Detection Service
+
+	Inspector
+		= Vulnerability Assessment Service
+
+	Security Hub
+		= Centralized Security Dashboard
+
+	Detective
+		= Security Investigation Service
+
+	WAF
+		= Web Attack Prevention
+
+	Shield
+		= DDoS Protection
+
 
 
 

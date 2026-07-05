@@ -1,35 +1,343 @@
-<html><head><title>Lesson 73 == NEXT LEVEL ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 73 -- NEXT LEVEL -//</h1><pre>
-RDS Multi-AZ vs Read Replica vs Aurora Global DB
+<html><head><title>Lesson 73 == Cloud Practitioner =Bedrock Agent ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 73 -- Cloud Practitioner =Bedrock Agent -//</h1><pre>		
+# 		1. Bedrock Agent là gì? (Bản chất)
+		
+	Amazon Bedrock Agent là một AI Agent do AWS quản lý, có khả năng tự lập kế hoạch (planning), gọi các API (Action Group), truy xuất dữ liệu (Knowledge Base), ghi nhớ trạng thái hội thoại và tự quyết định các bước cần thực hiện để hoàn thành mục tiêu của người dùng.
+		
+		
+	## Nếu chỉ có Claude (Foundation Model), quá trình sẽ là:	
+		User
+		   ↓
+		Prompt
+		   ↓
+		Claude
+		   ↓
+		Trả lời		
+		
+	Claude chỉ suy nghĩ từ Prompt.	
+		
+	Nhưng trong thực tế doanh nghiệp:	
+		
+				
+		Nhưng trong thực tế doanh nghiệp:
 
-Shared Responsibility Model
+		Ví dụ:
+			"Đặt vé máy bay từ Tokyo đến Osaka ngày mai."
 
-Scaling policy (target tracking vs step scaling)
-Cooldown (bẫy rất hay ra)
-Kết hợp Spot + Auto Scaling (design tối ưu cost)
+		AI không thể chỉ "trả lời".
+
+		Nó cần:
+			tìm chuyến bay
+			hỏi còn ghế không
+			kiểm tra tài khoản
+			thanh toán
+			gửi email
+			Claude không thể tự làm.
+			Đó là lý do Bedrock Agent xuất hiện.		
+			
+			
+Kiến trúc trở thành:		
+		
+		
+		User
+		   ↓
+		Bedrock Agent
+			  │
+			  ├── Claude
+			  │
+			  ├── Knowledge Base
+			  │
+			  ├── Lambda
+			  │
+			  ├── API
+			  │
+			  ├── Database
+			  │
+			  └── nhiều service AWS khác		
+				
+		Agent giống như:
+			Project Manager
+
+		Claude giống:
+			Nhân viên suy nghĩ				
+		
+		
+		
+		
+# 2. Agent khác Claude ở điểm nào?		
+		
+		
+| Claude                 | Bedrock Agent              |
+| ---------------------- | -------------------------- |
+| Chỉ sinh text          | Có thể thực hiện công việc |
+| Không biết gọi API nào | Tự quyết định API cần gọi  |
+| Không nhớ workflow     | Có Session Memory          |
+| Không planning         | Có Planning                |
+| Không orchestration    | Có Orchestration           |
+		
+		
+		
+		
+# 3. Các thành phần của Bedrock Agent		
+		
+		User
+		   ↓
+		Agent
+		   ↓
+		Foundation Model
+		   ↓
+		Planning
+		   ↓
+		Knowledge Base
+		   ↓
+		Action Group
+		   ↓
+		Memory
+		   ↓
+		Response		
+				
+				
+(1) Foundation Model
+
+Có thể là:
+
+Claude
+Llama
+Nova
+Titan
+
+Nó chỉ dùng để suy nghĩ.
+
+Không trực tiếp gọi AWS.		
+		
+		
+		
+(2) Planning
+
+	Đây là phần quan trọng nhất.
+	Ví dụ User:
+	Đặt phòng khách sạn rồi gửi email xác nhận.
+	Agent sẽ tự lập kế hoạch:
+
+	Step1
+	Tìm khách sạn
+	↓
+	Step2
+	Đặt phòng
+	↓
+	Step3
+	Lấy Booking ID
+	↓
+	Step4
+	Gửi Email
+	↓
+	Hoàn thành
+	Không cần Developer code từng bước.	
+			
+	Agent tự suy nghĩ.
+
+	Đây gọi là:
+		Reasoning + Planning			
+			
+		
+		
+		
+(3) Action Group
+
+Action Group chính là:
+	danh sách các API mà Agent được phép gọi.		
+			
+			
+	Ví dụ:		
+		SearchHotel()
+		ReserveHotel()
+		CancelReservation()
+		SendEmail()		
+				
+		
+		Agent sẽ tự chọn.
+		Developer chỉ khai báo.
+		Không cần viết logic:		
+				
+		
+		if...
+		else...
+		switch...		
+				
+		
+			User
+			↓
+			"Tôi muốn hủy đơn hàng"
+			↓
+			Agent
+			↓
+			Action:
+			CancelOrder()
+			↓
+			Lambda
+			↓
+			ERP
+			↓
+			Done		
+					
+					
+(4) Knowledge Base
+	Nếu Agent thiếu kiến thức:		
+			
+		
+Hướng dẫn nghỉ phép công ty
+	↓
+	Knowledge Base
+	↓
+	OpenSearch Vector
+	↓
+	Top-K
+	↓
+	Context
+	↓
+	Claude		
+			
+			
+		
+		
+				
+		Khác với Action Group.
+
+		Knowledge Base:
+			lấy thông tin
+
+		Action Group:
+			thực hiện hành động
+		Đề AWS rất thích đánh lừa hai khái niệm này.		
+				
+		
+		
+(5) Memory
+
+	Agent nhớ:		
+		Tên khách
+		Đơn hàng
+		Booking
+		Conversation			
+					
+					
+				
+		Ví dụ
+
+		User:
+			Đặt khách sạn Hilton.
+
+		5 phút sau:
+			Hủy nó đi.
+			"Nó"
+			Agent hiểu.
+			Claude bình thường có thể không hiểu nếu mất context.			
+						
+				
+			
+# 4. Kiến trúc thực tế
+
+Ví dụ Chatbot ngân hàng.			
+					
+		User
+		↓
+		Bedrock Agent
+		↓
+		Planning
+		↓
+		Action Group
+		↓
+		Lambda
+		↓
+		Core Banking API
+		↓
+		Lấy số dư
+		↓
+		Knowledge Base
+		↓
+		FAQ
+		↓
+		Claude
+		↓
+		Response			
+					
+			
+			
+# 5. Mapping với AWS 			
+			
+			
+| Thành phần    | AWS Service           |
+| ------------- | --------------------- |
+| AI            | Claude / Nova / Llama |
+| Agent         | Bedrock Agent         |
+| Vector Search | OpenSearch Serverless |
+| Document      | S3                    |
+| Embedding     | Titan Embedding       |
+| Action        | Lambda                |
+| API           | API Gateway           |
+| Database      | DynamoDB / Aurora     |
+| Logging       | CloudWatch            |
+| IAM           | Permission            |
+			
+			
+			
+# 	8. Trade-off		
+			
+| Ưu điểm                    | Nhược điểm                                              |
+| -------------------------- | ------------------------------------------------------- |
+| Ít phải viết orchestration | Tăng latency do nhiều bước                              |
+| Tự planning                | Planning có thể sai nếu prompt hoặc action thiết kế kém |
+| Dễ mở rộng                 | Chi phí cao hơn chỉ gọi model                           |
+| Tích hợp AWS mạnh          | Phụ thuộc hệ sinh thái Bedrock                          |
+			
+			
+# 	9. Từ khóa thường gặp trong đề thi		
+				
+Agent
+Planning
+Multi-step reasoning
+Action Group
+Function calling
+Knowledge Base
+Session Memory
+Orchestration
+API invocation
+Autonomous workflow			
 
 
-EBS
 
-EFS
-
-RDS / DynamoDB
+# 10. Các bẫy (Trap)
 
 
-Bucket Policy
-TLS
-Batch Ops
+| Đề bài                 | Đáp án đúng      | Bẫy                 |
+| ---------------------- | ---------------- | ------------------- |
+| Cần lấy tài liệu       | Knowledge Base   | Chọn Lambda         |
+| Cần gọi API            | Action Group     | Chọn Knowledge Base |
+| Cần nhiều bước tự động | Bedrock Agent    | Chỉ chọn Claude     |
+| Chỉ cần sinh văn bản   | Foundation Model | Chọn Agent          |
+| Cần vector search      | OpenSearch       | Chọn DynamoDB       |
 
-Glue 
-EMR
-Lambda processing
-👉 Object Lock vs Glacier Vault Lock vs Backup Vault Lock
 
-Efficient lookup
-EventBridge
-GSI
-RDS Proxy
-ElastiCache
-Export → Redshift 
-Aurora
-Amazon Kinesis
+# 12. Góc nhìn Master/Senior 
+
+	Nhiều người mới học nghĩ:
+
+	Bedrock Agent = Claude mạnh hơn.
+
+	Đây là một hiểu lầm.
+
+	Thực tế:
+
+	Claude/Nova/Llama là "bộ não" (reasoning engine): nhận prompt và sinh nội dung.
+	Bedrock Agent là "người điều phối" (orchestrator): quyết định khi nào dùng bộ não, khi nào truy xuất Knowledge Base, khi nào gọi API qua Action Group, và khi nào kết thúc workflow.
+
+	Một cách hình dung:
+
+	Foundation Model = Kỹ sư giỏi.
+	Knowledge Base = Thư viện tài liệu.
+	Action Group = Bộ công cụ để thao tác với hệ thống.
+	Bedrock Agent = Quản lý dự án phân công công việc cho kỹ sư và sử dụng đúng công cụ để hoàn thành mục tiêu.
+
+	Đây cũng là xu hướng hiện nay của AI doanh nghiệp: thay vì chỉ dùng LLM để "chat", các hệ thống đang chuyển sang Agentic AI, nơi AI có thể tự lập kế hoạch và thực hiện chuỗi hành động phức tạp. Bedrock Agent chính là dịch vụ AWS hiện thực hóa mô hình này.
+
+
 </pre><a id='backBottom' href='../aws-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

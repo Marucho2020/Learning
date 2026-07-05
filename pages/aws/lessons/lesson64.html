@@ -1,6 +1,261 @@
-<html><head><title>Lesson 64 == Cloud Practitioner ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 64 -- Cloud Practitioner -//</h1><pre>
-review
+<html><head><title>Lesson 64 == Cloud Practitioner ===CDN concept CloudFront ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 64 -- Cloud Practitioner --=CDN concept CloudFront -//</h1><pre>
+# CDN là gì? 
 
+Nói ngắn gọn:
+	CDN là hệ thống đặt nhiều bản sao dữ liệu ở nhiều nơi trên thế giới để đưa nội dung đến người dùng từ vị trí gần nhất.
+
+
+	CDN không phải là nơi tạo dữ liệu.
+	CDN không phải database.
+	CDN không thay thế server gốc.
+	CDN chỉ là:
+		"Bộ nhớ đệm (cache) phân tán toàn cầu."
+
+
+# Vì sao CDN tồn tại? 
+
+	Internet có một sự thật:
+	Khoảng cách vật lý càng xa ⇒ độ trễ (latency) càng cao.
+	Ví dụ:
+
+	Server đặt tại Tokyo.
+	Người dùng tại:
+		New York
+		Paris
+		London
+
+	Nếu tất cả request đều về Tokyo:
+
+		User Paris
+		   ↓
+		Tokyo Server
+		   ↓
+		User Paris
+
+
+	Mỗi request phải đi hàng ngàn km.
+
+	Kết quả:
+		Website chậm
+		Video giật
+		Tăng tải server
+
+
+	Tokyo Origin
+		  ↓
+	Sao chép dữ liệu
+		Paris Edge
+		London Edge
+		New York Edge
+		Singapore Edge
+
+
+	Người dùng sẽ lấy dữ liệu từ Edge gần nhất.
+
+
+# Bản chất kỹ thuật
+
+	CDN hoạt động dựa trên Cache.
+	
+	##Cache Miss
+		Lần đầu tiên:
+
+
+User
+ ↓
+CDN
+ ↓
+Origin Server
+ ↓
+CDN Cache
+ ↓
+User
+
+	CDN chưa có dữ liệu.
+	Phải hỏi Origin.
+
+	## Cache Hit
+
+	Lần tiếp theo:
+		User
+		 ↓
+		CDN Cache
+		 ↓
+		User
+
+	Không cần Origin.
+	
+		
+	Đây là mục tiêu lớn nhất của CDN:
+	Tăng Cache Hit Ratio
+
+	Cache Hit càng cao:
+		Website càng nhanh
+		Origin càng nhẹ
+		Chi phí càng thấp	
+	
+	
+	
+	Ví dụ đời thường
+
+	Giả sử Netflix.
+		Không dùng CDN:
+
+		100 triệu người
+			  ↓
+		Tokyo Datacenter
+
+	Tokyo sẽ chết ngay lập tức.	
+	
+	
+	
+	Thực tế:
+
+	Tokyo
+	 ↓
+	CDN toàn cầu
+		Mỹ
+		Đức
+		Nhật
+		Úc
+		Việt Nam
+
+	Mỗi khu vực xem từ cache gần nhất.	
+	
+	
+	
+	
+# 	Mapping AWS
+	
+Trong AWS:
+
+	CloudFront = CDN
+	Kiến trúc phổ biến:	
+		
+	
+	
+	Kiến trúc phổ biến:
+
+		User
+		 ↓
+		CloudFront
+		 ↓
+		S3
+
+	hoặc
+		User
+		 ↓
+		CloudFront
+		 ↓
+		ALB
+		 ↓
+		EC2
+	
+	
+# CDN cache cái gì?	
+	
+	## Static Content
+	Rất phù hợp
+
+	Ví dụ:
+		HTML
+		CSS
+		JavaScript
+		Image
+		Video
+		PDF	
+		
+	
+	
+	##Dynamic Content
+	
+	Ví dụ:
+		API
+		Login Response
+		User Profile
+
+	AWS rất thích hỏi:
+	Static content
+	=> Nghĩ ngay CloudFront/CDN	
+	
+	
+	
+	
+# 	Lợi ích thực sự của CDN
+	
+| Lợi ích           | Giải thích                     |
+| ----------------- | ------------------------------ |
+| Giảm Latency      | User lấy dữ liệu gần nhất      |
+| Giảm tải Origin   | Ít request vào server          |
+| Giảm Cost         | Giảm traffic từ Origin         |
+| Tăng Scalability  | Chịu tải lớn                   |
+| Tăng Availability | Một Edge lỗi vẫn còn Edge khác |
+	
+	
+	
+# 	Trade-off
+	
+	
+	CDN không phải thuốc tiên.
+
+	Ưu điểm
+		Nhanh
+		Rẻ
+		Scale tốt
+		
+	Nhược điểm
+		Dữ liệu có thể cũ
+	
+	Ví dụ:
+		Origin cập nhật ảnh mới
+		Nhưng Edge vẫn giữ ảnh cũ.
+		Gọi là:
+		Stale Cache	
+		
+
+# Cache Invalidation tốn thời gian
+
+	Muốn xóa cache:
+		Invalidate
+	CDN phải cập nhật toàn cầu.
+
+
+
+# So sánh dễ nhầm
+
+| Dịch vụ            | Chức năng           |
+| ------------------ | ------------------- |
+| S3                 | Lưu file            |
+| CloudFront         | Cache file toàn cầu |
+| ELB                | Cân bằng tải        |
+| Route53            | DNS                 |
+| Global Accelerator | Tăng tốc TCP/UDP    |
+
+
+# CloudFront vs Global Accelerator
+
+| CloudFront     | Global Accelerator |
+| -------------- | ------------------ |
+| Cache          | Có                 |
+| CDN            | Có                 |
+| Static Content | Tốt                |
+| HTTP/HTTPS     | Chủ yếu            |
+
+
+
+| Global Accelerator |       |
+| ------------------ | ----- |
+| Cache              | Không |
+| CDN                | Không |
+| TCP/UDP            | Tốt   |
+| Gaming             | Tốt   |
+| Real-time App      | Tốt   |
+
+
+
+
+
+	
 
 
 </pre><a id='backBottom' href='../aws-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

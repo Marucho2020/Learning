@@ -1,0 +1,462 @@
+<html><head><title>Lesson 6 == Bedrock Agent x ===Agent Orchestration ===Action Groups ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 6 -- Bedrock Agent x --=Agent Orchestration --=Action Groups -//</h1><pre># 1. Action Group là gì? 
+
+	Action Group chính là "bộ tay chân" (Execution Layer) của Agent.
+	Nếu Knowledge Base giúp Agent biết, thì Action Group giúp Agent làm được.
+
+
+	Nói ngắn gọn:
+		LLM chỉ biết suy nghĩ.
+		Action Group giúp biến suy nghĩ thành hành động.
+
+
+
+	Ví dụ:
+		Người dùng hỏi
+		"Đặt vé máy bay cho tôi."
+		LLM hiểu ý.
+
+	Nhưng LLM không thể:
+		gọi API của Vietnam Airlines
+		ghi Database
+		gửi Email
+		thanh toán Visa
+
+	Agent phải dùng Action Group.
+
+
+	Có thể tưởng tượng:
+		User
+		↓
+		Agent
+		↓
+		LLM suy nghĩ
+		↓
+		Action Group
+		↓
+		Lambda
+		API Gateway
+		REST API
+		MCP Server
+		Database
+		CRM
+		ERP
+		...
+		↓
+		Kết quả
+		↓
+		LLM giải thích lại cho User
+
+	Đây chính là mô hình Reason → Act → Observe → Respond.
+
+
+# 2. Tại sao phải có Action Group?
+	LLM có giới hạn rất lớn.
+
+
+	Ví dụ:
+		Người dùng hỏi
+		"Kiểm tra đơn hàng #12345"
+		Claude biết phải làm gì.
+
+
+	Nhưng Claude KHÔNG BIẾT:
+		Database ở đâu
+		Password là gì
+		Endpoint là gì
+		API nào dùng
+
+		LLM không được phép tự truy cập hệ thống nội bộ.
+		Action Group chính là cầu nối.
+
+
+	Ví dụ thực tế
+
+		Khách hỏi
+
+			Đơn hàng của tôi đang ở đâu?
+			↓
+			Claude hiểu
+			↓
+			Action Group
+			↓
+			GET /orders/12345
+			↓
+			API trả về
+			Shipping
+			↓
+			Claude
+			Đơn hàng đang được giao.
+
+
+
+# 3. Action Group gồm những gì?
+	Thông thường gồm:
+		Action Name
+		Description
+		Input Schema
+		Authentication
+		Target
+
+	Ví dụ
+
+		Action Name
+			GetOrder
+
+		Description
+			Lấy thông tin đơn hàng
+
+		Input
+			orderId
+	
+		Target
+			Lambda
+
+		Agent đọc Description để biết khi nào cần gọi.
+
+
+
+# 4. Agent quyết định gọi Action như thế nào? 
+
+
+Đây là phần rất nhiều người hiểu sai.
+	Không phải:
+		User
+		↓
+		Lambda
+
+	Mà là
+
+		User
+		↓
+		Claude
+		↓
+		Reasoning
+		↓
+		Có cần gọi tool không?
+		↓
+		YES
+		↓
+		Action Group
+		↓
+		Lambda
+		↓
+		Kết quả
+		↓
+		Claude
+		↓
+		User
+
+		LLM chính là người quyết định.
+		Giống ChatGPT quyết định khi nào dùng Search.
+
+		Ví dụ
+
+		User:
+			Hôm nay thời tiết thế nào?
+
+		Claude:
+			Không cần Action.
+
+
+
+		User:
+			Đặt lịch họp.
+	
+		Claude:
+			Cần Action.
+			↓
+			Call Calendar API
+
+
+
+
+# 5. Action Group gọi Lambda
+	Đây là cách phổ biến nhất.
+		User
+		↓
+		Agent
+		↓
+		Lambda
+		↓
+		Business Logic
+		↓
+		Database
+		↓
+		Lambda Response
+		↓
+		Agent
+
+		Ví dụ
+
+		BookHotel
+			Lambda
+			check room
+			reserve
+			payment
+			return booking number
+
+		Ưu điểm
+
+			Serverless
+			IAM Security
+			AWS Native
+			Logging
+			Retry
+
+		Đây là best practice của AWS.
+
+
+
+
+# 6. Action Group gọi API Gateway
+	Thay vì Lambda trực tiếp
+		Agent
+		↓
+		API Gateway
+		↓
+		Lambda
+		↓
+		Microservice
+		↓
+		Database
+
+
+		Lợi ích
+			Authentication
+			Throttle
+			API Version
+			Logging
+			WAF
+			Usage Plan
+
+		AWS rất khuyến khích cách này khi API cần chia sẻ cho nhiều hệ thống.
+
+
+
+# 7. Action Group gọi REST API
+	Không nhất thiết phải AWS.
+
+		Salesforce
+		Stripe
+		Jira
+		ServiceNow
+		Slack
+		SAP
+		Workday
+
+
+		Agent
+		↓
+		HTTPS
+		↓
+		REST API
+		↓
+		JSON
+		↓
+		Agent
+		
+		Ví dụ
+		POST
+		/create-ticket
+
+
+
+# 8. Action Group gọi MCP Server 
+
+	Đây là hướng mới của AI.
+	MCP
+	(Model Context Protocol)
+	Không gọi API riêng lẻ nữa.
+	Thay vào đó
+
+
+	Agent
+	↓
+	MCP Server
+	↓
+	Tool 1
+	Tool 2
+	Tool 3
+
+	Filesystem
+	GitHub
+	Slack
+	Database
+
+	...
+	
+	
+		MCP giống USB-C.
+		Một chuẩn.
+		Không cần viết API riêng từng Tool.
+			
+					
+		Ví dụ
+		Agent hỏi
+		Tạo Issue GitHub
+
+
+		Không cần biết
+		POST /issues
+		headers
+		token
+
+		...
+
+		Chỉ cần
+		create_issue()
+		MCP Server xử lý hết.
+
+
+
+
+
+# 9. So sánh
+
+| Action Target | Bản chất                | Khi nào dùng        |
+| ------------- | ----------------------- | ------------------- |
+| Lambda        | Business Logic          | AWS Native          |
+| API Gateway   | API Management          | Public/Internal API |
+| REST API      | External System         | Salesforce, Jira    |
+| MCP Server    | Universal Tool Protocol | AI Tool Ecosystem   |
+
+
+
+# 10. Mapping với AWS
+
+| AWS Service     | Vai trò            |
+| --------------- | ------------------ |
+| Bedrock Agent   | Reasoning          |
+| Action Group    | Tool Definition    |
+| Lambda          | Execute Logic      |
+| API Gateway     | Expose API         |
+| IAM             | Permission         |
+| CloudWatch      | Logging            |
+| Secrets Manager | API Key            |
+| Knowledge Base  | Retrieve Knowledge |
+| Guardrails      | Safety             |
+
+
+
+# 11. Ví dụ System Design
+
+	Người dùng
+		Reset password của user abc
+		↓
+		Bedrock Agent
+		↓
+		Reason
+		↓
+		Action Group
+		↓
+		Lambda
+		↓
+		ServiceNow API
+		↓
+		Reset Password
+		↓
+		Response
+		↓
+		Agent
+		↓
+		Đã reset thành công.
+
+
+
+# 12. Scenario giống đề AWS
+
+	Một công ty xây chatbot nội bộ.
+
+	Yêu cầu:
+		tra cứu tài liệu
+		tạo ticket ServiceNow
+		reset password
+		tạo EC2
+
+	Giải pháp?
+	Đáp án
+
+		Knowledge Base
+		+
+		Action Groups
+		↓
+		Lambda
+		↓
+		ServiceNow
+		AWS SDK
+		API Gateway
+
+	Đây gần như là kiến trúc chuẩn của Bedrock Agent.
+
+
+# 13. Trade-off
+
+
+| Cách          | Ưu điểm                   | Nhược điểm                         |
+| ------------- | ------------------------- | ---------------------------------- |
+| Lambda Direct | Đơn giản                  | Khó chia sẻ API                    |
+| API Gateway   | Quản lý tốt, bảo mật      | Tăng thêm một lớp, có chi phí      |
+| REST API      | Tích hợp mọi hệ thống     | Phải tự xử lý auth, retry, version |
+| MCP Server    | Chuẩn AI mới, mở rộng tốt | Hệ sinh thái còn đang phát triển   |
+
+
+
+
+# 14. Các từ khóa hay xuất hiện trong đề thi
+
+	Action Group
+	Tool Invocation
+	Function Calling
+	Lambda Integration
+	API Gateway
+	OpenAPI Schema
+	Authentication
+	IAM Role
+	Agent Orchestration
+	External Systems
+	Tool Execution
+
+
+# 15. Các bẫy đề thi AWS
+
+| Bẫy                                          | Đáp án đúng                                                                                           |
+| -------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Knowledge Base có thực hiện hành động không? | ❌ Không, chỉ truy xuất tri thức.                                                                      |
+| LLM có tự gọi API không?                     | ❌ Không, phải thông qua Action Group/Tool.                                                            |
+| Action Group có phải Business Logic không?   | ❌ Không, nó chỉ là lớp định nghĩa và điều phối việc gọi công cụ. Business Logic nằm trong Lambda/API. |
+| API Gateway có bắt buộc không?               | ❌ Không. Có thể gọi Lambda trực tiếp nếu phù hợp.                                                     |
+| MCP có thay thế Lambda không?                | ❌ Không. MCP là giao thức chuẩn hóa việc truy cập công cụ; Lambda vẫn có thể là công cụ được MCP gọi. |
+
+	AWS thường không hỏi:
+		"Action Group là gì?"
+
+	Mà sẽ đưa scenario.
+
+	Ví dụ:
+
+	Một Bedrock Agent cần:
+		trả lời tài liệu nội bộ
+		tạo ticket ServiceNow
+		gọi hệ thống ERP
+
+	Cần dùng gì?
+	
+		Nếu chỉ cần đọc tài liệu:
+			→ Knowledge Base
+
+		Nếu cần thao tác với hệ thống:
+			→ Action Groups
+
+		Nếu cần thực thi logic:
+			→ Lambda hoặc API
+
+		Nếu cần quản lý API tập trung:
+			→ API Gateway
+
+		Đây là chuỗi suy luận mà AWS mong đợi thí sinh nhận ra.
+		
+		
+		
+		
+
+</pre><a id='backBottom' href='../aws-bedrock-agent-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

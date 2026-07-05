@@ -1,11 +1,329 @@
-<html><head><title>Lesson 65 == Cloud Practitioner ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 65 -- Cloud Practitioner -//</h1><pre>
-CDN + Billing
-Service:
-
-Amazon CloudFront
-AWS Cost Explorer
+<html><head><title>Lesson 65 == Cloud Practitioner ==Global Accelerator ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 65 -- Cloud Practitioner --Global Accelerator -//</h1><pre>
+# 1. Bản chất của Global Accelerator là gì?
 
 
+	Nhiều người mới học AWS thường hiểu sai:
+		"Global Accelerator là CDN giống CloudFront"
 
+	Sai.
+		CloudFront tối ưu đường đi của dữ liệu (Content)
+		Global Accelerator tối ưu đường đi của kết nối (Network Traffic)
+		Đó là khác biệt cốt lõi.
+
+
+
+# Hiểu như đời thường
+	Bạn có hệ thống đặt vé máy bay đặt tại Tokyo.
+
+
+	Khách hàng truy cập từ:
+		Nhật
+		Mỹ
+		Đức
+		Singapore
+
+	Internet công cộng giống như đường quốc lộ.
+	AWS Global Network giống như đường cao tốc riêng của AWS.
+	Không dùng Global Accelerator:
+
+
+User (US)
+   ↓
+Internet công cộng
+   ↓
+Tokyo ALB
+
+
+	Dùng Global Accelerator:
+
+User (US)
+   ↓
+AWS Edge Location gần nhất
+   ↓
+AWS Global Backbone Network
+   ↓
+Tokyo ALB
+
+
+	Traffic lên mạng riêng AWS càng sớm càng tốt.
+		=> latency thấp hơn
+		=> packet loss ít hơn
+		=> ổn định hơn
+
+
+
+# 2. Global Accelerator hoạt động như thế nào?
+
+	##Bước 1
+		AWS cấp:
+			2 Anycast Static IP
+
+		Ví dụ:
+			15.1.1.1
+			15.1.1.2
+
+		Khách hàng toàn thế giới luôn truy cập:
+			15.1.1.1
+		hoặc
+			15.1.1.2
+
+
+
+	## Bước 2
+		AWS định tuyến đến Edge Location gần nhất.
+
+		Ví dụ:
+		User ở Mỹ.
+			User
+			 ↓
+			Los Angeles Edge
+
+
+	##Bước 3
+		Traffic được đưa vào AWS Global Network.
+		Los Angeles
+		 ↓
+		AWS Backbone
+		 ↓
+		Tokyo
+
+	Bước 4
+
+		GA chọn Endpoint tốt nhất.
+
+		Ví dụ:
+			Region A = Tokyo
+			Region B = Osaka
+
+		Nếu Tokyo lỗi:
+			GA
+			 ↓
+			Osaka
+			Failover tự động.
+
+
+
+# 3. Endpoint của Global Accelerator là gì?
+
+
+		GA không chạy ứng dụng.
+		GA chỉ chuyển tiếp traffic.
+		Endpoint thường là:
+
+
+| Endpoint   | Hỗ trợ |
+| ---------- | ------ |
+| ALB        | ✅      |
+| NLB        | ✅      |
+| EC2        | ✅      |
+| Elastic IP | ✅      |
+
+
+
+	Ví dụ:
+
+	Global Accelerator
+
+			↓
+
+		 ALB
+
+			↓
+
+	 Auto Scaling EC2
+
+	Mô hình xuất hiện cực nhiều trong đề SAA.
+
+
+
+# 4. So sánh Global Accelerator và CloudFront
+
+|                    | Global Accelerator | CloudFront       |
+| ------------------ | ------------------ | ---------------- |
+| Tối ưu             | Network path       | Content delivery |
+| Cache              | ❌                  | ✅                |
+| Static IP          | ✅                  | ❌                |
+| TCP/UDP            | ✅                  | ❌                |
+| HTTP/HTTPS         | ✅                  | ✅                |
+| Gaming             | ✅                  | ❌                |
+| VoIP               | ✅                  | ❌                |
+| Video streaming    | ❌                  | ✅                |
+| Web static content | ❌                  | ✅                |
+
+
+
+
+		Bản chất
+		CloudFront:
+			Mang dữ liệu tới gần User
+
+		Global Accelerator:
+			Mang User tới gần AWS Network
+
+		Đây là câu phân biệt quan trọng nhất.
+
+
+# 5. Global Accelerator và Route 53
+
+|                      | Route53 | Global Accelerator |
+| -------------------- | ------- | ------------------ |
+| DNS                  | ✅       | ❌                  |
+| Static IP            | ❌       | ✅                  |
+| Health Check         | ✅       | ✅                  |
+| Failover             | ✅       | ✅                  |
+| Network Optimization | ❌       | ✅                  |
+
+
+
+	## Route53
+
+	Khi user query DNS:
+	www.example.com
+		Route53 trả lời:
+		Tokyo IP
+		Sau đó user tự đi qua Internet.
+
+
+
+	## Global Accelerator
+	
+	User
+	 ↓
+	AWS Edge
+	 ↓
+	AWS Backbone
+	 ↓
+	Endpoint	
+		
+	AWS điều khiển đường đi.
+	
+	
+# 	6. Multi-Region Architecture
+	Đây là use case thực chiến lớn nhất.	
+	
+               Global Accelerator
+
+                    ↓
+
+      ┌─────────────┴─────────────┐
+
+      ↓                           ↓
+
+   Tokyo ALB                  Osaka ALB	
+
+	Nếu Tokyo chết:
+		100% Traffic
+		 ↓
+		Osaka
+
+		Failover vài giây.
+		Người dùng không đổi IP.
+		Không đổi DNS.
+
+
+
+
+
+
+# 7. Gaming là ví dụ kinh điển
+	Game Online:
+
+TCP
+UDP
+Real-time
+
+
+		Không cache được.
+		CloudFront gần như vô dụng.
+		Global Accelerator rất phù hợp.
+
+	Ví dụ:
+		MMORPG
+		FPS
+		MOBA
+
+
+
+# 8. Trade-off
+
+
+Ưu điểm
+	Performance
+	Latency thấp hơn.
+	Availability
+	Failover nhanh.
+	Static IP
+	Rất hữu ích khi khách hàng whitelist IP.
+	Global Routing
+	Đi qua backbone AWS.
+
+
+Nhược điểm
+	Tốn tiền
+	Đắt hơn Route53.
+
+
+Không cache
+	Không giảm tải ứng dụng như CloudFront.
+
+Không thay thế CDN
+	Đây là bẫy thi cực lớn.
+
+
+
+
+# 10. Cách AWS ra đề
+	Từ khóa nhận diện Global Accelerator
+
+global users
+low latency
+TCP
+UDP
+gaming
+static IP
+network performance
+multi-region failover
+AWS backbone
+
+=> nghĩ ngay đến
+	Global Accelerator
+	
+	
+	
+	
+	
+	Bẫy số 3
+
+	CloudFront vs Global Accelerator
+
+	Nếu nội dung đề nói:
+		image
+		video
+		css
+		js
+		download
+		cache
+	=> CloudFront.
+
+
+	Nếu đề nói:
+		TCP
+		UDP
+		gaming
+		API
+		static IP
+
+	=> Global Accelerator.
+		
+	
+# 	Tóm tắt 1 câu để đi thi
+	
+	CloudFront = tăng tốc dữ liệu bằng cache.
+
+	Global Accelerator = tăng tốc kết nối bằng mạng backbone toàn cầu của AWS và cung cấp Anycast Static IP để định tuyến traffic đến endpoint tốt nhất.	
+		
+	
+	
+	
 
 </pre><a id='backBottom' href='../aws-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

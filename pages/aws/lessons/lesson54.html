@@ -1,5 +1,308 @@
-<html><head><title>Lesson 54 == Cloud Practitioner ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 54 -- Cloud Practitioner -//</h1><pre>
+<html><head><title>Lesson 54 == Cloud Practitioner ===ad-hoc query ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 54 -- Cloud Practitioner --=ad-hoc query -//</h1><pre>	
+# Ad-hoc Query là gì trong AWS
 
-GSI Design pattern
+	Ad-hoc query = truy vấn phát sinh tức thời để trả lời một câu hỏi cụ thể mà chưa biết trước.
+
+
+	Nói thẳng:
+		Không phải query cố định chạy hàng ngày
+		Không phải batch job định kỳ
+		Không phải ETL pipeline chuẩn hóa sẵn
+
+	Là kiểu:
+		“Tôi cần tìm dữ liệu này NGAY bây giờ để điều tra / phân tích / debug / audit.”
+
+	Bản chất thực sự:
+		Ad-hoc query tồn tại vì dữ liệu ngày nay quá lớn → không thể precompute mọi thứ.
+
+
+	Cho nên AWS cung cấp các dịch vụ:
+		query trực tiếp trên data lake
+		không cần dựng database trước
+		không cần ETL toàn bộ trước
+		trả tiền theo lượng data scan
+
+	Đây là triết lý cực kỳ quan trọng của modern analytics trên AWS.
+
+
+# Ví dụ đời thường
+
+
+	##Ví dụ 1 — Điều tra lỗi production
+		Một website ecommerce bị lỗi:
+		“Tại sao user ở Osaka thanh toán fail trong 2 giờ gần đây?”
+
+
+	Engineer KHÔNG muốn:
+		import dữ liệu vào MySQL
+		dựng server mới
+		chạy ETL mất 3 tiếng
+		Họ chỉ muốn query nhanh log trong S3.
+		→ Đây chính là ad-hoc query.
+
+
+
+
+# Mapping AWS Services 
+
+
+| Use Case                                       | AWS Service              |
+| ---------------------------------------------- | ------------------------ |
+| Query trực tiếp file CSV/JSON/Parquet trong S3 | Athena                   |
+| Phân tích data warehouse                       | Redshift                 |
+| Search log realtime                            | CloudWatch Logs Insights |
+| Big data interactive query                     | EMR / Spark SQL          |
+| SIEM / Security investigation                  | OpenSearch               |
+
+
+
+
+# Dịch vụ AWS quan trọng nhất: Athena
+
+	Bản chất của Athena
+		Athena thực chất là:
+		Serverless SQL query engine trên S3.
+
+
+	Nói dễ hiểu:
+		Dữ liệu nằm trong S3
+		Athena không lưu data
+		Athena chỉ đọc data khi query
+		Trả tiền theo data scanned
+
+
+	## Kiến trúc thực tế 
+Application Logs
+       ↓
+      S3
+       ↓
+ Athena Query
+       ↓
+ Investigation / BI / Analysis
+
+
+# Scenario kiểu đề thi AWS
+
+
+
+	Scenario
+
+	Công ty lưu:
+		access logs
+		application logs
+		CSV sales data
+
+	trong Amazon S3.Data analyst muốn:
+		chạy SQL ngay lập tức
+		không quản lý server
+		cost thấp
+		chỉ query khi cần
+		Đáp án
+
+		→ Amazon Athena
+
+
+
+# Vì sao AWS thích ra Athena trong ad-hoc query?
+	Vì đây là keyword cực mạnh:
+
+| Requirement       | Service |
+| ----------------- | ------- |
+| Serverless query  | Athena  |
+| Query S3 directly | Athena  |
+| Pay per query     | Athena  |
+| No infrastructure | Athena  |
+| ANSI SQL          | Athena  |
+	Chỉ cần thấy combo này → gần như Athena.
+
+
+
+
+# Từ khóa thường xuất hiện trong đề thi
+
+| Keyword              | Ý nghĩa              |
+| -------------------- | -------------------- |
+| ad-hoc query         | query tức thời       |
+| interactive query    | query tương tác      |
+| analyze data in S3   | query trực tiếp S3   |
+| serverless analytics | không quản lý infra  |
+| standard SQL         | dùng SQL bình thường |
+| pay per query        | trả tiền theo scan   |
+| no ETL               | không ETL trước      |
+
+
+# Các bẫy AWS hay gài
+
+	## Bẫy 1 — Redshift vs Athena
+
+| Athena             | Redshift             |
+| ------------------ | -------------------- |
+| Query trực tiếp S3 | Data warehouse       |
+| Ad-hoc nhẹ         | Analytics lớn        |
+| Serverless         | Cluster              |
+| Không ingest nhiều | Thường cần load data |
+| Pay per scan       | Pay cluster          |
+
+
+	## AWS trap
+
+	Đề ghi:
+		“occasionally query”
+		“infrequent”
+		“S3 data”
+		“minimal operational overhead”
+
+	→ Athena.
+		Nếu chọn Redshift → sai vì overkill.
+
+
+
+	## Bẫy 2 — EMR vs Athena 
+
+| Athena           | EMR                 |
+| ---------------- | ------------------- |
+| SQL đơn giản     | Big data processing |
+| Serverless       | Cluster management  |
+| Ad-hoc analytics | Heavy Spark/Hadoop  |
+
+
+
+	Trap
+	Nếu đề chỉ cần:
+		simple SQL
+		operational simplicity
+	→ Athena.
+
+	EMR chỉ đúng khi:
+		custom Spark job
+		ML pipeline
+		petabyte-scale processing phức tạp
+
+
+
+
+	## Bẫy 3 — RDS query
+
+	Nhiều người nghĩ:
+		“Query thì dùng database.”
+		Sai trong cloud architecture hiện đại.
+
+	Nếu:
+		dữ liệu ở S3
+		chỉ query thỉnh thoảng
+		analytics
+		→ Athena tốt hơn RDS rất nhiều.
+
+	Vì:
+		không cần provision DB
+		scale tự động
+		cost thấp
+
+
+
+
+# Trade-off thực tế
+
+
+| Athena mạnh                  | Athena yếu                     |
+| ---------------------------- | ------------------------------ |
+| Không quản lý server         | Chậm hơn DB tuned              |
+| Scale cực dễ                 | Query nhỏ nhiều lần có thể tốn |
+| Tốt cho S3 data lake         | Không hợp OLTP                 |
+| Cost thấp cho sporadic query | Scan nhiều dữ liệu sẽ đắt      |
+
+
+
+# Bản chất senior-level cần hiểu
+
+	Athena KHÔNG phải database.
+		Đây là điều nhiều junior hiểu sai.
+
+	Athena là:
+
+		distributed query engine
+		đọc file object storage
+		compute tạm thời khi query
+
+	Nó gần với:
+		Presto
+		Trino
+		BigQuery external table
+
+	hơn là MySQL/PostgreSQL.
+
+
+# Cách AWS ra đề
+
+
+	Pattern cực phổ biến
+	Pattern 1
+
+	“Data stored in S3”
+
+		“run SQL queries”
+		“serverless”
+		=
+		Athena
+
+
+
+	Pattern 2
+		“minimal operational overhead”
+		AWS đang ám chỉ:
+		Không muốn quản lý cluster/server.
+		→ Athena.
+
+
+
+	Pattern 3
+		“analyze log data”
+		Nếu:
+		log nằm S3
+		SQL query
+		→ Athena.
+		Nếu:
+		realtime observability
+		→ CloudWatch Logs Insights/OpenSearch.
+
+
+
+
+# So sánh cực dễ nhầm 
+
+| Service    | Dùng khi nào              |
+| ---------- | ------------------------- |
+| Athena     | Ad-hoc query trên S3      |
+| Redshift   | Enterprise data warehouse |
+| RDS        | Transaction database      |
+| EMR        | Big data processing       |
+| Glue       | ETL/Data Catalog          |
+| QuickSight | Visualization BI          |
+
+
+# Một góc nhìn master-level 
+	Cloud architecture hiện đại đang chuyển từ:
+	Store first → Query later
+
+	Store everything cheaply in S3
+	→ Query on demand
+
+
+	Athena chính là hiện thân của triết lý đó.
+	Đây là lý do:
+		data lake
+		lakehouse
+		serverless analytics
+
+	được AWS push rất mạnh.
+
+
+
+
+
+
+
+
+
 
 </pre><a id='backBottom' href='../aws-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

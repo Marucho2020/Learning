@@ -1,0 +1,364 @@
+<html><head><title>Lesson 81 == Bedrock Agent 1 ===Agent Orchestration ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 81 -- Bedrock Agent 1 --=Agent Orchestration -//</h1><pre>
+Agent Orchestration
+ Hiểu Bedrock Agent điều phối toàn bộ workflow như thế nào, khác gì chỉ gọi Claude API
+ 
+ 
+ 1. Bản chất của Agent Orchestration
+
+	Nói ngắn gọn:
+		
+	Agent Orchestration là quá trình AI tự lập kế hoạch (Planning), quyết định cần làm gì tiếp theo, gọi công cụ nào, gọi API nào, truy xuất dữ liệu nào, rồi tổng hợp kết quả để hoàn thành mục tiêu của người dùng.
+
+	Điểm quan trọng nhất:
+		Claude API chỉ biết trả lời.
+		Bedrock Agent biết "làm việc".
+		Đây là sự khác biệt mà AWS muốn bạn hiểu.
+		 
+		 
+	 
+# 	Claude API 
+ 
+	 Bạn gửi Prompt
+	↓
+	Claude đọc Prompt
+	↓
+	Claude sinh Response
+	↓
+	Kết thúc.
+	 
+ 
+ User
+   │
+Prompt
+   │
+Claude
+   │
+Response
+ 
+	 Claude không biết:
+		có database
+		có API
+		có Lambda
+		có CRM
+		có ERP
+
+	Trừ khi bạn tự viết code.
+
+
+# Bedrock Agent
+
+
+	Bedrock Agent giống một người quản lý dự án.
+		User nói
+		Tôi muốn đổi chuyến bay ngày mai.
+	Agent sẽ tự nghĩ:
+
+	Bước 1
+		Hiểu ý định
+		↓
+
+	Bước 2
+		Kiểm tra thông tin khách hàng
+		↓
+
+	Bước 3
+		Tra cứu booking
+		↓
+
+	Bước 4
+		Kiểm tra chuyến bay
+		↓
+
+	Bước 5
+		Nếu còn chỗ
+		↓
+	Gọi API đổi vé
+		↓
+		Thông báo kết quả
+
+
+	Không cần developer viết logic if-else cho từng bước.
+	Agent tự quyết định.
+	Đây chính là Orchestration.
+
+
+# 2. Agent Orchestration thực sự làm gì?
+
+	Nó thực hiện nhiều vòng suy luận (Reasoning Loop).
+		Ví dụ:
+
+		User:
+		Đơn hàng của tôi đang ở đâu?
+
+	Agent suy nghĩ
+		Need customer id
+		↓
+		Need order id
+		↓
+		Need Order API
+		↓
+		Need Shipping API
+		↓
+		Need summarize result
+		↓
+		Answer
+
+
+
+		Một câu hỏi của user
+		↓
+		Agent có thể gọi
+
+		Lambda
+		↓
+		DynamoDB
+		↓
+		Aurora
+		↓
+		Salesforce
+		↓
+		SAP
+		↓
+		REST API
+		↓
+		Knowledge Base
+		↓
+		Claude nhiều lần
+		↓
+		mới tạo được câu trả lời.
+
+
+	Đây gọi là Orchestration.
+
+
+# 3. Thành phần bên trong Agent
+	Một Bedrock Agent thường gồm:
+
+		User
+		↓
+		Foundation Model
+		↓
+		Planning
+		↓
+		Reasoning
+		↓
+		Choose Action
+		↓
+		Call Tool
+		↓
+		Receive Result
+		↓
+		Reasoning Again
+		↓
+		More Tool?
+		↓
+		Final Answer
+
+Điểm quan trọng:
+
+	Claude chỉ là "bộ não"
+	Agent mới là "người điều phối"
+	AWS luôn tách hai khái niệm này.
+
+
+
+
+# 4. So sánh Claude API và Bedrock Agent
+
+
+| Claude API                      | Bedrock Agent             |
+| ------------------------------- | ------------------------- |
+| Chỉ sinh văn bản                | Điều phối workflow        |
+| Không có planning               | Có planning               |
+| Không gọi API trực tiếp         | Tự chọn API               |
+| Không nhớ workflow              | Có execution flow         |
+| Developer tự viết orchestration | AWS quản lý orchestration |
+| Chỉ là LLM                      | LLM + Workflow Engine     |
+
+
+	Một cách dễ hình dung:
+	Claude API giống:
+		Một nhân viên rất thông minh.
+	Bedrock Agent giống:
+		Một trưởng nhóm biết phân công công việc, gọi các phòng ban và tổng hợp kết quả.
+
+
+# 5. Ví dụ System Design
+
+
+Giả sử chatbot ngân hàng.
+
+	User:
+	"Tôi muốn khóa thẻ tín dụng."
+	Claude API
+
+		User
+		↓
+		Claude
+		↓
+		"Bạn hãy liên hệ ngân hàng."
+
+
+	Bedrock Agent
+		User
+		↓
+		Understand Intent
+		↓
+		Verify Identity
+		↓
+		Call Customer API
+		↓
+		Call Card API
+		↓
+		Lock Card
+		↓
+		Write Audit Log
+		↓
+		Notify Customer
+			
+	Đây là workflow thật.	
+		
+		
+# 	6. Mapping với AWS	
+		
+		
+	Ví dụ Agent cần trả lời:
+
+		"Tôi muốn biết đơn hàng."
+		Workflow		
+			
+		User
+		↓
+		Bedrock Agent
+		↓
+		Knowledge Base
+		↓
+		Lambda
+		↓
+		Order API
+		↓
+		DynamoDB
+		↓
+		Claude
+		↓
+		Answer		
+				
+		
+	## Các dịch vụ liên quan: 		
+		
+| Thành phần | AWS Service                      |
+| ---------- | -------------------------------- |
+| LLM        | Amazon Bedrock (Claude, Nova...) |
+| Agent      | Bedrock Agents                   |
+| Tool       | Lambda                           |
+| Database   | DynamoDB, Aurora                 |
+| Search     | Knowledge Base                   |
+| File       | S3                               |
+| Event      | EventBridge                      |
+| Workflow   | Step Functions (phức tạp)        |
+		
+		
+		
+# 7. Agent Orchestration có thay thế Step Functions không? 		
+		
+	Không.
+
+		Đây là câu AWS rất thích hỏi.	
+				
+		
+| Agent               | Step Functions   |
+| ------------------- | ---------------- |
+| AI quyết định       | Workflow cố định |
+| Dynamic             | Static           |
+| Không deterministic | Deterministic    |
+| Có reasoning        | Không reasoning  |
+		
+		
+	Luồng thay đổi theo tình huống.	
+		
+		
+# 	Trade-off	
+		
+Ưu điểm
+
+	✅ Giảm code orchestration
+	✅ AI tự quyết định
+	✅ Dễ mở rộng
+	✅ Linh hoạt		
+			
+		
+Nhược điểm
+
+	❌ Không hoàn toàn predictable
+	❌ Debug khó hơn
+	❌ Có thể gọi nhiều API → tăng chi phí
+	❌ Latency cao hơn	
+			
+			
+# 9. Từ khóa xuất hiện trong đề thi		
+		
+		
+Rất hay gặp:
+	Agent
+	Action Group
+	Tool Use
+	Function Calling
+	Orchestration
+	Multi-step reasoning
+	Workflow
+	Planning
+	Autonomous
+	Invoke Lambda
+	Knowledge Base
+	Retrieve
+	Execute Action
+
+Chỉ cần thấy các cụm như:
+	"AI cần tự quyết định bước tiếp theo"
+	→ Nghĩ ngay đến Bedrock Agent.		
+			
+		
+# 10. Các bẫy (Trap) AWS hay gài 		
+		
+| Bẫy                                                       | Đáp án đúng                                                    |
+| --------------------------------------------------------- | -------------------------------------------------------------- |
+| Claude API có tự gọi Lambda không?                        | Không, nếu không có Agent hoặc ứng dụng tự điều phối.          |
+| Bedrock Agent có thay thế hoàn toàn Step Functions không? | Không.                                                         |
+| Agent có phải là Foundation Model không?                  | Không, Agent sử dụng Foundation Model.                         |
+| Knowledge Base có phải Agent không?                       | Không, đó là nguồn dữ liệu để Agent truy xuất.                 |
+| Agent có bắt buộc dùng Claude không?                      | Không, có thể dùng nhiều Foundation Model được Bedrock hỗ trợ. |
+		
+		
+		
+# 	12. Tư duy kiến trúc (Master/Senior)	
+	Có thể xem kiến trúc theo mô hình phân tầng:		
+		
+                 User
+                  │
+                  ▼
+          Bedrock Agent
+      (Planner / Orchestrator)
+                  │
+      ┌───────────┼────────────┐
+      ▼           ▼            ▼
+ Knowledge     Lambda      External API
+   Base          │              │
+      ▼           ▼              ▼
+      S3     DynamoDB/Aurora   Salesforce/SAP
+                  │
+                  ▼
+         Foundation Model
+      (Claude, Nova, Llama...)
+                  │
+                  ▼
+          Final Response		
+		
+		
+Điểm cốt lõi là:
+	Foundation Model chịu trách nhiệm suy luận và tạo nội dung.
+	Bedrock Agent chịu trách nhiệm lập kế hoạch, điều phối và quyết định khi nào cần sử dụng công cụ hoặc dữ liệu.
+	Action Groups là cầu nối giữa Agent và các hệ thống bên ngoài (thường thông qua Lambda/API).
+	Knowledge Base cung cấp ngữ cảnh (RAG), không thực hiện hành động.		
+
+
+</pre><a id='backBottom' href='../aws-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

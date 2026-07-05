@@ -1,0 +1,382 @@
+<html><head><title>Lesson 79 == Cloud Practitioner =EventBridge ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 79 -- Cloud Practitioner =EventBridge -//</h1><pre>
+# 1. Bản chất của EventBridge (Định nghĩa không mơ hồ)
+	Amazon EventBridge là một Event Bus (xe buýt sự kiện) dùng để kết nối các hệ thống với nhau theo mô hình Event-Driven Architecture.
+
+	Nói đơn giản:
+		Một service phát ra Event → EventBridge nhận → EventBridge quyết định chuyển Event đó đến service nào.
+
+
+	EventBridge không xử lý business logic, nó chỉ làm nhiệm vụ:
+		Nhận Event
+		Lọc Event
+		Định tuyến (Routing)
+		Gửi đến đúng Target
+
+	Nó giống như:
+		Bưu điện thông minh cho Event.
+
+
+
+	Ví dụ:
+		EC2 vừa được tạo.
+
+	EC2 phát Event:
+		EC2 Instance State Change
+
+
+	↓
+		EventBridge nhận được
+
+	↓
+
+	Rule:
+		Nếu event = EC2 running
+
+	↓
+
+	Forward sang
+		Lambda
+		SNS
+		SQS
+		Step Functions
+		ECS
+		Kinesis
+		API Destination
+
+	...
+
+	Tất cả đều tự động.
+
+
+
+# 2. Event là gì?
+
+	Event chính là:
+		Một thông báo rằng "đã có chuyện gì xảy ra".
+
+
+Ví dụ:
+
+	Object uploaded vào S3
+	User login
+	EC2 stopped
+	RDS backup completed
+	CodePipeline failed
+	CloudTrail ghi log
+	Schedule 8AM
+	Custom Application gửi message
+
+
+
+	Tất cả đều là Event.
+
+	Một Event thường có dạng JSON
+
+	Ví dụ
+
+	{
+	  "source": "aws.ec2",
+	  "detail-type": "EC2 Instance State-change Notification",
+	  "detail": {
+		  "state":"running"
+	  }
+	}
+
+	EventBridge đọc JSON này rồi quyết định gửi đi đâu.
+
+
+
+# 3. EventBridge hoạt động như thế nào?
+
+
+Producer
+    │
+    ▼
+ EventBridge
+(Event Bus)
+    │
+    ▼
+ Rule Matching
+    │
+    ▼
+ Target
+
+
+	Bước 1
+
+		Producer tạo Event
+		Ví dụ
+		S3
+		EC2
+		CloudTrail
+		Application
+		AWS Service
+
+	↓
+
+	Bước 2
+
+		Event được gửi vào Event Bus
+		Có thể là
+		Default Event Bus
+		Custom Event Bus
+		Partner Event Bus
+
+	↓
+
+	Bước 3
+
+		Rule kiểm tra
+		Ví dụ
+		source = aws.s3
+		bucket = images
+		event = Object Created
+		Nếu đúng
+
+	↓
+
+	Bước 4
+
+		Forward sang Target
+		Ví dụ
+		Lambda
+		SNS
+		SQS
+		Step Functions
+		API Gateway
+		Kinesis
+		ECS
+		Batch
+
+
+# 4. Event Bus là gì?
+
+
+	Rất nhiều người nhầm EventBridge và Event Bus.
+
+Thực ra:
+	EventBridge là dịch vụ.
+
+	Bên trong nó có:
+		Event Bus
+
+	Giống như
+		Post Office
+		↓
+		Có nhiều hộp thư
+
+
+	Event Bus chính là nơi chứa Event tạm thời để routing.
+
+Có 3 loại
+
+Loại	Dùng khi nào
+Default Event Bus	AWS Service gửi Event
+Custom Event Bus	Application của bạn gửi Event
+Partner Event Bus	SaaS như Datadog, Zendesk, Auth0...
+
+
+
+# 5. Rule là gì?
+
+	Rule giống IF.
+
+	Ví dụ
+
+		IF
+		source == aws.ec2
+		AND
+		state == stopped
+		THEN
+		Invoke Lambda
+
+
+		Rule không viết code.
+		Chỉ cấu hình điều kiện.
+
+
+
+
+# 6. Target là gì?
+	Target là nơi Event cuối cùng được gửi tới.
+		Lambda
+		SNS
+		SQS
+		ECS
+		Step Functions
+		API Destination
+		CloudWatch Logs
+		Batch
+	Target chính là nơi business logic chạy.
+
+
+
+Ví dụ 1
+
+	Một công ty lưu ảnh lên S3.
+	Yêu cầu
+
+		Khi upload ảnh
+		↓
+		Resize ảnh
+		↓
+		Lưu thumbnail
+		Kiến trúc
+		User
+		↓
+		S3
+		↓
+		EventBridge
+		↓
+		Lambda
+		↓
+		Thumbnail
+
+	Không cần polling.
+	Không cần cron.
+	Hoàn toàn event-driven.
+
+
+
+	Ví dụ 2
+
+		EC2 bị Stop.
+
+			EC2
+			↓
+			EventBridge
+			↓
+			SNS
+			↓
+			Email Admin
+
+		Không cần server theo dõi.
+
+
+
+
+
+	Ví dụ 3
+
+	Mỗi sáng 8 giờ
+
+		Schedule
+		↓
+		EventBridge
+		↓
+		Lambda
+		↓
+		Generate Report
+
+	EventBridge thay thế Cron Job.
+
+
+# 8. Mapping với AWS
+
+8. Mapping với AWS
+
+
+| AWS Service          | Vaitrò               |
+| S3                   | Producer             |
+| EC2                  | Producer             |
+| CloudTrail           | Producer             |
+| Lambda               | Target               |
+| SNS                  | Target               |
+| SQS                  | Target               |
+| Step Functions       | Target               |
+| ECS                  | Target               |
+| API Destination      | Target               |
+| CloudWatch Scheduler | Có chức năng lập lịch |
+
+(trước đây EventBridge Rules cũng hỗ trợ schedule; 
+hiện AWS khuyến nghị dùng EventBridge Scheduler cho tác vụ lập lịch mới) 
+
+
+
+# 9. So sánh với SNS và SQS
+
+|                   | EventBridge   | SNS                  | SQS               |
+| ----------------- | ------------- | -------------------- | ----------------- |
+| Mục đích          | Event Routing | Fan-out Notification | Queue             |
+| Có Filter         | ✅ Rất mạnh    | Có nhưng hạn chế hơn | ❌                 |
+| Có Schedule       | ✅             | ❌                    | ❌                 |
+| Routing theo JSON | ✅             | Hạn chế              | ❌                 |
+| Lưu Queue         | ❌             | ❌                    | ✅                 |
+| Pull Message      | ❌             | ❌                    | ✅                 |
+| Event-driven      | ✅             | ✅                    | Không phải router |
+
+
+
+	Bản chất
+
+		SNS
+
+			Publish
+			↓
+			Broadcast
+
+		EventBridge
+
+			Publish
+			↓
+			Rule
+			↓
+			Routing
+
+		SQS
+
+			Publish
+			↓
+			Queue
+			↓
+			Consumer
+
+
+
+# 10. Trade-off
+
+	Ưu điểm
+		Decouple hệ thống rất tốt.
+		Không cần polling.
+		Dễ mở rộng.
+		Hỗ trợ hàng trăm nguồn sự kiện AWS và SaaS.
+		Routing dựa trên nội dung JSON.
+
+	Nhược điểm
+		Không phải hàng đợi lưu trữ lâu dài như SQS.
+		Không thay thế Kafka/Kinesis cho streaming tốc độ rất cao.
+		Chỉ nên dùng để điều phối sự kiện, không chứa business logic.
+
+
+
+# 11. Các từ khóa thường gặp trong đề thi
+
+Rất hay gặp:
+	Event-driven
+	Decouple
+	Loose Coupling
+	Event Bus
+	Rule
+	Event Pattern
+	Routing
+	Schedule
+	Serverless
+	SaaS Integration
+	Custom Event
+	CloudTrail Event
+
+
+# 12. Các bẫy (Trap) AWS hay gài
+
+| Đề bài                                  | Đáp án đúng                                           | Bẫy thường gặp   |
+| --------------------------------------- | ----------------------------------------------------- | ---------------- |
+| Khi S3 upload file cần kích hoạt Lambda | EventBridge (hoặc S3 Event Notification tùy ngữ cảnh) | Chọn SQS         |
+| Route event theo nhiều điều kiện JSON   | EventBridge                                           | Chọn SNS         |
+| Chạy tác vụ theo lịch                   | EventBridge Scheduler                                 | Chọn EC2 Cron    |
+| Cần hàng đợi bền vững, consumer đọc sau | SQS                                                   | Chọn EventBridge |
+| Fan-out đơn giản đến nhiều subscriber   | SNS                                                   | Chọn EventBridge |
+
+
+
+
+</pre><a id='backBottom' href='../aws-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

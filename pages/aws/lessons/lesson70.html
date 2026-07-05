@@ -1,3 +1,313 @@
-<html><head><title>Lesson 70 == Cloud Practitioner ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 70 -- Cloud Practitioner -//</h1><pre>trusted advisor
+<html><head><title>Lesson 70 == Cloud Practitioner ==Retrieval-Augmented Generation (RAG) ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 70 -- Cloud Practitioner --Retrieval-Augmented Generation (RAG) -//</h1><pre>
+# 1. Bản chất của RAG là gì?
+	RAG = Retrieval + Generation
+	
+	Nói đơn giản:
+		Thay vì bắt AI trả lời hoàn toàn bằng kiến thức đã được huấn luyện từ trước, ta cho AI đi tìm tài liệu liên quan trước, sau đó mới trả lời.
+
+
+	Luồng xử lý:
+
+		User Question
+			  ↓
+		Tìm tài liệu liên quan (Retrieve)
+			  ↓
+		Đưa tài liệu vào Prompt
+			  ↓
+		LLM sinh câu trả lời (Generate)
+			  ↓
+		Response
+
+
+
+
+		Nếu không có RAG:
+			Question
+			   ↓
+			LLM
+			   ↓
+			Answer
+
+
+		Nếu có RAG:
+			Question
+			   ↓
+			Knowledge Base Search
+			   ↓
+			Relevant Documents
+			   ↓
+			LLM
+			   ↓
+			Answer
+
+
+
+# 2. Vì sao RAG ra đời?
+
+	Vấn đề của LLM
+
+	Ví dụ:
+		Công ty bạn có chính sách nghỉ phép như thế nào?
+
+	ChatGPT không thể biết.
+	Lý do:
+		Không được train bằng dữ liệu nội bộ công ty
+		Kiến thức có thể mới phát sinh hôm qua
+		Fine-tuning liên tục rất tốn tiền
+
+
+	Giải pháp của RAG
+
+	Khi người dùng hỏi:
+		Chính sách nghỉ phép năm 2026 là gì?
+
+	Hệ thống:
+		Search PDF HR
+		Search Wiki nội bộ
+		Search tài liệu SharePoint
+		Lấy đoạn liên quan
+		Đưa cho LLM
+
+	LLM chỉ cần:
+		Đọc tài liệu này rồi trả lời.
+
+
+
+# 3. Thành phần của RAG
+
+	Bước 1: Data Source
+
+	Nguồn dữ liệu:
+		PDF
+		Word
+		Wiki
+		Confluence
+		SharePoint
+		S3
+		Database
+
+	Ví dụ:
+		Employee Handbook.pdf
+
+
+	Bước 2: Chunking
+		Không ai đưa cả quyển PDF 500 trang vào LLM.
+
+	Phải cắt nhỏ.
+
+	Ví dụ:
+		Chunk 1
+		Chunk 2
+		Chunk 3
+		...
+
+	Thông thường:
+		200~1000 tokens/chunk
+
+
+
+
+
+	## Bước 3: Embedding
+
+		AI không tìm kiếm bằng keyword.
+			Nó biến văn bản thành vector.
+
+		Ví dụ:
+			"Annual Leave Policy"
+			↓
+			[0.12, -0.55, 0.92, ...]
+
+
+
+	## Bước 4: Vector Database
+
+		Lưu vector.
+
+		Ví dụ:
+			Service
+			OpenSearch
+			Pinecone
+			Weaviate
+			Aurora PostgreSQL pgvector
+
+		AWS thường dùng:
+			Amazon OpenSearch Service
+
+
+
+	Bước 5: Retrieval
+
+	User hỏi:
+		How many annual leave days?
+		Embedding câu hỏi.
+
+	Sau đó:
+		Similarity Search
+		Tìm vector gần nhất.
+
+
+
+	Bước 6: Generation
+
+		Kết quả:
+			Employee Handbook
+			Section 4.1
+
+			Employees receive
+			20 annual leave days.
+
+		Đưa vào Prompt:
+			Answer only using context.
+			LLM sinh câu trả lời.
+
+
+
+# 4. AWS Mapping
+	AWS Native RAG Architecture
+
+
+Documents
+    ↓
+S3
+    ↓
+Knowledge Base
+    ↓
+Embedding Model
+    ↓
+Vector Store
+    ↓
+Bedrock
+    ↓
+Claude / Titan / Llama
+
+
+
+	## Các dịch vụ liên quan 
+
+| Thành phần       | AWS Service             |
+| ---------------- | ----------------------- |
+| LLM              | Amazon Bedrock          |
+| Embedding        | Titan Embeddings        |
+| Document Storage | S3                      |
+| Vector DB        | OpenSearch              |
+| Managed RAG      | Bedrock Knowledge Bases |
+
+
+
+
+# 5. Bedrock Knowledge Bases
+
+	Đây là dịch vụ AWS cực thích đưa vào đề thi hiện nay.
+
+	Bản chất:
+		AWS làm sẵn toàn bộ RAG Pipeline.
+
+	Bạn chỉ cần:
+		S3
+		↓
+		Knowledge Base
+		↓
+		Chat
+
+
+
+		AWS tự xử lý:
+			Chunking
+			Embedding
+			Indexing
+			Retrieval
+
+
+
+		Khi nào dùng?
+
+		Khi đề nói:
+
+			Muốn chatbot trả lời dựa trên tài liệu công ty
+
+		Hoặc:
+			Muốn GenAI sử dụng dữ liệu riêng
+
+		Đáp án gần như luôn:
+			Amazon Bedrock Knowledge Bases
+
+
+
+
+# 6. Từ khóa đề thi hay xuất hiện
+
+
+	Nếu thấy:
+		Private Documents
+		Company Data
+		Internal Knowledge
+		Enterprise Search
+		Context-Aware Answers
+		Grounded Responses
+		Reduce Hallucination
+
+	=> Nghĩ ngay:
+		RAG
+
+
+
+# 7. Hallucination và RAG
+
+
+	Hallucination là gì?
+		AI bịa.
+
+	Ví dụ:
+		Chính sách nghỉ phép là 25 ngày
+
+	Trong khi tài liệu ghi:
+		20 ngày
+		
+	RAG giúp gì?
+		RAG không loại bỏ hoàn toàn Hallucination.
+
+	Nhưng giảm rất mạnh vì:
+		AI có tài liệu tham khảo thật
+
+
+
+# 8. So sánh RAG và Fine-Tuning 
+
+| Tiêu chí                  | RAG     | Fine-Tuning |
+| ------------------------- | ------- | ----------- |
+| Cập nhật dữ liệu mới      | Dễ      | Khó         |
+| Chi phí                   | Thấp    | Cao         |
+| Triển khai                | Nhanh   | Chậm        |
+| Dữ liệu thay đổi liên tục | Tốt     | Kém         |
+| Huấn luyện lại model      | Không   | Có          |
+| Phù hợp doanh nghiệp      | Rất tốt | Trung bình  |
+
+
+
+	Bản chất
+
+	Fine-tuning:
+		Nhét kiến thức vào não AI
+
+	RAG:
+
+		Cho AI mở sách tra cứu
+	AWS thích đáp án nào?
+		RAG
+
+	99% trường hợp doanh nghiệp.
+
+
+
+
+
+
+
+
+
+
+
+
 
 </pre><a id='backBottom' href='../aws-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

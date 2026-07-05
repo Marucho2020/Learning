@@ -1,5 +1,160 @@
-<html><head><title>Lesson 68 == Cloud Practitioner ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 68 -- Cloud Practitioner -//</h1><pre>
-pricing model AWS
+<html><head><title>Lesson 68 == Cloud Practitioner =Bedrock Guardrails ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 68 -- Cloud Practitioner =Bedrock Guardrails -//</h1><pre># Bedrock Guardrails là gì?
+
+	Bedrock Guardrails là gì?
+
+	Nói ngắn gọn:
+		Guardrails = Hàng rào bảo vệ cho Generative AI.
+		Nó không làm AI thông minh hơn.
+		Nó không huấn luyện lại model.
+		Nó không thay đổi Foundation Model.
+		Nó chỉ đứng giữa:
+
+		User
+		 ↓
+		Guardrails
+		 ↓
+		Claude / Titan / Llama ...
+		 ↓
+		Guardrails
+		 ↓
+		User
+
+	để:
+
+		Chặn Prompt nguy hiểm
+		Chặn Output nguy hiểm
+		Chặn rò rỉ dữ liệu
+		Chặn nội dung không phù hợp
+
+
+# Mapping với Security truyền thống
+
+| Security truyền thống | AI Security |
+| --------------------- | ----------- |
+| Firewall              | Guardrails  |
+| WAF                   | Guardrails  |
+| IAM Policy            | Guardrails  |
+| Security Group        | Guardrails  |
+
+
+	Guardrails giống:
+		AI Firewall
+
+	Đây là cách nhớ dễ nhất.
+
+
+Các chức năng chính
+	AWS Bedrock Guardrails có 6 nhóm lớn.
+
+
+
+	1. Content Filters
+		Chặn nội dung độc hại.
+
+
+	2. Denied Topics
+		Chặn chủ đề.
+			Ví dụ công ty bảo hiểm:
+			Không cho AI tư vấn pháp luật
+			Không cho AI tư vấn y tế
+
+	3. Sensitive Information Filters
+		PII Protection
+		Đây là phần cực kỳ hay xuất hiện trong thực tế.
+
+		Các loại PII
+		Email
+		Phone
+		Credit Card
+		Passport
+		Address
+		Personal Information
+
+
+
+	4. Word Filters
+		Blacklist từ khóa.
+
+
+	5. Contextual Grounding
+		Vấn đề
+			LLM thường hallucination.
+
+		Guardrails kiểm tra:
+			Thông tin này có nằm trong dữ liệu nguồn không?
+
+	6. Automated Reasoning
+		Tính năng mới.
+
+		Mục tiêu:
+			Không chỉ kiểm tra nội dung.
+			Mà kiểm tra logic.
+
+			Ví dụ:
+
+			Nếu tuổi dưới 18
+			=> Không được cấp thẻ tín dụng
+
+			AI trả lời:
+
+			15 tuổi vẫn được mở thẻ
+
+			Guardrails:
+
+			Logic violation
+
+
+# Ví dụ thực tế ServiceNow + AWS
+
+		Dự án ServiceNow của bạn.
+
+		Khách hàng hỏi:
+
+			Show all employee salaries
+			AI Agent truy cập dữ liệu.
+
+		Không có Guardrails:
+			=> Trả lương toàn bộ nhân viên
+
+		Có Guardrails:
+			PII Filter
+			Denied Topic
+			Sensitive Data Filter
+
+		=> Block.
+			Đây chính là use case CISO rất thích.
+
+
+
+# So sánh các dịch vụ dễ nhầm
+
+| Dịch vụ                | Mục đích              |
+| ---------------------- | --------------------- |
+| Bedrock                | Chạy Foundation Model |
+| Bedrock Knowledge Base | RAG                   |
+| Bedrock Agents         | AI Agent              |
+| Bedrock Guardrails     | Bảo vệ AI             |
+| Comprehend             | NLP truyền thống      |
+| Macie                  | Tìm PII trong S3      |
+| GuardDuty              | Threat Detection      |
+| WAF                    | Bảo vệ Web            |
+| IAM                    | Quản lý quyền         |
+
+
+
+	## IAM Guardrails
+		Mục tiêu:
+			Ngăn con người có quyền quá lớn
+
+		Ví dụ:
+			AdministratorAccess
+			SecretsManagerFullAccess
+			IAMFullAccess
+
+
+	## Bedrock Guardrails 
+		Mục tiêu:
+			Ngăn AI trả lời hoặc hành động nguy hiểm
 
 
 </pre><a id='backBottom' href='../aws-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

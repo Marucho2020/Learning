@@ -1,6 +1,199 @@
-<html><head><title>Lesson 62 == Cloud Practitioner ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 62 -- Cloud Practitioner -//</h1><pre>
-IAM role
+<html><head><title>Lesson 62 == Cloud Practitioner ==Amazon CloudFront ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 62 -- Cloud Practitioner --Amazon CloudFront -//</h1><pre>
+# 1. Amazon CloudFront là gì?
+	CloudFront là dịch vụ CDN (Content Delivery Network) của AWS.
+
+	Nói thẳng:
+		CloudFront = hệ thống cache toàn cầu của AWS.
+	Nó copy dữ liệu từ Origin (S3, ALB, EC2...) ra hàng trăm điểm trên thế giới (Edge Location).
 
 
 
+	Khi user truy cập:
+		Không phải lúc nào cũng về server gốc
+		CloudFront sẽ trả dữ liệu từ cache gần user nhất
+
+	=> Giảm latency
+	=> Giảm tải Origin
+	=> Giảm chi phí
+
+
+# Ví dụ đời thường 
+
+	Giả sử:
+		Server đặt tại Tokyo
+		User ở Paris
+
+	Không dùng CloudFront:
+
+
+	Paris
+		↓
+		Tokyo Server
+		↓
+	Paris
+	Mỗi request phải đi nửa vòng trái đất.
+
+
+
+
+# Dùng CloudFront:
+
+
+	Tokyo Server
+		  ↓
+	Paris Edge Location (cache)
+
+	User Paris
+		  ↓
+	Paris Edge
+
+	Request không cần quay về Tokyo.
+
+
+# AWS Mapping 
+
+| Origin       | Ví dụ        |
+| ------------ | ------------ |
+| S3           | Website tĩnh |
+| EC2          | Web Server   |
+| ALB          | Application  |
+| API Gateway  | API          |
+| Media Server | Video        |
+
+
+
+
+# CloudFront hoạt động thế nào?
+
+
+	Lần đầu:
+		User
+		 ↓
+		CloudFront
+		 ↓
+		Origin
+		 ↓
+		CloudFront Cache
+		 ↓
+		User
+
+
+
+	Lần sau:
+		User
+		 ↓
+		CloudFront Cache
+		 ↓
+		User
+
+		Không cần Origin.
+
+
+	Từ khóa đề thi
+		Edge Location
+		Cache
+		TTL
+		Global Distribution
+		Low Latency
+		Static Content
+		Dynamic Content
+		Content Delivery
+	Nhìn thấy các từ này thường nghĩ đến:
+
+	👉 CloudFront
+
+
+# CloudFront giúp tiết kiệm tiền như thế nào?
+
+
+	Đây là điểm AWS rất thích hỏi.
+
+	Giả sử:
+		100 triệu lượt tải ảnh
+
+	Không dùng CloudFront:
+		100 triệu request vào S3
+
+
+	Dùng CloudFront:
+		95 triệu request
+		↓
+		CloudFront Cache
+
+		5 triệu request
+		↓
+		S3
+		S3 ít request hơn.
+	=> Chi phí giảm.
+
+
+
+# Các loại Cache
+
+
+	## Cache Hit
+		CloudFront đã có dữ liệu.
+			User
+			 ↓
+			CloudFront
+			 ↓
+			Response
+		Không gọi Origin.
+
+
+
+
+	## Cache Miss
+		CloudFront chưa có dữ liệu.
+		User
+		 ↓
+		CloudFront
+		 ↓
+		Origin
+		 ↓
+		CloudFront Cache
+		 ↓
+		User	
+			
+	
+	Đề thi cực thích hỏi:
+		Muốn giảm chi phí và giảm latency?
+	Đáp án:
+	👉 Tăng Cache Hit Ratio	
+	
+	
+	
+# 	CloudFront + S3
+	Kiến trúc xuất hiện cực nhiều trong SAA
+		User
+		 ↓
+		CloudFront
+		 ↓
+		S3
+
+	Lý do
+		Rẻ
+		Nhanh
+		Highly Available
+		Global	
+			
+	
+	
+# So sánh CloudFront vs S3 	
+	
+	
+| Tiêu chí        | S3    | CloudFront |
+| --------------- | ----- | ---------- |
+| Lưu file        | Có    | Không      |
+| Cache           | Không | Có         |
+| Global          | Không | Có         |
+| Giảm latency    | Không | Có         |
+| Giảm tải Origin | Không | Có         |
+	
+	
+	
+	
+	
+	
+	
 </pre><a id='backBottom' href='../aws-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

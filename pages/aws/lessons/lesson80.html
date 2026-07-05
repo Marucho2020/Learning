@@ -1,0 +1,515 @@
+<html><head><title>Lesson 80 == Cloud Practitioner =Lambda ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 80 -- Cloud Practitioner =Lambda -//</h1><pre>
+# Định nghĩa bản chất
+
+	AWS Lambda không phải là một server.
+	AWS Lambda cũng không phải là một chương trình chạy liên tục.
+	Lambda thực chất là:
+		Một môi trường thực thi (Execution Environment) được AWS tạo ra tạm thời để chạy một đoạn code khi có Event xảy ra.
+
+	Nói đơn giản:
+		Event
+			  ↓
+		AWS tạo Runtime
+			  ↓
+		Load code
+			  ↓
+		Chạy function
+			  ↓
+		Trả kết quả
+			  ↓
+		Nếu không dùng nữa thì có thể hủy runtime
+
+	Điểm quan trọng nhất:
+		Lambda là Event-driven Compute.
+			Không có Event
+			↓
+			Không có Lambda chạy
+			↓
+			Không tốn tiền compute.
+			
+		Đây chính là triết lý của Serverless.
+
+
+# Ví dụ đời thường
+
+	Giả sử bạn thuê một người sửa điện.
+	EC2
+		Bạn thuê anh ấy cả tháng.
+		Dù hôm nay không có việc.
+		Bạn vẫn phải trả tiền.
+
+
+	Lambda
+
+	Bạn gọi:
+		"Anh ơi bóng đèn cháy."
+		Anh ấy tới.
+		Sửa.
+		Xong.
+		Đi về.
+		Bạn chỉ trả tiền đúng lần sửa.
+		Đó chính là Pay Per Use.
+
+
+
+# Điều AWS thực sự làm phía sau
+
+
+	Khi Event tới:
+
+	Ví dụ:
+
+		S3 Upload
+		AWS sẽ làm:
+		1. Chọn Region
+		↓
+		2. Tìm Lambda Function
+		↓
+		3. Chuẩn bị Container
+		↓
+		4. Khởi động Runtime
+		(Java/Python/Node...)
+		↓
+		5. Load code
+		↓
+		6. Chạy Handler
+		↓
+		7. Trả Response
+		↓
+		8. Giữ Container một thời gian
+		↓
+		9. Nếu có request mới
+		Reuse Container
+		Nếu lâu không dùng
+		Destroy Container
+		Đây gọi là:
+		Execution Environment Lifecycle
+
+
+# Warm Start và Cold Start
+
+	Đây là phần AWS rất thích hỏi.
+	Cold Start
+	Container chưa tồn tại.
+	AWS phải:
+		Create Container
+		↓
+		Load Runtime
+		↓
+		Load Library
+		↓
+		Load Code
+		↓
+		Run
+
+	Tốn thêm vài chục ms
+	đến vài giây.
+	Java thường chậm hơn Node.
+
+
+	Warm Start
+	Container vẫn còn.
+	AWS chỉ:
+		Reuse Container
+		↓
+		Run Handler
+		Nhanh hơn rất nhiều.
+
+
+	Ví dụ
+
+	Lần đầu:
+		API Gateway
+		↓
+		Lambda
+		↓
+		1.8s
+		Sau 30 giây
+		gọi lại
+		API Gateway
+		↓
+		Lambda
+		↓
+		70ms
+		Đó là Warm Start.
+
+
+# AWS giữ Container bao lâu?
+
+	Không có tài liệu công bố.
+	AWS tự quyết định.
+
+	Có thể:
+		5 phút
+		10 phút
+		20 phút
+
+	hoặc lâu hơn.
+	Không nên code dựa vào giả định này.
+
+
+
+# Điều gì được giữ lại sau Warm Start?
+
+Ví dụ Java
+
+public class Handler {
+    static Database db = connect();
+}
+
+	Lần đầu
+	connect DB
+	Sau đó
+	Warm Start
+	Không connect lại.
+	Reuse luôn.
+	Đây là kỹ thuật tối ưu cực kỳ phổ biến.
+
+
+# Nhưng điều gì KHÔNG được giữ?
+	RAM
+	File trong /tmp
+	Connection
+	Cache
+	Không có gì được đảm bảo.
+	AWS có thể destroy container bất cứ lúc nào.
+
+
+# Sai lầm phổ biến
+
+Nhiều người nghĩ:
+	Lambda = Server
+	Sai.
+	Đúng phải là:
+	Lambda = Function
+	+
+	Execution Environment
+
+# Event Source Mapping
+
+	Đây là phần cực kỳ quan trọng.
+	Lambda không tự chạy.
+	Luôn có Event.
+	Ví dụ
+
+		S3
+		↓
+		Lambda
+
+		Upload file
+		↓
+		Lambda chạy.
+
+
+		Ví dụ
+			SQS
+			↓
+			Lambda
+
+			Có Message
+			↓
+			Lambda đọc.
+
+		Ví dụ
+			DynamoDB Streams
+			↓
+			Lambda
+
+			Có Record mới
+			↓
+			Lambda chạy.
+
+		Ví dụ
+			EventBridge
+			↓
+			Lambda
+
+			Cron
+			↓
+			Lambda chạy.
+			
+			
+			
+# 	Mapping các dịch vụ AWS		
+			
+			
+| Event            | Lambda làm gì          |
+| ---------------- | ---------------------- |
+| API Gateway      | Backend API            |
+| ALB              | Web backend            |
+| S3               | Resize Image           |
+| DynamoDB Stream  | Đồng bộ dữ liệu        |
+| SQS              | Worker                 |
+| SNS              | Notification Processor |
+| EventBridge      | Scheduler              |
+| CloudWatch Alarm | Auto Recovery          |
+| Cognito          | Trigger đăng ký user   |
+| Step Functions   | Workflow Step          |
+			
+			
+# Ví dụ thực tế 1			
+	Website Upload Avatar			
+			
+	Browser
+	↓
+	S3
+	↓
+	Event
+	↓
+	Lambda
+	↓
+	Resize
+	↓
+	Lưu Thumbnail			
+				
+	Không cần server.				
+			
+			
+			
+# 	Ví dụ thực tế 2		
+	Đơn hàng		
+			
+	Order API
+	↓
+	SQS
+	↓
+	Lambda
+	↓
+	Gửi Email
+	↓
+	Update DB
+	↓
+	SNS			
+			
+	Đây là kiến trúc cực kỳ phổ biến.			
+			
+			
+
+# Ví dụ thực tế 3
+	Cron Job
+	Thay vì
+
+		EC2
+		↓
+		crontab
+
+	AWS
+
+		EventBridge
+		↓
+		Lambda
+
+	Đơn giản hơn nhiều.
+
+
+
+# Lambda không phù hợp khi nào?
+
+	## 1. Chạy lâu
+
+		15 phút
+			Machine Learning Training 	×
+			Video Rendering ×
+
+		
+	## 2. Stateful
+			Game Server ×
+			Chat Server ×
+			WebSocket lâu dài ×
+
+	## 3. RAM lớn
+
+		Lambda tối đa khoảng:
+		10 GB RAM
+			Không phù hợp Big Data.
+
+
+
+# Concurrency
+	
+Giả sử:
+	1000 request
+	↓
+	1000 Lambda.
+	AWS scale ngang.	
+
+Lambda1
+Lambda2
+Lambda3
+
+...
+Lambda1000
+
+Không cần Auto Scaling Group.
+AWS tự scale.
+
+
+# Nhưng có giới hạn 
+
+
+Account có Concurrency Limit.
+	Ví dụ
+	1000
+	Request thứ
+	1001
+	↓
+	Throttle.
+		
+Có thể:
+
+	Reserved Concurrency
+	Provisioned Concurrency
+	để kiểm soát.					
+				
+
+
+# Provisioned Concurrency
+	Đây là giải pháp chống Cold Start.
+	AWS tạo sẵn
+		10 Container
+
+		Luôn nóng.
+		API cực nhanh.
+		Đổi lại:
+		Phải trả tiền.
+		Trade-off:
+		
+			Latency ↓
+			Cost ↑
+
+
+
+# Memory và CPU
+
+	Lambda rất đặc biệt.
+	CPU phụ thuộc RAM.
+	Ví dụ
+
+		128 MB
+		↓
+		CPU rất ít
+
+
+
+		2048 MB
+		↓
+		CPU mạnh hơn
+
+		Không thể chọn CPU riêng.
+
+
+	Timeout
+	Luôn đặt Timeout hợp lý.
+	Ví dụ
+		3 giây
+		API.
+
+		30 giây
+		Image Processing.
+
+		15 phút
+		Batch.
+
+
+
+# Retry 
+	Không phải Event nào cũng Retry giống nhau.
+
+	Ví dụ
+		SQS
+		↓
+		Retry.
+
+		SNS
+		↓
+		Retry.
+
+		API Gateway
+		↓
+		Không tự Retry.
+
+	Đây là bẫy thi rất hay gặp.
+
+
+# Idempotency
+	Lambda có thể chạy lại.
+	Nếu code
+	Insert Order
+		2 lần.
+
+	↓
+	Đơn hàng bị nhân đôi.
+	Luôn thiết kế
+	Idempotent.
+
+Ví dụ
+	OrderID tồn tại
+	↓
+	Skip
+	
+	
+	
+	
+# 	Security
+	Lambda luôn nên có:
+		IAM Role
+
+	Không hardcode:
+		Access Key
+		Secret Key
+		Đề thi cực thích hỏi.	
+		
+		
+		
+# 	Logging
+	Lambda
+	↓
+	CloudWatch Logs.
+	Không cần tự tạo Log Server.	
+		
+	
+# Monitoring	
+		CloudWatch
+		X-Ray
+		CloudTrail.	
+	
+	
+	
+# 	Từ khóa đề thi
+
+Serverless
+Event-driven
+Stateless
+Function
+Execution Environment
+Cold Start
+Warm Start
+Handler
+Trigger
+Event Source Mapping
+Concurrency
+Provisioned Concurrency
+Reserved Concurrency
+Idempotency
+Timeout
+Retry
+IAM Role
+CloudWatch Logs
+
+
+# So sánh Lambda với EC2 
+
+| Tiêu chí           | Lambda                        | EC2                |
+| ------------------ | ----------------------------- | ------------------ |
+| Quản lý server     | Không                         | Có                 |
+| Khởi động          | Theo Event                    | Luôn chạy          |
+| Thanh toán         | Theo request + thời gian chạy | Theo thời gian máy |
+| Scale              | Tự động                       | Auto Scaling       |
+| Giới hạn thời gian | 15 phút                       | Không              |
+| Stateful           | Không phù hợp                 | Phù hợp            |
+| Cold Start         | Có                            | Không              |
+| Cron               | EventBridge                   | crontab            |
+
+
+
+</pre><a id='backBottom' href='../aws-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

@@ -1,13 +1,325 @@
-<html><head><title>Lesson 72 == Cloud Practitioner ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 72 -- Cloud Practitioner -//</h1><pre>
-Luyện đề
+<html><head><title>Lesson 72 == Cloud Practitioner ==OpenSearch Vector Search ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 72 -- Cloud Practitioner --OpenSearch Vector Search -//</h1><pre>		
+# Định nghĩa ngắn gọn 
+	OpenSearch Vector Search là chức năng cho phép tìm kiếm dựa trên ý nghĩa (semantic meaning) thay vì chỉ tìm kiếm dựa trên từ khóa.
 
 
-20 câu practice test
 
-20 câu practice test
+	Thay vì:
+		"Tìm tài liệu chứa từ AWS"
+
+	thì sẽ là:
+		"Tìm tài liệu có nội dung liên quan tới AWS"
+
+	ngay cả khi trong tài liệu không hề xuất hiện từ "AWS".
 
 
-review sai
+	## Bản chất thật sự
+
+			Thông thường Search Engine hoạt động như:
+				Keyword Search
+
+			Ví dụ:
+
+				Query:
+				"How to deploy Spring Boot"
+
+				Document A:
+				"How to deploy Spring Boot on EC2"
+
+				=> Match
+
+			Nhưng:
+
+				Query:
+				"Deploy Java Application"
+
+				Document A:
+				"How to deploy Spring Boot on EC2"
+
+					=> Có thể không match tốt
+					vì từ ngữ khác nhau.
+
+
+
+		Vector Search giải quyết bằng cách:
+
+		Bước 1
+			Embedding Model
+			(Titan Embeddings, Cohere Embeddings...)
+			chuyển text thành vector.
+
+		Ví dụ:
+			"Deploy Spring Boot"
+			↓
+			[0.21, -0.55, 0.91, ...]
+
+			"Deploy Java Application"
+			↓
+			[0.23, -0.52, 0.89, ...]
+
+
+
+				Hai vector này sẽ nằm gần nhau trong không gian toán học.
+				Cosine Similarity
+					0.97
+				=> Ý nghĩa giống nhau.
+
+
+		Bước 2
+
+		Lưu vector vào OpenSearch
+			Ví dụ:
+
+| Document | Vector         |
+| -------- | -------------- |
+| Doc A    | [0.21,0.55...] |
+| Doc B    | [0.44,0.22...] |
+| Doc C    | [0.91,0.11...] |
+
+
+		Bước 3
+			User Query
+			"How can I deploy Java service?"
+
+
+			↓
+			Embedding
+			↓
+			Vector
+			↓
+			OpenSearch tìm các vector gần nhất
+			↓
+			Top K Results
+
+
+
+		Tóm tắt bản chất
+			OpenSearch Vector Search thực chất là:
+			Nearest Neighbor Search
+
+
+			hay:
+				Tìm vector gần nhất
+
+			KHÔNG phải:
+				Tìm keyword giống nhất
+
+
+
+# 2. Mapping trong AWS
+	Kiến trúc AWS rất hay ra đề:
+
+User Query
+      ↓
+Titan Embeddings
+      ↓
+Vector
+      ↓
+OpenSearch Vector Index
+      ↓
+Top K Documents
+      ↓
+Claude / LLM
+      ↓
+Answer
+
+
+
+	Dịch vụ AWS tương ứng
+
+| Thành phần      | AWS Service              |
+| --------------- | ------------------------ |
+| Embedding Model | Bedrock Titan Embeddings |
+| Vector Database | OpenSearch               |
+| LLM             | Claude / Titan Text      |
+| Orchestration   | Bedrock Knowledge Base   |
+| Data Source     | S3                       |
+
+
+
+# 3. OpenSearch Vector Search trong RAG
+	Đây là thứ xuất hiện cực kỳ nhiều trong đề thi AI Specialty và các hệ thống AI hiện đại.
+
+Ví dụ
+	S3 chứa:
+
+		Employee Handbook
+		HR Policy
+		Security Guideline
+
+	User hỏi:
+		Can I work remotely from overseas?
+
+
+	Knowledge Base:
+
+	Step 1
+
+		Convert Query
+		↓
+		Embedding
+		↓
+		Vector
+
+
+
+	Step 2
+		Search OpenSearch
+		↓
+		Tìm document gần nhất
+
+
+	Step 3
+
+		Trả về
+			Remote Work Policy
+
+
+	Step 4
+		Claude đọc tài liệu
+		↓
+		Sinh câu trả lời
+
+
+
+	Đây chính là:
+		RAG
+		=
+		Embedding
+		+
+		Vector Search
+		+
+		LLM
+
+
+
+
+# 4. Vì sao AWS thích OpenSearch?
+
+
+	Trước đây:
+		Database
+		không tối ưu cho vector.
+
+	Ví dụ:
+		RDS
+		Aurora
+		DynamoDB
+
+		đều không sinh ra để tìm kiếm vector.
+
+
+	OpenSearch hỗ trợ:
+		Approximate Nearest Neighbor (ANN)
+
+	cho phép:
+		Tìm vector gần nhất
+		trong hàng triệu vector.
+		rất nhanh.
+
+
+
+
+	Nếu có:
+
+		10 triệu documents
+	thì brute force:
+		so sánh từng vector
+
+		sẽ cực chậm.
+
+
+	OpenSearch dùng:
+		HNSW
+		(Hierarchical Navigable Small World)
+		để tăng tốc ANN Search.
+
+
+
+# 5. So sánh dễ nhầm
+
+|                                 | Keyword Search | Vector Search |
+| ------------------------------- | -------------- | ------------- |
+| Dựa trên                        | Từ khóa        | Ý nghĩa       |
+| Elastic/OpenSearch truyền thống | ✓              | ✗             |
+| Semantic Search                 | ✗              | ✓             |
+| Synonym                         | Kém            | Tốt           |
+| AI Search                       | Kém            | Tốt           |
+
+
+
+
+
+	Ví dụ
+
+	Query:
+		Car
+
+	Document:
+		Automobile
+
+	Keyword Search
+	Không tìm thấy
+	Vector Search
+	Tìm thấy
+	vì ý nghĩa giống nhau.
+
+
+
+# 6. Trade-off
+
+	Ưu điểm
+		Semantic Search
+		Hiểu ngữ nghĩa.
+		Tốt cho RAG
+		Hiện nay gần như tiêu chuẩn.
+		Scale lớn
+		Hàng triệu document.
+
+
+	Nhược điểm
+		Tốn chi phí Embedding
+		Mọi document phải được embed trước.
+		Không chính xác tuyệt đối
+		Vector Similarity là:
+			Gần đúng
+			không phải:
+			100% đúng
+
+		Storage tăng
+			Ngoài document còn phải lưu vector.
+
+
+
+S3
+ ↓
+Titan Embeddings
+ ↓
+OpenSearch Vector Index
+ ↓
+Bedrock Knowledge Base
+ ↓
+Claude
+
+
+
+
+# Từ khóa đề thi 
+
+		semantic search
+		meaning-based retrieval
+		embeddings
+		nearest neighbor search
+		RAG
+		vector database
+		knowledge retrieval
+
+	=> Gần như chắc chắn phải nghĩ đến:
+		OpenSearch Vector Search
+
+
+
+
 
 
 </pre><a id='backBottom' href='../aws-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

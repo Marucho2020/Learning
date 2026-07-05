@@ -1,5 +1,323 @@
-<html><head><title>Lesson 71 == Cloud Practitioner ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 71 -- Cloud Practitioner -//</h1><pre>
-best practices cost
+<html><head><title>Lesson 71 == Cloud Practitioner ==Titan Embeddings ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 71 -- Cloud Practitioner --Titan Embeddings -//</h1><pre>
+
+# 1. Bản chất của Titan Embeddings là gì?
+
+Nói ngắn gọn:
+	Titan Embeddings không phải AI để trả lời câu hỏi.
+	Titan Embeddings là AI để biến văn bản thành vector số học (embedding vector).
+
+
+	Ví dụ:
+
+	"Tôi thích AWS"
+		↓ Titan Embeddings
+		[0.123, -0.782, 0.456, ...]
+
+
+	Con người nhìn không hiểu.
+
+	Máy tính nhìn vào vector này để:
+		So sánh độ giống nhau
+		Tìm kiếm ngữ nghĩa (semantic search)
+		RAG
+		Recommendation
+		Clustering
+
+
+
+	Bản chất thật sự
+		LLM (Claude, GPT, Titan Text) làm nhiệm vụ:
+
+
+			Question
+			↓
+			Reasoning
+			↓
+			Answer
+
+		Embeddings Model làm nhiệm vụ:
+
+			Text
+			↓
+			Vector
+			↓
+			Similarity Search
+
+			Sai hoàn toàn.
+			Titan Embeddings không chat được.
+
+
+
+# 2. Tại sao cần Embeddings?
+
+
+	Giả sử công ty có:
+		100,000 file PDF
+
+	Người dùng hỏi:
+		Chính sách nghỉ phép năm là gì?
+
+	Nếu gửi toàn bộ 100,000 file cho Claude:
+		Impossible
+		Quá đắt
+		Quá chậm
+		Vượt context window
+
+
+	Thay vào đó:
+
+	Bước 1
+		Convert tài liệu thành vector
+
+
+		PDF
+		↓
+		Titan Embeddings
+		↓
+		Vector
+		↓
+		Vector Database
+
+
+
+	Bước 2
+
+	User hỏi
+		Xin nghỉ phép bao nhiêu ngày?
+		
+	Bước 3
+	Question cũng được convert thành vector
+		Question
+		↓
+		Titan Embeddings
+		↓
+		Vector
+
+
+
+		Bước 4
+
+		Tìm vector gần nhất
+			Cosine Similarity
+
+
+		Bước 5
+			Lấy đúng tài liệu liên quan
+			Top 5 chunks
+
+
+		Bước 6
+			Gửi cho Claude
+
+			Question
+			+
+			Relevant Documents
+			↓
+			Claude
+			↓
+			Answer
+
+		Đây chính là:
+			RAG
+			(Retrieval Augmented Generation)
+
+
+
+# 3. AWS Service Mapping
+
+		Titan Embeddings trong Bedrock
+		Amazon Bedrock
+		 ├─ Claude
+		 ├─ Llama
+		 ├─ Nova
+		 └─ Titan Embeddings
+
+
+
+# Kết hợp với Knowledge Bases
+
+	S3
+	↓
+	Knowledge Base
+	↓
+	Titan Embeddings
+	↓
+	OpenSearch Vector Store
+	↓
+	Claude
+	↓
+	Answer
+	
+	
+	
+# 	Dịch vụ liên quan
+	
+| Thành phần    | AWS Service           |
+| ------------- | --------------------- |
+| Lưu file      | S3                    |
+| Chunking      | Knowledge Bases       |
+| Embedding     | Titan Embeddings      |
+| Vector DB     | OpenSearch Serverless |
+| LLM           | Claude                |
+| Orchestration | Bedrock Agent         |
+	
+	
+	
+# 	4. Ví dụ thực tế
+	Chatbot nội bộ công ty	
+	
+	Công ty có:
+		- HR Policy
+		- Design Documents
+		- SOP
+		- User Manual
+
+	Nhân viên hỏi:
+		Tôi được nghỉ phép bao nhiêu ngày?
+		
+		
+			
+	Flow:
+		Question
+		↓
+		Titan Embeddings
+		↓
+		Vector Search
+		↓
+		HR Policy
+		↓
+		Claude
+		↓
+		Answer		
+		
+		
+		
+# Coding Assistant		
+		
+	Developer hỏi:
+		Làm thế nào gọi API thanh toán?		
+			
+		
+	Flow:
+		Question
+		↓
+		Titan Embeddings
+		↓
+		Design Document
+		↓
+		Claude
+		↓
+		Code Generation		
+				
+			
+	Đây là lý do các công ty chọn:
+		Claude + Titan Embeddings + Knowledge Base
+		không phải vì Titan thông minh.
+
+	Mà vì:
+		Claude giỏi suy luận
+		Titan giỏi tìm tài liệu
+		
+		
+# 	5. Từ khóa xuất hiện trong đề thi	
+		
+		
+	Semantic Search
+	Vector Search
+	Similarity Search
+	Knowledge Base
+	Embeddings
+	Vector Database
+	RAG
+	Retrieval
+	Context Augmentation
+	Document Retrieval		
+			
+		
+	Nếu thấy:
+		Tìm tài liệu liên quan nhất
+	
+	thì nghĩ ngay:
+		Embedding		
+			
+		
+# 6. So sánh dễ nhầm		
+		
+| Dịch vụ          | Chức năng                |
+| ---------------- | ------------------------ |
+| Claude           | Sinh câu trả lời         |
+| Titan Embeddings | Chuyển text thành vector |
+| OpenSearch       | Lưu vector               |
+| Knowledge Base   | Quản lý RAG              |
+| Bedrock Agent    | Workflow + Tool Calling  |
+	
+	
+	
+# Claude vs Titan Embeddings	
+	
+	
+| Claude          | Titan Embeddings      |
+| --------------- | --------------------- |
+| Sinh text       | Không sinh text       |
+| Chat được       | Không chat được       |
+| Reasoning       | Không reasoning       |
+| Trả lời câu hỏi | Không trả lời câu hỏi |
+| LLM             | Embedding Model       |
+	
+		
+	Ưu điểm
+		Semantic Search
+		Tìm theo ý nghĩa
+
+	Ví dụ:
+
+		Nghỉ phép năm
+		vẫn tìm được:
+			Annual Leave Policy
+			dù không khớp từ khóa.
+
+		Ngôn ngữ tự nhiên
+		Không cần exact keyword.
+		Scale lớn
+		Millions of documents
+		vẫn tìm được nhanh.	
+		
+				
+		Nhược điểm
+		Không hiểu logic
+		Embedding chỉ đo độ giống.
+
+		Ví dụ:
+		A > B
+		và
+		B > A
+
+		có thể rất giống nhau về vector.
+		Có thể retrieve sai
+		Nếu embedding model không tốt:
+
+		Wrong documents
+		↓
+		Claude trả lời sai
+
+		Đây gọi là:
+			Garbage In
+			Garbage Out	
+
+
+
+
+
+Nếu đề xuất hiện:
+	Semantic Search
+	Vector Search
+	Similarity Search
+	Document Retrieval
+	RAG
+	Knowledge Base
+
+
+
 
 
 

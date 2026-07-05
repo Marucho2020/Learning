@@ -1,5 +1,370 @@
-<html><head><title>Lesson 56 == Cloud Practitioner ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 56 -- Cloud Practitioner -//</h1><pre>
-backup database
+<html><head><title>Lesson 56 == Cloud Practitioner ===VPC ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 56 -- Cloud Practitioner --=VPC -//</h1><pre>
+#  VPC là gì?（Virtual Private Cloud）
 
+	VPC = Mạng riêng ảo của bạn bên trong AWS.
+
+
+
+	Khi tạo AWS Account:
+		AWS có một hệ thống mạng khổng lồ
+		Hàng triệu khách hàng dùng chung hạ tầng
+
+	VPC là cơ chế để:
+		Tách riêng một phần mạng cho riêng bạn.
+
+
+| Thực tế                | AWS               |
+| ---------------------- | ----------------- |
+| Tòa nhà văn phòng      | AWS Region        |
+| Tầng lầu               | Availability Zone |
+| Công ty thuê văn phòng | VPC               |
+| Phòng ban              | Subnet            |
+
+
+	Ví dụ:
+
+	Bạn thuê văn phòng.
+
+	Bạn quyết định:
+		IP nào được dùng
+		Ai được vào
+		Ai được ra Internet
+		Server nào nói chuyện với server nào
+
+	Đó chính là VPC.
+
+
+
+# 2. AWS tạo VPC để giải quyết vấn đề gì?
+
+
+	## Không có VPC:
+		EC2 khách hàng A
+		EC2 khách hàng B
+		EC2 khách hàng C
+
+	nằm chung mạng
+
+	=> Thảm họa bảo mật.
+
+
+
+	## Có VPC:
+
+		Customer A
+		VPC A
+		10.0.0.0/16
+
+		Customer B
+		VPC B
+		172.31.0.0/16
+	Tách biệt hoàn toàn.
+
+
+
+# 3. Thành phần bên trong VPC
+	VPC = Container mạng
+	Bên trong có:
+VPC
+├── Subnet
+├── Route Table
+├── Internet Gateway
+├── NAT Gateway
+├── Security Group
+├── NACL
+├── EC2
+├── RDS
+├── ELB
+
+
+
+# 4. CIDR Block là gì?
+	Khi tạo VPC:
+		10.0.0.0/16
+		
+	AWS hỏi:
+		IP range của mạng này là gì?
+	
+	/16 nghĩa là:
+	
+		10.0.0.0
+		↓
+		10.0.255.255	
+		Khoảng:	65,536 IP
+		
+	
+	Ví dụ công ty:
+		Tokyo Office
+		
+		10.0.x.x
+		AWS cũng y hệt.
+	
+
+# 5. Subnet là gì? 
+
+	Nhiều người học sai.
+	Họ nghĩ:
+		VPC = server
+		Subnet = server
+	Sai.
+
+		VPC = thành phố
+		Subnet = quận
+
+
+	Ví dụ:
+		VPC
+			10.0.0.0/16
+
+	Chia:
+		Public Subnet
+			10.0.1.0/24
+
+		Private Subnet
+			10.0.2.0/24
+
+
+
+# 6. Public Subnet và Private Subnet 
+
+	## Public Subnet
+		Có Route tới Internet Gateway
+
+	0.0.0.0/0
+	↓
+	IGW
+	Có thể ra Internet.
+
+	Ví dụ:
+		ALB
+		Bastion
+		Web Server	
+	
+	
+	
+	
+	
+	## Private Subnet
+		Không route trực tiếp tới Internet.
+		Ví dụ:
+	
+		RDS
+		Application Server
+		Redis
+	
+	
+	## Bẫy thi 	
+	
+	Có Public IP
+	=
+	Public Subnet	
+
+	Sai.
+		Điều kiện Public Subnet:
+			Route Table
+			có route tới IGW
+			
+		Mới là Public Subnet.
+		
+		
+		
+# 	7. Internet Gateway (IGW)	
+		
+	Bản chất:	Cổng nối VPC với Internet	
+	Không có IGW:
+		
+		EC2
+		↓
+		Internet
+
+		Không đi được		
+		
+		
+# 8. NAT Gateway 
+	Khái niệm cực hay bị hỏi.
+
+
+	Ví dụ:
+		Private EC2
+
+	cần:
+		apt update
+		yum update
+		download package
+
+
+	Không muốn Internet truy cập ngược vào.
+
+
+	Giải pháp:
+		Private EC2
+		↓
+		NAT Gateway
+		↓
+		Internet
+
+
+	Kết quả:
+	✅ Đi ra được
+	❌ Internet không vào được
+
+
+
+	## AWS rất thích hỏi 
+		
+			
+	Công ty cần:
+		Download update
+		Nhưng không public server
+
+	Đáp án:
+		NAT Gateway		
+		
+		
+		
+		
+# 	9. Route Table	
+	Bản chất:	
+		Bảng chỉ đường
+		
+	Ví dụ:
+		Đi đâu?		
+		
+		
+	Route:
+
+		10.0.0.0/16
+		local
+
+	Nghĩa là:
+		Trong VPC	
+		
+		
+		
+	Route:
+		0.0.0.0/0
+		IGW
+
+	Nghĩa là:
+		Internet		
+		
+		
+		
+		
+		
+# 	10. Security Group
+
+
+	AWS gọi:
+		Virtual Firewall
+
+	Nhưng hiểu sâu hơn:
+		Firewall gắn vào ENI (card mạng của instance)
+
+
+
+	Ví dụ:
+		Allow 80
+		Allow 443
+		Allow 22
+
+	Đặc điểm cực quan trọng:
+		✅ Stateful
+
+	Nghĩa là:
+		Request được phép
+
+	thì:
+		Response tự động được phép
+
+
+
+
+
+# 11. Network ACL (NACL)
+	Một lớp firewall khác.
+
+
+| Security Group | NACL         |
+| -------------- | ------------ |
+| Stateful       | Stateless    |
+| Instance Level | Subnet Level |
+| Allow Only     | Allow + Deny |
+	
+	AWS rất thích hỏi.	
+		
+	Ví dụ:
+		Chặn IP cụ thể
+		Security Group làm khó.
+		NACL làm dễ.		
+		
+		
+	## So sánh SG và NACL 
+
+| Tiêu chí        | SG       | NACL              |
+| --------------- | -------- | ----------------- |
+| Level           | Instance | Subnet            |
+| Stateful        | Có       | Không             |
+| Deny Rule       | Không    | Có                |
+| Thi thường chọn | SG       | NACL nếu cần deny |
+
+
+
+# Từ khóa thi SAA 
+
+
+
+| Từ khóa            | Nghĩ ngay      |
+| ------------------ | -------------- |
+| Internet access    | IGW            |
+| Outbound only      | NAT Gateway    |
+| Stateful firewall  | SG             |
+| Stateless firewall | NACL           |
+| Public-facing      | Public Subnet  |
+| Database security  | Private Subnet |
+| CIDR               | IP Range       |
+| Route              | Định tuyến     |
+| Isolation          | VPC            |
+
+
+
+# Góc nhìn Senior
+	Học VPC = học Subnet
+
+
+	Không đúng.
+
+	Bản chất VPC là:
+	Thiết kế kiến trúc mạng.
+	Khi nhìn một hệ thống AWS, senior thường nghĩ theo thứ tự:
+
+
+1. VPC
+↓
+2. CIDR
+↓
+3. Subnet
+↓
+4. Route
+↓
+5. Security
+↓
+6. Connectivity
+
+
+	Chứ không phải:
+		EC2 trước
+		Vì EC2 chỉ là "nhà" được đặt vào mạng.
+		VPC mới là "thành phố" quyết định mọi thứ.
+
+
+
+
+
+
+
+	
+		
+		
 
 </pre><a id='backBottom' href='../aws-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

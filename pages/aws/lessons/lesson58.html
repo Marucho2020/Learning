@@ -1,13 +1,285 @@
-<html><head><title>Lesson 58 == Cloud Practitioner ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 58 -- Cloud Practitioner -//</h1><pre>
-Network & Security
-Service:
-Amazon VPC
-AWS IAM
+<html><head><title>Lesson 58 == Cloud Practitioner ===internet gateway ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 58 -- Cloud Practitioner --=internet gateway -//</h1><pre>
+# 1. Định nghĩa bản chất (nói thẳng)
+	Internet Gateway (IGW) là cổng kết nối giữa VPC và Internet.
+
+	Nếu không có IGW:
+		EC2 trong VPC không thể ra Internet
+		Internet không thể vào EC2
+
+	IGW không phải Router.
+	IGW không phải NAT.
+	IGW không phải Firewall.
+	IGW chỉ là:
+		"Cánh cổng giúp Route từ VPC đi ra Internet và từ Internet đi vào VPC."
 
 
 
-VPC concept
+
+	## Hình dung đời thường
+
+	Nhà bạn nằm trong khu dân cư kín.
+		VPC = Khu dân cư
+		EC2 = Nhà trong khu dân cư
+		Route Table = Biển chỉ đường
+		Internet Gateway = Cổng ra đường quốc lộ
+
+
+	Không có cổng:
+		➡ Không ai ra ngoài được.
+		➡ Không ai đi vào được.
+
+	Có cổng nhưng không có biển chỉ đường:
+		➡ Vẫn không đi được.
+
+	Đây là điểm AWS rất thích ra đề.
+
+
+# 2. Điều kiện để EC2 truy cập Internet
+
+Nhiều người nghĩ:
+
+	Có Internet Gateway là đủ.
+	
+	AWS yêu cầu đủ 3 điều kiện.
+
+
+| Điều kiện                    | Bắt buộc |
+| ---------------------------- | -------- |
+| IGW attached vào VPC         | ✅        |
+| Route Table có route tới IGW | ✅        |
+| EC2 có Public IP             | ✅        |
+
+	Thiếu 1 cái là không ra Internet được.
+
+
+# Ví dụ
+	VPC		10.0.0.0/16
+		
+	Public Subnet 	10.0.1.0/24 
+
+	Route Table
+		10.0.0.0/16 -> local
+		0.0.0.0/0 -> igw-123456
+
+	EC2
+		Private IP:
+		10.0.1.10
+
+		Public IP:
+		54.x.x.x
+	=> Truy cập Internet được.
 
 
 
+# 3. Route Table mới là thứ quyết định Public hay Private Subnet
+
+	Đây là điểm cực kỳ quan trọng.
+	AWS không hề có resource tên:
+		Public Subnet
+		Private Subnet
+
+	AWS chỉ có:
+		Subnet
+		Public hay Private là do Route Table.
+	
+
+# Public Subnet 
+	0.0.0.0/0 -> IGW
+	Có đường ra Internet.
+
+
+# Private Subnet 
+	0.0.0.0/0 -> NAT Gateway
+
+	Không có route trực tiếp tới IGW.
+	Internet không thể initiate connection vào.
+	
+|                             | Public Subnet | Private Subnet |
+| --------------------------- | ------------- | -------------- |
+| Route tới IGW               | ✅             | ❌              |
+| Route tới NAT               | Có thể        | ✅              |
+| EC2 có Public IP            | Thường có     | Không          |
+| Internet truy cập trực tiếp | ✅             | ❌              |
+	
+	
+# 4. IGW hoạt động như thế nào? 	
+	
+Laptop
+↓
+Internet
+↓
+IGW
+↓
+EC2	
+	
+	Luồng xử lý:
+
+	## Bước 1
+		Laptop gửi request
+		https://54.x.x.x
+
+
+	Bước 2
+		Internet Gateway nhận packet
+
+
+	Bước 3
+		IGW mapping
+
+		Public IP
+		↓
+		Private IP
+
+		54.1.1.1
+		↓
+		10.0.1.10
+
+			
+	Bước 4
+		Packet được chuyển tới EC2.
+
+
+	Bước 5
+		Response đi ngược lại.
+
+
+EC2
+↓
+IGW
+↓
+Internet
+↓
+Laptop
+
+
+
+# 5. Internet Gateway có làm NAT không?
+	Đây là câu hỏi senior hay hỏi.
+
+
+	Câu trả lời:
+		Có nhưng không phải NAT Gateway.
+		IGW thực hiện:
+		1-to-1 NAT
+
+		Ví dụ:
+
+		54.1.1.1
+		↔
+		10.0.1.10
+
+		AWS gọi là:
+		Public IP Translation
+
+
+	Trong khi NAT Gateway:
+		10.0.1.10
+		10.0.1.11
+		10.0.1.12
+
+		↓
+		54.1.1.1
+
+		Nhiều Private IP dùng chung 1 Public IP.
+		Đây là bản chất khác nhau.
+
+
+
+# 6. Mapping với các dịch vụ AWS 
+
+| Service               | Quan hệ với IGW                                 |
+| --------------------- | ----------------------------------------------- |
+| VPC                   | IGW attach vào VPC                              |
+| Route Table           | Route tới IGW                                   |
+| Public Subnet         | Sử dụng IGW                                     |
+| NAT Gateway           | NAT Gateway phải nằm trong Public Subnet có IGW |
+| ALB                   | Thường đặt trong Public Subnet có IGW           |
+| Bastion Host          | Phải nằm trong Public Subnet có IGW             |
+| EC2 Public Web Server | Cần IGW                                         |
+
+
+
+
+# 7. Scenario giống đề thi AWS
+
+Đề bài
+
+Một công ty triển khai:
+
+	EC2
+	Public IP
+	trong Public Subnet.
+
+	Security Group:
+		Allow All Outbound
+		Allow HTTP Inbound
+
+	NACL:
+		Allow All
+
+	Nhưng EC2 không truy cập Internet.
+	Nguyên nhân khả dĩ nhất?
+
+	Đáp án
+
+		Route Table thiếu:
+			0.0.0.0/0 -> Internet Gateway
+
+	AWS cực thích kiểu câu này.
+
+	Người mới thường lao vào:
+		Security Group
+		NACL
+
+	Trong khi lỗi thật là:
+		Route Table
+		IGW
+
+
+# 8. Các từ khóa xuất hiện trong đề thi
+
+	Internet access
+
+	Public-facing
+
+	Public subnet
+
+	Inbound from Internet
+
+	Outbound Internet
+
+	Web Server
+
+	Bastion Host
+
+	Public IP
+
+	0.0.0.0/0
+
+	Internet connectivity
+
+	
+	
+# 	10. So sánh IGW vs NAT Gateway
+	
+	
+|                | Internet Gateway | NAT Gateway      |
+| -------------- | ---------------- | ---------------- |
+| Gắn vào        | VPC              | Subnet           |
+| Public IP cần? | EC2 cần          | NAT cần          |
+| Internet → EC2 | ✅                | ❌                |
+| EC2 → Internet | ✅                | ✅                |
+| Public Subnet  | ✅                | NAT phải nằm đây |
+| Private Subnet | ❌                | ✅                |
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 </pre><a id='backBottom' href='../aws-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

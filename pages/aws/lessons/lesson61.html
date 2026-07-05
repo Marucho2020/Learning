@@ -1,5 +1,231 @@
-<html><head><title>Lesson 61 == Cloud Practitioner ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 61 -- Cloud Practitioner -//</h1><pre>
+<html><head><title>Lesson 61 == Cloud Practitioner =IAM user,IAM role,IAM policy ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 61 -- Cloud Practitioner =IAM user,IAM role,IAM policy -//</h1><pre>
 
-IAM user
+# 1. IAM là gì?
+	IAM = Identity and Access Management
+
+	Nói đơn giản:
+
+		IAM là hệ thống quản lý "AI ĐƯỢC PHÉP LÀM GÌ TRÊN AWS"
+
+	AWS không quan tâm bạn là ai ngoài đời.
+	AWS chỉ quan tâm:
+		Bạn là User nào?
+		Bạn đang Assume Role nào?
+		Bạn được cấp Policy nào?
+
+# Bản chất thật
+
+	Trong AWS:
+
+	Authentication (Xác thực)
+		→ Bạn là ai?
+
+	Authorization (Phân quyền)
+		→ Bạn được làm gì?
+
+	IAM giải quyết cả 2 việc này.
+
+| Đối tượng       | AWS        |
+| --------------- | ---------- |
+| Nhân viên       | IAM User   |
+| Chức vụ         | IAM Role   |
+| Nội quy công ty | IAM Policy |
+
+
+
+
+# 2. IAM User
+
+	IAM User là:
+		Một danh tính (identity) cố định đại diện cho một người hoặc ứng dụng.
+
+	Có:
+		Username
+		Password
+		Access Key
+		Secret Key
+
+
+
+	Dùng khi nào?
+
+	Ngày xưa:
+		Developer
+		Administrator
+		Operator
+
+	thường được tạo IAM User riêng.
+
+		Hiện nay AWS khuyến khích:
+		IAM Identity Center (SSO)
+		thay cho IAM User.
+
+
+
+
+	Thi SAA cần nhớ
+
+	AWS hiện nay:
+		IAM User chỉ nên dùng cho người dùng đặc biệt hoặc service account.
+		Không nên tạo hàng trăm IAM User.
+
+
+
+# 3. IAM Policy
+
+
+	Định nghĩa bản chất
+
+	IAM Policy là:
+		Tài liệu JSON mô tả quyền được phép hoặc bị từ chối.
+
+
+	{
+	  "Effect":"Allow",
+	  "Action":"s3:GetObject",
+	  "Resource":"*"
+	}
+
+
+	Nghĩa là:
+		Được phép đọc file S3
+
+
+
+	## Cấu trúc Policy
+		3 thành phần cực kỳ quan trọng:
+
+| Thành phần | Ý nghĩa             |
+| ---------- | ------------------- |
+| Effect     | Allow hoặc Deny     |
+| Action     | Làm gì              |
+| Resource   | Trên tài nguyên nào |
+
+
+
+	## Ví dụ
+
+{
+  "Effect":"Allow",
+  "Action":"ec2:StartInstances",
+  "Resource":"*"
+}
+
+
+
+	## Điều quan trọng nhất khi thi
+		Explicit Deny luôn thắng
+
+		Deny > Allow
+
+
+
+
+# 4. IAM Role
+
+	Định nghĩa bản chất
+
+	IAM Role là:
+		Một tập quyền có thể được "mượn tạm thời" (assume).
+
+	Không có:
+		Password
+		Access Key cố định
+
+
+
+	Ví dụ đời thường
+
+	Bạn là nhân viên.
+
+	Bình thường:
+		Xem tài liệu
+
+	Khi được giao nhiệm vụ:
+		Trưởng nhóm tạm thời
+		Bạn được thêm quyền.
+		Sau khi hết nhiệm vụ:
+		Mất quyền
+		Đó chính là Role.
+
+
+
+
+	AWS thích:
+		Role
+
+	AWS ghét:
+		Access Key hardcode
+
+
+
+# So sánh IAM User vs IAM Role
+
+| Tiêu chí             | IAM User  | IAM Role      |
+| -------------------- | --------- | ------------- |
+| Identity cố định     | Có        | Không         |
+| Password             | Có        | Không         |
+| Access Key           | Có        | Không cố định |
+| Temporary Credential | Không     | Có            |
+| AWS khuyến khích     | Ít        | Rất nhiều     |
+| EC2 sử dụng          | Không nên | Nên           |
+
+
+
+# Mapping với dịch vụ AWS
+
+
+| Service        | Thường dùng                       |
+| -------------- | --------------------------------- |
+| EC2            | IAM Role                          |
+| Lambda         | IAM Role                          |
+| ECS            | IAM Role                          |
+| EKS            | IAM Role                          |
+| CodeBuild      | IAM Role                          |
+| CloudFormation | IAM Role                          |
+| User login AWS | IAM User hoặc IAM Identity Center |
+
+
+# Các bẫy AWS hay gài
+
+
+	Bẫy 1
+		Đề hỏi:
+		EC2 cần truy cập S3 an toàn nhất.
+
+		Sai:
+			IAM User + Access Key
+
+		Đúng:
+			IAM Role
+			
+			
+	Bẫy 2
+
+		Đề hỏi:
+			Cấp quyền tối thiểu.
+
+		Sai:
+			AdministratorAccess
+
+		Đúng:
+			Custom IAM Policy
+			
+			
+			
+	Bẫy 3
+		Đề hỏi:
+			Truy cập account AWS khác.
+
+		Đúng thường là:
+			Cross Account IAM Role
+
+		Không phải:
+			IAM User
+
+
+
+
+
 
 </pre><a id='backBottom' href='../aws-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

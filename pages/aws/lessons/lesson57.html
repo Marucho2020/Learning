@@ -1,5 +1,289 @@
-<html><head><title>Lesson 57 == Cloud Practitioner ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 57 -- Cloud Practitioner -//</h1><pre>
-review
+<html><head><title>Lesson 57 == Cloud Practitioner ===subnet ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 57 -- Cloud Practitioner --=subnet -//</h1><pre>
+# 1. Bản chất thật sự của Subnet là gì?
+
+Nếu chỉ nhớ 1 câu:
+	Subnet = chia nhỏ mạng VPC thành nhiều vùng mạng logic để kiểm soát routing, security và khả năng truy cập.
+
+
+	Nhiều người mới học thường nghĩ:
+		VPC = mạng
+		Subnet = thư mục con trong mạng
+
+	=> Sai bản chất.
+
+	Thực tế:
+		VPC chỉ là một vùng địa chỉ IP lớn.
+
+
+	Ví dụ:
+
+	VPC
+		10.0.0.0/16
+	AWS cấp cho bạn:
+		10.0.0.0 ~ 10.0.255.255
+
+	Tổng:
+		65,536 IP
+		Nhưng bạn không thể ném toàn bộ EC2, RDS, ALB vào cùng một đống.
+	Đó chính là Subnet.
+	
+
+
+# 2. Tại sao phải có Subnet?
+	Ví dụ công ty có tòa nhà:
+
+	Tầng 1 = tiếp khách
+	Tầng 2 = nhân viên
+	Tầng 3 = server
+	Tầng 4 = kho dữ liệu
+
+	Bạn không muốn:
+
+	Khách
+	Nhân viên
+	Server
+	Database
+
+	ở cùng một phòng
+
+	Tương tự:
+		Public Server
+		Application Server
+		Database
+		không nên ở cùng subnet
+
+
+# 3. Ví dụ thực tế System Design
+
+
+Website bán hàng:
+
+	Internet
+		|
+	ALB
+		|
+	EC2 App
+		|
+	RDS
+
+	Thiết kế đúng:
+
+VPC
+│
+├── Public Subnet A
+│      ALB
+│
+├── Public Subnet B
+│      ALB
+│
+├── Private Subnet A
+│      EC2
+│
+├── Private Subnet B
+│      EC2
+│
+├── Private Subnet A
+│      RDS
+│
+└── Private Subnet B
+       RDS
+
+
+Lý do:
+
+ALB phải nhận traffic Internet.
+
+=> Public Subnet
+
+EC2 không cần public.
+
+=> Private Subnet
+
+Database càng không được public.
+
+=> Private Subnet
+
+
+
+# 4. Public Subnet vs Private Subnet
+
+	Đây là câu AWS cực thích hỏi.
+	Sai lầm phổ biến
+	Nhiều người nghĩ:
+	Public Subnet vì có Public IP
+
+	Sai.
+
+	AWS định nghĩa:
+	Public hay Private phụ thuộc Route Table.
+	
+	
+	
+# 	Public Subnet
+	Có route:	
+	
+0.0.0.0/0
+    ↓
+Internet Gateway	
+	
+	
+Ví dụ:
+
+Destination	Target
+10.0.0.0/16	local
+0.0.0.0/0	IGW	
+	
+	Có đường ra Internet.
+	=> Public Subnet
+	
+	
+	
+# Private Subnet
+	Không có route tới IGW.
+
+| Destination | Target |
+| ----------- | ------ |
+| 10.0.0.0/16 | local  |
+	=> Private Subnet
+
+
+
+AWS Trap số 1
+
+	AWS hỏi:
+
+		Một EC2 có Public IP. Nó nằm trong Private Subnet hay Public Subnet?
+
+			Nhiều người chọn:
+			Public
+
+			Sai.
+
+			Cần kiểm tra:
+			Route Table
+			Nếu không có:
+
+			0.0.0.0/0 → IGW
+			thì vẫn là Private Subnet.
+
+
+
+# 5. Availability Zone và Subnet
+	Một Subnet chỉ thuộc:
+	1 AZ duy nhất
+
+
+Tokyo
+│
+├── ap-northeast-1a
+│     Subnet-A
+│
+├── ap-northeast-1c
+│     Subnet-B
+│
+└── ap-northeast-1d
+      Subnet-C
+
+		Không tồn tại:
+	1 subnet
+	=
+	nhiều AZ	
+	AWS không cho phép.
+	
+
+
+# 6. Route Table liên quan thế nào?
+
+	Subnet không tự biết đường đi.
+	Route Table là người chỉ đường.
+
+	Ví dụ:
+		Subnet
+		10.0.1.0/24
+
+
+	Gắn Route Table:
+
+	Destination	Target
+	0.0.0.0/0	IGW
+	=> Public
+
+
+	Nếu:
+
+	Destination	Target
+	0.0.0.0/0	NAT Gateway
+	=> Private subnet có Internet Outbound
+
+
+
+	AWS Trap số 3
+
+	NAT Gateway đặt ở đâu?
+	Đáp án:
+		Public Subnet
+		Không được đặt trong Private Subnet.
+
+
+
+
+#7. Mapping với các dịch vụ AWS 
+
+
+| Service         | Thường nằm ở đâu |
+| --------------- | ---------------- |
+| ALB             | Public Subnet    |
+| NAT Gateway     | Public Subnet    |
+| Bastion Host    | Public Subnet    |
+| EC2 App         | Private Subnet   |
+| ECS Task        | Private Subnet   |
+| EKS Worker Node | Private Subnet   |
+| RDS             | Private Subnet   |
+| ElastiCache     | Private Subnet   |
+
+
+
+# 8. CIDR và Subnet 
+
+
+	Ví dụ:
+
+	VPC:
+
+		10.0.0.0/16
+
+	Chia:
+		10.0.1.0/24
+		10.0.2.0/24
+		10.0.3.0/24
+		10.0.4.0/24
+
+	Mỗi subnet:
+		256 IP
+
+	Vì:
+		2
+		32−24
+		=256
+
+		Nhưng AWS giữ lại 5 IP đầu/cuối.
+			AWS reserved:
+
+			Network address
+			Router
+			DNS
+			Future use
+			Broadcast equivalent
+			
+			
+			
+	Nên dùng được:
+		251 IP
+
+
+
+# Tóm tắt 1 câu duy nhất để đi thi
+Subnet là vùng mạng con trong VPC; Public hay Private không phụ thuộc Public IP mà phụ thuộc Route Table. Public Subnet có đường tới Internet Gateway, Private Subnet thì không. Một Subnet chỉ thuộc một AZ.
 
 
 
