@@ -1,4 +1,405 @@
 <html><head><title>Lesson 7 == Bedrock Agent x ===Agent Orchestration ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 7 -- Bedrock Agent x --=Agent Orchestration -//</h1><pre>
 
+Knowledge Base (RAG)
+Agent truy xuất tài liệu từ S3/OpenSearch để có context trước khi suy luận.
+
+
+#1. Định nghĩa bản chất
+		Knowledge Base (RAG - Retrieval-Augmented Generation) là kỹ thuật không nhét toàn bộ kiến thức vào LLM, mà đi tìm tài liệu liên quan trước, rồi mới đưa tài liệu đó vào Prompt để LLM trả lời.
+
+
+	Nói đơn giản:
+	LLM không nhớ tất cả.
+		Khi có câu hỏi →
+		đi tìm tài liệu liên quan (Retrieve) →
+		đưa tài liệu đó vào Context
+		→
+		LLM mới Generate câu trả lời.
+
+	Đó chính là RAG.
+
+
+# Luồng hoạt động 
+
+
+User
+    │
+    ▼
+"Công ty có bao nhiêu ngày nghỉ phép?"
+    │
+    ▼
+Knowledge Base
+(Search)
+    │
+    ▼
+Tìm trong
+
+S3
+
+OpenSearch
+
+Vector Database
+
+    │
+    ▼
+Lấy 3 đoạn tài liệu liên quan nhất
+    │
+    ▼
+Ghép vào Prompt
+
+Context:
+
+"...Theo quy định nhân sự..."
+
+Question:
+
+"Có bao nhiêu ngày nghỉ?"
+    │
+    ▼
+LLM
+    │
+    ▼
+Trả lời
+
+
+
+
+# 2. Tại sao phải dùng RAG?
+
+	Ví dụ:
+
+	Bạn hỏi ChatGPT:
+		"Chính sách nghỉ phép của công ty ABC là gì?"
+
+	LLM sẽ gặp vấn đề:
+		chưa từng học dữ liệu đó
+		hoặc dữ liệu mới cập nhật hôm qua
+		hoặc tài liệu nội bộ
+
+	=> Không biết.
+
+	Nếu Fine-tune:
+		rất tốn tiền
+		phải train lại
+
+	Trong khi thực tế chỉ cần:
+
+
+	Search tài liệu
+	↓
+	Đưa tài liệu vào prompt
+	↓
+	LLM đọc
+	↓
+	Trả lời
+	Đó là lý do RAG ra đời.
+
+	
+# 3. Ví dụ đời thường
+
+
+Một luật sư.
+
+Khách hỏi:
+	Điều luật số 52 nói gì?
+	Luật sư không thuộc lòng toàn bộ luật.
+
+	Họ sẽ
+		Mở sách luật
+		↓
+		Tìm Điều 52
+		↓
+		Đọc
+		↓
+		Giải thích
+
+		RAG cũng làm y hệt.
+		LLM giống luật sư.
+		Knowledge Base giống thư viện.
+
+
+
+# 4. Ví dụ System Design
+
+	
+	Giả sử xây chatbot cho ngân hàng.
+		Tài liệu nằm trong	
+	
+		S3
+		PDF
+		Word
+		FAQ
+		Policy
+		Quy định
+		Email	
+		
+		Khách hỏi
+			Tôi có được vay khi đang là sinh viên không?		
+
+
+		User
+		↓
+		Embedding Question
+		↓
+		Vector Search
+		↓
+		Tìm tài liệu gần nhất
+		↓
+		Lấy Top K
+		↓
+		Ghép Prompt
+		↓
+		Claude
+		↓
+		Trả lời
+
+		Không cần train model.
+
+
+# 5. Amazon Bedrock Knowledge Base hoạt động như thế nào?
+	Amazon Bedrock tự động làm gần như toàn bộ pipeline RAG.
+
+	S3
+	↓
+	Parse Document
+	↓
+	Chunk
+	↓
+	Embedding
+	↓
+	Vector Database
+	↓
+	Search
+	↓
+	LLM
+
+	Developer gần như không cần tự code.
+	
+	
+	## Bước 1
+	
+	Đọc tài liệu
+
+	Ví dụ
+		PDF
+		DOCX
+		TXT
+		HTML
+			
+	
+	## Bước 2 
+		Chunk
+
+		Một PDF 500 trang
+		↓
+		chia thành
+			Chunk 1
+			Chunk 2
+			Chunk 3
+		...
+			vì LLM không đọc cả cuốn sách mỗi lần.	
+			
+	
+	
+	
+	
+	## Bước 3
+		Embedding
+
+		Mỗi chunk
+		↓
+		chuyển thành vector.
+			
+	
+		Text
+		↓
+		Embedding
+		↓
+		768 numbers	
+			
+	
+	
+	## Bước 4
+	
+		Lưu Vector
+
+		Có thể lưu ở
+			Amazon OpenSearch Serverless
+			Aurora PostgreSQL + pgvector
+			Pinecone (qua tích hợp)
+			Redis Enterprise (qua tích hợp)
+			
+	
+	
+	## Bước 5 	
+			
+		Search
+			User hỏi
+			↓
+			Question cũng được Embedding
+			↓
+			So sánh khoảng cách Vector
+			↓
+			Top K
+			↓
+			Lấy các đoạn gần nhất.	
+		
+
+
+	## Bước 6
+
+	Generate
+		Prompt sẽ thành
+		Context
+			Đoạn 1
+			Đoạn 2
+			Đoạn 3
+
+		Question
+	...
+
+	Claude chỉ cần đọc context này.	
+			
+	
+	
+	
+	
+# 	6. Mapping với AWS
+	
+	
+| Thành phần       | AWS Service                                                 |
+| ---------------- | ----------------------------------------------------------- |
+| Document Storage | Amazon S3                                                   |
+| Parsing          | Bedrock Knowledge Base                                      |
+| Chunking         | Bedrock                                                     |
+| Embedding Model  | Amazon Titan Embeddings                                     |
+| Vector Store     | Amazon OpenSearch Serverless / Aurora PostgreSQL (pgvector) |
+| Foundation Model | Claude / Amazon Nova / Llama                                |
+| Agent            | Amazon Bedrock Agent                                        |
+| Security         | IAM                                                         |
+	
+	
+	
+	
+# 	8. Từ khóa đề thi
+	
+		
+	Nếu thấy:
+		Company documents
+		Internal documents
+		PDF
+		Enterprise search
+		FAQ
+		Policy
+		Knowledge retrieval
+		Context
+		Semantic Search
+		Vector Search
+		Embedding
+		S3
+		OpenSearch
+		Grounding
+
+	=> Nghĩ ngay tới
+		Knowledge Base + RAG	
+			
+		
+# 9. Trade-off
+	
+| RAG                    | Fine-tuning                                |
+| ---------------------- | ------------------------------------------ |
+| Dữ liệu cập nhật ngay  | Phải train lại                             |
+| Rẻ                     | Đắt                                        |
+| Không thay đổi model   | Thay đổi trọng số model                    |
+| Tốt cho tài liệu       | Tốt cho phong cách hoặc tác vụ chuyên biệt |
+| Có thể trích dẫn nguồn | Khó biết câu trả lời dựa trên tài liệu nào |
+	
+	
+	
+	
+# 	10. So sánh các khái niệm dễ nhầm
+	
+	
+| Khái niệm          | Mục đích                      |
+| ------------------ | ----------------------------- |
+| Prompt Engineering | Viết Prompt tốt hơn           |
+| RAG                | Tìm tài liệu rồi mới hỏi LLM  |
+| Fine-tuning        | Huấn luyện lại model          |
+| Agent              | Quyết định dùng Tool nào      |
+| Knowledge Base     | Kho tài liệu để RAG truy xuất |
+	
+	
+	Mối quan hệ:
+		Knowledge Base là nguồn dữ liệu.
+		RAG là kỹ thuật truy xuất dữ liệu từ Knowledge Base rồi đưa vào Prompt.
+		Agent có thể sử dụng Knowledge Base như một trong nhiều công cụ (tools) của mình.
+			
+			
+	
+	
+## 	11. Cách AWS ra đề 
+	
+	
+	
+	Dạng 1
+		Dữ liệu thay đổi liên tục.
+		→ Không Fine-tune.
+		→ Dùng Knowledge Base.
+
+	Dạng 2
+
+		Có hàng triệu tài liệu PDF trong S3.
+		→ Knowledge Base.
+
+	Dạng 3
+
+		Muốn chatbot trả lời dựa trên tài liệu nội bộ.
+		→ Knowledge Base.
+
+	Dạng 4
+
+		Muốn giảm Hallucination.
+		→ RAG.
+
+	Dạng 5
+
+		Muốn Agent đọc tài liệu trước rồi mới quyết định.
+		→ Agent + Knowledge Base.
+			
+	
+# 	12. Những bẫy AWS rất thích hỏi
+	
+| Bẫy                                              | Đáp án đúng                                  |
+| ------------------------------------------------ | -------------------------------------------- |
+| Dữ liệu thay đổi liên tục nhưng chọn Fine-tuning | Sai, nên dùng RAG                            |
+| Có PDF trong S3 nhưng không dùng Knowledge Base  | Sai                                          |
+| Muốn cập nhật tài liệu ngay nhưng train model    | Sai                                          |
+| Nghĩ Agent tự biết dữ liệu công ty               | Sai, Agent cần Knowledge Base hoặc tool khác |
+| Nghĩ OpenSearch là LLM                           | Sai, OpenSearch chỉ lưu và tìm kiếm vector   |
+	
+
+
+# 13. Ghi nhớ để đi thi
+
+	Knowledge Base = Kho tài liệu.
+	RAG = Quy trình tìm tài liệu → thêm vào Context → LLM trả lời.
+	Agent = Bộ điều phối, có thể sử dụng Knowledge Base như một công cụ để lấy ngữ cảnh trước khi suy luận.
+
+	Nếu đề có các dấu hiệu:
+		tài liệu nội bộ,
+		PDF,
+		S3,
+		dữ liệu thay đổi thường xuyên,
+		giảm hallucination,
+		enterprise search,
+
+	→ Đáp án gần như luôn xoay quanh Amazon Bedrock Knowledge Base + RAG.
+
+
+
+
+
+
+		
 
 </pre><a id='backBottom' href='../aws-bedrock-agent-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
