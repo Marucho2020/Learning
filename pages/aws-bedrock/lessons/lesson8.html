@@ -1,4 +1,429 @@
-<html><head><title>Lesson 8 == Bedrock Agent x ===Agent Orchestration ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 8 -- Bedrock Agent x --=Agent Orchestration -//</h1><pre>
+<html><head><title>Lesson 8 == Bedrock Agent ===Session Memory & Context Management ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 8 -- Bedrock Agent --=Session Memory & Context Management -//</h1><pre>
+# 1. Bản chất là gì?
 
+	Rất nhiều người nghĩ:
+		Agent = LLM + Prompt
+
+	Đây là sai.
+
+	Đây là sai.
+
+		Một Agent thực sự phải biết:
+			mình đang nói chuyện với ai
+			cuộc hội thoại đang đến đâu
+			đang làm dở việc gì
+			còn bước nào chưa làm
+			dữ liệu nào cần nhớ
+			dữ liệu nào nên quên
+
+	Nói ngắn gọn:
+		Session Memory là trí nhớ ngắn hạn của Agent.
+
+
+	Còn
+		Context Management là cơ chế quản lý những gì được đưa vào "não" (context window) của LLM ở mỗi lần inference.
+		Đây là hai khái niệm liên quan nhưng không giống nhau.
+
+
+
+
+# 2. Vì sao cần Session Memory?
+
+
+Ví dụ ChatGPT.
+
+Bạn hỏi:
+	Tôi tên Bảo.
+	↓
+	5 phút sau
+
+	Tôi làm ở Nhật.
+	↓
+	10 phút sau
+
+	Hãy viết email cho sếp.
+	Nếu không có Session Memory thì LLM sẽ thấy:
+		"Hãy viết email cho sếp."
+		và không biết:
+			ai?
+			sếp nào?
+			ngôn ngữ gì?
+			người dùng tên gì?
+
+		Agent sẽ phải đọc lại toàn bộ lịch sử.
+
+		Điều này:
+			tốn token
+			chậm
+			đắt
+
+
+
+	## Agent sẽ lưu Session. 
+		Ví dụ:
+
+	Session
+		User Name = Bảo
+		Country = Japan
+		Language = Japanese
+		Current Task
+		Viết email xin nghỉ phép
+
+
+	Lần sau chỉ cần load Session.
+	Không cần load cả lịch sử chat.
+
+
+
+
+# 3. Context Management là gì?
+
+
+	Đây là khái niệm rất quan trọng.
+		LLM KHÔNG BAO GIỜ đọc toàn bộ dữ liệu.
+		
+	Nó chỉ đọc:
+
+
+		Context Window
+
+		Ví dụ:
+
+		Claude
+			200K token
+
+		GPT
+			128K token
+
+		Nếu dữ liệu lớn hơn:
+			500K token
+
+		thì phải quyết định:
+			Cái gì được đưa vào?
+
+			Cái gì bỏ đi?
+			Đó gọi là
+			Context Management
+
+
+
+		Nói cách khác
+			Agent giống thư ký.
+
+		LLM giống CEO.
+		Thư ký sẽ quyết định:
+		"Đưa tài liệu nào lên bàn CEO."
+		CEO không tự tìm.
+
+
+
+
+# 4. Session Memory khác Context Management như thế nào? 
+
+| Session Memory              | Context Management                |
+| --------------------------- | --------------------------------- |
+| Lưu trạng thái              | Chọn dữ liệu đưa vào prompt       |
+| Dùng nhiều request          | Chỉ dùng cho inference hiện tại   |
+| Có thể lưu DB               | Không nhất thiết lưu              |
+| Là "memory"                 | Là "selection"                    |
+| Ví dụ: user đang làm bước 3 | Ví dụ: chỉ gửi document liên quan |
+
+
+
+# 5. Có những loại Memory nào? 
+
+	Đây là kiến trúc Agent hiện đại.
+
+	Memory
+		├── Short-term Memory
+		├── Long-term Memory
+		├── Working Memory
+		├── Episodic Memory
+		├── Semantic Memory
+
+
+
+	##	Short-term Memory
+
+		Chỉ nhớ trong Session.
+		Ví dụ
+			Tên user
+			Task hiện tại
+			Bước đang làm
+
+		Kết thúc session
+		↓
+		xóa.
+
+
+
+
+	## Long-term Memory
+
+		Nhớ nhiều tháng.
+			Ví dụ
+			User thích Java
+			User ở Nhật
+			User thích AWS
+
+		ChatGPT Memory là ví dụ.
+
+
+
+
+	## Working Memory
+
+		Đây là phần LLM đang suy nghĩ.
+		Ví dụ
+
+		Step 1
+		↓
+		Tool A
+		↓
+		Tool B
+		↓
+		Reasoning
+		↓
+		Final Answer
+
+		Memory này chỉ tồn tại lúc Agent suy nghĩ.
+
+
+	## Episodic Memory
+			Nhớ các lần làm việc.
+
+
+			Ví dụ
+				Lần trước
+				đã deploy production
+				↓
+				rollback
+				↓
+				thành công
+				Lần sau Agent nhớ.
+
+
+
+	## Semantic Memory 
+
+			Là tri thức.
+			Ví dụ
+				EC2 là compute
+				S3 là object storage
+				Đây không phải cuộc hội thoại.
+				Mà là kiến thức.
+
+
+
+# 6. Context Management hoạt động như thế nào?
+
+
+
+		Ví dụ
+
+		User hỏi:
+			Vì sao Lambda timeout?
+
+			Knowledge Base
+			5000 document
+			Agent sẽ không gửi hết.
+
+
+		Quy trình:
+				Question
+				↓
+				Embedding
+				↓
+				Vector Search
+				↓
+				Top 5 document
+				↓
+				Context Builder
+				↓
+				Prompt
+				↓
+				Claude
+
+
+		Đó chính là Context Management.
+
+
+
+# 7. Trong AWS Bedrock Agent
+		User
+		↓
+		Session
+		↓
+		Agent
+		↓
+		Orchestrator
+		↓
+		Knowledge Base
+		↓
+		Memory
+		↓
+		Tool
+		↓
+		LLM
+
+
+	Trong đó
+
+	Session chứa:
+		Session ID
+		Conversation
+		Task State
+		Tool State
+		Variables
+
+	Agent dùng Session để tiếp tục công việc.
+
+
+
+
+# 8. Mapping với AWS
+
+| Khái niệm            | AWS Service                  |
+| -------------------- | ---------------------------- |
+| Session Memory       | Amazon Bedrock Agent Session |
+| Long-term Memory     | DynamoDB / Aurora / S3       |
+| Context              | Prompt + Retrieved Documents |
+| Context Management   | Bedrock Knowledge Base + RAG |
+| Semantic Memory      | OpenSearch Vector Store      |
+| Episodic Memory      | DynamoDB / Aurora            |
+| Conversation History | Session Store                |
+
+
+
+# 10. Trade-off
+		
+| Lưu quá nhiều | Lưu quá ít      |
+| ------------- | --------------- |
+| Token tăng    | Agent quên      |
+| Chi phí tăng  | Trải nghiệm kém |
+| Context nhiễu | Hỏi lặp         |
+| Latency tăng  | Sai logic       |
+
+
+Một Senior sẽ cố gắng:
+	Lưu tối thiểu nhưng đủ để tiếp tục công việc.
+
+
+
+
+# 11. Các từ khóa hay gặp trong đề thi
+
+	Session
+	Conversation History
+	Context Window
+	Token Limit
+	Prompt Engineering
+	Memory
+	State Management
+	Working Memory
+	Long-term Memory
+	Session State
+	Context Injection
+	RAG
+	Context Retrieval
+	Conversation State
+	Stateless
+	Stateful
+
+
+# 12. Các bẫy (Trap) 
+
+| Bẫy                              | Thực tế                                                                                                            |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Session = Database               | Sai. Session chỉ là trạng thái làm việc, không phải kho dữ liệu lâu dài.                                           |
+| Context = Memory                 | Sai. Context là dữ liệu được đưa vào prompt của một lần inference; Memory là dữ liệu được lưu để dùng lại sau này. |
+| Agent nhớ mọi thứ                | Sai. Agent chỉ nhớ những gì được lưu và nạp lại.                                                                   |
+| LLM có trí nhớ vĩnh viễn         | Sai. Mỗi lần inference là độc lập nếu không truyền context hoặc memory.                                            |
+| Context Window càng lớn càng tốt | Sai. Context lớn tăng chi phí, tăng độ trễ và có thể làm mô hình mất tập trung vào thông tin quan trọng.           |
+
+
+
+# 13. So sánh các khái niệm dễ nhầm
+
+| Khái niệm | Bản chất                                             |
+| --------- | ---------------------------------------------------- |
+| Session   | Trạng thái của một cuộc hội thoại hoặc workflow.     |
+| Memory    | Dữ liệu được lưu để sử dụng trong tương lai.         |
+| Context   | Dữ liệu thực sự được gửi vào LLM ở lần gọi hiện tại. |
+| Prompt    | Hướng dẫn và dữ liệu đầu vào gửi cho LLM.            |
+| State     | Giá trị hiện tại của tiến trình (ví dụ: bước 3/5).   |
+| History   | Nhật ký các cuộc hội thoại trước đó.                 |
+
+
+
+# 
+                Goal Manager
+                     │
+      ┌──────────────┼──────────────┐
+      │              │              │
+ Identity      Long-term KB    Episodic Memory
+      │              │              │
+      └──────────────┼──────────────┘
+                     │
+             Memory Index / Graph
+                     │
+        Relevance + Recency + Importance
+                     │
+            Context Constructor
+                     │
+              Working Memory
+                     │
+                    LLM
+
+Working Memory: chỉ giữ vài nghìn token thực sự cần thiết.
+Memory Index: không lưu nội dung đầy đủ mà lưu các "điểm neo" (anchors), quan hệ và mức độ quan trọng.
+Episodic Memory: lưu các sự kiện.
+Semantic Memory: lưu tri thức đã được khái quát.
+Identity/Goal: giữ các mục tiêu và nguyên tắc bất biến của agent.
+
+Khi cần, agent không "đọc lại", mà kích hoạt (activate) các vùng nhớ liên quan rồi mới mở rộng (expand) nếu cần thêm chi tiết. Điều này gần với cơ chế nhớ của con người hơn là chỉ tóm tắt lịch sử hội thoại.
+
+
+Memory không nên được lưu dưới dạng văn bản (text), mà dưới dạng cấu trúc có thể nén và mở rộng nhiều cấp (hierarchical semantic graph).
+
+Dormant Memory
+
+↓
+
+Weak Activation
+
+↓
+
+Candidate
+
+↓
+
+Expanded
+
+↓
+
+Working Memory
+
+↓
+
+Archived
+
+
+Theo mình, đừng bắt đầu bằng câu hỏi:
+	"Làm sao để Agent nhớ nhiều hơn?"
+
+Hãy bắt đầu bằng câu hỏi:
+	"Ký ức là gì dưới góc nhìn tính toán?"
+
+
+
+Nếu trả lời được câu hỏi này, bạn có thể tạo ra không chỉ một framework Agent mới mà còn một mô hình bộ nhớ mới cho AI.
+
+Hiện nay, phần lớn hệ thống (OpenAI, Anthropic, Google, Microsoft...) vẫn chủ yếu kết hợp context window + retrieval + summary + persistent memory. Chúng rất mạnh về kỹ thuật, nhưng chưa có một lý thuyết thống nhất về "trí nhớ" tương tự cách khoa học thần kinh mô tả trí nhớ của con người.
+
+Có lẽ đột phá tiếp theo sẽ không đến từ việc tăng context lên 10 triệu token, mà từ việc tìm ra một kiến trúc bộ nhớ có khả năng nén, kích hoạt và tái tạo tri thức theo mục tiêu. Đó là một hướng nghiên cứu thực sự, và cũng là lý do vì sao các lĩnh vực như cognitive architecture, neuroscience, information theory và agent systems đang bắt đầu hội tụ. Ý tưởng của bạn nằm đúng ở giao điểm đó.
+
+
+		
 
 </pre><a id='backBottom' href='../aws-bedrock-agent-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
