@@ -1,4 +1,440 @@
-<html><head><title>Lesson 10 == Bedrock Agent x ===Agent Orchestration ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 10 -- Bedrock Agent x --=Agent Orchestration -//</h1><pre>
+<html><head><title>Lesson 10 == Bedrock Agent ===Multi-Agent Collaboration ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 10 -- Bedrock Agent --=Multi-Agent Collaboration -//</h1><pre>Multi-Agent Collaboration
+Một Agent điều phối nhiều Agent khác (Supervisor Agent, Worker Agent), xu hướng mới của AWS và Anthropic. 
+
+
+# 1. Bản chất là gì? 
+
+
+	Nói ngắn gọn:
+		Multi-Agent Collaboration = Chia một bài toán lớn thành nhiều bài toán nhỏ, giao cho nhiều AI Agent chuyên môn khác nhau xử lý, sau đó tổng hợp kết quả.
+
+	Giống như trong công ty.
+	Không ai vừa làm CEO, vừa kế toán, vừa luật sư, vừa lập trình.
+
+
+		Thay vào đó
+
+		CEO
+		 │
+		 ├── HR
+		 ├── Accountant
+		 ├── Lawyer
+		 └── Engineer
+
+
+	CEO chỉ:
+		nhận yêu cầu
+		chia việc
+		tổng hợp kết quả
+
+		Đó chính là Supervisor Agent.
+		Các nhân viên là
+		Worker Agents
+
+
+
+
+	Một Agent thì sao?
+	Một Agent phải tự làm
+
+		Hiểu yêu cầu
+		↓
+		Lập kế hoạch
+		↓
+		Search
+		↓
+		Coding
+		↓
+		Tính toán
+		↓
+		Database
+		↓
+		Viết báo cáo
+
+
+
+	Rất nhiều responsibility.
+
+	Agent dễ bị
+		context quá dài
+		reasoning kém
+		tool selection sai
+		hallucination
+
+
+	Multi-Agent sẽ là
+
+               User
+
+                 │
+
+         Supervisor Agent
+
+        ╱      │       ╲
+
+ Search   Coding   Finance
+
+ Agent     Agent    Agent
+
+      ╲      │      ╱
+
+      Result Aggregation
+
+             │
+
+            User
+
+	Mỗi Agent chỉ làm đúng chuyên môn.
+
+
+# 2. Tại sao Multi-Agent tốt hơn?
+
+	Bạn hỏi
+
+		"Phân tích doanh nghiệp ABC rồi đề xuất đầu tư."
+		Nếu chỉ có một Agent
+
+
+		Search báo cáo
+		↓
+		Đọc PDF
+		↓
+		Phân tích tài chính
+		↓
+		Phân tích tin tức
+		↓
+		Tính ROE
+		↓
+		Đưa kết luận
+		Khối lượng reasoning rất lớn.
+
+	
+	Multi-Agent
+		Supervisor chia thành
+
+		Financial Agent
+		↓
+		News Agent
+		↓
+		Risk Agent
+		↓
+		Market Agent
+
+		Sau đó tổng hợp.
+		Giống như công ty tư vấn McKinsey.
+
+
+
+
+# 3. Kiến trúc chuẩn
+
+                  User
+
+                    │
+
+          Supervisor Agent
+
+        ╱      │      │      ╲
+
+ Planner Search SQL Coding
+
+        │      │      │      │
+
+      Claude Tool Lambda RDS
+
+         ╲      │      │     ╱
+
+           Result Merge
+
+                 │
+
+             Final Answer
+
+
+		Supervisor
+		không làm việc.
+		Supervisor chỉ
+			Planning
+			Task decomposition
+			Routing
+			Retry
+			Merge Result
+
+		Worker
+		chỉ tập trung
+		một capability.
+
+
+# 4. Supervisor Agent là gì?
+
+	Supervisor giống Project Manager.
+	Ví dụ
+	
+	Bạn nói
+		Lập kế hoạch chuyến đi Nhật
+
+	Supervisor nghĩ
+
+		Task 1
+
+		Tìm vé máy bay
+		↓
+		Task 2
+
+		Tìm khách sạn
+		↓
+		Task 3
+		Lập lịch trình
+		↓
+		Task 4
+
+		Ước tính chi phí
+
+	Sau đó gọi
+
+		Flight Agent
+		Hotel Agent
+		Travel Agent
+		Budget Agent
+
+
+	Supervisor không biết
+		vé máy bay.
+		Supervisor biết
+		"Ai nên làm?"
+		Đây là bản chất.
+
+
+
+# 5. Worker Agent là gì? 
+
+	Worker
+	là chuyên gia.
+
+	Ví dụ
+		SQL Agent
+		↓
+		Chỉ biết SQL
+
+
+	Python Agent
+	↓
+	Chỉ biết Code
+
+	Legal Agent
+	↓
+	Chỉ đọc luật
+
+	Finance Agent
+	↓
+	Chỉ phân tích tài chính
+
+	Điều này làm
+	Reasoning sâu hơn.
+
+
+
+# 6. Ví dụ thực tế
+
+	Một ngân hàng.
+	Khách hàng hỏi
+
+	Tôi có nên vay mua nhà không?
+
+	Supervisor
+	chia thành
+
+		Credit Agent
+		↓
+		Income Agent
+		↓
+		Risk Agent
+		↓
+		Interest Rate Agent
+
+
+	Sau đó tổng hợp.
+		Nếu một Agent làm tất cả
+		khả năng hallucination cao hơn.
+
+
+
+# 7. Mapping với AWS
+
+| Thành phần       | AWS                                           |
+| ---------------- | --------------------------------------------- |
+| Supervisor Agent | Amazon Bedrock Agent / AgentCore Orchestrator |
+| Worker Agent     | Amazon Bedrock Agent                          |
+| Tool             | Lambda                                        |
+| Database         | DynamoDB / Aurora                             |
+| Search           | Amazon Kendra / OpenSearch                    |
+| Knowledge Base   | Bedrock Knowledge Base                        |
+| Queue            | Amazon SQS                                    |
+| Event            | Amazon EventBridge                            |
+| Logging          | CloudWatch                                    |
+| Workflow         | AWS Step Functions                            |
+
+
+
+# 8. Mapping với Anthropic
+
+	Anthropic gọi đây là
+		Orchestrator Pattern
+	hoặc
+		Manager Agent
+		
+		
+	Worker gọi là
+		Specialist Agent		
+		
+	Claude khuyến nghị
+		Agent nhỏ
+		Context nhỏ
+		Responsibility rõ ràng
+
+		Không nên
+		một Agent biết mọi thứ.
+
+
+
+
+# 9. Các kiểu Multi-Agent phổ biến
+
+| Pattern             | Ý nghĩa                                  |
+| ------------------- | ---------------------------------------- |
+| Supervisor → Worker | Phổ biến nhất                            |
+| Peer-to-Peer        | Các Agent trao đổi ngang hàng            |
+| Planner → Executor  | Planner lập kế hoạch, Executor thực hiện |
+| Debate Agents       | Hai Agent tranh luận rồi quyết định      |
+| Hierarchical        | Nhiều tầng quản lý                       |
+| Swarm               | Hàng chục Agent làm song song            |
+
+
+
+
+
+# 10. Trade-off
+
+	Ưu điểm
+		✅ Reasoning tốt hơn
+		✅ Context nhỏ hơn
+		✅ Dễ scale
+		✅ Chuyên môn hóa
+		✅ Ít hallucination hơn
+
+	Nhược điểm
+		❌ Tăng latency do phải điều phối nhiều Agent.
+		❌ Chi phí cao hơn (nhiều lần gọi mô hình).
+		❌ Đồng bộ trạng thái (state) và chia sẻ ngữ cảnh khó hơn.
+		❌ Thiết kế orchestration và xử lý lỗi phức tạp hơn.
+
+
+
+# 11. Từ khóa thường gặp trong đề thi
+
+| Keyword            | Ý nghĩa            |
+| ------------------ | ------------------ |
+| Orchestration      | Điều phối          |
+| Multi-Agent        | Nhiều Agent        |
+| Supervisor         | Điều phối          |
+| Planner            | Lập kế hoạch       |
+| Worker             | Chuyên gia         |
+| Delegation         | Giao việc          |
+| Task decomposition | Chia nhỏ bài toán  |
+| Routing            | Chọn Agent phù hợp |
+| Aggregation        | Tổng hợp kết quả   |
+| Collaboration      | Hợp tác            |
+
+
+
+# 12. Các bẫy AWS rất thích hỏi
+
+
+	Bẫy 1
+
+		Một Agent biết SQL, Python, Search, Finance.
+		Đây không phải thiết kế tối ưu.
+
+	AWS thích
+
+			Một Agent
+			=
+			Một nhiệm vụ
+
+	Bẫy 2
+
+		Hỏi
+			Làm sao giảm hallucination?
+			Đáp án không phải luôn là đổi sang model lớn hơn.
+			Một đáp án thường gặp là:
+			chia bài toán thành nhiều Agent chuyên biệt,
+			mỗi Agent có tool và knowledge phù hợp.
+
+	Bẫy 3
+		Planner
+		không phải
+		Executor
+		Planner
+		không chạy Tool.
+		Planner
+		lập kế hoạch.
+
+	Bẫy 4
+		Supervisor
+		không nên
+			thực hiện business logic.
+			Supervisor chỉ điều phối.
+
+
+
+# 13. So sánh các khái niệm dễ nhầm
+
+
+| Khái niệm        | Vai trò                         |
+| ---------------- | ------------------------------- |
+| Agent            | Có thể tự suy nghĩ và dùng tool |
+| Workflow         | Luồng cố định, ít quyết định    |
+| Orchestrator     | Điều phối luồng                 |
+| Supervisor Agent | Điều phối các Agent khác        |
+| Worker Agent     | Thực hiện tác vụ chuyên biệt    |
+
+
+
+
+
+# 15. Cách AWS ra đề
+
+	AWS hiếm khi hỏi trực tiếp: "Multi-Agent là gì?"
+
+	Thay vào đó, đề sẽ mô tả các dấu hiệu như:
+		bài toán có nhiều lĩnh vực chuyên môn,
+		cần mở rộng từng chức năng độc lập,
+		muốn giảm hallucination,
+		cần tái sử dụng các thành phần,
+		nhiều công cụ hoặc nhiều nguồn dữ liệu khác nhau.
+
+	Nếu xuất hiện các dấu hiệu này, đáp án thường nghiêng về kiến trúc Supervisor Agent + Worker Agents thay vì một Agent duy nhất làm mọi việc.
+
+
+
+
+
+
+
+
+
+
+		// giải quyết  4 bài toàn này bằng agent 
+		❌ Tăng latency do phải điều phối nhiều Agent.
+		❌ Chi phí cao hơn (nhiều lần gọi mô hình).
+		❌ Đồng bộ trạng thái (state) và chia sẻ ngữ cảnh khó hơn.
+		❌ Thiết kế orchestration và xử lý lỗi phức tạp hơn.
+
+
+
+
+
+
 
 
 </pre><a id='backBottom' href='../aws-bedrock-agent-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
