@@ -1,4 +1,465 @@
-<html><head><title>Lesson 11 == Bedrock Agent x ===Agent Orchestration ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 11 -- Bedrock Agent x --=Agent Orchestration -//</h1><pre>
+<html><head><title>Lesson 11 == Bedrock Agent  ===Guardrails & Security ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 11 -- Bedrock Agent  --=Guardrails & Security -//</h1><pre>Guardrails & Security
+ Kiểm soát nội dung, PII, quyền truy cập, IAM, bảo vệ dữ liệu doanh nghiệp.
+
+# Bản chất
+
+
+	Rất nhiều người nghĩ:
+		AI mạnh → chỉ cần prompt tốt.
+		
+	Đây là suy nghĩ sai.
+	Trong doanh nghiệp, vấn đề lớn nhất không phải AI thông minh bao nhiêu.
+
+	Mà là:
+		AI được phép nói gì?
+		AI được phép xem gì?
+		AI có làm lộ dữ liệu công ty không?
+
+	Đó chính là lý do Guardrails tồn tại.
+
+	Guardrails giống như:
+		Luật pháp + Camera + Bảo vệ đứng trước AI.
+		
+		AI muốn trả lời gì cũng phải đi qua lớp này.
+
+
+
+# Guardrails KHÔNG phải Model
+	Đây là điểm AWS cực thích hỏi.
+
+	Ví dụ:
+		Claude
+		Llama
+		Nova
+		Titan
+
+	đều chỉ là Model.
+		Model chỉ sinh câu trả lời.
+		Guardrails mới là người kiểm duyệt.
+		Giống như
+		Ca sĩ -> hát
+		Ban kiểm duyệt -> được phát sóng hay không
+
+
+
+
+
+# Luồng hoạt động
+		User
+		↓
+		Prompt
+		↓
+		Guardrails kiểm tra Prompt
+		↓
+		Model
+		↓
+		Model sinh kết quả
+		↓
+		Guardrails kiểm tra Output
+		↓
+		User
+
+
+Guardrails hoạt động cả:
+		Input
+		Output
+
+	không chỉ Output.
+
+
+
+
+# Có những thứ Guardrails kiểm tra
+
+	## 1. Content Filtering
+
+
+	Ví dụ
+
+	User hỏi
+		How to make a bomb?
+
+	Model biết.
+		Nhưng Guardrails chặn.
+
+	Output:
+		I can't assist with that.
+
+	Ví dụ
+		How to kill someone
+		bị chặn.
+
+
+
+	AWS gọi đây là
+		Content Policy
+
+
+
+
+
+	## 2. PII Detection
+
+		PII
+		=
+			Personally Identifiable Information
+
+
+		Ví dụ
+			Phone number
+			Passport
+			Email
+			Address
+			Credit card
+			My Number
+			Social Security Number
+
+		Guardrails phát hiện.
+
+		Ví dụ
+			User nhập
+			My credit card is
+			4111 xxxx xxxx xxxx
+			
+			Guardrails
+			↓
+			Mask
+			↓
+			Output
+			***********
+		hoặc block.
+
+
+
+		Ví dụ công ty chatbot
+			Khách hàng nhập
+			Tên
+			Địa chỉ
+			SĐT
+			Mã số thuế
+			AI không nên học các dữ liệu này.
+			Guardrails sẽ che.
+
+
+
+	## 3. Sensitive Information
+	
+	
+		Ví dụ
+
+		Internal company document
+		Confidential
+		Secret API Key
+		Database password
+		Guardrails có thể chặn.
+
+		Ví dụ
+		User hỏi
+		Show me database password
+		AI biết.
+		Nhưng không được phép trả lời.	
+			
+	
+	
+	## 	4. Denied Topics
+	
+	
+	Ví dụ
+		Chatbot ngân hàng.
+
+		Bạn không muốn AI nói về
+			Politics
+			Religion
+			Medical diagnosis
+			Legal advice
+
+		Guardrails
+		↓
+		Block.
+			
+			
+		Ví dụ
+			I think you have cancer.
+		Không được.	
+			
+			
+
+	# 5. Word Filter
+			Ví dụ
+				Company confidential words
+				Project name
+				Internal code name
+
+			Ví dụ
+				Project Sakura
+				AI không được nhắc.
+
+
+
+
+
+
+	## 6. Custom Policy
+
+
+		Ví dụ
+
+		AI HR.
+		Không được
+			Đánh giá chủng tộc
+			Giới tính
+			Tôn giáo
+			Quốc tịch
+
+		Bạn tự định nghĩa luật.
+
+
+
+
+# Guardrails KHÁC IAM
+
+
+		Đây là câu AWS rất thích.
+			IAM
+			quản lý
+			Ai được dùng tài nguyên AWS.
+		Ví dụ
+			Dev
+			Admin
+			Finance
+
+		quyền khác nhau.
+
+			IAM quyết định
+			Có được gọi Bedrock API không?
+			Guardrails quyết định
+			Sau khi gọi API
+			AI được phép trả lời gì.
+
+
+
+		Ví dụ
+			Employee
+			↓
+			IAM OK
+			↓
+			Claude
+			↓
+			Guardrails
+			↓
+			Không cho trả lời lương CEO
+
+		IAM không làm được việc này.
+
+
+
+
+# Guardrails KHÁC Knowledge Base
+
+
+	Knowledge Base
+	quản lý
+		AI lấy dữ liệu ở đâu
+
+	Guardrails
+	quản lý
+		AI được phép nói gì
+
+	Ví dụ
+		Knowledge Base có
+		Salary.xlsx
+		Guardrails vẫn có thể chặn.
+
+
+
+
+# Guardrails KHÁC RAG
+
+	RAG
+	↓
+	tìm tài liệu.
+	Guardrails
+	↓
+	kiểm duyệt kết quả.
+
+
+
+# Guardrails KHÁC Prompt
+
+
+	Prompt
+		Please don't answer political question.
+		Model có thể vẫn trả lời.
+		
+	Guardrails
+		↓
+		bắt buộc.
+		Đây là sự khác biệt.
+		Prompt là chỉ dẫn (instruction).
+		Guardrails là cơ chế thực thi (enforcement).
+
+
+
+
+# Mapping AWS
+
+| Thành phần     | AWS Service           |
+| -------------- | --------------------- |
+| AI             | Bedrock Model         |
+| Kiểm duyệt     | Bedrock Guardrails    |
+| Quyền truy cập | IAM                   |
+| Mã hóa dữ liệu | KMS                   |
+| Lưu log        | CloudWatch            |
+| Audit          | CloudTrail            |
+| Bí mật         | Secrets Manager       |
+| Tài liệu       | Knowledge Base        |
+| Vector Search  | OpenSearch Serverless |
+
+
+# Trade-off
+
+| Guardrails      | Ưu điểm                             | Nhược điểm                                              |
+| --------------- | ----------------------------------- | ------------------------------------------------------- |
+| Có Guardrails   | Bảo vệ dữ liệu, tuân thủ, nhất quán | Có thể chặn nhầm (false positive), tăng một chút độ trễ |
+| Chỉ dùng Prompt | Linh hoạt                           | Không đáng tin cậy, model có thể bỏ qua                 |
+
+
+
+
+# Các từ khóa thường xuất hiện trong đề thi
+
+
+| Keyword               | Ý nghĩa                               |
+| --------------------- | ------------------------------------- |
+| Guardrails            | Kiểm soát nội dung AI                 |
+| Content filtering     | Lọc nội dung                          |
+| PII detection         | Phát hiện thông tin định danh cá nhân |
+| Sensitive information | Thông tin nhạy cảm                    |
+| Denied topics         | Chủ đề bị cấm                         |
+| IAM                   | Quản lý quyền truy cập AWS            |
+| Least privilege       | Quyền tối thiểu cần thiết             |
+| Encryption at rest    | Mã hóa dữ liệu khi lưu                |
+| Encryption in transit | Mã hóa dữ liệu khi truyền             |
+| KMS                   | Quản lý khóa mã hóa                   |
+| CloudTrail            | Ghi lại hoạt động API                 |
+| CloudWatch            | Giám sát và log                       |
+| Secrets Manager       | Quản lý bí mật                        |
+
+
+
+# Các bẫy (Trap)
+
+| Bẫy                                    | Đáp án đúng     |
+| -------------------------------------- | --------------- |
+| Chặn AI trả lời nội dung độc hại → IAM | ❌ Guardrails    |
+| Lọc PII bằng Prompt                    | ❌ Guardrails    |
+| Quyết định ai được gọi Bedrock API     | IAM             |
+| Quyết định AI được phép trả lời gì     | Guardrails      |
+| Bảo vệ khóa API                        | Secrets Manager |
+| Mã hóa dữ liệu                         | KMS             |
+| Ghi log API                            | CloudTrail      |
+| Ghi log ứng dụng                       | CloudWatch      |
+
+
+# Cách AWS ra đề
+
+AWS hiếm khi hỏi trực tiếp: "Guardrails là gì?"
+
+Thay vào đó, đề thường mô tả yêu cầu kinh doanh:
+
+"Prevent the model from generating harmful responses."
+"Block personally identifiable information (PII)."
+"Apply a centralized content policy across multiple generative AI applications."
+"Restrict responses on legal or medical topics."
+"Reduce the risk of exposing confidential enterprise data."
+
+Khi thấy các cụm từ như filter, block, PII, content policy, harmful content, centralized AI safety, hãy ưu tiên nghĩ đến Amazon Bedrock Guardrails.
+
+
+# Tóm tắt tư duy cần nhớ
+
+		IAM
+			↓
+		Ai được phép sử dụng AWS?
+
+
+		Guardrails
+			↓
+		AI được phép nói gì?
+
+
+		Knowledge Base
+			↓
+		AI lấy dữ liệu từ đâu?
+
+
+		RAG
+			↓
+		AI tìm tài liệu như thế nào?
+
+
+		KMS
+			↓
+		Dữ liệu được mã hóa ra sao?
+
+
+		CloudTrail
+			↓
+		Ai đã thực hiện hành động nào trên AWS?
+
+
+		CloudWatch
+			↓
+		Hệ thống đang hoạt động như thế nào?
+
+
+
+
+                 AWS
+
+                   │
+
+     ┌─────────────┼─────────────┐
+
+     │             │             │
+
+Infrastructure   Permissions      AI
+
+     │             │             │
+
+Control Tower     SCP        Bedrock Guardrails
+
+     │             │             │
+
+Detective      Block API     Filter Output
+
+Preventive
+
+Proactive
+
+🏢 Công ty AWS
+
+① Cổng vào (Preventive)
+👮 Bảo vệ đứng ở cửa.
+→ Không có thẻ thì không được vào.
+
+② Camera trong tòa nhà (Detective)
+📹 Chỉ ghi hình và báo khi có vi phạm.
+→ Không ngăn được hành động.
+
+③ Phòng thẩm định bản thiết kế (Proactive)
+📐 Kiểm tra bản vẽ trước khi xây.
+→ Sai tiêu chuẩn thì không được thi công.
+
+④ Phòng AI Chatbot (Bedrock Guardrails)
+🤖 Kiểm duyệt lời nói của AI.
+→ AI không được tiết lộ PII, thông tin mật hay trả lời nội dung bị cấm.
+
+	Infrastructure Guardrails bảo vệ tài nguyên AWS.
+	Bedrock Guardrails bảo vệ hành vi của AI.
+
+
+
 
 
 </pre><a id='backBottom' href='../aws-bedrock-agent-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
