@@ -1,4 +1,441 @@
-<html><head><title>Lesson 12 == Bedrock Agent x ===Agent Orchestration ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 12 -- Bedrock Agent x --=Agent Orchestration -//</h1><pre>
+<html><head><title>Lesson 12 == Bedrock Agent ===Observability & Evaluation ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 12 -- Bedrock Agent --=Observability & Evaluation -//</h1><pre>
+Observability & Evaluation
+Theo dõi Agent bằng CloudWatch, Trace, đánh giá Accuracy, Latency, Cost và Debug workflow. 
 
+#  Bản chất
+
+	Rất nhiều người nghĩ:
+		"Agent chạy được là xong."
+		Đó là tư duy của người mới.
+
+
+
+	Trong production, câu hỏi thực sự luôn là:
+		Agent có trả lời đúng không?
+		Agent mất bao lâu?
+		Agent gọi bao nhiêu model?
+		Agent gọi tool nào?
+		Agent lỗi ở bước nào?
+		Chi phí mỗi request bao nhiêu?
+		Nếu người dùng báo lỗi thì debug thế nào?
+
+	Đó chính là:
+		Observability
+	
+	Nếu Monitoring chỉ trả lời:
+		"Server còn sống."
+
+	thì
+	
+	Observability trả lời:
+		"Tại sao hệ thống lại hành xử như vậy?"
+		Đây là khái niệm cực kỳ quan trọng của DevOps và cũng áp dụng nguyên vẹn cho AI Agent.
+
+
+
+# Một Agent thực sự gồm nhiều bước
+
+
+		User
+		↓
+		Supervisor
+		↓
+		Planner
+		↓
+		Knowledge Base
+		↓
+		Claude
+		↓
+		Lambda
+		↓
+		Claude
+		↓
+		Final Answer
+
+
+		Nếu kết quả sai.
+		Sai ở đâu?
+		Planner?
+		hay
+		Knowledge Base?
+		hay
+		Claude hallucination?
+		hay
+		Lambda timeout?
+		Nếu không biết thì không sửa được.
+		Cho nên
+		Observability = nhìn xuyên toàn bộ workflow.
+
+
+# Ví dụ đời thường
+
+	Bạn gọi Grab.
+		Bạn không chỉ muốn biết:
+			Đơn đã giao.
+
+	Bạn muốn biết
+		Đã nhận đơn lúc nào
+		↓
+		Tài xế tới quán
+		↓
+		Đợi món
+		↓
+		Rời quán
+		↓
+		Đang giao
+		↓
+		Đã giao
+
+
+		Nếu giao muộn
+		Bạn biết ngay
+		kẹt xe
+		hay
+		quán làm chậm.
+		AI Agent cũng vậy.
+
+
+# AWS Mapping
+
+| Thành phần          | AWS                      |
+| ------------------- | ------------------------ |
+| Log                 | CloudWatch Logs          |
+| Metric              | CloudWatch Metrics       |
+| Dashboard           | CloudWatch Dashboard     |
+| Alarm               | CloudWatch Alarm         |
+| Trace               | X-Ray / Agent Trace      |
+| Distributed Trace   | X-Ray                    |
+| Event               | EventBridge              |
+| Debug Workflow      | Bedrock Trace            |
+| Evaluation          | Bedrock Evaluation       |
+| Accuracy Evaluation | Bedrock Model Evaluation |
+
+
+
+
+# Có 5 thứ luôn phải theo dõi
+
+1. Accuracy (Sự chính xác)
+
+	Đây là KPI quan trọng nhất.
+
+	Ví dụ
+
+		User hỏi
+			Chi phí EC2 tháng này?
+
+		Agent trả lời
+			100 USD
+
+		Thực tế
+			98 USD
+		Accuracy cao.
+
+
+		Nếu
+			500 USD
+		Accuracy thấp.
+
+
+
+
+	Accuracy không chỉ là đúng/sai.
+
+	Có thể đo:
+		Faithfulness  - sự chung thủy 
+		Hallucination 
+		Groundedness	- tính căn cứ 
+		Answer relevance	- Trả lời mức độ liên quan
+		Retrieval quality	-  chất lượng truy xuất 
+
+	Đây đều là metric trong Evaluation.
+
+
+
+
+# 2. Latency
+		Latency
+		=
+		thời gian người dùng chờ.
+
+		Question
+		↓
+		Claude
+		3s
+		↓
+		Knowledge Base
+		2s
+		↓
+		Lambda
+		5s
+		↓
+		Claude
+		4s
+		↓
+		Answer
+
+
+		Latency
+		=
+		14s
+		Quá lâu.
+		Người dùng bỏ đi.
+
+
+
+		Muốn tối ưu
+		phải biết
+		chậm ở đâu.
+
+
+
+
+# 3. Cost
+	Một request có thể gọi
+
+		Claude
+		↓
+		Claude
+		↓
+		Titan Embedding
+		↓
+		Knowledge Base
+		↓
+		Lambda
+		↓
+		Claude
+
+
+
+		Không ai để ý
+		thì
+
+		1 request
+		=
+		0.2 USD
+		100 nghìn request
+		=
+		20,000 USD
+		Rất nhiều startup chết vì điều này.
+
+
+		CloudWatch + Cost Explorer
+
+		cho biết
+			số token
+			model invocation 
+			request count
+			cost trend
+
+
+# 4. Trace
+
+
+	Trace
+		là timeline của toàn bộ request.
+
+	Ví dụ
+
+		10:00:01
+		User hỏi
+		↓
+		10:00:02
+		Planner
+		↓
+		10:00:03
+		Knowledge Base
+		↓
+		10:00:05
+		Claude
+		↓
+		10:00:07
+		Lambda
+		↓
+		10:00:08
+		Claude
+		↓
+		10:00:10
+		Final
+
+
+		Bạn nhìn vào
+		là biết ngay
+		bước nào chậm.
+
+
+
+# 5. Debug Workflow
+
+
+		Đây là thứ cực kỳ quan trọng.
+		Ví dụ
+		Agent trả lời sai.
+		Bạn mở Trace.
+		Thấy
+
+
+			Planner
+			↓
+			Query
+			↓
+			Retrieve
+			↓
+			Prompt
+			↓
+			Tool Call
+			↓
+			Response
+
+
+
+			Bạn phát hiện
+			Planner chọn sai Tool
+			hay
+			Retriever lấy sai document
+			hay
+			Prompt thiếu context
+			Debug xong sửa ngay.
+			
+			
+			
+			
+# 	CloudWatch trong Agent		
+	CloudWatch ghi:
+	
+		- Model invocation
+		- Latency
+		- Error
+		- Retry
+		- Timeout
+		- CPU
+		- Memory
+		- Lambda
+		- API Gateway
+		- Token usage
+		- Request count
+			
+	
+	CloudWatch không hiểu AI.
+	CloudWatch chỉ biết:
+		Có request gì xảy ra.
+	Muốn hiểu Agent
+	cần thêm Trace.	
+		
+	
+	
+# 	Bedrock Trace
+	
+	
+CloudWatch
+	Server View
+
+	Trace
+		Agent View
+
+	Ví dụ
+		CloudWatch
+
+		Latency
+		=
+		15s
+
+		Trace
+
+		Planner
+		1s
+
+		Retrieve
+		2s
+
+		Claude
+		10s
+
+		Lambda
+		2s
+
+		Trace mới cho biết
+		Claude là thủ phạm.
+
+
+
+# Evaluation (sự đánh giá)
+
+		Evaluation
+		=
+		đánh giá chất lượng.
+		Không phải monitoring.
+		
+	Monitoring
+		Agent sống.
+
+	Evaluation
+		Agent giỏi không.
+		
+	
+				
+		Ví dụ
+			1000 câu hỏi
+
+		Agent A
+			Accuracy
+				92%
+				
+		Agent B
+			95%
+			
+		Agent B tốt hơn.	
+	
+	
+	## AWS hỗ trợ
+			Model Evaluation
+			Prompt Evaluation
+			RAG Evaluation
+			Safety Evaluation	
+		
+	
+#	Trade-off
+	
+| Muốn           | Đổi lại                     |
+| -------------- | --------------------------- |
+| Accuracy cao   | Latency tăng                |
+| Accuracy cao   | Cost tăng                   |
+| Cost thấp      | Có thể Accuracy giảm        |
+| Latency thấp   | Có thể Prompt ngắn hơn      |
+| Nhiều Tool     | Workflow phức tạp           |
+| Trace chi tiết | Tăng log storage và chi phí |
+	
+
+| Evaluation    | Monitoring    |
+| ------------- | ------------- |
+| Đúng không    | Có chạy không |
+| Accuracy      | CPU           |
+| Hallucination | Memory        |
+| Relevance     | Error Rate    |
+
+
+# Mô hình ghi nhớ 	
+	
+	                 AI Agent
+                     │
+         ┌───────────┼───────────┐
+         │           │           │
+   Observability   Evaluation   Optimization
+         │           │           │
+         │           │           │
+ CloudWatch + Trace  Accuracy    Cost/Latency tuning
+         │
+         ├── Logs
+         ├── Metrics
+         ├── Traces
+         └── Debug Workflow
+		 
+			 
+	Công thức nhớ:
+		CloudWatch = Hệ thống đang xảy ra chuyện gì?
+		Trace = Request đã đi qua những bước nào?
+		Evaluation = Câu trả lời có tốt và chính xác không?
+		Observability = Hiểu được nguyên nhân, không chỉ nhìn thấy triệu chứng.		 
+				 
+		 
 
 </pre><a id='backBottom' href='../aws-bedrock-agent-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
