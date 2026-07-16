@@ -2,4 +2,525 @@
 Agentic System Design
 Thiết kế kiến trúc doanh nghiệp sử dụng Agent: phân chia nhiệm vụ, Human-in-the-loop, Retry, Fallback, Event-driven AI. 
 
+	Đây là một trong những chủ đề quan trọng nhất nếu bạn muốn xây dựng hệ thống AI thật sự trên AWS, đặc biệt khi sử dụng Amazon Bedrock Agents, Multi-Agent Collaboration, EventBridge, Step Functions, Lambda.
+
+	Đa số người mới đều nghĩ:
+		Agent = Chatbot biết gọi tool.
+
+	Đây là hiểu sai.
+		Trong doanh nghiệp,
+
+		Agent không phải chatbot. Agent là một worker (nhân viên) có khả năng tự lập kế hoạch, sử dụng công cụ, giao tiếp với agent khác và xử lý công việc.
+
+
+
+# I. Bản chất của Agentic System
+
+	Agentic System là một kiến trúc mà:
+		Một bài toán lớn được chia thành nhiều nhiệm vụ nhỏ.
+		Mỗi nhiệm vụ được giao cho một Agent chuyên trách.
+		Giống hệt công ty ngoài đời.
+		Không có CEO nào tự làm tất cả.
+
+
+	Khách hàng hỏi
+
+		"Tôi muốn hoàn tiền đơn hàng."
+		Trong công ty sẽ không có một người làm hết.
+		Thay vào đó
+
+
+		Customer
+		↓
+		Customer Support
+		↓
+		Finance
+		↓
+		Order System
+		↓
+		Inventory
+		↓
+		Notification
+
+		AI Agent cũng hoạt động y hệt.
+
+
+# Mapping AWS 
+
+	User
+	↓
+	Supervisor Agent (Amazon Bedrock Agent)
+	↓
+	Task Planning
+	↓
+	Finance Agent
+	Inventory Agent
+	CRM Agent
+	Email Agent
+	↓
+	AWS Services
+	Lambda
+	DynamoDB
+	S3
+	RDS
+	API Gateway
+	EventBridge
+
+
+
+	Điều quan trọng nhất
+		Agent không thông minh vì model.
+		Agent mạnh vì Architecture.
+		Đề AWS rất thích kiểm tra điều này.
+
+
+
+
+# II. Supervisor Pattern
+	Đây là pattern phổ biến nhất.
+
+            User
+
+              │
+
+      Supervisor Agent
+
+      /      |      \
+
+ Finance   Inventory  CRM
+
+      \      |      /
+
+        Final Response
+
+
+	Supervisor không làm việc.
+
+	Supervisor chỉ
+		hiểu yêu cầu
+		chia task
+		chọn Agent
+		ghép kết quả
+
+	Giống PM.
+
+
+
+# Ví dụ
+
+	User
+		Khách A muốn hoàn tiền đơn hàng.
+
+
+	Supervisor nghĩ
+
+		Need:
+
+			Check Order
+			↓
+			Check Payment
+			↓
+			Approve Refund
+			↓
+			Send Email
+
+	Sau đó gọi
+		Order Agent
+		↓
+		Payment Agent
+		↓
+		Email Agent
+		
+		
+		
+	AWS Mapping	
+		Amazon Bedrock Multi-Agent Collaboration
+		+
+		Bedrock Agent
+		+
+		Lambda
+		+
+		Knowledge Base		
+				
+		
+		
+# Trade-off
+			
+	Ưu điểm
+
+		✅ dễ mở rộng
+		✅ dễ thay Agent
+		✅ dễ debug
+
+	Nhược điểm
+
+		❌ nhiều API Call
+		❌ latency tăng
+		❌ cost tăng		
+		
+		
+		
+		
+# III. Task Decomposition		
+		
+			
+	Đây là kỹ năng quan trọng nhất.
+	Một Agent không nên làm nhiều việc.		
+			
+	Ví dụ sai			
+		HR Agent
+		Làm:
+		Payroll
+		Recruitment
+		Interview
+		Leave
+		Training		
+	Quá nhiều.				
+		
+		
+		
+	Thiết kế đúng
+
+		Payroll Agent
+		Recruitment Agent
+		Interview Agent
+		Leave Agent
+		Một Agent = một domain.
+
+	Đây chính là Single Responsibility Principle áp dụng cho AI.		
+	AWS rất thích thiết kế này.		
+		
+		
+		
+# 	IV. Human-in-the-loop (HITL)	
+		
+		
+	Đây là khái niệm cực kỳ quan trọng.
+
+	Định nghĩa
+
+	Không phải quyết định nào AI cũng được phép tự làm.
+		Một số quyết định
+		↓
+		cần người xác nhận.		
+					
+		
+		
+	Ví dụ
+
+	AI muốn
+	Delete Database
+		Không được.
+		↓
+		Approval Required		
+			
+		
+		
+	Hay
+
+		AI muốn
+
+		Refund
+			100万円
+			↓
+			Manager Approve
+			↓
+			Execute	
+		
+		
+# 	AWS Mapping	
+		
+	Bedrock Agent
+	↓
+	Step Functions Wait
+	↓
+	SNS
+	↓
+	Manager
+	↓
+	Approve
+	↓
+	Continue Workflow		
+		
+		
+	Thực tế	
+		Agent
+		↓
+		Need Approval
+		↓
+		Slack
+		↓
+		Manager
+		↓
+		Approve
+		↓
+		Continue
+
+	Đây là Human-in-the-loop.
+
+
+	Trade-off
+		Ưu
+			An toàn.
+		
+		Nhược
+			Workflow chậm.
+
+ 
+
+
+
+# V. Retry Pattern
+
+	AI rất hay lỗi.
+	Ví dụ
+	API timeout.
+	Hay
+	Tool lỗi.
+	Retry nghĩa là
+	Thử lại.
+
+		Call API
+		↓
+		Fail
+		↓
+		Retry
+		↓
+		Success
+
+	AWS Mapping
+		Step Functions
+		Retry
+		Lambda Retry
+		SQS Retry		
+
+
+		Không phải lỗi nào cũng retry.
+		Ví dụ
+		Permission Denied
+		Retry vô ích.
+		Đây là bẫy rất hay gặp.
+
+
+
+
+# VI. Fallback Pattern
+
+	Nếu Agent A thất bại.
+	↓
+	Dùng phương án B.
+
+		Claude
+		↓
+		Fail
+		↓
+		Nova Pro
+		↓
+		Fail
+		↓
+		Rule-based Response
+
+
+	Hoặc
+		Knowledge Base
+		↓
+		No Answer
+		↓
+		Search API
+		↓
+		Still Fail
+		↓
+		Human Support
+
+
+
+
+
+# AWS Mapping
+	Bedrock
+	Multiple Foundation Models
+	Lambda
+	Step Functions Choice
+	EventBridge
+
+
+
+## Trade-off
+
+	Ưu
+		Availability cao.
+
+	Nhược
+		Kiến trúc phức tạp.
+
+
+
+
+
+# VII. Event-driven AI
+
+	Đây là tư duy AWS nhất.
+
+
+	Thay vì
+		User
+		↓
+		Run AI
+
+	Hệ thống chạy khi có Event.
+	
+	
+	Ví dụ
+		Invoice Uploaded
+		↓
+		AI đọc hóa đơn
+		↓
+		Lưu Database
+		↓
+		Gửi Email
+		↓
+		Notify Slack	
+	
+	
+	
+	Hoặc
+		Customer Review
+		↓
+		Sentiment Analysis
+		↓
+		Negative
+		↓
+		Create Ticket
+
+	Không cần ai bấm nút.
+	Event tự kích hoạt.	
+	
+	
+	AWS Mapping
+		S3 Upload
+		↓
+		EventBridge
+		↓
+		Lambda
+		↓
+		Bedrock
+		↓
+		DynamoDB
+		
+		
+		
+		
+# 	VIII. Memory trong Agentic System	
+		
+	Đừng nhầm
+		Memory
+	với
+		Knowledge Base.
+	Memory là		
+			
+		
+	Conversation State
+	Knowledge Base là
+	Company Knowledge
+	Khác hoàn toàn.
+	
+| Memory   | Knowledge Base |
+| -------- | -------------- |
+| tạm thời | lâu dài        |
+| session  | document       |
+| context  | RAG            |
+
+		
+		
+# 	IX. Orchestration vs Chaining vs Multi-Agent	
+		
+| Pattern                | Bản chất                     |
+| ---------------------- | ---------------------------- |
+| Prompt Chaining        | Model gọi model              |
+| Workflow Orchestration | Workflow điều phối           |
+| Multi-Agent            | Agent điều phối Agent        |
+| Supervisor             | Một Agent quản lý Agent khác |
+		
+			
+# X. Kiến trúc doanh nghiệp chuẩn
+
+
+                    User
+
+                      │
+
+             API Gateway
+
+                      │
+
+          Amazon Bedrock Agent
+
+                      │
+
+          Supervisor Agent
+
+    ┌────────┬────────┬────────┐
+
+ Finance   CRM   Inventory   HR
+
+    │         │        │        │
+
+ Lambda   Lambda   Lambda   Lambda
+
+    │         │        │
+
+ DynamoDB  RDS   Salesforce
+
+                      │
+
+          EventBridge
+
+                      │
+
+       Step Functions
+
+                      │
+
+      Human Approval
+
+                      │
+
+      Notification
+
+
+
+
+# Những bẫy AWS hay gài
+
+
+| Bẫy                                             | Vì sao sai                                                      |
+| ----------------------------------------------- | --------------------------------------------------------------- |
+| Một Agent làm mọi việc                          | Khó mở rộng, khó bảo trì, vi phạm Single Responsibility         |
+| AI tự động thực hiện mọi hành động quan trọng   | Thiếu Human-in-the-loop, rủi ro cao                             |
+| Retry cho mọi lỗi                               | Có lỗi không thể phục hồi (Permission Denied, Validation Error) |
+| Không có Fallback                               | Hệ thống dễ dừng khi model hoặc API gặp sự cố                   |
+| Polling liên tục để kiểm tra dữ liệu mới        | AWS ưu tiên Event-driven với EventBridge/S3 Events              |
+| Dùng Knowledge Base để lưu trạng thái hội thoại | Sai bản chất; trạng thái hội thoại thuộc Memory/Session         |
+
+
+
+# XIII. Tóm tắt để nhớ lâu
+
+| Khái niệm          | Hình dung ngoài đời                                |
+| ------------------ | -------------------------------------------------- |
+| Supervisor Agent   | Quản lý dự án (PM) giao việc cho nhân viên         |
+| Task Decomposition | Chia một dự án lớn thành nhiều đầu việc nhỏ        |
+| Human-in-the-loop  | Hồ sơ cần sếp ký trước khi thực hiện               |
+| Retry              | Gọi lại khi đầu dây bên kia bận hoặc mất kết nối   |
+| Fallback           | Kế hoạch B khi kế hoạch A thất bại                 |
+| Event-driven AI    | Chuông báo vang lên thì nhân viên bắt đầu làm việc |
+| Memory             | Sổ ghi chú tạm trong cuộc họp                      |
+| Knowledge Base     | Thư viện tài liệu của công ty                      |
+
+
+
+
+
+
+
 </pre><a id='backBottom' href='../aws-bedrock-agent-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
