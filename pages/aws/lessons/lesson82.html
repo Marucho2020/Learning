@@ -1,10 +1,401 @@
-<html><head><title>Lesson 82 == NEXT LEVEL ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 82 -- NEXT LEVEL -//</h1><pre>
+<html><head><title>Lesson 82 == Cloud Practitioner =EBS ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 82 -- Cloud Practitioner =EBS -//</h1><pre>
+# 1. Bản chất của EBS (Định nghĩa không mơ hồ)
 
-EBS
+	Amazon EBS (Elastic Block Store) là ổ cứng mạng (Network Block Storage) được AWS tạo ra để gắn (Attach) vào EC2.
 
-EFS/
 
-RDS / DynamoDB
+	Nói dễ hiểu:
 
+		EC2 là máy tính.
+		EBS là ổ SSD/HDD của máy tính đó.
+
+		Nhưng ổ cứng này không nằm trong máy, mà nằm trong hệ thống lưu trữ riêng của AWS và được kết nối qua mạng tốc độ cao.
+
+
+	Đây là điểm rất quan trọng.
+		Nhiều người mới học tưởng EBS nằm trong EC2.
+		Không.
+
+
+          AWS Datacenter
+
+      +----------------------+
+      |     EC2 Instance     |
+      |      CPU / RAM       |
+      +----------+-----------+
+                 |
+      Network Storage
+                 |
+      +----------v-----------+
+      |        EBS           |
+      | SSD / HDD Volume     |
+      +----------------------+
+
+		CPU chết không có nghĩa dữ liệu mất.
+		Bạn chỉ cần attach EBS sang EC2 khác.
+		Đây chính là bản chất của cloud.
+		
+
+# 2. EBS lưu cái gì?
+
+
+	Thông thường:
+		Operating System (Windows/Linux)
+		Application
+		Database
+		Log
+		User Data
+
+
+	Ví dụ:
+
+	EC2
+		Ubuntu
+
+	/
+		├── nginx
+		├── mysql
+		├── app.jar
+		├── logs
+		└── home
+
+		Toàn bộ đều nằm trên EBS.
+
+
+# 3. Block Storage là gì?
+
+
+| Loại           | AWS |
+| -------------- | --- |
+| Block Storage  | EBS |
+| File Storage   | EFS |
+| Object Storage | S3  |
+
+
+	Block Storage nghĩa là:
+		Hệ điều hành nhìn thấy giống hệt một ổ SSD.
+
+	Ví dụ Linux:
+
+
+	/dev/xvda
+	/dev/nvme0n1
+
+	Bạn format
+		mkfs.ext4
+
+	mount
+		mount /dev/xvdf /data
+
+
+	AWS không quan tâm bên trong.
+	EC2 tự quản lý filesystem.
+
+# Ví dụ đời thường
+
+	Laptop
+	Laptop
+		CPU
+		RAM
+		SSD
+
+	Cloud
+		EC2
+		CPU
+		RAM
+		+
+
+		EBS
+		SSD
+
+	Khác ở chỗ SSD tách riêng.
+	
+	
+	
+# 4. Vì sao AWS tách EBS khỏi EC2?
+
+	Đây là tư duy Cloud.
+	Nếu SSD nằm trong EC2:	
+	
+		EC2 chết
+		↓
+		SSD chết
+		↓
+		Data mất
+
+	Nếu SSD tách riêng
+
+		EC2 chết
+		↓
+		Detach EBS
+		↓
+		Attach EC2 mới
+		↓
+		Chạy tiếp
+
+	Đây chính là High Availability ở mức Compute.	
+		
+		
+	
+	
+	
+# 	5. Volume là gì?
+		Một EBS gọi là một Volume.
+	
+		Ví dụ
+
+		Volume A
+			50GB
+
+		Volume B
+			200GB
+
+		Volume C
+			2TB
+
+		Một EC2 có thể attach nhiều volume.	
+			
+	
+		Ví dụ
+		/
+			100GB
+
+		/data
+			2TB
+
+		/log
+			500GB	
+	
+	
+	
+# 	6. Root Volume
+	
+	
+	Khi tạo EC2:
+
+	AWS tạo sẵn
+	/
+
+
+	đó gọi là
+	Root Volume.
+
+	Chứa:
+		Linux
+		Windows
+		Boot Loader
+		Kernel
+
+	Nếu xóa Root Volume
+	EC2 không boot được.	
+	
+	
+	
+# 	7. Data Volume
+	
+	Ngoài Root còn có
+		/data
+
+		/backup
+
+		/database
+
+	Đó gọi là Data Volume.	
+		
+	
+# 8. EBS chỉ nằm trong một Availability Zone 	
+	
+	Đây là câu hỏi cực kỳ hay thi.
+
+	Ví dụ
+		Tokyo
+		ap-northeast-1
+
+			AZ-a
+			EC2
+			EBS
+
+		Không attach được sang
+		AZ-b
+
+
+	Muốn chuyển
+
+		Snapshot
+		↓
+		Restore
+		↓
+		Volume mới
+		↓
+		AZ khác
+
+	Đây là bẫy rất hay gặp.
+	
+	
+	
+	
+# 	9. Snapshot là gì?
+	
+	Snapshot là Backup của EBS.
+	Không phải copy nguyên ổ.
+	AWS chỉ lưu block đã sử dụng.	
+		
+		
+	
+	Ví dụ
+		Volume
+		100GB
+		Nhưng dùng
+		25GB
+		Snapshot chỉ khoảng
+		25GB
+		
+	và lưu trên S3 (người dùng không truy cập trực tiếp).	
+		
+		
+	
+# 	10. Lifecycle
+	
+	Create Volume
+	↓
+	Attach
+	↓
+	Read Write
+	↓
+	Snapshot
+	↓
+	Detach
+	↓
+	Delete	
+	
+	
+	
+# 11. Mapping với AWS	
+	
+| Thành phần      | AWS      |
+| --------------- | -------- |
+| Virtual Machine | EC2      |
+| Hard Disk       | EBS      |
+| Backup          | Snapshot |
+| NAS             | EFS      |
+| Object Storage  | S3       |
+	
+		
+		
+		
+# 	12. Các loại EBS	
+		
+		
+| Type    | Dùng cho                     |
+| ------- | ---------------------------- |
+| gp3     | Mặc định, đa số workload     |
+| gp2     | Cũ hơn gp3                   |
+| io1/io2 | Database cần IOPS rất cao    |
+| st1     | HDD throughput               |
+| sc1     | Archive, dữ liệu truy cập ít |
+		
+		
+		
+		
+# 	Trade-off	
+		
+		
+| gp3     | io2                |
+| ------- | ------------------ |
+| Rẻ      | Đắt                |
+| Nhanh   | Rất nhanh          |
+| Web App | Oracle, SQL Server |
+		
+		
+		
+# 	13. So sánh EBS vs EFS vs S3	
+		
+|             | EBS              | EFS          | S3                   |
+| ----------- | ---------------- | ------------ | -------------------- |
+| Storage     | Block            | File         | Object               |
+| Mount       | 1 EC2 (mặc định) | Nhiều EC2    | Không mount như disk |
+| OS thấy như | SSD              | Folder       | Bucket               |
+| AZ          | Một AZ           | Multi-AZ     | Multi-AZ             |
+| Use case    | OS, DB           | Shared Files | Backup, Image, Video |
+		
+		
+		
+		
+		
+# 	14. Ví dụ System Design	
+		
+		
+          ALB
+           |
+      Auto Scaling
+      EC2   EC2
+       |      |
+      EBS    EBS
+
+
+Database
+RDS
+Backup
+Snapshot		
+		
+		
+	Mỗi EC2 đều có EBS riêng.
+	Không share.	
+		
+		
+		
+# 17. Các từ khóa trong đề thi		
+		
+| Keyword                   | Gợi ý đáp án |
+| ------------------------- | ------------ |
+| Boot volume               | EBS          |
+| Root volume               | EBS          |
+| Persistent storage        | EBS          |
+| Low latency block storage | EBS          |
+| Attach EC2                | EBS          |
+| Snapshot                  | EBS          |
+| High IOPS                 | io2          |
+| Cost optimized SSD        | gp3          |
+| Shared filesystem         | EFS          |
+| Object Storage            | S3           |
+		
+		
+# 	18. Những bẫy AWS rất thích gài	
+		
+| Bẫy                               | Thực tế                                            |
+| --------------------------------- | -------------------------------------------------- |
+| EBS dùng chung cho nhiều EC2      | Sai (mặc định chỉ attach một EC2)                  |
+| EBS là Object Storage             | Sai                                                |
+| EBS Multi-AZ                      | Sai                                                |
+| Snapshot nằm trong EBS            | Sai, snapshot lưu trên S3                          |
+| Terminate EC2 là luôn mất dữ liệu | Sai, tùy cấu hình Delete on Termination của volume |
+| Database luôn dùng gp3            | Không hẳn, workload IOPS cao nên dùng io2          |
+		
+		
+
+
+# 19. Cách nhớ cực lâu
+
+	Hãy tưởng tượng AWS là một trung tâm dữ liệu:
+		EC2 = Bộ não (CPU + RAM): xử lý tính toán, có thể thay thế nhanh.
+		EBS = Ổ SSD gắn qua dây cáp mạng tốc độ cao: lưu hệ điều hành và dữ liệu bền vững.
+		Snapshot = Chụp ảnh trạng thái của ổ SSD, cất vào kho lưu trữ (S3) để khôi phục khi cần.
+
+	Công thức nhớ:
+		EC2 xử lý → EBS lưu trữ → Snapshot sao lưu.
+
+	Nếu gặp câu hỏi có các từ khóa như OS, boot, database disk, persistent block storage, gần như bạn nên nghĩ ngay đến EBS.
+
+
+
+
+
+
+
+
+
+
+
+		
 
 </pre><a id='backBottom' href='../aws-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
