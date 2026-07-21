@@ -1,10 +1,283 @@
-<html><head><title>Lesson 83 == NEXT LEVEL ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 83 -- NEXT LEVEL -//</h1><pre>
+<html><head><title>Lesson 83 == Cloud Practitioner ==EFS ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 83 -- Cloud Practitioner --EFS -//</h1><pre>
+
+# AWS EFS (Elastic File System)
+	Amazon EFS là một hệ thống file (Network File System - NFS) được chia sẻ qua mạng, cho phép nhiều EC2 cùng đọc và ghi vào cùng một thư mục tại cùng một thời điểm.
+
+
+	Đừng nhớ theo kiểu:
+		"EFS là dịch vụ lưu trữ file."
+		Điều đó quá nông.
+
+	Hãy nhớ bản chất:
+		EFS = Một ổ cứng dùng chung (Shared Disk) nằm trên mạng.
+		Không thuộc riêng server nào.
+		Không gắn chết vào một EC2.
+		Bất kỳ EC2 nào được phép đều mount vào và nhìn thấy cùng dữ liệu.
 
 
 
-EFS
+	Giống như:
 
-RDS / DynamoDB
+            Amazon EFS
+        -----------------
+       |  /images        |
+       |  /videos        |
+       |  /logs          |
+        -----------------
+          /      |      \
+         /       |       \
+      EC2-1    EC2-2    EC2-3
+
+Tất cả đều thấy cùng file.
+
+
+
+
+# 2. Ví dụ đời thường
+
+
+Có một công ty có:
+	10 nhân viên
+	Nếu mỗi người có USB riêng
+
+	A -> USB A
+	B -> USB B
+	C -> USB C
+
+	Mỗi người sửa một file.
+	Người khác không thấy.
+	Đó giống EBS.
+
+
+
+Nếu công ty có:
+
+	NAS
+			   NAS
+		  -------------
+		  report.xlsx
+		  image.png
+		  video.mp4
+		  -------------
+
+		 /   /   /   /
+		A   B   C   D
+	Ai mở cũng là cùng file.
+	Đó chính là EFS.
+
+
+
+# 3. Ví dụ System Design
+
+
+	Website Upload ảnh.
+
+	Có:
+		ALB
+		↓
+		EC2-1
+		EC2-2
+		EC2-3
+
+		Khách upload
+		avatar.png
+		Nếu dùng EBS
+		EC2-1
+		/avatar.png
+		Request tiếp theo đi vào EC2-2
+		404 Not Found
+		Vì EC2-2 không có file.
+
+
+	Nếu dùng EFS
+	EC2-1
+
+		   \
+			EFS
+		   /
+	EC2-2
+	Upload ở EC2-1
+	↓
+	EC2-2 nhìn thấy ngay.
+	Không cần sync.
+
+
+	Đây là lý do EFS cực kỳ phổ biến với:
+		WordPress
+		CMS
+		Upload ảnh
+		Shared configuration
+		Shared log
+		ML dataset
+
+
+
+
+# 4. Mapping với AWS
+
+		User
+		↓
+		ALB
+		↓
+		Auto Scaling Group
+		↓
+		EC2
+		EC2
+		EC2
+		↓
+		Amazon EFS
+		Đây là kiến trúc kinh điển.
+
+
+
+
+		Một ví dụ khác
+		ECS
+		↓
+		Container A
+		↓
+		Container B
+		↓
+		EFS
+		Container restart
+		↓
+		Data vẫn còn.
+
+		Lambda cũng có thể mount EFS.
+		Đề SAA rất thích hỏi.
+
+
+
+#	5. Các đặc điểm quan trọng 
+
+	Shared Storage
+	Nhiều EC2 dùng chung.
+
+
+		NFS
+		Mount bằng:
+		mount
+
+		Linux dùng rất nhiều.
+		Windows không dùng.
+
+
+
+		Elastic
+		Không cần resize.
+		Không cần:
+		Increase Volume
+		Dung lượng tăng tự động.
+		Ví dụ
+		10 GB
+		↓
+		50 GB
+		↓
+		200 GB
+		↓
+		5 TB
+		Không cần thao tác gì.
+
+
+		Multi AZ
+		EFS lưu nhiều AZ.
+		Một AZ chết
+		↓
+		EFS vẫn hoạt động.
+		Đây là điểm khác cực lớn so với EBS.
+
+
+		Managed
+		Không quản RAID.
+		Không quản replication.
+		Không quản disk.
+		AWS làm hết.
+
+
+
+# 6. So sánh EFS vs EBS vs S3
+
+| Tiêu chí                | EBS                           | EFS         | S3                    |
+| ----------------------- | ----------------------------- | ----------- | --------------------- |
+| Kiểu lưu trữ            | Block                         | File        | Object                |
+| Mount như ổ cứng        | ✔                             | ✔           | ✖                     |
+| Shared nhiều EC2        | ✖ (trừ Multi-Attach giới hạn) | ✔           | Không mount trực tiếp |
+| Giao thức               | Block Device                  | NFS         | HTTP/API              |
+| Auto Scaling dung lượng | ✖                             | ✔           | ✔                     |
+| Multi AZ                | ✖                             | ✔           | ✔                     |
+| Phù hợp                 | Database, OS                  | Shared File | Backup, ảnh, video    |
+
+
+
+# 7. Trade-off
+	Ưu điểm
+		✅ Chia sẻ nhiều EC2
+		✅ Auto Scale
+		✅ Không cần resize
+		✅ Highly Available
+		✅ Multi AZ
+
+	Nhược điểm
+
+		Đắt hơn EBS.
+		Latency cao hơn EBS.
+		Không phù hợp Database IOPS cực cao.
+		Không hỗ trợ Windows.
+
+
+# 8. Khi nào dùng?
+
+Dùng EFS khi:
+	Nhiều EC2 cùng đọc ghi
+	Shared upload
+	WordPress
+	CMS
+	Home Directory
+	ML Dataset
+	Container shared storage
+
+Không dùng EFS nếu:
+	Chỉ có 1 EC2
+	Database
+	Cần latency thấp nhất
+
+
+# 9. Các từ khóa xuất hiện trong đề thi
+
+	Shared storage
+	Shared file system
+	Multiple EC2 instances
+	Linux
+	NFS
+	Auto Scaling storage
+	Multi-AZ
+	Mount target
+	POSIX-compliant
+	Concurrent access
+
+
+
+
+
+# 10. Các bẫy (Trap)
+
+| Đề bài                       | Đáp án đúng               | Bẫy                                |
+| ---------------------------- | ------------------------- | ---------------------------------- |
+| Một EC2 cần ổ đĩa nhanh nhất | EBS                       | Nhiều người chọn EFS vì "file"     |
+| Nhiều EC2 cùng dùng dữ liệu  | EFS                       | Chọn EBS là sai                    |
+| Lưu ảnh website              | S3 hoặc EFS (tùy yêu cầu) | Nếu cần mount như filesystem → EFS |
+| Backup lâu dài               | S3                        | Không dùng EFS                     |
+| Database                     | EBS                       | Không dùng EFS                     |
+
+
+
+# Ghi nhớ trong 10 giây 
+
+| Dịch vụ | Hình ảnh cần nhớ                                   |
+| ------- | -------------------------------------------------- |
+| **EBS** | Ổ SSD cắm vào **1 máy**                            |
+| **EFS** | NAS/ổ cứng mạng dùng chung cho **nhiều máy Linux** |
+| **S3**  | Kho đồ trên Internet, truy cập qua API/HTTP        |
 
 
 </pre><a id='backBottom' href='../aws-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
