@@ -1,4 +1,241 @@
-<html><head><title>Lesson 85 == Cloud Practitioner ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 85 -- Cloud Practitioner -//</h1><pre>
-	POSIX 	
+<html><head><title>Lesson 85 == Cloud Practitioner ==POSIX ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 85 -- Cloud Practitioner --POSIX -//</h1><pre>
+	
+# Định nghĩa bản chất
+
+	POSIX (Portable Operating System Interface) là một bộ tiêu chuẩn (standard) quy định cách hệ điều hành cung cấp API cho chương trình.
+
+
+	Nói đơn giản hơn:
+		POSIX không phải hệ điều hành.
+		POSIX không phải file system.
+		POSIX không phải Linux.
+		POSIX chỉ là "luật chơi".
+
+	Nếu một OS tuân theo POSIX thì chương trình viết cho OS đó gần như có thể chạy trên các OS POSIX khác mà không phải sửa nhiều.
+
+	Ví dụ:
+		Một chương trình Java gọi
+			Files.readAllBytes(path);
+	
+		Thực tế JVM sẽ gọi xuống
+			read()
+			open()
+			close()
+
+		Các hàm này chính là POSIX API.
+
+			Linux
+			↓
+			glibc
+			↓
+			POSIX
+			↓
+			Kernel
+
+
+
+
+# Ví dụ đời thường
+
+	Hãy tưởng tượng:
+		Bạn có một chiếc USB.
+	Nếu tất cả laptop đều dùng chuẩn USB-C thì:
+			Dell cắm được
+			HP cắm được
+			Lenovo cắm được
+			MacBook cắm được (nếu có USB-C)
+
+		USB-C chính là một chuẩn.
+		POSIX cũng vậy.
+		Nó là chuẩn để chương trình nói chuyện với hệ điều hành.
+
+
+# Ví dụ System Design
+	Giả sử công ty có hệ thống Java chạy trên EC2 Linux.
+		FileInputStream fis = new FileInputStream("abc.txt");
+
+		JVM
+		↓
+		POSIX open()
+		↓
+		Linux Kernel
+		↓
+		Disk
+		Ngày mai migrate sang Amazon Linux 2023.
+		Không cần sửa code.
+		Vì cả hai đều support POSIX.
+
+
+
+
+# POSIX gồm những gì?
+
+	Nó định nghĩa hàng trăm API.
+
+
+| API      | Chức năng      |
+| -------- | -------------- |
+| open()   | mở file        |
+| read()   | đọc            |
+| write()  | ghi            |
+| close()  | đóng           |
+| fork()   | tạo process    |
+| exec()   | chạy process   |
+| pipe()   | IPC            |
+| socket() | network        |
+| mmap()   | memory mapping |
+| pthread  | thread         |
+
+
+# POSIX và File System 	
+
+
+	Nhiều người nhầm.
+	POSIX KHÔNG định nghĩa ext4.
+	Không định nghĩa XFS.
+	Không định nghĩa NTFS.
+	POSIX chỉ định nghĩa:
+		làm sao đọc file
+		làm sao ghi file
+		permission hoạt động thế nào
+		directory hoạt động ra sao
+
+
+	Ví dụ
+		mkdir()
+		chmod()
+		chown()
+		stat()
+
+	Đó là POSIX.
+	Còn ext4 hay xfs chỉ là cách Linux lưu dữ liệu xuống disk.
+
+
+
+
+# POSIX Permission
+
+	POSIX định nghĩa
+		r
+		w
+		x
+
+		Owner
+		Group
+		Other
+
+
+	Ví dụ
+	-rwxr-xr-x
+	Đây chính là POSIX permission.
+
+
+# Mapping sang AWS
+
+| AWS Service                 | POSIX Support                                     |
+| --------------------------- | ------------------------------------------------- |
+| Amazon EFS                  | ✅ Có                                              |
+| Amazon FSx for Lustre       | ✅ Có                                              |
+| Amazon FSx for OpenZFS      | ✅ Có                                              |
+| Amazon FSx for NetApp ONTAP | ✅ Có                                              |
+| Amazon S3                   | ❌ Không                                           |
+| DynamoDB                    | ❌ Không                                           |
+| EBS                         | Chỉ block storage, POSIX do OS phía trên cung cấp |
+
+
+# Tại sao EFS hỗ trợ POSIX?
+
+	EFS là NFS.
+	Nó lưu
+		owner
+		group
+		permission
+		inode
+
+
+	Do đó Linux mount vào sẽ thấy như local disk.
+	Bạn có thể
+		chmod
+		chown
+		ls -l
+		mkdir
+
+
+# Tại sao S3 không hỗ trợ POSIX?
+	S3 là Object Storage.
+
+	inode
+	directory thật
+	permission kiểu rwx
+	hard link
+	symbolic link
+
+
+		S3 chỉ có
+		Bucket
+		Object
+		Key
+		Ví dụ
+		abc/test/a.txt
+		Thực ra chỉ là
+		Object Key
+		abc/test/a.txt
+		Không có thư mục thật.
+
+
+
+# Đây là lý do AWS luôn nhấn mạnh
+	Nếu application cần
+
+	POSIX
+	shared filesystem
+	NFS
+	permission
+	directory
+
+	=> Chọn
+	Amazon EFS
+	Không chọn S3.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Mẹo ghi nhớ
+	POSIX = Chuẩn API của hệ điều hành để thao tác file, process và permission.
+	EFS = Dịch vụ AWS cung cấp Shared File System tuân theo POSIX.
+	S3 = Object Storage, không phải POSIX File System.
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
 
 </pre><a id='backBottom' href='../aws-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
