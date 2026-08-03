@@ -1,3 +1,371 @@
-<html><head><title>Lesson 16 == Lộ trình ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 16 -- Lộ trình -//</h1><pre># Lộ trình 100 ngày học AIP-C01 — Trọng tâm: Kiến trúc AI hiện đại & Agentic AI
+<html><head><title>Lesson 16 == AIP-C01  === 3. Amazon Bedrock — kiến trúc tổng thể ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 16 -- AIP-C01  --= 3. Amazon Bedrock — kiến trúc tổng thể -//</h1><pre>
+# Bản chất của Amazon Bedrock
+
+Application
+        │
+        ▼
+ Amazon Bedrock
+        │
+ ┌──────┼───────────────┐
+ │      │               │
+Claude  Llama        Titan
+ │      │               │
+Anthropic Meta        AWS
+
+
+#Đây là bức tranh tổng thể.
+
+	Đây gần như toàn bộ kiến trúc GenAI AWS.
+
+
+             User
+               │
+               ▼
+        Web / Mobile App
+               │
+               ▼
+      Backend(API Gateway/Lambda/ECS)
+               │
+               ▼
+         Amazon Bedrock
+               │
+ ┌─────────────┼────────────────────────────┐
+ │             │                            │
+ ▼             ▼                            ▼
+Prompt      Guardrails                Prompt Mgmt
+
+ │             │
+ ▼             ▼
+
+Knowledge Base (optional)
+
+ │
+
+Retrieval
+
+ │
+
+Embedding Model
+
+ │
+
+Vector DB
+
+ │
+
+Retrieved Documents
+
+ │
+
+Foundation Model
+
+ │
+
+Inference
+
+ │
+
+Response
+
+ │
+
+Application
+
+ │
+
+User
+
+
+
+Vì sao?
+Vì Bedrock làm tất cả những việc Claude không làm.
+
+	- Authentication
+	- IAM
+	- Logging
+	- Monitoring
+	- Encryption
+	- Guardrails
+	- Prompt Versioning
+	- Multi-model Routing
+	- Knowledge Base
+	- Agents
+	- Evaluation
+	- Cross-region
+	- Provisioned Throughput
+
+
+Claude chỉ làm một việc.
+	Input
+	↓
+	Generate
+	↓
+	Output
+
+Hết.
+
+# 4. Bedrock giống cái gì ngoài đời? 
+
+
+Khách
+
+↓
+
+Grab
+
+↓
+
+Taxi A
+Taxi B
+Taxi C
+Taxi D
+
+	Grab không phải taxi.
+	Grab chỉ là nền tảng.
+	Bedrock cũng vậy.
+	Bedrock không phải Claude.
+	Bedrock là nền tảng.
+
+
+
+
+# 5. Vì sao AWS tạo Bedrock?
+	Nếu không có Bedrock.
+	Muốn đổi model.
+	
+		Xóa Claude API
+		↓
+		Viết lại
+		↓
+		Llama API	
+			
+	
+	Bedrock chuẩn hóa tất cả.
+
+		InvokeModel()
+		↓
+		Claude
+
+		hoặc
+		Llama
+
+		hoặc
+		Nova
+
+		hoặc
+		Titan
+
+		Application gần như không cần thay đổi.
+		Đây là một lợi ích rất lớn trong thiết kế hệ thống.
+
+
+
+# 6. Bản chất của Bedrock
+
+Bedrock giống như:
+	Java Interface
+
+
+	Claude
+		implements AI
+
+	Llama
+		implements AI
+
+	Titan
+		implements AI
+
+	Application chỉ gọi
+		AI.generate()
+
+	Không cần biết bên dưới là model nào.
+	Đây chính là abstraction layer.
+	AWS cực kỳ thích abstraction.
+
+
+# 7. Kiến trúc nội bộ của Bedrock
+
+
+Application
+↓
+IAM Authentication
+↓
+Bedrock API
+↓
+Authorization
+↓
+Guardrails
+↓
+Prompt Management
+↓
+Agent
+↓
+Knowledge Base
+↓
+Retrieve
+↓
+Embedding
+↓
+Vector Search
+↓
+Context
+↓
+Foundation Model
+↓
+Inference Endpoint
+↓
+GPU
+↓
+Result
+
+
+	Lưu ý.
+	Không phải request nào cũng đi hết.
+
+
+	Nếu dùng Agent.
+		Application
+		↓
+		Agent
+		↓
+		Tool
+		↓
+		Claude
+
+
+
+# 8. Mapping với các dịch vụ AWS
+
+| Thành phần        | AWS Service                                |
+| ----------------- | ------------------------------------------ |
+| Authentication    | IAM                                        |
+| API               | Amazon Bedrock Runtime                     |
+| Foundation Models | Claude / Nova / Titan / Llama / Mistral... |
+| Prompt            | Prompt Management                          |
+| Agent             | Bedrock Agents                             |
+| RAG               | Knowledge Bases                            |
+| Embedding         | Titan Embeddings hoặc embedding model khác |
+| Vector DB         | OpenSearch / Aurora pgvector / Pinecone... |
+| Monitoring        | CloudWatch                                 |
+| Audit             | CloudTrail                                 |
+| Encryption        | KMS                                        |
+| Secret            | Secrets Manager                            |
+
+
+
+# 9. Ví dụ Production
+
+	Ví dụ.
+		Một công ty bảo hiểm.
+
+	Khách hỏi.
+		Tôi muốn biết hợp đồng số 123.
+
+
+		User
+		↓
+		Web
+		↓
+		Lambda
+		↓
+		Bedrock
+		↓
+		Knowledge Base
+		↓
+		OpenSearch
+		↓
+		Top-5 documents
+		↓
+		Claude
+		↓
+		Generate
+		↓
+		Guardrails
+		↓
+		Response
+
+		Đây là RAG.
+		Nếu không dùng RAG.
+		Claude sẽ không biết hợp đồng của khách.
+
+
+
+
+# 10. Trade-off
+
+| Thiết kế                        | Ưu điểm                                                                             | Nhược điểm                                                                                                |
+| ------------------------------- | ----------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| Gọi API trực tiếp tới Anthropic | Ít lớp trung gian, có thể dùng ngay các tính năng mới nhất của nhà cung cấp         | Khó đổi model, IAM tích hợp kém, phải tự xây logging, guardrails, governance                              |
+| Qua Bedrock                     | Quản trị tập trung, IAM, Guardrails, Knowledge Bases, Agents, quan sát hệ thống tốt | Có thêm một lớp trừu tượng, đôi khi một số tính năng mới của model xuất hiện trên API gốc sớm hơn Bedrock |
+
+
+
+Điểm cần nhớ: Trong môi trường AWS Enterprise và trong kỳ thi AIP-C01, Bedrock thường là lựa chọn mặc định khi yêu cầu là "giảm công sức vận hành", "quản trị tập trung", "đa mô hình", "bảo mật" hoặc "governance".
+
+
+
+# 11. Từ khóa thường xuất hiện trong đề thi
+
+| Keyword          | Ý nghĩa cần liên tưởng                              |
+| ---------------- | --------------------------------------------------- |
+| Bedrock Runtime  | API dùng để suy luận (inference)                    |
+| Foundation Model | Mô hình nền (Claude, Nova, Llama, Titan...)         |
+| InvokeModel      | Gửi request tới model                               |
+| Converse API     | API hội thoại thống nhất cho nhiều model            |
+| Model Access     | Quyền sử dụng model                                 |
+| Inference        | Quá trình sinh kết quả từ model                     |
+| Abstraction      | Lớp trừu tượng giúp tách ứng dụng khỏi model cụ thể |
+| Managed Service  | AWS quản lý hạ tầng và vận hành                     |
+| Multi-model      | Có thể chuyển đổi giữa nhiều Foundation Model       |
+
+
+
+# 13. Các bẫy (Trap) trong kỳ thi
+
+| Bẫy                                   | Sự thật                                                                                                                          |
+| ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| Bedrock là Foundation Model           | ❌ Sai. Bedrock là nền tảng quản lý và truy cập nhiều Foundation Model.                                                           |
+| Bedrock tự huấn luyện model           | ❌ Sai. Bedrock không train model.                                                                                                |
+| Claude chạy bên trong Bedrock         | ❌ Không chính xác. Bedrock cung cấp quyền truy cập và hạ tầng suy luận được AWS quản lý; model vẫn thuộc nhà cung cấp tương ứng. |
+| Muốn dùng Bedrock bắt buộc dùng Titan | ❌ Sai. Có thể dùng Claude, Nova, Llama, Mistral và nhiều model khác.                                                             |
+| Bedrock luôn là lựa chọn đúng         | ❌ Sai. Nếu yêu cầu là dùng tính năng mới nhất hoặc API đặc thù của nhà cung cấp, API trực tiếp có thể phù hợp hơn.               |
+
+
+
+# 14. Tư duy cần nhớ để làm bài thi
+Đừng ghi nhớ Bedrock như một "dịch vụ gọi AI".
+
+Application
+      │
+      ▼
++-------------------------+
+|     Amazon Bedrock      |
+|-------------------------|
+| IAM                     |
+| Runtime API             |
+| Prompt Management       |
+| Guardrails              |
+| Agents                  |
+| Knowledge Bases         |
+| Evaluation              |
+| Inference Profiles      |
+| Provisioned Throughput  |
+| Logging / Governance    |
++-------------------------+
+      │
+      ▼
++--------------------------------------+
+| Foundation Models                    |
+| Claude / Nova / Llama / Titan / ...  |
++--------------------------------------+
+      │
+      ▼
+Inference Infrastructure
+      │
+      ▼
+GPU Cluster
+
+Đây là "bức tranh tổng thể" mà AWS mong bạn hình dung khi đọc mọi câu hỏi liên quan đến Amazon Bedrock.
+
 
 </pre><a id='backBottom' href='../aws-bedrock-agent-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
