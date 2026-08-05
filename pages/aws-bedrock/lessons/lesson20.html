@@ -1,3 +1,355 @@
-<html><head><title>Lesson 20 == Lộ trình ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 20 -- Lộ trình -//</h1><pre># Lộ trình 100 ngày học AIP-C01 — Trọng tâm: Kiến trúc AI hiện đại & Agentic AI
+<html><head><title>Lesson 20 == AIP-C01  === 5. On-Demand vs Provisioned Throughput (Bedrock) ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 20 -- AIP-C01  --= 5. On-Demand vs Provisioned Throughput (Bedrock) -//</h1><pre>
+
+Provisioned Throughput : thông lượng được cung cấp
+On-Demand	: theo yêu cầu
+
+Đây là một trong những chủ đề AWS rất thích đưa vào đề Professional vì nó liên quan trực tiếp đến Cost Optimization + Performance + Scalability + SLA. Nếu không hiểu bản chất thì rất dễ bị lừa bởi các đáp án kiểu:
+
+"Provisioned luôn nhanh hơn nên chọn."
+"On-Demand rẻ hơn nên dùng."
+"Production thì luôn phải Provisioned."
+
+Cả ba đều sai nếu không xét workload.
+
+
+# I. Bản chất
+	Điều đầu tiên phải hiểu:
+	Throughput = Khả năng xử lý inference của model.
+
+	Ví dụ:
+	Một model Claude có thể xử lý
+		1 request
+		100 request
+		1000 request
+
+	cùng lúc.
+
+	Đó chính là throughput.
+
+
+Trong Bedrock hiện nay có hai cách mua năng lực inference.
+
+# 1. On-Demand Throughput
+
+	Giống như đi taxi.
+	Bạn cần thì gọi.
+	Không cần thì thôi.
+	AWS sẽ tự tìm máy inference đang rảnh để chạy request.
+	Bạn chỉ trả tiền cho request.
+
+
+	User
+	↓
+	InvokeModel()
+	↓
+	AWS Bedrock
+	↓
+	Tìm inference capacity đang rảnh
+	↓
+	Model chạy
+	↓
+	Trả kết quả
+	
+
+	Bạn không sở hữu bất kỳ tài nguyên inference nào.
+	Bạn chỉ "thuê tạm".
+
+
+
+# 2. Provisioned Throughput
+
+	Giống như thuê nguyên một chiếc taxi theo tháng.
+	Chiếc taxi đó luôn chờ bạn.
+	Không ai dùng chung.
+
+		User
+		↓
+		Provisioned Throughput
+		↓
+		Reserved GPU		
+		↓
+		Foundation Model
+		↓
+		Response
+
+		AWS reserve sẵn inference capacity cho bạn.
+		Dù bạn dùng hay không vẫn trả tiền.
+
+
+
+# Ví dụ đời thường
+
+	Nhà hàng
+	
+	On-Demand
+		Bạn đến nhà hàng.
+		Nếu còn bàn
+		→ ngồi.
+		Nếu đông
+		→ phải đợi.
+
+	Provisioned
+		Bạn đặt phòng VIP.
+		Dù hôm nay không tới
+		phòng vẫn dành riêng.
+		Đó chính là bản chất.
+
+
+
+
+
+# Điều AWS reserve là gì?
+	reserve : dự trữ
+
+	Đây là điểm rất nhiều người hiểu sai.
+	Không phải AWS reserve model.
+	Model vẫn là Claude.
+	Model vẫn giống hệt.
+	AWS reserve
+	Inference Capacity
+	bao gồm
+		GPU
+		Memory
+		Compute
+		Token processing capacity
+
+	để model luôn chạy trên tài nguyên dành riêng.
+
+
+
+
+# Vì sao Provisioned nhanh hơn?
+
+	Không phải model nhanh hơn.
+	Mà vì
+	Bạn không cần xếp hàng.
+	Ví dụ
+	
+	On-Demand
+
+		100 người
+		↓
+		1 cụm GPU
+		↓
+		Bạn đứng thứ 98
+
+
+	Provisioned
+		GPU riêng
+		↓
+		Bạn luôn đứng đầu
+
+	Latency giảm.
+
+
+#So sánh
+
+|            | On-Demand                        | Provisioned               |
+| ---------- | -------------------------------- | ------------------------- |
+| Trả tiền   | Theo request                     | Theo giờ / capacity       |
+| GPU        | Shared                           | Dedicated                 |
+| Queue      | Có thể có                        | Hầu như không             |
+| Latency    | Có thể dao động                  | Ổn định                   |
+| Throughput | AWS quyết định                   | Bạn đặt trước             |
+| Cost       | Thấp nếu ít dùng                 | Rẻ hơn nếu dùng rất nhiều |
+| SLA        | Không đảm bảo capacity tuyệt đối | Capacity được reserve     |
+| Scale      | AWS tự scale                     | Bạn phải provision        |
+
+
+
+# Ví dụ Production
+
+
+
+	Một chatbot nội bộ.
+		100 nhân viên.
+		Mỗi ngày
+		300 câu hỏi.
+		Không có giờ cao điểm.
+		On-Demand đủ.
+
+	Một ngân hàng.
+		9:00 sáng.
+		20.000 nhân viên login.
+		Ai cũng hỏi AI.
+		Nếu dùng On-Demand.
+
+
+		Queue
+		↓
+		Latency
+		↓
+		Timeout
+
+	Do đó
+	Provisioned.
+
+
+
+# Cost
+
+		On-Demand
+		Ví dụ
+
+		1000 request
+		↓
+		100 yen
+
+		Nếu không có request
+		0 yen
+
+
+
+		Provisioned
+		Thuê
+			4 GPU
+			↓
+			24 giờ
+			↓
+			Vẫn trả tiền
+
+		Dù hôm đó không ai hỏi.
+	Đó là trade-off.
+
+
+
+
+# Khi nào Provisioned rẻ hơn?
+
+
+	Đây là chỗ AWS hay gài.
+	Nhiều người nghĩ
+	Provisioned luôn đắt.
+	Sai.
+	Ví dụ
+	
+	On-Demand
+		1 triệu request/ngày
+		↓
+		100 triệu token
+
+
+	Lúc này
+		AWS tính theo token.
+		Có thể vượt rất xa chi phí của một cụm GPU reserve.
+		Nghĩa là
+		Usage càng ổn định
+		Provisioned càng có lợi.
+
+
+
+
+# Autoscaling
+
+	Provisioned không có nghĩa là cố định mãi.
+	Bạn vẫn có thể
+
+		2 unit
+		↓
+		4 unit
+		↓
+		8 unit
+
+	tùy nhu cầu.
+	Nhưng
+	không linh hoạt như On-Demand.
+
+
+
+# Latency
+	On-Demand
+
+		200 ms
+		↓
+		500 ms
+		↓
+		1200 ms
+	tùy tải hệ thống.
+
+
+	Provisioned
+		210
+		↓
+		220
+		↓
+		215
+		↓
+		230
+
+
+		Đề Professional rất thích từ khóa:
+		Predictable latency		(độ trễ Có thể dự đoán được)
+	=> Chọn Provisioned.
+
+
+
+
+
+# Ví dụ kiến trúc
+
+	## On-Demand
+
+		User
+		↓
+		API Gateway
+		↓
+		Lambda
+		↓
+		Bedrock On-Demand
+		↓
+		Claude
+
+
+	## Provisioned
+		User
+		↓
+		API
+		↓
+		Bedrock
+		↓
+		Provisioned Throughput
+		↓
+		Claude
+
+
+
+
+# Mapping AWS
+
+
+| Nhu cầu             | Dùng                                        |
+| ------------------- | ------------------------------------------- |
+| Demo                | On-Demand                                   |
+| Development         | On-Demand                                   |
+| PoC                 | On-Demand                                   |
+| Internal Tool       | On-Demand                                   |
+| Production nhỏ      | On-Demand                                   |
+| Production lớn      | Provisioned                                 |
+| SLA cao             | Provisioned                                 |
+| Latency ổn định     | Provisioned                                 |
+| Predictable traffic | Provisioned                                 |
+| Flash traffic       | On-Demand (hoặc kết hợp chiến lược phù hợp) |
+
+
+
+# Trade-off
+
+
+| Tiêu chí               | On-Demand   | Provisioned               |
+| ---------------------- | ----------- | ------------------------- |
+| Cost khi ít request    | ⭐⭐⭐⭐⭐       | ⭐                         |
+| Cost khi nhiều request | ⭐⭐          | ⭐⭐⭐⭐                      |
+| Latency                | ⭐⭐          | ⭐⭐⭐⭐⭐                     |
+| Capacity guarantee     | ⭐           | ⭐⭐⭐⭐⭐                     |
+| Vận hành               | Đơn giản    | Phức tạp hơn              |
+| Scale                  | AWS quản lý | Bạn lập kế hoạch capacity |
+
+
+guarantee : bảo đảm
+
+
+
+
+
 
 </pre><a id='backBottom' href='../aws-bedrock-agent-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
