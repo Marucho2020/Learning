@@ -1,3 +1,373 @@
-<html><head><title>Lesson 21 == Lộ trình ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 21 -- Lộ trình -//</h1><pre># Lộ trình 100 ngày học AIP-C01 — Trọng tâm: Kiến trúc AI hiện đại & Agentic AI
+<html><head><title>Lesson 21 == AIP-C01  ===Model Invocation API (Converse API vs InvokeModel) ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 21 -- AIP-C01  --=Model Invocation API (Converse API vs InvokeModel) -//</h1><pre>
+
+# I. Bản chất của Model Invocation
+
+	Hãy quên API trước.
+	Đầu tiên phải hiểu bản chất.
+	Một Foundation Model (Claude, Llama, Nova, Titan...) chỉ biết đúng một việc:
+	Nhận Input → Tính toán → Trả Output
+
+
+Input
+↓
+Claude
+↓
+Output
+
+
+	AWS chỉ đang tạo ra nhiều "cửa" khác nhau để bạn gửi request vào model.
+
+	Giống như:
+	Bạn muốn nói chuyện với một nhân viên.
+	Có nhiều cách
+		Gọi điện
+		Chat
+		Email
+		Gặp trực tiếp
+
+	Đều là nói với cùng một người.
+	Khác nhau ở giao thức.
+	Model cũng vậy.
+	Claude không quan tâm bạn gọi bằng API nào.
+	Bedrock sẽ chuyển đổi request.
+
+
+
+
+# II. InvokeModel là gì?
+
+	InvokeModel là API nguyên thủy (low-level API).
+	Nó gần như nói với model rằng
+	Đây là dữ liệu.
+	Đây là prompt.
+	Đây là các parameter.
+	Hãy xử lý.
+
+	Ví dụ
+
+		App
+		↓
+		InvokeModel API
+		↓
+		Claude
+		↓
+		Response
+
+	Bạn phải tự chuẩn bị toàn bộ request.
+	
+	
+	
+	Ví dụ
+		{
+		  "prompt":"Explain RAG",
+		  "temperature":0.5,
+		  "max_tokens":1000
+		}
+
+	Bedrock chỉ chuyển request.
+	Không giúp gì thêm.
+	Đây gần giống HTTP POST.	
+		
+		
+		
+	Đặc điểm
+		Low-level
+		Full control
+		Phải biết format từng model
+		Mỗi model có body khác nhau
+
+	Ví dụ
+	Claude
+		messages
+	Llama
+		prompt
+	Titan
+		inputText
+
+	Cùng một ý
+	Nhưng JSON khác nhau.
+	Đây chính là điều gây đau đầu.
+		
+	
+	
+# 	Ví dụ
+
+	Nếu công ty đổi
+		Claude
+		↓
+		Llama
+
+	Developer phải sửa code.
+	Bởi vì body request khác.
+
+
+
+
+
+
+# III. Converse API là gì?
+
+
+	Converse API sinh ra để giải quyết đúng vấn đề trên.
+	AWS nói rằng
+	"Tôi sẽ tạo một API thống nhất."
+	Bạn không cần biết model nào.
+	Bạn chỉ cần nói
+
+	Kiến trúc
+		Application
+		↓
+		Converse API
+		↓
+		Bedrock
+		↓
+		Claude
+		↓
+		Llama
+		↓
+		Nova
+		↓
+		Mistral
+		↓
+		Response
+
+		Bạn không còn nói chuyện trực tiếp với model.
+		Bạn nói chuyện với Bedrock.
+		Bedrock phiên dịch.
+
+
+	Ví dụ
+		Bạn luôn gửi
+
+
+{
+  "messages":[
+      {
+        "role":"user",
+        "content":[
+            {
+                "text":"Explain RAG"
+            }
+        ]
+      }
+  ]
+}
+
+
+	Nếu hôm nay
+
+		Claude
+		↓
+		Bedrock dịch sang Claude Format
+		Nếu mai
+		Nova
+		↓
+		Bedrock dịch sang Nova Format
+		Application KHÔNG đổi.
+		Đây chính là abstraction.
+			
+			
+	
+	
+# 	IV. Bản chất thật sự của Converse API
+	
+	
+	Converse API không phải là Chat API.
+	Đây là điểm AWS rất thích gài.
+	Nó là
+	Universal Model Invocation API
+
+	Nó chuẩn hóa
+		prompt
+		message
+		system
+		tool use
+		inference config
+		streaming
+
+	cho tất cả model.
+	Chat chỉ là một use case.	
+		
+		
+		
+# 	V. So sánh	
+		
+	
+| Tiêu chí               | InvokeModel          | Converse API  |
+| ---------------------- | -------------------- | ------------- |
+| Mức abstraction        | Thấp                 | Cao           |
+| Phải biết format model | Có                   | Không         |
+| Đổi model              | Thường phải sửa code | Hầu như không |
+| Hỗ trợ multi-turn      | Tự xử lý             | Thiết kế sẵn  |
+| Tool use               | Phức tạp             | Native        |
+| System Prompt          | Tự theo từng model   | Chuẩn hóa     |
+| AWS khuyến nghị        | Chỉ khi cần đặc thù  | Có            |
+	
+	
+	
+# 	VI. Ví dụ thực tế
+
+	Giả sử công ty đang dùng
+	Claude Sonnet.
+	Sau 6 tháng.
+	CEO bảo
+	"Đổi sang Amazon Nova."
+
+	Nếu dùng InvokeModel
+	Developer phải sửa
+		request body
+		parameter
+		message format
+
+	Testing lại.
+
+
+	Nếu dùng Converse
+	Chỉ đổi
+		modelId
+	Xong.
+		Đây là lý do AWS khuyến nghị Converse.
+
+
+
+# VII. Trade-off
+
+	## Converse 
+
+
+
+	Ưu điểm
+		Portable
+		Clean Code
+		Unified API
+		Future Proof
+
+	Nhược
+		Không expose hết mọi tính năng đặc thù của từng model ngay lập tức.
+
+	Ví dụ
+
+		Nếu Anthropic ra một parameter mới.
+		InvokeModel thường hỗ trợ trước.
+		Converse có thể cần AWS cập nhật.
+
+
+
+	## InvokeModel
+
+
+		Ưu điểm
+			Toàn quyền điều khiển.
+			Có thể dùng ngay tính năng mới.
+
+		Nhược
+			Vendor-specific.
+			Đổi model rất đau.
+				
+				
+# 	VIII. Mapping AWS Services
+
+
+| Dịch vụ                    | API thường dùng |
+| -------------------------- | --------------- |
+| Bedrock Chat Application   | Converse        |
+| Bedrock Agent              | Converse        |
+| Knowledge Base             | Converse        |
+| Prompt Playground          | Converse        |
+| Multi-turn Chatbot         | Converse        |
+| Custom Integration         | Converse        |
+| Fine-grained Model Feature | InvokeModel     |
+
+
+
+
+# IX. Ví dụ System Design
+
+	User
+	↓
+	Web
+	↓
+	API Gateway
+	↓
+	Lambda
+	↓
+	Converse API
+	↓
+	Claude Sonnet
+	↓
+	Response
+
+	Sau này
+		Claude
+		↓
+		Nova
+
+	Lambda gần như không đổi.
+
+	Nếu dùng InvokeModel
+	Lambda phải sửa JSON request.
+			
+		
+		
+# 	X. AWS Professional Exam Scenario	
+		
+Một công ty đang phát triển chatbot nội bộ bằng Amazon Bedrock. Kiến trúc phải đáp ứng các yêu cầu sau:
+
+Có thể dễ dàng chuyển đổi giữa Anthropic Claude và Amazon Nova trong tương lai.
+Muốn giảm tối đa việc sửa đổi mã nguồn của ứng dụng khi thay đổi model.
+Hỗ trợ hội thoại nhiều lượt (multi-turn conversation) và khả năng gọi công cụ (tool use).
+
+Câu hỏi: Nên sử dụng API nào?
+
+Đáp án đúng
+
+Converse API
+
+Lý do:
+
+Chuẩn hóa định dạng message giữa các model.
+Giảm phụ thuộc vào từng nhà cung cấp model.
+Hỗ trợ thống nhất cho multi-turn conversation, system prompt, tool use và inference configuration.
+Giúp thay đổi modelId mà ít hoặc không cần thay đổi cấu trúc request.		
+		
+		
+# 	XI. Các bẫy AWS rất hay gài	
+		
+| Bẫy                                                       | Thực tế                                                                                                                                                            |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Converse chỉ dành cho chatbot                             | Sai. Đây là API chuẩn hóa cho việc gọi nhiều loại Foundation Model.                                                                                                |
+| InvokeModel đã bị deprecate                               | Sai. Vẫn được hỗ trợ và cần thiết cho một số tính năng đặc thù của model.                                                                                          |
+| Converse luôn thay thế hoàn toàn InvokeModel              | Sai. Nếu cần sử dụng khả năng riêng mà Converse chưa hỗ trợ, InvokeModel vẫn là lựa chọn phù hợp.                                                                  |
+| Converse nhanh hơn InvokeModel                            | Sai. Khác biệt chủ yếu nằm ở abstraction và trải nghiệm lập trình, không phải hiệu năng inference.                                                                 |
+| Chuyển model bằng Converse sẽ không bao giờ phải sửa code | Sai. Thông thường chỉ cần đổi `modelId`, nhưng nếu logic ứng dụng phụ thuộc vào hành vi hoặc định dạng đầu ra riêng của từng model thì vẫn có thể phải điều chỉnh. |
+
+
+
+
+# XIII. Ghi nhớ để nhớ mãi
+
+| Hình ảnh liên tưởng                                                                                                                              | API              |
+| ------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------- |
+| Ổ cắm điện đa năng (universal adapter): mọi thiết bị đều cắm qua cùng một chuẩn, adapter tự chuyển đổi sang chuẩn của từng quốc gia              | **Converse API** |
+| Cắm trực tiếp vào ổ điện của từng quốc gia: phải dùng đúng loại phích cắm cho từng nơi nhưng khai thác được đầy đủ khả năng của hệ thống điện đó | **InvokeModel**  |
+
+
+Converse API = Chuẩn hóa (Abstraction + Portability + Maintainability).
+InvokeModel = Điều khiển trực tiếp (Low-level + Model-specific + Full Feature Access).
+
+
+
+
+
+
+
+
+
+
+		
+		
+		
+		
+
 
 </pre><a id='backBottom' href='../aws-bedrock-agent-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
