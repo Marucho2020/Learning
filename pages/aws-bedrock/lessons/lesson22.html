@@ -1,3 +1,229 @@
-<html><head><title>Lesson 22 == Lộ trình ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 22 -- Lộ trình -//</h1><pre># Lộ trình 100 ngày học AIP-C01 — Trọng tâm: Kiến trúc AI hiện đại & Agentic AI
+<html><head><title>Lesson 22 == AIP-C01  === Model Latency vs Throughput trade-off ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 22 -- AIP-C01  --= Model Latency vs Throughput trade-off -//</h1><pre>
+
+
+# Model Latency vs Throughput Trade-off
+
+	Điểm quan trọng nhất:
+		Latency = một request mất bao lâu để hoàn thành.
+		Throughput = hệ thống xử lý được bao nhiêu workload trong một đơn vị thời gian.
+
+	Hai thứ này liên quan nhưng không đồng nghĩa. Tối ưu một cái chưa chắc tối ưu cái kia.
+
+
+# Latency
+
+	Latency trả lời:
+		“Một user phải chờ bao lâu?”
+
+	Ví dụ:
+
+		User
+		  ↓
+		API
+		  ↓
+		Bedrock
+		  ↓
+		Model
+		  ↓
+		Response
+
+		Request bắt đầu: 10:00:00.000
+		Response hoàn thành: 10:00:01.200
+
+		Latency = 1.2 giây
+
+				
+Trong GenAI, cần đặc biệt phân biệt:
+	Time to First Token (TTFT): thời gian từ lúc gửi request đến token đầu tiên.
+	Time Per Output Token (TPOT): thời gian để sinh từng token tiếp theo.
+	End-to-End Latency: toàn bộ thời gian user nhận được response hoàn chỉnh.		
+			
+		
+	Vì vậy:		
+		
+Request
+   │
+   ├── Network / queue
+   ├── Model processing
+   ├── First token
+   │
+   ├── token 1
+   ├── token 2
+   ├── token 3
+   └── ...		
+		
+		
+	Một chatbot có thể có:		
+		
+	TTFT = 300 ms
+		Total response = 4 seconds	
+			
+	User sẽ thấy response bắt đầu rất nhanh, dù tổng thời gian để hoàn thành câu trả lời vẫn là 4 giây.
+	Đây là lý do streaming cực kỳ quan trọng đối với perceived latency.			
+			
+		
+
+# 		2. Throughput là gì?
+		
+	Throughput trả lời:
+		“Trong một khoảng thời gian, hệ thống xử lý được bao nhiêu workload?”	
+				
+				
+	Ví dụ:
+
+	100 requests / second
+	hoặc trong GenAI:
+	500,000 tokens / minute
+
+	hoặc:
+	10,000 requests / minute		
+			
+			
+	Điểm rất quan trọng:
+
+	Throughput không nhất thiết đo bằng requests.
+	Đối với LLM, token thường quan trọng hơn request.
+
+	Ví dụ:
+	System A		
+			
+			
+	100 requests/minute
+		mỗi request = 100 tokens
+		→ 10,000 tokens/minute		
+			
+		
+		
+	System B
+		100 requests/minute
+		mỗi request = 10,000 tokens
+		→ 1,000,000 tokens/minute
+
+	Hai hệ thống đều có:
+	100 requests/minute
+
+	nhưng workload hoàn toàn khác nhau.
+			
+		
+	Vì vậy khi đề AWS nói:
+	token throughput
+
+	hãy nghĩ ngay:
+	khả năng xử lý/generate token trong một khoảng thời gian		
+			
+			
+		
+# 3. Một công thức cực kỳ quan trọng		
+		
+	Trong hệ thống xử lý request:	
+		
+		
+Throughput = 	Concurrency​	 / Latency
+		
+		
+		
+	Ví dụ:
+		Concurrency = 100 requests
+		Latency = 1 second
+
+	Throughput ≈ 100 requests/sec		
+			
+		
+		
+	Nếu:
+		Concurrency = 100
+		Latency = 2 seconds
+
+	Throughput ≈ 50 requests/sec	
+			
+			
+	Tức là nếu cùng một số lượng worker/concurrent slots, latency tăng thì throughput giảm.
+	Nhưng phải cẩn thận:
+		Công thức trên là trực giác về hệ thống/concurrency, không phải công thức định nghĩa throughput của mọi LLM service.
+
+
+	Trong thực tế còn có:
+
+		batching
+		queueing
+		concurrency limits
+		model capacity
+		token generation speed
+		input/output token size
+		throttling
+		network
+		scheduling
+
+
+# 5. Trong GenAI còn phức tạp hơn
+
+LLM không giống API CRUD thông thường.
+Ví dụ:
+
+	Input:
+	10,000 tokens
+
+	Output:
+	2,000 tokens
+
+	Input:
+	10,000 tokens
+
+	Output:
+	2,000 tokens
+
+		Model phải xử lý context lớn và generate output.
+
+		Nếu bạn yêu cầu:
+		max_tokens = 8,000
+
+		thì response có thể mất nhiều thời gian hơn so với:
+		max_tokens = 500
+
+		Do đó:
+		Output token length có ảnh hưởng trực tiếp đến generation latency.
+		Đây là một optimization rất thực tế.
+
+
+
+# 6. Latency vs Throughput trong Amazon Bedrock
+
+	Amazon Bedrock cung cấp nhiều cơ chế để xử lý workload khác nhau.
+	Một trong những cơ chế quan trọng nhất là:
+
+	## Provisioned Throughput
+		Provisioned Throughput cung cấp dedicated throughput cho model với model units và thời gian được chỉ định. AWS mô tả model unit dựa trên tổng số input/output tokens mà model unit có thể xử lý/generate trong một phút.
+
+
+
+	Nói đơn giản:
+		On-Demand
+
+		User
+		 ↓
+		Bedrock shared capacity
+		 ↓
+		Model
+
+	Trong khi:
+		Provisioned Throughput
+
+		User
+		 ↓
+		Bedrock
+		 ↓
+		Dedicated model capacity
+		 ↓
+		Model
+
+
+
+
+
+
+
+
+
+
 
 </pre><a id='backBottom' href='../aws-bedrock-agent-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
