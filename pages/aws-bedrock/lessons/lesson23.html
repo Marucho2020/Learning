@@ -1,3 +1,896 @@
-<html><head><title>Lesson 23 == Lộ trình ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 23 -- Lộ trình -//</h1><pre># Lộ trình 100 ngày học AIP-C01 — Trọng tâm: Kiến trúc AI hiện đại & Agentic AI
+<html><head><title>Lesson 23 == AIP-C01  ===Streaming Response (token streaming) ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 23 -- AIP-C01  --=Streaming Response (token streaming) -//</h1><pre>
+# 1. Streaming Response thực chất là gì?
+
+	Streaming Response là cơ chế server gửi kết quả sinh ra từng phần về client ngay khi có, thay vì chờ model tạo xong toàn bộ response rồi mới trả về.
+
+
+	## Streaming: 
+Request
+   ↓
+LLM xử lý
+   ↓
+"Amazon"
+   ↓
+" Bedrock"
+   ↓
+" is"
+   ↓
+" a"
+   ↓
+" fully"
+   ↓
+" managed..."
+   ↓
+Client hiển thị liên tục
+
+
+	Điểm quan trọng:
+		Streaming giảm Time To First Token (TTFT) / perceived latency, chứ không nhất thiết giảm thời gian model hoàn thành toàn bộ câu trả lời.
+
+
+Ví dụ:
+
+	Total generation time = 8 giây
+
+	Non-streaming:
+		User chờ 8 giây → nhận kết quả
+
+	Streaming:
+		User chờ 1 giây → thấy token đầu tiên
+					→ tiếp tục thấy token
+					→ 8 giây → hoàn thành
+
+
+
+	Vì vậy:
+		TTFT ↓
+		Perceived latency ↓
+		UX ↑
+		Nhưng total generation time có thể gần như không đổi
+
+	Đây là một điểm cực kỳ dễ xuất hiện trong câu hỏi Professional-level.
+
+
+
+# 2. Token streaming không có nghĩa là model tạo token nhanh hơn
+	Đây là mental model phải nhớ:
+
+                 MODEL
+                   │
+          token được generate
+                   │
+        ┌──────────┴──────────┐
+        │                     │
+   Streaming             Non-streaming
+        │                     │
+gửi ngay từng chunk       buffer toàn bộ
+        │                     │
+Client thấy sớm          Client thấy muộn
+
+	Streaming không biến model chậm thành model nhanh.
+
+
+
+# 3. AWS Bedrock hỗ trợ Streaming như thế nào?
+
+	Trong Amazon Bedrock hiện nay có nhiều API pattern.
+	Đối với API inference truyền thống:
+
+
+| API                             | Behavior                       |
+| ------------------------------- | ------------------------------ |
+| `InvokeModel`                   | response một lần               |
+| `InvokeModelWithResponseStream` | response dạng stream           |
+| `Converse`                      | synchronous conversational API |
+| `ConverseStream`                | conversational API + streaming |
+
+
+
+AWS mô tả InvokeModelWithResponseStream là API trả response theo stream; khả năng streaming của model có thể kiểm tra thông qua responseStreamingSupported.
+
+Đối với conversational application, AWS khuyến nghị Converse / ConverseStream vì cung cấp interface nhất quán giữa các model hỗ trợ messages.
+
+	Mental model:
+
+                Amazon Bedrock Runtime
+                       │
+          ┌────────────┴────────────┐
+          │                         │
+     Invoke family             Converse family
+          │                         │
+     InvokeModel               Converse
+          │                         │
+ InvokeModelWith            ConverseStream
+ ResponseStream
+
+
+
+# 4. InvokeModelWithResponseStream
+
+	Đây là API rất quan trọng cần nhớ cho exam.
+
+	Thay vì:
+		response = client.invoke_model(...)
+
+	có thể sử dụng:
+		response = client.invoke_model_with_response_stream(...)
+
+	Response được trả về thành các event/chunk.
+		AWS API reference cho biết operation này yêu cầu permission:
+
+
+	bedrock:InvokeModelWithResponseStream
+
+
+và response có thể chứa các chunk hoặc các streaming error như:
+	modelStreamErrorException
+	modelTimeoutException
+	throttlingException
+	serviceUnavailableException
+
+
+	Exam trap
+
+	Nếu câu hỏi nói:
+		"The application must stream model responses to users."
+
+	Đáp án:
+		InvokeModel
+		thường là không đủ.
+		
+	Bạn phải nghĩ đến:
+		InvokeModelWithResponseStream
+
+	hoặc nếu application sử dụng conversational interface:
+		ConverseStream
+
+
+
+
+# 5. ConverseStream — cực kỳ quan trọng
+
+	Nếu application là chatbot / multi-turn conversation thì đừng máy móc chọn InvokeModelWithResponseStream.
+		ConverseStream cung cấp conversational interface thống nhất và stream response. AWS mô tả ConverseStream là phiên bản streaming của Converse API.
+
+
+	Mental model:
+	
+                    Use case
+                       │
+          ┌────────────┴────────────┐
+          │                         │
+  Generic model invocation      Conversation
+          │                         │
+ InvokeModelWithResponseStream  ConverseStream
+
+
+
+# Ví dụ
+
+
+
+User:
+"I want to cancel my order."
+
+LLM:
+"Sure..."
+
+stream
+
+"Sure, I can help..."
+"Sure, I can help you cancel..."
+"Sure, I can help you cancel your order..."
+
+
+
+Nếu bạn cần:
+	multi-turn conversation
+	messages
+	system instructions
+	tool use
+	unified model interface
+
+→ ConverseStream thường là lựa chọn tự nhiên hơn.
+
+
+
+
+# 6. Streaming ảnh hưởng đến UX như thế nào?
+
+	Đây mới là lý do production system dùng streaming.
+	Giả sử chatbot phải trả lời 2.000 tokens.
+
+	Không streaming:
+
+
+User
+ │
+ │ request
+ ↓
+API
+ │
+ ↓
+Bedrock
+ │
+ │ 12 sec
+ │
+ ↓
+Full response
+ │
+ ↓
+User
+
+
+	UX:
+		"Website bị treo à?"
+
+	Streaming:
+User
+ │
+ ↓
+API
+ │
+ ↓
+Bedrock
+ │
+ ├── token 1 ──→ User
+ ├── token 2 ──→ User
+ ├── token 3 ──→ User
+ ├── token 4 ──→ User
+ ├── ...
+ └── token N ──→ User
+ 
+
+	User bắt đầu đọc ngay.
+
+	Vì vậy streaming đặc biệt hữu ích cho:
+		Chatbot
+		AI assistant
+		Coding assistant
+		Customer support
+		Long-form generation
+		Interactive applications
+
+
+
+# 7. Streaming không phải Async Invocation
+
+	Đây là một bẫy rất hay.
+
+		| Cơ chế       | Ý nghĩa                         |
+		| ------------ | ------------------------------- |
+		| Synchronous  | request → chờ → response        |
+		| Streaming    | request → response từng phần    |
+		| Asynchronous | request → job → lấy kết quả sau |
+
+
+	Đừng nhầm:
+	
+		Streaming
+			Request
+			  ↓
+			Model
+			  ↓
+			chunk 1
+			chunk 2
+			chunk 3
+			chunk 4
+
+
+		Async
+			Request
+			  ↓
+			Job ID
+			  ↓
+			[model processing]
+			  ↓
+			S3 / result
+			  ↓
+			retrieve later
+
+
+			Async phù hợp với workload dài hoặc không cần interactive response.
+			Streaming phù hợp với interactive UX.
+
+
+
+# 8. Streaming không đồng nghĩa với giảm cost
+
+	Streaming chủ yếu cải thiện:
+		TTFT
+		Perceived latency
+		UX
+
+	Không phải:
+		Model quality
+		Token generation cost
+		Total tokens
+
+	Nếu model vẫn generate:
+		Input = 2,000 tokens
+		Output = 4,000 tokens
+
+	thì streaming không tự nhiên biến nó thành:
+		Input = 2,000
+		Output = 3,000
+
+
+
+# 9. Streaming và throughput
+	Đây là chỗ cần suy nghĩ ở mức Senior.
+
+Giả sử:
+	100 concurrent users
+
+
+	mỗi user nhận streaming response.
+	Connection sẽ được giữ lâu hơn.
+	Do đó architecture phải xem xét:
+		concurrent connections
+		connection timeout
+		load balancer behavior
+		proxy buffering
+		API Gateway integration
+		Lambda execution duration
+		client disconnect
+		backpressure
+		retry
+		observability
+
+	Streaming không đơn giản chỉ là:
+	enable=true
+
+	rồi xong.
+
+
+
+
+# 10. Lambda + Streaming
+
+Scenario:
+
+	A company has a chatbot using Amazon Bedrock. Users complain that they must wait several seconds before seeing any response. The company wants to improve perceived latency without changing the foundation model.
+
+
+	Bạn nên suy nghĩ:
+
+		Client
+		   ↓
+		Streaming-capable API
+		   ↓
+		Lambda / backend
+		   ↓
+		Bedrock ConverseStream
+		   ↓
+		chunks
+		   ↓
+		Client
+		
+		
+	Điểm cần phân biệt:
+		Lambda không làm model generate nhanh hơn.
+		Lambda/backend chỉ forward chunks đến client càng sớm càng tốt.
+		Nếu backend nhận toàn bộ response rồi mới trả:		
+				
+		Bedrock
+			↓
+		wait until complete
+		   ↓
+		Lambda
+		   ↓
+		Client
+
+		thì bạn đã phá mất lợi ích của streaming.		
+		
+
+
+				
+# 11. API Gateway / frontend phải hỗ trợ streaming
+	Đây là một trap kiến trúc rất thực tế.
+
+	Giả sử Bedrock streaming:
+		Bedrock
+		 ↓
+		chunk 1
+		chunk 2
+		chunk 3
+
+	Nhưng backend làm:
+		for chunk in stream:
+			buffer.append(chunk)
+
+		return "".join(buffer)
+
+	Kết quả:
+		Bedrock streaming = YES
+		Backend-to-client streaming = NO
+		
+		User vẫn phải đợi full response.
+
+
+
+
+	## Mental model
+	Streaming phải được duy trì xuyên suốt pipeline:
+
+
+	Streaming phải được duy trì xuyên suốt pipeline:
+			LLM
+			 ↓
+			Bedrock streaming
+			 ↓
+			Backend streaming
+			 ↓
+			Network streaming
+			 ↓
+			Frontend incremental rendering
+			
+
+	Chỉ cần một layer buffer toàn bộ response:
+
+		LLM ──stream──> Backend ──BUFFER──> Client
+								   ↑
+							  streaming bị mất
+
+	Đây là một dạng scenario rất phù hợp Professional exam.
+
+			
+					
+			
+			
+# 	12. Guardrails + Streaming — cực kỳ quan trọng		
+			
+	Đây là phần có thể biến một câu hỏi streaming đơn giản thành câu hỏi khó.
+	Khi streaming, bạn không thể đơn giản:			
+				
+		generate entire response
+			   ↓
+		scan
+			   ↓
+		send			
+					
+			
+		vì mục tiêu của streaming là gửi chunk sớm.
+		
+		
+	Amazon Bedrock Guardrails có hai cách xử lý streaming response:			
+					
+	## 	Synchronous			
+		Guardrail buffer một hoặc nhiều chunks, scan trước rồi mới gửi.				
+			
+		Model
+		 ↓
+		chunk
+		 ↓
+		BUFFER
+		 ↓
+		Guardrail
+		 ↓
+		safe?
+		 ↓
+		Client			
+			
+			
+		Ưu điểm:
+			an toàn/chính xác hơn vì chunk được kiểm tra trước khi gửi.
+
+		Nhược điểm:
+			tăng latency.
+
+		AWS nói synchronous mode tạo thêm latency vì response chunk phải chờ Guardrails scan hoàn thành.			
+					
+					
+					
+	## Asynchronous 			
+			
+	Model
+	 ↓
+	chunk ───────────────→ Client
+	  │
+	  └────→ Guardrail scan		
+			
+				
+	Chunk được gửi ngay trong khi Guardrails kiểm tra phía sau.
+
+	Ưu điểm:
+		latency thấp hơn.
+
+	Nhược điểm:
+		một chunk không phù hợp có thể đã tới client trước khi Guardrails phát hiện.
+
+	AWS cảnh báo asynchronous mode có thể để nội dung không phù hợp xuất hiện trước khi quá trình scan hoàn tất; khi phát hiện, các chunk tiếp theo có thể bị chặn. Ngoài ra, masking sensitive information không được hỗ trợ trong asynchronous mode.			
+	
+
+
+# 13. Bảng trade-off Guardrails + Streaming
+
+
+|                           | Synchronous      | Asynchronous   |
+| ------------------------- | ---------------- | -------------- |
+| Response latency          | Cao hơn          | Thấp hơn       |
+| Chunk gửi ngay            | Không nhất thiết | Có             |
+| Kiểm tra trước khi gửi    | Có               | Không đảm bảo  |
+| UX latency                | Tệ hơn           | Tốt hơn        |
+| Safety trước khi hiển thị | Tốt hơn          | Có khoảng trễ  |
+| Sensitive-data masking    | Hỗ trợ           | Không hỗ trợ   |
+| Use case                  | Safety-critical  | Low-latency UX |
+
+
+
+
+# Exam trap cực mạnh
+
+	Scenario:
+		The company requires that no unsafe content ever be displayed to the user.
+
+	Đừng chọn:
+		Asynchronous guardrail streaming
+		chỉ vì nó có latency thấp.
+
+	Nếu requirement là:
+		content must be evaluated before being displayed
+		→ ưu tiên synchronous processing.
+
+	Ngược lại:
+		minimum latency is the highest priority and the company accepts that moderation happens asynchronously
+		→ asynchronous có thể phù hợp.
+
+	Đây chính là kiểu trade-off mà AWS thích kiểm tra. 
+
+
+
+
+# 14. Bedrock Agent cũng có Streaming
+
+	Đừng giới hạn streaming chỉ ở model invocation.
+	Amazon Bedrock Agent có thể stream final response bằng:
+		streamFinalResponse = true
+
+
+		AWS cho biết mặc định InvokeAgent có thể trả một chunk chứa complete response; bật streaming sẽ chia response thành nhiều chunks, giúp giảm latency trước khi người dùng nhận response đầu tiên.
+
+	Ví dụ:
+
+		User
+		 ↓
+		Bedrock Agent
+		 ↓
+		Reasoning / orchestration
+		 ↓
+		Knowledge Base / Action Group / Tool
+		 ↓
+		Final response
+		 ↓
+		chunk 1
+		chunk 2
+		chunk 3
+		 ↓
+		User
+
+	
+	Đây là một distinction quan trọng:
+		Agent streaming ≠ streaming toàn bộ quá trình reasoning.	
+
+
+	Bạn không nên mặc định rằng user sẽ nhận được:
+		Agent thought 1
+		Agent thought 2
+		Tool decision
+		Internal reasoning
+		...
+
+	Streaming final response chủ yếu liên quan đến response delivery.
+
+
+
+# 15. Agent + Guardrail interval
+
+
+	Một detail khá dễ thành trap.
+		Khi Agent có Guardrail, StreamingConfigurations có thể có:
+
+	applyGuardrailInterval
+
+	AWS dùng interval này để kiểm soát tần suất ApplyGuardrail được gọi trên outgoing response characters. Default interval hiện được document là 50 characters.
+
+	Mental model:
+
+		Generated response:
+		"Hello, I am your customer support assistant..."
+				↓
+		50 chars
+				↓
+		ApplyGuardrail
+
+		50 chars
+				↓
+		ApplyGuardrail
+
+		...
+
+
+	Nếu tăng interval:
+		larger interval
+			  ↓
+		larger chunks
+			  ↓
+		fewer ApplyGuardrail calls
+			  ↓
+		potentially lower overhead
+		
+	Nhưng safety checking trở nên ít granular hơn.	
+		
+		
+		
+#	16. Streaming trong RAG
+		
+	Streaming không chỉ dành cho pure LLM.	
+		User
+		 ↓
+		Bedrock Knowledge Base
+		 ↓
+		Retrieve documents
+		 ↓
+		Foundation Model
+		 ↓
+		Generate answer
+		 ↓
+		stream response
+		 ↓
+		User		
+				
+	Bedrock Knowledge Bases hỗ trợ RetrieveAndGenerateStream, cho phép generated response được trả về theo chunks thay vì đợi toàn bộ response.		
+			
+	Điểm quan trọng:
+		Retrieval không nhất thiết streaming.	
+					
+		
+	Thông thường:
+			Retrieve
+			 ↓
+			documents
+			 ↓
+			Generate
+			 ↓
+			stream generated answer
+
+		Nói cách khác, bạn có thể phải chờ retrieval xong trước, nhưng phần generation có thể stream.	
+				
+		
+# 	17. Streaming không giải quyết mọi loại latency	
+		
+User
+ ↓
+API
+ ↓
+Authentication       300ms
+ ↓
+RAG retrieval        2 sec
+ ↓
+Prompt construction  500ms
+ ↓
+LLM TTFT             1 sec
+ ↓
+Generation           8 sec		
+		
+		
+	Streaming chỉ chủ yếu giúp ở phần:
+		LLM generation
+
+	Nếu bottleneck nằm ở:
+		RAG retrieval = 2 sec
+		thì streaming không biến 2 giây thành 0.
+
+	Đây là tư duy Professional-level:
+		Đừng thấy requirement "reduce latency" rồi chọn streaming ngay. Hãy xác định latency budget nằm ở đâu.		
+			
+			
+		
+#	18. TTFT vs Total Latency
+		
+		
+Nên phân biệt:
+	TTFT — Time To First Token
+	
+		Thời gian:
+			request
+			 ↓
+			first token		
+				
+				
+	Total response latency			
+	Thời gian:
+		request
+		 ↓
+		last token				
+						
+					
+	Ví dụ:
+		TTFT = 1.2 sec
+		Total = 9 sec					
+							
+					
+	Streaming cải thiện mạnh:
+		TTFT
+
+	nhưng không nhất thiết:
+		Total = 9 sec → 4 sec				
+					
+					
+Muốn giảm total latency có thể phải xem:
+	model selection
+	smaller model
+	prompt size
+	RAG retrieval
+	output token limit
+	inference configuration
+	latency-optimized inference options
+	caching
+	architecture				
+				
+				
+# 	19. Streaming và model selection		
+				
+				
+	Một model không nhất thiết hỗ trợ streaming.
+
+	AWS cho phép kiểm tra:
+		responseStreamingSupported
+		thông qua GetFoundationModel.
+
+	Vì vậy scenario:
+		The application requires real-time streaming, but the selected foundation model does not support streaming.
+		Không thể chỉ sửa frontend.
+
+	Bạn phải:
+		select another model
+		hoặc thay đổi architecture.
+
+	Trap
+		"Amazon Bedrock supports streaming, therefore every foundation model supports streaming."
+
+	Sai.
+		Streaming support là thuộc tính cần kiểm tra ở model/API compatibility.				
+					
+					
+				
+
+# 20. Những thứ Streaming KHÔNG làm
+
+
+| Streaming KHÔNG...                                         | Vì sao                             |
+| ---------------------------------------------------------- | ---------------------------------- |
+| Làm model thông minh hơn                                   | Không liên quan model quality      |
+| Giảm hallucination                                         | Không                              |
+| Giảm số token                                              | Không                              |
+| Tự động giảm cost                                          | Không                              |
+| Làm inference nhanh hơn                                    | Không nhất thiết                   |
+| Thay thế async processing                                  | Khác mục đích                      |
+| Đảm bảo safety                                             | Phải kết hợp Guardrails            |
+| Tự động stream qua toàn bộ architecture                    | Backend/frontend phải hỗ trợ       |
+| Làm model không hỗ trợ streaming trở thành streaming model | API capability vẫn phụ thuộc model |
+
+
+
+
+# 21. Mapping AWS cần nhớ cho AIP-C01
+
+| Thành phần                      | Liên quan Streaming            |
+| ------------------------------- | ------------------------------ |
+| Amazon Bedrock                  | Foundation model inference     |
+| `InvokeModel`                   | Non-streaming                  |
+| `InvokeModelWithResponseStream` | Streaming                      |
+| `Converse`                      | Conversational inference       |
+| `ConverseStream`                | Conversational streaming       |
+| Bedrock Guardrails              | Streaming moderation trade-off |
+| Bedrock Agents                  | `streamFinalResponse`          |
+| Knowledge Bases                 | `RetrieveAndGenerateStream`    |
+| Lambda                          | Forward/handle streaming       |
+| API layer                       | Phải preserve streaming        |
+| Frontend                        | Incremental rendering          |
+| IAM                             | Cần permission phù hợp         |
+| CloudWatch / observability      | Theo dõi latency/error         |
+
+
+
+# 22. Keywords cần nhận diện trong đề thi
+
+	real-time response
+	incremental response
+	progressively display
+	partial response
+	response chunks
+	token-by-token
+	token streaming
+	first token
+	time to first token
+	TTFT
+	perceived latency
+	interactive chatbot
+	long response
+	reduce initial latency
+	stream response
+	streaming configuration
+	ConverseStream
+	InvokeModelWithResponseStream
+	streamFinalResponse
+	applyGuardrailInterval
+
+
+	Đặc biệt:
+		"Users want to see the answer as it is generated."
+		→ Streaming.
+
+	Không phải:
+		Async invocation.
+
+
+
+
+
+# 23. Scenario kiểu AIP-C01
+
+	Scenario
+		Một công ty xây dựng AI customer-support trên Amazon Bedrock.
+
+	Response trung bình:
+		2,000 tokens
+
+	Model mất khoảng:
+		8–10 seconds
+		Người dùng phàn nàn rằng UI có vẻ "đứng" trong nhiều giây.
+
+
+	Requirement:
+		Không thay đổi foundation model.
+		Không giảm chất lượng response.
+		Người dùng phải thấy response càng sớm càng tốt.
+		Không thay đổi business logic.
+		Đáp án tốt nhất
+		Use a streaming inference API and progressively render
+		response chunks on the client.
+
+	Ví dụ:
+
+	ConverseStream
+	nếu application dùng conversational API.
+
+
+
+# Nhưng nếu requirement thay đổi:
+
+	"No response content can be displayed until it has been evaluated by the organization's safety policies."
+	Lúc này:
+	Streaming + asynchronous Guardrails
+	là lựa chọn nguy hiểm.
+	Bạn phải ưu tiên cơ chế synchronous Guardrails processing, chấp nhận thêm latency. AWS document rõ trade-off này.
+
+
+
+# 25. Mental Model để nhớ mãi
+
+                STREAMING
+                    │
+        ┌───────────┼───────────┐
+        ↓           ↓           ↓
+      MODEL       NETWORK       UX
+        │           │           │
+   generate      send chunks   render
+   gradually     gradually     gradually
+
+
+
+Và 4 câu:
+	Streaming không làm model nhanh hơn.
+	Streaming làm user nhận được output sớm hơn.
+	TTFT giảm về mặt perceived latency; total generation time không nhất thiết giảm.
+	Muốn streaming end-to-end thì toàn bộ pipeline phải giữ được stream.
+
+
+
+
+
+
+
 
 </pre><a id='backBottom' href='../aws-bedrock-agent-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
