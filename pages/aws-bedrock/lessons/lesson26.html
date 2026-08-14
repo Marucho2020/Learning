@@ -1,2 +1,403 @@
-<html><head><title>Lesson 26 == Cloud Practitioner === Lộ trình học sâu về Bedrock Connect 10 bài nâng cao ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 26 -- Cloud Practitioner --= Lộ trình học sâu về Bedrock Connect 10 bài nâng cao -//</h1><pre>
+<html><head><title>Lesson 26 == AIP-C01  ===Bedrock Marketplace vs Bedrock Base Models ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 26 -- AIP-C01  --=Bedrock Marketplace vs Bedrock Base Models -//</h1><pre>
+
+# 1. Hiểu bản chất trước 
+
+Amazon Bedrock
+│
+├── Base / built-in Foundation Models
+│   ├── Amazon Nova
+│   ├── Anthropic Claude
+│   ├── Meta Llama
+│   ├── Mistral
+│   ├── Cohere
+│   └── ...
+│
+└── Bedrock Marketplace
+    ├── Specialized models
+    ├── Emerging models
+    ├── Domain-specific models
+    ├── Open/public models
+    └── Third-party models
+	
+	
+
+	Nhưng đừng hiểu Marketplace là một "model type".
+	Marketplace thực chất là catalog + deployment mechanism cho các model bổ sung vào hệ sinh thái Bedrock.
+	AWS hiện mô tả Marketplace là nơi khám phá, test và sử dụng hơn 100 model phổ biến, emerging và specialized bên cạnh selection model có sẵn của Bedrock.
+	
+	
+	
+	
+# 2. Base Models là gì?
+	Base Models trong Bedrock là các FM mà AWS cung cấp để bạn gọi trực tiếp qua Bedrock, không cần tự dựng GPU infrastructure.
+	
+	
+		Ví dụ:
+
+		Anthropic Claude
+		Amazon Nova
+		Meta Llama
+		Mistral
+		Cohere
+		v.v.
+							(thống nhất)
+		Bedrock cung cấp một unified API để application gọi model.	
+			
+	Ví dụ conceptually:		
+			Application
+			 │
+			 ▼
+		Amazon Bedrock Runtime
+			 │
+			 ▼
+		Claude / Nova / Llama / Mistral
+			
+	
+	
+	Bạn không cần:
+		EC2 GPU
+		EKS
+		Docker
+		vLLM
+		GPU scaling
+		Load Balancer
+		Auto Scaling
+			
+			
+	AWS quản lý phần serving infrastructure.
+		AWS gọi đây là các model được cung cấp trong Bedrock catalog và hỗ trợ nhiều API/endpoint tùy model.
+			
+			
+			
+			
+# 3. Bedrock Marketplace là gì?			
+			
+				
+	Marketplace giải quyết một vấn đề khác:
+		"Tôi muốn một model mà catalog Bedrock thông thường không cung cấp, đặc biệt là model specialized/domain-specific/emerging."			
+				
+				
+	Ví dụ AWS hiện liệt kê các model Marketplace như:
+		DeepSeek
+		Gemma
+		Falcon
+		Phi
+		Granite
+		Solar
+		Stable Diffusion
+		các model chuyên ngành
+		các model Nhật/Hàn/ngôn ngữ đặc thù
+		v.v			
+					
+	Workflow quan trọng:		
+			
+1. Discover model
+       ↓
+2. Subscribe / accept license
+       ↓
+3. Deploy model
+       ↓
+4. Managed endpoint
+       ↓
+5. Invoke through Bedrock API			
+			
+					
+		AWS documentation nói rõ Marketplace model được deploy lên endpoint managed by SageMaker AI, sau đó có thể truy cập thông qua Bedrock APIs.
+
+		Đây là điểm cực kỳ quan trọng để thi.			
+					
+			
+	Marketplace cho phép chọn instance type, number of instances và autoscaling policy, nên operational model khác đáng kể so với serverless FM thông thường.
+	
+			
+# 	4. So sánh trực tiếp		
+			
+|                      | Bedrock Base Models                                            | Bedrock Marketplace                                                |
+| -------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------ |
+| Mục đích             | Dùng các FM có sẵn trong Bedrock                               | Mở rộng lựa chọn model                                             |
+| Model                | Industry-leading / built-in selection                          | Popular, emerging, specialized, domain-specific                    |
+| Provider             | Amazon + third-party providers                                 | Nhiều third-party/model providers                                  |
+| Infrastructure       | Thường serverless/on-demand                                    | Model được deploy vào managed endpoint                             |
+| Có phải tự quản GPU? | Không                                                          | Không quản server trực tiếp, nhưng endpoint/deployment cần quản lý |
+| Scaling              | Bedrock quản lý                                                | Có thể chọn instance count/type và autoscaling                     |
+| Pricing model        | Model inference pricing                                        | Có model/provider pricing + endpoint/deployment economics          |
+| Subscribe/license    | Tùy model/provider; hiện access third-party có thể tự động hóa | Có subscription/EULA rõ ràng                                       |
+| Bedrock API          | Có                                                             | Có                                                                 |
+| Agents               | Model compatibility tùy model                                  | Chỉ model tương thích                                              |
+| Knowledge Bases      | Có tùy model                                                   | Có tùy model                                                       |
+| Guardrails           | Có                                                             | Có, nhưng cần chú ý compatibility/API                              |
+| Converse             | Tùy model                                                      | Chỉ model hỗ trợ Converse                                          |
+| Vận hành             | Đơn giản hơn                                                   | Nhiều deployment consideration hơn                                 |
+			
+			
+	
+	
+
+
+# 5. Cái bẫy lớn nhất: Marketplace ≠ SageMaker
+	Đề Professional rất thích câu này.
+
+	Sai:
+		"Bedrock Marketplace means you must leave Bedrock and invoke the model directly through SageMaker."
+
+
+	Đúng:	
+		Marketplace model
+			  ↓
+		SageMaker-managed endpoint
+			  ↓
+		Amazon Bedrock APIs
+			  ↓
+		Application			
+	
+	
+		Bạn vẫn có thể sử dụng Bedrock API để invoke Marketplace model. AWS nói rõ Marketplace models có thể được truy cập bằng InvokeModel, và một số model hỗ trợ Converse.	
+			
+		Thậm chí model tương thích còn có thể tích hợp với các capability của Bedrock như:	
+	
+			Agents
+			Knowledge Bases
+			Guardrails
+			Flows	
+	
+			nhưng không phải Marketplace model nào cũng hỗ trợ tất cả. Phải kiểm tra compatibility.
+	
+	
+# 	6. Ví dụ scenario
+	
+	
+	Scenario
+		Một công ty Nhật xây dựng chatbot hỗ trợ nhân viên.
+
+	Requirements:
+		Japanese language
+		cần model chuyên biệt cho tiếng Nhật
+		model hiện tại của Bedrock không đạt accuracy
+		muốn thử một model emerging từ third-party provider
+		muốn tiếp tục sử dụng Bedrock APIs
+		muốn tích hợp Guardrails và Knowledge Bases
+
+	Có 2 lựa chọn:	
+		
+	
+	A. Claude trên Bedrock
+		Application
+		   ↓
+		Bedrock
+		   ↓
+		Claude
+
+		Đây là lựa chọn built-in/base model.
+
+	B. Một specialized Japanese model trong Marketplace
+		Application
+		   ↓
+		Bedrock API
+		   ↓
+		Marketplace model
+		   ↓
+		Managed endpoint
+
+		Đây là trường hợp Marketplace phù hợp.
+
+	AWS Marketplace hiện có các model specialized và thậm chí có model Japanese-specific như Solar Mini Chat ja trong compatibility catalog.	
+		
+	
+# 7. Trap: "Marketplace luôn rẻ hơn Base Model"	
+	
+	Sai.
+		Marketplace không phải cơ chế pricing để "rẻ hơn".	
+		
+	Bạn phải xem:	
+	
+Model quality
++
+Inference cost
++
+Endpoint cost
++
+Instance type
++
+Utilization
++
+Autoscaling
++
+Throughput
++
+Latency	
+	
+	Base model serverless thường rất hấp dẫn khi workload: low / unpredictable traffic
+	vì không phải provision endpoint capacity trước.
+	
+	Marketplace endpoint có thể hợp lý hơn khi:
+predictable high traffic
++
+specific model requirement
++
+need specialized model
++
+need control over instance configuration	
+	
+	
+	
+# 	8. Trap: "Marketplace model = open-source model"
+	
+	Không hoàn toàn.
+	Marketplace có thể chứa:
+	
+open/public models
++
+commercial models
++
+specialized models
++
+emerging models
++
+domain-specific models	
+
+	
+	Và provider có thể áp dụng:
+		EULA
+		licensing
+		pricing
+		subscription
+
+	AWS FAQ mô tả Marketplace model có thể yêu cầu subscribe và chấp nhận EULA/pricing do provider đặt ra.	
+		
+	Vì vậy:
+		Marketplace ≠ Open Source Marketplace.
+
+
+
+
+# 9. Trap cực quan trọng: Converse support
+
+
+	Đừng nghĩ:
+		"Marketplace model thì chắc chắn hỗ trợ Converse."
+
+	Sai.
+		AWS có compatibility table riêng cho từng Marketplace model.
+
+
+| Model                | Converse | Streaming |
+| -------------------- | -------: | --------: |
+| Arcee Nova           |        ✅ |         ✅ |
+| DeepSeek-R1          |        ❌ |         ✅ |
+| Gemma 2 27B Instruct |        ✅ |         ✅ |
+| Falcon3 7B Base      |        ❌ |         ✅ |
+| Solar Mini Chat ja   |        ✅ |         ✅ |
+
+
+
+
+
+# 10. Guardrails cũng có trap
+
+	Một câu rất dễ gây nhầm:
+		"All Marketplace models support Guardrails exactly like native Bedrock models."
+
+	Không nên chọn.
+		Marketplace model compatibility khác nhau.
+
+	AWS hiện ghi rõ với Marketplace models, có thể sử dụng ApplyGuardrail API, trong khi các capability khác phụ thuộc model/API compatibility.
+
+
+	Tức là khi đề nói:
+		Marketplace model
+		+
+		Guardrails
+		+
+		Converse
+		+
+		Agents
+
+	đừng kết luận ngay rằng tất cả đều hoạt động.
+
+
+	Phải kiểm tra:
+
+		Model compatibility
+			   ↓
+		Supported API?
+			   ↓
+		Converse?
+			   ↓
+		Agent compatibility?
+			   ↓
+		Guardrails integration?
+
+
+
+# 11. Cách nhớ để thi
+
+
+	Base Model = "AWS cho tôi model để gọi."
+	Marketplace = "AWS cho tôi catalog để tìm model khác, rồi deploy model đó thành endpoint để gọi qua Bedrock."
+
+	Hoặc:
+
+BASE
+│
+└── Serverless FM
+    └── Call it
+        └── Don't think about GPU
+
+MARKETPLACE
+│
+└── Find specialized FM
+    └── Subscribe
+        └── Deploy
+            └── Managed endpoint
+                └── Call through Bedrock
+
+
+
+# 12. Cách AWS ra đề AIP-C01
+	Nếu scenario chứa các keyword:
+
+
+	## Nhóm 1 — Base Model 
+		serverless
+		on-demand
+		no infrastructure management
+		pay per usage
+		low/unpredictable traffic
+		switch models easily	
+		→ Nghĩ tới Bedrock built-in/base FMs.	
+	
+	## Nhóm 2 — Marketplace 
+		specialized model
+		domain-specific
+		emerging model
+		third-party model
+		specific language
+		specific industry
+		model not available in standard Bedrock catalog
+		choose instance type
+		number of instances
+		autoscaling
+		endpoint
+		EULA
+		subscription	
+	→ Nghĩ tới Bedrock Marketplace.
+	
+	
+	## Nhóm 3 — Bẫy 
+	
+		Marketplace
+		+ Converse
+		+ Agents
+		+ Knowledge Bases
+		+ Guardrails
+		→ Không mặc định tất cả supported.
+
+		Kiểm tra model compatibility.	
+			
+
+
+
+
+
+
 </pre><a id='backBottom' href='../aws-bedrock-agent-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

@@ -1,3 +1,676 @@
-<html><head><title>Lesson 24 == Lộ trình ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 24 -- Lộ trình -//</h1><pre># Lộ trình 100 ngày học AIP-C01 — Trọng tâm: Kiến trúc AI hiện đại & Agentic AI
+<html><head><title>Lesson 24 == AIP-C01  ===Multi-modal Foundation Model (text, image, video) ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 24 -- AIP-C01  --=Multi-modal Foundation Model (text, image, video) -//</h1><pre>
+# 1. Bản chất — hiểu đúng trước khi học AWS
+
+	Multi-modal Foundation Model (FM) là Foundation Model có khả năng xử lý và/hoặc sinh ra nhiều loại dữ liệu (modalities) thay vì chỉ xử lý text.
+
+	Các modality thường gặp:
+
+		Text — văn bản
+		Image — hình ảnh
+		Audio — âm thanh
+		Video — video
+	Có thể kết hợp nhiều loại trong cùng một request.
+
+	Ví dụ:
+
+	User upload một ảnh hóa đơn + hỏi:
+		「この請求書の合計金額はいくらですか？」
+
+	Model phải đồng thời hiểu:
+
+Image
+  ↓
+Visual understanding
+  ↓
+Extract invoice information
+  ↓
+Reasoning
+  ↓
+Text response
+
+	Đây không còn là bài toán text → text đơn thuần.
+
+
+
+# 2. Multimodal khác gì Text-only FM?
+
+| Đặc điểm              | Text-only FM                   | Multimodal FM                               |
+| --------------------- | ------------------------------ | ------------------------------------------- |
+| Input                 | Text                           | Text + Image + Audio + Video...             |
+| Output                | Chủ yếu text                   | Text và/hoặc modality khác                  |
+| Hiểu ảnh              | ❌                              | ✅                                           |
+| Phân tích video       | ❌                              | Một số model hỗ trợ                         |
+| OCR/visual reasoning  | Hạn chế/phải dùng service khác | Có thể native                               |
+| Kiến trúc application | Đơn giản hơn                   | Phức tạp hơn                                |
+| Chi phí               | Thường thấp hơn                | Thường cao hơn                              |
+| Token/context         | Text tokens                    | Có thể bao gồm visual tokens                |
+| Use case              | Chatbot, summarization         | Document AI, image analysis, video analysis |
+
+
+Điểm quan trọng cho AIP-C01:
+	Multimodal ≠ đơn giản là "LLM có thêm OCR".
+
+	Multimodal FM có khả năng reasoning trên nhiều modality trong cùng một context.
+
+	Ví dụ:
+
+	Image:
+	  Product photo
+
+	Text:
+	  "Is this product damaged?"
+
+	Model:
+	  Image understanding
+			+
+	  Text instruction
+			↓
+	  Reasoning
+			↓
+	  "Yes, the upper-right corner appears damaged."
+
+
+# 3. Multimodal Foundation Model hoạt động như thế nào?
+
+	Về bản chất, model phải đưa các modality khác nhau vào một không gian mà Transformer có thể xử lý.
+	Một cách đơn giản hóa:
+
+                ┌─────────────┐
+Text ──────────►│             │
+                │   Encoder / │
+Image ─────────►│   Projection│──► Shared Representation
+                │             │
+Audio ─────────►│             │
+                └─────────────┘
+                         │
+                         ▼
+                   Transformer
+                         │
+                         ▼
+                    Reasoning
+                         │
+              ┌──────────┴──────────┐
+              ▼                     ▼
+            Text                  Image
+           Output                Output
+
+
+	Không cần nhớ kiến trúc nội bộ cụ thể của từng model cho exam.
+
+Điều cần hiểu là:
+	Các modality được biểu diễn thành representation mà model có thể jointly reason trên đó.
+
+
+
+# 4. Ví dụ production thực tế
+	Giả sử xây dựng hệ thống AI kiểm tra lỗi sản phẩm trong nhà máy.
+
+
+
+	Camera gửi:
+		Image / Video
+
+	User gửi:
+		"この製品に異常がありますか？"
+
+	Multimodal FM có thể phân tích:
+
+		Image
+		  +
+		Question
+		  ↓
+		Multimodal FM
+		  ↓
+		"Yes. A crack is visible near the upper-left edge."
+
+
+	Nếu cần xử lý production:
+
+Camera
+   ↓
+Amazon S3
+   ↓
+Lambda
+   ↓
+Amazon Bedrock
+   ↓
+Multimodal FM
+   ↓
+Result
+   ↓
+DynamoDB / OpenSearch / EventBridge
+
+
+
+	Điểm cần nhớ:
+		Bedrock là managed access layer, còn multimodal capability nằm ở model.
+
+	Đừng nhầm:
+		"Amazon Bedrock là multimodal model."
+		Sai.
+	
+	Bedrock là platform/service cung cấp foundation models và các khả năng GenAI.
+
+
+# 5. AWS mapping
+	Trong AWS ecosystem, khi gặp multimodal FM, trước tiên nghĩ đến:
+
+	Amazon Bedrock
+		Bedrock cho phép application gọi các foundation models thông qua API mà không cần tự quản lý model infrastructure.
+
+	Một application có thể:
+
+		Application
+			↓
+		Amazon Bedrock
+			↓
+		Foundation Model
+			↓
+		Multimodal reasoning
+
+	Tùy model cụ thể, modality được hỗ trợ sẽ khác nhau.
+	Ví dụ cần phân biệt:
+
+	Model A
+		Text → Text
+
+	Model B
+		Text + Image → Text
+
+	Model C
+		Text + Image → Text + Image
+
+
+	Không được mặc định rằng mọi FM đều multimodal.
+
+
+
+# 6. Multimodal + RAG
+	Đây là chỗ Professional-level exam rất dễ gài.
+
+
+	Giả sử user hỏi:
+		"Hãy kiểm tra ảnh máy móc này dựa trên maintenance manual."
+
+	Ta có:
+
+Image
+   +
+User question
+   +
+Maintenance documents
+          ↓
+       Retrieval
+          ↓
+Relevant documents
+          ↓
+Multimodal FM
+          ↓
+Answer
+
+	Đây là:
+		Multimodal RAG
+
+	Chứ không phải chỉ:
+		Image analysis
+
+
+	Ví dụ:
+
+	Image:
+	  ảnh máy bị hỏng
+
+	Retrieved context:
+	  Maintenance Manual:
+	  "If pressure exceeds X, inspect valve Y."
+
+	Model:
+	  Image understanding
+		   +
+	  Retrieved knowledge
+		   +
+	  User question
+		   ↓
+	  Diagnosis
+
+
+	## Exam trap
+
+	Nếu câu hỏi nói:
+		"Model must answer using the company's latest internal documentation."
+		Chỉ chọn multimodal FM chưa đủ.
+
+	Bạn cần:
+		Multimodal FM
+		+
+		RAG / Knowledge Base
+
+		vì model phải có grounding bằng enterprise data.
+
+
+
+
+
+# 7. Multimodal ≠ RAG
+	Hai khái niệm nằm ở hai tầng khác nhau.
+
+| Concept        | Giải quyết vấn đề gì?                                 |
+| -------------- | ----------------------------------------------------- |
+| Multimodal FM  | Model hiểu nhiều loại dữ liệu                         |
+| Embedding      | Biểu diễn dữ liệu thành vector                        |
+| Vector search  | Tìm information tương tự                              |
+| RAG            | Đưa retrieved information vào model context           |
+| Knowledge Base | Managed implementation của RAG workflow trong Bedrock |
+| Guardrails     | Kiểm soát input/output/model behavior                 |
+
+
+
+
+# Ví dụ:
+
+	Image
+	  ↓
+	Multimodal FM
+	  ↓
+	Visual understanding
+
+
+	Còn:
+		Question
+		  ↓
+		Embedding
+		  ↓
+		Vector Search
+		  ↓
+		Retrieved documents
+		  ↓
+		Multimodal FM
+		  ↓
+		Answer
+
+
+
+# 8. Multimodal và Embedding — một bẫy rất quan trọng
+
+	Đừng suy luận:
+		"Multimodal model thì chắc chắn multimodal embedding."
+
+
+	Không đúng.
+		Đây là hai capability khác nhau.
+
+
+
+	Multimodal FM	
+
+	Có thể:
+
+		Image + Text
+			  ↓
+		   Reasoning
+			  ↓
+		   Answer
+
+
+	Multimodal embedding model
+	Có thể đưa:
+		Image → Vector
+		Text  → Vector
+	vào một embedding space để tìm similarity/cross-modal retrieval.
+
+	Ví dụ:
+		"red running shoes"
+				↓
+			Text Vector
+				↓
+			   Search
+				↑
+		   Image Vector
+				↑
+		Image of red shoes
+
+
+	Điều này cho phép:
+		Text-to-image retrieval
+		Đây là một use case khác với multimodal reasoning.
+
+
+
+
+
+# 9. Multimodal Video
+	Video đặc biệt quan trọng vì video không chỉ là một "ảnh lớn".
+
+	Video có:
+		Spatial information
+		+
+		Temporal information
+		+
+		Audio
+		+
+		Text / subtitles
+
+
+	Ví dụ:
+		"Trong video này, nhân viên đã thực hiện bước nào sai?"
+
+
+	Model phải hiểu:
+		Frame 1
+		Frame 2
+		Frame 3
+		...
+		Frame N
+		   +
+		Audio
+		   +
+		Question
+
+	và reasoning về sequence / temporal relationship.
+
+	## Exam trap
+
+		Nếu requirement là:
+			"Analyze a 30-minute surveillance video and identify events."
+
+		Đừng ngay lập tức nghĩ:
+			"Send entire video directly to FM."
+
+		Cần xem:
+			model có hỗ trợ video input không
+			context/input limitation
+			latency
+			cost
+			preprocessing
+			frame extraction
+			asynchronous processing
+			storage
+
+			Professional exam thường muốn bạn nhìn system design, không chỉ nhìn capability của model.
+
+
+
+# 10. Trade-off: Multimodal FM
+
+	Multimodal không phải lúc nào cũng là lựa chọn tốt nhất.
+
+| Requirement                | Multimodal FM       | Specialized service/pipeline               |
+| -------------------------- | ------------------- | ------------------------------------------ |
+| Hiểu nội dung ảnh phức tạp | ✅ Rất phù hợp       | Có thể không đủ                            |
+| OCR đơn giản               | Có thể dùng         | Specialized OCR có thể tốt hơn             |
+| Hàng triệu ảnh/ngày        | Có thể đắt          | Pipeline chuyên dụng có thể hiệu quả hơn   |
+| Video dài                  | Cần cân nhắc        | Preprocessing thường cần thiết             |
+| Complex visual reasoning   | ✅                   | ❌/hạn chế                                  |
+| Simple classification      | Có thể overkill     | Specialized model thường phù hợp           |
+| Low latency                | Tùy model           | Dedicated pipeline có thể tốt hơn          |
+| Cost optimization          | Có thể không tối ưu | Batch/specialized inference có thể tốt hơn |
+
+
+
+	Tư duy Professional:
+		Không phải "model mạnh nhất" = "architecture tốt nhất".
+
+	Phải cân bằng:
+		Accuracy
+		Latency
+		Cost
+		Scalability
+		Operational complexity
+
+
+
+# 11. Scenario kiểu AIP-C01
+
+
+Scenario
+
+	Một công ty có 10 triệu ảnh sản phẩm trong S3.
+	Requirement:
+		User nhập câu hỏi bằng text và muốn tìm những sản phẩm có hình ảnh tương tự.
+
+	Ví dụ:
+	User:
+		"Find products that look like this red chair."
+		+
+		Image
+
+	Có 2 bài toán:
+	
+	
+	Option A
+		Dùng multimodal FM trực tiếp để phân tích từng ảnh.
+		❌ Có thể đúng về capability nhưng không scalable/cost-efficient cho 10 triệu ảnh.
+
+
+
+	Option B
+		Xây:
+
+		Images
+		   ↓
+		Multimodal embedding
+		   ↓
+		Vector Store
+		   ↓
+		Similarity Search
+		   ↓
+		Top-K images
+		   ↓
+		Multimodal FM
+		   ↓
+		Final reasoning / response
+
+		✅ Đây thường là architecture hợp lý hơn.
+
+
+		Exam lesson:
+			Large-scale retrieval → precompute embeddings → vector search → invoke FM only for relevant candidates.
+			Không invoke expensive FM trên toàn bộ corpus nếu retrieval có thể giảm search space.
+
+
+
+# 12. Các keyword cần nhớ
+	Khi đề xuất hiện những từ sau, phải lập tức liên tưởng đến multimodal:
+
+		multimodal input
+		image understanding
+		visual question answering
+		image analysis
+		document understanding
+		video understanding
+		audio + text
+		cross-modal retrieval
+		visual reasoning
+		multimodal RAG
+		image-to-text
+		text-to-image
+		image embeddings
+		video analysis
+		temporal reasoning
+
+
+
+# 13. Những trap AWS Professional-level
+
+	Trap 1 — "Bedrock = multimodal model"
+		❌ Sai.
+
+	Bedrock là managed GenAI service/platform.
+	Model mới quyết định modality.
+
+
+	Trap 2 — "Multimodal = RAG"
+		❌ Sai.
+
+		Multimodal giải quyết:
+			What type of information can the model understand?
+
+		RAG giải quyết:
+			What external knowledge should the model use?
+
+
+	Trap 3 — "Multimodal = multimodal embedding"
+		❌ Sai.
+		Reasoning capability và embedding capability là hai vấn đề khác nhau.
+
+
+	Trap 4 — Dùng multimodal FM cho mọi image processing
+		❌ Không nhất thiết.
+		Nếu chỉ cần:
+		Image → "cat"
+		thì một specialized computer vision model có thể phù hợp hơn.
+
+		Nếu cần:
+			Image
+			+
+			Complex natural-language instruction
+			+
+			Reasoning
+
+		thì multimodal FM trở nên hấp dẫn hơn.
+
+
+
+	Trap 5 — Đưa toàn bộ video vào model
+		❌ Không mặc định đúng.
+
+		Phải xem:
+			supported modality
+			input limits
+			latency
+			cost
+			preprocessing
+			asynchronous architecture
+
+
+
+	Trap 6 — Multimodal FM tự biết company data
+		❌ Sai.
+
+		Foundation model không tự biết private enterprise data.
+		
+		Muốn sử dụng:
+			Company documents
+			+
+			Images
+			+
+			Internal knowledge
+
+		thường cần:
+			RAG / Knowledge Base
+			hoặc customization/fine-tuning tùy requirement.
+
+
+
+
+# 14. Cách AWS ra đề
+
+	Professional-level thường không hỏi:
+		"What is a multimodal foundation model?"
+		Mà sẽ cho một scenario dài:
+
+
+		Company has:
+		- text documents
+		- product images
+		- videos
+		- internal knowledge
+		- millions of objects
+		- strict latency requirement
+		- cost constraint
+
+		Requirement:
+		"Answer questions based on visual and textual information."
+
+
+	Sau đó cho 4 architecture gần giống nhau.
+	Bạn phải xác định bottleneck thực sự:
+
+
+Need visual reasoning?
+        ↓
+Multimodal FM
+
+
+Need enterprise knowledge?
+        ↓
+RAG
+
+
+Need large-scale retrieval?
+        ↓
+Embeddings + Vector Search
+
+
+Need cheap bulk processing? (cheap RẺ , bulk LỚN  - cần xử lý số lượng lớn giá rẻ )
+        ↓
+Preprocessing / batch / specialized model
+
+
+Need safety?
+        ↓
+Guardrails / application controls
+
+
+Đây mới là cách suy luận mà AIP-C01 muốn kiểm tra.
+
+
+
+
+# 15. Công thức tư duy để đi thi
+	Nhớ chuỗi này:
+
+                    ┌─ Text
+                    ├─ Image
+Input modalities ───┼─ Audio
+                    └─ Video
+                         ↓
+                Multimodal FM
+                         ↓
+                    Reasoning
+                         ↓
+                 ┌───────┴───────┐
+                 ↓               ↓
+              Answer          Action
+
+
+	Nếu cần knowledge bên ngoài:
+
+Multimodal Input
+      +
+User Query
+      ↓
+   Retrieval
+      ↓
+ Vector Search
+      ↓
+Relevant Context
+      ↓
+Multimodal FM
+      ↓
+Grounded Answer
+
+
+	Một câu chốt để nhớ khi thi:
+		Multimodal FM giải quyết khả năng hiểu nhiều loại dữ liệu; RAG giải quyết việc đưa knowledge bên ngoài vào context; embedding/vector search giải quyết việc tìm information ở quy mô lớn.
+
+
+
+
+
+
+Console sign-in URL
+
+https://336757183830.signin.aws.amazon.com/console
+User name
+
+bao.dinhvan
+Console password
+
+Adgjmptw2@
+
+
+
+
 
 </pre><a id='backBottom' href='../aws-bedrock-agent-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

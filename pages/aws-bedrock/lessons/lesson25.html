@@ -1,148 +1,631 @@
-<html><head><title>Lesson 25 == AIP-C01  === ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 25 -- AIP-C01  --= -//</h1><pre>
-## — DANH SÁCH 100 TỪ KHÓA (theo thứ tự học, 1 từ khóa/ngày)
+<html><head><title>Lesson 25 == AIP-C01  ===Model Selection Criteria (cost, latency, accuracy) ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 25 -- AIP-C01  --=Model Selection Criteria (cost, latency, accuracy) -//</h1><pre>
 
-### Tuần 1-2: Nền tảng kiến trúc Foundation Model (Ngày 1-14)
-1. Foundation Model (FM) là gì / bản chất
-2. Model Provider vs Model Consumer (kiến trúc AWS)
-3. Amazon Bedrock — kiến trúc tổng thể
-4. Bedrock Model Catalog (Claude, Llama, Titan, Nova...)
-5. On-Demand vs Provisioned Throughput (Bedrock)
-6. Model Invocation API (Converse API vs InvokeModel)
-8. Model Latency vs Throughput trade-off
-9. Streaming Response (token streaming)
+# 1. Bản chất của Model Selection
+	Khi chọn Foundation Model (FM), thường có 3 trục chính:
 
-10. Multi-modal Foundation Model (text, image, video)
-
-handson guardrail 2 cách buffer 1 phần chuck và scan sau cho streaming  Synchronous va Asynchronous
-học cách sử dụng được guardrails và Streaming + Multi-modal Foundation Model 3 trong 1 
-UI có thể sủ dụng CLI được 
-tạo UI bằng code Python comemnt đầy đủ 
-sử dụng model rẻ tiền ở aws cài đặt các cái trên từ a-z step by step dễ hiểu đẻ hiểu sâu , nhớ mãi về các cái này 
+| Tiêu chí               | Câu hỏi cần hỏi                      |
+| ---------------------- | ------------------------------------ |
+| **Accuracy / Quality** | Model có trả lời đủ chính xác không? |
+| **Latency**            | Người dùng phải chờ bao lâu?         |
+| **Cost**               | Mỗi request / token tốn bao nhiêu?   |
 
 
-11. Model Selection Criteria (cost, latency, accuracy)
-12. Bedrock Marketplace vs Bedrock Base Models
-13. Custom Model Import (Bedrock)
-14. So sánh Bedrock vs SageMaker JumpStart
+Nhưng trên production còn có:
 
-### Tuần 3-4: Prompt Engineering & Model Customization (Ngày 15-28)
-15. Prompt Engineering — bản chất
-16. Zero-shot / Few-shot / Chain-of-Thought Prompting
-17. System Prompt vs User Prompt (kiến trúc)
-18. Prompt Template & Prompt Management (Bedrock Prompt Management)
-19. Temperature, Top-P, Top-K (inference parameters)
-20. Prompt Injection — khái niệm & phòng chống
-21. Fine-tuning là gì, khi nào cần
-22. RAG vs Fine-tuning vs Prompt Engineering (so sánh trade-off)
-23. Continued Pre-training (Bedrock Custom Models)
-24. LoRA / PEFT (Parameter-Efficient Fine-Tuning)
-25. Distillation (Model Distillation trên Bedrock)
-26. Domain Adaptation
-27. Evaluation Dataset cho fine-tuning
-28. Model Versioning & Rollback strategy
+		Context window
+		Throughput
+		Availability
+		Modality
+		Tool/function calling
+		Structured output
+		Multilingual capability
+		Safety
+		Region availability
+		Provisioned Throughput
+		Fine-tuning support
 
-### Tuần 5-7: RAG & Data Architecture (Ngày 29-49)
-29. RAG (Retrieval Augmented Generation) — kiến trúc tổng thể
-30. Embedding là gì, Embedding Model
-31. Vector Database — bản chất
-32. Cosine Similarity vs Euclidean Distance
-33. Amazon OpenSearch Serverless (vector engine)
-34. Aurora PostgreSQL với pgvector
-35. Amazon Bedrock Knowledge Bases — kiến trúc
-36. Chunking Strategy (fixed-size, semantic, hierarchical)
-37. SQL vs NoSQL trong bối cảnh GenAI/RAG
-38. Metadata Filtering trong Vector Search
-39. Hybrid Search (keyword + semantic)
-40. Re-ranking trong RAG pipeline
-41. Data Ingestion Pipeline cho Knowledge Base
-42. S3 làm nguồn dữ liệu cho RAG
-43. Document Parsing (Textract + GenAI)
-44. Data Freshness / Sync Strategy cho Knowledge Base
-45. Retrieval Failure — nguyên nhân & debug
-46. Hallucination — bản chất & cách giảm thiểu
-47. Grounding (grounding response vào retrieved data)
-48. Citation / Source Attribution trong RAG response
-49. Multi-Knowledge-Base Architecture
+	Vì vậy, không có model "best" tuyệt đối.
+	
+	Ví dụ:
+		Model A:
+			Accuracy = 95%
+			Latency = 2.5 sec
+			Cost = $10 / 1M tokens
 
-### Tuần 8-11: Agentic AI Architecture (trọng tâm chính) (Ngày 50-77)
-50. Agent là gì trong GenAI — bản chất khác Chatbot thường
-51. Amazon Bedrock Agents — kiến trúc tổng thể
-52. Action Group là gì
-53. OpenAPI Schema cho Action Group
-54. Lambda Function làm Action Executor
-55. Agent Orchestration — ReAct pattern (Reasoning + Acting)
-56. Agent Memory (short-term vs long-term)
-57. Session State Management cho Agent
-58. Multi-Agent System — bản chất
-59. Supervisor Agent vs Sub-agent (Multi-agent collaboration)
-60. Agent-to-Agent Communication pattern
-61. Bedrock Agents Flows (visual orchestration)
-62. Tool Use / Function Calling — bản chất
-63. Model Context Protocol (MCP) — khái niệm
-64. MCP Server vs MCP Client trong kiến trúc AWS
-65. Agent Planning (task decomposition)
-66. Human-in-the-loop trong Agentic workflow
-67. Agent Guardrails vs Model Guardrails (khác nhau)
-68. Agentic Loop — infinite loop risk & mitigation
-69. Step Functions cho Agent Orchestration phức tạp
-70. EventBridge trong Agentic architecture (event-driven agent)
-71. Asynchronous Agent Invocation
-72. Agent Observability & Tracing
-73. Cost của Agentic system (token cost compounding)
-74. Agent Testing Strategy
-75. Autonomous Agent vs Human-supervised Agent
-76. Agent Handoff pattern (chuyển giao giữa các agent)
-77. So sánh Bedrock Agents vs tự build orchestration (Lambda + Step Functions thuần)
+		Model B:
+			Accuracy = 91%
+			Latency = 0.5 sec
+			Cost = $1 / 1M tokens
 
-### Tuần 12-13: Safety, Security, Governance (Ngày 78-91)
-78. Bedrock Guardrails — kiến trúc (content filter, denied topics, PII)
-79. Responsible AI trên AWS — nguyên tắc
-80. IAM cho Bedrock (resource-based policy vs identity-based)
-81. VPC Endpoint cho Bedrock (private connectivity)
-82. Data Privacy trong GenAI (data không dùng để train model)
-83. PII Redaction trong pipeline
-84. Prompt Injection Defense (nâng cao, ở cấp agent)
-85. Model Access Control (cross-account, cross-region)
-86. Audit Logging (CloudTrail cho Bedrock)
-87. Encryption at rest/in transit cho GenAI data
-88. Bias Detection & Fairness trong FM
-89. Compliance frameworks liên quan GenAI (data residency)
-90. Bedrock Evaluations (model evaluation, human evaluation)
-91. Automated Reasoning checks (Bedrock Guardrails advanced)
 
-### Tuần 14-15: Operational Efficiency, Cost, Testing (Ngày 92-100)
-92. Cost Optimization cho GenAI workload (caching, batching)
-93. Prompt Caching (Bedrock)
-94. Model Routing (chọn model rẻ/nhanh theo độ phức tạp câu hỏi)
-95. Latency Optimization (streaming, provisioned throughput)
-96. Monitoring GenAI app (CloudWatch metrics cho Bedrock)
-97. A/B Testing giữa các model/prompt
-98. Troubleshooting hallucination trong production
-99. Load Testing cho Agentic system
-100. Ôn tập tổng hợp — luyện đề scenario tổng hợp toàn bộ 5 domain
+	Nếu xây:
+		AI assistant cho bác sĩ
+		→ A có thể phù hợp hơn.
 
----
-
-## PHẦN 3 — GHI CHÚ SỬ DỤNG
+	Nếu xây:
+		Chatbot customer service với 1 triệu requests/ngày
+		→ B có thể phù hợp hơn.
+		Sai lầm của Professional exam: nhìn thấy model có accuracy cao nhất rồi chọn ngay.
 
 
 
 
+# 2. Accuracy — không phải cứ model lớn nhất là đúng
+
+	Accuracy của GenAI không đơn giản như classification accuracy.
+	Cần đánh giá theo use case cụ thể.
+
+	## Use case A — Coding
+	
+		Model cần:
+			- reasoning tốt
+			- code generation tốt
+			- instruction following
+			- tool use
+
+
+	## Use case B — Translation
+
+		Model cần:
+			- multilingual capability
+			- semantic preservation
+			- terminology consistency
+
+
+	## Use case C — RAG
+	
+		Model cần:
+			- sử dụng retrieved context tốt
+			- không hallucinate
+			- follow citation/context requirements	
+				
+			
+		Do đó:
+			Model benchmark score cao ≠ model phù hợp nhất với application.	
+			
+	
+	
+	
+# 	3. Latency
+	Latency đặc biệt quan trọng với interactive application.	
+	
+	
+	Ví dụ:
+
+		User
+		 ↓
+		API
+		 ↓
+		Bedrock
+		 ↓
+		Foundation Model
+		 ↓
+		Response
+
+	Nếu model mất 8 giây:
+
+		User request
+			  ↓
+			8 sec
+			  ↓
+		Response
+
+	UX có thể rất tệ.
+
+	Trong khi model khác:
+
+		User request
+			  ↓
+			800 ms
+			  ↓
+		Response
+
+	có thể đủ tốt dù accuracy thấp hơn một chút.
+		
+		
+	
+	Cần phân biệt
+		Time to First Token (TTFT)
+		và
+		Time to Complete Response
+			
+			
+			
+	Ví dụ:
+
+		Request
+		  ↓
+		300 ms
+		  ↓
+		First token
+		  ↓
+		streaming...
+		  ↓
+		2 sec
+		  ↓
+		complete
+
+			User có thể cảm thấy nhanh hơn rất nhiều so với việc chờ 2 giây rồi nhận toàn bộ response.
+			Vì vậy AWS exam có thể đưa requirement:
+			"The application must provide a responsive conversational experience."
+			→ nghĩ tới streaming inference và latency optimization, không nhất thiết chỉ đổi model.
+				
+				
+			
+	
+# 	4. Cost
+	
+	
+	Cost của FM thường phụ thuộc vào:
+		input tokens
+		output tokens
+		model
+		inference mode
+		throughput requirements
+
+	Một model rất mạnh nhưng đắt có thể trở thành vấn đề khi traffic tăng.	
+		
+		
+	Ví dụ:
+		100 requests/day
+
+	→ model premium có thể hoàn toàn hợp lý.	
+		
+		
+	Nhưng:
+		10 million requests/day
+		→ cost architecture trở thành vấn đề lớn.	
+		
+		
+	
+	
+# 	5. Một insight cực kỳ quan trọng: Routing giữa nhiều model
+	Production system không nhất thiết phải dùng một model duy nhất.
+	Có thể thiết kế:	
+	
+	
+                 ┌── Simple request ──→ Small/cheap model
+User → Router ───┤
+                 └── Complex request ─→ Large/expensive model	
+	
+	
+	Ví dụ:
+		Request đơn giản
+		"Hôm nay công ty có nghỉ không?"	
+		→ model nhỏ.	
+		
+	Request phức tạp
+		"Phân tích hợp đồng này và xác định tất cả điều khoản có rủi ro pháp lý."			
+	
+	
+	→ model mạnh hơn.
+		Đây là model routing / model cascading.	
+		
+	
+	Mục tiêu:
+		Cost ↓
+		Latency ↓
+		Quality vẫn đạt requirement
+
+	Đây thường là một architecture tốt hơn:
+		"Dùng model mạnh nhất cho mọi request."	
+		
+		
+	
+# 6. Bedrock Model Selection
+	Trong AWS, Amazon Bedrock cho phép application sử dụng nhiều FM khác nhau thông qua một API layer.
+	
+	
+	Ví dụ về model families:
+		Anthropic Claude
+		Amazon Nova
+		Meta Llama
+		Mistral
+		Cohere
+		AI21
+	một số model provider khác tùy Region và thời điểm	
+		
+	
+	Điểm quan trọng trong exam:
+		Không chọn model dựa trên vendor name. Chọn dựa trên workload requirement.
+
+	Ví dụ scenario:
+		Application cần reasoning phức tạp và quality cao.
+		→ ưu tiên model có capability phù hợp.
+
+	Scenario khác:
+		Application xử lý hàng triệu classification/summarization requests với latency thấp và cost thấp.
+		→ model nhỏ/nhanh có thể phù hợp hơn.	
+		
+	
+	
+	
+# 	7. So sánh Model Size
+	
+|                      | Small model    | Large model      |
+| -------------------- | -------------- | ---------------- |
+| Cost                 | thấp           | cao              |
+| Latency              | thường thấp    | thường cao hơn   |
+| Throughput           | thường tốt     | thấp hơn/đắt hơn |
+| Reasoning            | thường yếu hơn | thường mạnh hơn  |
+| Simple tasks         | rất phù hợp    | overkill         |
+| Complex reasoning    | hạn chế        | tốt hơn          |
+| High-volume workload | phù hợp        | có thể rất đắt   |
+	
+	
+	
+	Nhưng nhớ:
+		"Small model" không đồng nghĩa "bad model".
+		Nếu task đơn giản thì large model là over-engineering.	
+		
+	
+
+
+# 8. Accuracy vs Cost — bài toán Pareto
+
+
+	Giả sử có:
+	
+		Model A
+		Accuracy 95%
+		Cost $10
+
+		Model B
+		Accuracy 93%
+		Cost $3
+
+		Model C
+		Accuracy 85%
+		Cost $0.5
+
+	Nếu business requirement:
+		Accuracy >= 90%
+
+
+	Thì Model A chưa chắc là lựa chọn tốt nhất.
+		Model B đạt requirement với cost thấp hơn rất nhiều.
+
+	Đây là tư duy:
+		Meet the requirement, then optimize cost.
+
+	Không phải:
+		Maximize model quality regardless of cost.
 
 
 
-// Nâng cao 
-ReAct (Reason + Act) – nền tảng tư duy của Agent.
-Function Calling / Tool Use – cơ chế LLM quyết định gọi công cụ.
-Model Context Protocol (MCP) – chuẩn kết nối Agent với công cụ và dịch vụ.
-Human-in-the-Loop (HITL) – khi nào Agent phải chuyển cho con người.
-Long-term Memory vs Short-term Memory – các loại bộ nhớ của Agent.
-Reflection / Self-Correction – Agent tự đánh giá và sửa kết quả.
-Workflow vs Autonomous Agent – khác biệt giữa workflow cố định và Agent tự quyết định.
-Deterministic Logic vs AI Reasoning – khi nào dùng code, khi nào dùng LLM.
-Cost Optimization – giảm token, giảm số lần gọi model, cache, batching.
-Enterprise Agent Patterns – các mẫu kiến trúc như Supervisor–Worker, Planner–Executor, Router Agent, Reviewer Agent.
 
+# 9. Accuracy phải được đo bằng Evaluation
+	Đây là chỗ AIP-C01 có thể nối Model Selection với Amazon Bedrock Model Evaluation.
+
+	Không nên nói:
+		"Claude X có vẻ tốt hơn model Y."
+
+
+	Production cần benchmark.
+
+	Ví dụ test set:
+
+1,000 real-world queries
+        ↓
+ ┌──────┴──────┐
+Model A      Model B
+ ↓              ↓
+Evaluation    Evaluation
+ ↓              ↓
+Accuracy      Accuracy
+Latency       Latency
+Cost          Cost
+
+
+	Sau đó quyết định.
+
+	Đặc biệt với GenAI, cần đánh giá:
+		factual correctness
+		relevance
+		groundedness
+		toxicity
+		robustness
+		instruction following
+		task-specific quality
+
+
+
+# 10. Model Selection + RAG
+
+
+	Đây là một trap rất hay.
+
+	Giả sử:
+		Model A hallucination cao hơn Model B.
+
+	Không nên ngay lập tức kết luận:
+		"Đổi model."
+
+
+	Có thể nguyên nhân nằm ở:
+
+		User query
+		 ↓
+		Retrieval
+		 ↓
+		Wrong documents
+		 ↓
+		Bad context
+		 ↓
+		LLM
+		 ↓
+		Wrong answer
+
+	Trong RAG system, quality phụ thuộc:
+		Retrieval quality
+				+
+		Context quality
+				+
+		Prompt
+				+
+		Model capability
+
+	Do đó nếu retrieval sai thì đổi sang model đắt hơn không giải quyết root cause.
+
+
+
+# 11. Model Selection + Prompt Engineering
+
+
+	Tương tự.
+		Nếu model trả lời không đúng instruction:
+
+		Model
+		 ↓
+		bad prompt
+		 ↓
+		bad output
+
+	Không nhất thiết phải thay model.
+
+
+	Có thể cải thiện:
+		system prompt
+		few-shot examples
+		structured output
+		chain-of-thought reasoning strategy
+		tool use
+		context formatting
+
+	AWS Professional thích kiểu suy nghĩ:
+		Identify the bottleneck before changing the FM.
+
+
+# 12. Model Selection + Fine-tuning
+
+	Một trap khác.
+
+	Nếu model không đạt accuracy:
+		"Fine-tune ngay."
+		Không.
+
+	Thứ tự hợp lý có thể là:
+		1. Prompt engineering
+				↓
+		2. RAG
+				↓
+		3. Better model
+				↓
+		4. Fine-tuning
+	Tùy problem.
+
+
+	Ví dụ
+		Nếu model thiếu company-specific knowledge:
+			→ RAG thường phù hợp hơn fine-tuning.
+
+		Nếu model cần học:
+			"Output phải tuân theo format/style/domain behavior đặc biệt."
+			→ fine-tuning có thể phù hợp.
+
+
+
+# 13. Cost Optimization Strategy
+
+                   User
+                     ↓
+                 API Gateway
+                     ↓
+               Request Router
+              /              \
+             /                \
+      Simple request      Complex request
+            ↓                   ↓
+      Cheap model          Premium model
+            ↓                   ↓
+            └────────┬──────────┘
+                     ↓
+                  Response
+
+	Ví dụ:
+		70% requests → cheap model
+		30% requests → premium model
+
+	Nếu trước đây:
+		100% → premium
+
+	thì cost có thể giảm đáng kể trong khi quality tổng thể vẫn đạt SLA.
+
+
+
+
+# 14. Khi nào ưu tiên Cost?
+
+	Scenario:
+		A company processes millions of documents every day. The task is simple classification. The model must maintain acceptable accuracy while minimizing operational cost.
+
+	Keywords:
+		millions of requests
+		high volume
+		simple task
+		cost optimization
+
+	→ ưu tiên smaller / lower-cost model nếu evaluation chứng minh quality đạt requirement.
+
+
+
+
+# 15. Khi nào ưu tiên Latency?
+
+
+	Scenario:
+		Real-time conversational application. Users expect immediate responses.
+
+
+	Keywords:
+		real-time
+		interactive
+		low latency
+		responsive
+		conversational
+
+	→ cân nhắc:
+		lower-latency model
+		streaming
+		shorter prompt/context
+		efficient retrieval
+		caching
+		appropriate inference configuration
+
+	Đừng chỉ nghĩ:
+		"Chọn model nhanh hơn."
+
+
+	Có thể latency nằm ở:
+		API
+		 ↓
+		Retrieval
+		 ↓
+		Lambda
+		 ↓
+		Bedrock
+		 ↓
+		Model
+	Model chỉ là một phần.
+
+
+
+
+# 16. Khi nào ưu tiên Accuracy? 
+
+	Scenario:
+		Financial analysis / medical decision support / legal document analysis.
+
+	Nếu business requirement yêu cầu quality rất cao:
+		→ model capability có thể quan trọng hơn cost.
+
+	Nhưng vẫn phải nhớ:
+		High-stakes application không đồng nghĩa chỉ cần model lớn nhất.
+
+
+# 17. Bảng tư duy nhanh cho AIP-C01
+
+| Requirement                 | Ưu tiên                                 |
+| --------------------------- | --------------------------------------- |
+| Complex reasoning           | Model capability                        |
+| Simple classification       | Small/cheap model                       |
+| Millions of requests        | Cost + throughput                       |
+| Interactive chatbot         | Latency + streaming                     |
+| High-stakes decision        | Accuracy + safeguards + human oversight |
+| Company-specific knowledge  | RAG                                     |
+| Specific output behavior    | Prompt/fine-tuning tùy case             |
+| Variable request complexity | Model routing                           |
+| Cost-sensitive production   | Smaller model / routing / caching       |
+| Quality uncertain           | Evaluation trước khi quyết định         |
+
+
+
+
+# 18. Các Trap AWS Exam
+
+
+		Trap 1 — "Always choose the most powerful model"
+
+		❌ Sai.
+
+		Model mạnh nhất có thể:
+			quá đắt
+			latency cao
+			unnecessary
+
+
+		Trap 2 — "Lowest cost is always best"
+
+			❌ Sai.
+			Nếu model không đạt quality requirement thì cost thấp không có ý nghĩa.
+
+
+		Trap 3 — "Change the model to fix every quality problem"
+			❌ Sai.
+
+			Có thể vấn đề nằm ở:
+				prompt
+				retrieval
+				context
+				data quality
+				evaluation methodology
+
+
+
+		Trap 4 — "Fine-tuning improves factual knowledge"
+
+			⚠️ Đây là bẫy rất nguy hiểm.
+				Nếu mục tiêu là đưa private/current knowledge vào application:
+
+			→ RAG thường phù hợp hơn.
+				Fine-tuning không phải database.
+
+
+		Trap 5 — "Streaming reduces model inference time"
+			❌ Không chính xác.
+
+			Streaming chủ yếu cải thiện:
+			Perceived latency / time-to-first-token
+			Nó không nhất thiết làm model tính toán toàn bộ response nhanh hơn.
+
+		Trap 6 — "One model for everything"
+		Thường không phải architecture tối ưu.
+		
+		Nếu workload có nhiều loại request:
+			Simple → cheap model
+			Complex → powerful model
+			có thể tốt hơn.
+
+
+
+# 20. Công thức tư duy khi gặp câu Model Selection
+
+	① Business requirement là gì?
+			↓
+	② Quality threshold là bao nhiêu?
+			↓
+	③ Latency/SLA?
+			↓
+	④ Traffic/throughput?
+			↓
+	⑤ Cost constraint?
+			↓
+	⑥ Task complexity?
+			↓
+	⑦ Có cần RAG/tool/function calling không?
+			↓
+	⑧ Có cần routing giữa models không?
+			↓
+	⑨ Đã evaluation chưa?
+
+
+
+	Sau đó mới chọn model.
+	Đừng bắt đầu bằng tên model.
+	Đây là điểm khác biệt giữa cách học:
+		"Biết các model của Bedrock"
+		và:
+		"Biết design production GenAI system."
 
 
 </pre><a id='backBottom' href='../aws-bedrock-agent-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
