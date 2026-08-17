@@ -1,3 +1,448 @@
-<html><head><title>Lesson 30 == NEXT LEVEL ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 30 -- NEXT LEVEL -//</h1><pre>MCP Server chuyên sâu 10 bài 
+<html><head><title>Lesson 30 == AIP-C01  ===Zero-shot / Few-shot / Chain-of-Thought Prompting ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 30 -- AIP-C01  --=Zero-shot / Few-shot / Chain-of-Thought Prompting -//</h1><pre>		
+# Zero-shot Prompting
+
+	Định nghĩa
+		Zero-shot = yêu cầu model thực hiện task nhưng không cung cấp ví dụ mẫu.
+
+
+	Ví dụ:
+		Classify the following customer message as:
+		- Billing
+		- Technical
+		- Account
+
+
+	Message:
+		"I cannot log into my account."
+
+	Model phải tự suy luận:
+		Account
+
+	Không có:
+
+		Example 1 → Billing
+		Example 2 → Technical
+		Example 3 → Account
+
+
+	Bản chất
+
+	Zero-shot dựa chủ yếu vào:
+		pretrained knowledge của Foundation Model
+		instruction-following capability
+		khả năng hiểu natural language
+
+	Nó phù hợp khi task đơn giản, rõ ràng và model đã hiểu dạng task đó.
+
+
+
+# 1.2 Few-shot Prompting
+
+Định nghĩa
+	Few-shot = cung cấp một số ví dụ Input → Output ngay trong prompt để model bắt chước pattern.
+
+	Ví dụ:
+		Classify the message.
+
+		Example 1:
+		"I was charged twice."
+		→ Billing
+
+		Example 2:
+		"My password doesn't work."
+		→ Account
+
+		Example 3:
+		"The application crashes when I upload a file."
+		→ Technical
+
+		Now classify:
+		"My credit card was charged twice."
+		→
+
+	Model sẽ suy ra:
+		Bản chất cực kỳ quan trọng
+		Few-shot không phải là training model.
+		Model không thay đổi weights.
+		Ta chỉ đưa examples vào context của inference request.
+
+	Có thể hiểu:
+		Fine-tuning
+				↓
+			thay đổi model parameters/weights
+
+		Few-shot
+				↓
+			không thay đổi model
+				↓
+			chỉ thêm examples vào prompt/context		
+				
+				
+				
+				
+# 	1.3 Chain-of-Thought Prompting			
+				
+	Định nghĩa
+		Chain-of-Thought (CoT) prompting hướng model thực hiện reasoning theo chuỗi các bước trung gian trước khi đưa ra kết quả cuối cùng.			
+						
+				
+				
+		Ví dụ bài toán:
+			A company has 10 servers.
+			Each server handles 20 requests/sec.
+			Traffic increases by 50%.
+			
+		How many requests/sec are required?				
+						
+						
+	Thay vì chỉ:
+		300 requests/sec
+
+	Prompt có thể yêu cầu:
+		Solve the problem step by step.				
+					
+					
+	Model có thể thực hiện reasoning kiểu:			
+		10 × 20 = 200 requests/sec
+		50% increase = 100 requests/sec
+		Total = 300 requests/sec				
+						
+						
+	Bản chất
+
+	CoT đặc biệt hữu ích với các task cần:
+		multi-step reasoning
+		mathematics
+		logical reasoning
+		complex decision making
+		planning				
+				
+				
+		Simple task
+		   ↓
+		Zero-shot có thể đủ
+
+		Task có pattern đặc thù
+		   ↓
+		Few-shot
+
+		Complex reasoning
+		   ↓
+		CoT				
+				
+# 	2. So sánh 3 loại			
+				
+|                                | Zero-shot      | Few-shot       | Chain-of-Thought          |
+| ------------------------------ | -------------- | -------------- | ------------------------- |
+| Ví dụ trong prompt             | ❌ Không        | ✅ Có           | Có thể có                 |
+| Reasoning steps                | Không bắt buộc | Không bắt buộc | ✅ Có                      |
+| Training model                 | ❌              | ❌              | ❌                         |
+| Thay đổi weights               | ❌              | ❌              | ❌                         |
+| Prompt size                    | Nhỏ            | Lớn hơn        | Lớn hơn                   |
+| Token cost                     | Thấp           | Cao hơn        | Cao hơn                   |
+| Latency                        | Thấp           | Cao hơn        | Có thể cao                |
+| Task phức tạp                  | Hạn chế        | Tốt            | ✅ Rất phù hợp             |
+| Task có output format đặc biệt | Có thể khó     | ✅ Rất hữu ích  | Không phải mục tiêu chính |
+
+
+
+	Điểm cần nhớ:
+		Zero-shot/Few-shot nói về examples trong prompt.
+		CoT nói về reasoning process.
+
+	Đây là hai chiều khác nhau, nên chúng có thể kết hợp.
+
+	Ví dụ:
+		Few-shot + CoT
+		hoàn toàn hợp lệ.
+
+
+
+# 3. Ví dụ thực tế trên Amazon Bedrock
+	Giả sử xây dựng hệ thống phân loại ticket IT.
+
+
+
+	Cách 1 — Zero-shot
+		Classify this ticket into:
+		Network / Database / Application / Security
+
+
+	Ticket:
+		"The API returns HTTP 500 after deployment."
+
+	Model tự phân loại.
+		→ Rẻ, đơn giản, latency thấp.
+
+
+
+	Cách 2 — Few-shot
+
+		Example:
+		"Cannot connect to PostgreSQL"
+		→ Database
+
+		Example:
+		"VPN connection is unavailable"
+		→ Network
+
+		Example:
+		"Detected unauthorized IAM activity"
+		→ Security
+
+		Ticket:
+		"The API returns HTTP 500 after deployment."
+
+	Model có pattern rõ hơn.
+		→ Có thể tăng consistency/accuracy cho classification.
+
+
+	
+
+	Cách 3 — CoT
+				
+	Nếu task là:
+		Xác định root cause của incident dựa trên 10 log và 5 monitoring metrics.				
+					
+					
+	Có thể cần reasoning nhiều bước:				
+		Analyze the evidence systematically and determine
+		the most likely root cause.					
+							
+	Model cần tổng hợp:							
+		Log A
+		 ↓
+		Metric B
+		 ↓
+		Error C
+		 ↓
+		Hypothesis
+		 ↓
+		Root cause					
+							
+		Đây là lúc CoT có giá trị.			
+					
+					
+# 	4. AWS Mapping				
+	Trong AWS environment, các kỹ thuật này thường được sử dụng với:				
+					
+	Amazon Bedrock
+		Ví dụ application:					
+							
+			User
+			 ↓
+			API Gateway
+			 ↓
+			Lambda
+			 ↓
+			Amazon Bedrock
+			 ↓
+			Foundation Model						
+								
+	Prompt được xây dựng trong application rồi gửi tới model.				
+					
+					
+prompt = """
+Classify the following support ticket.
+
+Example 1:
+...
+→ Network
+
+Example 2:
+...
+→ Database
+
+Ticket:
+...
+"""					
+		Đây là few-shot prompting, không phải fine-tuning.
+
+
+
+
+
+# 5. Trade-off cần nhớ cho AIP-C01
+
+
+	Zero-shot
+
+		Ưu điểm:
+			prompt nhỏ
+			token input thấp
+			latency thấp
+			implementation đơn giản
+			dễ maintain
+
+		Nhược điểm:
+			output có thể không ổn định
+			khó ép model theo domain-specific pattern
+
+
+
+	Few-shot
+		Ưu điểm:
+			cải thiện task-specific behavior
+			kiểm soát output format tốt hơn
+			không cần training model
+
+		Nhược điểm:
+			prompt dài
+			tăng input token cost
+			tăng latency
+			context window bị tiêu tốn
+			phải chọn examples chất lượng
+
+
+			Trap
+
+			Không phải:
+				"Càng nhiều examples càng tốt."
+			Sai.
+				Few-shot tốt phụ thuộc vào quality và relevance của examples.
+				10 examples tốt có thể tốt hơn 100 examples linh tinh.
+
+
+
+	Chain-of-Thought
+
+		Ưu điểm:
+			phù hợp reasoning phức tạp
+			mathematical/logical tasks
+			planning
+			multi-step decision
+
+		Nhược điểm:
+			nhiều output tokens
+			latency tăng
+			cost tăng
+			không phải task nào cũng cần
+
+
+			Trap rất quan trọng
+
+			Nếu task chỉ là:
+				Translate this sentence.
+				Không có lý do để ép model thực hiện CoT.
+
+			Bạn đang tăng:
+				latency
+				+
+				token consumption
+				+
+				complexity
+				mà không tạo ra giá trị tương ứng.
+
+
+
+
+# 6. Một điểm Professional-level rất quan trọng
+
+
+
+	Hãy phân biệt:
+		Prompt Engineering
+				│
+				├── Zero-shot
+				├── Few-shot
+				├── CoT
+				├── Role prompting
+				├── Structured output
+				└── Prompt templates
+
+	với:
+		Model Customization
+				│
+				├── Fine-tuning
+				└── Continued/pre-training
+
+
+	và:
+
+		RAG
+				│
+				├── Embedding
+				├── Retrieval
+				├── Context injection
+				└── Generation
+
+			Few-shot ≠ Fine-tuning
+			RAG ≠ Few-shot
+			CoT ≠ Fine-tuning
+			
+		Đây là 3 nhầm lẫn rất dễ bị khai thác trong câu hỏi Professional.
+
+
+
+
+# 7. Scenario kiểu AIP-C01
+
+
+	Scenario
+		Một công ty sử dụng Amazon Bedrock để phân loại hàng nghìn support tickets.
+
+	Model hiện tại:
+		hiểu task
+		nhưng đôi khi trả về "Technical issue" thay vì một trong 4 category được định nghĩa
+		team không muốn fine-tune model
+		muốn thay đổi behavior bằng prompt
+		cần giảm chi phí và latency
+
+
+	Đáp án hợp lý
+		Few-shot prompting + explicit output instructions.
+
+		Ví dụ:
+
+		You must return exactly one of:
+			Billing
+			Account
+			Network
+			Security
+
+
+		Examples:
+
+
+		Tại sao không chọn Fine-tuning?
+
+		Vì requirement nói rõ:
+			không muốn modify/customize model weights.
+			Few-shot giải quyết bằng in-context examples.
+
+		Tại sao không chọn CoT?
+			Classification đơn giản không cần reasoning dài.
+			CoT chỉ làm tăng token/latency mà không cần thiết.
+
+
+	VI DU
+		The application performs complex multi-step reasoning and frequently produces incorrect intermediate decisions. Which prompting technique should the developer evaluate?
+
+		→ Chain-of-Thought
+
+		Nhưng phải đọc kỹ: nếu scenario chỉ cần format consistency, Few-shot có thể phù hợp hơn.
+
+
+
+# 9. Công thức nhớ để thi
+
+	Hãy nhớ đúng 3 câu:
+
+		Zero-shot = "Làm việc này."
+
+		Few-shot = "Làm việc này. Đây là vài ví dụ để mày hiểu pattern."
+
+		Chain-of-Thought = "Làm bài toán này qua nhiều bước reasoning."
+
+	Và câu quan trọng nhất:
+		Few-shot không train model. CoT không train model. Cả hai đều là prompt-time techniques.
+		
+		
+		
+		
+		
+		
+		
+			
 
 </pre><a id='backBottom' href='../aws-bedrock-agent-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

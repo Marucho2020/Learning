@@ -1,3 +1,330 @@
-<html><head><title>Lesson 27 == Lộ trình ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 27 -- Lộ trình -//</h1><pre># Lộ trình 100 ngày học AIP-C01 — Trọng tâm: Kiến trúc AI hiện đại & Agentic AI
+<html><head><title>Lesson 27 == AIP-C01  ===Custom Model Import (Bedrock) ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 27 -- AIP-C01  --=Custom Model Import (Bedrock) -//</h1><pre>
+# 1. Bản chất
+
+	Custom Model Import của Amazon Bedrock cho phép bạn đưa một model AI đã được tùy chỉnh/huấn luyện ở bên ngoài Bedrock vào Amazon Bedrock, sau đó sử dụng Bedrock để thực hiện inference.
+
+
+	Hiểu đơn giản:
+		Bạn có model của riêng mình → import model vào Bedrock → gọi model thông qua Bedrock API.
+
+	Nó khác với việc Bedrock cung cấp sẵn Foundation Model như Claude, Llama, Nova...
+
+
+	## Ví dụ
+
+	Công ty có:
+	
+Base Model
+    ↓
+Fine-tuning / Training
+    ↓
+Custom Model
+    ↓
+Custom Model Import
+    ↓
+Amazon Bedrock
+    ↓
+Application
+
+
+	Ví dụ công ty đã fine-tune một Llama model cho domain pháp lý:
+		Llama
+		  ↓
+		Fine-tune với dữ liệu pháp lý
+		  ↓
+		custom-legal-llama
+		  ↓
+		Import vào Bedrock
+		  ↓
+		Ứng dụng gọi Bedrock API
+
+
+	Điểm quan trọng:
+		Custom Model Import không phải là một phương pháp fine-tuning.
+		Nó là cơ chế đưa model đã tồn tại vào Bedrock.
+
+
+
+# 2. Phân biệt 3 thứ rất dễ nhầm
+
+
+| Khái niệm                   | Làm gì?                                   |
+| --------------------------- | ----------------------------------------- |
+| Foundation Model            | Model AWS/partner cung cấp sẵn            |
+| Fine-tuning / customization | Tạo ra model được customized từ model nền |
+| Custom Model Import         | Đưa model đã có vào Bedrock               |
+
+
+	Ví dụ:
+
+		Claude / Llama
+			  │
+			  │ fine-tuning
+			  ▼
+		Customized Model
+			  │
+			  │ Custom Model Import
+			  ▼
+		Amazon Bedrock
+			  │
+			  ▼
+		Application
+
+	Trap cực lớn
+
+	Đề nói:
+		"The company already has a trained/customized model and wants to use Amazon Bedrock APIs to invoke it."
+
+
+	Đáp án hợp lý:
+		Custom Model Import
+
+	Không phải:
+		Bedrock fine-tuning
+		Knowledge Bases
+		RAG
+		Bedrock Agents
+		Prompt engineering
+
+
+
+
+# 3. Tại sao cần Custom Model Import?
+	Giả sử công ty đã đầu tư rất nhiều vào model:
+
+		Company Data
+			 ↓
+		Training
+			 ↓
+		Custom Model
+
+
+	Họ không muốn:
+		Application
+			↓
+		self-managed inference infrastructure
+			↓
+		GPU EC2
+			↓
+		model
+
+	vì phải tự quản lý:
+		GPU
+		scaling
+		inference endpoint
+		deployment
+		infrastructure
+		monitoring
+		availability
+
+
+	Thay vào đó:
+		Application
+			 ↓
+		Amazon Bedrock
+			 ↓
+		Imported Custom Model
+
+	Bedrock trở thành lớp inference managed.
+
+
+# 4. Mapping với AWS
+	Hãy nhớ architecture này:
+
+                  Amazon Bedrock
+                       │
+          ┌────────────┼────────────┐
+          │            │            │
+     Base Models    Agents       Guardrails
+          │
+          │
+   Custom Model Import
+          │
+          ▼
+   Your Custom Model
+
+
+	Custom Model Import đặc biệt hữu ích khi tổ chức muốn chuẩn hóa việc inference thông qua Bedrock thay vì application phải biết model đang chạy ở đâu.
+
+
+# 5. So sánh với SageMaker
+	Đây là chỗ AIP-C01 rất dễ gài.
+
+
+|                         | Bedrock Custom Model Import | SageMaker                         |
+| ----------------------- | --------------------------- | --------------------------------- |
+| Mục tiêu                | Đưa model vào Bedrock       | ML platform đầy đủ                |
+| Training                | Không phải mục đích chính   | Có                                |
+| Fine-tuning             | Không phải chức năng chính  | Có                                |
+| Model deployment        | Managed thông qua Bedrock   | Endpoint/inference infrastructure |
+| Model lifecycle         | Đơn giản hơn                | Kiểm soát sâu hơn                 |
+| Infrastructure control  | Thấp hơn                    | Cao                               |
+| Application integration | Bedrock APIs                | SageMaker APIs/endpoints          |
+| GenAI abstraction       | Cao                         | Thấp hơn                          |
+
+
+
+	Mental model
+
+	SageMaker:
+		"Tôi muốn kiểm soát ML infrastructure."
+
+	Bedrock:
+		"Tôi muốn sử dụng foundation/custom models thông qua managed GenAI APIs."
+
+
+
+# 6. Khi nào chọn Custom Model Import?
+
+
+	Scenario:
+		Một công ty đã có một model được huấn luyện tùy chỉnh. Model này đáp ứng yêu cầu nghiệp vụ. Công ty muốn tích hợp model vào ứng dụng GenAI hiện tại đang sử dụng Amazon Bedrock và muốn tiếp tục sử dụng Bedrock APIs thay vì tự quản lý inference infrastructure.
+	→ Custom Model Import
+
+
+# 7. Khi KHÔNG chọn Custom Model Import
+
+
+	Case 1 — Muốn model học dữ liệu công ty
+
+		Nếu yêu cầu là:
+			"Model cần trả lời dựa trên tài liệu nội bộ."
+
+		Không nhất thiết phải custom model.
+
+		Thông thường:
+			Documents
+			   ↓
+			Embeddings
+			   ↓
+			Vector Store
+			   ↓
+			RAG / Knowledge Base
+			   ↓
+			FM
+
+		→ Bedrock Knowledge Bases / RAG
+
+
+	Case 2 — Muốn model thay đổi behavior
+
+		Ví dụ:
+			Model cần học format output đặc biệt từ dataset của công ty.
+			→ Có thể cần fine-tuning/customization.
+
+
+	Case 3 — Muốn toàn quyền infrastructure
+
+		Ví dụ:
+			Team ML cần kiểm soát GPU instance, inference container, autoscaling policy và deployment infrastructure.
+			→ SageMaker thường phù hợp hơn.
+
+
+
+# 8. Trap Professional-level
+
+	AWS rất thích cho 4 đáp án kiểu:
+		A. RAG
+		B. Fine-tuning
+		C. Custom Model Import
+		D. Bedrock Knowledge Bases
+		
+	Scenario:
+		"The model has already been trained outside Amazon Bedrock."
+
+	Đây là keyword cực mạnh.
+
+	Đừng nghĩ:
+		"Custom model → phải fine-tune trên Bedrock."
+
+	Sai.
+		Model đã tồn tại rồi → câu hỏi đang hướng tới import, không phải customization.
+
+
+
+# 9. Cách suy luận trong exam
+
+	Đừng học thuộc:
+		Custom Model Import = import custom model.
+
+	Hãy dùng decision tree:
+
+Model đã tồn tại?
+      │
+      ├── NO
+      │    ↓
+      │  Cần model?
+      │    ↓
+      │  Foundation Model
+      │
+      └── YES
+           │
+           ├── Cần model học thêm?
+           │       ↓
+           │    Fine-tuning
+           │
+           └── Chỉ muốn đưa model
+               vào Bedrock?
+                   ↓
+             Custom Model Import
+
+
+	Nhưng nhớ thêm một nuance quan trọng:
+		"Model đã tồn tại" chưa đủ để chọn Custom Model Import.
+
+		Phải xem model đó có thuộc loại/kiến trúc được Bedrock hỗ trợ import hay không, và scenario có yêu cầu Bedrock làm lớp inference hay không.
+
+
+
+
+
+# 10. Keywords trong đề thi
+
+
+Nếu thấy các cụm này, hãy cảnh giác với Custom Model Import:
+	custom model
+	pre-trained model
+	trained outside Amazon Bedrock
+	bring your own model
+	import an existing model
+	use the model with Amazon Bedrock
+	invoke through Bedrock
+	avoid managing inference infrastructure
+	existing customized model
+
+	Ngược lại:
+		retrieve company documents → RAG
+		ground responses in private data → Knowledge Bases/RAG
+		adapt model behavior using training data → fine-tuning
+		control GPU/inference infrastructure → SageMaker
+
+
+
+
+# 11. Điểm master cần nhớ
+	Có 3 tầng khác nhau:
+
+         MODEL CREATION
+               │
+        Training / Fine-tuning
+               │
+               ▼
+         Custom Model
+               │
+               │
+         MODEL IMPORT
+               │
+               ▼
+        Amazon Bedrock
+               │
+               │
+         MODEL INFERENCE
+               │
+               ▼
+          Application
+
+
+	Creation ≠ Import ≠ Inference
+	Đây chính là cách phân biệt giúp tránh rất nhiều câu AIP-C01.
 
 </pre><a id='backBottom' href='../aws-bedrock-agent-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
