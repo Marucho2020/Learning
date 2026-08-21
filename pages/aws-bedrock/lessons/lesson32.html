@@ -1,3 +1,657 @@
-<html><head><title>Lesson 32 == Lộ trình ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 32 -- Lộ trình -//</h1><pre># Lộ trình 100 ngày học AIP-C01 — Trọng tâm: Kiến trúc AI hiện đại & Agentic AI
+<html><head><title>Lesson 32 == AIP-C01  ===Prompt Template & Prompt Management (Bedrock Prompt Management) ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 32 -- AIP-C01  --=Prompt Template & Prompt Management (Bedrock Prompt Management) -//</h1><pre>
+Prompt Template & Prompt Management — Amazon Bedrock
+	Đây là phần rất đáng học cho AIP-C01, vì nó nằm ở ranh giới giữa Prompt Engineering và production management.
+
+Điểm cốt lõi cần nhớ:
+
+	Prompt Template = thiết kế prompt có biến (variables), để cùng một cấu trúc prompt được tái sử dụng cho nhiều input.
+	Prompt Management = quản lý prompt như một tài nguyên production: tạo, lưu, version, test và sử dụng lại prompt.
+
+
+
+# 1. Prompt Template — bản chất 
+
+
+Ví dụ đơn giản.
+
+	Thay vì viết:
+		Bạn là một chuyên gia AWS.
+		Hãy giải thích Amazon Bedrock cho người mới.
+
+	Mỗi lần muốn đổi chủ đề lại sửa prompt:
+		Bạn là một chuyên gia AWS.
+		Hãy giải thích Amazon S3 cho người mới.
+
+	Ta tạo template:
+		Bạn là một chuyên gia AWS.
+		Hãy giải thích {{topic}} cho {{audience}}.
+
+	Yêu cầu:
+		- Giải thích bản chất
+		- Cho ví dụ thực tế
+		- Nêu các lỗi thường gặp
+
+
+
+Sau đó truyền:
+	topic = Amazon Bedrock
+	audience = AWS Solutions Architect
+
+Kết quả:
+	Bạn là một chuyên gia AWS.
+
+
+	Hãy giải thích Amazon Bedrock cho AWS Solutions Architect.
+	...
+	Bản chất
+
+	Template tách:
+		PROMPT STRUCTURE
+			   +
+		VARIABLE INPUT
+			   ↓
+		FINAL PROMPT
+
+
+	Ví dụ:
+
+		Template:
+			"Translate {{text}} into {{language}}"
+
+		Input:
+			text = "Hello"
+			language = "Japanese"
+
+		Final prompt:
+			"Translate Hello into Japanese"
+
+
+# 2. Tại sao production cần Prompt Template?
+
+	Đây mới là điểm AWS muốn kiểm tra.
+	Giả sử application có 100 API/service sử dụng cùng logic prompt.
+	Nếu prompt bị hard-code:
+
+
+	Lambda A
+	 └── prompt v1
+
+	Lambda B
+	 └── prompt v1
+
+	Lambda C
+	 └── prompt v1
+
+	Application D
+	 └── prompt v1
+
+
+	Khi muốn sửa:
+		"Trả lời ngắn hơn"
+		phải sửa rất nhiều nơi.
+		Đây là prompt duplication.
+		
+	Prompt template giúp:
+
+                Prompt Template
+                     │
+        ┌────────────┼────────────┐
+        ↓            ↓            ↓
+     Lambda       API App       Agent
+	 
+	Một cấu trúc prompt được tái sử dụng.
+
+
+
+# 3. Prompt Management trong Amazon Bedrock
+
+	Amazon Bedrock cung cấp Prompt Management để quản lý prompt trong Bedrock thay vì application phải tự quản lý toàn bộ prompt bằng code/config.
+
+
+
+Mô hình tư duy:
+
+	Developer
+		│
+		↓
+	Bedrock Prompt Management
+		│
+		├── Prompt
+		├── Template
+		├── Variables
+		└── Versions
+				│
+				↓
+		   Application
+				│
+				↓
+		   Foundation Model
+
+
+	Điểm quan trọng:
+
+		Prompt Management không phải là một foundation model.
+
+
+		Nó cũng không phải:
+			fine-tuning
+			RAG
+			embedding
+			vector database
+			model training
+
+		Nó là prompt lifecycle management.
+
+
+# 4. Prompt Management giải quyết vấn đề gì?
+
+	Hãy nhìn production system.
+	Không có Prompt Management
+
+		Application
+			│
+			├── prompt_v1
+			├── prompt_v2
+			├── prompt_final
+			├── prompt_final2
+			└── prompt_final_REAL
+
+
+
+	Đây là kiểu quản lý rất dễ xảy ra trong thực tế.
+
+	Không biết:
+		prompt nào đang production
+		prompt nào đã test
+		prompt nào là version mới
+		rollback thế nào
+
+
+
+	Có Prompt Management
+
+		Prompt
+		  │
+		  ├── Version 1
+		  ├── Version 2
+		  ├── Version 3
+		  └── Version 4
+		  
+	Application có thể tham chiếu tới version phù hợp.	  
+		  
+		  
+	Ví dụ:
+
+	Customer Support Prompt
+		v1 → production
+		v2 → testing
+		v3 → experimental		  
+				  
+			  
+	Nếu v3 tệ:
+		v3
+		 ↓
+		rollback
+		 ↓
+		v1
+
+	Đây là tư duy prompt lifecycle.			  
+			  
+		  
+		  
+# 	5. Prompt versioning — cực kỳ quan trọng  
+		  
+	Professional exam rất thích đưa scenario kiểu:
+		A company wants to improve prompts without modifying application code and needs to maintain previous prompt versions for rollback.		  
+				  
+			  
+	Đáp án phù hợp thường hướng tới:
+
+		Amazon Bedrock Prompt Management
+
+		thay vì:
+			lưu prompt trong Lambda source code
+			hard-code prompt
+			lưu prompt trong từng application
+			fine-tune model			  
+					  
+			  
+	Tại sao?
+
+		Vì requirement là:
+			centralized prompt management
+			+
+			version control
+			+
+			reuse
+			+
+			application decoupling	  
+					  
+		  
+		  
+# 	6. Prompt Template ≠ Fine-tuning	  
+		  
+| Prompt Template            | Fine-tuning                        |
+| -------------------------- | ---------------------------------- |
+| Thay đổi instruction       | Thay đổi/customize model behavior  |
+| Không train model          | Có training/customization          |
+| Nhanh                      | Tốn thời gian hơn                  |
+| Dễ thay đổi                | Thay đổi model artifact            |
+| Phù hợp prompt reuse       | Phù hợp behavior/domain adaptation |
+| Không cần dataset training | Thường cần training data           |
+| Không thay đổi weights     | Có thể thay đổi model parameters   |
+		  
+		  
+		  
+			  
+	Muốn:
+
+		"Tất cả câu trả lời phải có format JSON."
+		→ thử prompt engineering/template trước.
+
+	Muốn:
+		Model phải học một behavior/domain đặc thù mà prompt không đạt được.
+		→ xem xét fine-tuning/customization.
+
+	Trap
+
+	Đề nói:
+		"Improve model performance by modifying instructions"
+		Không nhảy ngay vào fine-tuning.
+		Instruction change → Prompt Engineering trước.		  
+			  
+			  
+			  
+			  
+# 	7. Prompt Template ≠ RAG		  
+			  
+			  
+	Ví dụ:
+
+	Answer the question using the following context:
+		{{context}}
+
+	Question:
+		{{question}}			  
+	Đây là prompt template.			  
+			  
+			  
+			  
+	Nhưng:
+
+		User Question
+			 ↓
+		Embedding
+			 ↓
+		Vector Search
+			 ↓
+		Retrieve Documents
+			 ↓
+		context
+			 ↓
+		Prompt Template
+			 ↓
+		Model		  
+	Đây mới là RAG architecture.				  
+			  
+			  
+	Template chỉ định nghĩa:
+		context được đặt ở đâu
+		question được đặt ở đâu
+		instruction là gì
+
+	Nó không tự thực hiện retrieval.			  
+				  
+			  
+			  
+# 	8. Prompt Template ≠ Prompt Management		  
+			  
+			  
+			  
+| Khái niệm         | Bản chất                             |
+| ----------------- | ------------------------------------ |
+| Prompt            | Instruction gửi cho model            |
+| Prompt Template   | Prompt có cấu trúc + variables       |
+| Prompt Management | Quản lý prompt lifecycle             |
+| Prompt Version    | Một version cụ thể của prompt        |
+| Model             | Foundation model thực hiện inference |
+| RAG               | Cung cấp external context            |
+| Fine-tuning       | Customize model                      |
+			  
+			  
+			  
+	Tư duy:
+		Prompt Template
+			  ↓
+		"Prompt trông như thế nào?"
+
+
+		Prompt Management
+			  ↓
+		"Prompt được quản lý như thế nào?"
+
+	Đây là cách nhớ rất tốt.			  
+			  
+			  
+		  
+		  
+# 	9. Scenario kiểu AIP-C01	  
+		  
+		  
+		  
+	Scenario
+
+	Một công ty xây dựng customer-support chatbot.
+		Có 30 microservices sử dụng cùng một prompt.
+
+	Team muốn:
+		centrally manage prompts
+		reuse prompt
+		update prompt mà không phải sửa từng application
+		maintain previous versions
+		test prompt mới trước production
+		rollback nếu prompt mới gây giảm chất lượng
+
+	Đâu là hướng phù hợp?
+
+	Phân tích
+
+	Requirement không phải:
+		train model
+	Không phải:
+		retrieve documents
+
+	Không phải:
+		create embeddings
+
+	Mà là:
+		prompt lifecycle management
+
+	→ Amazon Bedrock Prompt Management		  
+			  
+			  
+			  
+		  
+# 	10. Trap: "Lưu prompt trong S3"	  
+		  
+		  
+		  
+		  
+	Đây là một đáp án nghe rất hợp lý.
+
+	Ví dụ:
+
+	S3
+	 └── prompt.json
+
+	Lambda:
+		prompt = read_from_s3()
+
+	Về mặt kỹ thuật hoàn toàn có thể làm.
+
+	Nhưng nếu requirement là:
+		centrally manage reusable prompts with versioning and prompt-specific lifecycle capabilities
+		thì S3 không phải lựa chọn chuyên biệt.
+
+	Đây là kiểu trap Professional-level:
+		"Có thể làm được" ≠ "AWS service phù hợp nhất".
+
+	AWS exam thường hỏi:
+		Which solution BEST meets the requirements?
+
+	Không hỏi:
+		Which solution CAN implement this?		  
+			  
+			  
+		  
+		  
+# 	11. Prompt Management và application architecture	  
+	Production architecture có thể tư duy như sau:	  
+		  
+		  
+                    ┌─────────────────────┐
+                    │ Prompt Management    │
+                    │                     │
+                    │ Template             │
+                    │ Variables            │
+                    │ Versions             │
+                    └──────────┬──────────┘
+                               │
+                               ↓
+                         Application
+                               │
+                               ↓
+                         Amazon Bedrock
+                               │
+                               ↓
+                        Foundation Model		  
+		  
+		Application không nhất thiết phải chứa toàn bộ prompt logic.  
+		  
+			  
+	Điều này tạo ra:
+	Separation of concerns
+	
+		Application
+			=
+		business logic
+
+
+		Prompt Management
+			=
+		prompt logic/lifecycle
+
+
+		Bedrock Model
+			=
+		inference
+
+	Đây là tư duy architecture quan trọng.	  
+			  
+			  
+			  
+# 	12. Trade-off		  
+		  
+		  
+	Prompt Management không phải lúc nào cũng cần.
+
+	Application nhỏ		  
+		1 Lambda
+		1 prompt
+		prompt thay đổi rất ít			  
+	Hard-code/config đơn giản có thể hợp lý.			  
+				  
+		  
+	Enterprise	  
+		100 services
+		20 prompts
+		nhiều team
+		A/B testing
+		prompt versioning
+		rollback
+		governance		  
+				  
+	Centralized Prompt Management có giá trị lớn hơn nhiều.	  
+		  
+		  
+# Trade-off 		  
+		  
+		  
+| Cách              | Ưu                               | Nhược                              |
+| ----------------- | -------------------------------- | ---------------------------------- |
+| Hard-code         | Đơn giản                         | Khó quản lý                        |
+| Config file       | Dễ triển khai                    | Version/lifecycle hạn chế          |
+| S3                | Centralized, dễ tích hợp         | Phải tự xây management logic       |
+| Prompt Management | Chuyên biệt cho prompt lifecycle | Thêm dependency/service management |
+		  
+		  
+		  
+# 	13. Một trap khác: Prompt Management không đảm bảo output quality	  
+		  
+			  
+	Đừng hiểu:
+		Prompt Management
+			  ↓
+		better model output
+
+	Sai.
+
+	Đúng là:
+		Prompt Management
+			  ↓
+		better prompt lifecycle		  
+				  
+			  
+
+	Output quality phụ thuộc vào:
+
+			Model
+			+
+			Prompt
+			+
+			Context
+			+
+			Parameters
+			+
+			Guardrails
+			+
+			Retrieval quality
+			+
+			Evaluation
+	Prompt Management chỉ quản lý prompt.
+
+
+# 14. Prompt Management và Evaluation 
+	Đây là architecture rất thực tế.
+
+	Prompt v1
+	   ↓
+	Evaluation
+	   ↓
+	Quality acceptable?
+	   │
+	   ├── NO → improve prompt
+	   │
+	   └── YES
+			↓
+		 v2
+			↓
+		 Test
+			↓
+		Production
+
+	Prompt management giúp quản lý version.
+	Evaluation giúp xác định:
+	Version nào tốt hơn?
+	Hai thứ không giống nhau.
+
+
+
+# 15. Cách AWS ra đề
+
+
+
+	AWS Professional thường không hỏi:
+		What is Prompt Management?
+
+	Mà hỏi scenario dài:
+		A company has multiple GenAI applications. Developers currently store prompts directly in application source code. The company wants to centrally manage reusable prompts, maintain multiple versions, and update prompts without modifying application code. Which solution requires the LEAST operational overhead?
+
+
+	Bạn phải nhận ra keyword:
+
+		Keyword 1
+			centrally manage prompts
+			→ Prompt Management
+
+		Keyword 2
+			reusable
+			→ Prompt Template
+
+		Keyword 3
+			multiple versions
+			→ Versioning
+
+		Keyword 4
+			without modifying application code
+			→ decoupling prompt from application
+
+		Keyword 5
+			least operational overhead
+			→ dùng managed capability của AWS thay vì tự xây.
+
+
+
+# 16. Keyword cần nhớ cho AIP-C01
+
+| Keyword trong đề                                 | Nghĩ ngay          |
+| ------------------------------------------------ | ------------------ |
+| Reusable prompt                                  | Prompt Template    |
+| Variables                                        | Template           |
+| Centralized prompts                              | Prompt Management  |
+| Prompt lifecycle                                 | Prompt Management  |
+| Prompt versions                                  | Versioning         |
+| Rollback prompt                                  | Versioning         |
+| Manage prompts centrally                         | Prompt Management  |
+| Decouple prompt from application                 | Prompt Management  |
+| Modify prompt without changing application logic | Prompt Management  |
+| Improve instructions                             | Prompt Engineering |
+| Ground response with company documents           | RAG                |
+| Customize model behavior                         | Fine-tuning        |
+| Evaluate prompt/model quality                    | Model Evaluation   |
+
+
+
+# 17. Công thức nhớ cho exam
+	Hãy nhớ 4 tầng:
+
+                MODEL
+                  ↑
+             Prompt
+                  ↑
+          Prompt Template
+                  ↑
+         Prompt Management
+
+
+	Nói chính xác hơn:
+
+		Prompt
+		 └── nội dung instruction
+
+
+		Prompt Template
+		 └── prompt + variables
+
+
+		Prompt Management
+		 └── create/manage/version/reuse prompt
+
+
+		Foundation Model
+		 └── thực thi inference
+
+
+	Và tuyệt đối đừng trộn:
+
+		Prompt Management
+		≠ RAG
+		≠ Fine-tuning
+		≠ Guardrails
+		≠ Evaluation
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 </pre><a id='backBottom' href='../aws-bedrock-agent-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
