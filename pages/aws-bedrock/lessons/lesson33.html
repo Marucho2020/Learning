@@ -1,3 +1,619 @@
-<html><head><title>Lesson 33 == Lộ trình ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 33 -- Lộ trình -//</h1><pre># Lộ trình 100 ngày học AIP-C01 — Trọng tâm: Kiến trúc AI hiện đại & Agentic AI
+<html><head><title>Lesson 33 == AIP-C01  ===Temperature, Top-P, Top-K (inference parameters) ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 33 -- AIP-C01  --=Temperature, Top-P, Top-K (inference parameters) -//</h1><pre>
+Đây là nhóm kiến thức rất dễ xuất hiện trong AIP-C01, đặc biệt ở dạng scenario: “ứng dụng cần output ổn định / sáng tạo / deterministic / đa dạng nhưng vẫn kiểm soát chất lượng”. Quan trọng nhất là hiểu rằng cả ba đều tác động đến cách model chọn token tiếp theo, nhưng chúng làm việc theo những cơ chế khác nhau.
+
+
+# Bản chất
+
+	LLM không thực sự “viết câu” một lần.
+
+	Nó hoạt động gần như:
+		Context → tính xác suất cho token tiếp theo → chọn một token → thêm token đó vào context → lặp lại.
+
+	Ví dụ model đang cần hoàn thành:
+		Amazon Bedrock is a ...
+		
+
+Model có thể tính:
+| Token    | Probability |
+| -------- | ----------: |
+| cloud    |        0.55 |
+| service  |        0.20 |
+| platform |        0.12 |
+| solution |        0.05 |
+| database |        0.01 |
+| ...      |         ... |
+
+Temperature, Top-K và Top-P đều can thiệp vào quá trình lựa chọn token này.
+
+
+# 2. Temperature
+
+	Bản chất
+		Temperature điều chỉnh độ "phẳng" của probability distribution.
+
+	Nói đơn giản:
+		Temperature thấp → model ưu tiên token có xác suất cao → output ổn định, ít ngẫu nhiên.
+		Temperature cao → probability distribution phẳng hơn → nhiều token có cơ hội được chọn → output đa dạng/sáng tạo hơn.
+
+
+	Ví dụ:
+
+		Temperature = thấp
+		cloud      0.80
+		service    0.12
+		platform   0.05
+		database   0.01
+
+	Model gần như luôn chọn cloud.
+	Các lựa chọn khác có cơ hội xuất hiện nhiều hơn.
+
+
+
+# Điều cực kỳ quan trọng 
+
+
+	Temperature không đơn giản là "randomness = 0/1".
+	Nó thay đổi phân phối xác suất trước khi sampling.
+	
+	Về mặt toán học:
+		“Pi′=∑jezj/Tezi/T”
+
+
+	Trong đó:
+
+	z
+	i
+		​
+
+	: logit của token
+	T: temperature
+	P
+	i
+	′
+		​
+
+	: probability sau khi áp dụng temperature
+	T → 0
+		Distribution trở nên rất tập trung vào token có logit cao nhất.
+
+	T tăng
+		Distribution trở nên phẳng hơn.
+
+
+
+# 3. Top-K
+
+	Đây là chỗ nhiều người nhầm với Temperature.
+	Top-K không thay đổi probability distribution theo cùng cách Temperature.
+
+	Nó giới hạn:
+		Chỉ giữ lại K token có probability cao nhất để sampling.
+
+	Ví dụ:
+
+		cloud      40%
+		service    25%
+		platform   15%
+		solution   10%
+		database    5%
+		network     3%
+		computer    2%
+
+
+	Nếu:
+		Top-K = 3
+
+	thì chỉ còn:
+		cloud
+		service
+		platform
+
+	Các token còn lại bị loại khỏi candidate set.
+
+
+
+	Hình dung cực dễ nhớ
+	
+	Temperature
+		"Cho phép model mạo hiểm hơn bao nhiêu?"
+
+	Top-K
+		"Cho phép model xem bao nhiêu ứng viên tốt nhất?"
+		
+		
+		
+# 	4. Top-P	
+		
+	Top-P còn gọi là:
+		Nucleus Sampling
+		Nó khác Top-K ở chỗ không cố định số lượng token.
+		Top-P chọn tập nhỏ nhất các token có cumulative probability đạt ít nhất P.		
+			
+			
+	Ví dụ:
+		cloud       0.40
+		service     0.25
+		platform    0.15
+		solution    0.10
+		database    0.05
+		network     0.03
+		computer    0.02			
+		
+	Nếu:
+		Top-P = 0.80
+
+	Ta cộng:
+		cloud       0.40
+		service     0.25  → 0.65
+		platform    0.15  → 0.80
+
+	→ candidate set:		
+		
+		
+	cloud
+	service
+	platform		
+			
+	Nếu probability distribution thay đổi ở token tiếp theo, số lượng candidate cũng thay đổi.
+	Đó là điểm khác biệt cốt lõi.		
+			
+		
+		
+# 	5. Top-K vs Top-P	
+		
+|                    | Top-K                  | Top-P                                  |
+| ------------------ | ---------------------- | -------------------------------------- |
+| Cơ chế             | Giữ K token            | Giữ token đến cumulative probability P |
+| Số candidate       | Cố định                | Thay đổi                               |
+| Dựa trên           | Rank                   | Probability mass                       |
+| Adapt theo context | Thấp hơn               | Cao hơn                                |
+| Ví dụ              | K=10                   | P=0.9                                  |
+| Bản chất           | Hard limit về số token | Hard limit về probability mass         |
+		
+		
+		
+# Ví dụ
+	Distribution:
+
+		A = 0.50
+		B = 0.20
+		C = 0.10
+		D = 0.08
+		E = 0.05
+		F = 0.03
+		G = 0.02
+		H = 0.01		
+		
+	Top-K = 3
+		A B C
+		Top-P = 0.80
+		A + B + C = 0.80
+
+		→ cũng là:
+		A B C
+
+		Nhưng không phải lúc nào chúng cũng cho cùng kết quả.	
+				
+				
+# 	6. Ví dụ cho thấy Top-K và Top-P thực sự khác nhau	
+		
+		
+	Giả sử model rất chắc chắn:
+		A = 0.90
+		B = 0.04
+		C = 0.02
+		D = 0.01
+		...
+		Top-K = 5
+
+	Candidate:
+
+	A B C D E
+	Top-P = 0.90
+
+	Chỉ cần:
+
+	A = 0.90
+
+	→ Candidate:
+
+	A
+
+	Đây là lý do Top-P có tính adaptive.		
+			
+Khi model rất confident, nucleus có thể rất nhỏ.
+	Khi model uncertain:
+
+		A = 0.15
+		B = 0.14
+		C = 0.13
+		D = 0.12
+		E = 0.11
+...
+
+Top-P sẽ tự động lấy nhiều token hơn để đạt P.		
+
+
+
+
+# 7. Temperature + Top-K + Top-P hoạt động cùng nhau
+
+	Đây mới là phần AIP-C01 cần hiểu.
+
+	Một pipeline đơn giản có thể hình dung:
+
+              Model
+                │
+                ▼
+             Logits
+                │
+                ▼
+          Temperature
+                │
+                ▼
+       Probability distribution
+                │
+        ┌───────┴────────┐
+        ▼                ▼
+      Top-K            Top-P
+        │                │
+        └───────┬────────┘
+                ▼
+             Sampling
+                │
+                ▼
+          Next token
+
+
+	Lưu ý: thứ tự triển khai chính xác có thể phụ thuộc model/provider/API; đừng học thuộc pipeline này như một contract universal của mọi FM.
+
+	Đây là một conceptual model để hiểu sampling.
+
+
+# 8. Temperature thấp hay cao?
+
+
+	Không có câu trả lời:
+		"Temperature thấp luôn tốt hơn."
+
+	Sai.
+	Phải nhìn vào workload.
+
+
+| Use case                | Temperature |
+| ----------------------- | ----------- |
+| SQL generation          | thấp        |
+| Code generation         | thấp–vừa    |
+| JSON structured output  | thấp        |
+| Enterprise Q&A          | thấp        |
+| Classification          | thấp        |
+| Summarization           | thấp–vừa    |
+| Creative writing        | cao hơn     |
+| Brainstorming           | cao hơn     |
+| Story generation        | cao hơn     |
+| Marketing copy variants | cao hơn     |
+
+
+
+
+	Ví dụ enterprise chatbot:
+		User hỏi: "Chính sách hoàn tiền của công ty là gì?"
+		Bạn không muốn model trả lời khác nhau mỗi lần.
+		→ Temperature thấp.
+
+	Ngược lại:
+		"Hãy đưa ra 10 ý tưởng marketing cho sản phẩm này."
+
+	Bạn muốn diversity.
+		→ Temperature cao hơn có thể phù hợp.
+
+
+# 9. Nhưng Temperature = 0 có nghĩa deterministic 100%?
+
+	Không nên kết luận như vậy trong exam.
+	Đây là một trap rất điển hình.
+	Temperature thấp làm giảm randomness, nhưng:
+		Temperature thấp ≠ guaranteed identical output trong mọi hệ thống.
+
+
+	Các yếu tố khác có thể ảnh hưởng:
+		sampling implementation
+		model/provider
+		infrastructure
+		floating-point behavior
+		model version
+		system configuration
+		non-deterministic backend behavior
+
+	Ngoài ra, một số model/API có parameter riêng liên quan đến deterministic behavior.
+
+
+	Exam mindset
+
+	Nếu đề nói:
+		"The application requires highly consistent responses."
+		→ Low temperature là một lựa chọn hợp lý.
+
+	Nếu đề nói:
+		"The application requires guaranteed identical output."
+
+	→ Đừng tự động chọn:
+		temperature = 0
+		Phải xem toàn bộ architecture và API/model capabilities.
+
+
+# 10. Một trap cực quan trọng: Temperature không làm model "thông minh hơn" 
+
+
+	Ví dụ:
+		Temperature = 0.9
+
+	không có nghĩa:
+		model reasoning tốt hơn.
+
+	Và:
+		Temperature = 0.1
+
+	không có nghĩa:
+		model reasoning kém hơn.
+
+	Temperature chủ yếu ảnh hưởng đến sampling behavior / diversity.
+
+		Nó không biến:
+			small model
+
+		thành:
+			large reasoning model
+
+
+# 11. Temperature vs Top-P vs Top-K — bản chất sâu
+
+	Có thể nhớ bằng 3 câu:
+	Temperature
+		How aggressively do we flatten/sharpen the probability distribution?
+
+	Top-K
+		How many highest-ranked candidates are allowed?
+
+	Top-P
+		How much probability mass is allowed?
+		Đây là ba câu cực đáng nhớ cho AIP-C01.
+
+
+
+
+# 12. Scenario kiểu AWS Professional
+
+	Scenario
+
+	Một công ty xây dựng:
+		Customer Support Assistant
+
+	Yêu cầu:
+		trả lời dựa trên corporate knowledge base
+		response phải nhất quán
+		giảm hallucination
+		không cần creative response
+		latency và cost phải thấp
+
+	Một engineer đề xuất:
+		Increase temperature to 0.9 to improve response quality.
+		❌ Sai hướng.
+		Temperature cao chủ yếu tăng diversity/randomness.
+
+	Thiết kế hợp lý hơn:
+		User
+		 ↓
+		Bedrock
+		 ↓
+		Knowledge Base / RAG
+		 ↓
+		Foundation Model
+		 ↓
+		Low temperature
+		 ↓
+		Response
+	
+	Và phải xử lý hallucination bằng architecture:
+	
+	Không dùng Temperature như một công cụ chính để giải quyết hallucination.
+	Đây là trap rất hay gặp.	
+		
+	
+# 13. Scenario 2 — Creative application
+	
+	Ứng dụng:
+		AI viết 20 slogan khác nhau cho một chiến dịch quảng cáo.	
+			
+			
+	Requirement:
+		diversity cao
+		tránh lặp lại
+		creative
+
+	Engineer A:	
+		temperature = very low
+	
+	Engineer B:
+		temperature = higher	
+		
+		
+	→ B hợp lý hơn.
+
+	Nhưng nếu output bắt buộc:
+			{
+			  "slogan": "...",
+			  "category": "...",
+			  "score": 0
+			}
+
+	thì không thể chỉ tăng Temperature và nghĩ rằng vấn đề đã giải quyết.
+	Structured output / schema enforcement, model capability và application validation vẫn quan trọng.		
+		
+		
+# 	14. AWS Mapping
+	Trong Amazon Bedrock, các inference parameters không hoàn toàn giống nhau giữa các foundation model.
+	
+	Đây là điểm rất quan trọng.
+		Ví dụ model A có thể hỗ trợ:	
+	
+		temperature
+		topP
+		maxTokens	
+			
+	Model B có thể có:
+		temperature
+		top_p
+		top_k	
+	
+	Model C có thể có parameter khác.
+	
+	Vì vậy:
+		Không được giả định mọi Bedrock model hỗ trợ cùng một inference parameter.
+
+	Bạn phải kiểm tra:
+		model documentation
+		model-specific inference parameters
+		API request schema
+		model provider requirements
+
+	Đây là kiểu detail Professional-level rất thích kiểm tra.	
+		
+		
+	
+# 	15. Inference parameters không phải Prompt Engineering
+	
+| Thành phần     | Mục đích                                   |
+| -------------- | ------------------------------------------ |
+| System prompt  | Điều khiển behavior/instruction            |
+| User prompt    | Cung cấp task/input                        |
+| Temperature    | Điều chỉnh sampling randomness             |
+| Top-K          | Giới hạn số candidate                      |
+| Top-P          | Giới hạn probability mass                  |
+| max tokens     | Giới hạn output length                     |
+| stop sequences | Điều kiện dừng                             |
+| RAG            | Cung cấp external knowledge                |
+| Guardrails     | Kiểm soát nội dung                         |
+| Fine-tuning    | Thay đổi model behavior/knowledge patterns |
+	
+	
+	
+Trap
+
+Nếu model trả lời sai vì:
+	Không có company knowledge
+	thì tăng/giảm Temperature không giải quyết gốc vấn đề.
+	→ RAG/Knowledge Base có thể mới là architectural solution.	
+	
+	
+	
+# 	16. Một cách tư duy cực mạnh khi làm exam
+	
+Khi gặp câu hỏi về inference parameters, hãy hỏi:
+
+	Câu 1
+		Problem là diversity hay accuracy/consistency?	
+	
+			Nếu:
+
+			creative
+			diverse
+			multiple variations
+
+			→ nghĩ đến higher sampling diversity.
+
+			Nếu:
+
+			consistent
+			predictable
+			structured
+			deterministic-like
+
+			→ nghĩ đến lower temperature / constrained sampling.
+
+
+
+	Câu 2
+		Problem có phải hallucination không?
+
+		Nếu có:
+
+		❌ Đừng vội:
+			"Set temperature to 0."
+
+		Hãy xem:
+			RAG
+			grounding
+			retrieval
+			prompt
+			model selection
+			guardrails
+			evaluation
+
+
+
+	Câu 3
+		Đề đang nói đến candidate filtering hay randomness?
+
+	Nếu:
+		"limit the number of candidate tokens"
+		→ Top-K
+
+	Nếu:
+		"limit cumulative probability"
+		→ Top-P
+
+	Nếu:
+		"increase/decrease randomness"
+		→ Temperature
+
+	Đây là cách nhận diện keyword cực nhanh.
+
+
+
+# 17. Các từ khóa exam cần nhớ
+
+| Keyword trong đề       | Nghĩ ngay                                                          |
+| ---------------------- | ------------------------------------------------------------------ |
+| randomness             | Temperature                                                        |
+| diversity              | Temperature / sampling                                             |
+| deterministic-like     | Low temperature                                                    |
+| consistent output      | Low temperature                                                    |
+| creative               | Higher temperature                                                 |
+| candidate tokens       | Top-K                                                              |
+| K most probable tokens | Top-K                                                              |
+| probability mass       | Top-P                                                              |
+| cumulative probability | Top-P                                                              |
+| nucleus sampling       | Top-P                                                              |
+| adaptive candidate set | Top-P                                                              |
+| hallucination          | RAG/grounding/model/prompt/evaluation — không mặc định Temperature |
+| unsupported parameter  | Check model-specific inference parameters                          |
+
+
+
+
+# 18. Công thức ghi nhớ
+
+
+Tôi khuyên nhớ đúng câu này:
+	Temperature = độ ngẫu nhiên
+	Top-K = bao nhiêu ứng viên
+	Top-P = bao nhiêu xác suất tích lũy
+
+Hoặc bằng tiếng Anh:
+	Temperature controls distribution sharpness.
+	Top-K controls candidate count.
+	Top-P controls cumulative probability mass.
+
+Nếu nhớ được bản chất này thì phần lớn câu hỏi inference parameter của AIP-C01 sẽ trở nên khá cơ học.
+
+	Nếu nhớ được bản chất này thì phần lớn câu hỏi inference parameter của AIP-C01 sẽ trở nên khá cơ học.
+
+
+
+
+
+
+
 
 </pre><a id='backBottom' href='../aws-bedrock-agent-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
