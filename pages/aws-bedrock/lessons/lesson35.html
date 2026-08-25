@@ -1,3 +1,464 @@
-<html><head><title>Lesson 35 == Lộ trình ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 35 -- Lộ trình -//</h1><pre># Lộ trình 100 ngày học AIP-C01 — Trọng tâm: Kiến trúc AI hiện đại & Agentic AI
+<html><head><title>Lesson 35 == AIP-C01  ===Fine-tuning là gì, khi nào cần ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 35 -- AIP-C01  --=Fine-tuning là gì, khi nào cần -//</h1><pre>
+
+# 1. Bản chất: Fine-tuning là gì?
+
+
+	Nói thẳng:
+		Fine-tuning = lấy một Foundation Model đã được train sẵn, rồi tiếp tục training nó trên dataset của bạn để thay đổi cách model thực hiện một nhiệm vụ cụ thể.
+
+	Ví dụ:
+		Bạn dùng một LLM tổng quát:
+		User: 顧客からのクレームを分析して
+
+	Model có thể trả lời khá tốt, nhưng công ty muốn mọi complaint đều được phân loại đúng theo 8 category nội bộ, với format cố định:
+
+
+	{
+	  "category": "DELIVERY_DELAY",
+	  "severity": "HIGH",
+	  "recommended_action": "..."
+	}
+
+	Bạn có thể fine-tune model bằng hàng nghìn ví dụ:
+
+	Input:
+	「商品がまだ届いていません」
+
+	Output:
+	{
+	  "category": "DELIVERY_DELAY",
+	  "severity": "MEDIUM",
+	  ...
+	}
+
+	Model học được pattern của task.
+
+
+
+# 2. Fine-tuning KHÔNG phải là RAG
+
+
+	Đây là một trong những điểm cực kỳ quan trọng đối với AIP-C01.
+
+	Giả sử công ty có:
+		100,000 tài liệu nội bộ về sản phẩm.
+
+	Bạn muốn model trả lời:
+		"Sản phẩm X có chính sách bảo hành bao nhiêu năm?"
+
+	Cách sai nếu dùng fine-tuning
+	Bạn nhét 100,000 tài liệu vào training dataset.
+
+
+	Vấn đề:
+		dữ liệu thay đổi → phải train lại
+		training tốn tiền
+		model không đảm bảo nhớ chính xác factual information
+		thông tin có thể bị outdated
+
+
+	Cách đúng thường là RAG
+
+		User
+		  ↓
+		Query
+		  ↓
+		Embedding
+		  ↓
+		Vector Search
+		  ↓
+		Relevant Documents
+		  ↓
+		LLM
+		  ↓
+		Answer
+
+	Model không cần học thuộc dữ liệu.
+	Nó chỉ lấy dữ liệu mới nhất rồi sử dụng để trả lời.
+
+
+# 3. Fine-tuning giải quyết vấn đề gì?
+
+Fine-tuning chủ yếu thay đổi behavior / capability của model đối với một task.
+
+
+	Có thể hình dung:
+		Foundation Model
+			   │
+			   │ Fine-tuning
+			   ↓
+		Specialized Model
+			   │
+			   ├── Classification
+			   ├── Domain-specific generation
+			   ├── Output format
+			   ├── Style
+			   └── Task-specific behavior
+
+
+	Ví dụ:
+
+	Foundation model:
+		"Hãy phân tích ticket này."
+
+	Fine-tuned model:
+		"Mọi ticket phải được phân loại theo taxonomy của công ty."
+
+
+
+# 4. Khi nào nên Fine-tuning?
+
+| Tình huống                                           |   Fine-tuning? |
+| ---------------------------------------------------- | -------------: |
+| Model không biết dữ liệu mới nhất                    |        ❌ → RAG |
+| Model cần truy cập tài liệu nội bộ                   |        ❌ → RAG |
+| Muốn model tuân thủ một behavior/task cố định        |              ✅ |
+| Muốn output format nhất quán                         |       ✅ có thể |
+| Prompt quá dài và phải lặp lại instruction rất nhiều |       ✅ có thể |
+| Cần giảm prompt/token cost ở scale lớn               |       ✅ có thể |
+| Muốn model học terminology/style/domain đặc thù      |              ✅ |
+| Muốn model biết database hiện tại                    |   ❌ → RAG/tool |
+| Muốn model thực hiện action trong hệ thống           | ❌ → tool/Agent |
+| Muốn model có knowledge mới liên tục                 |        ❌ → RAG |
+
+
+
+# 5. Một ví dụ production rất quan trọng
+
+
+Giả sử công ty có hệ thống:
+
+Customer Support
+       ↓
+Amazon Bedrock
+       ↓
+LLM
+       ↓
+Answer
+
+Model trả lời chưa ổn định:
+
+Ticket → "Có vẻ như vấn đề giao hàng..."
+Ticket → "Đây có thể là vấn đề vận chuyển..."
+Ticket → "Delivery issue."
+
+Công ty muốn:
+
+{
+  "category": "DELIVERY",
+  "priority": "HIGH",
+  "action": "REFUND"
+}
+
+và muốn model luôn tuân theo taxonomy nội bộ.
+
+
+Có thể cân nhắc fine-tuning.
+
+Dataset:
+	Input                          Expected Output
+	--------------------------------------------------
+	Customer complaint #1          DELIVERY
+	Customer complaint #2          PAYMENT
+	Customer complaint #3          PRODUCT_DEFECT
+	...
+	Customer complaint #10000      DELIVERY
+
+Model học:
+	Input pattern → desired output behavior.
+	Đây chính là territory của fine-tuning.
+
+
+
+#6. Fine-tuning vs Prompt Engineering vs RAG
+
+| Phương pháp            | Thay đổi model? | Thêm knowledge runtime? | Mục đích chính                       |
+| ---------------------- | --------------: | ----------------------: | ------------------------------------ |
+| Prompt Engineering     |               ❌ |                  Có thể | Điều khiển behavior bằng instruction |
+| RAG                    |               ❌ |                       ✅ | Cung cấp knowledge bên ngoài         |
+| Fine-tuning            |               ✅ |                       ❌ | Học behavior/task/domain pattern     |
+| Tool calling           |               ❌ |                       ✅ | Lấy dữ liệu/thực hiện action         |
+| Agent                  |        ❌/có thể |                       ✅ | Reason + plan + tool                 |
+| Continued pre-training |               ✅ |                       ❌ | Học thêm domain/corpus               |
+
+
+
+Rule rất mạnh:
+	Knowledge → RAG
+	Behavior → Fine-tuning
+	Action → Tool/Agent
+
+Đây là mental model cực kỳ hữu ích khi gặp câu hỏi Professional.
+
+
+# 7. Fine-tuning có nghĩa là model "biết" dữ liệu training không?
+
+
+Không nên hiểu như vậy.
+
+	Ví dụ training:
+
+	Question:
+		What is the return policy?
+
+	Answer:
+		Customers can return products within 30 days.
+
+
+	Fine-tuning không biến model thành database:
+		SELECT return_policy FROM company_database;
+		Nó chủ yếu làm thay đổi weights / learned behavior.
+
+
+
+	Vì vậy nếu:
+
+	Return policy:
+		30 days
+				↓
+		changed to
+		60 days
+
+	thì fine-tuned model không tự biết thông tin mới.
+	→ RAG mới phù hợp.
+
+
+
+
+
+# 8. Fine-tuning có nhược điểm gì?
+
+
+	Đây là phần AWS rất thích đưa vào scenario.
+	Cost
+	Có training cost.
+	Operational complexity
+	Bạn phải quản lý:
+
+
+		Dataset
+		   ↓
+		Training
+		   ↓
+		Validation
+		   ↓
+		Evaluation
+		   ↓
+		Model deployment
+		   ↓
+		Monitoring
+
+
+
+	Data quality
+	Garbage in → garbage out.
+
+	Dataset có:
+		wrong labels
+		inconsistent answers
+		biased examples
+
+
+	Model degradation
+
+	Fine-tuning quá mạnh hoặc dataset không tốt có thể làm model:
+		mất một số capability tổng quát
+		overfit
+		giảm performance trên task khác
+
+
+
+
+# 9. AWS sử dụng gì?
+	Trong AWS ecosystem, cần nhớ hai hướng lớn.
+
+	## Amazon Bedrock 
+		Bedrock hỗ trợ model customization/fine-tuning đối với những foundation model và region có hỗ trợ tính năng đó.
+
+		Workflow concept:
+
+		Training Dataset
+			  ↓
+		Amazon S3
+			  ↓
+		Bedrock Model Customization
+			  ↓
+		Customized Model
+			  ↓
+		Inference
+
+	Điểm cần nhớ:
+		Không phải tất cả foundation models trong Bedrock đều hỗ trợ fine-tuning.
+	Đề thi rất thích dùng lựa chọn:
+		"Fine-tune any foundation model available in Amazon Bedrock"
+	→ Sai.
+		Phải kiểm tra model cụ thể có hỗ trợ customization hay không.
+
+
+
+
+
+	## Amazon SageMaker
+	
+	SageMaker phù hợp hơn khi bạn cần:
+		control sâu hơn
+		training workflow tùy chỉnh
+		custom training
+		hyperparameter tuning
+		model lifecycle
+		MLOps
+		infrastructure control
+
+	Mental model:
+
+		Bedrock
+		→ managed GenAI platform
+		→ ít infrastructure management
+
+		SageMaker
+		→ ML platform
+		→ control nhiều hơn
+		→ flexibility cao hơn
+		→ operational complexity cao hơn
+
+
+
+# 10. Fine-tuning vs Continued Pre-training
+	Hai khái niệm này dễ bị đánh tráo.
+
+
+
+	## Fine-tuning
+
+		Dataset thường tập trung vào:
+			task / behavior / instruction
+
+		Ví dụ:
+			Input → classify this ticket
+			Output → DELIVERY
+
+
+
+
+	## Continued pre-training
+		Cho model tiếp tục học trên một lượng lớn domain corpus.
+
+	Ví dụ:
+		Foundation Model
+			  ↓
+		10 TB medical literature
+			  ↓
+		Continued Pre-training
+			  ↓
+		Domain-adapted Model
+
+
+	Mục tiêu thiên về:
+		domain knowledge / language distribution adaptation
+		chứ không đơn thuần là dạy một task cụ thể.
+
+
+
+
+# 11. AIP-C01: Cách AWS ra đề
+
+AWS Professional-level thường không hỏi:
+	"Fine-tuning là gì?"
+
+Mà sẽ đưa scenario kiểu:
+	Một công ty sử dụng foundation model để trả lời câu hỏi về 50,000 tài liệu nội bộ. Tài liệu được cập nhật hàng ngày. Công ty muốn câu trả lời dựa trên thông tin mới nhất và giảm hallucination. Giải pháp nào phù hợp nhất?
+
+
+	Bạn phải chọn:
+		RAG ✅
+
+	Không chọn:
+		Fine-tuning ❌
+
+	Scenario khác:
+		Công ty có 100,000 customer-support examples. Model hiện tại hiểu nội dung nhưng không tuân thủ taxonomy và output format nội bộ. Behavior cần ổn định trên production.
+		→ Fine-tuning có thể phù hợp.
+
+
+
+
+
+# Trap cực kỳ quan trọng
+
+	## Trap 1
+
+		"Model cần knowledge của company."
+		Không lập tức chọn fine-tuning.
+
+		Hỏi tiếp:
+			Knowledge có thay đổi thường xuyên không?
+
+		Nếu có	
+			→ RAG.
+
+
+
+
+
+	## Trap 2
+
+		"Prompt quá dài."
+
+		Không có nghĩa chắc chắn phải fine-tuning.
+
+		Có thể dùng:
+			prompt optimization
+			prompt management
+			RAG
+			context optimization
+
+		Fine-tuning chỉ là một option.
+
+
+
+	## Trap 3
+		"Muốn model thực hiện transaction."
+
+	Ví dụ:
+		refund customer
+		Fine-tuning không phải cơ chế để model gọi API.
+		→ Tool use / Agent / Lambda / API.
+
+
+
+
+# 12. Câu thần chú để làm bài
+	Hãy nhìn requirement trước, rồi phân loại:
+
+             Requirement
+                  │
+        ┌─────────┼─────────┐
+        ↓         ↓         ↓
+     Knowledge  Behavior   Action
+        │         │         │
+        ↓         ↓         ↓
+       RAG    Fine-tuning   Tool
+                            /Agent
+
+
+
+	Và thêm một câu hỏi:
+		Dữ liệu có thay đổi thường xuyên không?
+
+	Nếu:
+		YES → RAG
+		NO + cần model học behavior/task → Fine-tuning
+		
+	Đây là một trong những decision framework quan trọng nhất của AIP-C01.
+
+
+
+
+
+
+
+
+
+
 
 </pre><a id='backBottom' href='../aws-bedrock-agent-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
