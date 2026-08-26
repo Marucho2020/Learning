@@ -1,3 +1,615 @@
-<html><head><title>Lesson 36 == Lộ trình ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 36 -- Lộ trình -//</h1><pre># Lộ trình 100 ngày học AIP-C01 — Trọng tâm: Kiến trúc AI hiện đại & Agentic AI
+<html><head><title>Lesson 36 == AIP-C01  ===Continued Pre-training (Bedrock Custom Models) ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 36 -- AIP-C01  --=Continued Pre-training (Bedrock Custom Models) -//</h1><pre>
+# 1. Continued Pre-training thực chất là gì?
+
+	Continued Pre-training (CPT) là việc lấy một Foundation Model đã được pre-train sẵn, sau đó tiếp tục quá trình pre-training trên một tập dữ liệu mới, thường là dữ liệu lớn và mang tính domain-specific.
+
+
+	Có thể hình dung:
+
+		Internet / Books / Code / General Data
+					  ↓
+			   Foundation Model
+					  ↓
+			  Continued Pre-training
+					  ↓
+		Domain-specific Custom Model
+
+
+	Ví dụ:
+
+	Một model tổng quát đã biết:
+
+	"Amazon Web Services provides cloud computing services..."
+
+	Nhưng công ty có hàng triệu tài liệu về:
+		y khoa
+		luật Nhật Bản
+		tài liệu kỹ thuật nội bộ
+		codebase đặc thù
+		thuật ngữ chuyên ngành
+		tài liệu nghiên cứu
+
+	CPT cho phép model tiếp tục học distribution của domain đó.
+
+
+	Điểm quan trọng:
+		CPT không đơn giản là "dạy model trả lời một số câu hỏi". Nó tiếp tục thay đổi knowledge/representation của model thông qua quá trình language-model pre-training.
+
+
+
+
+
+# 2. Vì sao cần Continued Pre-training?
+
+	Foundation Model được pre-train trên dữ liệu rất rộng.
+
+
+	Ví dụ:
+		General FM
+		├── English
+		├── Japanese
+		├── Programming
+		├── Mathematics
+		├── Science
+		├── General knowledge
+		└── Internet text
+
+
+	Nhưng một doanh nghiệp có domain:
+
+		Company Domain
+		├── Automotive engineering
+		├── ECU specifications
+		├── CAN protocol
+		├── Internal terminology
+		├── Manufacturing documents
+		└── Japanese technical documents
+
+	Nếu domain này rất khác với dữ liệu general mà model đã học, chỉ prompt engineering hoặc vài-shot có thể không đủ.
+
+
+	CPT nhằm làm model:
+
+		General knowledge
+				+
+		Domain-specific corpus
+				↓
+		Better domain representation
+
+
+
+# 3. CPT khác Fine-tuning như thế nào?
+
+	Đây là phần quan trọng nhất để thi AIP-C01.
+|                                          | Continued Pre-training    | Fine-tuning                        |
+| ---------------------------------------- | ------------------------- | ---------------------------------- |
+| Mục tiêu                                 | Học thêm domain/corpus    | Học behavior/task                  |
+| Dữ liệu                                  | Thường rất lớn            | Thường nhỏ hơn                     |
+| Dữ liệu dạng                             | Raw/unlabeled text        | Task-specific examples             |
+| Input                                    | Domain corpus             | Input → desired output             |
+| Thay đổi knowledge/domain representation | **Có**                    | Có nhưng không phải mục tiêu chính |
+| Học style/behavior                       | Có thể                    | **Rất phù hợp**                    |
+| Học task cụ thể                          | Không phải mục tiêu chính | **Có**                             |
+| Chi phí                                  | Cao                       | Thường thấp hơn                    |
+| Training data volume                     | Large                     | Smaller                            |
+| Ví dụ                                    | Legal corpus              | Classification examples            |
+
+
+
+# Ví dụ cực dễ nhớ
+
+	CPT
+
+	Bạn đưa cho model:
+
+	10 triệu trang tài liệu luật Nhật Bản
+
+	Model tiếp tục học corpus đó.
+
+	→ Domain adaptation
+
+
+
+
+Fine-tuning
+
+Bạn đưa:
+	Question → Ideal Answer
+	Question → Ideal Answer
+	Question → Ideal Answer
+
+	→ Model học cách thực hiện task / behavior mong muốn.
+
+
+# 4. Một cách phân biệt rất mạnh
+
+	Hãy hỏi:
+		"Tôi muốn model học thêm DOMAIN hay học cách làm TASK?"
+
+
+	DOMAIN → Continued Pre-training
+		Medical terminology
+		Legal terminology
+		Scientific corpus
+		Company-specific language
+		Technical documents
+
+
+	TASK / BEHAVIOR → Fine-tuning
+		Classification
+		Summarization style
+		Structured output
+		Specific response format
+		Instruction following
+
+	Đây là mental model rất hữu ích khi gặp câu hỏi Professional-level.
+
+
+
+# 5. Continued Pre-training trong Amazon Bedrock
+
+	Trong Amazon Bedrock, Custom Model Import và custom model training/customization là những khu vực cần phân biệt rõ.
+	CPT có thể được dùng để tạo customized model từ foundation model được hỗ trợ, sử dụng dữ liệu domain-specific.
+
+	Architecture conceptually:
+	
+             Amazon S3
+                │
+                │ training corpus
+                ↓
+        Bedrock customization
+                │
+                ↓
+        Continued Pre-training
+                │
+                ↓
+        Custom Model
+                │
+                ↓
+        Model evaluation
+                │
+                ↓
+          Deployment
+
+	Trong production, S3 thường đóng vai trò storage cho training data/artifacts.
+
+
+
+# 6. Dữ liệu của CPT thường có đặc điểm gì?
+
+	CPT phù hợp với unlabeled domain corpus.
+	Ví dụ:
+	
+		S3
+		├── automotive/
+		│   ├── specification_001.txt
+		│   ├── specification_002.txt
+		│   ├── engineering_manual.txt
+		│   └── protocol_docs.txt
+
+	Không nhất thiết phải có:
+	
+		Question → Answer
+
+	vì mục tiêu không phải chủ yếu là học task.
+	Đây là điểm khác biệt quan trọng.
+
+
+# 7. CPT không phải RAG
+
+	Đây là một trap cực lớn.
+	Giả sử công ty có:
+		100 GB internal documents	
+
+
+	Có hai hướng:
+
+		RAG
+			User
+			 ↓
+			Query
+			 ↓
+			Embedding
+			 ↓
+			Vector DB
+			 ↓
+			Retrieve documents
+			 ↓
+			LLM
+			 ↓
+			Answer
+
+	Knowledge nằm bên ngoài model.
+
+
+		CPT
+			Domain corpus
+				  ↓
+			Training
+				  ↓
+			Model weights
+				  ↓
+			Custom model
+
+	Knowledge/domain patterns được incorporated into the model parameters.
+
+
+
+# So sánh
+
+|                      | RAG                       | Continued Pre-training                    |
+| -------------------- | ------------------------- | ----------------------------------------- |
+| Knowledge nằm ở đâu? | External knowledge base   | Model parameters                          |
+| Training model?      | Không                     | Có                                        |
+| Update knowledge     | Dễ                        | Phải train lại/tiếp tục train             |
+| Cost ban đầu         | Thấp hơn                  | Cao                                       |
+| Hallucination        | Có thể giảm nhờ grounding | Không tự động giải quyết                  |
+| Fresh information    | Rất phù hợp               | Không phù hợp                             |
+| Domain adaptation    | Hạn chế                   | **Mạnh**                                  |
+| Private docs         | Có thể dùng               | Có thể dùng nhưng cần governance rất chặt |
+
+
+	Câu hỏi quan trọng:
+		"Nếu tài liệu thay đổi hàng ngày thì CPT có phải lựa chọn tốt không?"
+
+	Thường là không.
+		RAG thường hợp lý hơn vì chỉ cần cập nhật knowledge base.
+
+
+
+# 8. CPT và RAG có thể kết hợp
+
+	Đây mới là architecture production mạnh.
+
+
+                ┌───────────────┐
+                │ Domain Corpus │
+                └───────┬───────┘
+                        │
+                  CPT training
+                        ↓
+                ┌───────────────┐
+                │ Custom Model  │
+                └───────┬───────┘
+                        │
+                        │
+User → Query → RAG → Retrieved Context
+                        │
+                        ↓
+                Custom Domain Model
+                        │
+                        ↓
+                     Answer
+
+		CPT giúp model hiểu domain tốt hơn.
+		RAG giúp model truy cập thông tin mới/grounded.
+		Hai thứ không loại trừ nhau.
+
+
+
+# 9. CPT và Prompt Engineering
+
+	Prompt Engineering:
+
+		Model weights
+			↓
+		KHÔNG thay đổi
+
+		Prompt
+			↓
+		Thay đổi behavior ở inference
+
+	CPT:
+	
+		Training data
+			↓
+		Training
+			↓
+		Model parameters thay đổi
+
+
+	Vì vậy:
+		Nếu yêu cầu là "không muốn retrain model, chỉ muốn cải thiện response" → Prompt Engineering.
+		Nếu yêu cầu là "model phải hấp thụ một domain corpus lớn" → CPT có thể phù hợp.
+
+
+
+
+# 10. CPT và Knowledge Base
+
+
+
+	Đây cũng là trap phổ biến.
+
+	Knowledge Base
+
+	Amazon Bedrock Knowledge Bases chủ yếu giải quyết:
+		"Model cần tìm thông tin ở đâu?"
+
+	CPT
+		Giải quyết:
+			"Model cần được thay đổi để hiểu domain như thế nào?"
+
+	Ví dụ:
+		Công ty có 5 triệu tài liệu kỹ thuật.
+
+	Nếu yêu cầu:
+		"Answer phải dựa trên tài liệu mới nhất."
+		→ RAG / Knowledge Base
+
+	Nếu yêu cầu:
+		"Model hiện tại hiểu rất kém thuật ngữ và language pattern của ngành này; muốn model internalize domain corpus."
+		→ Continued Pre-training
+
+
+
+
+
+# 11. Trade-off
+	CPT không phải "mạnh hơn nên tốt hơn".
+
+
+
+Nó có cái giá rất rõ.
+
+	Ưu điểm
+		Domain adaptation mạnh
+		Model có thể hiểu terminology tốt hơn
+		Có thể cải thiện performance trên domain-specific language
+		Giảm sự phụ thuộc vào prompt để ép model hiểu domain
+		Có thể tạo custom model phù hợp với business domain
+
+	Nhược điểm
+		Training cost
+		Data preparation cost
+		Training time
+		Evaluation phức tạp
+		Model lifecycle phức tạp hơn
+		Có nguy cơ catastrophic forgetting
+		Knowledge mới không được cập nhật realtime
+		Cần governance đối với training data
+
+
+
+
+
+
+
+# 12. Catastrophic Forgetting (thảm họa quên)
+
+	Đây là một concept Senior-level đáng nhớ.
+
+Model ban đầu:
+
+	General knowledge
+		████████████████████
+
+	CPT trên một domain quá mạnh:
+	
+		Domain knowledge
+		████████████████████████
+
+
+
+	Nếu training không tốt, model có thể:
+		Domain performance ↑
+		General capability ↓
+
+	Đó là một dạng catastrophic forgetting.
+
+
+# AWS exam có thể đưa scenario:
+	Sau customization, performance trên domain tăng nhưng performance trên general tasks giảm đáng kể.
+
+	Đừng chỉ kết luận:
+		"Training thêm nữa."
+
+	Phải nghĩ đến:
+		training data composition
+		hyperparameters
+		evaluation
+		balance giữa general và domain data
+		model selection
+		customization strategy
+
+
+
+
+# 13. Scenario kiểu AIP-C01
+
+
+	Scenario
+
+		Một công ty sản xuất ô tô có:
+			hàng chục triệu trang technical documents
+			terminology riêng
+			protocol nội bộ
+			model foundation hiện tại hiểu domain rất kém
+			muốn model thích nghi với domain
+			documents thay đổi hàng ngày
+
+		Architect cần thiết kế solution.
+
+
+	Câu trả lời tốt nhất thường không phải chỉ một service.
+
+	Có thể cần:
+		Continued Pre-training
+				+
+		RAG / Knowledge Base
+
+	Vì:
+		CPT → domain adaptation
+		RAG → current/fresh knowledge
+		Đây chính là kiểu reasoning mà Professional exam muốn kiểm tra.
+
+
+
+
+# 14. Các từ khóa cần nhận diện trong đề
+
+
+
+Nếu thấy:
+
+	Dấu hiệu CPT
+		domain-specific corpus
+		large unlabeled dataset
+		continue pre-training
+		domain adaptation
+		specialized domain
+		domain-specific language
+		terminology
+		additional pre-training
+		raw text corpus
+		large corpus
+		→ nghĩ đến Continued Pre-training.
+
+	Dấu hiệu Fine-tuning
+		labeled examples
+		task-specific
+		instruction examples
+		desired output
+		classification
+		formatting
+		behavior
+		task performance
+
+		→ nghĩ đến Fine-tuning.
+
+	Dấu hiệu RAG
+		latest information
+		frequently changing documents
+		grounding
+		citations
+		external knowledge
+		don't retrain
+		real-time knowledge
+
+	→ nghĩ đến RAG / Knowledge Base.
+
+
+
+# 15. Trap quan trọng nhất
+
+
+	Trap 1
+		"Có nhiều tài liệu nội bộ → dùng CPT."
+		Sai nếu tài liệu chỉ cần được truy xuất.
+		Nếu documents thường xuyên thay đổi:
+		→ RAG thường phù hợp hơn.
+
+
+
+	Trap 2
+	"Muốn model học domain → Fine-tuning."
+		Chưa chắc.
+		
+	Nếu đề nói:
+		massive domain corpus + unlabeled text + domain adaptation
+		→ CPT.
+
+
+
+	Trap 3
+		"CPT giúp model biết thông tin mới realtime."
+
+	Sai.
+		Model chỉ biết những gì được đưa vào training.
+
+
+
+
+	Trap 4
+		"CPT loại bỏ hallucination."
+
+	Sai.
+		CPT không phải grounding mechanism.
+
+	Muốn factual grounding:
+		→ RAG / Knowledge Base / retrieval architecture.
+
+
+
+	Trap 5
+		"CPT luôn tốt hơn RAG."
+		Sai hoàn toàn.
+		Đây là hai vấn đề khác nhau.
+
+	CPT = model adaptation
+	RAG = knowledge retrieval
+
+
+
+
+# 
+
+	AWS Professional-level thường không hỏi:
+	"What is Continued Pre-training?"
+	
+Mà sẽ hỏi kiểu:
+
+	Một enterprise có lượng lớn domain-specific unlabeled text. Foundation model hiện tại có performance kém trên domain đó. Công ty muốn model hiểu terminology và language patterns của domain tốt hơn. Dữ liệu không cần được truy xuất realtime. Giải pháp nào phù hợp nhất?
+	
+	
+	
+	Từ khóa quyết định:
+		large
+		unlabeled
+		domain-specific
+		language patterns
+		domain adaptation
+		not real-time
+
+	→ Continued Pre-training
+		
+	
+	
+#	17. Mental model để nhớ lâu
+	Hãy nhớ 4 tầng:	
+	
+	
+	                 WHAT IS THE PROBLEM?
+                         │
+        ┌────────────────┼────────────────┐
+        ↓                ↓                ↓
+   Need knowledge?   Need behavior?   Need domain?
+        │                │                │
+        ↓                ↓                ↓
+       RAG          Fine-tuning          CPT
+        │                │                │
+        ↓                ↓                ↓
+ External data      Task behavior     Domain adaptation
+	
+	
+Và một câu cực ngắn:
+	RAG = tìm kiến thức. Fine-tuning = học cách làm. CPT = học thêm domain.
+	Nếu nhớ được câu này, rất nhiều câu AIP-C01 sẽ trở nên đơn giản hơn.	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+
+
 
 </pre><a id='backBottom' href='../aws-bedrock-agent-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
