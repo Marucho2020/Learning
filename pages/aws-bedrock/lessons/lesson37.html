@@ -1,3 +1,736 @@
-<html><head><title>Lesson 37 == Lộ trình ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 37 -- Lộ trình -//</h1><pre># Lộ trình 100 ngày học AIP-C01 — Trọng tâm: Kiến trúc AI hiện đại & Agentic AI
+<html><head><title>Lesson 37 == AIP-C01  === LoRA / PEFT (Parameter-Efficient Fine-Tuning) ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 37 -- AIP-C01  --= LoRA / PEFT (Parameter-Efficient Fine-Tuning) -//</h1><pre>
+
+# Bản chất của PEFT
+	Efficient : có hiệu quả
+	
+	PEFT = Parameter-Efficient Fine-Tuning 
+
+	Ý tưởng rất đơn giản:
+		Không cập nhật toàn bộ hàng tỷ/thậm chí hàng trăm tỷ parameter của Foundation Model. Chỉ cập nhật một phần rất nhỏ parameter bổ sung hoặc một subset parameter.
+
+
+	Ví dụ model có:
+		70 tỷ parameters
+
+	Full fine-tuning:
+		70B parameters
+			↓
+		update gần như toàn bộ
+			↓
+		70B parameters cần tính gradient + optimizer state
+
+
+
+
+	PEFT:
+
+		70B parameters
+			  ↓
+			  🔒 Frozen
+			  ↓
+		Foundation Model
+
+		+ một lượng parameter nhỏ
+			  ↓
+			  ✏️ Train
+			  ↓
+		Adapter / LoRA
+
+		Model gốc không bị thay đổi.
+
+
+
+
+# 2. Tại sao cần PEFT?
+
+
+	Full fine-tuning rất đắt.
+	Khi training model, không chỉ cần lưu weights.
+	
+	Thông thường còn phải xử lý:
+		Model weights
+		+ Gradients
+		+ Optimizer states
+		+ Activations
+		+ GPU memory
+	Với model cực lớn, memory requirement tăng rất nhanh.
+	
+	Ví dụ tưởng tượng:
+		Foundation Model
+		70B parameters
+				│
+				├── Full Fine-Tuning
+				│       ↓
+				│    GPU cực lớn
+				│    Training đắt
+				│    Training lâu
+				│
+				└── PEFT
+						↓
+				  chỉ train adapter
+						↓
+				  rẻ hơn
+				  nhanh hơn
+				  ít memory hơn
+
+
+	Điểm mấu chốt:
+		PEFT không làm model “nhỏ đi”.
+		Nó làm quá trình customization/fine-tuning trở nên rẻ và nhẹ hơn.
+
+
+
+# 3. LoRA là gì?
+
+	LoRA = Low-Rank Adaptation.
+	Đây là một kỹ thuật PEFT rất phổ biến.
+
+	Ý tưởng quan trọng nhất:
+		Thay vì update trực tiếp một ma trận weight rất lớn, LoRA học một thay đổi nhỏ có cấu trúc low-rank.
+
+
+	Giả sử một layer có weight:
+			W
+
+
+	Full fine-tuning:
+		“W′=W+ΔW”
+
+	Trong full fine-tuning, ta phải học toàn bộ:
+		ΔW
+		
+	LoRA giả định rằng:
+		ΔW
+
+	có thể được xấp xỉ bằng hai ma trận nhỏ:
+		ΔW = B A
+
+
+	Do đó:
+		“W′=W+B A” 
+
+
+		W: weight gốc → freeze
+		\(A\): trainable
+		\(B\): trainable
+		\(BA\): tạo ra weight update
+		\(A,B\) có rank thấp
+
+
+
+
+# 4. "Low-Rank" nghĩa là gì?
+	Đây chính là phần cần hiểu bản chất.
+
+	Giả sử:
+
+
+		W∈R^(10000×10000)
+		
+	Nếu train trực tiếp:		
+		10,000 × 10,000
+		= 100,000,000 parameters		
+		
+	LoRA có thể chọn:
+
+		r = 8 
+
+	thay vì học toàn bộ matrix.
+		
+		A∈R^(8×10000)
+		B∈R^(10000×8)
+
+	= 160,000
+
+	So với:
+
+	100,000,000
+		thì cực kỳ nhỏ.
+		
+	Đây là lý do gọi là:
+		Parameter-Efficient
+
+
+# Có thể hình dung: 
+
+
+                 Foundation Model
+                ┌───────────────┐
+Input ─────────►│ W             │
+                │               │
+                │   🔒 Frozen   │
+                │               │
+                └───────┬───────┘
+                        │
+                        │ W(x)
+                        │
+                        ▼
+                     Output
+                        ▲
+                        │
+                ┌───────┴───────┐
+Input ─────────►│ LoRA Adapter  │
+                │   A → B       │
+                │   ✏️ Train    │
+                └───────────────┘
+
+
+		Output cuối cùng có thể được hiểu đơn giản là:
+			Wx+BAx
+
+
+		Tức là:
+			Original behavior
+				   +
+			small learned adaptation
+				   =
+			specialized behavior
+
+
+
+# 6. LoRA không train model gốc?
+
+	Đúng.
+		Đây là một keyword cực quan trọng.
+
+
+		Base Model
+			↓
+		Frozen 🔒
+
+		LoRA Adapter
+			↓
+		Trainable ✏️
+
+
+	Sau training:
+		Base Model
+			 +
+		LoRA Adapter
+			 ↓
+		Specialized Model behavior
+
+
+
+	Điều này dẫn đến một ưu điểm cực lớn.
+
+	Bạn có thể có:
+
+                    Base Model
+                        │
+          ┌─────────────┼─────────────┐
+          ↓             ↓             ↓
+      Adapter A      Adapter B      Adapter C
+      Legal           Finance        Medical
+
+
+
+	Không cần tạo 3 bản full model riêng biệt.
+
+
+
+# 7. Đây là điểm rất hay bị hỏi trong exam
+
+	Giả sử công ty có:
+		Một Foundation Model dùng chung cho 100 khách hàng.
+
+	Mỗi khách hàng cần behavior khác nhau.
+	
+	Không nhất thiết phải:
+		100 × Full Fine-Tuned Model
+
+
+	Có thể:
+
+                 Base Model
+                     │
+       ┌─────────────┼─────────────┐
+       ↓             ↓             ↓
+   Customer A     Customer B    Customer C
+   LoRA adapter   LoRA adapter  LoRA adapter
+   
+   
+   
+	  Điều này giúp giảm:
+			storage
+			training cost
+			training time
+			memory requirement
+			operational complexity 
+	   
+   
+   
+#    8. PEFT không chỉ có LoRA
+	   
+	 Đây là điểm cần phân biệt.
+	PEFT là một nhóm phương pháp.
+	LoRA là một phương pháp trong PEFT.  
+	   
+   
+PEFT
+│
+├── LoRA
+│
+├── Adapter-based methods
+│
+├── Prefix Tuning
+│
+├── Prompt Tuning
+│
+└── các phương pháp parameter-efficient khác   
+   
+   
+   
+	 Vì vậy:
+			PEFT ≠ LoRA
+		Mà:
+			LoRA ⊂ PEFT  
+   
+   
+   
+   
+#  9. LoRA vs Full Fine-Tuning  
+   
+| Tiêu chí                        | Full Fine-Tuning | LoRA / PEFT               |
+| ------------------------------- | ---------------- | ------------------------- |
+| Base model                      | Train            | Freeze                    |
+| Parameters update               | Rất nhiều        | Rất ít                    |
+| GPU memory                      | Cao              | Thấp hơn đáng kể          |
+| Training cost                   | Cao              | Thấp hơn                  |
+| Training time                   | Lâu              | Nhanh hơn                 |
+| Storage                         | Lớn              | Nhỏ                       |
+| Multiple customizations         | Tốn kém          | Rất thuận tiện            |
+| Model specialization            | Có thể rất sâu   | Tốt, nhưng phụ thuộc task |
+| Operational complexity          | Cao              | Thấp hơn                  |
+| Risk of catastrophic forgetting | Cao hơn          | Thường thấp hơn           |
+   
+   
+   
+ Nhưng đừng hiểu sai:
+	LoRA không phải lúc nào cũng tốt hơn.
+	Nếu cần thay đổi cực kỳ sâu vào toàn bộ model behavior, full fine-tuning có thể phù hợp hơn.  
+   
+   
+   
+#  10. LoRA vs Prompt Engineering vs RAG  
+   
+   
+|                                 | Prompt Engineering | RAG                       | LoRA                         |
+| ------------------------------- | ------------------ | ------------------------- | ---------------------------- |
+| Thay đổi weights?               | ❌                  | ❌                         | Chỉ adapter                  |
+| Training?                       | ❌                  | ❌                         | ✅                            |
+| Đưa knowledge mới vào?          | Có giới hạn        | **Rất phù hợp**           | Có thể                       |
+| Cập nhật knowledge thường xuyên | Không tốt          | **Tốt**                   | Không tốt                    |
+| Thay đổi behavior/style         | Tốt                | Không phải mục tiêu chính | **Tốt**                      |
+| Company documents               | Không tối ưu       | **RAG**                   | Không phải lựa chọn đầu tiên |
+| Domain-specific behavior        | Có thể             | Có thể hỗ trợ             | **Rất phù hợp**              |
+   
+   
+   
+   
+ Quy tắc exam:
+
+Nếu scenario nói:
+	"Company documents change frequently."
+
+	→ Nghĩ ngay:
+		RAG
+		Không phải LoRA. 
+		   
+		   
+		   
+	Nếu nói:
+		"The model must consistently follow a specific style, format, behavior, or domain-specific task."
+		→ Có thể nghĩ đến:
+		Fine-tuning / LoRA	   
+		   
+		   
+		   
+# 	11. Ví dụ thực tế   
+		   
+	Công ty có chatbot xử lý invoice.
+	
+	Model hiện tại:		   
+		Input:
+			Invoice PDF
+
+		Output:
+			JSON		   
+		   
+		   
+		   
+	Nhưng model thường output:	   
+		{
+		  "company": "...",
+		  "date": "...",
+		  "amount": "..."
+		}		   
+		   
+		   
+		   
+		   
+	Công ty muốn model luôn tuân theo format:	   
+		   
+		{
+		  "vendor_name": "...",
+		  "invoice_number": "...",
+		  "invoice_date": "...",
+		  "subtotal": 0,
+		  "tax": 0,
+		  "total": 0
+		}
+
+
+	Có hàng triệu examples.
+
+	Nếu chỉ prompt:
+		Always output this JSON format...
+		có thể không đủ ổn định.
+		Có thể dùng fine-tuning.
+
+	Nếu không muốn train toàn bộ model:
+		Base Model
+		   🔒
+		   +
+		LoRA Adapter
+		   ✏️
+		   ↓
+		Invoice-specialized model
+
+
+
+
+# 12. LoRA đặc biệt phù hợp khi nào?
+
+	## Scenario 1 — Limited GPU
+
+	Bạn có:
+		Limited GPU resources
+		→ PEFT/LoRA rất đáng cân nhắc.
+
+			   
+   
+	## Scenario 2 — Nhiều domain 
+   
+		 Base Model
+		│
+		├── Finance Adapter
+		├── Legal Adapter
+		├── Customer Support Adapter
+		└── Medical Adapter
+
+		→ LoRA rất hữu ích.  
+		   
+		   
+   
+  Scenario 3 — Cần customize nhiều model variants
+
+		Nếu mỗi business unit cần behavior khác nhau:
+			Base Model
+				+
+			small adapter
+
+		thường hiệu quả hơn tạo nhiều full fine-tuned copies. 
+		   
+   
+   
+   
+   
+#   13. LoRA có nhược điểm gì? 
+   
+	 Đừng học kiểu:
+		LoRA = tốt hơn mọi mặt.
+		Sai.  
+   
+   
+	 ① Có giới hạn về mức độ thay đổi
+		LoRA chỉ học một low-rank update.
+		Nếu task yêu cầu thay đổi rất sâu:  
+	   
+		LoRA
+		   ↓
+		may not have enough adaptation capacity
+
+		Có thể cần rank lớn hơn hoặc phương pháp customization khác.	   
+	   
+   
+   
+	② Rank càng lớn → càng nhiều parameters
+		LoRA có hyperparameter quan trọng:   
+	   
+	   
+	r = rank
+
+	Ví dụ:
+		r = 4
+		r = 8
+		r = 16
+		r = 64
+
+	Rank cao:
+		Capacity ↑
+		Parameters ↑
+		Memory ↑
+		Training cost ↑
+
+	Rank thấp:
+
+		Parameters ↓
+		Cost ↓
+		Capacity ↓
+
+	Đây là trade-off rất exam-worthy.   
+
+
+
+# 14. LoRA có "học knowledge" không?
+	Có thể, nhưng đây là cách tư duy dễ dẫn tới thiết kế sai.
+
+
+	Ví dụ:
+
+	Company policy:
+		2026 vacation policy
+
+	Policy thay đổi mỗi tháng.
+
+
+Không nên:
+	Fine-tune LoRA mỗi khi policy thay đổi
+	Đây là architecture tệ.
+
+
+	Nên:
+
+		User
+		 ↓
+		RAG
+		 ↓
+		Current company policy
+		 ↓
+		LLM
+
+	LoRA phù hợp hơn với:
+
+		behavior
+		style
+		task pattern
+		output format
+		domain adaptation
+
+	RAG phù hợp hơn với:
+
+		dynamic knowledge
+		private documents
+		frequently changing information
+
+
+
+
+
+# 15. LoRA và Catastrophic Forgetting
+
+	Đây là liên hệ rất đáng nhớ với chủ đề bạn vừa học.
+	
+	Catastrophic forgetting:
+		Model học knowledge/task mới và làm suy giảm khả năng đã học trước đó.
+
+
+	Full fine-tuning:
+		Base Model
+			 ↓
+		update toàn bộ weights
+			 ↓
+		Risk of forgetting ↑
+
+	LoRA:
+		Base Model
+			 🔒 frozen
+			 +
+		LoRA
+			 ✏️
+
+	Base model vẫn giữ nguyên.
+	Do đó LoRA giảm đáng kể nguy cơ phá hỏng base model.
+
+	Nhưng:
+
+	Không có nghĩa LoRA hoàn toàn miễn nhiễm catastrophic forgetting.
+	Adapter vẫn có thể overfit hoặc làm behavior của model thay đổi mạnh trong phạm vi adapter.
+
+
+
+
+
+# 16. Mapping sang AWS
+
+
+Trong hệ sinh thái AWS, cần phân biệt:
+
+	Amazon Bedrock
+
+		Dùng khi AWS cung cấp workflow customization được hỗ trợ cho model tương ứng.
+		Concept cần nhớ:
+
+			Foundation Model
+				   ↓
+			Model customization
+				   ↓
+			Customized model
+
+		Các khả năng customization phụ thuộc model/provider và Region.
+
+
+
+
+
+	Amazon SageMaker
+	
+		SageMaker phù hợp hơn khi bạn cần:
+			Custom training
+			Custom model
+			Custom training pipeline
+			PEFT / LoRA
+			Hyperparameter tuning
+			Model deployment
+		Đặc biệt khi bạn cần kiểm soát sâu:
+
+			Training code
+			Dataset
+			GPU
+			Framework
+			Hyperparameters
+			Training strategy
+			Deployment
+		thì SageMaker thường là lựa chọn mạnh hơn.
+
+
+
+
+# 17. Trap: "LoRA luôn dùng được trên mọi Bedrock model"
+
+	Sai.
+
+	Đừng suy luận:
+		"LoRA là kỹ thuật phổ biến nên Bedrock model nào cũng hỗ trợ."
+		Không.
+
+	AWS model customization capabilities phụ thuộc:
+		model
+		provider
+		Region
+		supported customization method
+		current AWS feature availability
+
+	Trong exam, phải đọc kỹ model/service constraint.
+
+
+
+# 18. Trap: "RAG và LoRA đều giải quyết knowledge update"
+
+
+	Sai về architecture.
+		Knowledge thay đổi liên tục
+				↓
+			   RAG
+
+	Trong khi:
+		Behavior/task specialization
+				↓
+			Fine-tuning
+				↓
+			  LoRA
+
+	Đây là một trong những distinction quan trọng nhất.
+
+
+
+
+# 19. Trap: "PEFT không cần training"
+
+	Sai.
+
+	PEFT vẫn là:
+
+		Fine-Tuning
+
+	Nó chỉ khác ở chỗ:
+
+		Fine-tuning
+			│
+			├── Full FT
+			│     → train nhiều/all parameters
+			│
+			└── PEFT
+				  → train subset/additional parameters
+
+
+
+
+# 20. Trap: "LoRA làm inference nhanh hơn rất nhiều"
+
+
+
+	Không nên kết luận như vậy.
+
+	LoRA chủ yếu tối ưu:
+		Training
+		Memory
+		Storage
+		Cost
+		Customization
+
+	Inference latency còn phụ thuộc:
+		model architecture
+		sequence length
+		batch size
+		hardware
+		serving architecture
+		adapter implementation
+		whether adapters are merged
+
+	Do đó:
+		PEFT ≠ automatically lower inference latency.
+
+
+
+# 22. Cây quyết định đi thi
+
+Cần cải thiện GenAI?
+        │
+        ├── Chỉ cần thay đổi cách trả lời?
+        │        ↓
+        │   Prompt Engineering
+        │
+        ├── Cần knowledge mới / private / dynamic?
+        │        ↓
+        │       RAG
+        │
+        └── Cần model học behavior/task/domain?
+                 │
+                 ├── Compute đủ + cần thay đổi sâu
+                 │        ↓
+                 │   Full Fine-Tuning
+                 │
+                 └── Compute hạn chế
+                          + muốn tiết kiệm
+                          + giữ base model
+                          ↓
+                       PEFT
+                          ↓
+                        LoRA
+
+
+# 🧠 23. Một câu để nhớ bản chất
+
+		LoRA không làm Foundation Model học lại từ đầu; nó gắn một "bộ não phụ nhỏ" vào model và chỉ train bộ phận nhỏ đó để chuyên môn hóa model.
+
+	Và câu dành cho exam:
+		RAG thay đổi information mà model nhìn thấy; LoRA thay đổi behavior mà model học được; Full Fine-Tuning thay đổi phần lớn chính model weights.
+
+
+
+日本語 — LoRA / PEFT
+
 
 </pre><a id='backBottom' href='../aws-bedrock-agent-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
