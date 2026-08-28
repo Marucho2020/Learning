@@ -1,3 +1,452 @@
-<html><head><title>Lesson 38 == Lộ trình ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 38 -- Lộ trình -//</h1><pre># Lộ trình 100 ngày học AIP-C01 — Trọng tâm: Kiến trúc AI hiện đại & Agentic AI
+<html><head><title>Lesson 38 == AIP-C01  === Distillation (Model Distillation trên Bedrock) ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 38 -- AIP-C01  --= Distillation (Model Distillation trên Bedrock) -//</h1><pre>
+Distillation : chưng cất 
+	Đây là một chủ đề rất đáng chú ý cho AIP-C01, vì nó liên quan trực tiếp đến bài toán model selection + cost + latency + production optimization.
+
+
+# 1. Bản chất của Model Distillation
+	Distillation = dùng một model lớn/giỏi (Teacher) để tạo dữ liệu/kiến thức hành vi cho một model nhỏ hơn (Student), sau đó huấn luyện Student để nó bắt chước Teacher.
+
+
+Ví dụ:
+
+             Teacher Model
+          (mạnh, lớn, đắt)
+                  │
+                  │ generate responses
+                  ▼
+          Training / Distillation Data
+                  │
+                  ▼
+             Student Model
+          (nhỏ, nhanh, rẻ)
+
+
+		Mục tiêu không phải là làm Student giống kiến trúc Teacher.
+	Mục tiêu là:
+	
+		Student đạt được chất lượng gần Teacher nhưng với inference cost và latency thấp hơn.
+
+
+	Ví dụ:
+		Teacher: Claude Sonnet
+		Student: một model nhỏ hơn
+		Ứng dụng có 10 triệu request/tháng
+
+	Nếu Student đạt 95% chất lượng nhưng inference rẻ hơn rất nhiều, production có thể chuyển phần lớn traffic sang Student.
+
+
+
+
+# 2. Vì sao cần Distillation?
+
+	Giả sử bạn xây chatbot cho doanh nghiệp.
+
+	Ban đầu:
+
+		User
+		  ↓
+		Large Foundation Model
+		  ↓
+		Excellent answer
+
+	Nhưng production xuất hiện vấn đề:
+		model lớn → expensive
+		latency cao
+		throughput thấp hơn
+		không cần năng lực reasoning quá mạnh cho những request đơn giản
+
+	Ví dụ 90% request chỉ là:
+
+	"Giờ làm việc của công ty?"
+	"Chính sách hoàn tiền là gì?"
+	"Làm sao reset password?"
+
+	Dùng model cực mạnh cho tất cả request là overkill.
+
+
+	Có thể làm:
+
+							 ┌── simple request ──→ Student
+			User → Router ───┤
+							 └── complex request ─→ Teacher
+
+	Hoặc sau khi distillation đủ tốt:
+		User
+		  ↓
+		Student Model
+		  ↓
+		95% request xử lý được
+
+	Teacher chỉ được dùng cho những trường hợp khó.
+
+
+
+
+# 3. Distillation khác Fine-tuning như thế nào?
+
+|                    | Fine-tuning                   | Distillation                         |
+| ------------------ | ----------------------------- | ------------------------------------ |
+| Mục tiêu           | Adapt model cho task/domain   | Làm model nhỏ bắt chước model lớn    |
+| Teacher bắt buộc?  | Không                         | Có                                   |
+| Dataset            | Human-labeled/domain data     | Thường có dữ liệu/outputs từ Teacher |
+| Student            | Có thể cùng hoặc khác model   | Thường là model nhỏ hơn              |
+| Mục tiêu chính     | Accuracy/domain adaptation    | Cost + latency + efficiency          |
+| Ví dụ              | Model học terminology ngành y | Small model học behavior của Claude  |
+| Production benefit | Specialized capability        | Cheaper/faster inference             |
+
+
+	Cách nhớ
+
+	Fine-tuning:
+		"Tôi muốn model học thêm cái này."
+
+	Distillation:
+		"Tôi muốn model nhỏ học cách model lớn trả lời."
+
+
+
+
+# 4. Distillation không phải là "copy knowledge" đơn giản
+
+	Đây là điểm cần hiểu sâu.
+	Teacher không đơn giản đưa toàn bộ internal knowledge sang Student.
+	
+	Thông thường Student học từ signals do Teacher cung cấp, chẳng hạn:
+		Input
+		  ↓
+		Teacher
+		  ↓
+		Teacher output / labels / signals
+		  ↓
+		Student training
+		
+			
+	Ví dụ:
+
+	Question:
+		"Customer muốn refund sau 45 ngày?"
+
+	Teacher:
+		"Không được refund vì policy chỉ cho phép trong 30 ngày."
+
+	Student được train để học pattern:
+		Input → appropriate answer
+
+	Do đó Student có thể bắt chước behavior của Teacher mà không cần chứa nguyên Teacher bên trong.		
+			
+			
+			
+			
+# 	5. Model Distillation trên Amazon Bedrock		
+		
+	Trong hệ sinh thái AWS, hãy nhìn Distillation như một model customization / optimization workflow.	
+		
+	Conceptually:	
+		
+             Amazon Bedrock
+                   │
+          Teacher Foundation Model
+                   │
+                   ▼
+        Distillation / generated data
+                   │
+                   ▼
+             Student Model
+                   │
+                   ▼
+              Production		
+		
+		
+	Điểm quan trọng cho AIP-C01:
+		Khi đề nói "reduce inference cost and latency while maintaining similar quality", hãy nghĩ ngay tới distillation.		
+
+
+
+# 6. Một scenario kiểu AIP-C01
+
+Giả sử:
+
+	Một công ty đang sử dụng foundation model lớn để xử lý customer-support requests. Model có accuracy rất tốt nhưng inference cost cao và latency không đáp ứng SLA. Công ty muốn giữ chất lượng tương tự nhưng sử dụng model nhỏ hơn.
+
+
+A. RAG
+
+	→ Sai hướng.
+	RAG giúp model truy cập external/private knowledge, không trực tiếp giải quyết việc model quá lớn và đắt.
+
+B. Fine-tuning Student model bằng dữ liệu của Teacher
+	→ Có thể đúng tùy wording.
+
+C. Model Distillation
+	→ Đáp án mạnh nhất nếu đề nhấn mạnh việc transfer behavior/capability từ large Teacher sang smaller Student nhằm giảm cost/latency.
+
+D. Tăng temperature
+	→ Hoàn toàn sai hướng.
+
+
+
+# 7. Trap cực kỳ quan trọng
+
+
+	Trap 1 — Distillation ≠ RAG
+
+		RAG:
+			Model
+			  +
+			External knowledge
+
+		Distillation:
+			Large Teacher
+				  ↓
+			Smaller Student
+
+
+	Nếu đề nói:
+		"The model lacks access to frequently changing company data"
+		→ nghĩ RAG.
+
+	Nếu đề nói:
+		"The model is too expensive/slow"
+		→ nghĩ distillation / smaller model / model selection.
+
+
+
+
+
+
+	Trap 2 — Distillation ≠ Prompt Engineering 
+
+		Prompt engineering:
+			Same model
+			+
+			Better prompt
+
+		Distillation:
+			Teacher
+			 ↓
+			Student training
+
+		Nếu chỉ thay đổi prompt mà không training Student → không phải distillation.
+
+
+
+
+	Trap 3 — Distillation không đảm bảo Student tốt bằng Teacher
+
+		Đây là trade-off thực tế.
+
+			Teacher:
+				Accuracy       ██████████ 100%
+				Cost           ██████████
+
+			Student:
+				Accuracy       █████████  ~90-98%
+				Cost           ███
+				Latency        ██
+
+		Bạn đang đổi một phần capability lấy efficiency.
+
+		Không có chuyện:
+			"Student nhỏ hơn nhưng luôn giữ 100% capability của Teacher."
+			Nếu requirement là maximum accuracy, Teacher có thể vẫn phù hợp.
+
+		Nếu requirement là:
+			"good enough + massive scale + low latency + low cost"
+			→ Student + distillation rất hấp dẫn.
+
+
+
+
+# 8. Khi nào KHÔNG nên dùng Distillation? 
+
+	Ví dụ:
+		Model cần trả lời những câu hỏi cực kỳ phức tạp, reasoning dài, thay đổi liên tục và yêu cầu accuracy tối đa.
+		Distillation có thể không phải lựa chọn tốt nhất.
+
+	Bởi vì:
+		Teacher capability
+			   ↓
+		Student approximation
+
+		Student có nguy cơ mất một phần capability.
+		Ngoài ra, nếu vấn đề thực sự là knowledge freshness, distillation không giải quyết bản chất.
+
+	Ví dụ:
+
+		Company policy thay đổi mỗi ngày
+		Không nên liên tục distill model chỉ để cập nhật policy.
+		→ RAG phù hợp hơn.
+
+
+
+
+
+# 9. Distillation + RAG có thể kết hợp
+	Đây mới là architecture production đáng chú ý.
+
+                 User
+                   │
+                   ▼
+              Application
+                   │
+                   ▼
+              RAG Retrieval
+                   │
+             relevant context
+                   │
+                   ▼
+             Student Model
+                   │
+                   ▼
+                Answer
+
+	Student được distill để:
+		hiểu task tốt
+		trả lời theo style của Teacher
+		giảm latency
+		giảm cost
+
+	RAG chịu trách nhiệm:
+		fresh knowledge
+		private company data
+		documents
+		policies
+
+	Hai thứ giải quyết hai vấn đề khác nhau.
+
+
+# 10. So sánh toàn bộ các kỹ thuật dễ nhầm
+
+
+| Kỹ thuật               | Giải quyết vấn đề gì?          | Key idea                          |
+| ---------------------- | ------------------------------ | --------------------------------- |
+| Prompt Engineering     | Model trả lời chưa tốt         | Better instruction                |
+| RAG                    | Thiếu external/fresh knowledge | Retrieve context                  |
+| Fine-tuning            | Model cần specialize           | Train model trên task/domain data |
+| Continued Pre-training | Model cần học domain/corpus    | Continue pre-training             |
+| Distillation           | Model quá lớn/đắt/chậm         | Teacher → smaller Student         |
+| Model Selection        | Chọn model phù hợp             | Choose right FM                   |
+| Quantization           | Model inference quá nặng       | Lower numerical precision         |
+
+
+
+
+Câu hỏi trong đầu khi đọc đề:
+
+	Thiếu knowledge?
+		   ↓
+		  RAG
+
+
+	Cần specialize?
+		   ↓
+		Fine-tuning
+
+
+	Cần học thêm domain/corpus lớn?
+		   ↓
+	Continued Pre-training
+
+
+	Model quá đắt / latency cao?
+		   ↓
+	Distillation / smaller model / optimization
+
+
+	Chỉ prompt chưa tốt?
+		   ↓
+	Prompt Engineering
+
+
+	Model inference quá nặng về compute/memory?
+		   ↓
+	Quantization
+
+
+
+# 11. Từ khóa AIP-C01 cần nhìn thấy là phản xạ
+
+
+	Nếu đề xuất hiện:
+		Teacher model
+		Student model
+		knowledge transfer
+		model compression
+		smaller model
+		reduce inference cost
+		reduce latency
+		maintain comparable quality
+		high-volume inference
+		production efficiency
+		large model → small model
+
+	→ DISTILLATION
+
+	Đặc biệt:
+		Teacher → Student + lower cost/latency
+		là pattern cực mạnh.
+
+
+
+
+
+# 12. Cách AWS ra đề
+
+
+	Professional-level thường không hỏi:
+		"What is model distillation?"
+
+	Mà hỏi scenario dài:
+		Công ty đang sử dụng một foundation model có chất lượng cao. Application nhận hàng triệu requests mỗi ngày. Chi phí inference tăng mạnh. Phần lớn requests thuộc một domain hẹp. Team muốn giảm inference cost và latency trong khi vẫn giữ output quality gần với model hiện tại. Giải pháp nào phù hợp nhất?
+
+	AWS đang kiểm tra bạn có phân biệt:
+		RAG
+		Fine-tuning
+		Distillation
+		Model selection
+		Prompt engineering
+
+	chứ không kiểm tra việc bạn thuộc definition.
+
+
+	Bẫy "nghe đúng"
+		"Fine-tune the largest model with more data."
+		Nghe rất hợp lý vì muốn accuracy cao.
+
+	Nhưng nếu requirement chính là:
+		lower inference cost + lower latency
+		thì đây có thể là đáp án sai.
+
+	Professional exam luôn bắt bạn nhìn constraint chính, không phải chọn giải pháp "mạnh nhất".
+
+
+
+
+
+# 13. Cách tư duy Senior khi gặp bài
+
+Đừng hỏi:
+	"Model nào mạnh nhất?"
+
+Hãy hỏi:
+
+                 Business requirement
+                         │
+        ┌────────────────┼────────────────┐
+        ↓                ↓                ↓
+     Accuracy          Cost            Latency
+        │                │                │
+        └────────────────┼────────────────┘
+                         ↓
+                  Model strategy
+				  
+				  
+
+	Production GenAI gần như luôn là bài toán:
+		Quality × Cost × Latency × Complexity
+		Distillation tồn tại vì bạn chấp nhận giảm một phần capability để đạt economics tốt hơn.
+
+
+
 
 </pre><a id='backBottom' href='../aws-bedrock-agent-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
