@@ -1,3 +1,443 @@
-<html><head><title>Lesson 39 == Lộ trình ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 39 -- Lộ trình -//</h1><pre># Lộ trình 100 ngày học AIP-C01 — Trọng tâm: Kiến trúc AI hiện đại & Agentic AI
+<html><head><title>Lesson 39 == AIP-C01  ===Domain Adaptation ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 39 -- AIP-C01  --=Domain Adaptation -//</h1><pre>
+# 1. Domain Adaptation là gì?
+
+Adaptation = thích ứng 
+
+	Domain Adaptation = làm cho một Foundation Model đã được train sẵn trở nên phù hợp với một “domain” cụ thể.
+
+	Model đã biết ngôn ngữ và kiến thức chung, nhưng chưa “nói đúng kiểu” của ngành/doanh nghiệp bạn. Domain Adaptation giúp model thích nghi với domain-specific data, terminology, style và patterns.
+
+
+	Model tổng quát:
+		“Please analyze this financial document.”
+		
+	Model có thể hiểu tiếng Anh tốt, nhưng không nhất thiết hiểu sâu các thuật ngữ như:
+		EBITDA
+		impairment
+		Basel III
+		NPL
+		DSCR
+		Japanese accounting terminology
+
+	Nếu doanh nghiệp có hàng triệu tài liệu tài chính đặc thù, ta có thể dùng domain-specific training/customization để model thích nghi tốt hơn.
+
+
+# 2. Domain ≠ Task
+	Đây là điểm rất dễ bị AWS gài.
+
+
+	## Domain
+		Lĩnh vực/ngữ cảnh mà model hoạt động.
+
+
+	Ví dụ:
+		Healthcare
+		Finance
+		Legal
+		Manufacturing
+		Insurance
+		Japanese banking
+
+
+
+	## Task
+
+		Công việc cụ thể model phải làm.
+
+		Ví dụ:
+			Classification
+			Summarization
+			Question answering
+			Information extraction
+			Translation
+
+
+	Ví dụ:
+		Domain = Insurance
+		Task = phân loại loại claim.
+
+	Hoặc:
+		Domain = Manufacturing
+		Task = dự đoán nguyên nhân lỗi máy.
+
+	Domain Adaptation không đồng nghĩa với Task Fine-tuning.
+
+
+
+
+
+# 3. Ví dụ cực kỳ dễ hiểu
+
+	Hãy tưởng tượng Claude là một kỹ sư rất giỏi.
+
+	Anh ta biết:
+		toán
+		lập trình
+		tiếng Anh
+		tiếng Nhật
+		kiến thức phổ thông
+
+	Nhưng bạn đưa anh ta vào một công ty sản xuất ô tô Nhật Bản.
+
+	Công ty sử dụng:
+		内製化, 稼働率, 不良率, 歩留まり, 金型, 設備保全...
+
+
+	Anh ta có thể hiểu một phần, nhưng chưa chắc hiểu cách công ty sử dụng những thuật ngữ này trong thực tế.
+
+	Bạn cho anh ta học một lượng lớn tài liệu nội bộ/domain-specific data.
+
+	Sau đó:
+		General-purpose model → Domain-adapted model
+		Đó chính là tư tưởng của Domain Adaptation.
+
+
+
+# 4. Domain Adaptation thường dùng dữ liệu gì?
+
+	Ví dụ công ty bảo hiểm Nhật:
+
+		General Model
+			  ↓
+		Domain-specific data
+			  ↓
+		────────────────────────
+		・保険約款
+		・過去の査定文書
+		・事故報告書
+		・商品仕様
+		・専門用語
+		・業界文書
+		────────────────────────
+			  ↓
+		Domain-adapted Model
+
+
+	Dữ liệu có thể giúp model học:
+
+	① Vocabulary
+		Các thuật ngữ chuyên ngành.
+
+	② Style
+		Cách viết đặc trưng của ngành.
+
+	③ Patterns
+		Các pattern thường xuất hiện trong domain.
+
+	④ Knowledge distribution
+		Những loại thông tin nào thường quan trọng trong domain.
+
+
+
+
+# 5. Domain Adaptation khác RAG như thế nào?
+
+Đây là bẫy cực quan trọng trong AIP-C01.
+
+|                      | Domain Adaptation               | RAG                              |
+| -------------------- | ------------------------------- | -------------------------------- |
+| Mục đích             | Thích nghi model với domain     | Cung cấp knowledge khi inference |
+| Knowledge nằm ở đâu? | Một phần được hấp thụ vào model | Nằm trong external data store    |
+| Cập nhật knowledge   | Phải retrain/re-customize       | Update documents/index           |
+| Chi phí              | Training/customization          | Retrieval/inference              |
+| Hallucination        | Không tự động giải quyết        | Có thể giảm nhờ grounding        |
+| Private data         | Cần đặc biệt chú ý              | Có thể giữ ngoài model           |
+| Phù hợp              | Domain language/pattern/style   | Dynamic/private knowledge        |
+
+
+
+	Ví dụ
+
+	Ngân hàng có:
+		10 triệu tài liệu nội bộ.
+
+	Nếu vấn đề là:
+		Model không biết các thuật ngữ/ngôn ngữ đặc thù của ngân hàng.
+		→ Domain Adaptation có thể phù hợp.
+
+	Nếu vấn đề là:
+		Nhân viên hỏi “Quy định mới nhất tháng 8/2026 là gì?”
+		→ RAG thường phù hợp hơn.
+		Vì regulation thay đổi.
+		Không thể mỗi lần regulation thay đổi lại train model.
+
+
+
+
+# 6. Domain Adaptation vs Fine-tuning
+
+
+	Hai khái niệm này có overlap, nhưng không nên coi là đồng nghĩa.
+	Fine-tuning là một kỹ thuật customization.
+	Domain Adaptation là mục tiêu/quá trình làm model thích nghi với domain.
+
+
+	Có thể dùng:
+
+		Domain Adaptation
+			   │
+			   ├── Continued Pre-training
+			   │
+			   ├── Fine-tuning
+			   │
+			   ├── PEFT / LoRA
+			   │
+			   └── Other customization techniques
+
+
+		Ví dụ:
+			Model đã được pre-trained trên Internet.
+
+		Bạn có một corpus cực lớn:
+			500 GB Japanese legal documents.
+
+		Bạn muốn model hiểu sâu:
+			法律用語 + legal writing + legal patterns
+
+		Một hướng là:
+			Continued Pre-training trên domain corpus.
+
+		Sau đó nếu muốn model thực hiện task cụ thể:
+			legal classification / extraction
+
+		có thể tiếp tục:
+			Fine-tuning.
+
+
+
+# 7. Domain Adaptation vs Continued Pre-training
+
+	Đây là chỗ cần phân biệt rất rõ.
+
+	## Continued Pre-training
+		Tiếp tục quá trình pre-training model trên domain-specific unlabeled corpus.
+
+	Ví dụ:
+		Base Model
+		   ↓
+		500GB legal documents
+		   ↓
+		Continued Pre-training
+		   ↓
+		Legal-domain adapted model
+
+	Model học:
+		“domain này nói chuyện như thế nào?”
+
+	chứ không nhất thiết học:
+		“hãy trả lời câu hỏi theo format X”.
+
+
+
+
+	## Fine-tuning 
+
+		Dữ liệu thường có dạng:
+			Input → Desired Output
+
+		Ví dụ:
+
+		Claim:
+			"事故による車両損傷..."
+
+				↓
+
+			Classification:
+			"Collision Damage"
+
+		Model học:
+			“Khi gặp input như thế này → hãy thực hiện task như thế này.”
+
+
+
+
+# 8. AWS Mapping
+
+	Trong AWS ecosystem, khi nói đến model customization/domain adaptation, cần nghĩ đến:
+
+
+	Amazon Bedrock
+		Có các khả năng customization/model training tùy model và Region, chẳng hạn:
+			Fine-tuning
+			Continued pre-training
+			Model customization
+			Custom Model Import
+
+
+
+	Amazon SageMaker
+
+	Phù hợp hơn khi bạn cần:
+		kiểm soát training pipeline
+		custom training
+		custom architecture
+		hyperparameter tuning
+		training infrastructure
+		MLOps
+		evaluation/deployment control
+
+
+	Mental model:
+	
+	
+		Amazon Bedrock
+			↓
+		Managed GenAI customization
+			↓
+		Ít infrastructure management
+
+
+
+
+		Amazon SageMaker
+			↓
+		Custom ML workflow
+			↓
+		Nhiều control hơn
+		
+		
+		
+		
+		
+		
+# 		9. Một scenario kiểu Professional exam
+
+
+	Scenario
+		Một công ty bảo hiểm Nhật Bản muốn xây dựng GenAI assistant.
+
+	Họ có:
+		20 năm tài liệu bảo hiểm
+		terminology rất đặc thù
+		hàng triệu policy documents
+		regulations thay đổi hàng tháng
+
+	Model hiện tại:
+		trả lời tiếng Nhật tốt
+		reasoning tốt
+		nhưng thường hiểu sai các thuật ngữ bảo hiểm đặc thù.
+
+	Team đưa ra 4 phương án:
+
+		A. Fine-tune model trên toàn bộ policy documents.
+
+		B. RAG với vector database chứa policy documents.
+
+		C. Domain adaptation/continued pre-training trên domain corpus + RAG cho knowledge thay đổi.
+
+		D. Tăng temperature để model generate đa dạng hơn.
+
+	Đáp án mạnh nhất: C
+		Tại sao?
+
+	Có hai vấn đề khác nhau:
+
+		Problem 1:
+			Model chưa hiểu domain
+					↓
+			Domain adaptation
+
+	và:
+
+		Problem 2:
+			Regulation / policy thay đổi
+				↓
+			RAG
+				
+		Đây chính là kiểu tư duy Professional-level:
+			Không cố dùng một kỹ thuật để giải quyết hai loại problem khác nhau.
+		
+		
+		
+		
+		
+# 11. Cách AWS ra đề	
+			
+	Khi gặp scenario dài, hãy tìm các keyword sau:	
+		
+| Keyword trong đề                | Nghĩ đến                    |
+| ------------------------------- | --------------------------- |
+| Domain-specific terminology     | Domain Adaptation           |
+| Industry-specific language      | Domain Adaptation           |
+| Specialized vocabulary          | Domain Adaptation           |
+| Large unlabeled corpus          | Continued Pre-training      |
+| Input/output examples           | Fine-tuning                 |
+| Frequently changing information | RAG                         |
+| Latest information              | RAG                         |
+| Grounded responses              | RAG                         |
+| Private documents               | RAG / security architecture |
+| Reduce training cost            | PEFT / RAG tùy mục tiêu     |
+| Custom model behavior           | Fine-tuning                 |
+| Custom training pipeline        | SageMaker                   |
+		
+		
+		
+	Công thức tư duy
+
+	Đừng hỏi:
+		“AWS service nào dùng cho cái này?”
+
+	Hãy hỏi trước:
+		“Problem thực sự nằm ở model hay nằm ở knowledge?”		
+			
+			
+		Model không hiểu domain
+				↓
+		Domain Adaptation
+				↓
+		Continued Pre-training / Fine-tuning
+		
+		
+
+		Model cần knowledge mới nhất
+				↓
+		RAG
+		
+		
+
+		Model cần thực hiện task cụ thể
+				↓
+		Fine-tuning
+		
+		
+
+		Model cần external actions
+				↓
+		Agent / Tool use			
+				
+				
+				
+				
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+
+
 
 </pre><a id='backBottom' href='../aws-bedrock-agent-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
