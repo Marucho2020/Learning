@@ -1,3 +1,591 @@
-<html><head><title>Lesson 40 == Lộ trình ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 40 -- Lộ trình -//</h1><pre># Lộ trình 100 ngày học AIP-C01 — Trọng tâm: Kiến trúc AI hiện đại & Agentic AI
+<html><head><title>Lesson 40 == AIP-C01  ===Evaluation Dataset cho fine-tuning ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 40 -- AIP-C01  --=Evaluation Dataset cho fine-tuning -//</h1><pre>				
+
+# 1. Bản chất
+
+	Evaluation Dataset = tập dữ liệu dùng để kiểm tra model đã fine-tuning tốt đến mức nào.
+
+	Nói đơn giản:
+		Training dataset dùng để dạy model. Evaluation dataset dùng để kiểm tra model có học đúng hay không.
+
+	Ví dụ:
+		Bạn muốn fine-tune model để biến:
+		Customer: Tôi muốn hủy đơn hàng.
+
+	thành:
+		Intent: CANCEL_ORDER
+		Bạn có 10.000 mẫu dữ liệu.
+
+
+
+	Có thể chia:
+		10.000 samples
+			 │
+			 ├── 8.000 → Training Dataset
+			 │              ↓
+			 │         Fine-tuning
+			 │
+			 └── 2.000 → Evaluation Dataset
+							↓
+					   Đánh giá model
+
+	Điểm quan trọng nhất:
+		Evaluation dataset phải đại diện cho dữ liệu model sẽ gặp trong thực tế, nhưng không nên đơn giản là copy các sample đã dùng để training.
+
+
+
+
+# 2. Tại sao không dùng Training Dataset để đánh giá?
+
+
+
+
+
+	Đây là cái bẫy rất hay gặp.
+
+	Giả sử:
+		Training:
+		A → 1
+		B → 2
+		C → 3
+
+	Fine-tune xong model trả lời:
+		A → 1 ✓
+		B → 2 ✓
+		C → 3 ✓
+
+	Bạn kết luận:
+		Model đạt 100%.
+
+
+
+	Model có thể chỉ đơn giản là memorization — ghi nhớ dữ liệu training.
+	Nó chưa chứng minh được khả năng generalization.
+	Evaluation dataset phải kiểm tra:
+
+		Dữ liệu chưa từng thấy
+				↓
+			  Model
+				↓
+		Có dự đoán đúng không?
+
+	Ví dụ:
+
+	Training:
+		"How do I cancel my order?"
+		→ CANCEL_ORDER
+
+	Evaluation:
+		"I want to stop the purchase I just made."
+		→ CANCEL_ORDER
+
+		Nếu model xử lý tốt câu thứ hai, ta có bằng chứng tốt hơn rằng model đã học pattern, chứ không chỉ nhớ câu training.
+
+
+
+
+# 3. Training / Validation / Evaluation khác nhau thế nào?
+
+	Đây là phần rất dễ nhầm.
+
+
+| Dataset                     | Mục đích                                                                 |
+| --------------------------- | ------------------------------------------------------------------------ |
+| **Training dataset**        | Dùng để train/fine-tune model                                            |
+| **Validation dataset**      | Theo dõi performance trong quá trình training / lựa chọn hyperparameters |
+| **Evaluation/Test dataset** | Đánh giá model cuối cùng trên dữ liệu chưa dùng để train                 |
+
+	Có thể hình dung:
+
+                Dataset
+                   │
+        ┌──────────┼──────────┐
+        ↓          ↓          ↓
+     Train      Validation    Test
+        │          │           │
+        ↓          ↓           ↓
+     Học model   Tune model   Đánh giá
+
+
+
+Nhưng cần chú ý
+	Trong các dịch vụ/model customization khác nhau, terminology và workflow có thể khác nhau.
+	Đừng học thuộc rằng mọi AWS fine-tuning job luôn bắt buộc có đúng 3 dataset này.
+	Đề Professional thường khai thác chính điểm này.
+
+
+
+# 4. Evaluation Dataset không phải "dữ liệu để fine-tune"
+
+
+
+	Ví dụ bạn có:
+		training.jsonl
+		evaluation.jsonl
+
+	Thì:
+		training.jsonl
+			↓
+		Fine-tuning
+
+		evaluation.jsonl
+			↓
+		Evaluation
+
+	Không được:
+
+		training.jsonl + evaluation.jsonl
+				↓
+		Fine-tuning
+
+	rồi sau đó lại dùng evaluation.jsonl để tuyên bố model tốt.
+	Đó là data leakage.
+
+
+
+
+
+
+# 5. Evaluation Dataset phải được thiết kế như thế nào?
+
+	Đây mới là phần Senior/Professional-level.
+	Một evaluation dataset tốt không chỉ là "random 10% dữ liệu".
+	Nó phải phản ánh production distribution.
+
+
+
+	Production có:
+		60% account questions
+		20% transaction questions
+		10% card problems
+		10% fraud/security
+
+	Nếu evaluation dataset lại có:
+		95% account questions
+		5% transaction questions
+		0% fraud
+		0% security
+
+	thì evaluation score cao cũng không có nhiều ý nghĩa.
+	
+	
+	
+# Một evaluation dataset tốt cần kiểm tra 	
+	
+	
+	
+	① Accuracy
+		Model có trả lời đúng không?
+
+	② Relevance
+		Có trả lời đúng vấn đề người dùng hỏi không?
+
+	③ Consistency
+		Các input tương tự có cho output nhất quán không?
+
+	④ Safety
+		Model có tạo ra nội dung không được phép không?
+
+	⑤ Robustness
+		Thay đổi cách diễn đạt có làm model fail không?
+
+	Ví dụ:
+		"Cancel my order"
+		"How can I stop my order?"
+		"I don't want this purchase anymore."
+		Model nên hiểu cùng một intent.
+			
+		
+		
+		
+	
+# 6. Evaluation Dataset và RAG Evaluation khác nhau	
+	Cực kỳ dễ nhầm trong AIP-C01.
+	
+	
+	## Fine-tuning
+		Bạn muốn thay đổi behavior/model capability.
+	
+	
+		Training dataset
+			  ↓
+		Fine-tuning
+			  ↓
+		Customized model
+			  ↓
+		Evaluation dataset
+			  ↓
+		Measure performance	
+	
+	
+	
+	
+	
+	## RAG
+
+		Bạn muốn kiểm tra:
+			
+			Question
+			   ↓
+			Retriever
+			   ↓
+			Retrieved documents
+			   ↓
+			LLM
+			   ↓
+			Answer			
+	
+	
+	
+	Evaluation có thể phải đánh giá riêng:
+
+		Retrieval quality
+		+
+		Generation quality	
+	
+	
+	Ví dụ model trả lời sai:
+		Question
+		   ↓
+		Retriever lấy sai document
+		   ↓
+		LLM
+		   ↓
+		Sai
+
+	Không thể kết luận ngay:
+		"LLM cần fine-tune."
+		Có thể retrieval mới là vấn đề.
+		Đây là kiểu reasoning AWS rất thích.	
+		
+	
+	
+	
+# 	7. Fine-tuning không đồng nghĩa Evaluation Dataset = Ground Truth tuyệt đối
+	
+	
+	Evaluation dataset thường có:
+		Input
+		Expected output
+
+	Ví dụ:
+		{
+		  "prompt": "What is the refund policy?",
+		  "completion": "Customers can request a refund within 30 days."
+		}
+
+	Sau đó model sinh:
+		Customers may request refunds within 30 days.
+		Hai câu không giống character-by-character nhưng semantic meaning giống nhau.
+		Do đó evaluation phải dùng metric phù hợp.	
+		
+		
+		
+		
+# 	8. Evaluation metric	
+		
+		
+| Task            | Metric có thể phù hợp                                      |
+| --------------- | ---------------------------------------------------------- |
+| Classification  | Accuracy, Precision, Recall, F1                            |
+| Text generation | BLEU, ROUGE                                                |
+| QA              | Exact Match, semantic similarity                           |
+| Summarization   | ROUGE / semantic evaluation                                |
+| LLM response    | Human evaluation / LLM-as-a-judge + task-specific criteria |
+| Safety          | Toxicity / policy violation rate                           |
+| RAG             | Retrieval metrics + answer quality                         |
+		
+		
+		
+		
+	Bẫy:
+		Accuracy cao ⇒ model tốt.
+		Không nhất thiết.
+
+	Ví dụ classification:
+		95% NORMAL
+		5% FRAUD
+
+	Model dự đoán tất cả:
+		NORMAL
+
+	Accuracy:
+		95%
+
+	Nhưng khả năng phát hiện fraud:
+		Recall = 0%
+
+	Trong hệ thống fraud detection, model này vô dụng.		
+			
+			
+		
+		
+# 	9. Evaluation Dataset và Overfitting	
+		
+	Một mục đích quan trọng của evaluation dataset là phát hiện:	
+		Overfitting
+		
+	Ví dụ:
+		Training score     = 99%
+		Evaluation score   = 72%
+
+	Khoảng cách lớn:
+		99% ───────── Training
+		 │
+		 │   ← generalization gap
+		 │
+		72% ───────── Evaluation
+
+	Có khả năng model đã học quá sát training data.
+
+	Đặc biệt với fine-tuning dataset nhỏ:
+
+		Dataset nhỏ
+			↓
+		Fine-tuning quá mạnh
+			↓
+		Model memorization
+			↓
+		Overfitting		
+			
+			
+			
+# 	10. Evaluation Dataset và Catastrophic Forgetting
+		
+	Liên quan trực tiếp đến phần bạn vừa học về Continued Pre-training / Fine-tuning.		
+		
+		
+	Ví dụ base model:
+		General knowledge = tốt
+
+	Bạn fine-tune mạnh trên:
+		Company-specific data
+
+	Model trở thành:
+		Company task       ↑
+		General capability ↓
+
+		Đây có thể là dấu hiệu catastrophic forgetting.
+
+	Vì vậy evaluation dataset có thể cần chứa hai nhóm:
+
+		A. Target task
+		   → model có học task mới không?
+
+		B. General capability / regression
+		   → model có làm mất capability cũ không?
+
+	Đây là tư duy production rất quan trọng.		
+			
+			
+		
+		
+# 11. Ví dụ Production Scenario — kiểu AIP-C01		
+		
+	Một công ty muốn fine-tune foundation model để tạo customer-support response.	
+		
+	Họ có:
+		100,000 historical conversations
+
+	Team A chia:
+		100% → training
+
+	Sau fine-tuning:
+		Model accuracy = 97%
+
+	Team A nói:
+		"Model production-ready."
+		❌ Sai
+
+	Vì họ đánh giá trên chính dữ liệu model đã học.		
+			
+		
+		
+		
+	Cách tốt hơn
+		100,000 conversations
+				│
+				├── 80,000 → Training
+				│
+				└── 20,000 → Evaluation		
+				
+			
+		
+		Evaluation data:
+			không được dùng trong training
+			phản ánh production traffic
+			có ground truth rõ ràng
+			bao phủ edge cases
+			kiểm tra safety
+			kiểm tra regression
+
+		Sau đó:
+			Fine-tuned model
+				   ↓
+			Evaluation dataset
+				   ↓
+			Metrics
+				   ↓
+			Compare with baseline
+
+		Quan trọng nhất là:
+
+			Fine-tuned model
+				   VS
+			Base model
+
+		Không chỉ hỏi:
+			"Fine-tuned model có tốt không?"
+
+		Mà phải hỏi:
+			"Fine-tuning có thực sự cải thiện task mà không làm degradation các capability quan trọng khác không?"
+
+		Đây mới là cách suy nghĩ Professional-level.		
+				
+				
+				
+				
+# 	12. Mapping AWS	
+		
+		
+| Thành phần                         | Vai trò                                                                           |
+| ---------------------------------- | --------------------------------------------------------------------------------- |
+| **Amazon Bedrock**                 | Foundation models, model customization/evaluation capabilities tùy model/workflow |
+| **Amazon SageMaker**               | Training/fine-tuning/customization và evaluation workflow                         |
+| **S3**                             | Lưu training/evaluation datasets                                                  |
+| **Bedrock Model Evaluation**       | Đánh giá foundation/custom model theo các loại evaluation phù hợp                 |
+| **Amazon Bedrock Knowledge Bases** | RAG; evaluation cần xem retrieval + generation                                    |
+| **CloudWatch**                     | Theo dõi production metrics/operational behavior                                  |
+| **Human evaluation**               | Đánh giá chất lượng subjective như helpfulness, correctness                       |
+		
+		
+		
+	Điểm cần nhớ:
+		Evaluation dataset là concept về ML evaluation, không phải một "AWS service".
+		S3 có thể chứa evaluation dataset, nhưng S3 không phải evaluation system.	
+		
+		
+		
+		
+# 	13. Các từ khóa AIP-C01 cần nhận diện	
+		
+		
+	Khi đề xuất hiện:
+		held-out dataset
+		unseen data
+		test dataset
+		evaluation dataset
+		generalization
+		overfitting
+		data leakage
+		baseline
+		regression
+		ground truth
+		validation
+		production distribution
+		representative dataset
+
+	hãy lập tức nghĩ đến:	
+		
+		
+		
+# 	14. Trap AWS hay gài	
+		
+		
+Trap 1
+	Use the training dataset to evaluate the fine-tuned model.
+	❌ Sai — không chứng minh generalization.		
+		
+	
+	
+Trap 2
+	Use the largest possible evaluation dataset.
+	❌ Không phải lúc nào cũng đúng.
+
+	Quan trọng hơn là:
+	representative + high-quality + unseen + statistically meaningful.	
+		
+		
+	
+	
+Trap 3
+		Randomly split data and assume evaluation is unbiased.
+
+		⚠️ Không luôn đúng.
+
+	Nếu dữ liệu có temporal leakage:
+
+		2025 conversations
+			  ↓
+		Training
+
+		2024 conversations
+			  ↓
+		Evaluation
+
+	có thể không phản ánh production.
+	Hoặc cùng một customer/conversation xuất hiện ở cả hai tập → leakage.	
+		
+		
+		
+	
+Trap 4
+	Higher evaluation score always means better model.
+		❌ Sai.
+
+	Phải xem:
+
+		metric
+		+
+		business objective
+		+
+		latency
+		+
+		cost
+		+
+		safety
+		+
+		regression	
+			
+		
+		
+	
+Trap 5
+	Fine-tuning improves model knowledge.
+		⚠️ Đây là cách diễn đạt dễ gây nhầm.
+
+	Fine-tuning chủ yếu nhằm điều chỉnh:
+		behavior
+		style
+		task performance
+		domain-specific patterns
+
+	Nếu mục tiêu là đưa fresh/private factual knowledge vào hệ thống, RAG thường phù hợp hơn.	
+		
+		
+		
+# 15. Câu chốt để nhớ	
+	
+	Hãy nhớ đúng một câu:
+		Training dataset = học. Evaluation dataset = thi.
+
+	Nhưng ở level Professional, nâng lên thành:
+		Evaluation dataset không chỉ đo model "đúng bao nhiêu %", mà phải chứng minh rằng model generalize tốt trên dữ liệu chưa thấy, phù hợp production, không bị leakage/overfitting, và fine-tuning không gây regression ở những capability quan trọng.	
+		
+		
+		
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 
 </pre><a id='backBottom' href='../aws-bedrock-agent-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
