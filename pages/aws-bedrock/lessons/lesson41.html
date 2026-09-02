@@ -1,3 +1,762 @@
-<html><head><title>Lesson 41 == Lộ trình ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 41 -- Lộ trình -//</h1><pre># Lộ trình 100 ngày học AIP-C01 — Trọng tâm: Kiến trúc AI hiện đại & Agentic AI
+<html><head><title>Lesson 41 == AIP-C01  ===	Model Versioning & Rollback strategy ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 41 -- AIP-C01  --=	Model Versioning & Rollback strategy -//</h1><pre>	
+
+# 1. Bản chất của Model Versioning
+
+Hiểu đơn giản:														hiện vật
+	Model Versioning = coi mỗi phiên bản model/configuration là một artifact bất biến để có thể theo dõi, so sánh và quay lại phiên bản trước.
+
+
+	Ví dụ:
+
+		Production
+		   │
+		   ▼
+		Model v1
+		   │
+		   │ deploy v2
+		   ▼
+		Model v2
+
+
+	Sau khi v2 có vấn đề:
+
+	Model v2 ❌
+	   │
+	   │ rollback
+	   ▼
+	Model v1 ✅
+
+	Điểm quan trọng:
+		Rollback không phải là “train lại model cũ”.
+		Model cũ phải được lưu/version hóa ngay từ đầu.
+
+
+# 2. Tại sao GenAI cần Model Versioning?
+	Trong ứng dụng GenAI, output không chỉ phụ thuộc vào model.
+
+
+Có thể có:
+	Model
+	+
+	Model version
+	+
+	System prompt
+	+
+	Inference parameters
+	+
+	RAG configuration
+	+
+	Embedding model
+	+
+	Knowledge base
+	+
+	Guardrail
+	+
+	Tool/Agent configuration
+
+
+	Ví dụ:
+		Claude v1
+		Temperature = 0.2
+		Prompt v3
+		Knowledge Base v5
+		Guardrail v2
+
+	Sau đó developer thay đổi:
+		Claude v2
+		Temperature = 0.7
+		Prompt v4
+		Knowledge Base v6
+
+
+
+Output thay đổi.
+	Nếu chỉ version hóa model mà không version hóa configuration, bạn có thể không tái tạo được production environment cũ.
+
+	Đây là tư duy reproducibility. (khả năng tái tạo)
+
+
+
+# 3. Model Version ≠ Model Alias ≠ Deployment
+
+
+| Khái niệm      | Bản chất                                      |
+| -------------- | --------------------------------------------- |
+| Model Version  | Phiên bản artifact/model                      |
+| Deployment     | Đưa một version vào môi trường chạy           |
+| Alias/Endpoint | Tên logical trỏ tới version đang được sử dụng |
+| Rollback       | Chuyển traffic về version ổn định trước       |
+
+
+	Ví dụ:
+		production-model
+			   │
+			   ▼
+			Model v2
+
+	Rollback:
+		production-model
+			   │
+			   ▼
+			Model v1
+
+	Application không nhất thiết phải thay đổi code.
+
+
+
+
+
+
+# 4. AWS Mapping
+	Trong hệ sinh thái AWS, cần nghĩ theo từng loại model.
+
+	Amazon Bedrock
+		Bedrock cung cấp foundation models được AWS/Model Provider quản lý.
+		Bạn thường không quản lý model artifact giống SageMaker.
+
+
+	Thay vào đó cần chú ý:
+		Model ID
+		Model version
+		Provisioned Throughput / inference configuration
+		inference parameters
+		Prompt Management
+		Agents
+		Knowledge Bases
+		Guardrails
+		Flows
+
+	Đặc biệt:
+		Không được mặc định rằng “Bedrock model ID” hoạt động giống một SageMaker endpoint version.
+
+
+
+
+# 5. SageMaker Model Versioning
+
+	Với custom model, SageMaker phù hợp hơn cho lifecycle control.
+	
+
+	Training
+	   │
+	   ▼
+	Model Artifact
+	   │
+	   ▼
+	SageMaker Model Registry
+	   │
+	   ├── v1
+	   ├── v2
+	   └── v3
+			  │
+			  ▼
+		   Approval
+			  │
+			  ▼
+		  Deployment
+
+
+
+	Ví dụ:
+
+	Model Registry
+		fraud-model
+		 ├── 1.0 → Production
+		 ├── 1.1 → Staging
+		 └── 1.2 → Pending
+
+	Nếu 1.2 fail:
+		Production
+			│
+			▼
+		   1.0
+
+
+
+# 6. Rollback Strategy quan trọng nhất (Strategy : chiến lược)
+
+Có 4 pattern cần nhớ.
+
+# Strategy 1 — Blue/Green
+	
+			
+		Đây là pattern rất quan trọng.
+
+						┌── Model v1
+		User ──► Traffic│
+						└── Model v2
+
+		Ví dụ:
+			Blue  = v1
+			Green = v2
+			v2 được deploy độc lập.
+
+		Sau đó kiểm tra:
+			v2
+			│
+			├── latency
+			├── error rate
+			├── accuracy
+			├── hallucination
+			└── safety
+
+		Nếu tốt:
+			100% → v2
+
+		Nếu xấu:
+			100% → v1
+			
+		Ưu điểm
+			rollback nhanh
+			giảm downtime
+			production version vẫn tồn tại
+			dễ kiểm thử trước khi chuyển traffic
+			
+		Nhược điểm
+			Tốn resource hơn vì phải duy trì hai version.	
+			
+			
+			
+	
+# 7. Canary Deployment
+
+	Canary không chuyển 100% traffic ngay.
+
+		
+	Ví dụ:
+		v1 = 95%
+		v2 = 5%
+
+	Sau một thời gian:
+		v1 = 80%
+		v2 = 20%
+
+	Sau đó:
+		v1 = 50%
+		v2 = 50%
+
+	Cuối cùng:
+		v2 = 100%
+
+	Nếu phát hiện:
+		Error ↑
+		Latency ↑
+		Quality ↓
+
+	thì:
+		v2 = 0%
+		v1 = 100%
+		Khi nào tốt?
+		Khi muốn giảm blast radius.
+
+	Ví dụ:
+		Model mới có thể ảnh hưởng đến 10 triệu request/ngày.
+
+	Không nên:
+
+		10 million requests
+			   ↓
+			  v2
+
+	Mà:
+		9.5M → v1
+		0.5M → v2
+
+	Nếu v2 có bug thì chỉ một phần traffic bị ảnh hưởng.
+		
+		
+	
+	
+# 8. A/B Testing
+
+	A/B testing khác Canary ở mục đích.
+
+
+
+	Canary
+
+	Mục tiêu:
+		Deployment safety
+		A/B Testing
+
+	Mục tiêu:
+		So sánh behavior/performance giữa hai version
+
+	Ví dụ:
+
+		Users A → v1
+		Users B → v2
+
+
+	| Metric            |    v1 |    v2 |
+	| ----------------- | ----: | ----: |
+	| Accuracy          |   88% |   91% |
+	| Latency           | 500ms | 650ms |
+	| Cost              |     $ |    $$ |
+	| User satisfaction |   4.1 |   4.4 |
+
+
+	v2 có accuracy cao hơn nhưng latency/cost cao hơn.
+
+	Khi đó decision không đơn giản là:
+		v2 tốt hơn.
+		Mà phải xét business requirements và trade-off.
+
+
+
+
+# 9. Rollback phải bao gồm cả Configuration
+
+
+	Đây là một trap cực mạnh.
+
+	Giả sử:
+	v1:
+		Model = Claude
+		Prompt = P1
+		Temperature = 0.2
+		RAG = KB1
+		Guardrail = G1
+
+	v2:
+		Model = Claude
+		Prompt = P2
+		Temperature = 0.7
+		RAG = KB2
+		Guardrail = G2
+
+	Nếu chỉ rollback:
+		Model v2 → Model v1
+
+	nhưng vẫn giữ:
+
+		Prompt P2
+		KB2
+		Guardrail G2
+
+	thì:
+		Bạn chưa thực sự rollback production state.
+
+	Production state nên được coi là:
+
+		Release =
+			Model
+		  + Prompt
+		  + Parameters
+		  + RAG
+		  + Guardrail
+		  + Application code
+
+
+
+# 10. GenAI đặc biệt khó rollback vì RAG
+	Đây là điểm Senior/Professional-level rất thích.
+
+
+
+	Giả sử:
+
+		Model v1
+			+
+		Knowledge Base v1
+
+	Sau đó:
+
+		Model v2
+			+
+		Knowledge Base v2
+		v2 gây hallucination.
+
+	Bạn rollback model:
+		Model v1
+
+	nhưng KB đã thay đổi:
+		KB v2
+
+	Output vẫn có thể khác.
+		Vì vậy cần version/control cả:
+
+		Model
+		Prompt
+		Embedding
+		Chunking strategy
+		Vector index
+		Documents
+		Retrieval parameters
+		Guardrail
+
+
+
+
+# 11. Embedding Model cũng phải version hóa 
+
+	Ví dụ:
+		Embedding v1
+			↓
+		Vector DB
+
+	sau đó đổi:
+		Embedding v2
+
+		Bạn không nên đơn giản đưa embedding v2 vào cùng index cũ nếu dimension/semantic space không tương thích.
+
+	Thường cần:
+
+		Documents
+			│
+			├── Embedding v1 → Index v1
+			│
+			└── Embedding v2 → Index v2
+
+	Sau đó test:
+		Retriever v1 + Model v1
+		Retriever v2 + Model v2
+
+	Đây chính là tư duy versioned RAG pipeline.
+
+
+
+
+# 12. Rollback trong Agentic AI
+
+	Agent còn phức tạp hơn.
+	
+	Một Agent release có thể gồm:
+
+		Foundation Model
+			  +
+		System Prompt
+			  +
+		Action Groups
+			  +
+		Lambda
+			  +
+		Knowledge Base
+			  +
+		Guardrail
+			  +
+		Agent configuration
+
+
+	Ví dụ:
+		Agent v3
+		 ├── Claude model v2
+		 ├── Prompt v5
+		 ├── Lambda v4
+		 ├── KB v3
+		 └── Guardrail v2
+
+	Nếu Agent v3 lỗi, rollback phải xác định release artifact nào cần quay lại, không chỉ model.
+
+
+# 13. Immutable Deployment
+
+Một nguyên tắc rất quan trọng:
+	Đừng sửa trực tiếp production version. Hãy tạo version mới.
+
+		Không tốt:
+			Production v1
+				↓
+			modify
+				↓
+			Production v1
+
+		Tốt:
+			Production v1
+				  │
+				  └── clone/change
+						  ↓
+					  Production v2
+
+		Lợi ích:
+			reproducibility
+			auditability
+			rollback
+			debugging
+			compliance
+
+
+
+# 14. CI/CD cho GenAI
+	Một pipeline production có thể là:
+
+		Developer
+			↓
+		Git
+			↓
+		Build
+			↓
+		Evaluation
+			↓
+		Register Model
+			↓
+		Staging
+			↓
+		Automated Evaluation
+			↓
+		Canary
+			↓
+		Production
+
+	Ví dụ evaluation:
+
+		Accuracy
+		Faithfulness
+		Relevance
+		Toxicity
+		Latency
+		Cost
+
+
+	Nếu fail:
+		Deployment blocked
+
+	Nếu pass:
+		Production
+
+
+	AWS services có thể liên quan:
+		Amazon SageMaker
+		SageMaker Model Registry
+		SageMaker Pipelines
+		Amazon Bedrock
+		Bedrock evaluations
+		AWS CodePipeline
+		AWS CodeBuild
+		AWS CloudWatch
+		AWS Lambda
+		AWS Step Functions
+
+
+# 15. Automated Rollback
+
+	Production không nên phụ thuộc hoàn toàn vào con người.
+	Ví dụ:
+
+		Deploy v2
+			↓
+		Canary 5%
+			↓
+		CloudWatch metrics
+			↓
+		Error rate > threshold?
+			   │
+		   ┌───┴───┐
+		  Yes      No
+		   │        │
+		Rollback   Continue
+		   │        │
+		 v1       25%
+
+
+	Ví dụ policy:
+
+		IF
+		  error_rate > 2%
+		OR
+		  p95_latency > 2 sec
+		OR
+		  safety_violation > threshold
+		THEN
+		  rollback
+
+
+	Với GenAI còn có thể thêm:
+
+		evaluation_score < threshold
+
+
+
+# 16. Nhưng có một vấn đề: Quality không phải lúc nào cũng đo realtime được
+	Đây là chỗ Professional-level bắt đầu khó.
+
+	Infrastructure metrics:
+	
+		CPU
+		Memory
+		Latency
+		5xx
+	dễ đo.
+	
+	GenAI quality:
+		Hallucination
+		Faithfulness
+		Helpfulness
+		Reasoning quality	
+
+	khó hơn.
+		Vì vậy một hệ thống production tốt thường kết hợp:
+
+			Operational Metrics
+					+
+			Model Evaluation
+					+
+			Business Metrics
+					+
+			Safety Metrics
+
+		Không nên chỉ rollback dựa trên HTTP 500.
+
+
+# Không nên chỉ rollback dựa trên HTTP 500.
+
+| Strategy   | Mục tiêu         | Rollback   | Cost       | Blast Radius |
+| ---------- | ---------------- | ---------- | ---------- | ------------ |
+| Blue/Green | Safe deployment  | Rất nhanh  | Cao        | Thấp         |
+| Canary     | Gradual rollout  | Rất nhanh  | Trung bình | Rất thấp     |
+| A/B        | So sánh version  | Có         | Trung bình | Có kiểm soát |
+| Big Bang   | Deploy ngay 100% | Khó/rủi ro | Thấp       | Rất cao      |
+
+
+
+	Nếu đề hỏi:
+		Production system, zero/minimal downtime, ability to quickly revert.
+
+	Thường nghĩ:
+		Blue/Green
+
+	Nếu đề nhấn mạnh:
+		Gradually expose users and minimize impact if new model is defective.
+
+	Nghĩ:
+		Canary
+
+	Nếu đề nhấn mạnh:
+		Compare user behavior/business performance between two models.
+
+	Nghĩ:
+		A/B testing
+
+
+
+# 18. AWS Exam Trap 
+
+
+
+Trap 1
+	“Rollback model bằng cách retrain model cũ.”
+	❌ Sai.
+	Rollback cần version artifact đã tồn tại.
+
+Trap 2
+	“Chỉ cần version model.”
+	❌ Không đủ đối với GenAI production.
+	
+	Cần xem:
+		Model
+		Prompt
+		Parameters
+		RAG
+		Embedding
+		Guardrail
+		Tools
+		Application
+		
+		
+	Trap 3
+
+		“Canary = A/B testing.”
+		❌ Không giống nhau.
+
+		Canary → deployment safety
+		A/B     → comparison/experimentation
+
+
+	Trap 4
+		“Blue/Green luôn rẻ nhất.”
+		❌ Sai.
+		Blue/Green thường yêu cầu duy trì environment/version song song.
+
+
+	Trap 5
+		“Rollback model là rollback toàn bộ GenAI system.”
+		❌ Sai.
+		RAG, prompt, guardrail, Lambda, tool configuration... có thể vẫn ở version mới.
+
+
+	Trap 6
+		“Model mới accuracy cao hơn → deploy ngay.”
+		❌ Đây là bẫy.
+		Phải xét:
+			Accuracy
+			Latency
+			Cost
+			Safety
+			Reliability
+			Business KPI
+
+	Một model accuracy tăng 2% nhưng cost tăng 5× và latency tăng 3× có thể không phải lựa chọn tốt hơn.
+
+
+Keyword trong đề
+
+
+| Keyword trong đề              | Nghĩ ngay                          |
+| ----------------------------- | ---------------------------------- |
+| gradually release             | Canary                             |
+| limited percentage of traffic | Canary                             |
+| minimize blast radius         | Canary                             |
+| instant/quick rollback        | Blue/Green / versioned deployment  |
+| two environments              | Blue/Green                         |
+| compare user groups           | A/B                                |
+| experiment                    | A/B                                |
+| immutable artifact            | Versioning                         |
+| reproducibility               | Versioning                         |
+| automated rollback            | Monitoring + deployment automation |
+| model quality degradation     | Evaluation                         |
+| zero/minimal downtime         | Blue/Green                         |
+
+
+
+# 21. Mental Model cần nhớ
+
+             GENAI RELEASE
+                  │
+       ┌──────────┼──────────┐
+       ▼          ▼          ▼
+     Model      Prompt       RAG
+       │          │          │
+       └──────────┼──────────┘
+                  ▼
+              Version
+                  │
+                  ▼
+              Staging
+                  │
+                  ▼
+          Evaluation / Test
+                  │
+                  ▼
+          Canary / Blue-Green
+                  │
+                  ▼
+             Production
+                  │
+                  ▼
+             Monitoring
+                  │
+          ┌───────┴───────┐
+          ▼               ▼
+        PASS             FAIL
+          │               │
+          ▼               ▼
+     Full rollout      Rollback
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 </pre><a id='backBottom' href='../aws-bedrock-agent-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
