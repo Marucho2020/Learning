@@ -1,3 +1,969 @@
-<html><head><title>Lesson 42 == Lộ trình ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 42 -- Lộ trình -//</h1><pre># Lộ trình 100 ngày học AIP-C01 — Trọng tâm: Kiến trúc AI hiện đại & Agentic AI
+<html><head><title>Lesson 42 == AIP-C01  === RAG (Retrieval Augmented Generation) — kiến trúc tổng thể ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 42 -- AIP-C01  --= RAG (Retrieval Augmented Generation) — kiến trúc tổng thể -//</h1><pre>
+Điểm cốt lõi phải hiểu là:
+	RAG không phải một model. RAG là một kiến trúc kết hợp Retrieval + Augmentation + Generation để LLM trả lời dựa trên dữ liệu bên ngoài model.
+
+	Augmentation : tăng cường
+	Generation  : thế hệ
+
+
+
+# 1. Bản chất của RAG
+
+	Một LLM thông thường:
+		User
+		  │
+		  ▼
+		Prompt ─────► LLM ─────► Answer
+
+
+	LLM chỉ biết những gì đã được học trong quá trình training.
+
+
+	Ví dụ công ty có:
+		HR_Policy_2026.pdf
+		Employee_Handbook.pdf
+		Salary_Rules.xlsx
+		Internal_FAQ.docx
+
+	Claude không tự nhiên biết nội dung những file này.
+
+	Ta xây:
+
+                    ┌──────────────────┐
+                    │ Internal Data    │
+                    │ PDF / DOCX / DB  │
+                    │ Excel / HTML     │
+                    └────────┬─────────┘
+                             │
+                       Ingestion
+                             │
+                             ▼
+                    ┌──────────────────┐
+                    │ Chunking         │
+                    │ Embedding        │
+                    └────────┬─────────┘
+                             │
+                             ▼
+                    ┌──────────────────┐
+                    │ Vector Store     │
+                    │ OpenSearch etc.  │
+                    └────────┬─────────┘
+                             │
+User Question ───────► Retrieval
+                             │
+                             ▼
+                    Relevant Context
+                             │
+                             ▼
+                    ┌──────────────────┐
+                    │      LLM         │
+                    │   Generation     │
+                    └────────┬─────────┘
+                             │
+                             ▼
+                           Answer
+
+
+	Đây chính là RAG.
+
+# 2. Ba thành phần: Retrieval → Augmented → Generation
+
+	Tên RAG không phải viết cho đẹp.
+
+	##	R — Retrieval
+		Tìm những thông tin liên quan đến câu hỏi.
+
+
+
+		Ví dụ:
+			「育児休業中の給与はどうなりますか？」
+
+		Hệ thống không đưa toàn bộ 5.000 trang tài liệu cho LLM.
+
+
+		Nó tìm ra:
+
+			Chunk 127:
+			育児休業期間中の基本給与は支給されません。
+
+			Chunk 241:
+			育児休業給付金については...
+
+
+
+	## A — Augmented
+	
+		Lấy kết quả Retrieval rồi nhúng nó vào context/prompt gửi cho LLM.
+
+	Ví dụ:
+		System:
+		You are an HR assistant.
+
+		Retrieved Context:
+		[Document 127]
+		育児休業期間中の基本給与は支給されません。
+
+		[Document 241]
+		育児休業給付金については...
+
+		User:
+		育児休業中の給与はどうなりますか？
+
+	LLM lúc này không cần “nhớ” chính sách.
+	Nó đọc context được retrieve.
+
+
+
+
+	## G — Generation 
+
+
+	LLM sử dụng:
+
+		User Question
+			   +
+		Retrieved Context
+			   ↓
+			  LLM
+			   ↓
+		Generated Answer
+
+	Ví dụ:
+		育児休業期間中は基本給与は支給されません。ただし、一定の条件を満たす場合は育児休業給付金を受給できる可能性があります。
+
+
+# 3. Kiến trúc RAG hoàn chỉnh
+
+	Professional-level nên nhìn RAG thành 2 pipeline khác nhau:
+
+                 RAG SYSTEM
+                     │
+          ┌──────────┴──────────┐
+          │                     │
+          ▼                     ▼
+   OFFLINE / INGESTION     ONLINE / QUERY
+      PIPELINE               PIPELINE
+          │                     │
+          ▼                     ▼
+     Documents              User Query
+          │                     │
+       Parsing               Embedding
+          │                     │
+      Chunking                  │
+          │                     ▼
+     Embedding             Retrieval
+          │                     │
+          ▼                     ▼
+    Vector Store          Retrieved Chunks
+                                │
+                                ▼
+                         Prompt Augmentation
+                                │
+                                ▼
+                              LLM
+                                │
+                                ▼
+                             Answer
+							 
+							 
+							 
+Đây là mental model rất quan trọng.
+	Nhiều câu AIP-C01 sẽ không hỏi “RAG là gì” mà hỏi:
+		Tại sao hệ thống trả lời sai sau khi tài liệu được cập nhật?
+		
+	Lúc đó phải nghĩ đến ingestion pipeline, không phải chỉ nhìn vào LLM.							 
+							 
+	ingestion : nuốt vào						 
+							 
+							 
+							 
+							 
+							 
+#	4. Offline / Ingestion Pipeline					 
+							 
+	Đây là pipeline biến dữ liệu thô thành dữ liệu mà hệ thống có thể retrieval.						 
+				
+
+Documents
+    │
+    ▼
+Data Source
+    │
+    ▼
+Parsing
+    │
+    ▼
+Cleaning
+    │
+    ▼
+Chunking
+    │
+    ▼
+Embedding Model
+    │
+    ▼
+Vector Embeddings
+    │
+    ▼
+Vector Database
+
+
+
+
+# Step 1 — Data Source
+
+
+Ví dụ:
+	Amazon S3
+	├── HR/
+	├── Finance/
+	├── Legal/
+	└── Engineering/
+
+AWS:
+	Amazon S3
+	databases
+	enterprise applications
+	APIs
+	file systems
+
+Trong Bedrock Knowledge Bases, S3 là một data source phổ biến.
+
+
+
+
+# 5. Step 2 — Parsing
+				
+								 
+	Ví dụ PDF:
+		employee_policy.pdf
+
+	Không thể đơn giản coi PDF là một chuỗi text sạch.
+
+	Có thể chứa:
+		Text
+		Tables
+		Headers
+		Footers
+		Images
+		Columns
+
+	Do đó phải extract nội dung.
+
+	Đây là lý do document parsing có ảnh hưởng trực tiếp đến chất lượng RAG.							 
+								 
+								 
+							 
+							 
+
+							 
+# 6. Step 3 — Chunking
+
+	Đây là một trong những điểm hay bị đánh lừa trong exam.
+
+	Giả sử tài liệu:
+		10,000 tokens
+		Không nên embedding cả tài liệu thành một vector.
+
+	Thay vào đó:
+
+		Document
+		   │
+		   ├── Chunk 1
+		   ├── Chunk 2
+		   ├── Chunk 3
+		   ├── ...
+		   └── Chunk 100
+
+	Ví dụ:
+
+		Chunk size = 500 tokens
+		Overlap = 50 tokens
+		
+		
+		
+		
+	Tại sao cần chunking?
+
+	Nếu chunk quá lớn:
+
+	Chunk
+		[irrelevant A]
+		[irrelevant B]
+		[important information]
+		[irrelevant C]
+		[irrelevant D]
+
+	Retrieval có thể lấy rất nhiều thông tin thừa.
+
+	Nếu chunk quá nhỏ:
+
+		Chunk 1: "Employees are eligible..."
+		Chunk 2: "after completing..."
+		Chunk 3: "12 months of service."
+
+	Ý nghĩa bị chia cắt.
+	=> Retrieval có thể lấy Chunk 1 nhưng bỏ Chunk 2 và 3.		
+			
+		
+		
+		
+# 	7. Step 4 — Embedding	
+		
+		
+		
+	Embedding model chuyển text thành vector.
+
+	Ví dụ:
+		"How much is parental leave salary?"
+					 │
+					 ▼
+			   Embedding Model
+					 │
+					 ▼
+		[0.12, -0.44, 0.82, ..., 0.31]
+
+	Một câu hỏi khác:
+		"What happens to salary during childcare leave?"
+
+	có thể tạo vector gần với vector của chunk liên quan.		
+			
+			
+			
+Bản chất
+	Embedding không lưu “ý nghĩa” theo kiểu database thông thường.
+	Nó tạo ra vector representation để đo semantic similarity. (semantic ngữ nghĩa, similarity giống nhau)
+
+	Ví dụ:
+
+		Query vector
+			 │
+			 │ similarity
+			 ▼
+		┌────────────────────────────┐
+		│ Chunk A       similarity .91│
+		│ Chunk B       similarity .84│
+		│ Chunk C       similarity .32│
+		│ Chunk D       similarity .18│
+		└────────────────────────────┘
+
+	Retrieval chọn:
+		A
+		B		
+				
+			
+
+# 8. Step 5 — Vector Store 
+
+	Vector được lưu trong vector database/index.
+	AWS ecosystem thường gặp:
+
+
+	| Option                              | Vai trò                                          |
+	| ----------------------------------- | ------------------------------------------------ |
+	| Amazon OpenSearch Service           | Vector search                                    |
+	| Amazon Aurora PostgreSQL + pgvector | Vector search                                    |
+	| Amazon Neptune Analytics            | Graph/vector-related use cases                   |
+	| Bedrock Knowledge Bases             | Managed RAG abstraction                          |
+	| S3 Vectors                          | Vector storage/search option trong AWS ecosystem |
+
+
+
+	Đối với AIP-C01, cần đặc biệt phân biệt:
+		Bedrock Knowledge Bases
+				≠
+		Vector Database
+
+	Knowledge Bases là managed RAG capability.
+	Nó có thể sử dụng vector store phía dưới.
+
+
+
+
+
+# 9. Online Query Pipeline
+
+
+	Khi user hỏi:
+		"育児休業中の給与は？"
+
+	pipeline chạy:
+		User Query
+			│
+			▼
+		Query Processing
+			│
+			▼
+		Query Embedding
+			│
+			▼
+		Vector Search
+			│
+			▼
+		Top-K Results
+			│
+			▼
+		Filtering / Reranking
+			│
+			▼
+		Context
+			│
+			▼
+		Prompt
+			│
+			▼
+		Foundation Model
+			│
+			▼
+		Answer
+				
+			
+# 	10. Retrieval không đơn giản chỉ là Vector Search	
+
+
+	Đây là điểm rất quan trọng.
+
+	Có:
+
+	Semantic / Vector Search
+
+	Tìm theo ý nghĩa.
+		"childcare leave salary"
+
+	có thể match:
+		"compensation during parental leave"
+
+
+
+
+
+	## Keyword Search
+		Tìm exact terms.
+
+		Ví dụ:
+			"EMP-2026-001"
+
+		Vector search đôi khi không phải lựa chọn tốt nhất cho mã tài liệu.
+
+
+
+
+
+	## Hybrid Search
+		Kết hợp:
+			Vector Search
+				  +
+			Keyword Search
+				  ↓
+			Better Retrieval
+
+		Đây là một pattern rất thực tế.
+
+		Ví dụ:
+
+		Query:
+			"Policy EMP-2026-001 for parental leave"
+
+			Semantic search
+					+
+			Keyword search
+					↓
+			Combined ranking
+
+
+
+
+
+
+
+# 11. Top-K càng lớn không có nghĩa càng tốt
+
+
+
+	Đây là trap kinh điển.
+
+	Nhiều người nghĩ:
+		K càng lớn → nhiều context → accuracy càng cao.
+		Không nhất thiết.
+
+	Ví dụ:
+
+	K = 3
+
+	Context:
+
+		Relevant
+		Relevant
+		Relevant
+
+	rất tốt.
+
+	Nhưng:
+
+	K = 20
+
+	có thể thành:
+
+		Relevant
+		Relevant
+		Irrelevant
+		Irrelevant
+		Irrelevant
+	...
+
+	Kết quả:
+
+		tăng token
+		tăng latency
+		tăng cost
+		tăng noise
+		có thể làm LLM confused (bối rối)
+
+	=> Retrieval quality quan trọng hơn việc lấy thật nhiều documents.
+
+
+
+
+# 13. Reranking 
+
+	Một kiến trúc tốt có thể:
+
+		Vector Search
+			 │
+			 ▼
+		Top 50
+			 │
+			 ▼
+		Reranker
+			 │
+			 ▼
+		Top 5
+			 │
+			 ▼
+		LLM
+
+	Tại sao?
+		Vector search có thể nhanh nhưng chưa chắc ranking hoàn hảo.
+
+	Reranker đánh giá:
+		Query ↔ Candidate Document
+		chi tiết hơn.
+
+	Trade-off:
+		+ Accuracy
+		- Latency
+		- Cost
+
+
+
+# 14. Metadata Filtering
+
+
+	Đây là cực kỳ quan trọng trong production.
+
+	Ví dụ database có:
+		department = HR
+		department = Finance
+		department = Engineering
+
+		User thuộc HR.
+
+	Không nên chỉ:
+
+		Vector Search
+
+	mà nên:
+		User Query
+			│
+			▼
+		Metadata Filter
+		department = HR
+			│
+			▼
+		Vector Search
+
+	Hoặc:
+		Vector Search
+			 +
+		Metadata filtering
+
+
+
+
+		Tại sao?
+			Không chỉ vì accuracy.
+
+		Mà còn vì:
+			Security / data isolation.
+
+		Ví dụ:
+			Employee A
+				↓
+			HR documents only
+
+			Finance Manager
+				↓
+			Finance documents
+
+			Không được để retrieval trả về tài liệu mà user không có quyền đọc.
+
+		Trap:
+			“LLM được Guardrails bảo vệ nên dữ liệu nội bộ không thể leak.”
+
+		Sai.
+			Guardrails không thay thế authorization.
+			Phải kiểm soát access ở tầng data/retrieval/application.
+
+
+
+
+
+# 15. Prompt Augmentation
+
+	Sau retrieval:
+
+	Query:
+		What is the parental leave salary?
+
+	Retrieved Context:
+
+	[Doc A]
+		Employees on parental leave do not receive base salary...
+
+	[Doc B]
+		Eligible employees may receive government benefits...
+
+	Prompt:
+		Answer the question using the provided context.
+
+	Context:
+	...
+	...
+
+	Question:
+		What is the parental leave salary?
+
+	LLM:
+		According to the retrieved policy...
+
+	Đây là phần Augmented trong RAG.
+
+
+
+# 16. Grounding
+
+
+	Một mục tiêu quan trọng của RAG:
+		Ground the model response in retrieved evidence.
+
+
+	Tức là:
+		LLM
+		 ↓
+		không tự bịa
+		 ↓
+		dựa trên retrieved context
+
+	Có thể yêu cầu:
+		If the answer is not present in the context,
+		say that the information is unavailable.
+
+
+# 17. RAG không loại bỏ hallucination
+
+
+	Đây là một bẫy Professional-level rất quan trọng.
+
+	Sai:
+		RAG = hallucination-free LLM.
+
+	Đúng:
+		RAG giảm hallucination bằng cách cung cấp context có liên quan, nhưng không đảm bảo loại bỏ hallucination.
+
+	Hallucination vẫn có thể xảy ra nếu:
+		Wrong retrieval
+				↓
+		Wrong context
+				↓
+		Wrong answer
+
+	hoặc:
+
+		Correct retrieval
+				↓
+		LLM misinterprets context
+				↓
+		Wrong answer
+
+
+
+
+# 18. RAG quality thực chất là một chuỗi
+
+
+	Hãy nhớ:
+		Data Quality
+			 ↓
+		Parsing Quality
+			 ↓
+		Chunking Quality
+			 ↓
+		Embedding Quality
+			 ↓
+		Retrieval Quality
+			 ↓
+		Context Quality
+			 ↓
+		Prompt Quality
+			 ↓
+		Generation Quality
+
+	Nếu Retrieval sai:
+		LLM rất thông minh
+			   +
+		Context sai
+			   =
+		Answer sai
+
+	LLM không thể “sửa” một retrieval pipeline tồi một cách đáng tin cậy.
+
+
+
+
+# 19. Mapping sang AWS
+
+	Một kiến trúc AWS điển hình:
+	
+	
+                    Amazon S3
+                       │
+                       │ Documents
+                       ▼
+              Bedrock Knowledge Bases
+                       │
+             ┌─────────┴─────────┐
+             │                   │
+         Chunking            Embedding
+                                 │
+                                 ▼
+                         Vector Store
+                       ┌───────────────┐
+                       │ OpenSearch    │
+                       │ Aurora PG     │
+                       │ S3 Vectors   │
+                       └───────────────┘
+
+User
+ │
+ ▼
+Application
+ │
+ ▼
+Amazon Bedrock
+ │
+ ▼
+Knowledge Base Retrieval
+ │
+ ▼
+Retrieved Context
+ │
+ ▼
+Foundation Model
+ │
+ ▼
+Answer
+
+
+
+
+Application layer có thể sử dụng:
+	Amazon API Gateway
+	AWS Lambda
+	Amazon ECS
+	Amazon EKS
+	Step Functions
+	Bedrock Agents
+
+tùy architecture.
+
+
+
+
+# 20. Bedrock Knowledge Bases thực chất giải quyết cái gì?
+
+	Nếu tự xây RAG:
+
+		S3
+		 ↓
+		Parser
+		 ↓
+		Chunker
+		 ↓
+		Embedding
+		 ↓
+		Vector DB
+		 ↓
+		Retriever
+		 ↓
+		Prompt construction
+		 ↓
+		Bedrock
+
+	Bạn phải tự quản lý rất nhiều thành phần.
+
+	Bedrock Knowledge Bases cung cấp abstraction managed:
+		Data source
+			 ↓
+		Knowledge Base
+			 ↓
+		Retrieval
+			 ↓
+		Foundation Model
+
+	Mục tiêu:
+
+	Giảm undifferentiated heavy lifting khi xây RAG.
+
+
+
+
+# 23. RAG Architecture trong một câu hỏi Professional
+
+
+Ví dụ đề:
+	Một công ty có 10 triệu tài liệu nội bộ. Người dùng phàn nàn rằng chatbot trả lời không liên quan. Công ty muốn cải thiện accuracy nhưng phải duy trì latency thấp và không muốn tăng mạnh chi phí.
+
+Các đáp án có thể là:
+
+	A. Tăng Top-K từ 5 lên 100
+
+		Nghe hợp lý.
+		→ Không nhất thiết đúng.
+
+		Vì:
+
+		more chunks
+		→ more tokens
+		→ higher latency/cost
+		→ more noise
+
+	B. Fine-tune foundation model trên toàn bộ tài liệu
+		Nghe rất mạnh.
+		→ Thường không phải lựa chọn đầu tiên nếu vấn đề là retrieval quality/current knowledge.
+
+	C. Improve chunking + embedding + retrieval + reranking
+		Có khả năng đúng hơn.
+
+	D. Tăng temperature
+		Gần như chắc chắn không phải giải pháp cho retrieval accuracy.
+
+
+	failure ở ingestion
+		PDF
+		 ↓
+		Parsing
+		 ↓
+		Chunking
+		 ↓
+		Embedding
+
+		→ kiểm tra ingestion.
+
+	Failure ở retrieval
+		Query
+		 ↓
+		Vector search
+		 ↓
+		Wrong documents
+
+		→ retrieval tuning.
+
+		Ví dụ:
+			chunk size
+			overlap
+			metadata filtering
+			embedding model
+			hybrid search
+			Top-K
+			reranking
+
+
+	Failure ở generation
+		Correct context
+			   ↓
+		Wrong answer
+
+		→ xem:
+
+		prompt
+		model
+		generation parameters
+		context formatting
+		grounding instructions
+
+	Failure ở security
+		Correct answer
+			   ↓
+		Unauthorized document
+
+		→ IAM / authorization / metadata filtering / application-level access control
+
+		Không đơn giản là tăng Guardrails.
+
+
+# 25. Các Keyword cần nhận diện trong đề
+
+
+| Keyword                      | Nghĩ đến                |
+| ---------------------------- | ----------------------- |
+| Current / latest information | RAG                     |
+| Frequently changing data     | RAG                     | Frequently : thường xuyên 
+| Enterprise private documents | RAG                     |
+| Grounded response            | RAG                     |
+| Knowledge base               | Retrieval               |
+| Semantic search              | Embedding/vector search |
+| Exact term / identifier      | Keyword search          |
+| Hybrid search                | Vector + keyword        |
+| Relevant documents           | Retrieval quality       |
+| Too much irrelevant context  | Reduce/tune Top-K       |
+| Wrong chunks                 | Chunking/retrieval      |
+| Ranking candidates           | Reranking               |
+| Unauthorized documents       | Access control          |
+| Model behavior/style         | Fine-tuning             |
+| New knowledge                | RAG                     |
+| Reduce hallucination         | Grounding/RAG           |
+| Citation/source              | RAG                     |
+
+
+
+# 26. Mental Model để nhớ lâu
+
+	Đừng học thuộc:
+		RAG = Retrieval Augmented Generation.
+
+	Hãy nhớ câu này:
+		LLM là người trả lời. Vector store là thư viện. Retriever là thủ thư. RAG là quy trình đưa đúng sách cho người trả lời trước khi người đó trả lời câu hỏi.
+
+	Nếu thủ thư lấy nhầm sách:
+		Bad Retrieval
+			  ↓
+		Bad Context
+			  ↓
+		Bad Answer
+
+	Dù người trả lời là Claude cực mạnh cũng không đảm bảo cứu được.
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 </pre><a id='backBottom' href='../aws-bedrock-agent-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
