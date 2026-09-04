@@ -1,3 +1,592 @@
-<html><head><title>Lesson 43 == Lộ trình ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 43 -- Lộ trình -//</h1><pre># Lộ trình 100 ngày học AIP-C01 — Trọng tâm: Kiến trúc AI hiện đại & Agentic AI
+<html><head><title>Lesson 43 == AIP-C01  ===Embedding là gì, Embedding Model ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 43 -- AIP-C01  --=Embedding là gì, Embedding Model -//</h1><pre># 1. Embedding là gì?
+
+Nói thẳng:
+	Embedding là cách biến một dữ liệu có ý nghĩa — thường là text — thành một vector số để máy tính có thể đo lường mức độ "giống nhau về ý nghĩa".
+
+
+Giả sử vector có 1536 chiều:
+
+	Text
+	 ↓
+	Embedding Model
+	 ↓
+	[0.12, -0.83, 0.41, ..., -0.21]
+
+	Con người nhìn vector này không có ý nghĩa trực tiếp.
+
+	Nhưng máy tính có thể tính:
+		distance(vector_A, vector_B)
+
+	hoặc:
+		cosine_similarity(vector_A, vector_B)
+
+	để xác định hai nội dung có gần nhau về mặt ngữ nghĩa hay không.
+
+
+
+# Tại sao phải biến Text thành Vector?
+
+	Semantic Search — tìm kiếm theo ý nghĩa thay vì chỉ tìm keyword.
+
+
+
+# Semantic Search — tìm kiếm theo ý nghĩa thay vì chỉ tìm keyword.
+
+	Embedding Model là model chuyên thực hiện việc:
+
+		Input
+		  ↓
+		Embedding Model
+		  ↓
+		Vector
+
+	Ví dụ:
+		"Amazon Bedrock là gì?"
+		↓
+		Amazon Titan Text Embeddings
+
+
+	Nó không phải model dùng để sinh câu trả lời như Claude.
+	Đây là điểm rất dễ bị nhầm.
+
+| Loại model                  | Nhiệm vụ                                      |
+| --------------------------- | --------------------------------------------- |
+| Foundation/Generative Model | Sinh text/image/code                          |
+| Embedding Model             | Biến dữ liệu → vector                         |
+| Reranker                    | Đánh giá lại độ phù hợp của kết quả retrieval |
+| LLM                         | Hiểu context và sinh câu trả lời              |
+
+
+Ví dụ kiến trúc RAG:
+
+                ┌────────────────────┐
+User Question → │ Embedding Model    │
+                └─────────┬──────────┘
+                          ↓
+                     Query Vector
+                          ↓
+                  Vector Database
+                          ↓
+                   Relevant Chunks
+                          ↓
+                    Prompt + Context
+                          ↓
+                 Generative Model
+                          ↓
+                       Answer
+
+
+	Embedding Model không trả lời user.
+	Nó chỉ giúp hệ thống tìm được thông tin phù hợp.
+
+
+# 4. Vector thực sự biểu diễn cái gì?
+
+
+	Đây là phần quan trọng nhất để hiểu sâu.
+
+	Giả sử embedding có 3 dimensions:
+		[0.8, 0.1, -0.3]
+
+	Không nên hiểu:
+		dimension 1 = độ liên quan đến AWS
+		dimension 2 = độ liên quan đến password
+		dimension 3 = độ liên quan đến security
+
+	Không đơn giản như vậy.
+	Embedding là một distributed representation.
+	Thông tin ngữ nghĩa được phân bố trên rất nhiều dimensions.
+
+
+	Ví dụ tưởng tượng:
+
+		"cat"
+		   ●
+
+		"dog"
+		   ●
+
+		"car"
+								 ●
+
+	Cat và dog gần nhau vì chúng có semantic similarity cao.
+	Car nằm xa.
+	Trong thực tế embedding có hàng trăm hoặc hàng nghìn dimensions.
+
+
+# 5. Embedding Space
+
+
+                    Security
+                       ↑
+                       |
+          IAM ●        |       ● GuardDuty
+                       |
+                       |
+ AWS ●                  | 
+                       |
+                       +----------------→ Cloud
+                      /
+                     /
+              ● Kubernetes
+
+
+	Các document có semantic gần nhau sẽ nằm gần nhau.
+
+
+
+# 6. Cosine Similarity
+	Một cách phổ biến để đo độ giống nhau giữa hai vector là:
+
+	Cosine Similarity
+						  A · B
+		cos(A,B) = ─────────────────
+					||A|| × ||B||
+
+
+	Ý tưởng:
+		Không quá quan tâm vector dài bao nhiêu, mà quan tâm hướng của chúng có giống nhau không.
+
+
+
+
+	Ví dụ:
+		A → Query
+		B → Document
+
+	Nếu:
+		cos(A,B) ≈ 1
+		→ rất giống nhau.
+
+	Nếu:
+		cos(A,B) ≈ 0
+		→ ít liên quan.
+
+	Nếu:
+		cos(A,B) ≈ -1
+		→ hướng đối lập.
+
+	Trong hệ thống thực tế, việc dùng metric nào còn phụ thuộc embedding model và vector database/configuration.
+
+
+
+
+# 7. Embedding trong RAG
+
+	## Bước 1 — Ingestion
+		Có document:
+			AWS Bedrock Developer Guide
+
+		Document được chia thành chunks:
+
+			Chunk 1
+			"Amazon Bedrock provides..."
+
+			Chunk 2
+			"Knowledge Bases can..."
+
+			Chunk 3
+			"Guardrails can..."
+
+
+
+
+
+	## Bước 2 — Embedding
+	
+		Mỗi chunk đi qua Embedding Model:
+		
+			Chunk 1
+			   ↓
+			Embedding Model
+			   ↓
+			Vector 1
+			
+
+			Chunk 2
+			   ↓
+			Embedding Model
+			   ↓
+			Vector 2
+			
+
+			Chunk 3
+			   ↓
+			Embedding Model
+			   ↓
+			Vector 3
+
+
+
+	## Bước 3 — Lưu Vector
+
+		Vector được lưu vào Vector Store:
+			Vector 1 → Chunk 1
+			Vector 2 → Chunk 2
+			Vector 3 → Chunk 3
+
+		Thường metadata cũng được lưu:
+
+			{
+			  vector: [...],
+			  text: "...",
+			  document_id: "...",
+			  source: "...",
+			  metadata: {...}
+			}
+
+
+
+
+
+
+	## Bước 4 — User hỏi
+
+
+		Guardrails trong Bedrock hoạt động thế nào?"
+		
+	Query cũng được embedding:
+
+		Question
+		   ↓
+		Embedding Model
+		   ↓
+		Query Vector
+
+
+
+
+
+	## Bước 5 — Similarity Search (sự tương đồng)
+	
+		Vector database tìm những vector gần Query Vector nhất.
+
+
+
+
+
+	## Bước 6 — đưa context cho LLM
+
+			User Question
+				  +
+			Retrieved Documents
+				  ↓
+				  LLM
+				  ↓
+			Final Answer
+
+	Đây chính là:
+	
+		Retrieval-Augmented Generation
+
+
+
+
+
+# 8. AWS Mapping
+
+	Trong AWS, bạn sẽ gặp:
+		Amazon Bedrock
+
+	Có các embedding models, ví dụ dòng:
+		Amazon Titan Embeddings
+
+	Dùng để:
+		Text → Vector
+		Sau đó vector có thể được sử dụng trong kiến trúc RAG.
+
+
+
+
+
+# Amazon Bedrock Knowledge Bases
+
+	Knowledge Bases có thể quản lý phần lớn pipeline RAG:
+
+		S3
+		 ↓
+		Parsing / Chunking
+		 ↓
+		Embedding
+		 ↓
+		Vector Store
+		 ↓
+		Retrieval
+		 ↓
+		LLM
+
+
+	Vector store phía dưới có thể liên quan đến các lựa chọn như:
+		Amazon OpenSearch Serverless
+		Amazon Aurora PostgreSQL với pgvector
+		Amazon Neptune Analytics / các vector-capable stores tùy cấu hình và thời điểm
+		các lựa chọn được Bedrock Knowledge Bases hỗ trợ
+
+	Điểm thi quan trọng: đừng học thuộc một kiến trúc duy nhất. AWS có thể hỏi bạn chọn vector store dựa trên scale, latency, existing infrastructure, operational burden, query capabilities và cost.
+
+
+# 9. Embedding Model ≠ Generative Model
+
+|                   | Embedding Model            | Generative Model     |
+| ----------------- | -------------------------- | -------------------- |
+| Input             | Text/image/etc.            | Prompt               |
+| Output            | Vector                     | Text/image/etc.      |
+| Mục đích          | Representation / retrieval | Generation           |
+| Dùng cho RAG      | Retrieval                  | Answer generation    |
+| Ví dụ             | Titan Embeddings           | Claude / Amazon Nova |
+| Sinh câu trả lời? | ❌                          | ✅                    |
+
+
+
+
+
+
+# 10. Một vấn đề cực kỳ quan trọng: Embedding Model phải nhất quán
+
+
+
+
+	Giả sử lúc indexing document bạn dùng:
+
+	Embedding Model A
+
+	Vector:
+		Document → Model A → Vector A
+
+	Sau đó query lại dùng:
+		Embedding Model B
+		Query → Model B → Vector B
+
+	Rồi đem:
+		Vector B
+			 ↓
+		so với
+		Vector A
+		Đây có thể là vấn đề nghiêm trọng vì hai model có thể tạo ra hai vector spaces không tương thích.
+
+	Trong thiết kế production:
+
+		Indexing:
+		Document → Embedding Model X → Vector X
+
+		Query:
+		Question → Embedding Model X → Vector X
+
+		Nên dùng cùng embedding model / cùng embedding space cho indexing và retrieval, trừ khi kiến trúc được thiết kế để xử lý tương thích.
+
+
+
+
+
+# 11. Embedding dimension
+
+	Embedding model có thể tạo vector:
+
+		384 dimensions
+		768 dimensions
+		1024 dimensions
+		1536 dimensions
+		...
+
+
+
+	Ví dụ:
+		Document
+		   ↓
+		Embedding
+		   ↓
+		[ x1, x2, x3, ..., x1536 ]
+
+	Dimension càng lớn không có nghĩa chắc chắn retrieval càng tốt.
+
+	Nó có thể ảnh hưởng:
+		Dimension ↑
+		   ↓
+		Storage ↑
+		Memory ↑
+		Index size ↑
+		Potential compute ↑
+
+	Nhưng chất lượng còn phụ thuộc:
+		model
+		domain
+		language
+		chunking
+		retrieval strategy
+		data quality
+		similarity metric
+
+	Đây là một trade-off, không phải:
+		"dimension càng lớn = AI càng thông minh."
+
+
+
+
+
+# 12. Embedding không chỉ dành cho Text
+
+	Khái niệm tổng quát hơn:
+		Khái niệm tổng quát hơn:
+			Data
+			 ↓
+			Embedding Model
+			 ↓
+			Vector Representation
+
+	Có thể có:
+		Text
+		Image
+		Audio
+		Video
+		Code
+
+	Ví dụ multimodal embedding:
+		"Red shoes"
+			  ↓
+			Vector
+
+	và:
+		[Image of red shoes]
+			  ↓
+			Vector
+
+	Nếu embedding space được thiết kế phù hợp, chúng có thể được so sánh để thực hiện cross-modal retrieval.
+
+
+
+# 13. Các lỗi thiết kế RAG liên quan đến Embedding
+
+
+	## Trap 1 — Nghĩ embedding là LLM
+
+		Sai.
+		Embedding model không có nhiệm vụ sinh câu trả lời.
+
+
+
+
+
+	## Trap 2 — Chỉ thay embedding model mà không re-index
+
+	Ví dụ:
+		Old documents
+		   ↓
+		Embedding Model A
+		   ↓
+		Existing vectors
+
+	Bạn đổi sang:
+		Embedding Model B
+		nhưng giữ vector cũ.
+		→ Có thể làm retrieval sai vì vector space thay đổi.
+		Thông thường cần re-embedding / re-indexing dữ liệu.
+
+
+
+
+	## Trap 3 — Nghĩ semantic search luôn tốt hơn keyword search
+
+
+	Sai.
+
+	Ví dụ:
+		Error code: ERR-40392
+		Keyword search có thể cực kỳ hiệu quả.
+
+	Semantic search đôi khi không phù hợp với:
+		exact IDs
+		SKU
+		error codes
+		account numbers
+		product codes
+		legal identifiers
+
+	Production RAG thường cân nhắc:
+
+		Keyword Search
+			  +
+		Vector Search
+			  ↓
+		Hybrid Search
+
+
+
+
+	## Trap 4 — Embedding tốt nhưng RAG vẫn tệ
+
+		Hoàn toàn có thể.
+		
+		Pipeline:
+
+			Document
+			 ↓
+			Chunking ❌
+			 ↓
+			Embedding
+			 ↓
+			Vector DB
+			 ↓
+			Retrieval
+			 ↓
+			LLM
+
+		Nếu chunking sai:
+			Embedding tốt
+			+
+			Chunking tệ
+			=
+			Retrieval tệ
+
+		Do đó đừng nghĩ:
+			"Mua embedding model tốt nhất là giải quyết được RAG."
+			Không.
+			RAG là một pipeline, không phải một model.
+
+
+
+# 15. Cách AWS ra đề
+
+
+	Khi thấy các keyword:
+		semantic similarity
+		semantic search
+		vector search
+		nearest neighbors
+		similarity
+		cosine similarity
+		vector database
+		embeddings
+		retrieval
+		RAG
+
+	hãy nghĩ ngay:
+		Embedding
+		   ↓
+		Vector
+		   ↓
+		Similarity Search
+		   ↓
+		Relevant Context
+
+	Nhưng nếu đề xuất hiện:
+		exact match
+		SKU
+		product ID
+		error code
+		identifier
+		exact phrase
+
+	hãy cảnh giác với việc vector search thuần túy.
+
+	Có thể đáp án tốt hơn là:
+		Keyword Search
+
+	hoặc:
+		Hybrid Search
+
+
+
+
+
 
 </pre><a id='backBottom' href='../aws-bedrock-agent-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
