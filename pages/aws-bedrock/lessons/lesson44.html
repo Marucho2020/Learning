@@ -1,3 +1,799 @@
-<html><head><title>Lesson 44 == Lộ trình ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 44 -- Lộ trình -//</h1><pre># Lộ trình 100 ngày học AIP-C01 — Trọng tâm: Kiến trúc AI hiện đại & Agentic AI
+<html><head><title>Lesson 44 == AIP-C01  ===Vector Database — bản chất ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 44 -- AIP-C01  --=Vector Database — bản chất -//</h1><pre>
+# Vector Database — bản chất
+
+
+Nếu học để thi AIP-C01, đừng hiểu Vector Database đơn giản là “database lưu vector”. Bản chất quan trọng hơn là:
+	Vector Database là hệ thống lưu trữ và tìm kiếm các vector theo độ tương đồng (similarity), thay vì chủ yếu tìm kiếm theo giá trị chính xác của từ khóa.
+
+Trong GenAI/RAG, nó giải quyết một bài toán rất cụ thể:
+	“Trong hàng triệu đoạn dữ liệu, đoạn nào có ý nghĩa gần với câu hỏi của user nhất?”
+
+
+
+
+# 1. Trước hết: Vector là gì?
+
+	không cần giống nhau về mặt chữ.
+	Nhưng embedding của chúng có thể gần nhau về mặt semantic meaning.
+
+
+
+
+
+# 2. Database thông thường khác Vector Database thế nào?
+
+
+	## Traditional Database 
+
+		Ví dụ:
+			SELECT *
+			FROM employees
+			WHERE name = 'Tanaka';
+
+		Database đang tìm theo:
+			exact value / s	tructured condition
+
+		Ví dụ:
+			name = Tanaka
+			age > 30
+			department = Engineering
+
+
+
+
+
+	## Vector Database
+
+
+	User hỏi:
+		"Nhân viên có thể nghỉ phép như thế nào?"
+
+	Hệ thống không nhất thiết tìm chính xác chuỗi:
+		"nhân viên có thể nghỉ phép như thế nào"
+
+	Mà:
+
+		User Query
+			↓
+		Embedding Model
+			↓
+		Query Vector
+			↓
+		Similarity Search
+			↓
+		Top-K vectors gần nhất
+
+	Ví dụ:
+
+	Query
+	"Nhân viên có thể nghỉ phép như thế nào?"
+
+			↓ embedding
+
+	q = [0.22, -0.71, 0.47, ...]
+
+			↓ similarity search
+
+		Document #182   similarity = 0.94
+		Document #923   similarity = 0.91
+		Document #431   similarity = 0.87
+
+	Sau đó các document này được đưa vào LLM.
+	Đây chính là phần Retrieval trong RAG.
+
+
+
+
+
+# 3. Vector Database thực chất đang làm gì?
+
+
+Có thể nhìn nó thành 3 nhiệm vụ:
+
+	1. STORE
+	   lưu vector + metadata
+
+	2. INDEX
+	   tạo cấu trúc giúp tìm vector gần nhau nhanh
+
+	3. SEARCH
+	   tìm Top-K vector gần query vector nhất
+
+
+
+
+
+	## Ví dụ:
+		Vector
+			[0.21, -0.73, 0.45, ...]
+
+		Metadata
+		{
+		  document_id: "doc-123",
+		  department: "HR",
+		  language: "ja",
+		  year: 2026
+		}
+
+		Original text
+		"社員は入社6ヶ月後から..."
+
+
+	Một record trong Vector Database thường không chỉ có vector.
+
+	Nó thường có:
+		Embedding
+		   +
+		Original content / document reference
+		   +
+		Metadata
+
+	Đây là điểm rất quan trọng khi thiết kế RAG.
+
+
+
+
+# 4. Similarity Search là trái tim của Vector Database
+
+
+	Giả sử query vector:
+		Q = [0.8, 0.7]
+
+	Database có:
+
+		A = [0.9, 0.8]
+		B = [0.1, 0.2]
+		C = [0.75, 0.72]
+
+	Ta muốn tìm:
+		distance(Q, A)
+		distance(Q, B)
+		distance(Q, C)
+
+	Sau đó lấy các vector gần nhất.
+	Có nhiều cách đo similarity/distance.
+	
+	
+	
+	## Cosine similarity
+	
+		Rất phổ biến trong embedding search.
+
+	Ý tưởng:
+
+		vector càng cùng hướng
+				↓
+		semantic similarity càng cao	
+			
+	
+	
+	## Euclidean distance
+		Đo khoảng cách hình học trực tiếp.
+
+
+	## Dot product
+		Tính tích vô hướng.	
+		
+	
+						gần đúng
+# 	5. Exact Search vs Approximate Search
+	
+	Đây là một trap rất đáng nhớ trong AIP-C01.	
+	
+	
+	Giả sử có:
+		100 million vectors	
+		
+		
+	Nếu mỗi query phải tính khoảng cách với:	
+		100,000,000 vectors	
+	
+	
+	thì rất chậm.
+		Vì vậy Vector Database thường sử dụng Approximate Nearest Neighbor (ANN).	
+
+
+	Thay vì:
+		Search EVERY vector
+
+	nó xây dựng index để nhanh chóng tìm:
+
+		vectors that are VERY LIKELY
+		to be the nearest neighbors
+
+
+
+	## Trade-off:
+
+	| Cách     | Accuracy |        Latency |  Compute |
+	| -------- | -------: | -------------: | -------: |
+	| Exact NN | Cao nhất |            Cao |      Cao |
+	| ANN      |  Rất cao | Thấp hơn nhiều | Thấp hơn |
+
+
+Bản chất của ANN:
+	Hy sinh một chút tính chính xác tuyệt đối để đổi lấy tốc độ và khả năng scale.
+	Đây là tư duy Professional-level: không có giải pháp miễn phí.
+
+
+
+# 6. Vector Database nằm ở đâu trong RAG?
+
+
+                INGESTION
+                    │
+Documents ──→ Chunking
+                    │
+                    ↓
+             Embedding Model
+                    │
+                    ↓
+             Vector Database
+                    │
+              store vectors
+                    │
+                    │
+────────────────────┼────────────────────
+                    │
+                  QUERY
+                    │
+User Question
+                    │
+                    ↓
+             Embedding Model
+                    │
+                    ↓
+              Query Vector
+                    │
+                    ↓
+          Vector Similarity Search
+                    │
+                    ↓
+               Top-K chunks
+                    │
+                    ↓
+              Prompt + Context
+                    │
+                    ↓
+                   LLM
+                    │
+                    ↓
+                 Answer
+
+
+
+	Nói cực ngắn:
+		Embedding Model biến text → vector.
+		Vector Database lưu và tìm vector.
+		LLM sử dụng kết quả tìm được để tạo câu trả lời.
+
+	Đừng nhầm 3 thứ này.
+
+
+# 7. Vector Database KHÔNG phải là Embedding Model
+
+	Đây là một lỗi rất cơ bản nhưng dễ xuất hiện trong scenario.
+
+
+	## Embedding Model
+	
+			Text
+			 ↓
+			Embedding Model
+			 ↓
+			Vector
+			
+		Nó tạo vector.
+
+
+
+
+
+	## Vector Database
+
+		Vector
+		 ↓
+		Store
+		 ↓
+		Index
+		 ↓
+		Similarity Search
+		
+		Nó lưu và tìm vector.
+
+
+
+	## LLM
+	
+		Context + Question
+			   ↓
+			  LLM
+			   ↓
+			Answer
+
+		Nó suy luận/generate answer.
+		Ba thành phần có vai trò hoàn toàn khác nhau.
+
+
+
+
+# 8. Vector Database cũng không phải Knowledge Base
+
+
+	AWS rất dễ ra câu hỏi khiến bạn nhầm hai khái niệm này.
+	
+	Amazon Bedrock Knowledge Bases là một managed RAG capability.
+
+
+	Nó có thể quản lý nhiều bước:
+	
+		S3 / data source
+			   ↓
+		Parsing
+			   ↓
+		Chunking
+			   ↓
+		Embedding
+			   ↓
+		Vector store
+			   ↓
+		Retrieval
+			   ↓
+		Generation
+
+
+
+	Trong khi Vector Database chủ yếu là tầng:
+
+             Vector Store
+                   ↓
+        similarity / retrieval
+
+
+	Có thể hiểu:
+		Vector Database = infrastructure/data layer
+		Knowledge Base = higher-level managed RAG capability
+
+
+
+
+
+# 9. AWS có những lựa chọn nào?
+
+Trong hệ sinh thái AWS, bạn có thể gặp:
+
+| Service / Technology             | Vai trò                                                                         |
+| -------------------------------- | ------------------------------------------------------------------------------- |
+| Amazon OpenSearch Service        | Vector search + search engine                                                   |
+| Aurora PostgreSQL + pgvector     | Relational DB + vector search                                                   |
+| Amazon RDS PostgreSQL + pgvector | PostgreSQL + vector search                                                      |
+| Amazon Neptune Analytics         | Graph-oriented workloads, có vector-related capabilities trong một số kiến trúc |
+| Amazon Bedrock Knowledge Bases   | Managed RAG, có thể dùng vector stores bên dưới                                 |
+| Amazon S3 Vectors                | Vector storage/search capability cho một số use cases                           |
+
+
+
+
+	## Điểm quan trọng khi thi:
+	
+		Đừng nghĩ “RAG = OpenSearch”.
+		RAG chỉ là architecture.
+		Vector store có thể được triển khai bằng nhiều công nghệ khác nhau.
+
+
+
+
+# 10. OpenSearch vs Aurora PostgreSQL + pgvector
+
+	Một scenario rất điển hình:
+		Công ty đã có hệ thống PostgreSQL chứa customer data. Muốn thêm semantic search mà không muốn vận hành thêm một database riêng.
+
+
+	Một lựa chọn hợp lý:
+		Aurora PostgreSQL
+				+
+			 pgvector
+
+	Tại sao?
+
+	Vì có thể giữ:
+		Relational data
+		+
+		Vector data
+		trong cùng ecosystem.
+
+	Ngược lại, nếu workload thiên về:
+		Large-scale search
+		+
+		Full-text search
+		+
+		Vector search
+		+
+		Filtering
+		+
+		Search ranking
+
+	thì OpenSearch thường là ứng viên tự nhiên hơn.
+
+
+
+
+# 11. Metadata filtering cực kỳ quan trọng
+
+			similarity : (sự giống nhau)
+	Vector similarity không phải lúc nào cũng đủ.
+
+	Ví dụ user hỏi:
+		"Chính sách nghỉ phép của nhân viên Nhật Bản năm 2026?"
+		
+	Vector search có thể tìm:
+		
+		Japan 2025
+		Japan 2026
+		Vietnam 2026
+		US 2026
+
+	Nhưng ta có metadata:
+
+	{
+	  "country": "Japan",
+	  "year": 2026,
+	  "department": "HR"
+	}
+
+	Ta có thể filter trước/sau tùy engine:
+		country = Japan
+		AND
+		year = 2026
+
+	sau đó thực hiện semantic retrieval.
+	Đây gọi là metadata filtering / hybrid retrieval strategy.
+
+
+
+
+# 12. Hybrid Search
+	Đây là concept cực kỳ quan trọng.
+
+
+	## Keyword search
+
+		Tìm theo từ:
+			"Amazon Bedrock"
+
+		Nếu document chứa chính xác:
+			Amazon Bedrock
+			→ match tốt.
+
+
+
+
+
+	## Semantic search
+
+		Tìm theo ý nghĩa.
+			"dịch vụ AWS để xây dựng ứng dụng GenAI"
+
+		có thể tìm được:
+			Amazon Bedrock
+			dù câu hỏi không chứa chính xác chữ đó.
+
+
+
+	## Hybrid
+
+	Kết hợp:
+		Keyword relevance
+				+
+		Semantic similarity
+				↓
+		Combined ranking
+
+	Trong production RAG, hybrid retrieval thường mạnh hơn việc cực đoan chỉ dùng một loại search.
+
+
+
+# 13. Một hiểu lầm nguy hiểm: Vector Database không "hiểu" nội dung
+
+	Vector Database không hiểu tiếng Việt, tiếng Nhật hay tiếng Anh theo nghĩa như LLM.
+
+
+	Nó chỉ nhận:
+		Vector A
+		Vector B
+
+	và tính:
+		A gần B?
+
+	Cái quyết định semantic meaning chủ yếu nằm ở:
+		Embedding Model
+		
+	Nếu embedding model kém với tiếng Nhật:
+
+		Japanese query
+			   ↓
+		Poor embedding
+			   ↓
+		Poor vector representation
+			   ↓
+		Poor retrieval
+			   ↓
+		LLM gets wrong context
+			   ↓
+		Bad answer
+
+
+	Cho nên:
+		Vector Database không thể cứu một embedding model tệ.
+		Đây là một insight quan trọng khi debug RAG.
+
+
+
+
+
+
+# 14. Khi RAG trả lời sai, đừng lập tức đổ lỗi cho LLM
+
+	Document
+	   ↓
+	Parsing?
+	   ↓
+	Chunking?
+	   ↓
+	Embedding?
+	   ↓
+	Index?
+	   ↓
+	Retrieval?
+	   ↓
+	Top-K?
+	   ↓
+	Metadata filter?
+	   ↓
+	Prompt?
+	   ↓
+	LLM?
+
+
+	Ví dụ:
+
+	User hỏi:
+		"契約社員の有給休暇は？"
+		Nhưng hệ thống trả lời sai.
+		Có thể LLM không sai.
+		
+	Retrieval có thể đã lấy:
+		正社員の有給休暇
+
+	thay vì:
+		契約社員の有給休暇
+
+	LLM chỉ đang generate dựa trên context sai.
+	Đây là lý do Retrieval Evaluation rất quan trọng trong RAG.
+
+
+
+# 15. Các tham số retrieval cần nhớ
+
+
+	Ví dụ:
+		Top-K = 5
+
+	nghĩa là:
+		lấy 5 kết quả gần nhất.
+
+	Nhưng:
+		Top-K càng lớn
+
+	không có nghĩa:
+		RAG càng tốt
+
+	Vì context đưa vào LLM tăng:
+
+		K ↑
+		→ context ↑
+		→ token ↑
+		→ cost ↑
+		→ latency ↑
+		→ noise ↑
+
+	Có thể xảy ra:
+
+		K = 3 → thiếu context
+		K = 10 → đủ context
+		K = 50 → quá nhiều noise
+
+	Do đó phải tune retrieval, không phải cứ tăng K.
+
+
+
+
+
+# 16. Các yếu tố ảnh hưởng chất lượng Vector Search
+	Có thể nhớ theo chuỗi:
+
+
+	Document quality
+		  ↓
+	Chunking strategy
+		  ↓
+	Embedding model
+		  ↓
+	Vector index
+		  ↓
+	Similarity metric
+		  ↓
+	Top-K
+		  ↓
+	Metadata filtering
+		  ↓
+	Reranking
+		  ↓
+	LLM
+
+
+	Nếu retrieval kém:
+		LLM thông minh đến đâu
+		cũng không đảm bảo câu trả lời đúng.
+
+	Đây là tư tưởng:
+		Garbage in → garbage retrieved → garbage generation.
+
+
+
+
+# 17. Vector Database vs Traditional DB — nhớ bằng bản chất
+
+|                | Traditional DB                | Vector DB                |
+| -------------- | ----------------------------- | ------------------------ |
+| Tìm kiếm chính | Exact / structured            | Similarity               |
+| Input          | String, number, date...       | Vector                   |
+| Query          | SQL/filter                    | k-NN / ANN               |
+| Mục tiêu       | tìm record thỏa điều kiện     | tìm item gần về semantic |
+| RAG            | Metadata / transactional data | Semantic retrieval       |
+| Index          | B-tree, Hash...               | HNSW, IVF...             |
+| Use case       | Orders, users, transactions   | Semantic search, RAG     |
+
+
+
+
+
+#18. Cách AWS ra đề AIP-C01
+
+
+	AWS có thể cho scenario kiểu:
+
+		Một công ty có 50 triệu documents. Người dùng đặt câu hỏi bằng ngôn ngữ tự nhiên. Hệ thống cần tìm những tài liệu có nội dung liên quan nhất, ngay cả khi tài liệu không chứa chính xác các từ trong câu hỏi. Latency phải thấp và hệ thống phải scale.
+
+
+	Natural language
+	+
+	semantic similarity
+	+
+	large corpus
+	+
+	low latency
+			↓
+	Embedding
+			↓
+	Vector search
+			↓
+	ANN index
+
+
+
+	Không phải:
+		SQL LIKE '%keyword%'
+
+
+
+# Trap 1 — "LLM tự tìm document"
+❌ Sai.
+
+
+# Trap 2 — "Vector Database tạo embedding"
+❌ Sai.
+	Embedding Model tạo embedding.
+	
+#	Trap 3 — "Top-K càng cao càng chính xác"
+❌ Sai.
+
+# Trap 4 — "Vector Search thay thế hoàn toàn keyword search"
+❌ Không phải lúc nào.
+
+	Các query chứa:
+		product ID
+		invoice number
+		SKU
+		employee ID
+		exact terminology
+
+		thường cần exact/keyword matching.
+		Semantic search và keyword search có thể bổ sung cho nhau.
+
+
+
+
+# Trap 5 — "Vector DB càng lớn thì RAG càng chính xác"
+❌ Sai.
+
+	Scale database ≠ retrieval quality.
+
+
+	Chất lượng phụ thuộc vào:
+		chunking
+		embedding
+		index
+		retrieval
+		filtering
+		reranking
+
+
+
+# 19. Công thức tư duy để nhớ lâu
+
+Hãy nhớ Vector Database bằng một câu:
+	“Tôi không hỏi database: record nào có từ này? Tôi hỏi: record nào có ý nghĩa gần với câu này?”
+
+Pipeline:
+
+	TEXT
+	 ↓
+	Embedding Model
+	 ↓
+	VECTOR
+	 ↓
+	Vector Database
+	 ↓
+	Similarity Search
+	 ↓
+	Top-K
+	 ↓
+	Relevant Context
+	 ↓
+	LLM
+	 ↓
+	Answer
+
+
+Và phân biệt tuyệt đối:
+
+	Embedding Model
+		= biến meaning → vector
+
+	Vector Database
+		= lưu + index + tìm vector gần
+
+	Knowledge Base
+		= managed RAG capability
+
+	LLM
+		= reasoning + generation
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 </pre><a id='backBottom' href='../aws-bedrock-agent-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
