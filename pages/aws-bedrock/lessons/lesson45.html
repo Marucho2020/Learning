@@ -1,3 +1,432 @@
-<html><head><title>Lesson 45 == Lộ trình ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 45 -- Lộ trình -//</h1><pre># Lộ trình 100 ngày học AIP-C01 — Trọng tâm: Kiến trúc AI hiện đại & Agentic AI
+<html><head><title>Lesson 45 == AIP-C01  ===Cosine Similarity vs Euclidean Distance ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 45 -- AIP-C01  --=Cosine Similarity vs Euclidean Distance -//</h1><pre>
+# 1. Bản chất trước tiên
+
+
+Giả sử embedding biến hai câu thành hai vector:
+	A = [0.9, 0.1]
+	B = [0.8, 0.2]
+	C = [-0.9, -0.1]
+
+Có hai cách hỏi:
+	Cosine Similarity: Hai vector cùng hướng nhau đến mức nào?
+	Euclidean Distance: Hai vector cách nhau bao xa trong không gian?
+	Đây là khác biệt cốt lõi.
+
+
+# 2. Cosine Similarity
+	Cosine Similarity đo góc giữa hai vector, không quan tâm nhiều đến độ dài vector.
+
+	Trực giác
+		Hãy tưởng tượng mỗi embedding là một mũi tên.
+
+
+        B
+       /
+      /
+     / θ
+    /
+   A ─────────>
+
+
+	## Nếu hai vector cùng hướng:
+		A ─────────────>
+		B ─────────────>
+
+	Cosine ≈ 1
+
+
+
+	## Nếu vuông góc:
+
+	A ─────────>
+	B
+	↑
+	│
+	│
+	└────────
+
+	Cosine ≈ 0
+
+
+
+	## Nếu ngược hướng:
+
+		A ─────────>
+		<───────── B
+
+		Cosine ≈ -1
+
+
+| Cosine Similarity | Ý nghĩa                   |
+| ----------------: | ------------------------- |
+|               `1` | Cùng hướng hoàn toàn      |
+|               `0` | Không tương quan về hướng |
+|              `-1` | Ngược hướng               |
+
+
+	Trong embedding của LLM, giá trị thực tế thường được xử lý trong miền phù hợp với model/vector store; đừng học thuộc rằng mọi embedding luôn nằm từ -1 đến 1 rồi suy ra semantic similarity tuyệt đối. Điều quan trọng là ranking tương đối giữa các vector.
+
+
+
+
+
+# 3. Euclidean Distance
+
+	Euclidean Distance đo khoảng cách trực tiếp giữa hai điểm.
+
+
+	Ví dụ:
+		A = (1, 2)
+		B = (4, 6)
+		
+		
+	Ý nghĩa
+		Khoảng cách càng nhỏ → càng giống nhau.
+
+	Khác với Cosine:
+		Similarity càng lớn → càng giống nhau.		
+			
+			
+		
+		
+# 	4. Khác biệt quan trọng nhất	
+		
+		
+	Giả sử:
+
+		A = [1, 1]
+		B = [2, 2]
+		C = [1, 0]	
+				
+		
+		
+		A và B:
+
+		A ↗
+		  ↗ B
+
+		Hai vector cùng hướng.
+
+		Cosine:		 cos(A,B)=1
+		→ giống nhau về hướng.			
+		
+
+		Nhưng Euclidean: sqrt(2)
+		
+	→ không phải cùng một điểm.
+		Đây chính là điểm dễ bị đề thi khai thác.		
+			
+
+
+
+# 5. Vì sao Cosine thường rất phù hợp cho Embedding?
+
+
+Trong semantic search, điều ta thường quan tâm là:
+	"Hai text có biểu diễn ngữ nghĩa tương tự nhau không?"
+
+
+	Ví dụ:
+
+		Query:
+			"How can I reset my AWS password?"
+
+		Document A:
+			"Steps to reset your AWS console password"
+
+		Document B:
+			"AWS pricing information"
+
+
+
+	Embedding:
+		Query ────────→
+		Document A ───→    gần cùng hướng
+		Document B ↑
+
+		Ta quan tâm semantic direction, chứ không nhất thiết quan tâm magnitude.
+		Do đó Cosine Similarity rất tự nhiên cho semantic search.
+
+
+
+
+
+
+# 6. Nhưng đừng học thuộc "Embedding = Cosine"
+
+
+	Đây là một trap rất nguy hiểm.
+
+	Không phải:
+		Vector DB → luôn dùng Cosine.
+
+	Mà phải hiểu:
+		Embedding Model
+			   ↓
+		Vector
+			   ↓
+		Similarity / Distance metric
+			   ↓
+		Vector Database
+		Metric phải phù hợp với embedding model + indexing/search configuration + use
+
+
+
+
+	Có thể gặp:
+		Cosine similarity
+		Euclidean/L2 distance
+		Dot product / inner product
+
+	Một số hệ thống còn normalize vector trước khi search.
+
+
+
+
+
+# 7. Cosine vs Euclidean — bảng cần nhớ cho AIP-C01
+
+
+
+|                           | Cosine Similarity    | Euclidean Distance         |
+| ------------------------- | -------------------- | -------------------------- |
+| Đo                        | Góc / hướng          | Khoảng cách                |
+| Quan tâm magnitude?       | Ít/không             | Có                         |
+| Càng lớn                  | Càng giống           | —                          |
+| Càng nhỏ                  | —                    | Càng giống                 |
+| Semantic search           | Rất phổ biến         | Có thể dùng                |
+| Nhạy với vector magnitude | Thấp                 | Cao                        |
+| Không gian                | Direction-based      | Geometry-based             |
+| Công thức                 | \(A·B/(\|A\|\|B\|)\) | \(\sqrt{\sum(A_i-B_i)^2}\) |
+
+
+
+
+
+
+
+
+
+# 8. Một insight cực kỳ quan trọng: Normalize
+
+	Đây là chỗ từ Senior → Master.
+
+	Nếu normalize vector về độ dài 1:
+		∥A∥=∥B∥=1
+
+	thì:
+
+	Mà với vector normalized:
+
+
+	Kết luận
+		Khi vector đã được L2-normalize, Euclidean distance và Cosine similarity tạo ra cùng một ranking.
+
+	Đây là kiến thức rất đáng nhớ.
+
+
+
+	Ví dụ:
+
+		Cosine ranking:
+			A > B > C
+
+	thì với normalized vectors:
+	
+		Euclidean distance:
+			A < B < C
+
+	Thứ tự kết quả giống nhau, chỉ khác cách biểu diễn.
+
+
+
+
+
+# 9. Liên hệ trực tiếp với RAG
+
+	Trong RAG:
+
+                 ┌── Chunk 1
+User Query       │
+   │             ├── Chunk 2
+   ↓             │
+Embedding ───────┼── Vector DB
+                 │
+                 ├── Chunk 3
+                 │
+                 └── Chunk 4
+
+
+	Query được embedding:
+		q → [0.21, -0.44, 0.73, ...]	
+
+		Document chunks cũng đã được embedding:
+			d1 → [...]
+			d2 → [...]
+			d3 → [...]
+
+
+	Vector DB thực hiện:
+		similarity(q, d1)
+		similarity(q, d2)
+		similarity(q, d3)
+	...
+
+	Sau đó lấy:
+		Top-K
+		để đưa vào LLM.
+		Cosine/Euclidean không phải là RAG.
+		Nó chỉ là cơ chế đo mức độ gần nhau của vector trong retrieval layer.
+
+
+
+
+
+# 10. AWS Mapping
+
+	Trong AWS ecosystem, hãy tư duy theo pipeline:
+
+		Document
+		   ↓
+		Chunking
+		   ↓
+		Embedding Model
+		   ↓
+		Vector
+		   ↓
+		Vector Store
+		   ↓
+		Similarity Search
+		   ↓
+		Top-K chunks
+		   ↓
+		LLM
+
+
+	Các thành phần có thể liên quan:
+		Amazon Bedrock → foundation models / embedding models
+		Amazon Bedrock Knowledge Bases → quản lý ingestion + retrieval/RAG
+		Amazon OpenSearch Service → vector search
+		Amazon Aurora PostgreSQL + pgvector → vector storage/search
+		các vector store khác được Knowledge Bases hỗ trợ tùy kiến trúc
+
+	Điểm cần nhớ:
+		Embedding model tạo vector; vector database không "hiểu" text. Nó chủ yếu thực hiện phép tìm kiếm dựa trên vector.
+
+
+
+
+
+# 11. AWS Professional Exam Trap
+
+
+Trap 1 — "Cosine càng nhỏ càng giống"
+
+	❌ Sai.
+
+	Cosine:
+		càng lớn → càng giống
+
+	Euclidean:
+		càng nhỏ → càng giống
+
+
+
+Trap 2 — "Euclidean luôn kém hơn Cosine cho semantic search"
+
+		❌ Sai.
+			Không có metric nào luôn tốt hơn.
+
+		Phải xem:
+			embedding model
+			normalization
+			distribution của vector
+			retrieval objective
+			indexing implementation
+			accuracy/latency trade-off
+
+
+
+Trap 3 — "Cosine chỉ dùng được cho text"
+	❌ Sai.
+	Cosine similarity dùng được cho vector representation nói chung.
+
+
+
+Trap 4 — "Vector càng dài thì semantic similarity càng cao"
+
+	❌ Sai nếu dùng Cosine.
+
+		Ví dụ:
+
+			A = [1, 1]
+			B = [100, 100]
+
+		Hai vector cùng hướng:
+			$$ Cosine(A,B)=1 $$
+
+		mặc dù magnitude khác nhau rất lớn.
+
+
+Trap 5 — "Cosine và Euclidean luôn cho kết quả khác nhau"
+	❌ Sai.
+	Nếu vector được normalize thích hợp, chúng có thể tạo cùng ranking.
+
+
+
+
+# 12. Scenario kiểu AIP-C01
+
+
+Một công ty xây dựng RAG trên Amazon Bedrock. Team nhận thấy một số document có embedding magnitude lớn hơn đáng kể so với các document khác. Semantic relevance vẫn tốt khi xét theo hướng vector, nhưng retrieval hiện tại bị ảnh hưởng bởi magnitude. Họ muốn metric ít nhạy với magnitude hơn.
+
+Đáp án có logic mạnh:
+
+Cosine similarity
+
+Vì objective là đo directional similarity, giảm ảnh hưởng của vector magnitude.
+
+Nhưng nếu đề nói:
+
+Các vector đã được L2-normalized và team muốn sử dụng một distance metric tương thích với ANN implementation hiện tại.
+
+Thì Euclidean distance có thể hoàn toàn hợp lý.
+
+Đừng chọn đáp án chỉ vì:
+
+"Cosine = AI"
+
+AWS Professional rất thích kiểu bẫy này.
+
+
+
+
+
+# 13. Cách nhớ trong 5 giây
+
+	COSINE
+	   ↓
+	"Cùng hướng không?"
+	   ↓
+	Similarity ↑ = giống ↑
+
+
+	EUCLIDEAN
+	   ↓
+	"Cách nhau bao xa?"
+	   ↓
+	Distance ↓ = giống ↑
+	
+
+	Và câu quan trọng nhất:
+		Cosine quan tâm hướng; Euclidean quan tâm khoảng cách hình học, bao gồm cả magnitude.
+
+
+
+
+
+
+
+
 
 </pre><a id='backBottom' href='../aws-bedrock-agent-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
