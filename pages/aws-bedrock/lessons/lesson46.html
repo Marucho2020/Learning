@@ -1,3 +1,658 @@
-<html><head><title>Lesson 46 == Lộ trình ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 46 -- Lộ trình -//</h1><pre># Lộ trình 100 ngày học AIP-C01 — Trọng tâm: Kiến trúc AI hiện đại & Agentic AI
+<html><head><title>Lesson 46 == AIP-C01  ===Amazon OpenSearch Serverless (vector engine) ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 46 -- AIP-C01  --=Amazon OpenSearch Serverless (vector engine) -//</h1><pre>
+# Bản chất:
+
+	Đây là một dịch vụ rất quan trọng đối với AIP-C01, đặc biệt ở phần RAG / Vector Store / Retrieval.
+
+	Nói thẳng bản chất:
+	
+	Amazon OpenSearch Serverless Vector Engine = một vector database/search engine managed bởi AWS, dùng để lưu embedding và tìm các vector gần với vector của query.
+
+
+
+
+# nó nằm ở đâu trong RAG? 
+
+	Ví dụ user hỏi:
+		「育児休業の申請条件は何ですか？」
+		
+	Pipeline:
+
+                 User Query
+                     │
+                     ▼
+          ┌──────────────────┐
+          │ Embedding Model  │
+          │ Titan / Cohere...│
+          └────────┬─────────┘
+                   │
+                   │ Query Vector
+                   ▼
+      ┌──────────────────────────┐
+      │ OpenSearch Serverless    │
+      │       Vector Engine      │
+      │                          │
+      │  Vector + Metadata       │
+      │  Vector + Metadata       │
+      │  Vector + Metadata       │
+      │  Vector + Metadata       │
+      └────────────┬─────────────┘
+                   │
+             Top-K similar
+                 chunks
+                   │
+                   ▼
+             Context
+                   │
+                   ▼
+          ┌─────────────────┐
+          │      LLM        │
+          │ Claude / Nova   │
+          └────────┬────────┘
+                   │
+                   ▼
+                 Answer
+
+
+	Embedding Model trả lời:
+		"Câu này được biểu diễn thành vector nào?"
+
+	OpenSearch Vector Engine trả lời:
+		"Trong database, những vector nào gần vector này nhất?"
+
+	LLM trả lời:
+		"Dựa trên những document được retrieve, tôi nên trả lời user thế nào?"
+
+	Đây là 3 vai trò hoàn toàn khác nhau.
+
+
+
+
+# 2. OpenSearch Serverless thực sự lưu cái gì?
+
+	Một record có thể conceptually như:
+
+	{
+	  "text": "育児休業は子どもが1歳になるまで取得できます。",
+	  "embedding": [0.021, -0.183, 0.442, ...],
+	  "department": "HR",
+	  "language": "ja",
+	  "document_id": "hr-policy-001"
+	}
+
+
+	Trong đó:
+		text
+		  ↓
+		Embedding Model
+		  ↓
+		[0.021, -0.183, 0.442, ...]
+		  ↓
+		OpenSearch Vector Engine
+
+
+
+
+	OpenSearch lưu:
+
+		vector
+		text
+		metadata
+		document ID
+		các field phục vụ filtering/search
+
+	Điểm rất quan trọng:
+		Vector database không chỉ chứa vector.
+
+		OpenSearch Serverless cho phép lưu metadata như number, boolean, date, keyword, geopoint và text cùng với vector. Điều này cực kỳ hữu ích cho metadata filtering trong RAG
+
+
+
+
+
+
+
+# 3. Tại sao dùng OpenSearch thay vì một database bình thường?
+
+
+	Database SQL truyền thống rất giỏi:
+		WHERE department = 'HR'
+
+	hoặc:
+		WHERE employee_id = 123
+
+	Nhưng nó không tự nhiên giải quyết câu hỏi:
+		"Document nào có ngữ nghĩa gần nhất với câu hỏi này?"
+
+
+
+	Vector search làm:
+
+		Query vector
+			 ↓
+		Similarity Search
+			 ↓
+		Top-K nearest vectors
+
+
+	Ví dụ:
+		Query:
+		"育児休業の申請条件"
+
+			   ↓ embedding
+
+		Q = [0.21, 0.83, -0.14, ...]
+
+		OpenSearch
+			Document A = [0.20, 0.81, -0.12, ...]  ← gần
+			Document B = [0.71, 0.02,  0.91, ...]  ← xa
+			Document C = [0.22, 0.80, -0.10, ...]  ← gần
+
+			   ↓
+
+		A, C được retrieve
+
+
+	Đây chính là semantic search.
+	
+	OpenSearch Vector Engine hỗ trợ các distance metric như:
+		Euclidean
+		Cosine similarity
+		Dot product
+
+	và hỗ trợ vector tới 16,000 dimensions.
+
+
+
+
+# 4. k-NN — từ khóa cực kỳ quan trọng
+	Vector search của OpenSearch dựa trên k-nearest neighbor (k-NN).
+
+	Ví dụ:
+		{
+		  "query": {
+			"knn": {
+			  "embedding": {
+				"vector": [0.21, 0.83, -0.14],
+				"k": 5
+			  }
+			}
+		  }
+		}
+
+
+	k = 5
+
+	nghĩa là:
+		Tìm 5 vector gần nhất với query vector.
+		AWS documentation mô tả Vector Engine sử dụng k-NN search và cung cấp k-NN API.
+
+
+
+
+
+# 5. Vì sao gọi là "Serverless"?
+
+	Đây là phần rất dễ bị đề thi đánh lừa.
+	
+	Với OpenSearch cluster truyền thống:
+
+		Bạn
+		 │
+		 ├── chọn instance
+		 ├── chọn node
+		 ├── cluster size
+		 ├── shard
+		 ├── replica
+		 ├── scaling
+		 └── capacity planning
+
+
+
+	OpenSearch Serverless:
+		Bạn
+		 │
+		 ▼
+		Collection
+		 │
+		 ▼
+		AWS quản lý infrastructure
+		 │
+		 ├── scaling
+		 ├── compute
+		 ├── capacity
+		 └── underlying infrastructure
+
+
+# 6. Nhưng "Serverless" KHÔNG có nghĩa là "free"
+
+	Đây là trap rất hay.
+
+		Serverless
+		≠
+		No infrastructure cost
+		
+		
+	OpenSearch Serverless sử dụng OpenSearch Compute Units — OCUs cho compute capacity.	
+		
+		
+	Vì vậy:
+
+Không phải trả tiền cho EC2 instance trực tiếp không có nghĩa là miễn phí.
+
+Trong bài thi nếu đáp án nói:
+	"Use OpenSearch Serverless because it eliminates infrastructure costs" (eliminates loại bỏ )
+	→ Sai.
+
+Đúng hơn:
+	"Use OpenSearch Serverless to reduce operational overhead and automatically scale capacity."	
+		
+		
+		
+		
+# 	7. Collection → Index → Document	
+		
+	Đây là hierarchy phải nhớ.	
+		
+		
+OpenSearch Serverless
+        │
+        ▼
+    Collection
+        │
+        ├── Index A
+        │      ├── Document
+        │      ├── Document
+        │      └── Document
+        │
+        └── Index B
+               ├── Document
+               └── Document		
+		
+		
+		
+	Collection
+		Logical grouping của một hoặc nhiều indexes.	
+		
+		
+	Index
+		Nơi chứa documents có schema tương tự.	
+		
+		
+	Document
+		Một record thực tế:		
+			{
+			  "text": "...",
+			  "embedding": [...],
+			  "department": "HR"
+			}
+
+			AWS định nghĩa collection là logical grouping của một hoặc nhiều indexes.		
+					
+					
+		
+		
+		
+# 	8. OpenSearch Serverless trong Bedrock Knowledge Bases	
+	Đây mới là phần AIP-C01 quan trọng.
+
+Bạn có:
+
+
+S3
+ │
+ │ documents
+ ▼
+Bedrock Knowledge Bases
+ │
+ ├── Chunking
+ │
+ ├── Embedding Model
+ │
+ │     ↓
+ │   vectors
+ │
+ ▼
+OpenSearch Serverless
+ │
+ │ vector search
+ ▼
+Relevant chunks
+ │
+ ▼
+Foundation Model
+ │
+ ▼
+Answer
+
+
+	Amazon Bedrock Knowledge Bases có thể sử dụng Amazon OpenSearch Serverless làm vector store. Khi dùng quick-create, Bedrock có thể tự tạo vector search collection và index cần thiết.
+
+
+	Đây là một architecture cực kỳ phổ biến:
+
+		S3
+		 ↓
+		Bedrock Knowledge Bases
+		 ↓
+		Embedding
+		 ↓
+		OpenSearch Serverless
+		 ↓
+		Retrieve
+		 ↓
+		Claude / Nova
+
+
+# 9. OpenSearch Serverless vs Aurora PostgreSQL + pgvector 
+
+|                                 | OpenSearch Serverless         | Aurora PostgreSQL + pgvector      |
+| ------------------------------- | ----------------------------- | --------------------------------- |
+| Bản chất                        | Search engine / vector search | Relational DB                     |
+| Vector search                   | Rất mạnh                      | Có                                |
+| Full-text search                | Mạnh                          | Có                                |
+| Metadata filtering              | Mạnh                          | Mạnh                              |
+| SQL                             | Không phải điểm mạnh          | **Rất mạnh**                      |
+| Relational data                 | Không phù hợp bằng Aurora     | **Rất phù hợp**                   |
+| Operational overhead            | Thấp                          | Cao hơn                           |
+| Serverless                      | Có                            | Có thể dùng Aurora Serverless     |
+| RAG                             | Rất phù hợp                   | Rất phù hợp                       |
+| Search-centric workload         | **Rất phù hợp**               | Không phải lựa chọn tự nhiên nhất |
+| Transaction/relational workload | Không                         | **Phù hợp**                       |
+
+
+
+	Rule để thi
+
+	Nếu scenario nói:
+		"Application already stores relational business data in PostgreSQL and needs vector search integrated with relational queries."
+		→ Aurora PostgreSQL + pgvector có thể là lựa chọn tự nhiên.
+
+	Nếu nói:
+		"Need scalable semantic search with minimal infrastructure management."
+		→ OpenSearch Serverless Vector Engine.
+
+
+		
+		
+#  	10. OpenSearch Serverless vs S3 Vectors
+		
+	Đây là một điểm hiện đại mà bạn nên để ý khi học AIP-C01.	
+		
+		
+	Đừng suy nghĩ:
+		Vector DB = OpenSearch	
+		
+		
+	AWS hiện có nhiều lựa chọn vector store cho Bedrock Knowledge Bases, bao gồm OpenSearch Serverless, Aurora PostgreSQL, Neptune Analytics, Pinecone, Redis và các lựa chọn khác.		
+			
+			
+	Do đó exam sẽ ngày càng hỏi theo kiểu:
+		"Given workload X, which vector store is most appropriate?"
+
+	chứ không đơn giản:
+		"Which service stores vectors?"	
+			
+			
+		
+		
+# 11. Filtering — cực kỳ quan trọng trong RAG production		
+		
+		
+	Giả sử công ty có:
+
+		Document A
+		department = HR
+
+		Document B
+		department = Finance
+
+		Document C
+		department = Engineering		
+				
+		
+		
+		
+	User thuộc HR.
+
+	Query:
+		"How many paid vacation days do I have?"
+
+	Nếu chỉ vector similarity:
+		Query
+		 ↓
+		Top-K
+		 ↓
+		A
+		B
+		C
+
+		Có nguy cơ lấy nhầm document.
+
+	Ta thêm metadata filtering:		
+		Query
+		 +
+		department = HR
+		 ↓
+		Vector Search
+		 ↓
+		HR documents only			
+			
+			
+	Đây là cách kết hợp:
+		Semantic similarity + metadata filtering
+		OpenSearch Vector Engine hỗ trợ advanced filtering cùng vector search.
+		Trong production RAG, đây thường quan trọng hơn việc chỉ tăng k.			
+			
+			
+		
+		
+# 	12. Trap cực mạnh: tăng Top-K không phải lúc nào cũng tốt
+		
+	Kết quả:
+		Context dài hơn
+				↓
+		Latency tăng
+				↓
+		Token cost tăng
+				↓
+		Nhiễu tăng
+				↓
+		LLM có thể trả lời kém hơn
+
+	Cho nên:
+		More retrieved documents ≠ better RAG.
+		Professional exam rất thích trade-off này.		
+			
+			
+			
+			
+			
+			
+# 13. NextGen Vector Search — điểm mới cần biết			
+			
+			
+	AWS hiện phân biệt:
+		OpenSearch Serverless
+		│
+		├── NextGen
+		│
+		└── Classic			
+					
+			
+	NextGen là generation mới và AWS khuyến nghị dùng cho collection mới. NextGen có khả năng scale theo workload và chỉ load các data blocks cần thiết vào memory; workers có thể scale theo nhu cầu CPU/memory.			
+				
+			
+			
+	Đừng học theo kiểu cũ:
+		"OpenSearch Serverless Vector = Classic"
+
+	Không còn đủ chính xác.			
+				
+			
+			
+			
+# 	14. Một trap rất thực tế với Bedrock Knowledge Bases	
+			
+	Nếu bạn tự tạo OpenSearch Serverless vector index để dùng với Bedrock Knowledge Bases, cần chú ý engine/configuration compatibility.
+
+	AWS hiện ghi rõ: với một số filtering/query configuration của Knowledge Bases, vector index trên OpenSearch Serverless cần sử dụng FAISS; nếu index dùng nmslib, có những trường hợp phải tạo index phù hợp khác hoặc để Bedrock tự tạo index.			
+				
+				
+	Đây chính là kiểu chi tiết mà Professional exam có thể dùng để biến:
+		"OpenSearch Serverless"
+
+	thành đáp án gần đúng nhưng chưa đủ.				
+				
+				
+			
+# 	15. Mapping toàn bộ RAG stack		
+	Hãy nhớ architecture này:		
+			
+                 ┌───────────────┐
+                 │      S3       │
+                 │ Source Docs   │
+                 └───────┬───────┘
+                         │
+                         ▼
+                ┌──────────────────┐
+                │ Bedrock KB       │
+                │                  │
+                │ Chunking         │
+                │ Embedding        │
+                └────────┬─────────┘
+                         │
+                         │ vectors
+                         ▼
+              ┌──────────────────────┐
+              │ OpenSearch Serverless │
+              │    Vector Engine      │
+              │                      │
+              │ Vector               │
+              │ Metadata             │
+              │ Index                │
+              └──────────┬───────────┘
+                         │
+                    similarity
+                       search
+                         │
+                         ▼
+                  Top-K chunks
+                         │
+                         ▼
+                ┌─────────────────┐
+                │ Foundation Model│
+                │ Claude / Nova   │
+                └────────┬────────┘
+                         │
+                         ▼
+                       Answer
+
+
+
+	Vai trò từng thành phần:
+
+| Thành phần               | Công việc                          |
+| ------------------------ | ---------------------------------- |
+| S3                       | Source documents                   |
+| Bedrock Knowledge Bases  | Orchestrate ingestion/retrieval    |
+| Embedding Model          | Text → vector                      |
+| OpenSearch Vector Engine | Store + similarity search          |
+| Metadata                 | Filtering / access control context |
+| Foundation Model         | Generate answer                    |
+
+
+# 16. Từ khóa AIP-C01 phải nhìn thấy là nhận diện ngay
+
+
+Khi đọc đề thấy:
+	vector search
+	semantic search
+	similarity search
+	k-NN
+	embedding
+	vector store
+	metadata filtering
+	cosine similarity
+	Euclidean distance
+	dot product
+	RAG
+	Knowledge Bases
+	OpenSearch Serverless
+	minimal infrastructure management
+	automatic scaling
+	search workload
+						   
+→ lập tức nghĩ:
+	OpenSearch Serverless Vector Engine
+	Nhưng đừng chọn ngay. Phải nhìn workload trước.		
+
+
+
+
+
+# 17. Cách AWS ra đề
+
+
+Scenario
+
+Một công ty có 50 triệu tài liệu nội bộ. Ứng dụng GenAI cần semantic search. Team không muốn quản lý cluster hoặc provision infrastructure. Hệ thống cần metadata filtering và vector similarity search.
+
+Các đáp án có thể là:
+
+A. DynamoDB
+B. S3
+C. OpenSearch Serverless Vector Engine
+D. Lambda
+
+→ C.
+
+
+
+Nhưng Professional-level sẽ khó hơn:
+
+Company already has PostgreSQL containing customer records and needs vector search combined with complex relational queries.
+
+Lúc này:
+	OpenSearch Serverless
+
+nghe rất đúng, nhưng chưa chắc tối ưu.
+
+Có thể:
+	Aurora PostgreSQL + pgvector
+
+phù hợp hơn.
+
+
+
+# 18. Công thức tư duy khi gặp câu hỏi
+
+Đừng hỏi:
+	"OpenSearch có vector search không?"
+
+Hãy hỏi:
+
+1. Workload là gì?
+       ↓
+2. Search-centric hay relational-centric?
+       ↓
+3. Có cần semantic search?
+       ↓
+4. Có cần metadata filtering?
+       ↓
+5. Scale như thế nào?
+       ↓
+6. Operational overhead?
+       ↓
+7. Latency?
+       ↓
+8. Cost?
+       ↓
+9. Integration với Bedrock?
+
+	Đó mới là cách làm bài Professional-level.
+		
+			
+
+
 
 </pre><a id='backBottom' href='../aws-bedrock-agent-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
