@@ -1,3 +1,589 @@
-<html><head><title>Lesson 47 == Lộ trình ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 47 -- Lộ trình -//</h1><pre># Lộ trình 100 ngày học AIP-C01 — Trọng tâm: Kiến trúc AI hiện đại & Agentic AI
+<html><head><title>Lesson 47 == AIP-C01  ===Aurora PostgreSQL với pgvector ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 47 -- AIP-C01  --=Aurora PostgreSQL với pgvector -//</h1><pre>
+# 1. Bản chất
+
+	Nếu đặt trong RAG trên AWS, hãy hiểu rất đơn giản:
+
+	Aurora PostgreSQL = database quan hệ.
+	pgvector = extension biến PostgreSQL thành nơi lưu và tìm kiếm vector embedding.
+
+
+	Ví dụ bạn có tài liệu:
+		「有給休暇は入社6か月後から取得できます。」
+
+	Embedding model biến câu này thành một vector:
+		[0.021, -0.183, 0.442, ..., 0.091]
+
+
+	Bạn lưu vào Aurora:
+
+	documents
+	------------------------------------------------
+	id
+	title
+	content
+	embedding
+	department
+	created_at
+
+
+	Trong đó:
+
+		content
+		→ text
+
+		embedding
+		→ vector
+
+	pgvector cung cấp kiểu dữ liệu và khả năng similarity search cho vector.
+
+
+	Ví dụ conceptually:
+		SELECT *
+		FROM documents
+		ORDER BY embedding <=> :query_embedding
+		LIMIT 5;
+
+	Ý nghĩa:
+		"Tìm 5 document có vector gần query embedding nhất."
+
+	Đây chính là vector retrieval của RAG.
+
+
+
+
+# 2. Aurora không phải Vector Database thuần túy
+
+	Đây là điểm cực kỳ quan trọng khi thi AIP-C01.
+	
+	Aurora PostgreSQL vốn là:
+		Relational Database
+				↓
+		PostgreSQL
+				↓
+		pgvector extension
+				↓
+		Vector search capability
+
+
+	Không nên suy nghĩ:
+		Aurora = Vector DB
+
+	Mà phải nghĩ:
+		Aurora PostgreSQL
+			+
+		pgvector
+			=
+		PostgreSQL có khả năng vector similarity search
+
+	Đây là lý do Aurora đặc biệt hữu ích khi application đã sử dụng PostgreSQL.
+
+
+
+
+# 3. Tại sao dùng Aurora + pgvector cho RAG?
+
+	Giả sử công ty có hệ thống HR:
+Employee
+Department
+Salary
+Leave
+Document
+FAQ
+
+	Bạn cần xây chatbot:
+		User
+		 ↓
+		Question
+		 ↓
+		Embedding Model
+		 ↓
+		Aurora PostgreSQL + pgvector
+		 ↓
+		Relevant documents
+		 ↓
+		LLM
+		 ↓
+		Answer
+
+	Điểm mạnh là bạn có thể kết hợp:
+
+	Semantic search
+		embedding similarity
+	với:
+	SQL filtering
+	
+	
+	
+	Ví dụ:
+		"Chính sách nghỉ phép của nhân viên thuộc department A."
+
+	Bạn có thể filter:
+		WHERE department = 'A'
+		rồi mới similarity search.
+
+	Đây là một lợi thế rất thực tế của PostgreSQL.	
+		
+	
+	
+# 	4. pgvector tìm kiếm như thế nào?
+
+	Có ba khái niệm cần nhớ.
+	
+	
+| Metric             | Ý nghĩa                   |
+| ------------------ | ------------------------- |
+| Cosine similarity  | Độ giống nhau về hướng    |
+| Euclidean distance | Khoảng cách giữa hai điểm |
+| Inner product      | Tích vô hướng             |
+	
+	
+	
+	Trong pgvector, bạn sẽ gặp các toán tử như:
+	
+		<=>  Cosine distance
+		<->  Euclidean distance
+		<#>  Negative inner product
+		
+	Ví dụ:
+		ORDER BY embedding <=> :query_embedding
+		LIMIT 5;
+
+		<=> là cosine distance, không phải cosine similarity.
+
+		Đây là một exam trap rất điển hình.	
+			
+	
+	
+	
+	
+	
+# 	5. Index — phần Professional-level rất quan trọng
+	Nếu database chỉ có:
+		1,000 documents
+
+	thì brute-force search có thể vẫn ổn.	
+	
+	Nhưng nếu:
+		10 million vectors
+
+	thì không thể đơn giản:
+		query
+		 ↓
+		so sánh với toàn bộ vector
+		 ↓
+		sort	
+		
+	vì latency sẽ tăng mạnh.
+	pgvector hỗ trợ các phương pháp indexing quan trọng như:
+		HNSW
+		IVFFlat	
+	
+	
+	
+# HNSW	
+	Hierarchical Navigable Small World.
+	
+	
+	Ý tưởng:
+
+		vector
+		 ↓
+		graph
+		 ↓
+		navigate tới những vector gần nhất	
+			
+	
+	Ưu điểm:
+		retrieval nhanh
+		recall tốt
+		phù hợp low-latency similarity search
+
+	Nhược điểm:
+
+		index tốn memory
+		build index tốn resource
+		tuning phức tạp hơn	
+			
+		
+	
+	
+	
+# IVFFlat 	
+	
+	
+	Ý tưởng:
+		vectors
+		   ↓
+		clusters
+		   ↓
+		chỉ search một số cluster
+
+	Thay vì search toàn bộ vector space.
+
+	Ưu điểm:
+		index tương đối nhẹ
+		nhanh hơn brute force
+
+	Nhược điểm:
+
+		recall phụ thuộc tuning
+		cần chọn số cluster/probes phù hợp
+			
+		
+		
+
+
+
+
+
+# 6. Aurora + pgvector vs OpenSearch
+	Đây là bảng rất đáng nhớ cho AIP-C01.
+
+|                                             | Aurora PostgreSQL + pgvector | OpenSearch              |
+| ------------------------------------------- | ---------------------------- | ----------------------- |
+| Bản chất                                    | Relational DB                | Search/analytics engine |
+| SQL                                         | ⭐⭐⭐⭐⭐                        | ⭐⭐                      |
+| Vector search                               | Có                           | Có                      |
+| Metadata filtering                          | Rất mạnh                     | Rất mạnh                |
+| Transaction                                 | ⭐⭐⭐⭐⭐                        | Không phải thế mạnh     |
+| Existing PostgreSQL app                     | ⭐⭐⭐⭐⭐                        | ⭐⭐                      |
+| Full-text search                            | Tốt                          | ⭐⭐⭐⭐⭐                   |
+| Massive search workload                     | Tùy workload                 | ⭐⭐⭐⭐⭐                   |
+| Operational simplicity nếu đã có PostgreSQL | ⭐⭐⭐⭐⭐                        | ⭐⭐⭐                     |
+| RAG                                         | Rất phù hợp                  | Rất phù hợp             |
+
+
+	Không có đáp án "OpenSearch luôn tốt hơn vì nó là search engine".
+
+	AWS Professional-level thường muốn bạn suy nghĩ:
+		Workload thực tế là gì?
+
+
+
+
+
+# 7. Khi nào chọn Aurora + pgvector?
+
+
+	Scenario
+
+		Một công ty đã có:
+			Aurora PostgreSQL
+
+		và application đang lưu:
+			customers
+			orders
+			products
+			documents
+
+		Họ muốn thêm RAG.
+
+
+	Requirement:
+
+		500K documents
+		moderate query volume
+		cần transaction
+		cần SQL filtering
+		muốn giảm operational complexity
+		không muốn thêm một database riêng
+
+	→ Aurora PostgreSQL + pgvector là lựa chọn rất hợp lý.
+
+
+	Vì:
+		Existing Aurora
+			   +
+		pgvector
+			   ↓
+		RAG
+
+	Không cần thêm một search infrastructure chỉ để phục vụ vector retrieval.
+
+		
+		
+		
+		
+		
+		
+# 	8. Khi nào OpenSearch có thể phù hợp hơn?	
+		
+		
+	Ví dụ:
+		100 million documents
+		high query volume
+		complex full-text search
+		faceted search
+		keyword + semantic search
+		search-oriented workload		
+			
+			
+			
+	Lúc này:
+
+	OpenSearch
+		có thể phù hợp hơn.
+
+	Đặc biệt nếu requirement nhấn mạnh:
+		full-text search + semantic/vector search + high-scale search workload
+		thì hãy nghĩ ngay đến OpenSearch.		
+				
+			
+			
+		
+		
+# 	9. Một architecture RAG thực tế	
+
+	Ví dụ dùng Aurora:	
+		
+                 ┌─────────────────┐
+                 │   User Query    │
+                 └────────┬────────┘
+                          ↓
+                 ┌─────────────────┐
+                 │ Embedding Model │
+                 │     Bedrock     │
+                 └────────┬────────┘
+                          ↓
+                    Query Vector
+                          ↓
+             ┌────────────────────────┐
+             │ Aurora PostgreSQL      │
+             │                        │
+             │ documents              │
+             │ metadata               │
+             │ embedding              │
+             │                        │
+             │      pgvector          │
+             └───────────┬────────────┘
+                         ↓
+                  Top-K documents
+                         ↓
+                  Context Assembly
+                         ↓
+                 ┌─────────────────┐
+                 │ Foundation Model│
+                 │    Bedrock      │
+                 └────────┬────────┘
+                          ↓
+                       Answer		
+		
+		
+	AWS components có thể là:	
+		
+Amazon Bedrock
+    ├── Embedding Model
+    └── Foundation Model
+
+Amazon Aurora PostgreSQL
+    └── pgvector
+
+AWS Lambda
+    └── orchestration
+
+IAM
+    └── authorization
+
+CloudWatch
+    └── monitoring		
+		
+		
+		
+		
+
+# 10. Aurora + pgvector trong Amazon Bedrock Knowledge Bases
+
+Đây là điểm cần phân biệt.
+	Amazon Bedrock Knowledge Bases có thể quản lý nhiều phần của RAG workflow thay cho bạn.
+
+
+	Concept:
+		Documents
+		   ↓
+		Chunking
+		   ↓
+		Embedding
+		   ↓
+		Vector storage
+		   ↓
+		Retrieval
+		   ↓
+		Foundation Model
+
+
+	Nếu chọn Aurora PostgreSQL-Compatible làm vector store:
+
+		Bedrock Knowledge Bases
+				  ↓
+		Embedding
+				  ↓
+		Aurora PostgreSQL
+				  ↓
+		pgvector
+
+	Do đó trong exam, đừng nghĩ:
+		"Dùng Aurora thì phải tự viết toàn bộ RAG."
+
+	Không nhất thiết.
+
+	Có thể sử dụng:
+		Bedrock Knowledge Bases
+		+
+		Aurora PostgreSQL / pgvector
+
+		để giảm phần code/orchestration phải tự quản lý.
+
+
+
+# 11. Trade-off thật sự
+
+	Aurora + pgvector
+
+
+                 Accuracy
+                    ↑
+                    │
+             ┌──────┼──────┐
+             │      │      │
+             │      │      │
+Cost ←───────┼──────┼──────┼──────→ Scale
+             │      │      │
+             └──────┼──────┘
+                    ↓
+              Complexity(độ phức tạp)
+
+
+	Không có lựa chọn miễn phí.
+
+	Bạn đang trade:
+
+	Aurora + pgvector
+		→ đơn giản nếu đã có PostgreSQL
+		→ SQL/transaction rất mạnh
+		→ dễ kết hợp relational metadata
+		→ nhưng không phải search engine chuyên dụng cho mọi workload.
+
+	OpenSearch
+		→ mạnh về search scale/full-text/vector
+		→ nhưng thêm infrastructure và operational consideration.
+
+
+
+
+
+# 12. Exam Trap
+
+	Trap 1
+		"pgvector is a standalone AWS vector database."
+		❌ Sai.
+		pgvector là PostgreSQL extension.
+
+	Trap 2
+		"Aurora PostgreSQL cannot perform vector similarity search."
+		❌ Sai.
+		Có thể thông qua pgvector.
+
+	Trap 3
+		"Cosine distance <=> directly returns cosine similarity."
+		❌ Sai.
+		<=> là cosine distance.
+
+	Trap 4
+		"OpenSearch is always better than Aurora for RAG."
+		❌ Sai.
+
+	Phải xét:
+		scale
+		workload
+		filtering
+		transactions
+		full-text search
+		existing infrastructure
+		latency
+		cost
+		operational complexity
+		
+	Trap 5
+		"You must deploy a dedicated vector database for every RAG application."
+		❌ Sai.
+
+		Có thể dùng:
+			Aurora PostgreSQL + pgvector
+
+		hoặc:
+			OpenSearch
+			hoặc các vector-store options khác được Bedrock hỗ trợ tùy kiến trúc.
+
+
+
+
+# 13. Cách AWS ra đề
+
+	Một câu Professional-level thường không hỏi:
+
+	"pgvector là gì?"
+
+	Mà sẽ hỏi kiểu:
+
+	Một công ty đang sử dụng Aurora PostgreSQL cho application hiện tại. Công ty muốn bổ sung semantic search cho 800,000 documents. Metadata của documents phải được filter bằng SQL, application cần transactional consistency và team muốn giảm số lượng infrastructure phải vận hành. Giải pháp nào phù hợp nhất?
+
+
+	Đừng bị dụ bởi đáp án:
+		Deploy another dedicated vector database
+
+	Chỉ vì nghe có vẻ "đúng kiến trúc AI".
+
+	Hãy nhìn requirement:
+		Existing PostgreSQL
+		+
+		SQL filtering
+		+
+		transaction
+		+
+		moderate scale  (moderate vừa phải)
+		+ 
+		reduce infrastructure
+
+	→ Aurora PostgreSQL + pgvector.
+
+
+
+
+
+# 14. Câu chốt để nhớ
+	Aurora PostgreSQL + pgvector = biến PostgreSQL hiện có thành một vector-capable database, đặc biệt mạnh khi vector search phải sống cùng relational data.
+
+Còn:
+	OpenSearch = ưu tiên khi bài toán bản chất là search ở quy mô lớn, đặc biệt full-text + semantic/vector search.
+
+
+
+
+pgvector
+→ PostgreSQL extension
+
+<=> 
+→ Cosine distance
+
+<-> 
+→ Euclidean distance
+
+HNSW / IVFFlat
+→ Vector index
+
+Aurora + pgvector
+→ Relational data + vector search
+
+OpenSearch
+→ Search-oriented workload
+
+
+
+
+
+
+
+
+
 
 </pre><a id='backBottom' href='../aws-bedrock-agent-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
