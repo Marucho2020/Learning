@@ -1,3 +1,876 @@
-<html><head><title>Lesson 48 == Lộ trình ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 48 -- Lộ trình -//</h1><pre># Lộ trình 100 ngày học AIP-C01 — Trọng tâm: Kiến trúc AI hiện đại & Agentic AI
+<html><head><title>Lesson 48 == AIP-C01  ===Amazon Bedrock Knowledge Bases — kiến trúc ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 48 -- AIP-C01  --=Amazon Bedrock Knowledge Bases — kiến trúc -//</h1><pre>
+
+# Bản chất 
+
+	Amazon Bedrock Knowledge Bases là một managed RAG pipeline: AWS quản lý phần lớn quá trình ingestion → chunking/parsing → embedding → vector storage → retrieval → đưa context cho foundation model.
+
+
+	AWS hiện cũng có nhiều loại Knowledge Base, bao gồm managed/vector-based KB và các hướng structured data/SQL; vì vậy trong đề Professional, phải nhìn vào kiến trúc và trade-off, không chỉ nhớ tên service.
+
+
+
+# 1. Nhìn toàn bộ kiến trúc trước
+
+Kiến trúc cơ bản:
+
+
+
+                 OFFLINE / INGESTION
+┌──────────────────────────────────────────────────────┐
+│                  Data Sources                        │
+│                                                      │
+│  S3 / SharePoint / Confluence / Salesforce /        │
+│  Google Drive / OneDrive / Web Crawler / Custom     │
+└──────────────────────┬───────────────────────────────┘
+                       │
+                       ▼
+              ┌─────────────────┐
+              │ Parsing          │
+              │ Document        │
+              │ processing      │
+              └────────┬────────┘
+                       │
+                       ▼
+              ┌─────────────────┐
+              │ Chunking         │
+              │                 │
+              │ Document         │
+              │      ↓          │
+              │ Chunk 1          │
+              │ Chunk 2          │
+              │ Chunk 3          │
+              └────────┬────────┘
+                       │
+                       ▼
+              ┌─────────────────┐
+              │ Embedding Model │
+              │                 │
+              │ Text → Vector   │
+              └────────┬────────┘
+                       │
+                       ▼
+              ┌─────────────────┐
+              │ Vector Store    │
+              │                 │
+              │ Vector +         │
+              │ Metadata +       │
+              │ Source reference │
+              └─────────────────┘
+
+
+                  ONLINE / QUERY
+┌──────────────┐
+│ User Query   │
+│ "..."        │
+└──────┬───────┘
+       │
+       ▼
+┌─────────────────────┐
+│ Query Embedding     │
+│                     │
+│ Query → Vector      │
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────┐
+│ Vector Retrieval    │
+│                     │
+│ Similarity Search   │
+│ Top-K chunks        │
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────┐
+│ Optional Reranking  │
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────┐
+│ Retrieved Context   │
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────┐
+│ Foundation Model    │
+│                     │
+│ Prompt + Context    │
+└──────────┬──────────┘
+           │
+           ▼
+        Answer
+
+
+
+	AWS mô tả chính xác flow cốt lõi này: document được chia thành chunks, chuyển thành embeddings, lưu vào vector index; khi query, query cũng được embedding rồi dùng để tìm các chunks tương đồng, sau đó context được đưa vào prompt cho model.
+
+
+
+# 2. Hai pipeline khác nhau — cực kỳ quan trọng
+
+	Một lỗi rất phổ biến khi học RAG là nghĩ:
+		User hỏi → Bedrock tìm document → LLM trả lời.
+
+	Không đủ.
+	Knowledge Bases có hai lifecycle:
+
+
+
+	## A. Ingestion pipeline
+		Raw document
+			 ↓
+		Parse
+			 ↓
+		Chunk
+			 ↓
+		Embedding
+			 ↓
+		Vector Store
+
+
+
+	## B. Retrieval / generation pipeline
+
+		User Query
+			 ↓
+		Query Embedding
+			 ↓
+		Vector Search
+			 ↓
+		Top-K chunks
+			 ↓
+		Reranking (optional)
+			 ↓
+		Context
+			 ↓
+		Foundation Model
+			 ↓
+		Answer
+	Đây là distinction rất hay bị AWS dùng để gài đáp án.
+
+
+# 3. Ingestion — dữ liệu đi vào Knowledge Base như thế nào?
+
+	Ví dụ công ty có:
+		S3
+		│
+		├── employee-handbook.pdf
+		├── security-policy.pdf
+		├── aws-operation-guide.pdf
+		└── service-management.docx	
+			
+			
+	Bạn connect S3 vào Knowledge Base.		
+	
+	Knowledge Base sẽ xử lý:
+	
+		PDF
+		 │
+		 ├── Parsing
+		 │
+		 ├── Chunking
+		 │
+		 ├── Embedding
+		 │
+		 └── Vector Store
+			
+	AWS hỗ trợ nhiều data source như S3, Confluence, SharePoint, Salesforce, Google Drive, OneDrive, Web Crawler và custom data sources.			
+				
+		
+# Điểm cần nhớ
+
+	Knowledge Base không lưu document theo nghĩa truyền thống rồi LLM đọc trực tiếp.	
+		
+	Nó tạo representation để retrieval.	
+	
+	Ví dụ:
+		"Employees must rotate their password every 90 days."	
+		
+	sau embedding có thể trở thành đại loại:
+		[0.021, -0.183, 0.441, ...]
+		Vector này biểu diễn semantic meaning của chunk.		
+		
+		
+	
+
+# 4. Chunking — mắt xích cực kỳ quan trọng
+
+	Giả sử PDF có 100 trang.
+	Không thể hiệu quả nếu embedding cả PDF thành một vector duy nhất.
+
+	Thay vào đó:
+		100-page PDF
+			  ↓
+		 ┌───────────────┐
+		 │ Chunk 1       │
+		 │ Chunk 2       │
+		 │ Chunk 3       │
+		 │ ...           │
+		 │ Chunk 500     │
+		 └───────────────┘
+
+	Mỗi chunk:
+		Chunk
+		├── Text
+		├── Embedding
+		├── Metadata
+		└── Source reference
+
+
+	Tại sao chunking quan trọng?
+	
+	## Nếu chunk quá lớn:
+
+		Query
+		 ↓
+		Chunk chứa rất nhiều irrelevant information
+		 ↓
+		LLM phải xử lý nhiều context
+		 ↓
+		Cost ↑
+		Latency ↑
+		Signal/Noise ↓
+
+
+	
+
+	## Nếu chunk quá nhỏ: 
+
+		Important information
+			   ↓
+		bị chia thành nhiều chunks
+			   ↓
+		retrieval có thể chỉ lấy một phần
+			   ↓
+		context bị thiếu
+
+
+Cho nên:
+	Chunking là retrieval-quality problem, không đơn thuần là storage problem.
+	AWS Knowledge Bases cung cấp các cấu hình/customization cho ingestion để điều chỉnh cách dữ liệu được xử lý.
+
+
+	AWS Knowledge Bases cung cấp các cấu hình/customization cho ingestion để điều chỉnh cách dữ liệu được xử lý.
+
+
+
+
+# 5. Embedding Model
+
+	Sau khi chunk:
+		Chunk
+		  ↓
+		Embedding Model
+		  ↓
+		Vector
+
+	Ví dụ:
+		"How often should employees rotate passwords?"
+		↓
+		[0.17, -0.04, 0.82, ...]
+		Knowledge Bases hỗ trợ embedding models, trong đó có Amazon Titan Text Embeddings V2.
+
+
+	Điểm cực kỳ quan trọng:
+		Document và query phải ở cùng semantic vector space
+
+			Document
+			   ↓
+			Embedding Model
+			   ↓
+			Vector D
+
+			Query
+			   ↓
+			Same/compatible embedding model
+			   ↓
+			Vector Q
+
+
+
+		Sau đó hệ thống có thể tính similarity:
+			similarity(Q, D)
+			để tìm những chunks gần query nhất.
+
+
+
+# 6. Vector Store
+
+	Embedding tạo ra vector nhưng vector phải được lưu ở đâu đó.
+	Knowledge Bases có thể sử dụng các vector stores như:
+		Amazon OpenSearch Serverless
+		Amazon OpenSearch Service
+		Amazon Aurora
+		Amazon Neptune
+		Pinecone
+		và các lựa chọn khác tùy kiến trúc/feature hiện hành.
+
+
+	Một kiến trúc quen thuộc:
+		S3
+		 ↓
+		Bedrock Knowledge Bases
+		 ↓
+		Embedding
+		 ↓
+		Amazon OpenSearch Serverless
+	
+
+	Hoặc:
+		S3
+		 ↓
+		Bedrock Knowledge Bases
+		 ↓
+		Embedding
+		 ↓
+		Aurora PostgreSQL + pgvector
+
+
+		Embedding
+			 ↓
+		Vector Database
+			 ↓
+		OpenSearch
+			 ↓
+		Aurora PostgreSQL + pgvector
+
+	phải được ghép lại với Knowledge Bases.
+
+
+
+# 7. Query-time — chuyện gì xảy ra khi user hỏi?
+
+
+ cơ bản:
+
+	User Query
+		↓
+	Embedding Model
+		↓
+	Query Vector
+		↓
+	Vector Search
+		↓
+	Relevant Chunks
+
+Ví dụ:
+	Top-K = 5
+	Chunk #183  similarity 0.91
+	Chunk #092  similarity 0.89
+	Chunk #411  similarity 0.86
+	Chunk #205  similarity 0.84
+	Chunk #377  similarity 0.82
+
+	Sau đó có thể sử dụng reranking để cải thiện thứ tự kết quả retrieval. AWS Knowledge Bases hỗ trợ reranking models trong quá trình query.
+
+
+
+
+
+
+# 8. Retrieve vs RetrieveAndGenerate
+
+
+	Đây là phần rất quan trọng cho AIP-C01.
+	Knowledge Bases cung cấp ít nhất hai abstraction quan trọng:
+
+		| API                   | Làm gì?                |
+		| --------------------- | ---------------------- |
+		| `Retrieve`            | Chỉ retrieval          |
+		| `RetrieveAndGenerate` | Retrieval + generation |
+
+	AWS xác nhận Retrieve trả về source chunks/images liên quan, còn RetrieveAndGenerate kết hợp retrieval với model invocation để tạo natural-language response.
+
+
+	## Retrieve
+		User Query
+			↓
+		Knowledge Base
+			↓
+		Relevant chunks
+			↓
+		Application
+
+		Application tự quyết định làm gì tiếp.
+
+	Ví dụ:
+		Lambda
+		  ↓
+		Retrieve
+		  ↓
+		Build custom prompt
+		  ↓
+		InvokeModel
+		  ↓
+		Claude / Nova / ...
+
+	Điều này cho bạn control cao hơn.
+
+
+
+
+	## RetrieveAndGenerate 
+		User Query
+			↓
+		Knowledge Base
+			↓
+		Retrieve
+			↓
+		Context augmentation
+			↓
+		Foundation Model
+			↓
+		Answer
+
+	AWS quản lý nhiều phần của RAG flow.
+
+	Tư duy thi:
+		Retrieve = tôi muốn kiểm soát retrieval/application logic.
+		RetrieveAndGenerate = tôi muốn managed RAG flow nhanh hơn.
+
+
+
+
+# 9. Knowledge Bases KHÔNG phải Foundation Model
+
+
+	Đây là một distinction phải thuộc.
+		Knowledge Base
+			  ≠
+		Foundation Model
+		Foundation Model
+
+	Giải quyết:
+		"Generate an answer"
+
+	Ví dụ:
+		Claude
+		Nova
+		Llama
+		...
+		Knowledge Base
+
+	Giải quyết:
+		"Find the relevant information"
+
+	Ví dụ:
+		Company policy
+		Internal documents
+		Product manuals
+		Support documents
+
+	Sau đó:
+
+		Knowledge Base
+			   ↓
+		Context
+			   ↓
+		Foundation Model
+			   ↓
+		Answer
+
+
+
+# 10. Knowledge Base ≠ Fine-tuning
+
+
+	Không cần retrain model.
+
+	AWS cũng nhấn mạnh Knowledge Bases giúp đưa proprietary data vào ứng dụng mà không cần continually train model trên private data.
+
+
+
+
+
+
+# 11. Knowledge Base + Agent
+	Đây mới là architecture rất quan trọng ở Professional level.
+
+
+                    User
+                      │
+                      ▼
+              ┌───────────────┐
+              │ Bedrock Agent │
+              └───────┬───────┘
+                      │
+          ┌───────────┴───────────┐
+          ▼                       ▼
+   Knowledge Base           Action Group
+          │                       │
+          ▼                       ▼
+   Internal documents       Lambda / API
+          │
+          ▼
+     Retrieved data
+
+
+	Ví dụ:
+		"Chính sách hoàn tiền của khách hàng enterprise là gì?"
+
+
+
+
+
+
+	## Agent:
+	
+		User question
+			 ↓
+		Agent reasoning
+			 ↓
+		Knowledge Base
+			 ↓
+		Retrieve policy
+			 ↓
+		Answer
+
+
+	Nhưng:
+	
+		"Hãy hoàn tiền cho customer A."
+		thì Agent có thể cần:
+			Agent
+			 ↓
+			Action Group
+			 ↓
+			Lambda
+			 ↓
+			Payment API
+
+
+
+	Đây là sự khác nhau giữa:
+		RAG system
+
+	và
+		Agentic system có RAG capability.
+
+	AWS cũng mô tả Knowledge Bases là thành phần cung cấp enterprise/domain knowledge cho agents thông qua RAG.
+
+
+
+
+
+
+
+# 12. Managed Knowledge Base vs tự xây RAG
+
+	Đây là trade-off mà Professional exam rất thích.
+
+|                    | Bedrock Knowledge Bases | Custom RAG        |
+| ------------------ | ----------------------- | ----------------- |
+| Ingestion          | Managed                 | Tự xây            |
+| Chunking           | Managed/configurable    | Tự implement      |
+| Embedding          | Managed integration     | Tự gọi model      |
+| Vector DB          | AWS/integrated options  | Tự quản lý        |
+| Retrieval          | Managed                 | Tự code           |
+| Reranking          | Có hỗ trợ               | Tự tích hợp       |
+| Development speed  | **Nhanh**               | Chậm              |
+| Control            | Trung bình/cao tùy mode | **Rất cao**       |
+| Operational burden | **Thấp hơn**            | Cao               |
+| Custom pipeline    | Hạn chế hơn             | **Rất linh hoạt** |
+
+
+	AWS hiện khuyến nghị Managed Knowledge Base cho optimized retrieval accuracy và managed experience. Đồng thời customer-managed KB vẫn phù hợp khi cần kiểm soát pipeline/vector store/configuration sâu hơn.
+
+
+
+
+# 13. Một architecture production điển hình
+
+	Japanese company internal AI assistant
+
+                     ┌──────────────┐
+                     │ Employee     │
+                     └──────┬───────┘
+                            │
+                            ▼
+                     ┌──────────────┐
+                     │ Web / App    │
+                     └──────┬───────┘
+                            │
+                            ▼
+                     ┌──────────────┐
+                     │ API Gateway  │
+                     └──────┬───────┘
+                            │
+                            ▼
+                     ┌──────────────┐
+                     │ Lambda       │
+                     └──────┬───────┘
+                            │
+                            ▼
+                ┌────────────────────────┐
+                │ Bedrock Knowledge Base │
+                └───────────┬────────────┘
+                            │
+                    RetrieveAndGenerate
+                            │
+                ┌───────────┴───────────┐
+                │                       │
+                ▼                       ▼
+         Vector Search            Foundation Model
+                │                       │
+                ▼                       │
+        OpenSearch / Aurora             │
+                │                       │
+                └───────────┬───────────┘
+                            ▼
+                         Answer
+
+	Data side:
+		SharePoint / S3 / Confluence
+					 │
+					 ▼
+			Knowledge Base ingestion
+					 │
+			   Parsing / Chunking
+					 │
+					 ▼
+			   Embedding Model
+					 │
+					 ▼
+				Vector Store
+				
+				
+				
+				
+# 	14. Điểm AWS hay gài trong đề			
+				
+				
+	## Trap 1 — "Private data → Fine-tuning"
+
+		Nghe có vẻ đúng nhưng không mặc định đúng.
+		Nếu requirement là:
+			"Company policies change frequently and answers must reflect the latest documents."
+			→ RAG / Knowledge Base thường phù hợp hơn fine-tuning.			
+							
+							
+						
+						
+				
+				
+	## 	Trap 2 — "Knowledge Base tự biết dữ liệu mới"		
+				
+	Không nên nghĩ vậy.
+		Data source thay đổi thì ingestion/sync phải cập nhật index. AWS mô tả rõ việc sync chuyển raw data thành embeddings để dữ liệu có thể được query.				
+					
+		S3 updated
+		   ↓
+		Knowledge Base
+		   ↓
+		Sync
+		   ↓
+		New embeddings/index					
+							
+				
+				
+				
+	## Trap 3 — "Vector DB là Knowledge Base"			
+				
+				
+		Sai.
+			Knowledge Base
+			 ├── Data source
+			 ├── Parsing
+			 ├── Chunking
+			 ├── Embedding
+			 ├── Vector store
+			 ├── Retrieval
+			 └── Generation integration
+
+		Vector DB chỉ là một component.				
+						
+						
+						
+				
+				
+	## 	Trap 4 — "Retrieve và RetrieveAndGenerate giống nhau"	
+				
+		Sai.
+
+		Retrieve
+			= retrieval only
+
+		RetrieveAndGenerate
+			= retrieval + generation				
+						
+						
+				
+				
+	## 	Trap 5 — "Vector search luôn đủ"	
+		Không nhất thiết.
+
+		Nếu retrieval quality chưa tốt:
+			Query
+			 ↓
+			Vector Search
+			 ↓
+			Bad Top-K
+			 ↓
+			LLM
+			 ↓
+			Confident wrong answer
+
+		Có thể cần:
+			Better chunking
+			+
+			Metadata filtering
+			+
+			Hybrid search
+			+
+			Reranking
+			+
+			Better embedding
+
+		Professional exam thường kiểm tra retrieval quality, chứ không chỉ hỏi “Knowledge Bases dùng service nào”.
+
+
+# 15. Structured data là một nhánh khác
+
+	Đừng nhét tất cả vào vector DB.
+
+		Ví dụ:
+
+		Question:
+			"Doanh thu tháng 8 của chi nhánh Tokyo là bao nhiêu?"
+
+		Đây là dữ liệu có cấu trúc:
+			sales
+			├── date
+			├── branch
+			├── product
+			└── revenue
+
+		Knowledge Bases hiện hỗ trợ structured data stores và có thể chuyển natural-language query thành SQL để truy vấn dữ liệu thay vì bắt buộc vectorize mọi thứ. Các nguồn được hỗ trợ gồm Amazon Redshift và AWS Glue Data Catalog/Lake Formation tùy cấu hình/Region.
+
+
+		Tư duy:
+
+		Unstructured
+			PDF / DOCX / HTML
+					↓
+			Embedding
+					↓
+			Vector Retrieval
+
+
+		Structured
+			SQL tables
+					↓
+			Natural Language → SQL
+					↓
+			Database Query
+
+		Đây là điểm rất đáng nhớ cho AIP-C01.
+
+
+
+
+# 16. Mental model để nhớ toàn bộ
+
+	Hãy nhớ Knowledge Bases bằng 6 động từ:
+
+		INGEST
+		  ↓
+		PARSE
+		  ↓
+		CHUNK
+		  ↓
+		EMBED
+		  ↓
+		RETRIEVE
+		  ↓
+		GENERATE
+
+
+	Hoặc:
+	
+		Data → Chunks → Vectors → Retrieval → Context → LLM
+
+	Nếu hiểu được chuỗi này thì bạn đã hiểu bản chất kiến trúc Knowledge Bases, thay vì học thuộc AWS Console.
+
+
+
+# 17. Từ khóa AIP-C01
+
+
+| Keyword trong đề              | Nghĩ ngay đến                                  |
+| ----------------------------- | ---------------------------------------------- |
+| Private company documents     | RAG / Knowledge Base                           |
+| Frequently changing data      | RAG                                            |
+| Avoid model retraining        | Knowledge Base                                 |
+| Semantic search               | Embedding + Vector Store                       |
+| Chunking                      | Ingestion                                      |
+| Embedding model               | Text → Vector                                  |
+| Vector store                  | OpenSearch / Aurora / ...                      |
+| Top-K                         | Retrieval                                      |
+| Poor retrieval quality        | Chunking / embedding / retrieval tuning        |
+| Reranking                     | Improve relevance of retrieved results         |
+| `Retrieve`                    | Retrieval only                                 |
+| `RetrieveAndGenerate`         | RAG + generation                               |
+| Agent needs company knowledge | Agent + Knowledge Base                         |
+| Structured business data      | SQL/structured KB path                         |
+| Latest information            | Retrieve current source data, not model memory |
+
+
+
+
+# 18. Cách AWS ra đề
+
+	Một scenario kiểu Professional có thể nói:
+		Một công ty có hàng triệu tài liệu nội bộ. Nhân viên cần hỏi đáp về policy. Documents được cập nhật hàng ngày. Công ty muốn tránh retraining foundation model và muốn giảm operational overhead. Hệ thống phải cung cấp source citations.
+
+
+
+	Đừng nhìn thấy:
+		"millions of documents"
+		rồi chọn ngay OpenSearch.
+
+	Hãy parse requirement:
+
+
+		Private data
+			  ↓
+		RAG
+
+		Frequently updated
+			  ↓
+		No fine-tuning
+
+		Reduce operational overhead
+			  ↓
+		Managed Knowledge Base
+
+		Need source attribution
+			  ↓
+		Knowledge Base retrieval/generation + citations
+
+
+	Đáp án tốt thường là đáp án thỏa toàn bộ constraint, không phải đáp án “có vẻ kỹ thuật nhất”.
+
+	Đây chính là tư duy Professional-level:
+		Requirement → architectural constraint → service choice → trade-off
+
+	chứ không phải:
+		Keyword → AWS service.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 </pre><a id='backBottom' href='../aws-bedrock-agent-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
