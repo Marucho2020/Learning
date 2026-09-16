@@ -1,3 +1,601 @@
-<html><head><title>Lesson 49 == Lộ trình ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 49 -- Lộ trình -//</h1><pre># Lộ trình 100 ngày học AIP-C01 — Trọng tâm: Kiến trúc AI hiện đại & Agentic AI
+<html><head><title>Lesson 49 == AIP-C01  ===SQL vs NoSQL trong bối cảnh GenAI/RAG ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 49 -- AIP-C01  --=SQL vs NoSQL trong bối cảnh GenAI/RAG -//</h1><pre>
+
+
+Điểm quan trọng nhất: trong RAG, SQL vs NoSQL không phải là “database nào tốt hơn”. Câu hỏi đúng là:
+	Dữ liệu của mình có cấu trúc thế nào, retrieval cần kiểu gì, consistency ra sao, và workload của RAG là gì?
+
+	Đặc biệt ở AWS, AIP-C01 rất thích hỏi theo kiểu “database nào phù hợp với requirement này?”, chứ không hỏi thuộc lòng định nghĩa SQL/NoSQL.
+
+
+# Trước tiên: RAG thực sự cần database làm gì?
+
+
+	Document
+	   ↓
+	Parse
+	   ↓
+	Chunking
+	   ↓
+	Embedding Model
+	   ↓
+	Vector
+	   ↓
+	Vector Store
+	   ↓
+	Similarity Search
+	   ↓
+	Relevant Chunks
+	   ↓
+	LLM
+	   ↓
+	Answer
+
+
+
+Database/vector store chủ yếu chịu trách nhiệm:
+	"Với query này, hãy tìm những chunk có semantic meaning gần nhất."
+
+
+Vì vậy:
+
+	RAG không nhất thiết cần một "NoSQL database". Nó cần một storage/retrieval engine có khả năng vector search phù hợp.
+
+Đây là điểm cực kỳ quan trọng.
+
+
+
+
+# 2. SQL là gì về bản chất?
+
+	SQL database = dữ liệu được tổ chức theo schema tương đối rõ ràng, thường dưới dạng:
+
+		Table
+		 ├── Row
+		 └── Column
+
+
+SQL mạnh ở:
+	structured data
+	relationships
+	JOIN
+	transactions
+	ACID
+	consistency
+	complex queries
+
+	Đây là kiểu:
+		Tôi biết chính xác tôi muốn tìm dữ liệu nào dựa trên thuộc tính.
+
+
+
+
+
+
+# 3. NoSQL là gì về bản chất?
+
+	NoSQL thường được thiết kế để xử lý dữ liệu:
+		schema linh hoạt
+		huge scale
+		high throughput
+		distributed systems
+		access pattern cụ thể
+
+	Ví dụ document database:
+
+{
+  "employee_id": "E001",
+  "name": "Tanaka",
+  "skills": ["AWS", "Python", "Java"],
+  "projects": [
+    {
+      "name": "GenAI",
+      "role": "Developer"
+    }
+  ]
+}
+
+	Không nhất thiết tất cả document phải có cùng schema.
+
+
+Một record khác có thể:
+	{
+	  "employee_id": "E002",
+	  "name": "Sato",
+	  "certifications": ["AWS SAA"]
+	}
+
+NoSQL thường mạnh ở:
+	Tôi muốn scale lớn và truy cập dữ liệu theo một số access pattern đã xác định.
+
+
+
+# 4. Nhưng RAG làm thay đổi câu chuyện
+
+
+Đây là chỗ dễ nhầm.
+
+	Bạn có:
+		PDF
+		DOCX
+		HTML
+		Email
+		Database
+		Knowledge Article
+
+	Sau khi embedding:
+		Chunk 1 → Vector
+		Chunk 2 → Vector
+		Chunk 3 → Vector
+		...
+
+
+
+	Bạn cần:
+		similarity search
+
+	chứ không chỉ:
+		WHERE department = 'IT'
+
+	Ví dụ:
+
+		Query:
+		"How can I reset my corporate password?"
+
+	Keyword search có thể tìm:
+		"password reset"
+
+	Nhưng semantic search có thể hiểu:
+		"credentials recovery"
+		"account authentication issue"
+		"forgot login credentials"
+
+	là gần nghĩa.
+
+	Do đó:
+		Vector capability quan trọng hơn việc database được gọi là SQL hay NoSQL.
+
+
+
+
+
+# 5. SQL database hoàn toàn có thể làm Vector DB
+
+
+Đây là một trong những trap lớn của AIP-C01.
+
+Ví dụ AWS:
+	Amazon Aurora PostgreSQL + pgvector
+
+	Aurora PostgreSQL là:
+		SQL database
+
+	Nhưng có thể lưu:
+		document
+		chunk
+		embedding vector
+		metadata
+
+	Ví dụ conceptual schema:
+
+		documents
+		------------------
+		id
+		title
+		content
+		metadata
+		embedding
+
+		Sau đó thực hiện vector similarity search.
+			
+	Ví dụ:
+		Query embedding
+			   ↓
+		Aurora PostgreSQL
+			   ↓
+		pgvector
+			   ↓
+		similar vectors
+
+	Vậy:
+		SQL ≠ không dùng được cho RAG.
+
+	Sai lầm:
+		RAG → phải dùng NoSQL
+		❌ Sai.
+
+	Đúng:
+
+		RAG
+		 ↓
+		cần vector retrieval
+		 ↓
+		có thể dùng SQL hoặc NoSQL
+		 ↓
+		miễn storage/retrieval engine hỗ trợ workload phù hợp
+
+
+
+
+
+
+# 6. AWS examples
+
+Trong AWS, bạn có thể gặp nhiều hướng.
+
+| Storage / Service            | Bản chất                 | RAG relevance                                                  |
+| ---------------------------- | ------------------------ | -------------------------------------------------------------- |
+| Aurora PostgreSQL + pgvector | SQL/relational           | Vector search + relational data                                |
+| Amazon OpenSearch            | Search engine            | Vector + keyword/hybrid search                                 |
+| DynamoDB                     | NoSQL key-value/document | Metadata / application state, không phải mặc định là vector DB |
+| Amazon S3                    | Object storage           | Source documents                                               |
+| Bedrock Knowledge Bases      | Managed RAG abstraction  | Có thể quản lý ingestion/retrieval                             |
+| Neptune                      | Graph database           | Relationship/graph-oriented retrieval                          |
+
+
+
+	Đừng nhìn tên database rồi kết luận nó phù hợp cho RAG.
+
+	Hãy nhìn:
+		What retrieval mechanism do I need?
+
+
+
+
+# 7. SQL cực mạnh khi RAG cần metadata filtering
+
+	Đây là scenario rất hay xuất hiện trong exam.
+	
+		Giả sử công ty có:
+			10 million documents
+
+
+
+	Mỗi chunk có:
+		department
+		country
+		security_level
+		created_at
+		document_type
+		embedding
+
+	User:
+		"Tìm chính sách nghỉ phép của bộ phận IT tại Nhật."
+
+	Ta có thể muốn:
+		semantic similarity
+				+
+		metadata filtering
+
+	Conceptually:
+		WHERE
+		department = 'IT'
+		AND country = 'Japan'
+		AND security_level <= user's clearance
+
+		ORDER BY
+		vector_similarity
+
+	Nếu database hỗ trợ tốt cả:
+
+		relational filtering
+		vector search
+
+		thì SQL database như PostgreSQL + pgvector có thể rất phù hợp.
+
+
+
+
+# 8. NoSQL lại mạnh ở trường hợp khác
+
+	Giả sử application có:
+		100 million users
+
+
+	Mỗi user có:
+		conversation history
+		preferences
+		session
+		agent state
+		tool state
+
+	Schema thay đổi thường xuyên:
+		{
+		  "user_id": "123",
+		  "session": "abc",
+		  "preferences": {...},
+		  "agent_state": {...}
+		}
+
+
+	Workload:
+		Get by user_id
+		Get by session_id
+		Write very frequently
+		Massive scale
+		Low latency
+
+		DynamoDB có thể phù hợp.
+
+	Nhưng:
+		DynamoDB không tự nhiên trở thành vector database chỉ vì application đó là GenAI.
+
+	Đây là trap.
+
+
+
+
+# 9. SQL vs NoSQL trong RAG
+
+| Tiêu chí           | SQL                | NoSQL                                 |
+| ------------------ | ------------------ | ------------------------------------- |
+| Schema             | Structured         | Flexible                              |
+| Relationships      | Rất mạnh           | Thường hạn chế hơn                    |
+| JOIN               | Mạnh               | Thường không phải trọng tâm           |
+| ACID               | Thường mạnh        | Tùy loại                              |
+| Scaling            | Có thể scale lớn   | Thường thiết kế cho distributed scale |
+| Flexible schema    | Thấp hơn           | Cao                                   |
+| Transaction        | Mạnh               | Tùy service                           |
+| Metadata filtering | Rất tốt            | Tùy implementation                    |
+| Vector search      | Có thể hỗ trợ      | Có thể hỗ trợ                         |
+| RAG                | Có thể rất phù hợp | Có thể rất phù hợp                    |
+| Quyết định         | Dựa trên workload  | Dựa trên workload                     |
+
+
+
+
+# 10. Một cách tư duy tốt hơn: 4 loại retrieval
+
+
+Đừng chỉ hỏi:
+	SQL hay NoSQL?
+
+Hãy hỏi:
+
+	## ① Exact lookup
+		employee_id = E123
+		→ Key-value/document store có thể rất tốt.
+
+
+
+
+	## ② Structured query
+
+		department = IT
+		salary > 500000
+		country = Japan
+
+		→ SQL rất mạnh.
+
+
+	③ Semantic search
+		"How do I recover my password?"
+		→ Vector search.
+
+
+
+	④ Hybrid search
+
+		keyword search
+			  +
+		vector search
+			  +
+		metadata filtering
+
+	Đây mới là kiểu retrieval cực kỳ quan trọng trong production RAG.
+
+
+
+	Ví dụ:
+		"契約社員の有給休暇について"
+
+	Có thể cần:
+		BM25 / keyword
+			   +
+		vector similarity
+			   +
+		department filter
+			   +
+		document date filter
+
+	Search engine như OpenSearch thường rất phù hợp với workload này.
+
+
+
+
+
+# 11. SQL vs OpenSearch: một comparison rất quan trọng
+
+	Trong AWS RAG architecture, câu hỏi thường không thực sự là:
+		SQL vs NoSQL
+
+
+	mà có thể là:
+
+		Aurora PostgreSQL + pgvector
+					 VS
+		OpenSearch Serverless
+
+
+
+
+|                                | Aurora PostgreSQL + pgvector | OpenSearch             |
+| ------------------------------ | ---------------------------- | ---------------------- |
+| Primary identity               | Relational DB                | Search engine          |
+| SQL                            | ✅                            | ❌/không phải trọng tâm |
+| Relational data                | ⭐⭐⭐⭐⭐                        | ⭐                      |
+| Vector search                  | ✅                            | ✅                      |
+| Full-text search               | Có thể                       | ⭐⭐⭐⭐⭐                  |
+| Hybrid search                  | Có thể                       | ⭐⭐⭐⭐⭐                  |
+| JOIN                           | ⭐⭐⭐⭐⭐                        | Không phải thế mạnh    |
+| Search-oriented workload       | ⭐⭐⭐                          | ⭐⭐⭐⭐⭐                  |
+| Existing PostgreSQL app        | ⭐⭐⭐⭐⭐                        | ⭐⭐                     |
+| Complex relational transaction | ⭐⭐⭐⭐⭐                        | ⭐                      |
+| Large-scale search workload    | ⭐⭐⭐                          | ⭐⭐⭐⭐⭐                  |
+
+
+
+
+	Tư duy exam:
+
+	Nếu scenario nói:
+		"The application already uses PostgreSQL and needs vector similarity search together with transactional relational data."
+
+		→ Aurora PostgreSQL + pgvector là ứng viên rất mạnh.
+
+	Nếu scenario nói:
+		"The application requires large-scale search, full-text search, vector search, and hybrid retrieval."
+		→ OpenSearch thường là ứng viên mạnh hơn.
+
+
+
+
+
+
+# 12. Trap cực lớn: NoSQL ≠ Vector DB
+
+Đây là câu cần nhớ:
+	Vector database là một capability/workload, không phải một database category thay thế SQL/NoSQL.
+
+
+
+
+	Có thể có:
+		SQL database
+		 + vector capability
+
+	hoặc:
+		Search engine
+		 + vector capability
+
+	hoặc:
+		specialized vector database
+
+	Cho nên:
+		SQL
+		NoSQL
+		Vector DB
+		Search Engine
+
+	không phải lúc nào cũng là 4 thứ loại trừ lẫn nhau.
+
+
+
+
+
+# 
+
+semantic search
++
+keyword search
++
+metadata filtering
++
+high-volume retrieval
+
+
+→ Đây là search workload.
+→ OpenSearch phù hợp hơn.
+
+
+
+
+# 15. Khi nào SQL không phải lựa chọn tốt nhất?
+
+
+Nếu workload là:
+	Massive search
+	+
+	full-text
+	+
+	vector
+	+
+	faceting
+	+
+	ranking
+	+
+	distributed retrieval
+
+thì search engine như OpenSearch thường tự nhiên hơn relational DB.
+Không phải vì:
+	SQL yếu
+
+mà vì:
+	Search engine được thiết kế quanh search workload.
+	Đây chính là cách senior engineer nên suy nghĩ.
+
+
+
+	① Existing architecture
+		Có database gì sẵn?
+
+	② Access pattern
+		Key lookup?
+		Relational query?
+		Vector?
+		Full-text?
+		Hybrid?
+		
+	③ Scale
+		10K
+		10M
+		1B documents?
+		
+	④ Latency
+		milliseconds?
+		seconds acceptable?
+		
+	⑤ Operational complexity
+
+		Có cần:
+
+		ETL
+		sync
+		replication
+		additional database
+
+		không?
+
+	⑥ Cost
+
+	Không phải:
+		"service nào mạnh nhất?"
+
+	mà:
+		"service nào đáp ứng requirements với complexity/cost thấp nhất?"
+		Đây là mindset Professional-level.
+
+
+
+
+
+
+
+# 🔥 17. Câu chốt để nhớ
+
+
+	SQL vs NoSQL
+		   ↓
+	Không phải câu hỏi chính trong RAG.
+
+	Câu hỏi chính:
+			   ↓
+		Retrieval workload là gì?
+			   ↓
+		Exact lookup?
+		Structured query?
+		Vector search?
+		Full-text?
+		Hybrid?
+			   ↓
+	Sau đó mới chọn storage/search technology.
+
+
+Và nhớ 3 câu này:
+	RAG cần retrieval, không cần "NoSQL".
+	Vector DB là capability/workload, không phải synonym của NoSQL.
+	Aurora PostgreSQL + pgvector chứng minh SQL database hoàn toàn có thể đóng vai trò vector store cho RAG.
+
+
+
 
 </pre><a id='backBottom' href='../aws-bedrock-agent-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
