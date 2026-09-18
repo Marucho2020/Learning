@@ -1,3 +1,617 @@
-<html><head><title>Lesson 50 == Lộ trình ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 50 -- Lộ trình -//</h1><pre># Lộ trình 100 ngày học AIP-C01 — Trọng tâm: Kiến trúc AI hiện đại & Agentic AI
+<html><head><title>Lesson 50 == AIP-C01  ===Metadata Filtering trong Vector Search ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 50 -- AIP-C01  --=Metadata Filtering trong Vector Search -//</h1><pre>
+# Metadata Filtering trong Vector Search
+
+
+	Đây là một chủ đề rất hay xuất hiện trong RAG và Vector Search, đặc biệt khi đề AWS đưa scenario kiểu:
+
+	“Có hàng triệu documents, nhưng người dùng chỉ được phép tìm kiếm tài liệu thuộc department của mình / tenant của mình / một khoảng thời gian / một document type…”
+
+	Lúc này chỉ semantic similarity là chưa đủ. Ta cần Metadata Filtering.
+
+
+
+# 1. Bản chất — hiểu như người bình thường
+
+	Giả sử Vector Database có 1 triệu tài liệu.
+
+	Mỗi document có:
+	
+Document:
+    content = "AWS IAM allows you to control access..."
+    
+    vector = [0.12, -0.83, 0.44, ...]
+
+    metadata:
+        department = "IT"
+        language = "ja"
+        year = 2026
+        document_type = "manual"
+        tenant_id = "company_A"
+
+
+	Khi user hỏi:
+		「IAMのアクセス制御について教えて」
+		Hệ thống embedding câu hỏi → query vector.
+		Vector Search sẽ tìm những document có ý nghĩa gần nhất.
+
+
+	Nhưng có một vấn đề:
+
+		User A thuộc company_A
+
+					  ↓
+
+		Vector Search
+
+					  ↓
+
+		Document của company_A
+		Document của company_B
+		Document của company_C
+		Document public
+		...
+
+		Semantic similarity không biết user có quyền xem document nào.
+
+		Đây chính là lý do Metadata Filtering tồn tại.
+
+
+
+# 2. Metadata Filtering thực chất làm gì?
+	Nó thêm điều kiện lọc vào Vector Search.
+
+
+
+
+	Ví dụ:
+
+	query:
+	"IAM access control"
+
+	filter:
+	tenant_id = "company_A"
+	AND
+	department = "IT"
+
+
+	Thay vì:
+	
+		Search toàn bộ 1 triệu documents
+				↓
+		lấy documents giống nhất
+				↓
+		Top-K
+
+	ta muốn:
+
+		1 triệu documents
+				↓
+		lọc metadata
+				↓
+		chỉ còn documents hợp lệ
+				↓
+		Vector similarity search
+				↓
+		Top-K
+
+	Có thể hình dung:
+
+                    Vector Search
+                         │
+             ┌───────────┴───────────┐
+             │                       │
+       Semantic Search         Metadata Filter
+             │                       │
+             └───────────┬───────────┘
+                         ↓
+                  Relevant Documents
+
+
+	Điểm quan trọng: thứ tự thực thi cụ thể có thể phụ thuộc vào vector database / search engine và query execution strategy. Đừng học thuộc rằng “filter luôn chạy trước vector search”. Cái cần nhớ cho exam là:
+
+	Metadata filter constrains the candidate set; vector similarity determines semantic relevance within the allowed set.
+
+
+# 3. Metadata khác Embedding như thế nào?
+
+|                 | Embedding                         | Metadata                                |
+| --------------- | --------------------------------- | --------------------------------------- |
+| Bản chất        | Vector biểu diễn semantic meaning | Thuộc tính mô tả document               |
+| Dùng để         | Tìm nội dung có ý nghĩa tương tự  | Giới hạn phạm vi tìm kiếm               |
+| Ví dụ           | `[0.21, -0.45, ...]`              | `department=IT`                         |
+| Semantic        | Có                                | Không                                   |
+| Exact filtering | Không phù hợp                     | Rất phù hợp                             |
+| Access control  | Không nên dựa vào                 | Có thể dùng làm một phần của cơ chế lọc |
+| Ví dụ query     | "AWS security"                    | `department = IT`                       |
+
+
+
+
+# 4. Ví dụ cực kỳ quan trọng: Multi-tenant RAG
+
+	Đây là scenario rất giống production.
+	Bạn xây SaaS RAG cho 1,000 công ty.
+
+
+
+Database chứa:
+
+	Company A
+	 ├── HR documents
+	 ├── IT documents
+	 └── Finance documents
+
+	Company B
+	 ├── HR documents
+	 ├── IT documents
+	 └── Finance documents
+
+	User:
+		user_id = 123
+		tenant_id = company_A
+		department = IT
+
+	User hỏi:
+		"社内のVPN接続方法を教えて"
+
+
+	Nếu chỉ vector search:
+		query
+		 ↓
+		embedding
+		 ↓
+		vector search
+		 ↓
+		Top 5
+
+	có thể lấy:
+		Company A VPN manual
+		Company B VPN manual
+		Company C VPN manual
+
+	Về semantic similarity, tất cả đều có thể rất gần nhau.
+	Nhưng Company B và C không được phép xuất hiện.
+
+	Vì vậy query cần conceptually:
+		tenant_id = "company_A"
+		AND department = "IT"
+
+	rồi mới semantic retrieval trong phạm vi phù hợp.
+
+
+
+
+
+
+
+# 5. Metadata Filtering không phải Security hoàn chỉnh
+
+
+	
+
+	⚠️ Đây là trap cực quan trọng trong AWS Professional exam.
+
+	Đừng suy luận:
+		"Tôi có metadata filter nên data đã được bảo mật."
+		Không đơn giản như vậy.
+
+	Ví dụ:
+
+	metadata:
+		tenant_id = company_A
+
+	Nếu application cho phép user tự gửi:
+
+		{
+		  "tenant_id": "company_B"
+		}
+		thì filter có thể bị thao túng.
+
+	Architecture tốt hơn:
+
+		User
+		 ↓
+		Application
+		 ↓
+		Authentication / Authorization
+		 ↓
+		Determine user's tenant_id
+		 ↓
+		Construct trusted filter
+		 ↓
+		Vector Search
+		 ↓
+		RAG
+
+	Chứ không:
+
+		User
+		 ↓
+		"Cho tôi tenant_id = company_B"
+		 ↓
+		Vector Search
+		Nguyên tắc
+
+	Metadata filtering là retrieval constraint, không tự động biến thành authorization system.
+	Trong production, authorization phải được enforce ở tầng phù hợp.
+
+
+
+
+
+# 6. Các loại metadata thường gặp
+
+
+{
+  "tenant_id": "company_A",
+  "department": "engineering",
+  "document_type": "manual",
+  "language": "ja",
+  "year": 2026,
+  "created_at": "2026-08-10",
+  "classification": "internal"
+}
+
+
+	ta có thể filter:
+	Exact match
+		department = "engineering"
+
+	Tùy vector database/search engine, các operator hỗ trợ cụ thể sẽ khác nhau.
+
+# 7. Metadata Filtering + Semantic Search
+
+	Đây mới là architecture quan trọng.
+
+	Giả sử có:
+		10,000 documents
+
+	Query:
+		"AWS IAM best practices"
+
+	Không filter:
+
+		10,000 docs
+			   ↓
+		semantic similarity
+			   ↓
+		Top 5
+
+	Có filter:
+
+		10,000 docs
+			   ↓
+		department = IT
+			   ↓
+		2,000 docs
+			   ↓
+		semantic similarity
+			   ↓
+		Top 5
+
+	Kết quả có thể tốt hơn rất nhiều vì search space phù hợp hơn.
+
+
+
+
+
+# 8. Nhưng có một vấn đề: Filter quá chặt
+
+
+
+	Giả sử:
+		100,000 documents
+
+	Filter:
+		department = quantum-computing
+
+	Chỉ còn:
+		3 documents
+
+
+	User hỏi một vấn đề mà thực tế 3 document đó không chứa thông tin.
+	Vector search dù rất tốt cũng không thể tạo ra document phù hợp từ không gian candidate quá nhỏ.
+
+	Đây là trade-off:
+
+		Filter rộng
+			↓
+		Recall ↑
+			↓
+		Có nhiều candidate
+			↓
+		Nhưng có thể có noise
+
+	Trong khi:
+
+		Filter quá chặt
+			↓
+		Noise ↓
+			↓
+		Precision có thể ↑
+			↓
+		Nhưng Recall ↓
+
+
+
+
+# Câu hỏi Professional-level
+
+
+AWS có thể cho:
+	“The application requires highly relevant answers while ensuring users only retrieve documents belonging to their department.”
+
+
+	Bạn phải nhận ra đây là hai vấn đề:
+		Authorization / scope
+				+
+		Semantic relevance
+
+	Không phải chỉ đơn thuần chọn embedding model tốt hơn.
+
+
+# 9. Metadata Filtering trong Amazon Bedrock Knowledge Bases
+
+
+Trong hệ sinh thái AWS, concept này đặc biệt quan trọng với:
+
+	Amazon Bedrock Knowledge Bases
+
+
+S3
+ │
+ │ documents
+ ↓
+Knowledge Base
+ │
+ ├── Parsing
+ ├── Chunking
+ ├── Embedding
+ │
+ ↓
+Vector Store
+ │
+ ├── OpenSearch Serverless
+ ├── Aurora PostgreSQL
+ └── các vector store được hỗ trợ khác
+
+
+
+	Khi ingestion, metadata có thể được lưu cùng chunk.
+
+
+	Ví dụ:
+	chunk:
+		"Employees must rotate passwords..."
+
+		metadata:
+		{
+			department: "HR",
+			country: "JP",
+			document_type: "security_policy"
+		}
+
+
+
+	Khi retrieval:
+
+		Query
+		  ↓
+		Embedding
+		  ↓
+		Vector Retrieval
+		  +
+		Metadata Filter
+		  ↓
+		Relevant chunks
+		  ↓
+		Prompt augmentation
+		  ↓
+		Foundation Model
+		  ↓
+		Answer
+
+
+	Điểm cần nhớ cho AIP-C01:
+
+		Metadata filtering là một retrieval technique để kiểm soát candidate documents dựa trên structured attributes, bên cạnh semantic similarity.
+
+
+
+
+# 10. Metadata Filtering vs Hybrid Search
+
+
+|                   | Metadata Filtering  | Hybrid Search                |
+| ----------------- | ------------------- | ---------------------------- |
+| Mục đích          | Giới hạn candidate  | Kết hợp nhiều kiểu retrieval |
+| Dựa vào           | Structured metadata | Keyword + semantic/vector    |
+| Ví dụ             | `department = IT`   | BM25 + vector                |
+| Giải quyết        | Scope / attributes  | Retrieval relevance          |
+| Có thay thế nhau? | ❌                   | ❌                            |
+
+
+
+
+	Có thể dùng cả hai:
+	
+		Metadata filter
+			   ↓
+		department = IT
+			   ↓
+		Hybrid Search
+			   ↓
+		BM25 + Vector similarity
+			   ↓
+		Top-K
+
+
+
+
+# 11. Metadata Filtering vs Reranking 
+
+
+	Cũng cực kỳ dễ nhầm.
+
+		Filtering
+			"Document nào được phép / thuộc phạm vi?"
+
+		Reranking
+			"Trong các document candidate này,
+			document nào phù hợp nhất với query?"
+
+
+
+	Ví dụ:
+		100,000 docs
+			  ↓
+		metadata filter
+			  ↓
+		10,000 docs
+			  ↓
+		vector search
+			  ↓
+		50 candidates
+			  ↓
+		reranker
+			  ↓
+		Top 5
+
+
+
+	Conceptually:
+
+		FILTER
+		   ↓
+		RETRIEVE
+		   ↓
+		RERANK
+		   ↓
+		GENERATE
+
+	Mỗi bước giải quyết một vấn đề khác nhau.
+
+
+
+
+# 12. Một trap rất sâu: Metadata không mang semantic meaning
+
+
+Giả sử:
+
+	metadata:
+		department = "IT"
+
+	Vector embedding không tự động hiểu:
+		IT = Information Technology.
+		Metadata chỉ là structured attribute.
+
+	Còn:
+		"IAM controls permissions for AWS resources"
+		được embedding thành vector để semantic retrieval.
+
+	Nói cách khác:
+
+		Metadata:
+		"WHERE / WHICH"
+
+		Embedding:
+		"WHAT DOES IT MEAN?"
+
+	Đây là mental model rất tốt để nhớ.
+
+
+
+
+
+# 14. Các từ khóa nhìn thấy là phải nghĩ đến Metadata Filtering
+
+	department
+	tenant
+	customer
+	region
+	language
+	document type
+	category
+	date
+	timestamp
+	access level
+	classification
+	business unit
+	user-specific documents
+	organization-specific documents
+	restrict retrieval
+	filter documents
+	scope retrieval
+
+
+→ nghĩ ngay:
+		Metadata Filtering
+
+	Đặc biệt:
+		multi-tenant + RAG
+
+	thì metadata filtering gần như là một concept bắt buộc phải xem xét.
+
+
+	Trap 5 — "Metadata filtering = authorization"
+
+		Không hoàn toàn.
+
+		Metadata filter là một enforcement/retrieval mechanism, nhưng hệ thống phải đảm bảo metadata filter được xây dựng từ trusted authorization context, không phải dữ liệu user có thể tự ý sửa
+
+
+
+
+# 16. Mental Model để nhớ mãi
+
+
+	Hãy tưởng tượng thư viện.
+
+	Có:
+		1,000,000 cuốn sách
+
+	User hỏi:
+		"AWS security"
+		
+		
+	Vector Search
+		Thủ thư tìm:
+		"Những cuốn có nội dung gần với AWS security nhất."
+
+	Metadata Filtering
+		Nhân viên kiểm tra:
+		"Chỉ lấy sách thuộc khu vực IT và được phép cho user này xem."
+
+	Reranking
+		Sau đó:
+		"Trong 50 cuốn tìm được, cuốn nào trả lời câu hỏi tốt nhất?"
+
+	LLM
+		Cuối cùng:
+		"Dựa trên những cuốn này, hãy trả lời user."
+
+	Cho nên:
+
+		Metadata Filter
+			  ↓
+		"ĐƯỢC TÌM CÁI GÌ?"
+
+		Vector Search
+			  ↓
+		"CÁI GÌ GIỐNG VỚI CÂU HỎI?"
+
+		Reranker
+			  ↓
+		"CÁI NÀO PHÙ HỢP NHẤT?"
+
+		LLM
+			  ↓
+		"TRẢ LỜI THẾ NÀO?"
+
+	Đây là cách phân biệt rất chắc cho AIP-C01.
+
+
+
 
 </pre><a id='backBottom' href='../aws-bedrock-agent-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
