@@ -30,9 +30,415 @@ Semantic Search hiểu “ý nghĩa”, nhưng đôi khi lại không hiểu r�
 
 
 
+# 6. Hybrid Search hoạt động thế nào?
+
+	Ví dụ query:
+		“How was incident INC0012345 resolved?”
+		
+
+	Nhánh 1 — Keyword
+
+		Query
+		 ↓
+		BM25
+		 ↓
+		Document A
+		Document D
+		Document X
+
+
+		Document A chứa:
+			INC0012345
+			→ điểm cao.
 
 
 
+
+	Nhánh 2 — Semantic
+
+		Query
+		 ↓
+		Embedding
+		 ↓
+		Vector Search
+		 ↓
+		Document B
+		Document A
+		Document F
+
+
+	Document B có:
+		The incident was fixed by restarting
+		the authentication service...
+
+	Mặc dù không chứa chính xác toàn bộ từ khóa query.
+
+
+
+		Sau đó combine
+			Keyword score
+				   +
+			Semantic score
+				   ↓
+			Fusion / Ranking
+				   ↓
+			Top-K documents
+
+		Kết quả cuối cùng có thể là:
+
+		1. Document A   ← exact identifier + semantic relevance
+		2. Document B   ← semantic relevance
+		3. Document D   ← keyword relevance
+
+
+
+# 7. Đây mới là bản chất quan trọng nhất
+
+
+	Hybrid Search không đơn giản là:
+		Keyword Search
+		+
+		Vector Search
+
+	mà mục tiêu cuối cùng là:
+		Kết hợp hai tín hiệu relevance khác nhau để ranking kết quả tốt hơn.
+
+
+	Có thể hình dung:
+
+
+                 Relevance
+                    ↑
+                    │
+        Keyword ────┼──── Semantic
+             \      │      /
+              \     │     /
+               \    │    /
+                \   │   /
+                 Hybrid
+
+	Keyword và semantic nhìn relevance từ hai góc khác nhau.
+
+
+
+
+「ServiceNowでINC0012345の認証エラーをどう解決した？」
+
+                         Query
+                           │
+              ┌────────────┴────────────┐
+              ↓                         ↓
+        Keyword Search            Vector Search
+              │                         │
+        INC0012345                 authentication
+              │                     error / fix
+              ↓                         ↓
+              └────────────┬────────────┘
+                           ↓
+                       Re-ranking
+                           ↓
+                    Top-K documents
+                           ↓
+                         LLM
+                           ↓
+                       Answer
+
+	Đây là kiến trúc RAG production rất tự nhiên.
+
+
+
+
+# 9. Hybrid Search trong Amazon OpenSearch
+
+
+	Đây là chỗ cần nhớ cho AIP-C01.
+
+	OpenSearch có thể hỗ trợ cả: 
+		Lexical Search   (Lexical từ vựng)
+
+	và:
+		Neural / Vector Search
+
+	Tức là cùng một hệ thống search có thể xử lý:
+	
+		BM25 / keyword
+				+
+		vector similarity
+
+	Sau đó kết hợp kết quả để ranking.
+
+
+	Trong kiến trúc RAG:
+
+                    User
+                     │
+                   Query
+                     │
+              ┌──────┴──────┐
+              ↓             ↓
+         Lexical        Semantic
+         Search          Search
+           │               │
+           └───────┬───────┘
+                   ↓
+              Hybrid ranking
+                   ↓
+                 Top-K
+                   ↓
+              Prompt + Context
+                   ↓
+                  LLM
+
+
+
+# 10. Hybrid Search ≠ Reranking
+
+
+Hai thứ này rất dễ nhầm.
+
+	## Hybrid Search
+	
+	Kết hợp:
+		keyword relevance
+		+
+		semantic relevance
+
+
+	để tạo kết quả.
+
+	## Reranking
+
+		Sau khi có một tập candidate:
+
+			Top 50 candidates
+				   ↓
+			   Reranker
+				   ↓
+			    Top 5
+
+		Reranker đánh giá query-document relevance sâu hơn.
+
+
+
+	Có thể có pipeline:
+
+		Keyword Search ─────┐
+							├── Hybrid ── Candidate Set
+		Vector Search ──────┘
+								 ↓
+							  Reranker
+								 ↓
+							   Top-K
+								 ↓
+								LLM
+
+	Vì vậy:
+		Hybrid Search và Reranking không phải một thứ.
+
+
+|                    | Keyword | Semantic   | Hybrid      |
+| ------------------ | ------- | ---------- | ----------- |
+| Exact term         | ⭐⭐⭐     | ⭐          | ⭐⭐⭐         |
+| Identifier         | ⭐⭐⭐     | ⭐          | ⭐⭐⭐         |
+| Synonym            | ⭐       | ⭐⭐⭐        | ⭐⭐⭐         |
+| Paraphrase         | ⭐       | ⭐⭐⭐        | ⭐⭐⭐         |
+| Conceptual meaning | ⭐       | ⭐⭐⭐        | ⭐⭐⭐         |
+| Chi phí            | thấp    | cao hơn    | cao hơn     |
+| Complexity         | thấp    | trung bình | cao hơn     |
+| RAG production     | Có      | Có         | Rất phù hợp |
+
+
+	Nhưng đừng học thuộc rằng:
+		Hybrid luôn tốt hơn.
+		Đó là trap.
+
+	Nếu workload chỉ cần exact lookup:
+		"Find order ID 123456"
+		thì hybrid có thể là unnecessary complexity.
+
+
+
+
+# Scenario
+
+	A company stores millions of product records. Users search using exact SKU codes. The application requires deterministic retrieval and very low latency.
+
+	Đáp án:
+		Hybrid Search
+
+	nghe rất hiện đại.
+	Nhưng chưa chắc đúng.
+
+	Nếu requirement chính là:
+		exact SKU lookup
+		+
+		low latency
+		+
+		deterministic result
+	thì keyword/exact search có thể phù hợp hơn.
+
+	AWS Professional không hỏi:
+		"Công nghệ nào hiện đại hơn?"
+
+	Mà hỏi:
+		"Requirement nào quan trọng nhất?"
+
+
+
+# 14. Hybrid Search và Metadata Filtering
+
+
+	Hai cái này cũng không giống nhau.
+
+	Ví dụ:
+		Query:
+			"How to configure authentication?"
+
+		Requirement:
+			department = IT
+			language = Japanese
+			year >= 2025
+
+	Có thể pipeline:
+
+		Metadata Filter
+			   ↓
+		Candidate documents
+			   ↓
+		Hybrid Search
+			   ↓
+		Ranking
+
+	hoặc hệ thống có thể áp dụng filtering trong quá trình retrieval tùy kiến trúc.
+
+	Điểm cần nhớ:
+		Metadata filtering trả lời "được phép/tìm trong tập nào?"
+		Hybrid search trả lời "document nào relevant nhất?"
+
+
+
+
+# 15. Trong Amazon Bedrock Knowledge Bases
+
+	Đây là điểm có giá trị trực tiếp cho AIP-C01.
+		Khi dùng Knowledge Bases, retrieval có thể tận dụng:
+
+	semantic search
+		và tùy cấu hình/retrieval setup có thể sử dụng:
+		hybrid search
+
+
+	để kết hợp:
+
+	vector search
+	+
+	keyword search
+
+	Đặc biệt hữu ích khi knowledge base chứa:
+		technical documentation
+		product names
+		SKU
+		error codes
+		ticket IDs
+		API names
+		configuration parameters
+		domain-specific terminology
+
+
+
+# 16. Khi nào nên nghĩ ngay đến Hybrid Search?
+
+	Hãy nhìn query và hỏi:
+		Có exact identifiers không?
+
+		SKU
+		ticket ID
+		error code
+		product ID
+		API name
+		version number
+
+		→ Keyword signal quan trọng.
+
+	paraphrase : diễn giải 
+
+
+
+
+
+	Có natural language / paraphrase không?
+		"How can I reduce latency?"
+		"Why is the application slow?"
+	→ Semantic signal quan trọng.
+
+	Có cả hai?
+	"How do I fix CVE-2026-12345?"
+
+	→ Hybrid Search là ứng viên rất mạnh.
+
+
+
+# 17. Cách AWS ra đề
+
+	Professional-level thường không hỏi:
+
+	What is Hybrid Search?
+
+	Mà dựng scenario:
+
+		A company has a large knowledge repository containing technical documents, product names, error codes, and internal ticket IDs. Users ask natural-language questions but frequently reference exact identifiers. The current vector-only retrieval system sometimes retrieves semantically similar documents but misses the exact document associated with the identifier.
+
+	Bạn phải nhận ra:
+
+		Problem
+		   ↓
+		Vector-only retrieval
+		   ↓
+		Exact identifiers bị miss
+		   ↓
+		Need lexical + semantic signals
+		   ↓
+		Hybrid Search
+		
+	Từ khóa báo hiệu
+		Khi thấy các cụm:
+			- exact keyword
+			- exact identifier
+			- SKU
+			- ticket ID
+			- error code
+			- product name
+			- natural language
+			- synonyms
+			- paraphrases
+			- semantic relevance
+			- lexical relevance
+			- vector + keyword
+
+	hãy nghĩ ngay:
+		Hybrid Search
+
+
+
+
+# 18. Mental model để nhớ lâu
+
+	Đừng nhớ bằng định nghĩa.
+
+	Nhớ câu này:
+		Keyword nhìn vào chữ. Semantic nhìn vào nghĩa. Hybrid nhìn cả chữ lẫn nghĩa.
+
+
+"Fix CVE-2026-12345 authentication issue"
+       │                    │
+       │                    │
+   EXACT TERM           SEMANTIC INTENT
+       │                    │
+       └─────────┬──────────┘
+                 ↓
+           HYBRID SEARCH
+
+	Đây chính là lý do Hybrid Search đặc biệt hữu ích trong enterprise RAG.
 
 
 
