@@ -1,3 +1,692 @@
-<html><head><title>Lesson 52 == Lộ trình ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 52 -- Lộ trình -//</h1><pre># Lộ trình 100 ngày học AIP-C01 — Trọng tâm: Kiến trúc AI hiện đại & Agentic AI
+<html><head><title>Lesson 52 == AIP-C01  ===Re-ranking trong RAG pipeline ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 52 -- AIP-C01  --=Re-ranking trong RAG pipeline -//</h1><pre>
+# Bản chất 
+
+	Retrieval tìm ra một tập tài liệu có khả năng liên quan → Re-ranking sắp xếp lại tập đó theo mức độ liên quan thực sự với câu hỏi → chỉ đưa Top-K tốt nhất cho LLM.
+
+	Ví dụ:
+
+User Query
+   │
+   ▼
+Embedding
+   │
+   ▼
+Vector Search / Hybrid Search
+   │
+   │  lấy Top 20–100 chunks
+   ▼
+Candidate Documents
+   │
+   ▼
+┌─────────────────┐
+│   Re-ranking    │  ← đánh giá query ↔ từng document kỹ hơn
+└─────────────────┘
+   │
+   │  chọn Top 3–5
+   ▼
+LLM
+   │
+   ▼
+Answer
+
+
+
+# tại sao đã Search rồi còn phải Re-rank?
+
+
+
+	Giả sử user hỏi:
+		「育児休業を取得できる条件を教えてください。」
+
+	Database có 10.000 chunks.
+
+	Vector Search tìm được:
+
+| Rank | Document    | Similarity |
+| ---: | ----------- | ---------: |
+|    1 | 育児休業制度について  |       0.86 |
+|    2 | 育児休業給付金について |       0.84 |
+|    3 | 育児休業の申請方法   |       0.83 |
+|    4 | 育児休業からの復職   |       0.82 |
+|    5 | 育児休業中の社会保険  |       0.81 |
+
+
+
+
+	Vấn đề:
+		Similarity cao ≠ thực sự trả lời câu hỏi tốt nhất.
+
+	Ví dụ document #2 có thể chứa rất nhiều từ:
+		育児休業、条件、申請、給付、対象者...
+		nên embedding similarity rất cao.
+
+	Nhưng user đang hỏi:
+		điều kiện để được nghỉ
+
+	chứ không hỏi:
+		tiền trợ cấp là bao nhiêu
+		Vector search có thể đưa #2 lên rất cao.
+
+
+
+# 2. Re-ranking làm gì?
+
+	Re-ranker nhận:
+	
+		Query
+		+
+		Candidate Documents
+
+	rồi đánh giá mức độ liên quan của từng cặp Query–Document.
+
+
+
+
+	Ví dụ:
+
+	Query:
+		"Điều kiện để được hưởng 育児休業 là gì?"
+
+	Candidate A:
+		"育児休業を取得できる労働者の条件は..."
+
+	Candidate B:
+		"育児休業給付金の支給額は..."
+
+	Candidate C:
+		"育児休業から復職する際には..."
+
+
+
+	Re-ranker có thể đánh giá:
+		A → 0.97
+		B → 0.62
+		C → 0.31
+
+	Sau đó:
+		A
+		B
+		C
+
+	được sắp xếp lại thành:
+		A
+		B
+		C
+
+	hoặc nếu vector search ban đầu xếp:
+		B
+		A
+		C
+
+	thì re-ranking sửa thành:
+		A
+		B
+		C
+
+	Đây chính là ý nghĩa của "re-ranking".
+
+
+
+
+# 3. Vector Search và Re-ranking khác nhau ở đâu?
+	Đây là điểm cực kỳ quan trọng cho AIP-C01.
+
+
+
+|               | Vector Search            | Re-ranking                       |
+| ------------- | ------------------------ | -------------------------------- |
+| Mục đích      | Retrieval                | Reranking                        |
+| Input         | Query embedding          | Query + Document                 |
+| Cách đánh giá | Vector similarity        | Relevance giữa query và document |
+| Tốc độ        | Nhanh                    | Chậm hơn                         |
+| Candidate     | Hàng nghìn → vài chục    | Vài chục → vài document          |
+| Accuracy      | Khá                      | Có thể cao hơn                   |
+| Cost          | Thấp hơn                 | Cao hơn                          |
+| Vị trí        | Early stage              | Sau retrieval                    |
+| Ví dụ         | OpenSearch vector search | Cross-encoder / reranker         |
+
+
+	Có thể hình dung:
+
+		10,000 documents
+			   │
+			   │ Vector Search
+			   ▼
+			 Top 50
+			   │
+			   │ Re-ranking
+			   ▼
+			 Top 5
+			   │
+			   ▼
+			  LLM
+
+	Không dùng re-ranker để search toàn bộ 10.000 documents.
+	Đó là một trap rất điển hình.
+
+
+
+# 4. Tại sao Re-ranking thường chính xác hơn?
+
+	Điểm sâu nằm ở kiến trúc model.
+
+	## Vector Search
+	
+		Thông thường:
+			Query
+			  ↓
+			Embedding Model
+			  ↓
+			Query Vector
+
+	Document cũng đã được embedding trước:
+
+			Document
+			  ↓
+			Embedding Model
+			  ↓
+			Document Vector
+
+
+	Sau đó:
+		similarity(Query Vector, Document Vector)
+
+	Ví dụ:
+		Query ───────► [0.12, 0.82, 0.33, ...]
+								 │
+								 │ similarity
+								 ▼
+		Document ─────► [0.15, 0.79, 0.35, ...]
+
+	Rất nhanh.
+		Nhưng model không nhất thiết phải phân tích sâu mối quan hệ giữa từng query và từng document.
+
+
+
+# 5. Re-ranker thường dùng Cross-Encoder 
+
+	Đây là concept rất đáng nhớ.
+		Cross-encoder nhận query và document cùng lúc:
+
+┌───────────────────────────────┐
+│ Query:                        │
+│ "Điều kiện để nghỉ育児休業?"    │
+│                               │
+│ Document:                     │
+│ "対象となる労働者は..."         │
+└───────────────────────────────┘
+                │
+                ▼
+          Re-ranking Model
+                │
+                ▼
+           relevance = 0.97
+
+
+	Nó có thể phân tích interaction giữa:
+		Query ↔ Document
+	sâu hơn.
+
+	Đổi lại:
+		Computational cost và latency cao hơn.
+		Đây chính là trade-off.
+
+
+
+# 6. Tại sao không dùng Cross-Encoder ngay từ đầu?
+
+
+Giả sử có:
+	1,000,000 documents
+	Nếu Cross-Encoder phải đánh giá:
+	Query × 1,000,000 documents
+	thì cực kỳ tốn computation.
+
+
+	Thay vào đó:
+
+	1,000,000 documents
+		   │
+		   │ Vector Search
+		   ▼
+		 Top 100
+		   │
+		   │ Cross-Encoder
+		   ▼
+		 Top 10
+
+	Đây là kiến trúc two-stage retrieval.
+
+
+	## Stage 1 — Retrieval 
+
+		Nhanh, recall cao.
+
+		Goal:
+		"Đừng bỏ sót tài liệu có liên quan."
+
+
+
+	## Stage 2 — Re-ranking
+
+
+
+	Chậm hơn nhưng chính xác hơn.
+
+	Goal:
+		"Trong những tài liệu đã tìm được,
+		hãy xác định cái nào thực sự phù hợp nhất."
+
+	Câu này rất đáng nhớ:
+		Retriever tối ưu Recall, Reranker tối ưu Precision.
+		Không phải tuyệt đối trong mọi implementation, nhưng đây là mental model rất hữu ích khi làm exam.
+
+
+
+
+# 7. Recall và Precision trong RAG
+	Ví dụ database có 100 document liên quan.
+
+	Vector Search lấy:
+		Top 50
+
+	và trong đó có:
+		40 relevant
+		10 irrelevant
+
+	→ Recall tương đối tốt.
+
+
+	→ Recall tương đối tốt.
+
+	Sau đó Re-ranker:
+		Top 50
+		   ↓
+		Top 5
+
+
+	và chọn:
+		5 relevant
+		→ Precision cao.
+
+
+
+	Cho nên pipeline:
+
+		Broad Retrieval
+			  ↓
+		High Recall
+			  ↓
+		Re-ranking
+			  ↓
+		High Precision
+			  ↓
+		LLM
+
+
+
+
+# 8. Re-ranking đặc biệt hữu ích khi nào?
+
+	Trường hợp 1 — Documents rất giống nhau
+
+
+	Ví dụ:
+		"How to reset password?"
+
+
+	Có:
+		Password reset for employees
+		Password reset for administrators
+		Password reset for customers
+		Password reset for contractors
+
+	Embedding search có thể trả cả 4.
+	Re-ranker có thể phân biệt document nào phù hợp nhất với context cụ thể của query.
+
+
+
+# Trường hợp 2 — Query dài và phức tạp
+
+
+	Ví dụ	
+		"Nhân viên hợp đồng tại Nhật Bản có thể sử dụng育児休業 nếu đã làm việc dưới 1 năm không?"
+
+	Có rất nhiều concept:
+		contract employee
+		Japan
+		育児休業
+		employment duration
+		eligibility
+
+		Re-ranking giúp chọn những chunks thực sự trả lời toàn bộ intent.
+
+
+
+
+
+
+# Trường hợp 3 — Hybrid Search
+
+
+               Query
+                 │
+        ┌────────┴────────┐
+        ▼                 ▼
+ Keyword Search      Vector Search
+        │                 │
+        └────────┬────────┘
+                 ▼
+          Candidate Pool
+                 │
+                 ▼
+             Re-ranker
+                 │
+                 ▼
+              Top-K
+                 │
+                 ▼
+                LLM
+
+
+
+	Ví dụ:
+
+	BM25 → Top 50
+	Vector → Top 50
+		   ↓
+	merge
+		   ↓
+	100 candidates
+		   ↓
+	Re-ranking
+		   ↓
+	Top 5
+
+	Đây là một kiến trúc RAG production rất hợp lý.
+
+
+
+
+# 9. Re-ranking không phải là Embedding
+
+Đây là trap rất dễ gặp.
+
+	## Embedding model
+		Document
+		   ↓
+		Vector
+
+
+	Mục tiêu:
+		biểu diễn semantic meaning dưới dạng vector.
+
+
+	## Reranker
+		Query + Document
+			   ↓
+		Relevance Score
+
+		Mục tiêu:
+		đánh giá document này có liên quan đến query này đến mức nào.
+		Hai model có thể hoàn toàn khác nhau.
+
+
+# 10. Re-ranking không tạo ra knowledge mới
+
+
+	Một hiểu nhầm khác:
+		Retriever
+		   ↓
+		Documents
+		   ↓
+		Reranker
+		   ↓
+		Documents được sắp xếp
+		   ↓
+		LLM
+
+	Reranker không trả lời user.
+
+	Nó chỉ nói:
+		Document A → 0.97
+		Document B → 0.81
+		Document C → 0.43
+
+	Nó không phải:
+		Question → Answer
+
+	LLM mới làm phần:
+		Context + Query
+			   ↓
+			 Answer
+
+
+
+
+
+# 11. Re-ranking trong Amazon Bedrock
+
+
+	Trong hệ sinh thái AWS, cần đặc biệt chú ý tới:
+		Amazon Bedrock Knowledge Bases có thể sử dụng reranking trong quá trình retrieval để cải thiện thứ tự kết quả.
+
+	Mental model:
+		User Query
+			↓
+		Knowledge Base
+			↓
+		Retrieval
+			↓
+		Candidate chunks
+			↓
+		Reranking
+			↓
+		Top results
+			↓
+		Foundation Model
+			↓
+		Answer
+		
+		
+	Điểm thi không nằm ở việc nhớ tên API đơn thuần.
+	Điểm quan trọng là hiểu:
+		Reranking được đặt sau initial retrieval để cải thiện relevance của những candidate đã được retrieve.	
+		
+		
+		
+# 	12. Trade-off mà AWS rất thích hỏi	
+		
+| Thiết kế                        |        Accuracy | Latency |    Cost |
+| ------------------------------- | --------------: | ------: | ------: |
+| Vector Search 	              |  Trung bình–cao |    Thấp |    Thấp |
+| Vector + Re-ranking             |         Cao hơn | Cao hơn | Cao hơn |
+| Re-ranking quá nhiều candidates |      Có thể cao |     Cao |     Cao |
+| Re-ranking ít candidates        | Có thể thấp hơn |    Thấp |    Thấp |
+		
+		
+		
+	Ví dụ scenario:
+		Application yêu cầu response dưới 500 ms nhưng accuracy của retrieval hiện tại đã đủ tốt.
+
+	Không nên mặc định:
+		"Add reranking because it improves accuracy."
+		Phải nhìn latency requirement + accuracy requirement + cost.
+
+	Ngược lại:
+		Legal/medical/internal policy assistant cần precision cao, latency 1–2 giây chấp nhận được.
+		Re-ranking có thể là lựa chọn hợp lý.	
+			
+		
+	
+
+# 13. Trap Professional-level 
+
+
+
+	## Trap 1
+		"Reranking replaces vector search."
+		❌ Sai.
+
+	Thông thường:
+		Retrieval → Reranking
+
+	chứ không phải:
+		Reranking → Retrieval
+
+
+
+
+
+	## Trap 2
+
+		"Reranking searches the entire knowledge base."
+
+		❌ Không phải mục đích thông thường.
+
+		Entire corpus
+			↓
+		Retriever
+			↓
+		Candidate set
+			↓
+		Reranker
+
+
+
+	## Trap 4
+
+	"Increasing Top-K always improves RAG."
+	❌ Không đơn giản.
+
+	Ví dụ:
+		Top-K = 5
+		có thể thiếu relevant document.
+
+	Nhưng:
+		Top-K = 100
+		có thể đưa quá nhiều irrelevant chunks vào reranking/LLM.
+
+	Cần cân bằng:
+	Recall
+		Precision
+		Latency
+		Cost
+		Context window	
+				
+				
+				
+				
+	## 	Trap 5
+
+		"Reranking fixes bad chunking."
+		❌ Không hoàn toàn.
+
+		Nếu chunking đã phá nát context:
+		Chunk A:
+			"Employees may apply..."
+
+		Chunk B:
+			"...under the following conditions..."
+
+		thì reranker không thể magically khôi phục context bị mất		
+						
+		Pipeline tốt phải đi từ:					
+			Parsing
+			   ↓
+			Chunking
+			   ↓
+			Embedding
+			   ↓
+			Retrieval
+			   ↓
+			Filtering
+			   ↓
+			Reranking
+			   ↓
+			Generation				
+				
+				
+## 14. Scenario kiểu AIP-C01
+
+	Một công ty xây dựng chatbot nội bộ.
+
+	Có:
+		500,000 documents
+		User hỏi các câu rất cụ thể về policy.
+
+	Initial vector retrieval:
+		Top 50
+		nhưng nhiều document có semantic similarity cao nhưng không trực tiếp trả lời câu hỏi.
+
+	Requirement:
+		High retrieval precision
+		Latency dưới 2 giây
+
+	Kiến trúc hợp lý:
+		User Query
+			 ↓
+		Embedding
+			 ↓
+		Vector / Hybrid Search
+			 ↓
+		Top 50 candidates
+			 ↓
+		Metadata filtering
+			 ↓
+		Reranking
+			 ↓
+		Top 5
+			 ↓
+		LLM
+			 ↓
+		Answer
+
+	Tại sao?
+
+		Không rerank 500,000 documents vì cost/latency.
+		Không đưa cả Top 50 vào LLM vì context noise.
+		Không chỉ lấy Top 1 vì có thể bỏ mất supporting context.				
+				
+				
+# 	15. Mental model để nhớ mãi			
+				
+				
+				
+	Hãy tưởng tượng tuyển nhân viên:
+
+			1000 CV
+			  ↓
+			Keyword / embedding search
+			  ↓
+			50 CV phù hợp sơ bộ
+			  ↓
+			HR đọc kỹ từng CV
+			  ↓
+			5 CV phù hợp nhất
+			  ↓
+			Interview
+
+		Trong đó:
+			Vector Search = lọc sơ bộ
+			Re-ranking    = đọc kỹ và xếp hạng
+			LLM           = sử dụng Top candidates để trả lời
+
+		Hoặc ngắn hơn:
+			Retrieve rộng → Rank kỹ → Generate.			
+						
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 </pre><a id='backBottom' href='../aws-bedrock-agent-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
