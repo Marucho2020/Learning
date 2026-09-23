@@ -1,3 +1,642 @@
-<html><head><title>Lesson 53 == Lộ trình ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 53 -- Lộ trình -//</h1><pre># Lộ trình 100 ngày học AIP-C01 — Trọng tâm: Kiến trúc AI hiện đại & Agentic AI
+<html><head><title>Lesson 53 == AIP-C01  ===Data Ingestion Pipeline cho Knowledge Base ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 53 -- AIP-C01  --=Data Ingestion Pipeline cho Knowledge Base -//</h1><pre>
+	Nếu đang học RAG / Amazon Bedrock Knowledge Bases, hãy nắm một câu trước:
+
+		Data Ingestion Pipeline = quá trình biến dữ liệu thô trong Data Source thành các vector + metadata có thể được Retrieval Engine tìm kiếm.
+
+	Nói cách khác:
+		PDF / Word / HTML / CSV / TXT
+				↓
+		   Data Source
+				↓
+			  Parse
+				↓
+			Chunking
+				↓
+			Embedding
+				↓
+		Vector + Metadata
+				↓
+		Vector Store
+				↓
+		   READY FOR RAG
+
+
+# 1. Bản chất — hiểu từ mức đơn giản
+
+
+Giả sử công ty có:
+	AWS_Handbook.pdf
+	給与規定.pdf
+	ServiceNow_Manual.docx
+	Security_Policy.html
+
+User hỏi:
+	「有給休暇は年間何日取得できますか？」
+	LLM không tự nhiên biết nội dung 給与規定.pdf.
+	Ta phải chuẩn bị dữ liệu trước.
+
+
+
+	## Bước 1 — lấy dữ liệu
+		S3
+		 ├── AWS_Handbook.pdf
+		 ├── 給与規定.pdf
+		 └── Security_Policy.html
+
+	Đây là Data Source.
+
+
+
+	## Bước 2 — Parse
+
+
+	PDF không nên được coi đơn giản là một file binary.
+
+	Pipeline phải lấy nội dung có ý nghĩa:
+
+		給与規定.pdf
+				↓
+		「第10条 有給休暇」
+		「従業員は...」
+		「年間最大20日...」
+
+	Parse = lấy/khôi phục nội dung có thể hiểu được từ file.
+	Đây là chỗ rất dễ nhầm với chunking.
+		Parse chưa chia nhỏ tài liệu.
+		Parse chỉ làm cho dữ liệu trở thành dạng nội dung mà pipeline có thể xử lý.
+
+
+# 2. Chunking
+
+	Sau khi parse:
+		Toàn bộ tài liệu
+				↓
+		┌────────────────────┐
+		│ Chunk 1            │
+		│ 第1条...            │
+		└────────────────────┘
+
+		┌────────────────────┐
+		│ Chunk 2            │
+		│ 第2条...            │
+		└────────────────────┘
+
+		┌────────────────────┐
+		│ Chunk 3            │
+		│ 有給休暇について... │
+		└────────────────────┘
+
+	Tại sao?
+		Vì nếu embedding toàn bộ 給与規定.pdf thành một vector, vector đó đại diện cho quá nhiều chủ đề.
+
+	Query:
+		有給休暇は何日？
+
+	sẽ khó tìm chính xác phần:
+		「年間最大20日...」
+	Chunking tạo ra các đơn vị retrieval nhỏ hơn.
+
+
+
+
+# 3. Embedding
+
+
+	Đây là bước cực kỳ quan trọng.
+
+		Ví dụ chunk:
+			従業員は入社6か月後から有給休暇を取得できる。
+
+		Embedding model biến nó thành vector:
+			[0.12, -0.83, 0.44, ..., 0.17]
+
+		Ví dụ query:
+			有給休暇はいつから取得できますか？
+
+		cũng được embedding:
+			[0.10, -0.79, 0.48, ..., 0.19]
+
+
+	Hai vector nằm gần nhau trong embedding space.
+
+             Vector Space
+
+          ● Query
+         /
+        /
+       ● Chunk về 有給休暇
+
+
+                         ● Chunk về 給与
+
+	Vector database có thể tìm ra chunk liên quan.
+
+
+
+# 4. Metadata cũng được tạo/lưu
+
+	Không chỉ có vector.
+		Một record thực tế có thể conceptually giống:
+
+
+	{
+	  "vector": [0.12, -0.83, 0.44, ...],
+	  "text": "従業員は入社6か月後から...",
+	  "metadata": {
+		"source": "給与規定.pdf",
+		"department": "HR",
+		"language": "ja",
+		"document_type": "policy"
+	  }
+	}
+	
+	Metadata cực kỳ quan trọng cho:
+		filtering
+		access control
+		document classification
+		source attribution
+		retrieval optimization
+	
+		
+	
+	Ví dụ
+	
+		Query:
+		「営業部の規定を教えて」
+
+			   ↓
+
+		Metadata filter:
+		department = "sales"
+
+			   ↓
+
+		Vector search	
+			
+	Thay vì tìm toàn bộ database.		
+			
+	
+	
+	
+# 5. Cuối cùng đưa vào Vector Store
+
+S3
+ │
+ │ Sync
+ ▼
+Parse
+ │
+ ▼
+Chunk
+ │
+ ▼
+Embedding Model
+ │
+ ▼
+Vector
+ │
+ ├── Text
+ ├── Metadata
+ └── Embedding
+       │
+       ▼
+   Vector Store
+   
+   
+   Trong AWS có thể gặp:
+
+		Amazon Bedrock Knowledge Bases
+		Amazon S3
+		Amazon OpenSearch Serverless
+		Amazon Aurora PostgreSQL / pgvector
+		các vector store được Knowledge Bases hỗ trợ
+		   
+		   
+   
+#   6. Amazon Bedrock Knowledge Bases nhìn như thế nào?
+   
+   
+                    Amazon S3
+                    │
+                    │
+                    ▼
+          ┌──────────────────┐
+          │ Knowledge Bases  │
+          │                  │
+          │  Data Source     │
+          └────────┬─────────┘
+                   │
+                   ▼
+                Parsing
+                   │
+                   ▼
+                Chunking
+                   │
+                   ▼
+             Embedding Model
+                   │
+                   ▼
+             Vector Store
+                   │
+                   ▼
+             Indexed Data
+   
+   
+   Sau đó khi user hỏi:
+
+		User
+		 │
+		 │ "有給休暇は何日？"
+		 ▼
+		Retrieve
+		 │
+		 ▼
+		Relevant chunks
+		 │
+		 ▼
+		Foundation Model
+		 │
+		 ▼
+		Answer
+
+	Điểm cần nhớ:
+		Ingestion là chuẩn bị knowledge. Retrieval là lấy knowledge ra khi user hỏi.
+	   
+	   
+	   
+#   7. Ingestion ≠ Retrieval
+   
+  |           | Data Ingestion                | Retrieval              |
+| --------- | ----------------------------- | ---------------------- |
+| Thời điểm | Trước khi query               | Khi user query         |
+| Mục đích  | Chuẩn bị/index dữ liệu        | Tìm dữ liệu liên quan  |
+| Input     | Documents                     | User query             |
+| Xử lý     | Parse → Chunk → Embed → Index | Query → Embed → Search |
+| Output    | Vector store/index            | Relevant chunks        |
+| Ví dụ     | S3 → Knowledge Base           | 「有給は？」→ chunks         |
+ 
+   
+   
+   Có thể hình dung:
+   
+   
+                 INGESTION
+                   ↓
+Documents → Parse → Chunk → Embed → Index
+                                      │
+                                      │
+                                      ▼
+                                Vector Store
+                                      │
+                                      │
+                RETRIEVAL             │
+                   ↑                  │
+User Query → Embed → Search ─────────┘
+                         ↓
+                   Top-K Chunks
+                         ↓
+                       LLM
+                         ↓
+                      Answer  
+   
+   
+# 8. Data Ingestion Pipeline thực tế không đơn giản chỉ là "upload file"   
+   
+   Production pipeline thường phải xử lý:
+   
+               Data Sources
+                   │
+       ┌───────────┼───────────┐
+       ▼           ▼           ▼
+      S3         DB/API      SaaS
+       │           │           │
+       └───────────┼───────────┘
+                   ▼
+                 Parse
+                   ▼
+             Clean / Normalize
+                   ▼
+               Chunking
+                   ▼
+              Enrichment
+                   ▼
+              Embedding
+                   ▼
+             Metadata
+                   ▼
+              Vector Store  
+
+
+
+Ví dụ enterprise:
+
+
+	SharePoint
+	Confluence
+	S3
+	Database
+		  ↓
+	Document ingestion
+		  ↓
+	Parsing
+		  ↓
+	Chunking
+		  ↓
+	Embedding
+		  ↓
+	Vector index
+	
+		
+	Nếu dữ liệu thay đổi:
+		Old document
+			  ↓
+		Updated document
+			  ↓
+		Re-ingestion / synchronization
+			  ↓
+		Updated embeddings/index
+
+	Đây là lý do data freshness trở thành một vấn đề production.	
+		
+		
+# 	9. Incremental ingestion
+	
+	
+	Giả sử hôm nay có:
+		policy_v1.pdf
+
+	Ngày mai sửa thành:
+		policy_v2.pdf
+
+	Không muốn lúc nào cũng:
+
+		Delete everything
+			   ↓
+		Re-process 1 TB
+			   ↓
+		Re-embed everything
+			
+	Thường muốn xử lý thay đổi một cách hiệu quả hơn:
+
+		Changed documents
+			   ↓
+		Re-parse
+			   ↓
+		Re-chunk
+			   ↓
+		Re-embed affected content
+			   ↓
+		Update index	
+			
+			
+	## Trade-off		
+			
+| Strategy               | Ưu điểm                       | Nhược điểm                |
+| ---------------------- | ----------------------------- | ------------------------- |
+| Full re-ingestion      | Đơn giản, consistency dễ hiểu | Cost + latency lớn        |
+| Incremental ingestion  | Nhanh, tiết kiệm              | Pipeline phức tạp hơn     |
+| Scheduled sync         | Dễ vận hành                   | Có độ trễ                 |
+| Event-driven ingestion | Gần real-time                 | Architecture phức tạp hơn |
+			
+			
+			
+			
+# 	10. Một điểm cực kỳ quan trọng: thay đổi Chunking/Embedding Model		
+			
+	Giả sử ban đầu:
+		Embedding Model A
+			   ↓
+		Vector Store
+
+	Sau đó đổi sang:
+		Embedding Model B
+
+	Không thể đơn giản:
+
+		Query → Model B
+					 ↓
+			   Vector Store chứa
+			   vector của Model A
+
+		và kỳ vọng similarity vẫn có ý nghĩa.
+
+	Bởi vì:
+		Query embedding và document embedding phải nằm trong cùng một compatible embedding space.
+
+	Do đó thay đổi embedding model thường dẫn đến:
+
+		Documents
+			↓
+		Re-chunk nếu cần
+			↓
+		Embedding Model B
+			↓
+		Re-embed
+			↓
+		Re-index
+
+	Đây là connection trực tiếp với phần Embedding Model + Vector Database mà bạn vừa học.			
+				
+			
+			
+			
+# 	11. Chunking nằm ở đâu trong pipeline?		
+			
+				
+	Rất dễ nhớ:
+
+		RAW DATA
+		   ↓
+		PARSE
+		   ↓
+		CHUNK
+		   ↓
+		EMBED
+		   ↓
+		INDEX
+		
+	Không phải:
+		RAW DATA
+		   ↓
+		EMBED
+		   ↓
+		CHUNK
+
+	Vì embedding thường được tạo trên chunk, không phải trên toàn bộ document rồi mới chia vector.			
+				
+			
+			
+			
+# 	12. Parse và Chunking khác nhau thế nào?
+
+
+	| Parse                   | Chunking                      |
+	| ----------------------- | ----------------------------- |
+	| Đọc/khôi phục nội dung  | Chia nội dung                 |
+	| File → usable content   | Large content → smaller units |
+	| Xử lý PDF/HTML/DOC/etc. | Quyết định kích thước chunk   |
+	| "Nội dung là gì?"       | "Chia nội dung thế nào?"      |
+
+
+	Ví dụ:
+
+		PDF
+		 ↓ Parse
+		"Section 1.... Section 2.... Section 3..."
+		 ↓ Chunk
+		[Section 1]
+		[Section 2]
+		[Section 3]
+
+
+
+# 13. Chunking ảnh hưởng trực tiếp đến RAG quality
+
+	Đây là điểm Professional-level cần hiểu.
+		Chunk quá lớn
+		1 chunk = 20 trang
+
+	Ưu:
+		giữ nhiều context
+
+	Nhược:
+
+		retrieval kém chính xác
+		context gửi vào LLM lớn
+		tăng token cost
+		dễ đưa irrelevant information
+
+
+
+
+	Chunk quá nhỏ
+		1 chunk = 1 câu
+
+	Ưu:
+		retrieval rất precise
+
+	Nhược:
+
+		mất context
+		câu được retrieve có thể không đủ nghĩa
+		LLM khó hiểu quan hệ giữa các đoạn
+
+
+	Vì vậy: 
+		Chunking
+			 ↓
+		Retrieval quality
+			 ↓
+		Context quality
+			 ↓
+		Answer quality
+
+	Không phải cứ embedding model mạnh là RAG tự nhiên tốt.
+
+
+
+# 16. Cách nhìn production
+
+Nếu tôi thiết kế một RAG enterprise, tôi sẽ coi ingestion là data engineering pipeline, không phải một bước phụ của AI.
+
+
+
+                  DATA
+                   │
+                   ▼
+        ┌────────────────────┐
+        │ Data Ingestion     │
+        │                    │
+        │ Parse              │
+        │ Clean              │
+        │ Chunk              │
+        │ Metadata           │
+        │ Embed              │
+        │ Index              │
+        └─────────┬──────────┘
+                  │
+                  ▼
+             Vector Store
+                  │
+                  ▼
+             Retrieval
+                  │
+                  ▼
+             Reranking
+                  │
+                  ▼
+            Prompt Assembly
+                  │
+                  ▼
+                  LLM
+                  │
+                  ▼
+                Answer
+
+
+	RAG không bắt đầu từ LLM.
+		Nó bắt đầu từ chất lượng dữ liệu được ingest.
+
+
+
+# 17. Công thức nhớ cho AIP-C01
+
+
+	Hãy nhớ:
+		Ingestion = biến Knowledge thành Searchable Knowledge.
+
+	Và pipeline:
+		SOURCE
+		  ↓
+		PARSE
+		  ↓
+		CHUNK
+		  ↓
+		METADATA
+		  ↓
+		EMBEDDING
+		  ↓
+		VECTOR INDEX
+
+	Còn lúc user hỏi:
+		QUERY
+		  ↓
+		QUERY EMBEDDING
+		  ↓
+		RETRIEVAL
+		  ↓
+		RERANKING
+		  ↓
+		CONTEXT
+		  ↓
+		LLM
+		  ↓
+		ANSWER
+
+Hai pipeline này nối với nhau ở:
+
+              INGESTION
+                  │
+                  ▼
+             VECTOR INDEX
+                  │
+                  ▲
+                  │
+              RETRIEVAL
+                  ▲
+                  │
+                QUERY
+
+
+
+
+
+
+
+
+
+
+		
+		
 
 </pre><a id='backBottom' href='../aws-bedrock-agent-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
