@@ -1,3 +1,569 @@
-<html><head><title>Lesson 54 == Lộ trình ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 54 -- Lộ trình -//</h1><pre># Lộ trình 100 ngày học AIP-C01 — Trọng tâm: Kiến trúc AI hiện đại & Agentic AI
+<html><head><title>Lesson 54 == AIP-C01  ===S3 làm nguồn dữ liệu cho RAG ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 54 -- AIP-C01  --=S3 làm nguồn dữ liệu cho RAG -//</h1><pre>
+
+Điểm cần nhớ ngay:
+	S3 thường là source of truth / landing zone
+	S3 không phải Vector Database. S3 chỉ lưu dữ liệu gốc (raw/source documents). Knowledge Base sẽ lấy dữ liệu từ S3 → parse → chunk → embedding → lưu vector vào vector store → phục vụ retrieval.
+
+
+# 1. Nhìn toàn bộ pipeline trước
+		
+S3
+ │
+ │ documents
+ ▼
+Knowledge Base
+ │
+ ├─ Parse
+ │
+ ├─ Chunk
+ │
+ ├─ Embedding
+ │
+ ▼
+Vector Store
+ │
+ │ retrieval
+ ▼
+User Query
+ │
+ ▼
+Relevant Chunks
+ │
+ ▼
+Foundation Model
+ │
+ ▼
+Answer		
+		
+		
+	## Ví dụ S3:	
+	
+s3://company-kb/
+
+├── hr/
+│   ├── company-policy.pdf
+│   ├── vacation-policy.docx
+│   └── benefits.md
+│
+├── it/
+│   ├── service-now-guide.pdf
+│   └── aws-operation-guide.docx
+│
+└── security/
+    ├── security-policy.pdf
+    └── incident-response.md		
+		
+		
+		
+		
+	S3 ở đây đóng vai trò:
+		Document repository / data source
+		chứ không trực tiếp thực hiện semantic search.	
+		
+		
+		
+		
+		
+		
+# 2. Bản chất của S3 trong RAG		
+		
+| Tầng             | Thành phần   | Nhiệm vụ                           |
+| ---------------- | ------------ | ---------------------------------- |
+| ① Raw data       | S3           | Lưu tài liệu gốc                   |
+| ② Retrieval data | Vector Store | Lưu chunks + embeddings + metadata |
+| ③ Generation     | Bedrock FM   | Sinh câu trả lời                   |
+	
+		
+		
+	Ví dụ:	
+		
+PDF 10 MB
+        │
+        ▼
+       S3
+        │
+        ▼
+      Parse
+        │
+        ▼
+  "AWS provides..."
+  "Amazon Bedrock..."
+  "Knowledge Bases..."
+        │
+        ▼
+     Chunking
+        │
+        ▼
+ chunk1 / chunk2 / chunk3
+        │
+        ▼
+    Embedding
+        │
+        ▼
+ [0.13, -0.82, 0.44, ...]
+        │
+        ▼
+   Vector Store		
+		
+		
+	Điểm cực kỳ quan trọng:
+		S3 chứa PDF/DOCX/TXT/HTML...
+
+	Vector store chứa:
+		chunk
+		embedding
+		metadata
+
+	Không nên nghĩ:
+		"S3 chứa embedding nên S3 là vector DB."
+
+	Không.
+		S3 chỉ là object storage.		
+			
+		
+# 	3. Tại sao AWS thường dùng S3 làm Data Source?	
+		
+	Vì S3 cực kỳ phù hợp với việc làm document repository.
+	Ví dụ doanh nghiệp có 500.000 tài liệu.	
+		
+	Thay vì:
+		Application
+		   ↓
+		Database
+
+	có thể thiết kế:
+
+		Users / Applications
+				↓
+			   S3
+				↓
+		Knowledge Base
+				↓
+		Vector Store		
+				
+			
+	S3 có các đặc điểm rất phù hợp:
+		durable storage
+		scalable
+		relatively low cost
+		versioning
+		lifecycle management
+		encryption
+		IAM integration
+		event integration
+		folder/prefix organization
+
+	Đặc biệt:
+		Tách storage của source documents khỏi retrieval layer.
+		Đây là một design principle rất quan trọng.			
+			
+			
+		
+		
+# 	4. S3 Data Source ≠ Knowledge Base	
+		
+	Đây là một trap rất dễ gặp.
+
+	Giả sử:
+		S3 bucket
+			↓
+		Knowledge Base
+
+	Không có nghĩa S3 trở thành Knowledge Base.
+	
+	Knowledge Base thực hiện nhiều bước xử lý:		
+		S3
+		 ↓
+		Ingestion
+		 ↓
+		Parsing
+		 ↓
+		Chunking
+		 ↓
+		Embedding
+		 ↓
+		Vector Store			
+				
+	Do đó:
+
+		S3 = nơi dữ liệu sống
+		Knowledge Base = hệ thống biến dữ liệu thành dữ liệu có thể retrieval
+		Vector Store = nơi phục vụ similarity search				
+						
+				
+		
+# 	5. Khi document trong S3 thay đổi thì sao?	
+		
+		
+	Đây là chỗ bắt đầu có tư duy production.
+
+	Ví dụ:
+		policy-v1.pdf
+		được upload vào S3.
+
+	Knowledge Base ingest:
+
+		policy-v1.pdf
+			   ↓
+		chunks
+			   ↓
+		embeddings
+
+	Sau đó công ty sửa document:
+		policy-v2.pdf
+		S3 đã có dữ liệu mới.
+
+	Nhưng:
+
+		Vector index không tự động có nghĩa là đã phản ánh nội dung mới chỉ vì file trong S3 thay đổi.
+		Cần có quá trình synchronization / ingestion để đưa dữ liệu mới vào Knowledge Base/vector store.
+		Đây là một điểm cực dễ bị đề thi gài.	
+				
+				
+		
+# 	6. S3 + Knowledge Base ingestion	
+		
+	Có thể hình dung:	
+		
+                S3
+                 │
+        source documents
+                 │
+                 ▼
+        Knowledge Base
+                 │
+          Start ingestion
+                 │
+                 ▼
+              Parsing
+                 │
+                 ▼
+             Chunking
+                 │
+                 ▼
+            Embedding
+                 │
+                 ▼
+          Vector Database		
+		
+		
+		
+# 	7. S3 không chỉ chứa PDF	
+		
+		
+	Một trap khác:
+		"RAG source trên S3 = PDF"
+		Sai.
+
+	S3 có thể chứa nhiều loại document/data format tùy pipeline/parser hỗ trợ.
+
+	Ví dụ:
+		.pdf
+		.docx
+		.txt
+		.md
+		.html
+		.csv
+		...
+
+	Điều quan trọng không phải "S3 chứa loại file gì", mà là:
+		Data ingestion pipeline có khả năng parse format đó hay không		
+				
+				
+			
+# 8. Metadata trong S3
+	Đây là phần rất quan trọng khi học RAG nâng cao.	
+		
+		
+	Giả sử:
+		s3://company-kb/
+
+		hr/
+		  vacation.pdf
+
+		finance/
+		  expense-policy.pdf
+
+		security/
+		  password-policy.pdf
+
+	Bạn có thể muốn retrieval có filter:		
+			
+	department = "HR"
+
+	hoặc:
+		document_type = "policy"
+
+	hoặc:
+		year = 2026
+
+	Conceptually:
+
+	Document
+	   │
+	   ├── content
+	   │
+	   └── metadata
+			  ├── department=HR
+			  ├── year=2026
+			  └── document_type=policy		
+			
+			
+			
+	Khi retrieval:
+		User query
+		   +
+		metadata filter
+				↓
+		Vector Search
+				↓
+		Relevant chunks
+
+	Điều này giúp giảm:
+		search space
+		irrelevant retrieval
+		hallucination risk
+		latency			
+				
+			
+			
+		
+# 	9. Một kiến trúc production thực tế	
+	Ví dụ công ty Nhật có hệ thống hỏi đáp nội bộ:	
+		
+                   Employees
+                       │
+                       ▼
+                 Chat Application
+                       │
+                       ▼
+                 Amazon Bedrock
+                       │
+                 Knowledge Base
+                       │
+          ┌────────────┴────────────┐
+          │                         │
+          ▼                         ▼
+      Retrieval              Metadata Filter
+          │
+          ▼
+     Vector Store
+          ▲
+          │
+       Ingestion
+          ▲
+          │
+          S3
+          │
+   ┌──────┼───────────┐
+   │      │           │
+  PDF   DOCX         MD		
+		
+		
+	S3 trở thành:
+		Central document repository
+
+	còn Knowledge Base trở thành:
+		Retrieval pipeline		
+			
+			
+		
+		
+# 	10. Tại sao không lưu tất cả trực tiếp vào Vector DB?	
+		
+	Câu này rất đáng suy nghĩ.
+		Vector DB không nên được coi là nơi lưu source-of-truth documents.		
+			
+		
+	Ví dụ:
+		S3
+		 └── original.pdf
+
+	và:
+
+		Vector DB
+		 ├── chunk_001
+		 ├── chunk_002
+		 ├── chunk_003
+		 └── embeddings
+
+	Nếu cần:
+		re-chunk
+		đổi embedding model
+		đổi chunking strategy
+		rebuild index
+		migrate vector DB
+
+	thì source document vẫn nằm nguyên trong S3.
+
+	Bạn có thể:
+		S3
+		 ↓
+		new chunking strategy
+		 ↓
+		new embedding model
+		 ↓
+		new vector index
+
+	Đây chính là lý do architecture này có tính reproducibility và maintainability tốt.		
+			
+			
+			
+			
+# 	11. Đây là tư duy cực quan trọng cho AIP-C01		
+			
+			
+			
+Hãy nhớ 3 lớp:
+
+	SOURCE OF TRUTH
+		  ↓
+		 S3
+		  ↓
+	RETRIEVAL REPRESENTATION
+		  ↓
+	Vector Store
+		  ↓
+	GENERATION
+		  ↓
+	Foundation Model			
+				
+				
+				
+	Đừng trộn chúng với nhau.		
+			
+| Thành phần      | Vai trò                        |
+| --------------- | ------------------------------ |
+| S3              | Original documents             |
+| Parser          | Hiểu cấu trúc/content document |
+| Chunker         | Chia document                  |
+| Embedding model | Text → vector                  |
+| Vector Store    | Similarity search              |
+| Retriever       | Tìm relevant chunks            |
+| FM              | Generate answer                |
+			
+			
+			
+# 13. Scenario kiểu AWS Professional			
+			
+	Scenario
+		Một công ty lưu 2 triệu tài liệu PDF trong S3. Họ muốn xây dựng hệ thống RAG nội bộ.			
+					
+						
+	Yêu cầu:
+		tài liệu gốc phải được lưu lâu dài
+		có thể rebuild vector index
+		có thể thay đổi embedding model
+		giảm operational overhead
+		hỗ trợ semantic retrieval			
+					
+	Architecture hợp lý về mặt nguyên tắc:
+
+                  S3
+          Source Documents
+                  │
+                  ▼
+          Bedrock Knowledge Base
+                  │
+        ┌─────────┴─────────┐
+        │                   │
+     Parsing             Chunking
+        │                   │
+        └─────────┬─────────┘
+                  ▼
+           Embedding Model
+                  │
+                  ▼
+             Vector Store
+                  │
+                  ▼
+             Retrieval
+                  │
+                  ▼
+             Bedrock FM
+
+
+# Cách suy luận trong phòng thi
+
+	Nếu đề nói:
+		authoritative/original/source documents
+		→ nghĩ S3
+
+	Nếu nói:
+		semantic similarity / nearest neighbors / embeddings
+		→ nghĩ Vector Store
+
+	Nếu nói:
+		generate natural-language answer
+		→ nghĩ Foundation Model
+
+	Nếu nói:
+		retrieve relevant information from enterprise documents
+		→ nghĩ RAG / Knowledge Base
+
+
+
+
+# 14. Cái cần nhớ nhất
+
+Nếu chỉ được nhớ một câu, hãy nhớ:
+	S3 là nơi lưu "sự thật gốc"; vector store là nơi lưu "biểu diễn để tìm kiếm".
+
+	Hay nhìn theo data lineage:
+
+		Original truth
+			 │
+			 ▼
+			S3
+			 │
+			 │ transform
+			 ▼
+		   Chunks
+			 │
+			 │ embed
+			 ▼
+		  Vectors
+			 │
+			 ▼
+		Vector Store
+			 │
+			 │ retrieve
+			 ▼
+		Relevant Context
+			 │
+			 ▼
+		Foundation Model
+
+	Đây chính là nền tảng để sau này hiểu sâu hơn Knowledge Bases → Data Ingestion → Parsing → Chunking → Metadata → Embedding → Vector Store → Retrieval → Reranking → Generation.
+
+                         LINE
+                          │
+                          ▼
+                    API Gateway
+                          │
+                          ▼
+                       Lambda
+                          │
+                          ▼
+                    ┌──────────┐
+                    │   Jev    │
+                    │ Decision │
+                    └────┬─────┘
+                         │
+       ┌─────────────────┼──────────────────┐
+       │                 │                  │
+       ▼                 ▼                  ▼
+   Structured          Knowledge         Complex
+     Query              Query             Query
+       │                 │                  │
+       ▼                 ▼                  ▼
+   DynamoDB        Bedrock KB/RAG       Bedrock FM
+       │                 │                  │
+       └─────────────────┼──────────────────┘
+                         ▼
+                    Response Builder
+                         │
+                         ▼
+                        LINE	
 
 </pre><a id='backBottom' href='../aws-bedrock-agent-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
