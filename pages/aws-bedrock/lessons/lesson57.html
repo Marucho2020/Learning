@@ -1,2 +1,787 @@
-<html><head><title>Lesson 57 == Cloud Practitioner === Lộ trình học sâu về Bedrock Connect 10 bài nâng cao ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 57 -- Cloud Practitioner --= Lộ trình học sâu về Bedrock Connect 10 bài nâng cao -//</h1><pre>
+<html><head><title>Lesson 58 == AIP-C01  ===Retrieval Failure — nguyên nhân & debug ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 58 -- AIP-C01  --=Retrieval Failure — nguyên nhân & debug -//</h1><pre>
+	Đây là một chủ đề rất quan trọng trong AIP-C01, vì AWS thường không hỏi kiểu “RAG là gì?”, mà đưa scenario kiểu:
+
+	“Knowledge Base đã ingest dữ liệu thành công nhưng câu trả lời của model không chứa thông tin trong tài liệu. Developer cần xác định nguyên nhân.”
+
+	Muốn debug RAG ở level senior, phải nhìn nó như một pipeline nhiều tầng, không được mặc định rằng “LLM trả lời sai = model có vấn đề”.
+
+
+
+# 1. Bản chất: Retrieval Failure là gì?
+
+	Trong RAG:
+
+User Question
+     ↓
+Query processing
+     ↓
+Embedding
+     ↓
+Vector / Hybrid Search
+     ↓
+Top-K Documents
+     ↓
+Filtering / Reranking
+     ↓
+Context
+     ↓
+LLM
+     ↓
+Answer
+
+	Retrieval Failure xảy ra khi:
+		Thông tin cần thiết không được lấy vào context, hoặc được lấy nhưng không đủ / không đúng / bị loại bỏ trước khi đến LLM.
+
+
+
+	Điểm cực kỳ quan trọng:
+		Wrong answer
+		   ≠
+		LLM failure
+
+
+
+	Có thể:
+		Document có thông tin
+				↓
+		Embedding tốt
+				↓
+		Search không tìm được
+				↓
+		Context không có thông tin
+				↓
+		LLM không thể trả lời chính xác
+
+	LLM lúc này có thể hoàn toàn “vô tội”.
+
+
+
+# 2. Hãy chia Retrieval Failure thành 6 tầng
+
+
+Đây là mental model tôi khuyên dùng khi thi và khi debug production:
+
+	① Data
+	   ↓
+	② Parsing / Chunking
+	   ↓
+	③ Embedding
+	   ↓
+	④ Retrieval
+	   ↓
+	⑤ Filtering / Reranking
+	   ↓
+	⑥ Context → Generation
+
+	Nếu muốn debug nhanh, hỏi:
+		“Thông tin đã biến mất ở tầng nào?”
+
+
+
+# 3. Tầng ① — Data Failure
+
+	Đầu tiên phải hỏi:
+		Thông tin có thực sự tồn tại trong Knowledge Base không?
+
+
+
+	Ví dụ:
+		company_policy.pdf
+
+	Trong PDF:
+		Chapter 7
+		Remote Work Policy
+
+	Employees may work remotely up to 3 days per week.
+
+	Nhưng ingestion pipeline lại:
+		PDF
+		 ↓
+		Parser
+		 ↓
+		Chapter 7 bị bỏ qua
+		 ↓
+		Embedding
+
+	User hỏi:
+		"How many days can employees work remotely?"
+		Search không tìm thấy.
+		Không phải vector DB lỗi.
+		Dữ liệu chưa bao giờ được index.
+
+
+
+	Các nguyên nhân
+
+		file chưa được ingest
+		file mới nhưng KB chưa sync
+		ingestion job failed
+		document bị exclude
+		parser không đọc được format
+		OCR thất bại
+		bảng/image bị bỏ qua
+		file bị overwrite nhưng index chưa refresh
+		metadata sai
+
+
+	Debug
+
+	Kiểm tra:
+		S3 object
+		   ↓
+		Knowledge Base data source
+		   ↓
+		Ingestion job
+		   ↓
+		Parsed content
+		   ↓
+		Chunks
+
+
+	Trong AWS cần đặc biệt chú ý:
+
+		ingestion job status
+		failed documents
+		parsing errors
+		data source configuration
+		S3 object/version
+		last synchronization time
+
+
+
+
+
+# 4. Tầng ② — Parsing / Chunking Failure
+	Đây là chỗ rất hay bị đánh giá thấp.
+
+
+	Giả sử document:
+
+	Employee Expense Policy
+		Hotel reimbursement:
+			Tokyo: ¥15,000/night
+			Osaka: ¥12,000/night
+			Other regions: ¥10,000/night
+
+
+Parser tạo chunk:
+	Employee Expense Policy
+	và bỏ mất bảng.
+
+
+
+	Hoặc chunking:
+
+	Chunk 1:
+		Hotel reimbursement:
+		Tokyo
+
+	Chunk 2:
+		¥15,000/night
+		Osaka
+
+	Chunk 3:
+		¥12,000/night
+		Other regions
+
+	Semantic relationship bị phá.
+
+	User hỏi:
+		"What is the hotel reimbursement limit in Tokyo?"
+
+	Search có thể retrieve:
+		Tokyo
+
+	nhưng không retrieve:
+		¥15,000/night
+
+	→ Retrieval technically hoạt động, nhưng retrieval quality thấp.
+	
+	
+	
+# 	7. Hierarchical relationship bị mất
+	
+	
+	Đây là lỗi rất quan trọng với document enterprise.
+		Ví dụ:
+		Chapter 4: Travel Policy
+
+		4.1 Transportation
+		4.2 Hotel
+		4.3 Meals
+
+	Chunk:
+		Maximum reimbursement is ¥15,000.
+
+	Nếu mất metadata:
+		chapter = Travel Policy
+		section = Hotel
+
+	thì retrieval chỉ nhìn thấy:
+		Maximum reimbursement is ¥15,000.
+
+	Không biết:
+		¥15,000 cho cái gì?
+		Do đó metadata và hierarchical chunking có thể rất quan trọng.
+		
+		
+		
+	
+	
+	
+# 	8. Tầng ③ — Embedding Failure
+	
+	
+	Đây là tầng cực kỳ quan trọng.
+
+	Embedding biến:
+		"How much can I claim for a hotel?"
+
+	thành vector:
+		[0.12, -0.81, 0.44, ...]
+		Document cũng được vector hóa.
+		Retrieval dựa trên khoảng cách / similarity.	
+		
+	
+	
+	Ví dụ:
+		Query
+		  ↓
+		q = [....]
+
+		Document A
+		  ↓
+		dA = [....]
+
+		Document B
+		  ↓
+		dB = [....]
+
+	Nếu:
+
+		similarity(q,dA) = 0.91
+		similarity(q,dB) = 0.63
+
+	A được ưu tiên.	
+		
+	
+	
+# 9. Embedding model mismatch	
+	Cùng embedding model / compatible embedding space là nguyên tắc quan trọng.
+	
+	
+	
+# 	10. Query và document dùng ngôn ngữ khác nhau
+	
+	
+	Ví dụ database chứa:
+
+	Japanese:
+		在宅勤務は週3日まで認められる。
+
+	User hỏi:
+		How many days can I work from home?
+
+	Embedding model phải có khả năng multilingual tốt.
+		Nếu embedding model yếu với cross-lingual retrieval:
+
+		Japanese document
+				↓
+		weak representation
+
+		English query
+				↓
+		weak alignment
+		→ retrieval recall giảm.
+
+	Đây là lý do embedding model selection không chỉ nhìn dimension hoặc giá.	
+		
+		
+	
+	
+	
+	
+	
+# 11. Tầng ④ — Retrieval Failure thật sự	
+	
+	
+	Giả sử mọi thứ phía trước đều đúng.
+
+	Bây giờ:
+		Query
+		 ↓
+		Embedding
+		 ↓
+		Vector search
+
+	Nhưng Top-K không chứa document cần thiết.	
+		
+		
+	Ví dụ:
+
+		K = 3
+
+		1. FAQ
+		2. General travel policy
+		3. Expense policy overview
+
+	Trong khi document chính xác:
+		4. Tokyo hotel reimbursement
+
+	→ bị loại.
+		
+	
+	
+# 	12. Top-K quá nhỏ
+	
+		
+	Đây là trap rất phổ biến.
+		Top-K = 3
+
+	không có nghĩa:
+		“3 documents tốt nhất chắc chắn đủ.”
+
+	Nó chỉ có nghĩa:
+		“Lấy 3 kết quả có similarity cao nhất theo retrieval strategy hiện tại.”
+
+	Nếu relevant document đứng thứ 7:
+		Top 3 → không có answer
+
+	Tăng:
+		K = 10
+		có thể tăng recall.
+
+	Nhưng:
+		K ↑
+		→ context ↑
+		→ token ↑
+		→ latency ↑
+		→ cost ↑
+		→ noise ↑
+
+	Vì vậy K không phải càng lớn càng tốt.	
+		
+		
+	
+	
+# 	13. Recall vs Precision
+	
+	
+	Đây là cách suy nghĩ rất quan trọng.
+		Recall
+		Có lấy được document đúng hay không?
+
+		Relevant documents = 10
+		Retrieved = 8
+
+		Recall = 8/10 = 80%
+		Precision
+
+	Những document lấy về có thực sự relevant không?
+
+		Retrieved = 10
+		Relevant = 6
+		Precision = 60%
+
+	RAG thường phải cân bằng:
+
+		Recall ↑
+			↕
+		Precision
+
+	Nếu K quá thấp:
+
+		Precision có thể ↑
+		Recall ↓
+
+	Nếu K quá cao:
+
+		Recall ↑
+		Noise ↑
+		Precision ↓	
+		
+		
+	
+	
+	
+# 14. Tầng ⑤ — Metadata Filtering	
+	
+	
+	
+	Đây là một trong những nguyên nhân Retrieval Failure nguy hiểm nhất.
+
+	Giả sử:
+
+	Documents:
+
+		doc-A
+		department = HR
+
+		doc-B
+		department = Finance
+
+		doc-C
+		department = Engineering
+
+	User hỏi:
+		"What is the travel policy?"
+
+	Semantic search tìm thấy:
+		doc-A
+		doc-B
+		doc-C
+
+	Nhưng application gửi filter:
+		department = Engineering
+		→ HR và Finance bị loại.
+		Có thể semantic search hoàn toàn đúng.
+		Filter giết retrieval.	
+		
+		
+	
+	
+
+# 	16. Filter quá restrictive
+	
+		
+	Ví dụ:
+		tenant = company-A
+		department = HR
+		region = Tokyo
+		document_type = policy
+		year = 2026
+
+	Chỉ cần một metadata sai:
+		year = 2025
+		→ document bị loại.
+
+	Trong production:
+		Search failure
+
+	đôi khi thực chất là:
+		Filter failure	
+	
+	
+	
+	
+# 	17. Hybrid Search
+	
+Với enterprise documents, những thứ như:
+	ticket ID
+	product code
+	employee ID
+	contract number
+	version
+	error code
+
+	thường rất quan trọng.	
+		
+		
+	Nếu chỉ semantic search:
+
+	Query:
+		CVE-2026-1234
+
+	có thể retrieval không tốt.
+
+	Hybrid:
+
+		BM25 / keyword
+		+
+		Vector similarity
+
+	có thể cải thiện recall.	
+		
+		
+	
+# 	18. Tầng ⑥ — Reranking Failure
+	
+	Pipeline:
+		Query
+		 ↓
+		Initial Retrieval
+		 ↓
+		Top 20
+		 ↓
+		Reranker
+		 ↓
+		Top 5
+		 ↓
+		LLM
+
+	Có thể initial retrieval đã lấy đúng document:	
+		
+		
+Top 20:
+...
+document X ← correct
+...
+
+Nhưng reranker đánh giá sai:
+
+Top 5:
+	A
+	B
+	C
+	D
+	E
+
+	document X bị loại.
+
+→ Retrieval failure xảy ra sau vector search.
+	Đây là lý do debug phải kiểm tra trước và sau reranking.	
+	
+	
+	
+	
+# 	19. Retrieval đúng nhưng Context bị mất
+		
+	Có một case rất quan trọng:
+		Retriever
+		   ↓
+		Correct document
+		   ↓
+		Context
+		   ↓
+		Prompt construction
+		   ↓
+		LLM
+
+	Nếu prompt builder:
+
+		truncate context
+		giới hạn token
+		cắt document
+		đặt context sai vị trí
+		vượt context window
+
+	thì:
+
+		Retrieved correctly
+		
+	BUT
+		LLM never sees the useful part
+
+	Đây không còn là retrieval failure thuần túy.
+
+	Nó là:
+		context construction / generation failure
+		Nhưng khi debug RAG production, vẫn phải kiểm tra.	
+		
+		
+	
+	
+# 20. Một cây debug thực chiến	
+	
+Khi user báo:
+	“RAG không trả lời được thông tin trong tài liệu.”
+	Đừng ngay lập tức đổi model.
+	Đi theo thứ tự:	
+	
+	
+                    User Question
+                         │
+                         ▼
+               ┌──────────────────┐
+               │ Document exists? │
+               └────────┬─────────┘
+                        NO
+                         ↓
+                  Fix ingestion
+                         │
+                        YES
+                         ↓
+               ┌──────────────────┐
+               │ Parsed correctly?│
+               └────────┬─────────┘
+                        NO
+                         ↓
+                 Fix parser/OCR
+                        YES
+                         ↓
+               ┌──────────────────┐
+               │ Chunking correct?│
+               └────────┬─────────┘
+                        NO
+                         ↓
+                  Fix chunking
+                        YES
+                         ↓
+               ┌──────────────────┐
+               │ Embedding valid? │
+               └────────┬─────────┘
+                        NO
+                         ↓
+               Fix embedding
+                        YES
+                         ↓
+               ┌──────────────────┐
+               │ Relevant in Top-K│
+               └────────┬─────────┘
+                        NO
+                         ↓
+             Tune retrieval / hybrid
+                        │
+                        YES
+                         ↓
+               ┌──────────────────┐
+               │ Filter removes it?│
+               └────────┬─────────┘
+                        YES
+                         ↓
+                    Fix filter
+                        NO
+                         ↓
+               ┌──────────────────┐
+               │ Reranker removes?│
+               └────────┬─────────┘
+                        YES
+                         ↓
+                  Tune reranking
+                        NO
+                         ↓
+               ┌──────────────────┐
+               │ Context preserved?│
+               └────────┬─────────┘
+                        NO
+                         ↓
+                 Fix prompt/context
+                        │
+                        YES
+                         ↓
+                    LLM issue	
+	
+	
+	
+# 	21. Debug bằng một Query duy nhất
+	
+	
+Đừng debug bằng cảm giác.
+
+Lấy:
+
+Query ID = Q123
+
+log toàn bộ:
+
+{
+  "query": "...",
+  "embedding_model": "...",
+  "top_k": 10,
+  "filters": {},
+  "retrieved_documents": [
+    {
+      "id": "...",
+      "score": 0.82
+    }
+  ],
+  "reranked_documents": [],
+  "final_context": "...",
+  "model": "..."
+}
+
+Sau đó hỏi từng tầng:	
+	
+	
+	
+# 	22. Các triệu chứng → nguyên nhân
+	
+	
+| Triệu chứng                                         | Nghi ngờ                         |
+| --------------------------------------------------- | -------------------------------- |
+| Không document nào được retrieve                    | ingestion / embedding / query    |
+| Document liên quan đứng rất thấp                    | chunking / embedding / retrieval |
+| Search tốt nhưng production không tìm thấy          | metadata filter                  |
+| Keyword chính xác nhưng semantic search fail        | cần hybrid search                |
+| Document đúng trong Top-20 nhưng không trong Top-5  | reranking                        |
+| Document đúng được retrieve nhưng answer không dùng | context / prompt / LLM           |
+| Chỉ document mới không tìm thấy                     | sync / ingestion freshness       |
+| PDF text tìm được nhưng table không                 | parsing                          |
+| English query không tìm Japanese document           | multilingual embedding           |
+| ID/error code tìm kém                               | keyword/hybrid search            |
+| Query dài hoạt động kém                             | query formulation / embedding    |
+| Một tenant thấy data tenant khác                    | metadata isolation/security bug  |
+	
+	
+	
+	
+# 23. AWS Mapping
+	
+	
+| Problem             | Thành phần cần kiểm tra                                                     |
+| ------------------- | --------------------------------------------------------------------------- |
+| Source data         | Amazon S3                                                                   |
+| Parsing / ingestion | Bedrock Knowledge Bases ingestion                                           |
+| Chunking            | Knowledge Bases chunking strategy                                           |
+| Embedding           | Bedrock embedding model                                                     |
+| Vector retrieval    | OpenSearch Serverless / Aurora PostgreSQL pgvector / supported vector store |
+| Metadata filtering  | KB retrieval configuration / application logic                              |
+| Hybrid search       | supported retrieval configuration / OpenSearch capabilities                 |
+| Reranking           | Bedrock Knowledge Bases reranking                                           |
+| Generation          | Amazon Bedrock foundation model                                             |
+| Access control      | IAM / application authorization                                             |
+| Freshness           | ingestion/synchronization pipeline                                          |
+| Observability       | application logs / CloudWatch / evaluation pipeline                         |
+	
+	
+Điểm thi cần nhớ:
+
+Knowledge Base không phải một “database thần kỳ”.
+
+Nó là một pipeline:
+	Data
+	 ↓
+	Parsing
+	 ↓
+	Chunking
+	 ↓
+	Embedding
+	 ↓
+	Vector store
+	 ↓
+	Retrieval
+	 ↓
+	Optional reranking
+	 ↓
+	Generation	
+		
+	
+# 	28. Cách nhớ toàn bộ Retrieval Failure
+	
+	
+Tôi khuyên dùng chữ:
+
+D-P-E-R-F-C
+	D = Data
+	P = Parsing / Partitioning
+	E = Embedding
+	R = Retrieval
+	F = Filter / Rerank
+	C = Context
+
+Khi RAG fail:
+
+D → P → E → R → F → C
+
+Không nhảy ngay đến LLM.	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+
+
 </pre><a id='backBottom' href='../aws-bedrock-agent-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
