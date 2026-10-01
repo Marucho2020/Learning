@@ -1,3 +1,122 @@
-<html><head><title>Lesson 59 == Lộ trình ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 59 -- Lộ trình -//</h1><pre># Lộ trình 100 ngày học AIP-C01 — Trọng tâm: Kiến trúc AI hiện đại & Agentic AI
+<html><head><title>Lesson 59 == AIP-C01  ===Hallucination — bản chất & cách giảm thiểu ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 59 -- AIP-C01  --=Hallucination — bản chất & cách giảm thiểu -//</h1><pre>
+	RAG đã triển khai nhưng model vẫn trả lời sai → nguyên nhân nằm ở retrieval, prompt, model, dữ liệu hay generation? Giải pháp nào giảm hallucination hiệu quả nhất với ít thay đổi kiến trúc nhất?
+
+
+# 	Hallucination thực chất là gì?
+	Nói đơn giản
+		Hallucination = model tạo ra thông tin nghe hợp lý nhưng không được dữ liệu/nguồn sự thật hỗ trợ.
+
+	Ví dụ:
+
+	User hỏi:
+		「AWS Bedrock Knowledge Bases の最大チャンクサイズは何ですか？」
+
+	Model không biết chính xác nhưng thay vì nói:
+		“Tôi không chắc.”
+
+	nó có thể trả lời:
+		“Maximum chunk size is 10,000 tokens.”
+		Câu này có thể nghe rất chuyên nghiệp, nhưng nếu con số đó không tồn tại trong tài liệu thì đó là hallucination.	
+		
+	
+	
+# 	Ở level sâu hơn
+
+	LLM về bản chất không phải là một database.
+	Dựa trên context hiện tại, token nào có xác suất xuất hiện tiếp theo cao?
+	
+	Nó không mặc định thực hiện:
+		Answer= Verified Fact from Database
+
+	Mà gần hơn với:
+		Answer = Most likely continuation
+
+	Đây chính là nguồn gốc sâu của hallucination.	
+		
+		
+		
+		
+# 	2. Một hiểu lầm cực kỳ nguy hiểm	
+		
+		
+	Nhiều người nghĩ:
+		“LLM được train bằng rất nhiều dữ liệu → nó biết rất nhiều → hallucination là do model kém.”
+
+	Không chính xác.
+		Ngay cả model rất mạnh vẫn có thể hallucinate.
+
+	Có thể hình dung:		
+			
+			
+	LLM
+	 │
+	 ├── Knowledge learned during training
+	 │
+	 ├── User prompt
+	 │
+	 ├── Retrieved context
+	 │
+	 └── Generation
+			  ↓
+		   Answer
+			  ↓
+		Có thể hallucinate		
+			
+	Hallucination có thể xuất hiện ở nhiều tầng khác nhau.		
+		
+		
+		
+# 	3. 5 nguồn hallucination quan trọng	
+		
+			
+	Đây là cách tôi khuyên bạn nhớ để thi:
+
+		DATA
+		 ↓
+		RETRIEVAL
+		 ↓
+		PROMPT
+		 ↓
+		MODEL
+		 ↓
+		GENERATION
+
+	Có thể gọi là:
+		D-R-P-M-G		
+		
+		
+		
+# 3.1. Data problem		
+
+	Dữ liệu nguồn đã sai hoặc lỗi thời.	
+		
+		Ví dụ:
+			old_policy.md
+
+		Refund period:
+			30 days
+
+		Trong khi policy hiện tại:
+
+		Refund period:
+			14 days
+
+		RAG retrieve đúng tài liệu cũ.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 </pre><a id='backBottom' href='../aws-bedrock-agent-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
