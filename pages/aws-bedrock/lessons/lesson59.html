@@ -1,3 +1,535 @@
-<html><head><title>Lesson 60 == Lộ trình ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 60 -- Lộ trình -//</h1><pre># Lộ trình 100 ngày học AIP-C01 — Trọng tâm: Kiến trúc AI hiện đại & Agentic AI
+<html><head><title>Lesson 60 == AIP-C01  ===Grounding (grounding response vào retrieved data) ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 60 -- AIP-C01  --=Grounding (grounding response vào retrieved data) -//</h1><pre>
+# 1. Grounding là gì?
+
+	Nói thẳng:
+
+	Grounding = làm cho câu trả lời của LLM được “neo” vào những dữ liệu có thật đã được cung cấp/retrieved, thay vì để model tự suy diễn từ kiến thức trong pretrained model.
+
+	Ví dụ:
+
+	Bạn có tài liệu:
+		Quy định nghỉ phép của công ty:
+		Nhân viên được nghỉ phép có lương 20 ngày/năm.
+		Ngày nghỉ chưa sử dụng được chuyển sang năm tiếp theo tối đa 10 ngày.
+
+
+
+	User hỏi:
+		「有給休暇は何日取得できますか？」
+
+	Nếu chỉ gọi LLM:
+		LLM → "一般的には年間20日程度です。"
+
+	Đây chưa được grounding.
+		LLM có thể đang trả lời dựa trên kiến thức đã học, chứ không nhất thiết dựa vào tài liệu công ty.
+
+
+	Với RAG:
+		User
+		 ↓
+		Query
+		 ↓
+		Retriever
+		 ↓
+		Retrieved chunks
+		 ↓
+		LLM
+		 ↓
+		Answer
+
+
+	Context đưa vào:
+		[Retrieved Context]
+			規定:
+			従業員は年間20日の有給休暇を取得できる。
+
+	Prompt yêu cầu:
+		Answer the question based only on the provided context.
+		If the answer cannot be found in the context, say that the information is unavailable.
+
+	Model:
+		年間20日の有給休暇を取得できます。
+
+	Đây là grounded response.
+
+
+# 2. Grounding không phải là Retrieval
+
+	Đây là điểm rất dễ nhầm trong bài thi.
+
+	## Retrieval
+		Là:
+			Tìm đúng dữ liệu.
+
+	## Grounding
+
+		Là:
+			Đảm bảo response của LLM dựa trên dữ liệu đó.
+
+
+	Hai vấn đề khác nhau.
+
+              RAG
+               │
+       ┌───────┴───────┐
+       ↓               ↓
+   Retrieval       Generation
+       │               │
+ "Tìm đúng"       "Trả lời đúng"
+       │               │
+       └───────┬───────┘
+               ↓
+          Grounding
+
+
+	Ví dụ:
+
+	Retriever tìm được:
+
+		Chunk A:
+		有給休暇は年間20日
+
+	nhưng LLM trả lời:
+		年間25日取得できます。
+		→ Retrieval thành công nhưng grounding thất bại.
+
+	Ngược lại:
+		LLM nhận đúng context nhưng retriever tìm sai tài liệu:
+
+	Retrieved:
+		2024年の旧規定
+
+	Trong khi hiện tại:
+		2026年の新規定
+		LLM trả lời rất chính xác dựa trên context.
+		Nhưng business answer vẫn sai.
+		→ Đây là retrieval/data freshness problem, không đơn thuần là grounding problem.
+
+
+
+
+
+# 3. Grounding thực chất giải quyết vấn đề gì?
+
+	Nó giải quyết một vấn đề rất căn bản của LLM:
+		LLM không phân biệt một cách đáng tin cậy giữa “thứ tôi biết từ training” và “thứ tôi vừa được cung cấp trong context”.
+
+
+	Ví dụ model biết:
+		日本の一般的な有給休暇制度
+
+	nhưng công ty của bạn có policy riêng:
+		Company Policy:
+		新人は入社6か月後から有給休暇を取得できる。
+
+	User hỏi:
+		「入社3か月後に有給を取得できますか？」
+		LLM pretrained có thể trả lời dựa trên kiến thức chung về luật Nhật.
+
+	Nhưng hệ thống doanh nghiệp muốn:
+		回答:
+		社内規定では、入社6か月後から有給休暇を取得できます。
+
+
+	Tức là:
+		General knowledge
+			  ↓
+			 ❌
+		Company source
+			  ↓
+			 ✅
+
+	Grounding ép hệ thống ưu tiên authoritative context.
+
+
+
+# 4. Grounding có nhiều tầng
+
+Đừng hiểu grounding chỉ là:
+	“ném retrieved documents vào prompt”.
+	Ở production, grounding thường là cả một chuỗi kiểm soát.
+
+
+	User Query
+		↓
+	Retrieval
+		↓
+	Relevant Documents
+		↓
+	Metadata / Permission filtering
+		↓
+	Reranking
+		↓
+	Context
+		↓
+	Prompt
+		↓
+	LLM
+		↓
+	Grounded Response
+		↓
+	Citation / Attribution
+		↓
+	Grounding evaluation
+
+	Mỗi tầng giải quyết một loại failure.
+
+
+# 5. Tầng 1 — Context grounding
+
+	Đây là tầng cơ bản nhất.
+
+	Prompt:
+		
+		Use only the information contained in the context.
+		If the answer cannot be determined from the context,
+		say that the information is not available.
+		Do not use external knowledge.
+			
+	
+	Context:
+		<document>
+		Project X will be released on October 15, 2026.
+		</document>
+
+	Question:
+		When will Project X be released?
+
+	Response:
+		Project X will be released on October 15, 2026.
+
+	Nhưng:
+
+		Question:
+		Who is the project manager?
+		Context không có.
+
+	Model phải trả:
+		The project manager is not specified in the provided information.
+		Đây mới là behavior mà bạn muốn.	
+		
+		
+	
+#  6. Tầng 2 — Citation / Attribution
+	Grounding mạnh hơn nếu model phải chỉ ra nguồn của câu trả lời.
+	
+	Ví dụ:
+		Project X will be released on October 15, 2026.
+
+	Source:
+		Project_X_Release_Plan.md
+	
+		
+	Hoặc:
+		Project X will be released on October 15, 2026. [1]
+		[1] Project_X_Release_Plan.md
+		Điều này rất quan trọng trong enterprise RAG.
+
+	Ví dụ hệ thống quản lý:
+
+	User:
+		今月の売上状況を教えてください。
+
+	Response:
+		9月の売上は1,250万円で、前月比8%増加しています。
+
+	出典:
+		営業月次報告書_2026年9月
+
+	Người dùng có thể kiểm chứng.	
+		
+		
+		
+		
+# 	7. Nhưng Citation ≠ Grounding	
+		
+			
+	Đây là một trap rất hay.
+
+	LLM có thể tạo:
+		売上は1,250万円です。[Report.pdf]
+
+	nhưng trong Report.pdf không hề có:
+		1,250万円
+		Citation tồn tại nhưng citation không support claim.
+
+	Do đó:
+		Citation exists
+			   ≠
+		Claim is grounded
+
+	Grounding thực sự cần:
+		Claim phải được hỗ trợ bởi retrieved evidence.		
+			
+			
+		
+		
+		
+# 8. Grounding ≠ Hallucination		
+		
+			
+			
+	Hai khái niệm liên quan nhưng không đồng nghĩa.
+
+	Hallucination
+		Model tạo thông tin không đúng hoặc không có căn cứ.
+
+	Grounding
+		Cơ chế làm giảm việc đó bằng cách bắt response bám vào evidence.
+
+	Ví dụ:
+
+		Retrieved:
+		Amazon Bedrock Knowledge Bases supports RAG.
+
+	LLM:
+		Amazon Bedrock Knowledge Bases supports RAG
+		and automatically trains a custom foundation model.
+
+	Phần:
+		supports RAG
+		→ grounded.
+
+	Phần:
+		automatically trains a custom foundation model
+		→ unsupported claim / hallucination.
+
+	Vì vậy:
+
+		Grounding
+		   ↓
+		giảm unsupported claims
+		   ↓
+		giảm hallucination
+
+	nhưng:
+
+	Grounding không đảm bảo 100% không hallucination.		
+			
+			
+		
+# 9. Grounding cũng không đảm bảo dữ liệu đúng	
+	
+	Đây là tầng suy nghĩ Senior/Professional.	
+		
+				
+			
+		Đây là tầng suy nghĩ Senior/Professional.
+
+		Giả sử database chứa:
+
+			Employee salary:
+			¥5,000,000
+
+			Retriever lấy đúng record.
+
+		LLM trả:
+
+			年収は500万円です。
+
+		Grounding:
+			Có.
+			Nhưng database đã lỗi thời.
+
+		Salary thực tế:
+			¥6,000,000
+			→ Answer vẫn sai.
+
+		Do đó:
+			Grounding
+				 ↓
+			"Answer có dựa vào evidence không?"
+
+		Không phải:
+			"Evidence có đúng không?"
+
+		Muốn giải quyết vấn đề này cần:
+			data freshness
+			source authority
+			versioning
+			metadata
+			access control
+			ingestion pipeline
+			validation
+
+		Đây chính là lý do các bài trước về Data Freshness / Retrieval Failure / RAG liên kết trực tiếp với grounding.	
+			
+			
+	
+# 	10. Grounding trong Amazon Bedrock
+	Trong AWS architecture, grounding xuất hiện ở nhiều thành phần.
+	
+	Bedrock Knowledge Bases
+
+	Có pipeline:	
+		S3
+		 ↓
+		Parsing
+		 ↓
+		Chunking
+		 ↓
+		Embedding
+		 ↓
+		Vector store
+		 ↓
+		Retrieval
+		 ↓
+		Retrieved context
+		 ↓
+		Foundation Model
+		 ↓
+		Response	
+			
+	Knowledge Bases giúp hệ thống lấy enterprise data làm context cho generation.
+	
+	
+	
+	
+## Bedrock Agents
+	
+		
+	Agent có thể:
+		User
+		 ↓
+		Agent
+		 ↓
+		Knowledge Base
+		 ↓
+		Retrieved information
+		 ↓
+		Model reasoning
+		 ↓
+		Action / response
+		
+		Grounding lúc này không chỉ là document retrieval.
+
+	Agent có thể grounding bằng:
+		Knowledge Base
+		Action Group
+		external APIs
+		business systems
+
+	Ví dụ:
+
+	User:
+		注文 #1234 の配送状況は？
+		Agent không nên tự đoán.
+
+	Nó gọi:
+
+		Action Group
+			 ↓
+		Lambda
+			 ↓
+		Order API
+			 ↓
+		Order #1234 = Shipped
+
+	Response:
+		注文 #1234 は発送済みです。
+
+	Ở đây API result chính là grounding evidence.	
+		
+		
+		
+# 	11. Grounding trong Agentic AI còn quan trọng hơn RAG
+	
+		
+	RAG truyền thống:
+		Documents → Context → LLM
+
+	Agent:
+		LLM
+		 ↓
+		Tool
+		 ↓
+		External system
+		 ↓
+		Result
+		 ↓
+		LLM
+		 ↓
+		Decision
+
+	Ví dụ:
+		"現在の在庫数を教えて"
+		Model không nên dùng knowledge cutoff.
+
+	Nó phải:
+
+		Inventory API
+			  ↓
+		Current stock = 17
+			  ↓
+		LLM
+			  ↓
+		"現在17個あります"
+
+	Đây là grounding bằng real-time tool data.
+		
+		
+
+# 12. Grounding và RAG: nhìn ở cấp kiến trúc
+
+| Thành phần         | Câu hỏi nó giải quyết              |
+| ------------------ | ---------------------------------- |
+| Chunking           | Chia document thế nào?             |
+| Embedding          | Biến meaning thành vector thế nào? |
+| Retrieval          | Tìm context nào?                   |
+| Metadata filtering | Tìm trong phạm vi nào?             |
+| Reranking          | Context nào quan trọng nhất?       |
+| Grounding          | Response có bám vào context không? |
+| Citation           | Có thể kiểm chứng nguồn không?     |
+| Evaluation         | Grounding có tốt không?            |
+| Freshness          | Context có mới không?              |
+
+
+
+	Điểm rất quan trọng:
+		Grounding là vấn đề ở phía generation, nhưng chất lượng grounding phụ thuộc mạnh vào retrieval.
+
+	Nếu retrieval đưa garbage:
+		Garbage context
+			  ↓
+		LLM
+			  ↓
+		Garbage grounded answer
+
+	Nói cách khác:
+		Grounded ≠ Correct.
+		Có thể grounded nhưng wrong vì source sai/lỗi thời.
+
+
+
+# 20. Tóm tắt bản chất
+
+
+                 RAG
+                  │
+         ┌────────┴────────┐
+         ↓                 ↓
+     Retrieval         Generation
+         │                 │
+   "Tìm evidence"    "Dùng evidence"
+         │                 │
+         └────────┬────────┘
+                  ↓
+              Grounding
+                  │
+                  ↓
+       Response dựa trên evidence
+                  │
+          ┌───────┴───────┐
+          ↓               ↓
+      Citation        Evaluation
+          │               │
+    kiểm chứng       đo groundedness
+
+
+Một câu để đi thi:
+	Grounding là kiểm soát để LLM tạo response dựa trên evidence được cung cấp/retrieved, thay vì tự suy diễn; nhưng grounding không đồng nghĩa với factual correctness, vì evidence có thể sai, cũ hoặc retrieval có thể chọn nhầm nguồn.
+		
+		
+
 
 </pre><a id='backBottom' href='../aws-bedrock-agent-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
