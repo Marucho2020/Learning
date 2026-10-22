@@ -1,0 +1,91 @@
+<html><head><title>Lesson 13 == Select ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../angular-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 13 -- Select -//</h1><pre># Khái niệm 
+	<select> – rất quan trọng trong các form chọn giá trị như "chọn quốc gia", "chọn user", "chọn trạng thái", v.v.
+	Tạo dropdown bằng AngularJS, gán giá trị và xử lý khi chọn.
+	
+# 🔹 1. Sử dụng ng-model với <select>
+
+<select ng-model="selectedName">
+  <option>Emil</option>
+  <option>Tobias</option>
+  <option>Linus</option>
+</select>
+
+
+	📌 Giải thích:
+		ng-model="selectedName" → giá trị được chọn sẽ lưu vào biến $scope.selectedName
+		Bạn có thể dùng biến này để xử lý logic tiếp theo
+
+	👉 Hiển thị giá trị đã chọn: 
+		<h1>Bạn chọn: {{ selectedName }}</h1>
+
+# 🔹 2. Dùng ng-options để tạo <option> từ danh sách 
+	
+	✔ Cách thông minh hơn:
+		$scope.names = ["Emil", "Tobias", "Linus"];
+		<select ng-model="selectedName" ng-options="x for x in names"></select>
+
+		📌 Giải thích:
+			ng-options="x for x in names" → lặp danh sách và tạo từng <option>
+			Sạch sẽ, dễ đọc hơn dùng ng-repeat
+
+
+# 🔹 3. Dùng object (danh sách object thay vì string) 
+	
+	$scope.people = [
+	{ id: 1, name: "Emil" },
+	{ id: 2, name: "Tobias" },
+	{ id: 3, name: "Linus" }
+	];
+
+
+	<select ng-model="selectedPerson" 
+			ng-options="person.name for person in people track by person.id">
+	</select>
+
+	📌 Giải thích:
+
+| Thành phần           | Ý nghĩa                                  |
+| -------------------- | ---------------------------------------- |
+| `person.name`        | Hiển thị tên trong option                |
+| `person in people`   | Duyệt danh sách                          |
+| `track by person.id` | Dùng ID để tránh lỗi lặp hoặc render sai |
+
+
+# 🔹 4. Hiển thị thông tin của lựa chọn 
+
+<p>Bạn chọn ID: {{ selectedPerson.id }}</p>
+<p>Tên: {{ selectedPerson.name }}</p>
+
+
+# 💡 Kết hợp với $http (load danh sách động từ API) 
+	
+	$http.get("/api/countries").then(function(response) {
+	$scope.countries = response.data;
+	});
+	
+	<select ng-model="selectedCountry" ng-options="c.name for c in countries track by c.code">
+	</select>
+
+
+# ✅ Mẹo thực tế
+	
+| Kỹ thuật                       | Mục tiêu                                 |
+| ------------------------------ | ---------------------------------------- |
+| `track by id`                  | Tránh lỗi khi dữ liệu object             |
+| `ng-disabled`                  | Disable select khi chưa load xong        |
+| `ng-change="onSelectChange()"` | Gọi hàm khi người dùng thay đổi lựa chọn |
+
+
+# 🔚 Kết luận 
+	
+| Học được gì             | Ứng dụng                           |
+| ----------------------- | ---------------------------------- |
+| `ng-model` + `<select>` | Binding giá trị người dùng chọn    |
+| `ng-options`            | Duyệt danh sách sinh ra `<option>` |
+| Kết hợp object          | Gọn gàng, dễ xử lý                 |
+| Kết hợp với `$http`     | Dữ liệu động từ server             |
+| Dễ test                 | Unit và Integration đều rõ ràng    |
+
+
+
+</pre><a id='backBottom' href='../angular-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

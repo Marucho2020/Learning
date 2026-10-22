@@ -1,0 +1,185 @@
+<html><head><title>Lesson 72 == DispatcherServlet ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 72 -- DispatcherServlet -//</h1><pre>	
+# Khái niệm  
+		DispatcherServlet là trái tim của Spring MVC, hoạt động như một Front Controller điều phối tất cả các yêu cầu HTTP đến ứng dụng web. 
+
+		
+
+# Tổng quan về DispatcherServlet 
+		Vai trò chính : 
+			- Nhận tất cả các request HTTP đến  
+			- Xác định Controller thích hợp để xử lý request 
+			- Gọi Controller và nhận về dữ liệu hoặc view 
+			- Render view hoặc trả response về client 
+			
+		## Sơ đồ hoạt động 
+			Client  →  DispatcherServlet  →  HandlerMapping  →  Controller  →  ViewResolver  →  Response
+
+
+
+# Luồng	xử lý của DispatcherServlet 
+	Khi một request HTTP đến, DispatcherServlet sẽ thực hiện các bước sau  : 
+		
+		## Bước 1 : Nhận yêu cầu từ Client 
+			Tất cả các request HTTP được gửi đến DispatcherServlet thông qua cấu hình web.xml hoặc Spring Boot Auto Configuration. 
+			
+		## Bước 2 : Tìm HandlerMapping phù hợp 
+		
+			DispatcherServlet sử dụng các HandlerMapping để tìm ra Controller phù hợp. 
+			
+			Các loại HandlerMapping phổ biến: 
+				RequestMappingHandlerMapping (dùng @RequestMapping trong Spring Boot) 
+				
+			SimpleUrlHandlerMapping (cấu hình thủ công các URL) 
+				
+
+		## Bước 3 : Gửi request đến HandlerAdapter 
+				HandlerAdapter đóng vai trò là một bộ chuyển đổi, giúp DispatcherServlet có thể gọi đúng method của Controller.
+
+
+		## Bước 4 :  Xử lý logic trong Controller 
+			Controller nhận request, xử lý dữ liệu và trả về ModelAndView (nếu là web) hoặc ResponseEntity (nếu là API REST). 
+			
+			
+		## Bước 5:  Xác định View thông qua ViewResolver 
+			- ViewResolver giúp tìm ra template HTML/JSP phù hợp. 
+			- Các loại ViewResolver phổ biến: 
+				InternalResourceViewResolver (dùng cho JSP) 
+				ThymeleafViewResolver (dùng cho Thymeleaf) 
+				MappingJackson2JsonView (trả về JSON) 
+			
+		## Trả về response cho client 
+			DispatcherServlet lấy kết quả từ ViewResolver hoặc ResponseEntity và trả về client.
+		
+
+# Cấu hình DispatcherServlet trong Java Config 
+	## Cấu hình trong web.xml (Java EE style - không khuyến khích) 
+		Trước đây, DispatcherServlet được cấu hình trong web.xml như sau: 
+		
+		<servlet>
+			<servlet-name>dispatcher</servlet-name>
+			<servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+			<load-on-startup>1</load-on-startup>
+		</servlet>
+		
+		<servlet-mapping>
+			<servlet-name>dispatcher</servlet-name>
+			<url-pattern>/</url-pattern>
+		</servlet-mapping>
+
+		
+
+	## Cấu hình với Java Config (Spring Boot - hiện đại) 
+		Spring Boot tự động cấu hình DispatcherServlet, nhưng bạn có thể override nó: 
+			
+			@Configuration
+			public class MyWebConfig implements WebMvcConfigurer {
+				
+				@Bean
+				public DispatcherServlet dispatcherServlet() {
+					return new DispatcherServlet();
+				}
+				
+				@Bean
+				public ServletRegistrationBean<DispatcherServlet> dispatcherServletRegistration() {
+					ServletRegistrationBean<DispatcherServlet> registration = new ServletRegistrationBean<>(dispatcherServlet(), "/");
+					registration.setLoadOnStartup(1);
+					return registration;
+				}
+			}
+			
+			
+
+# Tối ưu DispatcherServlet cho ứng dụng lớn (Senior Level) 
+	
+	## Caching ViewResolvers để tăng tốc độ load View 
+		Mặc định, Spring Boot sẽ tìm lại view mỗi lần request đến. Bạn có thể cache kết quả để tăng tốc: 
+
+		@Bean
+		public InternalResourceViewResolver viewResolver() {
+			InternalResourceViewResolver resolver = new InternalResourceViewResolver();
+			resolver.setPrefix("/WEB-INF/views/");
+			resolver.setSuffix(".jsp");
+			resolver.setCache(true); // Enable caching
+			return resolver;
+		}
+
+	## Nén Response để giảm tải băng thông 
+		Thêm gzip compression vào response headers để giảm thời gian tải: 
+		
+			@Bean
+			public FilterRegistrationBean<GzipFilter> gzipFilter() {
+				FilterRegistrationBean<GzipFilter> registration = new FilterRegistrationBean<>();
+				registration.setFilter(new GzipFilter());
+				registration.addUrlPatterns("/*");
+				return registration;
+			}
+
+	
+	
+	##  Tối ưu HandlerMapping 
+		Nếu ứng dụng có nhiều Controller, nên dùng RequestMappingHandlerMapping thay vì SimpleUrlHandlerMapping để tránh performance bottleneck. 
+	
+		@Bean
+		public RequestMappingHandlerMapping requestMappingHandlerMapping() {
+			RequestMappingHandlerMapping mapping = new RequestMappingHandlerMapping();
+			mapping.setOrder(0);
+			return mapping;
+		}
+
+
+	## Bật Asynchronous Processing
+		@Configuration
+		@EnableAsync
+		public class AsyncConfig {
+			
+			@Bean
+			public WebMvcConfigurer webMvcConfigurer() {
+				return new WebMvcConfigurer() {
+					@Override
+					public void configureAsyncSupport(AsyncSupportConfigurer configurer) {
+						configurer.setDefaultTimeout(5000);
+						configurer.setTaskExecutor(new SimpleAsyncTaskExecutor());
+					}
+				};
+			}
+		}
+
+	
+# 	Các câu hỏi phỏng vấn Java Gold & Senior về DispatcherServlet 
+	
+	
+	## Câu hỏi lý thuyết 
+		1. DispatcherServlet có phải là một Singleton không?
+			Trả lời: Có, nhưng mỗi DispatcherServlet instance chỉ xử lý một ApplicationContext. 
+			
+		2. 	Làm thế nào để thay đổi cấu hình mặc định của DispatcherServlet trong Spring Boot? 
+			Trả lời: Có thể override bean DispatcherServlet trong Java Config. 
+				
+		3. ViewResolver hoạt động như thế nào trong Spring MVC? 
+			Trả lời: Nó tìm kiếm view phù hợp dựa trên tên trả về từ Controller. 
+			
+		4. 	Sự khác nhau giữa @RestController và @Controller là gì? 
+			Trả lời: @RestController tự động thêm @ResponseBody vào tất cả phương thức. 
+			
+	## 	Câu hỏi về tối ưu hóa 
+		5. Nếu hệ thống có quá nhiều Controller, làm sao để tối ưu DispatcherServlet? 
+			Trả lời: Có thể dùng caching, bật async processing, và tối ưu HandlerMapping. 
+			
+		6. Làm sao để xử lý file upload trong Spring MVC? 
+			Trả lời: Cấu hình MultipartResolver.
+	
+	
+#  Kết luận 
+
+	DispatcherServlet là trung tâm của Spring MVC, đóng vai trò Front Controller.
+
+	Nó xử lý request thông qua HandlerMapping, HandlerAdapter, và ViewResolver.
+	
+	Hiểu rõ cách hoạt động của nó giúp bạn tối ưu ứng dụng cho các hệ thống lớn.
+	
+	Cấu hình nâng cao như caching, compression, async processing giúp tăng hiệu suất.
+	
+	Hiểu sâu về nó là bắt buộc nếu bạn muốn thi Java Gold hoặc lên Senior Java Developer.	
+	
+	
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

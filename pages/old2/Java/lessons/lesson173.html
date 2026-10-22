@@ -1,0 +1,129 @@
+<html><head><title>Lesson 173 == CountDownLatch ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 173 -- CountDownLatch -//</h1><pre>
+# 🔹 CountDownLatch – Đồng bộ 1 chiều, đếm ngược đến 0
+
+	- CountDownLatch khởi tạo với một số nguyên N.
+	- Nhiều thread có thể gọi await() → tất cả bị block cho đến khi counter = 0.
+	- Các thread khác gọi countDown() → giảm counter.
+	- Khi counter = 0 → tất cả thread đang chờ được unpark.
+	
+	👉 Một latch chỉ dùng được một lần → không reset (khác CyclicBarrier).
+
+
+# 2. Cơ chế hoạt động (under the hood)
+
+
+	- Implement dựa trên AQS.
+	- State = số đếm còn lại (count).
+	- await() → CAS state, nếu state > 0 thì thread vào queue (park).
+	- countDown() → CAS decrement. Khi state == 0 → release tất cả thread trong queue.
+	- Không reentrant, không reset.
+
+
+
+# 3. Use cases thực tế
+
+	## 3.1. Chờ nhiều worker hoàn tất 
+		Ví dụ: Master thread submit 10 worker tasks, sau đó chờ tất cả xong:	
+
+CountDownLatch latch = new CountDownLatch(10);
+
+for (int i = 0; i < 10; i++) {
+    executor.submit(() -> {
+        try {
+            // do work
+        } finally {
+            latch.countDown(); // báo hiệu hoàn tất
+        }
+    });
+}
+
+latch.await(); // master chờ
+
+
+
+	## 3.2. One-time initialization gate
+
+		Bạn có nhiều thread worker, nhưng tất cả phải chờ một service init xong.
+		Dùng CountDownLatch(1) → giống như một “cửa chặn 1 chiều”:
+
+CountDownLatch startGate = new CountDownLatch(1);
+
+// workers
+for (...) {
+    executor.submit(() -> {
+        startGate.await(); // chờ signal
+        // start work
+    });
+}
+
+// khi ready
+startGate.countDown(); // tất cả worker đồng loạt chạy
+
+
+
+	##3.3. Benchmarking / performance test
+	
+		Chặn tất cả threads tại await() rồi mở latch → đo hiệu năng khi tất cả cùng start.
+
+
+# 4. Ưu điểm vs Nhược điểm
+
+✅ Ưu điểm
+	Cực kỳ đơn giản, dễ hiểu, ít trap.
+	Thường dùng cho một lần đồng bộ (shutdown, init, test).
+
+⚠️ Nhược điểm
+
+	Không reset được → nếu muốn dùng nhiều lần phải tạo latch mới.
+	Không linh hoạt khi số lượng thread dynamic (dùng Phaser tốt hơn).
+	Dễ bị await treo mãi nếu có thread nào không countDown (bug logic).
+
+
+# 5. So sánh với các cơ chế khác
+
+| Công cụ          | Đặc điểm                                | Khi nào dùng                                                   |
+| ---------------- | --------------------------------------- | -------------------------------------------------------------- |
+| `CountDownLatch` | Đếm ngược một chiều, không reset        | Khi cần **chờ một nhóm job xong** hoặc **một event duy nhất**  |
+| `CyclicBarrier`  | Barrier 2 chiều, reset được             | Khi nhiều thread cần **gặp nhau nhiều lần** (iteration phases) |
+| `Phaser`         | Nhiều phase, dynamic thread đăng ký     | Khi số lượng thread **thay đổi**, cần đồng bộ nhiều vòng       |
+| `Semaphore`      | Cấp phát permit, không reset count auto | Khi cần **giới hạn concurrency** thay vì chờ nhóm              |
+
+
+
+# 6. Senior-level pitfalls & best practices
+
+	## Quên gọi countDown()
+		
+		Rất hay gặp → thread chính treo mãi ở await().
+		Giải pháp: luôn gọi trong finally:
+
+	## Sai mô hình dùng CountDownLatch(1) 
+	
+		Lúc này nó hoạt động như một binary latch.
+		Nếu bạn cần thứ có thể reset → chuyển sang CyclicBarrier hoặc Phaser.
+
+
+	## Không dùng cho thread pool long-lived 
+		Nếu bạn muốn đồng bộ định kỳ (ví dụ chờ batch N task trong executor) → latch không đủ → bạn phải tạo latch mới mỗi lần.	
+
+
+	## Timeout vs Deadlock detection 
+		Luôn nên dùng await(timeout) thay vì await() vô hạn, trừ khi 100% chắc chắn logic đúng.
+
+if (!latch.await(10, TimeUnit.SECONDS)) {
+    throw new TimeoutException("Workers too slow or deadlocked");
+}
+
+
+
+# 7. Mindset senior
+
+	- CountDownLatch = latch 1 lần (fire once).
+	- Nó không phải tool để đồng bộ liên tục.
+	- Rất hữu ích trong testing, bootstrap, one-off synchronization.
+	- Trong hệ thống lớn, bạn sẽ thấy latch được dùng như sync primitive, sau đó bọc trong abstraction cao hơn (ví dụ JobCoordinator).
+
+	CountDownLatch là súng bắn 1 lần trong kho vũ khí concurrency. Nó đơn giản, mạnh khi dùng đúng chỗ, nhưng nếu bạn cố dùng nó như barrier đa pha thì sẽ tự bắn vào chân.
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

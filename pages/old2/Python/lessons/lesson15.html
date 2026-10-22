@@ -1,0 +1,104 @@
+<html><head><title>Lesson 14 == Iteration Iterator Iterable object ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../python-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 14 -- Iteration Iterator Iterable object -//</h1><pre>1. Khái niệm 
+
+
+- Iteration là một khái niệm chung cho việc lấy từng phần tử của một đối tượng nào đó, Bất cứ khi nào sử dụng
+vòng lặp hay kỹ thuật nào đó để có được giá trị của một nhóm phần tử thì chính là iteration 
+
+- Iterable object là một object có phương thức __iter__ trả về một iterator , hoặc một object 
+có phương thức __getitem__ cho phép lấy bất cứ phần tử nào của nó bằng indexing ví dụ Chuỗi , List , Tuple 
+
+- Iterator object đơn giản chỉ là một đối tượng mà cho phép ta lấy từng giá trị một của nó.
+
+-  Iterator không có khả năng tái sử dụng trừ một số iterator có phương thức hỗ trợ như file object sẽ có method seek 
+
+- Iterator sử dụng hàm next để lấy từng giá trị một. Và sẽ có lỗi StopIteration khi sử dụng hàm next lên đối tượng đó trong khi nó hết giá trị đưa ra cho bạn 
+
+- Các iterable object chưa phải là iterator. Khi sử dụng hàm iter sẽ trả về một iteration . Đây cũng chính là cách vòng lặp hoạt động 
+
+- iterator cũng là một object -> có tính chất tham chiếu  
+
+
+
+e.g 1 
+
+objx = [x for x in range(3)]
+print(objx)  				// [0, 1, 2]
+
+itor = (x for x in range(3))
+print(next(itor))         // 0 
+print(next(itor))         // 1 
+print(next(itor))         // 2 
+print(next(itor))         // StopIteration
+
+
+
+e.g 2
+
+lst = [6,3,7 , 'kteam',3.9,[0,2,3]]
+iter_list = iter(lst) # iter_list là một iterator tạo từ list 
+print(iter_list)		// <list_iterator object at 0x000002387B7FABF0>
+print(iter_list[0])		//  TypeError: 'list_iterator' object is not subscriptable  iterator không hỗ trợ indexing
+
+print(next(iter_list))        // 6
+print(next(iter_list))        // 3
+print(next(iter_list))        // 7
+print(next(iter_list))        // kteam
+print(next(iter_list))        // 3.9
+
+
+
+
+2 .   Một số hàm hỗ trợ cho iterable object trong Python		// lst = [6,3,7 ,3.9,0,2,3]
+		*args 						// packing argument 
+									// Biểu thị có thể truyền nhiều đối số args , giống như ... trong js và java 
+		
+		
+		*[, default=obj, key=func])		// keyword-only arguments
+				 dấu * chỉ rằng các đối số sau dấu * chỉ có thể truyền vào bằng cách sử dụng tên các đối số (tức là dạng keyword ) và không thể được truyền vào trực tiếp như một giá trị vị trí thông thường     default=... , key=...  dạng khai báo ấy 
+
+
+		/ 								// Positional-only argument 
+										// Tức là các đối số trước dấu / chỉ có thể được truyền vào bằng vị trí(position) chứ không thể truyền dưới dạng keyword argument 
+										iterable: Là đối số positional-only, có nghĩa là bạn phải truyền một đối tượng có thể lặp qua (như danh sách, tuple, v.v.) mà không sử dụng tên đối số.
+
+
+
+		-  sum(iterable[,start=0]) 		// Hàm tính tổng các giá trị trong iterable số 
+										// trả về tổng các giá trị của iterable này và BẮT BUỘC PHẢI LÀ SỐ 
+										// start là vị trí index bắt đầu tính cộng tổng , mặc định k truyền=0
+										// print(sum(iter_list))  // 24.9
+										
+
+		
+		- max(iterable*[,default=obj,key=func])	// Hàm tìm giá trị lớn nhất của iterable bằng Key (mặc định sử dụng operator > (lớn hơn) , key=len để sử dụng trong các hàm string tìm cái nào nhiều ký tự nhất )
+												// Default là giá trị muốn nhận về trong trường hợp không lấy được giá trị nào 
+												// * chính là ký hiệu yêu cầu keyword-only argument 
+											
+											print(max(lst))                         // 7
+											print(max([],default='default'))        // default
+											lst2 = ['a','bb','ccc','dddd']
+											print(max(lst2,key=len))				// dddd 
+
+
+		- max(arg1 , arg2 , *args,*[,key=func])		// tìm giá trị lớn nhất trong các args truyền vào 
+													
+												print(max(6,3,7 ,3.9,0,2,3))                  //  7
+												print(max('a','bb','ccc','dddd',key=len))     //  dddd
+															
+
+
+		- min(iterable*[,default=obj,key=func])			// tìm giá trị nhỏ nhất 
+
+		- min(arg1 , arg2 , *args,*[,key=func])			// tìm giá trị nhỏ nhất 
+		
+		
+		
+		- sorted(iterable,/,*,key=None,reverse=False )	// Sắp xếp gần giống với sort của List Object 
+														//  
+														lst = [6,3,7 ,3.9,0,2,3]
+														print(sorted(lst, reverse=True))    // [7, 6, 3.9, 3, 3, 2, 0]   Đảo ngược 
+														print(lst)                          // [6, 3, 7, 3.9, 0, 2, 3]	// Trả về list mới được sắp xếp và không làm thay đổi list cũ (Class Static method chứ k phải instance)
+
+
+
+</pre><a id='backBottom' href='../python-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

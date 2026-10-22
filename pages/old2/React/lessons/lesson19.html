@@ -1,0 +1,192 @@
+<html><head><title>Lesson 19 == React Forms - Checkbox ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../react-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 19 -- React Forms - Checkbox -//</h1><pre>
+# 1. Checkbox trong React 
+	
+	Checkbox trong React là controlled component, sử dụng thuộc tính checked (thay vì value như <input>, <textarea>, <select>) để quản lý trạng thái (true/false). Sự kiện onChange cập nhật state dựa trên e.target.checked.
+
+# 2. Phân tích ví dụ
+
+import { useState } from 'react';
+import { createRoot } from 'react-dom/client';
+
+function MyForm() {
+  const [inputs, setInputs] = useState({});
+
+  const handleChange = (e) => {
+    const { name, type, checked, value } = e.target;
+    setInputs(values => ({ ...values, [name]: type === 'checkbox' ? checked : value }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    let fillings = '';
+    if (inputs.tomato) fillings += 'tomato';
+    if (inputs.onion) fillings += inputs.tomato ? ' and onion' : 'onion';
+    if (!fillings) fillings = 'no fillings';
+    alert(`${inputs.firstname || ''} wants a burger with ${fillings}`);
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <label>My name is:
+        <input type="text" name="firstname" value={inputs.firstname || ''} onChange={handleChange} />
+      </label>
+      <p>I want a burger with:</p>
+      <label>Tomato:
+        <input type="checkbox" name="tomato" checked={inputs.tomato || false} onChange={handleChange} />
+      </label>
+      <label>Onion:
+        <input type="checkbox" name="onion" checked={inputs.onion || false} onChange={handleChange} />
+      </label>
+      <button type="submit">Submit</button>
+    </form>
+  );
+}
+
+createRoot(document.getElementById('root')).render(<MyForm />);
+
+
+	## State inputs
+		useState({}) tạo object để lưu trạng thái của tất cả input, bao gồm firstname (string) và tomato, onion (boolean).
+		
+		Sử dụng object giúp quản lý nhiều trường (text, checkbox) trong một state duy nhất.	
+
+	## Hàm handleChange 
+		Phân biệt loại input bằng e.target.type
+			Nếu type === 'checkbox', lấy e.target.checked (true/false).
+			Nếu không, lấy e.target.value (cho input text).	
+	
+		Cập nhật state động với spread operator (...values) và bracket notation ([name]: value).
+	
+	
+	## Checkbox: 
+		checked={inputs.tomato || false}: Liên kết trạng thái checkbox với state, dùng || false để tránh lỗi undefined.
+		
+		onChange={handleChange}: Cập nhật state khi checkbox được chọn/bỏ chọn.
+	
+	
+	## Hàm handleSubmit 
+		Ngăn tải lại trang với e.preventDefault().	
+		Xử lý logic hiển thị fillings
+			Kiểm tra inputs.tomato và inputs.onion để xây dựng chuỗi (e.g., "tomato and onion", "no fillings").
+			Hiển thị alert với tên và lựa chọn.
+	
+	
+	## Khởi tạo giá trị ban đầu 
+		
+const [inputs, setInputs] = useState({
+  firstname: 'John',
+  tomato: true,
+  onion: false
+});
+
+
+
+
+# 3. So sánh với các input khác
+		
+	- Checkbox dùng checked (boolean) thay vì value (string như <input>, <textarea>, <select>).
+	- Hàm handleChange cần kiểm tra type để xử lý cả value và checked, đảm bảo tính linh hoạt khi quản lý nhiều loại input.	
+	
+
+
+
+# Kết hợp với Multiple Inputs, Textarea, Select
+
+const [inputs, setInputs] = useState({
+  firstname: '',
+  comment: '',
+  car: 'Volvo',
+  tomato: false,
+  onion: false
+});
+
+const handleChange = (e) => {
+  const { name, type, checked, value } = e.target;
+  setInputs({ ...inputs, [name]: type === 'checkbox' ? checked : value });
+};
+
+return (
+  <form onSubmit={handleSubmit}>
+    <input type="text" name="firstname" value={inputs.firstname || ''} onChange={handleChange} />
+    <textarea name="comment" value={inputs.comment || ''} onChange={handleChange} />
+    <select name="car" value={inputs.car || ''} onChange={handleChange}>
+      <option value="Ford">Ford</option>
+      <option value="Volvo">Volvo</option>
+    </select>
+    <input type="checkbox" name="tomato" checked={inputs.tomato || false} onChange={handleChange} />
+    <input type="checkbox" name="onion" checked={inputs.onion || false} onChange={handleChange} />
+    <button type="submit">Submit</button>
+  </form>
+);
+
+
+# Kết hợp với React Transitions 
+
+import { CSSTransition } from 'react-transition-group';
+import './style.css';
+
+function MyForm() {
+  const [inputs, setInputs] = useState({});
+  const [submitted, setSubmitted] = useState(false);
+
+  const handleChange = (e) => {
+    const { name, type, checked, value } = e.target;
+    setInputs({ ...inputs, [name]: type === 'checkbox' ? checked : value });
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setSubmitted(true);
+    setTimeout(() => setSubmitted(false), 2000);
+  };
+
+  return (
+    <div>
+      <form onSubmit={handleSubmit}>
+        <input type="text" name="firstname" value={inputs.firstname || ''} onChange={handleChange} />
+        <input type="checkbox" name="tomato" checked={inputs.tomato || false} onChange={handleChange} />
+        <input type="checkbox" name="onion" checked={inputs.onion || false} onChange={handleChange} />
+        <button type="submit">Submit</button>
+      </form>
+      <CSSTransition in={submitted} timeout={300} classNames="fade" unmountOnExit>
+        <p className="success">
+          {inputs.firstname || ''} wants a burger with{' '}
+          {(inputs.tomato && inputs.onion) ? 'tomato and onion' : inputs.tomato ? 'tomato' : inputs.onion ? 'onion' : 'no fillings'}
+        </p>
+      </CSSTransition>
+    </div>
+  );
+}
+
+
+.success { background-color: lightgreen; padding: 10px; border-radius: 5px; }
+.fade-enter { opacity: 0; }
+.fade-enter-active { opacity: 1; transition: opacity 300ms; }
+.fade-exit { opacity: 1; }
+.fade-exit-active { opacity: 0; transition: opacity 300ms; }
+
+
+
+
+# 5. Lưu ý kỹ thuật (chuyên sâu)
+
+
+	## Checkbox và checked 
+	
+		Luôn dùng checked thay vì value để quản lý trạng thái checkbox.
+		checked={inputs.tomato || false} đảm bảo giá trị boolean, tránh lỗi undefined.
+
+
+	## Hàm handleChange linh hoạt 
+		Kiểm tra type để xử lý cả checkbox (checked) và input khác (value), giúp hàm này tái sử dụng cho nhiều loại input.
+
+	
+	## Xử lý logic trong handleSubmit
+		Logic tạo chuỗi fillings cần tối ưu để tránh lặp code (ví dụ: dùng mảng hoặc join để xử lý nhiều checkbox).
+	
+	## Hiệu suất: 
+		Dùng một state object để giảm số lần re-render so với nhiều useState.
+		Tránh cập nhật state không cần thiết bằng cách kiểm tra giá trị trước khi gọi setInputs.
+	
+	
+</pre><a id='backBottom' href='../react-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

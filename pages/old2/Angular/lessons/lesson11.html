@@ -1,0 +1,101 @@
+<html><head><title>Lesson 11 == $http ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../angular-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 11 -- $http -//</h1><pre>
+# Khái niệm  
+	$http là một AngularJS service dùng để gửi HTTP request (GET, POST, PUT, DELETE, etc.) đến server và nhận lại dữ liệu.
+	Nó giống như fetch hoặc axios trong các framework hiện đại, nhưng được tích hợp sẵn trong AngularJS.
+	
+
+# 🔹2. Cú pháp tổng quát:
+$http({
+  method: 'GET',
+  url: 'https://example.com/api'
+}).then(function(response) {
+  // Xử lý thành công
+}, function(error) {
+  // Xử lý thất bại
+});
+
+	📌 Giải thích:
+	
+| Thành phần   | Ý nghĩa                                                    |
+| ------------ | ---------------------------------------------------------- |
+| `method`     | Kiểu HTTP (`GET`, `POST`, `PUT`, `DELETE`...)              |
+| `url`        | API endpoint bạn muốn gọi                                  |
+| `.then(...)` | Hàm xử lý kết quả **nếu gọi API thành công hoặc thất bại** |
+
+
+# 🔸 Ví dụ: Lấy danh sách user
+
+app.controller("myCtrl", function($scope, $http) {
+  $http.get("https://jsonplaceholder.typicode.com/users")
+  .then(function(response) {
+    $scope.users = response.data;
+  });
+});
+
+	📌 Giải thích:
+		Gọi API bằng GET
+		Khi có kết quả, response.data chứa danh sách user
+		Gán vào $scope.users để hiển thị trên HTML bằng ng-repeat
+
+
+# 🔸 POST request – gửi dữ liệu lên server 
+
+$http.post("/api/createUser", {
+  name: "Bảo",
+  age: 30
+}).then(function(response) {
+  $scope.result = response.data;
+});
+
+	## 💡 POST dùng khi nào? 
+		Khi bạn cần gửi form, dữ liệu đăng ký, đăng nhập, v.v.
+		Nên dùng trong Service thay vì viết trực tiếp trong Controller (theo best practice)
+
+
+# 🔹3. Các method thường dùng với $http
+| Method   | Khi nào dùng?                               |
+| -------- | ------------------------------------------- |
+| `GET`    | Lấy dữ liệu từ server (danh sách, chi tiết) |
+| `POST`   | Gửi dữ liệu mới                             |
+| `PUT`    | Cập nhật dữ liệu hiện có                    |
+| `DELETE` | Xoá dữ liệu                                 |
+
+
+
+# 🛡 Error Handling (Xử lý lỗi)
+
+$http.get("/api/error")
+  .then(function(response) {
+    // Thành công
+  }, function(error) {
+    // Thất bại
+    console.error("Lỗi gọi API:", error.status);
+  });
+
+
+	✅ Gợi ý thực tế:
+	Luôn có xử lý lỗi (function(error) { ... })
+	Có thể hiển thị alert, chuyển trạng thái, hoặc ghi log
+
+# 💡 Liên hệ với dự án bạn đang làm (AngularJS + Eclipse)
+	✅ Nên viết như sau:
+	
+// Trong service
+app.service("userService", function($http) {
+  this.getUsers = function() {
+    return $http.get("/api/users");
+  };
+});
+
+// Trong controller
+app.controller("userCtrl", function($scope, userService) {
+  userService.getUsers().then(function(response) {
+    $scope.users = response.data;
+  }, function(error) {
+    alert("API lỗi: " + error.status);
+  });
+});
+
+
+
+</pre><a id='backBottom' href='../angular-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

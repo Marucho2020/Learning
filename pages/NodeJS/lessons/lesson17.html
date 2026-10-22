@@ -1,10 +1,43 @@
-<html><head><title>Lesson 17 == NodeJs Script ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../NodeJS-learning.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 17 -- NodeJs Script -//</h1><pre>
+<!DOCTYPE html><html lang='vi'><head><meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0'>
+<title>Lesson 17 -- NodeJs Script -//</title>
+<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css'>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js'></script>
+<script id='MathJax-script' async src='https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'></script>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; margin: 0; padding: 20px; transition: 0.3s; }
+.dark-mode { background-color: #121212; color: #e0e0e0; }
+.light-mode { background-color: #ffffff; color: #333333; }
+.container { max-width: 950px; margin: auto; }
+h1 { text-align: center; color: #3498db; margin: 20px 0; font-size: 26px; }
+.nav-bar { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 20px 0; }
+.nav-btn { text-decoration: none; padding: 10px 18px; background: #3498db; color: white; border-radius: 6px; font-weight: bold; font-size: 15px; display: inline-block; transition: 0.2s; }
+.nav-btn:hover { background: #2980b9; }
+.nav-btn.home-nav { background: #6c757d; }
+.nav-btn.home-nav:hover { background: #5a6268; }
+.nav-btn.disabled { background: #aaa; cursor: not-allowed; opacity: 0.5; }
+.done-btn { display: block; margin: 15px auto; padding: 10px 24px; border: 2px solid #2ecc71; background: transparent; color: #2ecc71; border-radius: 25px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+.done-btn.completed { background: #2ecc71; color: white; }
+.content-box { position: relative; margin: 20px 0; }
+pre { padding: 20px; border-radius: 8px; white-space: pre-wrap; word-break: break-word; overflow-x: auto; font-family: 'Consolas', 'Courier New', monospace; font-size: 15px; }
+.dark-mode pre { background: #1a1a1a; color: #f8f8f2; border: 1px solid #333; }
+.light-mode pre { background: #f8f9fa; color: #212529; border: 1px solid #e9ecef; }
+.copy-btn { position: absolute; top: 12px; right: 12px; padding: 6px 12px; font-size: 12px; background: #555; color: white; border: none; border-radius: 4px; cursor: pointer; opacity: 0.8; }
+.copy-btn:hover { opacity: 1; background: #2ecc71; }
+.theme-toggle-btn { display: block; margin: 20px auto; padding: 8px 16px; background: transparent; border: 1px solid #888; color: inherit; border-radius: 5px; cursor: pointer; }
+</style></head><body onload='initLesson()'>
+<div class='container'>
+<div class='nav-bar'><a class='nav-btn' href='lesson16.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../NodeJS-learning.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson18.html'>Bài sau ➡️</a></div><h1>Lesson 17 -- NodeJs Script -//</h1>
+<button id='doneButton' class='done-btn' onclick='toggleDone()'>Mark as Done ⚪</button>
+<div class='content-box'>
+<button class='copy-btn' onclick='copyContent()'>📋 Copy nội dung</button>
+<pre><code id='lessonCode'>
 
 # 1. NPM Scripts Là Gì? (What are NPM Scripts?)
 
 	NPM Scripts là một tính năng của NPM (Node Package Manager), công cụ quản lý package mặc định của Node.js. Chúng không phải là "script" theo nghĩa viết code riêng lẻ, mà là các lệnh (commands) bạn định nghĩa trong file package.json để chạy các tác vụ tự động. Hãy tưởng tượng chúng như "phím tắt" để thực hiện các công việc lặp lại, thay vì gõ lệnh dài dòng mỗi lần.
 
-	Định nghĩa cơ bản: NPM Scripts là các lệnh tùy chỉnh mà bạn định nghĩa trong phần "scripts" của file package.json. Chúng cho phép bạn tự động hóa các nhiệm vụ phổ biến như chạy ứng dụng, kiểm tra code, build dự án, hoặc dọn dẹp file. Thay vì gõ lệnh thủ công trên terminal (như node index.js), bạn chỉ cần chạy npm run <tên-script> – đơn giản và nhất quán cho cả team.
+	Định nghĩa cơ bản: NPM Scripts là các lệnh tùy chỉnh mà bạn định nghĩa trong phần "scripts" của file package.json. Chúng cho phép bạn tự động hóa các nhiệm vụ phổ biến như chạy ứng dụng, kiểm tra code, build dự án, hoặc dọn dẹp file. Thay vì gõ lệnh thủ công trên terminal (như node index.js), bạn chỉ cần chạy npm run &lt;tên-script&gt; – đơn giản và nhất quán cho cả team.
 
 
 	## Lợi ích sâu sắc
@@ -29,7 +62,7 @@
 {
   "scripts": {
     "start": "node index.js",  // Chạy file index.js bằng Node.js
-    "test": "echo \"Running tests...\" && exit 0",  // In ra thông báo và kết thúc thành công
+    "test": "echo \"Running tests...\" &amp;&amp; exit 0",  // In ra thông báo và kết thúc thành công
     "dev": "nodemon index.js"  // Sử dụng Nodemon để theo dõi thay đổi và reload
   }
 }
@@ -40,7 +73,7 @@
 		- "start": Script đặc biệt để chạy ứng dụng chính.
 		- "test": Script đặc biệt cho testing, thường dùng với framework như Mocha hoặc Jest.
 		- "dev": Tùy chỉnh, dùng Nodemon (cần install trước: npm install --save-dev nodemon).
-		- Lệnh có thể kết hợp nhiều phần bằng && (chạy nối tiếp nếu thành công) hoặc & (chạy song song). Ví dụ: "build": "rm -rf dist && webpack" – xóa thư mục dist trước khi build.
+		- Lệnh có thể kết hợp nhiều phần bằng &amp;&amp; (chạy nối tiếp nếu thành công) hoặc &amp; (chạy song song). Ví dụ: "build": "rm -rf dist &amp;&amp; webpack" – xóa thư mục dist trước khi build.
 	
 
 	## Mẹo chuyên gia:
@@ -57,7 +90,7 @@
 
 # 3. Cách Chạy NPM Scripts (Running NPM Scripts)
 
-	Cú pháp cơ bản: npm run <tên-script>. Ví dụ: npm run dev.
+	Cú pháp cơ bản: npm run &lt;tên-script&gt;. Ví dụ: npm run dev.
 
 	## Script đặc biệt (không cần "run"):
 
@@ -85,12 +118,12 @@
 		-	Build/Bundle: "build": "webpack --config webpack.config.js" – Bundle code cho deployment.
 		-	Lint/Format: "lint": "eslint ." hoặc "format": "prettier --write .".
 		-	Clean up: "clean": "rm -rf dist" – Xóa file tạm.
-		-	Deploy: "deploy": "npm run build && git push heroku main" – Build rồi deploy.	
+		-	Deploy: "deploy": "npm run build &amp;&amp; git push heroku main" – Build rồi deploy.	
 	
 	
 	## Ứng dụng chuyên sâu: 
 	
-		- Microservices: Trong dự án lớn, dùng script để start nhiều service: "start-all": "npm run start-api & npm run start-worker".
+		- Microservices: Trong dự án lớn, dùng script để start nhiều service: "start-all": "npm run start-api &amp; npm run start-worker".
 		- Performance: Kết hợp với pm2 (process manager): "prod": "pm2 start ecosystem.config.js".
 		- Security: "audit": "npm audit" – Kiểm tra vulnerabilities trong dependencies.
 		- Real-world example: Trong dự án Express.js, script có thể là: "start": "node dist/server.js", "build": "tsc", "dev": "concurrently \"tsc -w\" \"nodemon dist/server.js\"" (dùng concurrently để chạy nhiều lệnh song song).
@@ -103,4 +136,46 @@
 	
 	
 
-</pre><a id='backBottom' href='../NodeJS-learning.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
+</code></pre>
+</div>
+<div class='nav-bar'><a class='nav-btn' href='lesson16.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../NodeJS-learning.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson18.html'>Bài sau ➡️</a></div><button class='theme-toggle-btn' onclick='toggleTheme()'>🌓 Đổi Giao Diện</button>
+</div>
+<script>
+const lessonKey = 'NodeJS-learning_lesson17.html';
+function toggleTheme() {
+   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';
+   document.body.className = mode;
+   localStorage.setItem('theme', mode);
+}
+function toggleDone() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   if (isDone) {
+       localStorage.removeItem(lessonKey);
+   } else {
+       localStorage.setItem(lessonKey, 'done');
+   }
+   renderDoneStatus();
+}
+function renderDoneStatus() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   let btn = document.getElementById('doneButton');
+   if (isDone) {
+       btn.className = 'done-btn completed';
+       btn.innerText = 'Đã Hoàn Thành ✅';
+   } else {
+       btn.className = 'done-btn';
+       btn.innerText = 'Đánh dấu đã học ⚪';
+   }
+}
+function copyContent() {
+   let text = document.getElementById('lessonCode').innerText;
+   navigator.clipboard.writeText(text).then(function() {
+       alert('✅ Đã sao chép nội dung bài học!');
+   });
+}
+function initLesson() {
+   document.body.className = localStorage.getItem('theme') || 'dark-mode';
+   renderDoneStatus();
+   if (window.Prism) Prism.highlightAll();
+}
+</script></body></html>

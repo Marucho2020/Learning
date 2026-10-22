@@ -1,4 +1,37 @@
-<html><head><title>Lesson 37 == useMemo ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../react-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 37 -- useMemo -//</h1><pre>
+<!DOCTYPE html><html lang='vi'><head><meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0'>
+<title>Lesson 37 -- useMemo -//</title>
+<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css'>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js'></script>
+<script id='MathJax-script' async src='https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'></script>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; margin: 0; padding: 20px; transition: 0.3s; }
+.dark-mode { background-color: #121212; color: #e0e0e0; }
+.light-mode { background-color: #ffffff; color: #333333; }
+.container { max-width: 950px; margin: auto; }
+h1 { text-align: center; color: #3498db; margin: 20px 0; font-size: 26px; }
+.nav-bar { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 20px 0; }
+.nav-btn { text-decoration: none; padding: 10px 18px; background: #3498db; color: white; border-radius: 6px; font-weight: bold; font-size: 15px; display: inline-block; transition: 0.2s; }
+.nav-btn:hover { background: #2980b9; }
+.nav-btn.home-nav { background: #6c757d; }
+.nav-btn.home-nav:hover { background: #5a6268; }
+.nav-btn.disabled { background: #aaa; cursor: not-allowed; opacity: 0.5; }
+.done-btn { display: block; margin: 15px auto; padding: 10px 24px; border: 2px solid #2ecc71; background: transparent; color: #2ecc71; border-radius: 25px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+.done-btn.completed { background: #2ecc71; color: white; }
+.content-box { position: relative; margin: 20px 0; }
+pre { padding: 20px; border-radius: 8px; white-space: pre-wrap; word-break: break-word; overflow-x: auto; font-family: 'Consolas', 'Courier New', monospace; font-size: 15px; }
+.dark-mode pre { background: #1a1a1a; color: #f8f8f2; border: 1px solid #333; }
+.light-mode pre { background: #f8f9fa; color: #212529; border: 1px solid #e9ecef; }
+.copy-btn { position: absolute; top: 12px; right: 12px; padding: 6px 12px; font-size: 12px; background: #555; color: white; border: none; border-radius: 4px; cursor: pointer; opacity: 0.8; }
+.copy-btn:hover { opacity: 1; background: #2ecc71; }
+.theme-toggle-btn { display: block; margin: 20px auto; padding: 8px 16px; background: transparent; border: 1px solid #888; color: inherit; border-radius: 5px; cursor: pointer; }
+</style></head><body onload='initLesson()'>
+<div class='container'>
+<div class='nav-bar'><a class='nav-btn' href='lesson36.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../react-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson38.html'>Bài sau ➡️</a></div><h1>Lesson 37 -- useMemo -//</h1>
+<button id='doneButton' class='done-btn' onclick='toggleDone()'>Mark as Done ⚪</button>
+<div class='content-box'>
+<button class='copy-btn' onclick='copyContent()'>📋 Copy nội dung</button>
+<pre><code id='lessonCode'>
 # Giới Thiệu Về Hook useMemo Trong React (Mức Độ Senior) 
 	useMemo là một hook quan trọng trong React, được giới thiệu từ phiên bản 16.8, dùng để memoize (lưu cache) các giá trị tính toán, giúp tránh việc recalculate không cần thiết trong mỗi render. Điều này cải thiện performance bằng cách giảm computations nặng nề, đặc biệt trong các component với dữ liệu phức tạp hoặc child components memoized. Ở mức độ senior, chúng ta cần hiểu sâu về memoization mechanism dựa trên dependencies, cách hook tích hợp với reconciliation process của React, xử lý stale values trong closures, và tối ưu hóa trong scenarios như large datasets, virtualization, hoặc SSR (Server-Side Rendering). Memoization ở đây dựa trên shallow compare của dependency array, giúp stable references cho values như objects/arrays, tránh unnecessary re-renders.	
 	
@@ -12,7 +45,7 @@
 	## 	So sánh với useCallback:
 	useMemo: Memoize bất kỳ value (số, object, array, etc.), dùng cho computations trả về data.
 	
-	useCallback: Memoize function (callback), tương đương useMemo(() => fn, deps). Dùng khi cần stable function reference (props, deps).
+	useCallback: Memoize function (callback), tương đương useMemo(() =&gt; fn, deps). Dùng khi cần stable function reference (props, deps).
 	
 	Khác biệt: useMemo chạy compute và cache result; useCallback cache function mà không chạy nó ngay. Cả hai đều giúp stable props để tránh re-render child với React.memo.
 	
@@ -23,7 +56,7 @@
 	## Pitfalls chuyên sâu: 
 	
 		- Missing deps: Quên dep gây stale values (compute capture old closures).
-		- Over-memoization: Memoize simple values gây overhead (allocation cost > lợi ích).
+		- Over-memoization: Memoize simple values gây overhead (allocation cost &gt; lợi ích).
 		- Mutable returns: Nếu return mutable object và mutate nó, gây bugs (luôn return immutable).
 		- Infinite loops: Nếu dep bao gồm value từ compute, gây loop.
 		- SSR considerations: Compute chạy trên server, đảm bảo deterministic (không random).	
@@ -40,25 +73,25 @@ function App() {
 
   const calculation = expensiveCalculation(count); // Chạy mỗi render, gây lag khi addTodo
 
-  const increment = () => setCount(c => c + 1);
-  const addTodo = () => setTodos(t => [...t, 'New Todo']);
+  const increment = () =&gt; setCount(c =&gt; c + 1);
+  const addTodo = () =&gt; setTodos(t =&gt; [...t, 'New Todo']);
 
   return (
-    <div>
-      <h2>My Todos</h2>
-      {todos.map((todo, index) => <p key={index}>{todo}</p>)}
-      <button onClick={addTodo}>Add Todo</button>
-      <hr />
-      Count: {count} <button onClick={increment}>+</button>
-      <h2>Expensive Calculation: {calculation}</h2>
-    </div>
+    &lt;div&gt;
+      &lt;h2&gt;My Todos&lt;/h2&gt;
+      {todos.map((todo, index) =&gt; &lt;p key={index}&gt;{todo}&lt;/p&gt;)}
+      &lt;button onClick={addTodo}&gt;Add Todo&lt;/button&gt;
+      &lt;hr /&gt;
+      Count: {count} &lt;button onClick={increment}&gt;+&lt;/button&gt;
+      &lt;h2&gt;Expensive Calculation: {calculation}&lt;/h2&gt;
+    &lt;/div&gt;
   );
 }
 
-const expensiveCalculation = (num) => {
+const expensiveCalculation = (num) =&gt; {
   console.log('Calculating...'); // Log mỗi render
   let result = num;
-  for (let i = 0; i < 1000000000; i++) {
+  for (let i = 0; i &lt; 1000000000; i++) {
     result += 1;
   }
   return result;
@@ -74,7 +107,7 @@ function App() {
   const [count, setCount] = useState(0);
   const [todos, setTodos] = useState([]);
 
-  const calculation = useMemo(() => {
+  const calculation = useMemo(() =&gt; {
     try {
       return expensiveCalculation(count);
     } catch (error) {
@@ -83,25 +116,25 @@ function App() {
     }
   }, [count]); // Chỉ re-compute khi count đổi
 
-  const increment = () => setCount(c => c + 1);
-  const addTodo = () => setTodos(t => [...t, 'New Todo']);
+  const increment = () =&gt; setCount(c =&gt; c + 1);
+  const addTodo = () =&gt; setTodos(t =&gt; [...t, 'New Todo']);
 
   return (
-    <div>
-      <h2>My Todos</h2>
-      {todos.map((todo, index) => <p key={index}>{todo}</p>)}
-      <button onClick={addTodo}>Add Todo</button>
-      <hr />
-      Count: {count} <button onClick={increment}>+</button>
-      <h2>Expensive Calculation: {calculation}</h2>
-    </div>
+    &lt;div&gt;
+      &lt;h2&gt;My Todos&lt;/h2&gt;
+      {todos.map((todo, index) =&gt; &lt;p key={index}&gt;{todo}&lt;/p&gt;)}
+      &lt;button onClick={addTodo}&gt;Add Todo&lt;/button&gt;
+      &lt;hr /&gt;
+      Count: {count} &lt;button onClick={increment}&gt;+&lt;/button&gt;
+      &lt;h2&gt;Expensive Calculation: {calculation}&lt;/h2&gt;
+    &lt;/div&gt;
   );
 }
 
-const expensiveCalculation = (num) => {
+const expensiveCalculation = (num) =&gt; {
   console.log('Calculating...');
   let result = num;
-  for (let i = 0; i < 1000000000; i++) {
+  for (let i = 0; i &lt; 1000000000; i++) {
     result += 1;
   }
   return result;
@@ -118,26 +151,26 @@ const expensiveCalculation = (num) => {
 
 import { useState, useMemo, memo } from 'react';
 
-const Item = memo(({ item }) => {
+const Item = memo(({ item }) =&gt; {
   console.log(`Render ${item.name}`); // Heavy render giả lập
-  return <li>{item.name} - {item.price}</li>;
+  return &lt;li&gt;{item.name} - {item.price}&lt;/li&gt;;
 });
 
 function ProductList() {
   const [filter, setFilter] = useState('');
-  const products = useMemo(() => Array.from({ length: 1000 }, (_, i) => ({ id: i, name: `Product ${i}`, price: i * 10 })), []); // Memoize large array
+  const products = useMemo(() =&gt; Array.from({ length: 1000 }, (_, i) =&gt; ({ id: i, name: `Product ${i}`, price: i * 10 })), []); // Memoize large array
 
-  const filteredProducts = useMemo(() => {
-    return products.filter(product => product.name.toLowerCase().includes(filter.toLowerCase()));
+  const filteredProducts = useMemo(() =&gt; {
+    return products.filter(product =&gt; product.name.toLowerCase().includes(filter.toLowerCase()));
   }, [products, filter]); // Re-compute chỉ khi filter/products đổi
 
   return (
-    <>
-      <input value={filter} onChange={e => setFilter(e.target.value)} placeholder="Lọc sản phẩm..." />
-      <ul>
-        {filteredProducts.map(product => <Item key={product.id} item={product} />)}
-      </ul>
-    </>
+    &lt;&gt;
+      &lt;input value={filter} onChange={e =&gt; setFilter(e.target.value)} placeholder="Lọc sản phẩm..." /&gt;
+      &lt;ul&gt;
+        {filteredProducts.map(product =&gt; &lt;Item key={product.id} item={product} /&gt;)}
+      &lt;/ul&gt;
+    &lt;/&gt;
   );
 }
 
@@ -154,27 +187,27 @@ function DataProcessor() {
   const [data, setData] = useState([]);
   const [sortBy, setSortBy] = useState('name');
 
-  useEffect(() => {
+  useEffect(() =&gt; {
     fetch('https://jsonplaceholder.typicode.com/users')
-      .then(res => res.json())
+      .then(res =&gt; res.json())
       .then(setData);
   }, []);
 
-  const sortedData = useMemo(() => {
+  const sortedData = useMemo(() =&gt; {
     console.log('Sorting data...');
-    return [...data].sort((a, b) => a[sortBy].localeCompare(b[sortBy]));
+    return [...data].sort((a, b) =&gt; a[sortBy].localeCompare(b[sortBy]));
   }, [data, sortBy]); // Re-sort chỉ khi data/sortBy đổi
 
   return (
-    <>
-      <select value={sortBy} onChange={e => setSortBy(e.target.value)}>
-        <option value="name">Name</option>
-        <option value="email">Email</option>
-      </select>
-      <ul>
-        {sortedData.map(user => <li key={user.id}>{user.name} - {user.email}</li>)}
-      </ul>
-    </>
+    &lt;&gt;
+      &lt;select value={sortBy} onChange={e =&gt; setSortBy(e.target.value)}&gt;
+        &lt;option value="name"&gt;Name&lt;/option&gt;
+        &lt;option value="email"&gt;Email&lt;/option&gt;
+      &lt;/select&gt;
+      &lt;ul&gt;
+        {sortedData.map(user =&gt; &lt;li key={user.id}&gt;{user.name} - {user.email}&lt;/li&gt;)}
+      &lt;/ul&gt;
+    &lt;/&gt;
   );
 }
 
@@ -187,9 +220,9 @@ function DataProcessor() {
 import { useMemo } from 'react';
 
 function useFilteredData(data, filter) {
-  return useMemo(() => {
+  return useMemo(() =&gt; {
     if (!data) return [];
-    return data.filter(item => item.toLowerCase().includes(filter.toLowerCase()));
+    return data.filter(item =&gt; item.toLowerCase().includes(filter.toLowerCase()));
   }, [data, filter]); // Memoize filter
 }
 
@@ -199,10 +232,10 @@ function SearchComponent() {
   const filtered = useFilteredData(items, filter);
 
   return (
-    <>
-      <input value={filter} onChange={e => setFilter(e.target.value)} />
-      <ul>{filtered.map((item, idx) => <li key={idx}>{item}</li>)}</ul>
-    </>
+    &lt;&gt;
+      &lt;input value={filter} onChange={e =&gt; setFilter(e.target.value)} /&gt;
+      &lt;ul&gt;{filtered.map((item, idx) =&gt; &lt;li key={idx}&gt;{item}&lt;/li&gt;)}&lt;/ul&gt;
+    &lt;/&gt;
   );
 }
 
@@ -220,33 +253,75 @@ const ThemeContext = createContext();
 function ThemeProvider({ children }) {
   const [theme, setTheme] = useState('light');
 
-  const themeStyles = useMemo(() => ({
+  const themeStyles = useMemo(() =&gt; ({
     background: theme === 'light' ? 'white' : 'black',
     color: theme === 'light' ? 'black' : 'white',
     // Expensive computations here, e.g., generate CSS vars
   }), [theme]); // Memoize object
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme, styles: themeStyles }}>
+    &lt;ThemeContext.Provider value={{ theme, setTheme, styles: themeStyles }}&gt;
       {children}
-    </ThemeContext.Provider>
+    &lt;/ThemeContext.Provider&gt;
   );
 }
 
 function ThemedComponent() {
   const { styles } = useContext(ThemeContext);
-  return <div style={styles}>Themed Content</div>;
+  return &lt;div style={styles}&gt;Themed Content&lt;/div&gt;;
 }
 
 // App.js
 function App() {
   return (
-    <ThemeProvider>
-      <ThemedComponent />
-    </ThemeProvider>
+    &lt;ThemeProvider&gt;
+      &lt;ThemedComponent /&gt;
+    &lt;/ThemeProvider&gt;
   );
 }
 
 
 
-</pre><a id='backBottom' href='../react-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
+</code></pre>
+</div>
+<div class='nav-bar'><a class='nav-btn' href='lesson36.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../react-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson38.html'>Bài sau ➡️</a></div><button class='theme-toggle-btn' onclick='toggleTheme()'>🌓 Đổi Giao Diện</button>
+</div>
+<script>
+const lessonKey = 'react-learning-list_lesson37.html';
+function toggleTheme() {
+   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';
+   document.body.className = mode;
+   localStorage.setItem('theme', mode);
+}
+function toggleDone() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   if (isDone) {
+       localStorage.removeItem(lessonKey);
+   } else {
+       localStorage.setItem(lessonKey, 'done');
+   }
+   renderDoneStatus();
+}
+function renderDoneStatus() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   let btn = document.getElementById('doneButton');
+   if (isDone) {
+       btn.className = 'done-btn completed';
+       btn.innerText = 'Đã Hoàn Thành ✅';
+   } else {
+       btn.className = 'done-btn';
+       btn.innerText = 'Đánh dấu đã học ⚪';
+   }
+}
+function copyContent() {
+   let text = document.getElementById('lessonCode').innerText;
+   navigator.clipboard.writeText(text).then(function() {
+       alert('✅ Đã sao chép nội dung bài học!');
+   });
+}
+function initLesson() {
+   document.body.className = localStorage.getItem('theme') || 'dark-mode';
+   renderDoneStatus();
+   if (window.Prism) Prism.highlightAll();
+}
+</script></body></html>

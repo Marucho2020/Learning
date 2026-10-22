@@ -1,0 +1,74 @@
+<html><head><title>Lesson 22 == MobileNet: Mô hình hiệu quả trên thiết bị di động ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../AI-learning-list-pharse1.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 22 -- MobileNet: Mô hình hiệu quả trên thiết bị di động -//</h1><pre># Giới thiệu 
+	Trí tuệ nhân tạo (AI) đã và đang thay đổi cách chúng ta tương tác với thế giới xung quanh, từ nhận diện khuôn mặt đến lái xe tự động. Tuy nhiên, sự bùng nổ của AI cũng đi kèm với những thách thức đáng kể, đặc biệt là vấn đề triển khai các mô hình AI trên các thiết bị di động với tài nguyên hạn chế.	
+	
+	Trong bối cảnh đó, MobileNet xuất hiện như một giải pháp đột phá, mang đến sự cân bằng giữa độ chính xác và hiệu quả tính toán, mở ra cơ hội mới cho các ứng dụng AI trên các thiết bị di động và các hệ thống nhúng.
+https://aicandy.vn/wp-content/uploads/2024/11/aicandy_mibilenet.jpg
+# 2. Kiến trúc 
+	https://aicandy.vn/wp-content/uploads/2024/08/aicandy_MobileNet_3.png
+	
+	## 2.1. Depthwise Separable Convolutions 
+		Một trong những cải tiến chính của MobileNet là kỹ thuật Depthwise Separable Convolutions, giúp giảm đáng kể số lượng phép tính cần thiết trong quá trình huấn luyện và suy diễn. Thay vì áp dụng các bộ lọc (filter) lên toàn bộ các kênh của đầu vào như trong CNN truyền thống, MobileNet tách quá trình này thành hai bước:
+		
+		### Depthwise Convolution:  Mỗi filter chỉ áp dụng cho một kênh của đầu vào. Nếu có 32 kênh đầu vào, thì sẽ có 32 filter độc lập, mỗi filter áp dụng lên một kênh duy nhất. Điều này giúp giảm đáng kể chi phí tính toán 
+				https://aicandy.vn/wp-content/uploads/2024/08/aicandy_MobileNet_1-768x245.png
+				
+		### Pointwise Convolution:  Sau bước Depthwise, MobileNet áp dụng convolution 1×1 (tức là mỗi filter có kích thước 1×1) để kết hợp các kênh lại với nhau, tạo ra kênh đầu ra mới.
+			https://aicandy.vn/wp-content/uploads/2024/08/aicandy_MobileNet_2-768x233.png
+			
+		Việc tách riêng Depthwise và Pointwise không chỉ giảm số lượng phép tính mà còn giúp giảm số lượng tham số trong mô hình. Theo thống kê, việc sử dụng Depthwise Separable Convolutions có thể giảm số lượng phép tính xuống còn khoảng 8 đến 9 lần so với mô hình CNN truyền thống với cùng kích thước đầu vào và số lượng lớp.
+
+	## 2.2. Width Multiplier (α) 
+		Width Multiplier là một tham số được MobileNet giới thiệu để điều chỉnh độ rộng của mạng, tức là số lượng kênh đầu ra tại mỗi lớp. Thay vì sử dụng số lượng kênh chuẩn (ví dụ: 32, 64, 128, v.v.), MobileNet cho phép điều chỉnh số lượng kênh này bằng cách nhân với một hệ số α\alphaα (0 < α ≤ 1). Điều này giúp giảm số lượng tham số và phép tính cần thiết mà không ảnh hưởng quá nhiều đến độ chính xác của mô hình.
+			
+		Ví dụ, với α = 0.75, số lượng phép tính giảm khoảng 50% nhưng độ chính xác của mô hình chỉ giảm nhẹ so với α = 1. Điều này tạo điều kiện thuận lợi cho việc triển khai trên các thiết bị di động với tài nguyên hạn chế.
+		
+	## 	2.3. Resolution Multiplier (ρ) 
+	Resolution Multiplier cho phép giảm độ phân giải của ảnh đầu vào trước khi đưa vào mạng. Mặc dù điều này có thể làm giảm độ chính xác của mô hình, nhưng nó lại tăng tốc độ suy diễn, phù hợp cho các ứng dụng yêu cầu thời gian thực. Ví dụ, với ρ = 0.5, độ phân giải của ảnh đầu vào giảm một nửa (ví dụ từ 224×224 xuống 112×112), từ đó giảm đáng kể số lượng phép tính cần thiết.
+	
+	## 2.4. Inverted Residual Block và Linear Bottleneck 
+		MobileNetV2 giới thiệu Inverted Residual Block với linear bottleneck, một cải tiến quan trọng giúp tối ưu hóa hiệu suất. Khác với các khối Residual truyền thống (như trong ResNet), Inverted Residual Block mở rộng không gian đặc trưng (feature space) và sau đó nén lại thông qua một bottleneck tuyến tính. Điều này giúp giảm thiểu sự mất mát thông tin và cải thiện độ chính xác tổng thể của mạng.
+		
+# 3. Phiên bản 
+	## 3.1. MobileNetV1 (2017) 
+		Là phiên bản đầu tiên được Google giới thiệu, MobileNetV1 đã chứng minh tính hiệu quả của Depthwise Separable Convolutions. Các thí nghiệm trên tập dữ liệu ImageNet cho thấy MobileNetV1 đạt được độ chính xác gần với các mô hình CNN truyền thống như VGG hay Inception nhưng chỉ với một phần nhỏ số lượng tham số và phép tính.
+		
+	## 3.2. MobileNetV2 (2018) 
+		MobileNetV2 cải tiến dựa trên nền tảng của V1 bằng cách bổ sung Inverted Residual Block với linear bottleneck. Những cải tiến này giúp tăng cường khả năng biểu diễn của mạng mà không làm tăng đáng kể độ phức tạp tính toán. MobileNetV2 cũng được tối ưu hóa cho việc triển khai trên các thiết bị di động, với độ chính xác cao hơn và khả năng tổng quát tốt hơn so với V1.
+
+	## 3.3. MobileNetV3 (2019)
+		MobileNetV3 là phiên bản mới nhất, được thiết kế thông qua kỹ thuật Neural Architecture Search (NAS) kết hợp với các cải tiến từ các phiên bản trước. MobileNetV3 tích hợp thêm khối SE (Squeeze-and-Excitation) giúp tăng cường khả năng tập trung vào các đặc trưng quan trọng và Swish activation để cải thiện độ chính xác. MobileNetV3 có hai phiên bản: Small và Large, tối ưu hóa cho các yêu cầu khác nhau về tốc độ và độ chính xác.
+		
+# 4.Hiệu năng
+	MobileNetV1: 70.6% độ chính xác Top-1 trên ImageNet với 569 triệu FLOPs.
+	MobileNetV2: 71.8% độ chính xác Top-1 trên ImageNet với 300 triệu FLOPs.
+	MobileNetV3: 75.2% độ chính xác Top-1 trên ImageNet với 219 triệu FLOPs cho phiên bản Large và 67.4% với 65 triệu FLOPs cho phiên bản Small.
+	
+	Trong đó: FLOPs (Floating Point Operation) là đơn vị đo lường số lượng các phép toán số học thực hiện với số dấu phẩy động, chẳng hạn như phép cộng, trừ, nhân, hoặc chia. Trong bối cảnh mạng nơ-ron tích chập (CNN), FLOPs được sử dụng để đo lường khối lượng công việc tính toán cần thiết để xử lý một mẫu đầu vào.
+	
+	
+# 5. Ứng dụng  
+	Với khả năng xử lý hiệu quả và độ chính xác cao, MobileNet đã được ứng dụng rộng rãi trong nhiều lĩnh vực khác nhau: 
+	
+	## 5.1. Nhận diện hình ảnh và video 
+		MobileNet là lựa chọn hàng đầu cho các ứng dụng nhận diện khuôn mặt và phân loại hình ảnh trên các thiết bị di động, như các ứng dụng bảo mật dựa trên sinh trắc học, mạng xã hội, và ứng dụng camera trên điện thoại thông minh. 
+		
+	## 5.2. Nhận diện giọng nói và ngôn ngữ tự nhiên 
+		MobileNet được tích hợp vào các hệ thống nhận diện giọng nói và xử lý ngôn ngữ tự nhiên, giúp tối ưu hóa các ứng dụng trợ lý ảo như Google Assistant, Siri, và Alexa. 
+		
+	## 5.3. Thực tế tăng cường (AR) 	
+		Trong các ứng dụng AR, tốc độ và hiệu suất là yếu tố then chốt. MobileNet giúp tăng cường trải nghiệm AR bằng cách xử lý hình ảnh và video trong thời gian thực với độ trễ thấp, tạo ra những ứng dụng như Snapchat filters, Pokemon Go, và các công cụ thiết kế nội thất ảo.
+		
+	## 5.4. Y tế và chăm sóc sức khỏe 
+		MobileNet còn được ứng dụng trong lĩnh vực y tế, từ việc phân tích hình ảnh y tế như X-ray và MRI, đến các thiết bị đeo tay thông minh theo dõi sức khỏe. Việc triển khai các mô hình MobileNet trên các thiết bị y tế di động giúp đưa ra chẩn đoán nhanh chóng và chính xác. 
+		
+	## 	5.5. Các hệ thống IoT 
+		MobileNet cũng là lựa chọn lý tưởng cho các ứng dụng IoT, nơi mà tài nguyên tính toán thường rất hạn chế. Nó có thể được triển khai trên các cảm biến thông minh, camera an ninh, và các thiết bị nhà thông minh để phân tích dữ liệu tại chỗ mà không cần truyền tải toàn bộ dữ liệu lên đám mây. 
+		
+# 6. Kết luận 
+	Trong bối cảnh các thiết bị di động ngày càng phổ biến và nhu cầu sử dụng AI ngày càng tăng, MobileNet và các kiến trúc tương tự sẽ tiếp tục đóng vai trò quan trọng. Các cải tiến về hiệu suất và tối ưu hóa tài nguyên sẽ giúp mở rộng phạm vi ứng dụng của AI, từ các thiết bị cầm tay đến các hệ thống nhúng, đưa AI vào mọi ngõ ngách của cuộc sống hàng ngày.
+
+	MobileNet đã và đang tạo ra một cuộc cách mạng trong cách chúng ta suy nghĩ về trí tuệ nhân tạo trên thiết bị di động. Với sự phát triển không ngừng của công nghệ và các phiên bản tiếp theo, MobileNet sẽ tiếp tục là một công cụ quan trọng trong kho vũ khí của các nhà phát triển AI, mở ra những khả năng mới cho tương lai của công nghệ di động.
+		
+
+
+</pre><a id='backBottom' href='../AI-learning-list-pharse1.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

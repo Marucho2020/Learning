@@ -1,10 +1,43 @@
-<html><head><title>Lesson 22 == React Suspense ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../react-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 22 -- React Suspense -//</h1><pre>
+<!DOCTYPE html><html lang='vi'><head><meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0'>
+<title>Lesson 22 -- React Suspense -//</title>
+<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css'>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js'></script>
+<script id='MathJax-script' async src='https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'></script>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; margin: 0; padding: 20px; transition: 0.3s; }
+.dark-mode { background-color: #121212; color: #e0e0e0; }
+.light-mode { background-color: #ffffff; color: #333333; }
+.container { max-width: 950px; margin: auto; }
+h1 { text-align: center; color: #3498db; margin: 20px 0; font-size: 26px; }
+.nav-bar { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 20px 0; }
+.nav-btn { text-decoration: none; padding: 10px 18px; background: #3498db; color: white; border-radius: 6px; font-weight: bold; font-size: 15px; display: inline-block; transition: 0.2s; }
+.nav-btn:hover { background: #2980b9; }
+.nav-btn.home-nav { background: #6c757d; }
+.nav-btn.home-nav:hover { background: #5a6268; }
+.nav-btn.disabled { background: #aaa; cursor: not-allowed; opacity: 0.5; }
+.done-btn { display: block; margin: 15px auto; padding: 10px 24px; border: 2px solid #2ecc71; background: transparent; color: #2ecc71; border-radius: 25px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+.done-btn.completed { background: #2ecc71; color: white; }
+.content-box { position: relative; margin: 20px 0; }
+pre { padding: 20px; border-radius: 8px; white-space: pre-wrap; word-break: break-word; overflow-x: auto; font-family: 'Consolas', 'Courier New', monospace; font-size: 15px; }
+.dark-mode pre { background: #1a1a1a; color: #f8f8f2; border: 1px solid #333; }
+.light-mode pre { background: #f8f9fa; color: #212529; border: 1px solid #e9ecef; }
+.copy-btn { position: absolute; top: 12px; right: 12px; padding: 6px 12px; font-size: 12px; background: #555; color: white; border: none; border-radius: 4px; cursor: pointer; opacity: 0.8; }
+.copy-btn:hover { opacity: 1; background: #2ecc71; }
+.theme-toggle-btn { display: block; margin: 20px auto; padding: 8px 16px; background: transparent; border: 1px solid #888; color: inherit; border-radius: 5px; cursor: pointer; }
+</style></head><body onload='initLesson()'>
+<div class='container'>
+<div class='nav-bar'><a class='nav-btn' href='lesson21.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../react-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson23.html'>Bài sau ➡️</a></div><h1>Lesson 22 -- React Suspense -//</h1>
+<button id='doneButton' class='done-btn' onclick='toggleDone()'>Mark as Done ⚪</button>
+<div class='content-box'>
+<button class='copy-btn' onclick='copyContent()'>📋 Copy nội dung</button>
+<pre><code id='lessonCode'>
 React Suspense là một tính năng mạnh mẽ trong React (từ phiên bản 16.6), cho phép ứng dụng "treo" (suspend) việc render một phần UI trong khi chờ dữ liệu hoặc code tải, đồng thời hiển thị fallback UI (như "Loading...") để duy trì trải nghiệm mượt mà. Không chỉ là công cụ loading, Suspense đại diện cho triết lý concurrent rendering của React, nơi ứng dụng có thể ưu tiên các nhiệm vụ quan trọng, tránh blocking UI và nâng cao hiệu suất. Nó tích hợp sâu với lazy loading và data fetching, giúp xây dựng ứng dụng responsive, đặc biệt trong các app lớn với network latency cao.
 
 # 1. Cách Hoạt Động Nội Bộ Của Suspense (Deeper Mechanics)
 	Suspense hoạt động dựa trên cơ chế "suspending" – khi một component con "throw" một Promise (thay vì throw error thông thường), React sẽ tạm dừng render subtree đó và fallback đến UI thay thế. Điều này tận dụng concurrent rendering: React có thể ưu tiên render các phần khác của UI mà không block toàn bộ app. Nội bộ, React sử dụng fiber architecture để schedule tasks, nơi suspended trees được "hidden" và chỉ reveal khi Promise resolve.
 
-	## Props Của <suspense></suspense> 
+	## Props Của &lt;suspense&gt;&lt;/suspense&gt; 
 		
 		- children: Phần UI chính cần render. Nếu children suspend, Suspense sẽ kích hoạt fallback.
 		- fallback: UI thay thế (có thể là component, text, hoặc bất kỳ JSX valid). Nếu fallback cũng suspend, nó sẽ propagate lên Suspense cha gần nhất.
@@ -28,19 +61,19 @@ React Suspense là một tính năng mạnh mẽ trong React (từ phiên bản 
 import { createRoot } from 'react-dom/client';
 import { Suspense, lazy } from 'react';
 
-const Cars = lazy(() => import('./Cars')); // ./Cars là file riêng, tải động
+const Cars = lazy(() =&gt; import('./Cars')); // ./Cars là file riêng, tải động
 
 function App() {
   return (
-    <div>
-      <Suspense fallback={<div>Loading...</div>}>
-        <Cars />
-      </Suspense>
-    </div>
+    &lt;div&gt;
+      &lt;Suspense fallback={&lt;div&gt;Loading...&lt;/div&gt;}&gt;
+        &lt;Cars /&gt;
+      &lt;/Suspense&gt;
+    &lt;/div&gt;
   );
 }
 
-createRoot(document.getElementById('root')).render(<App />);
+createRoot(document.getElementById('root')).render(&lt;App /&gt;);
 
 	Phân Tích: Khi import('./Cars') throw Promise (đang tải code), Suspense fallback. Trong thực tế, trên mạng chậm (3G), fallback visible rõ rệt. Chuyên gia khuyên dùng webpack hoặc Vite cho code splitting để bundle nhỏ hơn.
 
@@ -52,25 +85,25 @@ createRoot(document.getElementById('root')).render(<App />);
 import { createRoot } from 'react-dom/client';
 import { Suspense, lazy } from 'react';
 
-const Header = lazy(() => import('./Header'));
-const Content = lazy(() => import('./Content'));
-const Sidebar = lazy(() => import('./Sidebar'));
+const Header = lazy(() =&gt; import('./Header'));
+const Content = lazy(() =&gt; import('./Content'));
+const Sidebar = lazy(() =&gt; import('./Sidebar'));
 
 function App() {
   return (
-    <div>
-      <Suspense fallback={<div>Loading all sections...</div>}>
-        <Header />
-        <div style={{ display: 'flex' }}>
-          <Sidebar />
-          <Content />
-        </div>
-      </Suspense>
-    </div>
+    &lt;div&gt;
+      &lt;Suspense fallback={&lt;div&gt;Loading all sections...&lt;/div&gt;}&gt;
+        &lt;Header /&gt;
+        &lt;div style={{ display: 'flex' }}&gt;
+          &lt;Sidebar /&gt;
+          &lt;Content /&gt;
+        &lt;/div&gt;
+      &lt;/Suspense&gt;
+    &lt;/div&gt;
   );
 }
 
-createRoot(document.getElementById('root')).render(<App />);
+createRoot(document.getElementById('root')).render(&lt;App /&gt;);
 
 
 	Phân Tích Sâu: Điều này thúc đẩy "grouping" để reveal đồng bộ, nhưng nếu một child chậm, toàn bộ delay. Giải pháp: Nesting Suspense (xem phần 4) để fallback granular.
@@ -87,19 +120,19 @@ import { Suspense } from 'react';
 
 function Albums({ artistId }) {
   const dataPromise = fetch(`https://api.example.com/artists/${artistId}/albums`)
-    .then(res => res.json());
+    .then(res =&gt; res.json());
   const albums = use(dataPromise); // use throw Promise nếu pending
-  return <ul>{albums.map(album => <li key={album.id}>{album.title}</li>)}</ul>;
+  return &lt;ul&gt;{albums.map(album =&gt; &lt;li key={album.id}&gt;{album.title}&lt;/li&gt;)}&lt;/ul&gt;;
 }
 
 function ArtistPage({ artist }) {
   return (
-    <>
-      <h1>{artist.name}</h1>
-      <Suspense fallback={<h2>🌀 Loading albums...</h2>}>
-        <Albums artistId={artist.id} />
-      </Suspense>
-    </>
+    &lt;&gt;
+      &lt;h1&gt;{artist.name}&lt;/h1&gt;
+      &lt;Suspense fallback={&lt;h2&gt;🌀 Loading albums...&lt;/h2&gt;}&gt;
+        &lt;Albums artistId={artist.id} /&gt;
+      &lt;/Suspense&gt;
+    &lt;/&gt;
   );
 }
 	
@@ -116,9 +149,9 @@ import { Message } from './Message.js'; // Client Component
 export default function App() {
   const messagePromise = fetchMessage(); // Fetch trên server
   return (
-    <Suspense fallback={<p>Waiting for message...</p>}>
-      <Message messagePromise={messagePromise} />
-    </Suspense>
+    &lt;Suspense fallback={&lt;p&gt;Waiting for message...&lt;/p&gt;}&gt;
+      &lt;Message messagePromise={messagePromise} /&gt;
+    &lt;/Suspense&gt;
   );
 }
 
@@ -128,7 +161,7 @@ import { use } from 'react';
 
 export function Message({ messagePromise }) {
   const messageContent = use(messagePromise); // Suspend nếu pending
-  return <p>Here is the message: {messageContent}</p>;
+  return &lt;p&gt;Here is the message: {messageContent}&lt;/p&gt;;
 }	
 	
 	Phân Tích Sâu: Điều này cho phép streaming SSR – server gửi HTML partial với fallback, client hydrate dần. Chuyên gia: Giảm TTFB (Time to First Byte) 30-50% ở app data-heavy, nhưng yêu cầu serializable data (no functions).
@@ -142,14 +175,14 @@ import { useSuspenseQuery } from '@tanstack/react-query';
 
 function Todos() {
   const { data } = useSuspenseQuery({ queryKey: ['todos'], queryFn: fetchTodos });
-  return <ul>{data.map(todo => <li key={todo.id}>{todo.title}</li>)}</ul>;
+  return &lt;ul&gt;{data.map(todo =&gt; &lt;li key={todo.id}&gt;{todo.title}&lt;/li&gt;)}&lt;/ul&gt;;
 }
 
 function App() {
   return (
-    <Suspense fallback={<div>Loading todos...</div>}>
-      <Todos />
-    </Suspense>
+    &lt;Suspense fallback={&lt;div&gt;Loading todos...&lt;/div&gt;}&gt;
+      &lt;Todos /&gt;
+    &lt;/Suspense&gt;
   );
 }
 		
@@ -168,20 +201,20 @@ import { Suspense } from 'react';
 
 export default function ArtistPage({ artist }) {
   return (
-    <>
-      <h1>{artist.name}</h1>
-      <Suspense fallback={<BigSpinner />}>
-        <Biography artistId={artist.id} /> {/* Load nhanh, reveal sớm */}
-        <Suspense fallback={<AlbumsGlimmer />}> {/* Placeholder cho albums */}
-          <Albums artistId={artist.id} /> {/* Load chậm */}
-        </Suspense>
-      </Suspense>
-    </>
+    &lt;&gt;
+      &lt;h1&gt;{artist.name}&lt;/h1&gt;
+      &lt;Suspense fallback={&lt;BigSpinner /&gt;}&gt;
+        &lt;Biography artistId={artist.id} /&gt; {/* Load nhanh, reveal sớm */}
+        &lt;Suspense fallback={&lt;AlbumsGlimmer /&gt;}&gt; {/* Placeholder cho albums */}
+          &lt;Albums artistId={artist.id} /&gt; {/* Load chậm */}
+        &lt;/Suspense&gt;
+      &lt;/Suspense&gt;
+    &lt;/&gt;
   );
 }
 
-function BigSpinner() { return <h2>🌀 Loading...</h2>; }
-function AlbumsGlimmer() { return <div>Albums placeholder...</div>; }
+function BigSpinner() { return &lt;h2&gt;🌀 Loading...&lt;/h2&gt;; }
+function AlbumsGlimmer() { return &lt;div&gt;Albums placeholder...&lt;/div&gt;; }
 
 
 	Phân Tích: Biography reveal trước, albums fallback riêng. Chuyên gia: Sử dụng cho progressive loading, cải thiện perceived performance (người dùng thấy tiến triển).
@@ -199,17 +232,17 @@ import { ErrorBoundary } from 'react-error-boundary';
 
 function MessageContainer({ messagePromise }) {
   return (
-    <ErrorBoundary fallback={<p>⚠️ Something went wrong</p>}>
-      <Suspense fallback={<p>⌛ Downloading...</p>}>
-        <Message messagePromise={messagePromise} />
-      </Suspense>
-    </ErrorBoundary>
+    &lt;ErrorBoundary fallback={&lt;p&gt;⚠️ Something went wrong&lt;/p&gt;}&gt;
+      &lt;Suspense fallback={&lt;p&gt;⌛ Downloading...&lt;/p&gt;}&gt;
+        &lt;Message messagePromise={messagePromise} /&gt;
+      &lt;/Suspense&gt;
+    &lt;/ErrorBoundary&gt;
   );
 }
 
 function Message({ messagePromise }) {
   const content = use(messagePromise); // Reject sẽ throw lên ErrorBoundary
-  return <p>Here is the message: {content}</p>;
+  return &lt;p&gt;Here is the message: {content}&lt;/p&gt;;
 }
 	
 	
@@ -219,9 +252,9 @@ function Message({ messagePromise }) {
 	
 	## Ví Dụ Client-Only Component: Tránh render server-side 
 	
-<Suspense fallback={<Loading />}>
-  <Chat />
-</Suspense>
+&lt;Suspense fallback={&lt;Loading /&gt;}&gt;
+  &lt;Chat /&gt;
+&lt;/Suspense&gt;
 
 function Chat() {
   if (typeof window === 'undefined') {
@@ -242,7 +275,7 @@ function Chat() {
 	## Best Practices: 
 	
 		- Nesting: Sử dụng multi-level để fallback chi tiết, tránh single fallback lớn gây UX kém.
-		- Transitions: Kết hợp startTransition cho non-blocking updates: startTransition(() => setState(newValue)) – suspended updates không show fallback ngay, giữ UI responsive.
+		- Transitions: Kết hợp startTransition cho non-blocking updates: startTransition(() =&gt; setState(newValue)) – suspended updates không show fallback ngay, giữ UI responsive.
 		- SSR Và Streaming: Trong Next.js, Suspense enable selective hydration – hydrate parts dần, giảm JavaScript tải ban đầu.
 		- Performance: Test trên slow networks; sử dụng preload (e.g., link rel="preload") cho resources. Tránh overuse Suspense cho sync operations.
 		- Accessibility: Fallback nên có ARIA (e.g., role="progressbar"), thông báo screen readers.
@@ -259,4 +292,46 @@ function Chat() {
 
 
 
-</pre><a id='backBottom' href='../react-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
+</code></pre>
+</div>
+<div class='nav-bar'><a class='nav-btn' href='lesson21.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../react-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson23.html'>Bài sau ➡️</a></div><button class='theme-toggle-btn' onclick='toggleTheme()'>🌓 Đổi Giao Diện</button>
+</div>
+<script>
+const lessonKey = 'react-learning-list_lesson22.html';
+function toggleTheme() {
+   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';
+   document.body.className = mode;
+   localStorage.setItem('theme', mode);
+}
+function toggleDone() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   if (isDone) {
+       localStorage.removeItem(lessonKey);
+   } else {
+       localStorage.setItem(lessonKey, 'done');
+   }
+   renderDoneStatus();
+}
+function renderDoneStatus() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   let btn = document.getElementById('doneButton');
+   if (isDone) {
+       btn.className = 'done-btn completed';
+       btn.innerText = 'Đã Hoàn Thành ✅';
+   } else {
+       btn.className = 'done-btn';
+       btn.innerText = 'Đánh dấu đã học ⚪';
+   }
+}
+function copyContent() {
+   let text = document.getElementById('lessonCode').innerText;
+   navigator.clipboard.writeText(text).then(function() {
+       alert('✅ Đã sao chép nội dung bài học!');
+   });
+}
+function initLesson() {
+   document.body.className = localStorage.getItem('theme') || 'dark-mode';
+   renderDoneStatus();
+   if (window.Prism) Prism.highlightAll();
+}
+</script></body></html>

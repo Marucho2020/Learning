@@ -1,0 +1,53 @@
+<html><head><title>Lesson 7 == Dữ liệu vào và ra ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../centos-command-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 7 -- Dữ liệu vào và ra -//</h1><pre>
+
+
+			
+			stdout > file.txt  // chuyển dữ liệu ra chuẩn vào file 					(   > fileName) 
+			stderr 2> file.txt   // chuyển dữ liệu ra lỗi vào file 					( 	2>fileName)
+			stdout+stderr &> file.txt   // chuyển cả dữ liệu chuẩn và lỗi ra file 	( &> fileName)
+			command A > file.txt 2>&1   // tương đương với lệnh commandA &> file.txt -> nhưng cách này tường minh và thường được sử dụng hơn 
+			>> // chèn dữ liệu thêm vào cuối của văn bản , chèn thên dòng chứ kđè 
+			echo "This text " &> file.txt
+			
+			=> input 
+				cpio -i < test.cpio  ( giải nén cpio cũng là một dạng input vào 
+				
+	
+	
+#	Lệnh đường ống 
+
+			Command 1 | command 2 | Command 3 
+			-> dữ liệu trả ra (stdout) của 1 sẽ là stdin của command 2 -> và tương tự như thế 
+			wc -c fileName : // đếm chữ cái cho file 
+			wc -w fileName : // đếm từ cho file hoặc input 
+			wc -l fileName : // đếm xem có bao nhiêu dòng 
+			
+#	-> xargs tee
+	*xargs //  chuyển tiếp kết quả của một lệnh khác như một đối số -> hữuu ích khi thực hiện cùng lúc nhiều lệnh với một lệnh hoặc một input lớn 
+		e.g 
+		// ls -l ""|| xargs rm    -> xóa tất cả các file được liệt kê bởi ls 
+		//  cat file.txt | xargs touch   -> tạo ra các file có trong touch 
+	
+	*tee  // lưu nội dung ra nhiều file sử dụng pipe 
+		ls | tee file1.txt file2.txt file3.txt 
+#	 ví dụ sử dụng để đếm từ 
+
+			echo "aaa" | wc -w   // đếm từ cho input( từ chứ không phải chữ cái ) 
+	
+	
+#	 lọc dữ liệu 
+
+			grep  // lấy dữ liệu theo dòng 
+				grep -n root /etc/passwd    // tìm kiếm và hiển thị số dòng (number ) 
+				grep -i root /etc/passws	//tìm kiếm không phân biệt hoa thường  ( -i -n hoặc -in 
+			cut 	// lấy dữ liệu theo cột 
+			//-> sử dụng đường ống để lấy dữ liệu theo ô 
+			
+			cut -d":" -f1 /etc/passwd   // dấu phân cách :   , lấy cột 1( -f1 : fill 1) 
+	
+			cut -d":" -f1,7 /etc/passwd // in ra vị trí 1 và 7 với phân cách( 区切り）là :
+	
+	
+	
+
+</pre><a id='backBottom' href='../centos-command-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

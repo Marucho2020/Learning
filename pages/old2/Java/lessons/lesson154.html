@@ -1,0 +1,125 @@
+<html><head><title>Lesson 154 == Custom Collector ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 154 -- Custom Collector -//</h1><pre>
+# 🧠 I. Collector là gì? 
+
+	Trong java.util.stream, Collector<T, A, R> là một interface dùng để thu thập phần tử của stream (T) vào một cấu trúc kết quả (R), có thể thông qua một kiểu trung gian (A – accumulation type).
+
+public interface Collector<T, A, R> {
+    Supplier<A> supplier();
+    BiConsumer<A, T> accumulator();
+    BinaryOperator<A> combiner();
+    Function<A, R> finisher();
+    Set<Characteristics> characteristics();
+}
+
+
+
+# 🩺 II. Nội tạng Collector – Phân tích từng phần
+
+	## 1. supplier(): Tạo ra accumulator 
+		Nó trả về một object rỗng ban đầu (accumulator), thường là:
+			new ArrayList<>()
+			new StringBuilder()
+			new HashMap<>()		
+
+
+	## 2. accumulator(): Nhận từng phần tử từ stream 
+		Là một BiConsumer<A, T>. Từng phần tử stream (T) sẽ được nạp vào accumulator (A).
+
+			(list, element) -> list.add(element);
+
+
+	## 3. combiner(): Dùng khi parallel – gộp 2 accumulator lại
+		Là một BinaryOperator<A>, dùng khi nhiều thread xử lý song song.	
+
+
+
+	## 4. finisher(): Biến A thành R
+		Nếu bạn thu thập List<T>, thì A == R, nên finisher() là identity. Nhưng nếu bạn cần chuyển Map -> String, thì finisher() là thật sự cần thiết.
+	
+	
+	## 5. characteristics(): Tối ưu hóa nội bộ
+	
+	Các flags:
+	
+		UNORDERED
+		CONCURRENT
+		IDENTITY_FINISH → A == R, không cần gọi finisher()
+
+# ⚙️ III. Tạo Custom Collector – Ví dụ thực tế
+
+
+	🎯 Mục tiêu:
+	
+		Thu thập stream các String thành một Map<Character, List<String>>, nơi key là ký tự đầu tiên.
+
+Collector<String, Map<Character, List<String>>, Map<Character, List<String>>> myCollector =
+    Collector.of(
+        HashMap::new, // supplier
+        (map, str) -> {
+            char firstChar = str.charAt(0);
+            map.computeIfAbsent(firstChar, k -> new ArrayList<>()).add(str);
+        },
+        (map1, map2) -> {
+            map2.forEach((k, v) -> map1.merge(k, v, (l1, l2) -> { l1.addAll(l2); return l1; }));
+            return map1;
+        },
+        Function.identity(),
+        Collector.Characteristics.IDENTITY_FINISH
+    );
+
+
+
+Sử dụng: 
+
+List<String> words = List.of("apple", "banana", "apricot", "blueberry", "avocado");
+Map<Character, List<String>> grouped = words.stream().collect(myCollector);
+
+
+# 🧰 IV. Collector Interface thực tế – trong Java SDK
+
+	Collectors.toList() bên trong được implement gần giống:
+	
+public static <T> Collector<T, ?, List<T>> toList() {
+    return new CollectorImpl<>(
+        ArrayList::new,
+        List::add,
+        (left, right) -> { left.addAll(right); return left; },
+        CH_ID // IDENTITY_FINISH + UNORDERED
+    );
+}
+		
+
+# 🧵 V. Kỹ thuật nâng cao với Collector
+
+	## 1. Collector lồng Collector
+		groupingBy(Person::getCountry, mapping(Person::getAge, toList()))
+
+	
+	
+	## 2. Collector với cấu trúc bất biến (Immutable Collector) 
+		Sử dụng Collectors.collectingAndThen để wrap:	
+	
+		collectingAndThen(toList(), Collections::unmodifiableList)
+
+	
+	
+	
+# 	📌 VI. Tổng kết – Những thứ cần đào sâu tiếp
+
+| Chủ đề                                                       | Lý do quan trọng                   |
+| ------------------------------------------------------------ | ---------------------------------- |
+| `Collector.of(...)` vs `CollectorImpl`                       | Biết cách tự build Collector tùy ý |
+| Parallel Collector – phân tích `combiner()`                  | Để tránh sai sót khi scale         |
+| Kỹ thuật `mapping`, `reducing`, `collectingAndThen`          | Modular hóa pipeline               |
+| Biến đổi dữ liệu nhiều tầng (`groupingBy`, `partitioningBy`) | Phân nhóm phức tạp                 |
+| Collector cho Immutable/Thread-safe Structures               | Đảm bảo hệ thống không mutable     |
+
+
+
+
+# 🎯 Nhắc lại một điều quan trọng: 
+
+	Nếu bạn hiểu rõ Collector, bạn không chỉ điều khiển được dòng dữ liệu trong Stream API – bạn còn tái định nghĩa được cách biến đổi dữ liệu trong Java một cách hàm thuần túy, mở rộng và hiệu quả.
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

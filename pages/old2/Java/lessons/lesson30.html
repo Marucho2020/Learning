@@ -1,0 +1,157 @@
+<html><head><title>Lesson 30 == HashSet ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 30 -- HashSet -//</h1><pre># 0. Khái niệm 
+	HashSet trong java là một trong những triển khai phổ biến của interface Set trong Java. Nó được sử dụng để lưu trữ một tập hợp các phần tử mà: 
+		1. Không có phần tử trùng lặp 
+		2. Không đảm bảo thứ tự lưu trữ  
+		
+		
+		
+		
+# 1. Khởi tạo 
+	- HashSet được khai báo trong gói java.util. Bạn có thể khởi tạo HashSet bằng các cách sau : 
+		HashSet<Integer> hashS = new HashSet<>();
+		HashSet<String> hashSetWithCapacity = new HashSet<>(50);
+		HashSet<Double> hashSetWithCapacityAndLoadFactor = new HashSet<>(50 , 0.75f)
+		
+	- Các tham số 
+		Init Capacity :  dung lượng ban đầu , dung lượng của bảng băm nội bộ, mặc định là 16 
+		Load Factor : Hệ số tải : Xác đinh ngưỡng khi nào HashSet cần mở rộng. Giá trị mặc định là 0.75 khi bảng băm đầy 75%, nó sẽ được mở rộng gấp đôi 
+		
+		
+# 2. Đặc điểm chính của HashSet 
+	
+	## 1. Không cho phép phần tử trùng lặp :
+		Mỗi phần tử trong HashSet phải duy nhất. Điều này được đảm bảo bởi cơ chế bảng băm và phương thức hashCode() kết hợp với equals();
+		
+	## 2. Không đảm bảo thứ tự: 
+		HashSet không duy trì thứ tự thêm vào. Thứ tự các phần tử có thể thay đổi sau mỗi lần thêm hoặc xóa phần tử/ 
+		
+	## 3. Hoạt động dựa trên Hashing: 
+		Sử dụng bảng băm(HashTable) để lưu trữ phần tử. 
+		Phương thức hashCode() của đối tượng quyết định vị trí của phần tử trong bảng băm 
+		
+	## 4. Cho phép 1 phần tử null 
+		HashSet cho phép tồn tại một phần tử null, vì bảng băm có thể xử lý giá trị null.
+		
+		
+# 3. Các phương thwusc quan trọng trong HashSet 
+
+	### Thêm phần tử 
+		hashSet.add(10);
+		boolean wasAdded = hashSet.add(20);
+		
+	### Xóa phần tử : 
+		hashSet.remove(10);
+		boolean wasRemoved = hashSet.remove(20);
+		
+	### Kiểm tra tồn tại : 
+		boolean exists = hashSet.contains(30);
+		
+	### Kích thước và rỗng: 
+		int size = hashSet.size();
+		boolean isEmpty = hashSet.isEmpty();
+
+	### Duyệt HashSet : 
+		Sử dụng vòng lặp for-each hoặc Iterator 
+		
+		for(Integer num : hashSet){
+			System.out.println(num);
+		}
+		// Duyệt bằng Iterator 
+		Iterator<Integer> iterator = hashSet.iterator();
+		while(iterator.hashNext()){
+			System.out.println(iterator.next());
+		}
+		
+	### Xóa tất cả các phần tử 
+		hashSet.clear();
+		
+		
+# 4. HashSet hoạt động như thế nào ? 
+	
+	## Bảng băm (HashTable):
+		- HashSet sử dụng HashMap ở bên trong để lưu trữ các phần tử. 
+		- Khi bạn thêm một phần tử vào HashSet, nó thực sự được lưu dưới dạng key trong một HashMap với một giá trị giả định(thường là PRESENT)
+		
+	## Cơ chế thêm phần tử: 
+	    - Khi bạn gọi add(element), phương thức hashCode() của đối tượng được gọi để tính toán mã băm (hash code).
+		
+		- Nếu mã băm này đã tồn tại(tức là vị trí đã bị chiếm) equal() sẽ được gọi để kiểm tra xem phần tử đã tồn tại hay chưa 
+			+ Nếu phần tử đã tồn tại(equals trả về true) , phần tử không được thêm 
+			+  Nếu không , phần tử mới sẽ được thêm vào vị trí trống.
+			
+			
+# 5. Lưu ý quan trọng khi sử dụng HashSet 
+	
+	## hashCode và equals():
+		Để đảm bảo tính duy nhất của các phần tử trong HashSet, bạn phải override cả 2 phương thức hashCode và equals() trong lớp của đối tượng được thêm. 
+		Nếu hashCode() không nhất quán hoặc không được định nghĩa đúng, HashSet có thể cho phép các phần tử trùng lặp. 
+	
+	Ví dụ về hashCode() và equals() đúng cách 
+		class Person {
+			int id;
+			String name;
+		
+			Person(int id, String name) {
+				this.id = id;
+				this.name = name;
+			}
+		
+			@Override
+			public int hashCode() {
+				return id; // Mã băm dựa trên id
+			}
+		
+			@Override
+			public boolean equals(Object obj) {
+				if (this == obj) return true;
+				if (obj == null || getClass() != obj.getClass()) return false;
+				Person person = (Person) obj;
+				return id == person.id; // So sánh dựa trên id
+			}
+		}
+		
+		
+	## Null handling  
+		+ Chỉ có một phần tử null được phép trong HashSet 
+		
+	## Hiệu suất : 
+		Tìm kiếm, thêm, xóa phần tử tỏng HashSet có thời gian trung bình là O(1), nhưng có thể tăng lên O(n) nếu các giá trị hashcode bị phân phối không đồng đều  
+		
+		
+# 6 Ưu điểm và nhược điểm
+
+	## Ưu điểm  
+		+ Loại bỏ tự động các phần tử trùng lặp 
+		+ Hiệu suất cao cho các thao tác thêm, xóa, tìm kiếm 
+		
+	## Nhược điểm 
+		- Không đảm bảo thứ tự của các phần tử.  
+		- Không hỗ trợ duyệt phần tử theo thứ tự thêm vào(sử dụng Linked HashSet nếu cần)
+		- Cần phải định nghĩa hashCode và equals() chính xác nếu sử dụng các đối tượng tùy chỉnh  
+		
+	
+# 7. So sánh với các Set khác 
+		Đặc điểm				HashSet						LinkedHashSet						TreeSet
+		Thứ tự lưu trữ			Không duy trì thứ tự		Duy trì thứ tự thêm vào				Thứ tự tự nhiên hoặc so sánh
+		Tốc độ					Nhanh nhất					Nhanh (nhưng chậm hơn HashSet)		Chậm nhất (O(log n))
+		Hỗ trợ null				Cho phép một phần tử null	Cho phép một phần tử null			Không cho phép null
+
+
+
+#8 Ví dụ thực tế : 
+	HashSet<String> set = new HashSet<>();
+	set.add("Java");
+	set.add("Python");
+	set.add("C++");
+	set.add("Java");			// Phần tử trùng lặp, không được thêm
+	System.out.println(set)		//  // Kết quả: [Python, Java, C++]
+
+
+
+#9 Các lưu ý : 
+	- HashSet rất phù hợp để lưu trữ tập hợp các phần tử duy nhất mà không quan tâm đến thứ tự. 
+	- Hiệu suất nhanh nhờ bảng băm. 
+	- Cần chú ý đến định nghĩa hashCode() và equals() khi sử dụng đối tượng tùy chỉnh trong HashSet.
+	
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

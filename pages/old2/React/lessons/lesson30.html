@@ -1,0 +1,109 @@
+<html><head><title>Lesson 30 == React Hook ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../react-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 30 -- React Hook -//</h1><pre>
+# 1. What is a Hook?
+
+Hooks cách mạng hóa React bằng cách loại bỏ boilerplate của class (như this, binding methods), và khuyến khích functional programming. Trong React 18+, Hooks tích hợp tốt với Concurrent Rendering (như useTransition). Tuy nhiên, Hooks chỉ dùng trong functional components; class vẫn hỗ trợ nhưng ít dùng trong code mới. Performance: Hooks giảm bundle size và dễ optimize với React.memo. Nếu migrate từ class, dùng Hooks để refactor dần. Thư viện như Redux, React Query thường cung cấp Hooks (ví dụ: useSelector, useQuery).
+
+
+	Hooks là các hàm đặc biệt (bắt đầu bằng "use") cho phép "hook into" (kết nối) state và lifecycle từ functional components. Trước Hooks, functional components chỉ stateless (pure functions nhận props, trả JSX). Hooks làm chúng stateful mà không cần class.
+
+
+	Các Hooks cơ bản: useState (state), useEffect (lifecycle/side effects), useContext (context), useRef (refs), useReducer (complex state). Hooks custom cho phép tái sử dụng logic (như fetch data). Lưu ý: Hooks dựa trên order gọi (không conditional), nên ESLint plugin eslint-plugin-react-hooks là must-have để tránh lỗi. Trong SSR (Next.js), Hooks hoạt động tốt nhưng cần cẩn thận với hydration.
+
+
+# 2. Example: Ví dụ với useState
+
+	Ví dụ minh họa useState để quản lý state màu yêu thích, với buttons cập nhật state.
+
+	
+import { useState } from 'react';  // Import Hook
+import { createRoot } from 'react-dom/client';  // Render root
+
+function FavoriteColor() {
+  const [color, setColor] = useState("red");  // Khởi tạo state
+
+  return (
+    <>
+      <h1>My favorite color is {color}!</h1>  // Hiển thị state
+      <button type="button" onClick={() => setColor("blue")}>Blue</button>  // Cập nhật state
+      <button type="button" onClick={() => setColor("red")}>Red</button>
+      <button type="button" onClick={() => setColor("pink")}>Pink</button>
+      <button type="button" onClick={() => setColor("green")}>Green</button>
+    </>
+  );
+}
+
+createRoot(document.getElementById('root')).render(
+  <FavoriteColor />
+);
+
+	useState là Hook đơn giản nhất, tương đương this.state và this.setState trong class. Initial value có thể là function cho lazy init: useState(() => computeInitial()) (useful cho expensive calculations). Best practice: Dùng functional updates cho setter nếu phụ thuộc state cũ: setColor(prev => prev === "red" ? "blue" : "red")
+
+
+	Lỗi phổ biến: Gọi Hooks conditional (vi phạm rules), dẫn đến bugs (state mismatch). Trong array/object state, luôn tạo copy mới khi update để tránh mutate (ví dụ: setList([...list, newItem])). Performance: Nếu state phức tạp, dùng useReducer thay thế.
+
+
+	## Ví dụ mở rộng để học: 
+
+function Counter() {
+  const [count, setCount] = useState(0);
+  return (
+    <div>
+      <p>You clicked {count} times</p>
+      <button onClick={() => setCount(count + 1)}>Click me</button>
+    </div>
+  );
+}
+
+	Hoặc dùng object state:
+
+const [user, setUser] = useState({ name: "John", age: 30 });
+setUser(prev => ({ ...prev, age: prev.age + 1 }));  // Update mà không mutate
+
+
+
+# 3. Hook Rules 
+
+	## Có 3 quy tắc nghiêm ngặt:
+	
+		Chỉ gọi trong functional components: Không dùng trong class hoặc regular functions.
+
+		Chỉ gọi ở top level: Không nested trong loops, conditions, hoặc functions con (React dựa vào order gọi để track state).
+
+		Không conditional: Không wrap Hooks trong if/else (làm sai order).
+
+
+	Hooks không hoạt động trong class components.
+
+	Insight chuyên gia: Quy tắc này do Hooks internals: React dùng linked list để track Hooks calls mỗi render. Vi phạm dẫn đến errors như "Rendered more hooks than during the previous render". Sử dụng ESLint rule react-hooks/rules-of-hooks để enforce. Nếu cần conditional logic, di chuyển vào Hook: useEffect(() => { if (condition) { ... } }, [condition]). Trong custom Hooks, tuân thủ tương tự. Debug: Nếu error, check order calls với React DevTools.
+
+
+
+
+# 4. Custom Hooks 
+	Nếu logic stateful cần reuse (như fetch data, subscription), tạo custom Hook (hàm bắt đầu bằng "use", gọi các Hooks khác). Bài gợi ý chi tiết sau, nhưng đây là cách chia sẻ behavior mà không HOCs hay render props.
+
+	Insight chuyên gia: Custom Hooks là super power của Hooks, giúp abstract logic (ví dụ: useFetch cho API calls). Ví dụ đơn giản:
+
+
+import { useState, useEffect } from 'react';
+
+function useWindowSize() {  // Custom Hook
+  const [size, setSize] = useState({ width: window.innerWidth, height: window.innerHeight });
+  useEffect(() => {
+    const handleResize = () => setSize({ width: window.innerWidth, height: window.innerHeight });
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);  // Cleanup
+  }, []);
+  return size;
+}
+
+// Sử dụng
+function App() {
+  const { width, height } = useWindowSize();
+  return <div>Window size: {width} x {height}</div>;
+}
+
+	Best practice: Custom Hooks phải pure (không side effects ngoài Hooks nội bộ), và export để reuse. Trong libraries, custom Hooks thay HOCs (ví dụ: useForm trong React Hook Form). Scale: Tổ chức trong folder hooks/, test với @testing-library/react-
+
+
+</pre><a id='backBottom' href='../react-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

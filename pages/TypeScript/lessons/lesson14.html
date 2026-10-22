@@ -1,15 +1,48 @@
-<html><head><title>Lesson 14 == TypeScript Generics ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../type-script-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 14 -- TypeScript Generics -//</h1><pre>
+<!DOCTYPE html><html lang='vi'><head><meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0'>
+<title>Lesson 14 -- TypeScript Generics -//</title>
+<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css'>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js'></script>
+<script id='MathJax-script' async src='https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'></script>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; margin: 0; padding: 20px; transition: 0.3s; }
+.dark-mode { background-color: #121212; color: #e0e0e0; }
+.light-mode { background-color: #ffffff; color: #333333; }
+.container { max-width: 950px; margin: auto; }
+h1 { text-align: center; color: #3498db; margin: 20px 0; font-size: 26px; }
+.nav-bar { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 20px 0; }
+.nav-btn { text-decoration: none; padding: 10px 18px; background: #3498db; color: white; border-radius: 6px; font-weight: bold; font-size: 15px; display: inline-block; transition: 0.2s; }
+.nav-btn:hover { background: #2980b9; }
+.nav-btn.home-nav { background: #6c757d; }
+.nav-btn.home-nav:hover { background: #5a6268; }
+.nav-btn.disabled { background: #aaa; cursor: not-allowed; opacity: 0.5; }
+.done-btn { display: block; margin: 15px auto; padding: 10px 24px; border: 2px solid #2ecc71; background: transparent; color: #2ecc71; border-radius: 25px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+.done-btn.completed { background: #2ecc71; color: white; }
+.content-box { position: relative; margin: 20px 0; }
+pre { padding: 20px; border-radius: 8px; white-space: pre-wrap; word-break: break-word; overflow-x: auto; font-family: 'Consolas', 'Courier New', monospace; font-size: 15px; }
+.dark-mode pre { background: #1a1a1a; color: #f8f8f2; border: 1px solid #333; }
+.light-mode pre { background: #f8f9fa; color: #212529; border: 1px solid #e9ecef; }
+.copy-btn { position: absolute; top: 12px; right: 12px; padding: 6px 12px; font-size: 12px; background: #555; color: white; border: none; border-radius: 4px; cursor: pointer; opacity: 0.8; }
+.copy-btn:hover { opacity: 1; background: #2ecc71; }
+.theme-toggle-btn { display: block; margin: 20px auto; padding: 8px 16px; background: transparent; border: 1px solid #888; color: inherit; border-radius: 5px; cursor: pointer; }
+</style></head><body onload='initLesson()'>
+<div class='container'>
+<div class='nav-bar'><a class='nav-btn' href='lesson13.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../type-script-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson15.html'>Bài sau ➡️</a></div><h1>Lesson 14 -- TypeScript Generics -//</h1>
+<button id='doneButton' class='done-btn' onclick='toggleDone()'>Mark as Done ⚪</button>
+<div class='content-box'>
+<button class='copy-btn' onclick='copyContent()'>📋 Copy nội dung</button>
+<pre><code id='lessonCode'>
 # 1. TypeScript Generics là gì? 
 	Generics (Kiểu chung) trong TypeScript là cách tạo ra các hàm, class, hoặc interface có thể làm việc với nhiều kiểu dữ liệu khác nhau, nhưng vẫn giữ được tính an toàn kiểu (type safety). Thay vì cố định một kiểu cụ thể (như string hay number), bạn sử dụng một placeholder (thường là T) để biểu diễn kiểu, giúp mã tái sử dụng và linh hoạt hơn.
 	
 	Ví dụ: Một hàm trả về giá trị bạn truyền vào: 
 
-function identity<T>(value: T): T {
+function identity&lt;T&gt;(value: T): T {
   return value;
 }
 
-console.log(identity<string>("Hello")); // Output: Hello (kiểu string)
-console.log(identity<number>(123)); // Output: 123 (kiểu number)
+console.log(identity&lt;string&gt;("Hello")); // Output: Hello (kiểu string)
+console.log(identity&lt;number&gt;(123)); // Output: 123 (kiểu number)
 
 	T là một kiểu chung, cho phép hàm identity hoạt động với bất kỳ kiểu dữ liệu nào.
 	
@@ -36,22 +69,22 @@ function identityNumber(value: number): number {
 
 
 		## Dùng generics (gọn hơn): 
-function identity<T>(value: T): T {
+function identity&lt;T&gt;(value: T): T {
   return value;
 }		
 
 
 # 3. Cú pháp cơ bản của Generics
-	Generics sử dụng ký hiệu <T> (hoặc bất kỳ ký tự nào, như <U>, <K>) để định nghĩa một kiểu chung. T được thay thế bằng kiểu cụ thể khi hàm hoặc class được sử dụng. 
+	Generics sử dụng ký hiệu &lt;T&gt; (hoặc bất kỳ ký tự nào, như &lt;U&gt;, &lt;K&gt;) để định nghĩa một kiểu chung. T được thay thế bằng kiểu cụ thể khi hàm hoặc class được sử dụng. 
 	
 	## a. Generics trong hàm 
 		
-function getValue<T>(value: T): T {
+function getValue&lt;T&gt;(value: T): T {
   return value;
 }
 
-let str = getValue<string>("Hello"); // T là string
-let num = getValue<number>(42); // T là number
+let str = getValue&lt;string&gt;("Hello"); // T là string
+let num = getValue&lt;number&gt;(42); // T là number
 
 
 	Bạn chỉ định kiểu cụ thể (string, number) khi gọi hàm, hoặc TypeScript sẽ tự suy ra kiểu nếu có thể: 
@@ -62,11 +95,11 @@ let num = getValue<number>(42); // T là number
 		Bạn có thể dùng nhiều kiểu chung:
 		
 		
-function merge<T, U>(obj1: T, obj2: U): T & U {
+function merge&lt;T, U&gt;(obj1: T, obj2: U): T &amp; U {
   return { ...obj1, ...obj2 };
 }
 
-let result = merge<{ name: string }, { age: number }>(
+let result = merge&lt;{ name: string }, { age: number }&gt;(
   { name: "Alice" },
   { age: 25 }
 );
@@ -75,7 +108,7 @@ console.log(result); // Output: { name: "Alice", age: 25 }
 
 
 	## c. Generics trong Class 
-class Box<T> {
+class Box&lt;T&gt; {
   content: T;
 
   constructor(value: T) {
@@ -87,22 +120,22 @@ class Box<T> {
   }
 }
 
-let stringBox = new Box<string>("Hello");
+let stringBox = new Box&lt;string&gt;("Hello");
 console.log(stringBox.getContent()); // Output: Hello
 
-let numberBox = new Box<number>(123);
+let numberBox = new Box&lt;number&gt;(123);
 console.log(numberBox.getContent()); // Output: 123		
 
 Class Box có thể chứa bất kỳ kiểu dữ liệu nào (string, number, v.v.) nhờ generics.
 	
 	## d. Generics với Interface
 
-interface Pair<K, V> {
+interface Pair&lt;K, V&gt; {
   key: K;
   value: V;
 }
 
-let pair: Pair<string, number> = { key: "age", value: 25 };
+let pair: Pair&lt;string, number&gt; = { key: "age", value: 25 };
 console.log(pair); // Output: { key: "age", value: 25 }
 
 	Interface Pair dùng generics để định nghĩa kiểu của key và value.
@@ -112,7 +145,7 @@ console.log(pair); // Output: { key: "age", value: 25 }
 
 	Đôi khi, bạn muốn giới hạn kiểu mà generics có thể nhận. Sử dụng extends để thêm ràng buộc:
 
-function printLength<T extends { length: number }>(item: T): void {
+function printLength&lt;T extends { length: number }&gt;(item: T): void {
   console.log(item.length);
 }
 
@@ -128,12 +161,12 @@ printLength(123); // Lỗi: number không có thuộc tính length
 
 	Bạn có thể đặt kiểu mặc định cho generics:
 
-function identity<T = string>(value: T): T {
+function identity&lt;T = string&gt;(value: T): T {
   return value;
 }
 
 console.log(identity("Hello")); // OK, T là string (mặc định)
-console.log(identity<number>(123)); // OK, T là number
+console.log(identity&lt;number&gt;(123)); // OK, T là number
 
 
 
@@ -147,14 +180,14 @@ console.log(identity<number>(123)); // OK, T là number
 function badIdentity(value: any): any {
   return value; // Không biết kiểu trả về
 }
-function goodIdentity<T>(value: T): T {
+function goodIdentity&lt;T&gt;(value: T): T {
   return value; // Biết chính xác kiểu trả về
 }
 
 
 		- Ứng dụng thực tế: Generics rất phổ biến trong các thư viện như React (với hooks), Angular, hoặc các cấu trúc dữ liệu như danh sách, hàng đợi, v.v. Ví dụ trong React:
 		
-function useState<T>(initial: T): [T, (newValue: T) => void] {
+function useState&lt;T&gt;(initial: T): [T, (newValue: T) =&gt; void] {
   // Logic của useState
 }
 
@@ -167,12 +200,12 @@ function useState<T>(initial: T): [T, (newValue: T) => void] {
 	- Đừng lạm dụng: Generics mạnh mẽ nhưng có thể làm mã phức tạp nếu dùng quá nhiều hoặc không cần thiết.
 	- Hiểu ràng buộc: Nếu không dùng extends, generics có thể nhận bất kỳ kiểu nào, dẫn đến lỗi runtime nếu bạn giả định sai về kiểu.
 
-function getProperty<T>(obj: T, key: string): any {
+function getProperty&lt;T&gt;(obj: T, key: string): any {
   return obj[key]; // Lỗi: key không chắc chắn tồn tại trên T
 }
 
 	## Giải pháp: Ràng buộc T với keyof:
-function getProperty<T, K extends keyof T>(obj: T, key: K): T[K] {
+function getProperty&lt;T, K extends keyof T&gt;(obj: T, key: K): T[K] {
   return obj[key];
 }
 
@@ -191,7 +224,7 @@ let value = getProperty(obj, "name"); // Output: Alice
 	
 	- Kiểm tra kiểu: Kết hợp generics với type guard để tăng độ an toàn:
 
-function isArray<T>(value: T | T[]): value is T[] {
+function isArray&lt;T&gt;(value: T | T[]): value is T[] {
   return Array.isArray(value);
 }
 
@@ -206,4 +239,46 @@ function isArray<T>(value: T | T[]): value is T[] {
 
 
 
-</pre><a id='backBottom' href='../type-script-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
+</code></pre>
+</div>
+<div class='nav-bar'><a class='nav-btn' href='lesson13.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../type-script-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson15.html'>Bài sau ➡️</a></div><button class='theme-toggle-btn' onclick='toggleTheme()'>🌓 Đổi Giao Diện</button>
+</div>
+<script>
+const lessonKey = 'type-script-learning-list_lesson14.html';
+function toggleTheme() {
+   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';
+   document.body.className = mode;
+   localStorage.setItem('theme', mode);
+}
+function toggleDone() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   if (isDone) {
+       localStorage.removeItem(lessonKey);
+   } else {
+       localStorage.setItem(lessonKey, 'done');
+   }
+   renderDoneStatus();
+}
+function renderDoneStatus() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   let btn = document.getElementById('doneButton');
+   if (isDone) {
+       btn.className = 'done-btn completed';
+       btn.innerText = 'Đã Hoàn Thành ✅';
+   } else {
+       btn.className = 'done-btn';
+       btn.innerText = 'Đánh dấu đã học ⚪';
+   }
+}
+function copyContent() {
+   let text = document.getElementById('lessonCode').innerText;
+   navigator.clipboard.writeText(text).then(function() {
+       alert('✅ Đã sao chép nội dung bài học!');
+   });
+}
+function initLesson() {
+   document.body.className = localStorage.getItem('theme') || 'dark-mode';
+   renderDoneStatus();
+   if (window.Prism) Prism.highlightAll();
+}
+</script></body></html>

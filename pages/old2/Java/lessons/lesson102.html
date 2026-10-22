@@ -1,0 +1,74 @@
+<html><head><title>Lesson 102 == Data Lineage ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 102 -- Data Lineage -//</h1><pre># Khái niệm 
+	Data Lineage = Dòng chảy của dữ liệu: từ nguồn gốc, qua các bước xử lý, đến nơi sử dụng cuối cùng. 
+	
+	## 🧠 Tưởng tượng: 
+		CSV file -> Load vào DB -> ETL -> Clean -> Join -> Model AI -> Dashboard
+ 
+	## Bạn cần biết:
+		Dữ liệu từ đâu ra?
+		Ai/chức năng nào đã xử lý nó?
+		Nó được biến đổi thế nào?
+		Đầu ra hiện tại có thể tin được không? 
+
+# 🔎 Tại sao cần Data Lineage? 
+	
+Lý do									 | Mô tả
+✅ Debug dữ liệu			 		| Nếu output sai → trace ngược lại để biết chỗ hỏng
+✅ Audit tuân thủ 			 		| Phải chứng minh "dữ liệu bệnh nhân đến từ đâu", "ai chỉnh sửa", v.v.
+✅ Data Quality				 		| Phát hiện pipeline lỗi / thiếu bước
+✅ Phát hiện tác động		 		| Nếu schema DB thay đổi → biết ảnh hưởng đến đâu
+✅ Giải thích AI		     		| Explainable AI → biết model học từ dữ liệu nào
+
+
+
+
+
+
+# 🛠️ Cách xây dựng hệ thống có Data Lineage? 
+
+	##  1. Metadata Collection (track từ đầu đến cuối) 
+			
+		Mỗi lần load data → log lại:
+			- Nguồn gốc (source file, API)
+			- Thời gian
+			- Job ID
+			- Schema version
+
+		ETL / DAG tool phải có tracking step
+
+
+
+
+
+
+	## 2. Tool hỗ trợ Data Lineage 
+		
+
+		Tool 								| Mô tả
+		OpenLineage 					 | Open standard cho lineage tracking
+		Apache Atlas					 | Dùng nhiều trong Hadoop ecosystem
+		Amundsen						 | Metadata search engine từ Lyft
+		DataHub							 | Từ LinkedIn, hỗ trợ Lineage, Schema registry
+		dbt								 | Nếu dùng dbt (SQL transformation), có builtin lineage
+		Airflow + OpenLineage plugin 	 | Track dữ liệu xuyên DAG
+
+
+
+#📉 Ví dụ trực quan: 
+
+			📁 orders.csv
+				↓
+			[ETL Job #1]
+				↓
+			🧮 Cleaned Orders Table
+				↓
+			[ETL Job #2]
+				↓
+			📊 Monthly Revenue Dashboard
+			
+		→ Data Lineage graph sẽ vẽ được cây dependency như vậy
+
+
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

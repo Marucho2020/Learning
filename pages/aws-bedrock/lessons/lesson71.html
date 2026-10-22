@@ -1,0 +1,312 @@
+<!DOCTYPE html><html lang='vi'><head><meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0'>
+<title>Lesson 72 -- AIP-C01  --=AgentCore Identity -//</title>
+<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css'>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js'></script>
+<script id='MathJax-script' async src='https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'></script>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; margin: 0; padding: 20px; transition: 0.3s; }
+.dark-mode { background-color: #121212; color: #e0e0e0; }
+.light-mode { background-color: #ffffff; color: #333333; }
+.container { max-width: 950px; margin: auto; }
+h1 { text-align: center; color: #3498db; margin: 20px 0; font-size: 26px; }
+.nav-bar { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 20px 0; }
+.nav-btn { text-decoration: none; padding: 10px 18px; background: #3498db; color: white; border-radius: 6px; font-weight: bold; font-size: 15px; display: inline-block; transition: 0.2s; }
+.nav-btn:hover { background: #2980b9; }
+.nav-btn.home-nav { background: #6c757d; }
+.nav-btn.home-nav:hover { background: #5a6268; }
+.nav-btn.disabled { background: #aaa; cursor: not-allowed; opacity: 0.5; }
+.done-btn { display: block; margin: 15px auto; padding: 10px 24px; border: 2px solid #2ecc71; background: transparent; color: #2ecc71; border-radius: 25px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+.done-btn.completed { background: #2ecc71; color: white; }
+.content-box { position: relative; margin: 20px 0; }
+pre { padding: 20px; border-radius: 8px; white-space: pre-wrap; word-break: break-word; overflow-x: auto; font-family: 'Consolas', 'Courier New', monospace; font-size: 15px; }
+.dark-mode pre { background: #1a1a1a; color: #f8f8f2; border: 1px solid #333; }
+.light-mode pre { background: #f8f9fa; color: #212529; border: 1px solid #e9ecef; }
+.copy-btn { position: absolute; top: 12px; right: 12px; padding: 6px 12px; font-size: 12px; background: #555; color: white; border: none; border-radius: 4px; cursor: pointer; opacity: 0.8; }
+.copy-btn:hover { opacity: 1; background: #2ecc71; }
+.theme-toggle-btn { display: block; margin: 20px auto; padding: 8px 16px; background: transparent; border: 1px solid #888; color: inherit; border-radius: 5px; cursor: pointer; }
+</style></head><body onload='initLesson()'>
+<div class='container'>
+<div class='nav-bar'><a class='nav-btn' href='lesson70.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../aws-bedrock-agent-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson72.html'>Bài sau ➡️</a></div><h1>Lesson 72 -- AIP-C01  --=AgentCore Identity -//</h1>
+<button id='doneButton' class='done-btn' onclick='toggleDone()'>Mark as Done ⚪</button>
+<div class='content-box'>
+<button class='copy-btn' onclick='copyContent()'>📋 Copy nội dung</button>
+<pre><code id='lessonCode'>
+
+	Ý tưởng cốt lõi: AgentCore Identity giải quyết bài toán làm thế nào để một AI Agent có danh tính, lấy được thông tin xác thực phù hợp và truy cập các hệ thống bên ngoài theo đúng quyền được cấp.
+
+	Khi một chatbot chỉ trả lời câu hỏi, nó thường không cần danh tính riêng để gọi hệ thống doanh nghiệp. Nhưng khi Agent có thể đọc email, truy vấn database, tạo ticket, gọi API hoặc cập nhật dữ liệu, câu hỏi quan trọng không còn là “LLM có gọi được tool không?” mà là:
+
+	“Agent nào đang thực hiện hành động này, đang hành động thay mặt ai, và được phép làm gì?”
+
+	Đây chính là vấn đề AgentCore Identity giúp giải quyết.
+
+
+
+# 1. Bản chất: Identity không chỉ là quản lý API key
+
+	Hãy tưởng tượng bạn xây dựng một AI Agent cho doanh nghiệp Nhật Bản. Nhân viên yêu cầu:
+	“Tìm hợp đồng của khách hàng A trên Google Drive, kiểm tra trạng thái thanh toán trong hệ thống nội bộ rồi cập nhật báo cáo.”
+
+	Agent cần truy cập ít nhất hai hệ thống, mỗi hệ thống có cơ chế xác thực và quyền truy cập khác nhau.
+
+
+
+	1. User identity — Danh tính người dùng
+		Ai yêu cầu Agent thực hiện công việc? Ví dụ: nhân viên A, đã đăng nhập qua Amazon Cognito.
+
+	2. Workload identity — Danh tính của Agent
+		Agent hoặc workload nào đang thực hiện hành động? Đây là danh tính kỹ thuật của workload, không phải danh tính của người dùng.
+
+	3. Credential — Thông tin xác thực
+		Agent cần OAuth access token, API key hoặc cơ chế xác thực phù hợp để gọi dịch vụ đích.
+
+	4. Authorization — Quyền hạn
+		Agent có được phép đọc tài liệu này, xem dữ liệu thanh toán hay cập nhật báo cáo không?
+
+
+
+	AgentCore Identity cung cấp cơ chế quản lý danh tính và credential cho workload AI, bao gồm việc hỗ trợ Agent truy cập dịch vụ AWS và dịch vụ bên thứ ba thay mặt người dùng. Nó không tự động cấp quyền nghiệp vụ không giới hạn cho Agent.
+
+
+
+Ví dụ để nhớ lâu
+	Hãy liên tưởng Agent là một nhân viên mới được tuyển vào công ty:
+	- Workload identity: thẻ nhân viên của chính nhân viên đó.
+	- User identity: khách hàng hoặc nhân viên mà Agent đang hỗ trợ.
+	- Credential: chìa khóa hoặc giấy thông hành để vào một hệ thống cụ thể.
+	- Authorization: quy định người đó được vào phòng nào và được làm gì trong phòng đó.
+
+
+
+
+# 2. Kiến trúc AgentCore Identity gồm những gì?
+
+	User / Client Application
+		Đăng nhập bằng Cognito, Okta hoặc IdP khác
+		
+				↓
+
+	AgentCore Runtime / Gateway
+		Xác thực yêu cầu đi vào (inbound authentication)
+
+
+
+	AgentCore Identity
+		 - Workload identity
+		 - Credential providers
+		 - Token Vault
+		 - IAM access controls
+
+
+	External services / APIs
+		Google Drive · Salesforce · GitHub · Enterprise API
+
+
+
+	Các thành phần trên không phải tất cả đều là một hệ thống xác thực độc lập. Chúng phối hợp để quản lý danh tính workload, kiểm soát việc truy cập credential và hỗ trợ xác thực outbound. Runtime và Gateway còn có thể tự động tạo workload identity trong các trường hợp triển khai tương ứng.
+
+
+# Bốn khái niệm cần phân biệt
+
+
+| Thành phần          | Vai trò chính                                                     | Không nên nhầm với                       |
+| ------------------- | ----------------------------------------------------------------- | ---------------------------------------- |
+| Workload identity   | Định danh Agent/workload                                          | User identity                            |
+| Credential provider | Cấu hình cơ chế lấy credential cho dịch vụ                        | Quyền nghiệp vụ trên mọi API             |
+| Token Vault         | Lưu trữ và quản lý credential/token theo cơ chế của dịch vụ       | Vector database hoặc agent memory        |
+| IAM policy          | Kiểm soát AWS principal được phép gọi các API tài nguyên Identity | Toàn bộ authorization logic của ứng dụng |
+
+
+	Lưu ý: IAM policy kiểm soát việc gọi API của AgentCore Identity; quyền của token trên hệ thống bên ngoài vẫn do dịch vụ đích và cơ chế cấp quyền tương ứng quyết định.
+
+
+
+# 3. Hai luồng quan trọng: Inbound và Outbound Identity
+
+	## Inbound authentication — Ai được gọi Agent?
+		Ví dụ nhân viên truy cập LINE bot hoặc web app của doanh nghiệp.
+			1. Nhân viên đăng nhập qua Amazon Cognito.
+			2. Client nhận JWT.
+			3. Request gửi JWT đến AgentCore Runtime hoặc Gateway.
+			4. Thành phần nhận request xác thực token theo cơ chế được cấu hình.
+			5. Nếu vượt qua kiểm tra, request mới được tiếp tục xử lý.
+
+
+
+	## Outbound authentication — Agent dùng quyền nào để gọi hệ thống khác?
+		Sau khi nhận yêu cầu, Agent cần truy cập Google Drive.
+			1. Agent xác định cần gọi tool truy vấn tài liệu.
+			2. AgentCore Identity hỗ trợ lấy credential phù hợp từ credential provider.
+			3. Nếu cần quyền truy cập thay mặt người dùng, hệ thống sử dụng cơ chế OAuth 2.0 phù hợp và người dùng có thể phải cấp consent.
+			4. Agent gọi Google Drive API bằng token thích hợp.
+			5. Google Drive vẫn kiểm tra quyền mà token đại diện.
+
+
+	Tài liệu AWS mô tả Runtime có thể xác thực JWT inbound, lấy thông tin iss và sub của người dùng, kết hợp với workload identity để tạo workload access token. Token này phục vụ việc truy cập các dịch vụ AgentCore; không phải access token dùng trực tiếp để gọi Google Drive.
+
+
+
+
+
+# 4. Hai kiểu cấp quyền outbound: User-delegated và Machine-to-machine 
+	Đây là khác biệt rất quan trọng khi thiết kế production.
+
+
+
+	## A. User-delegated access — Đại diện người dùng
+		Ví dụ: Agent đọc Google Drive của từng nhân viên theo quyền của chính nhân viên đó.
+		- Thường dùng OAuth 2.0 authorization code flow.
+		- Người dùng thực hiện consent theo yêu cầu của nhà cung cấp dịch vụ.
+		- Credential được gắn với tổ hợp danh tính workload và người dùng.
+		- Quyền truy cập phụ thuộc vào scope đã cấp và quyền thực tế của người dùng.
+		Phù hợp: Google Drive cá nhân, CRM theo tài khoản người dùng, hệ thống yêu cầu user consent.
+
+
+
+
+	## B. Machine-to-machine (M2M) — Workload gọi workload
+		Ví dụ: Agent chạy theo lịch, gọi API nội bộ để lấy số liệu vận hành mà không cần một nhân viên đăng nhập trực tiếp mỗi lần.
+		- Dùng OAuth client credentials hoặc cơ chế M2M được hệ thống đích hỗ trợ.
+		- Có thể dùng API key nếu đó là cơ chế được dịch vụ đích yêu cầu.
+		- Không cần user consent cho từng lần gọi, nhưng phải quản lý quyền của workload.
+		- Nên cấp scope tối thiểu và tách credential theo môi trường hoặc chức năng.
+
+
+	Không phải mọi API đều hỗ trợ OAuth, cũng không phải mọi OAuth provider đều hỗ trợ các flow giống nhau. Phải chọn cơ chế mà dịch vụ đích thực sự hỗ trợ. AgentCore Identity hỗ trợ quản lý các loại credential phù hợp với những mô hình tích hợp này.
+
+
+
+
+
+# 5. Phân biệt Workload Access Token và OAuth Access Token
+
+
+
+| Tiêu chí              | Workload Access Token                                     | OAuth Access Token                                     |
+| --------------------- | --------------------------------------------------------- | ------------------------------------------------------ |
+| Mục đích              | Cho phép Agent truy cập các dịch vụ AgentCore được hỗ trợ | Cho phép truy cập API của resource server              |
+| Nơi sử dụng           | AgentCore Identity và các dịch vụ AgentCore liên quan     | Google Drive, Salesforce hoặc API hỗ trợ OAuth         |
+| Phạm vi quyền         | Theo cơ chế truy cập dịch vụ AgentCore                    | Theo scope, audience và quyền mà hệ thống đích áp dụng |
+| Có thể thay thế nhau? | Không                                                     | Không                                                  |
+
+
+	Quy trình khi người dùng chưa cấp consent
+	Giả sử nhân viên lần đầu yêu cầu Agent đọc Google Drive.
+	1. Agent yêu cầu credential cho đúng workload và người dùng.
+	2. AgentCore Identity phát hiện chưa có OAuth credential hợp lệ cho tổ hợp đó.
+	3. Hệ thống có thể tạo URL để người dùng thực hiện OAuth consent.
+	4. Người dùng đăng nhập và cấp quyền.
+	5. Identity service lưu trữ, quản lý token theo cơ chế được hỗ trợ.
+	6. Các lần gọi sau có thể tái sử dụng token hợp lệ mà không cần consent lại mỗi lần.
+	Đây là mô hình user-delegated access; chi tiết thực tế còn phụ thuộc vào provider, OAuth flow, scope và thời hạn token.
+
+
+
+# 6. Production design: Multi-agent và least privilege
+
+	Giả sử hệ thống có ba Agent:
+	- ReportAgent: đọc dữ liệu vận hành.
+	- BillingAgent: truy vấn hóa đơn.
+	- AdminAgent: cập nhật cấu hình nhạy cảm.
+
+	Sai lầm thường gặp là cấp cho cả ba Agent quyền truy cập tất cả credential providers để tiện triển khai.
+
+
+Kiến trúc nên hướng tới:
+
+	IAM policies + Credential providers
+		Giới hạn Resource ARN cụ thể, tách quyền giữa các workload và kiểm tra quyền trên hệ thống đích.
+
+
+	AWS hướng dẫn giới hạn quyền truy cập credential providers bằng IAM policy, sử dụng resource ARN cụ thể thay vì wildcard * và cân nhắc tách workload identity cùng IAM role cho những Agent có nhu cầu khác nhau.
+
+
+
+# Trade-off thực tế
+
+
+| Yếu tố             | Tách identity và quyền chi tiết     | Dùng chung identity, quyền rộng   |
+| ------------------ | ----------------------------------- | --------------------------------- |
+| Security           | Tốt hơn, giới hạn phạm vi ảnh hưởng | Rủi ro cao khi Agent bị khai thác |
+| Vận hành           | Nhiều policy và cấu hình hơn        | Đơn giản ban đầu                  |
+| Khả năng kiểm toán | Dễ phân biệt trách nhiệm            | Khó truy nguyên hơn               |
+| Mở rộng            | Tốt khi có ranh giới chức năng rõ   | Dễ phình quyền theo thời gian     |
+
+
+	Không nên hiểu rằng phải tạo một workload identity cho mọi tool nhỏ. Tách theo ranh giới tin cậy, dữ liệu nhạy cảm, quyền và vòng đời vận hành. Tách quá mức cũng làm tăng chi phí quản lý và độ phức tạp.
+
+
+
+
+# Keywords thường gặp
+	- Workload identity: danh tính kỹ thuật của Agent.
+	- User-delegated access: truy cập dịch vụ thay mặt người dùng.
+	- M2M authentication: xác thực giữa các workload.
+	- Credential provider: cấu hình để lấy credential cho dịch vụ.
+	- Token Vault: quản lý credential/token.
+	- Least privilege: chỉ cấp quyền cần thiết.
+	- OAuth consent: người dùng đồng ý cấp quyền.
+	- JWT validation: xác minh token, issuer, chữ ký và thời hạn theo cấu hình.
+	- Credential provider scoping: giới hạn Agent được truy cập provider nào.
+
+
+
+
+# 8. Scenario kiểu Professional-level
+
+
+Một công ty Nhật Bản triển khai trợ lý AI cho 500 nhân viên. Agent chạy trên AgentCore Runtime và cần truy cập Google Drive của từng người dùng. Yêu cầu:
+	- Mỗi nhân viên chỉ được truy cập tài liệu mà họ có quyền.
+	- Không yêu cầu người dùng cấp consent trong mọi request.
+	- Credential phải được quản lý tập trung.
+	- Không được để Agent này lấy credential của Agent khác.
+	- Giảm tối đa việc tự xây dựng hệ thống quản lý token.
+
+
+	B. Dùng AgentCore Identity với workload identity, OAuth user-delegated access, token management và IAM policy giới hạn quyền truy cập provider.
+
+
+</code></pre>
+</div>
+<div class='nav-bar'><a class='nav-btn' href='lesson70.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../aws-bedrock-agent-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson72.html'>Bài sau ➡️</a></div><button class='theme-toggle-btn' onclick='toggleTheme()'>🌓 Đổi Giao Diện</button>
+</div>
+<script>
+const lessonKey = 'aws-bedrock-agent-learning-list_lesson71.html';
+function toggleTheme() {
+   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';
+   document.body.className = mode;
+   localStorage.setItem('theme', mode);
+}
+function toggleDone() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   if (isDone) {
+       localStorage.removeItem(lessonKey);
+   } else {
+       localStorage.setItem(lessonKey, 'done');
+   }
+   renderDoneStatus();
+}
+function renderDoneStatus() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   let btn = document.getElementById('doneButton');
+   if (isDone) {
+       btn.className = 'done-btn completed';
+       btn.innerText = 'Đã Hoàn Thành ✅';
+   } else {
+       btn.className = 'done-btn';
+       btn.innerText = 'Đánh dấu đã học ⚪';
+   }
+}
+function copyContent() {
+   let text = document.getElementById('lessonCode').innerText;
+   navigator.clipboard.writeText(text).then(function() {
+       alert('✅ Đã sao chép nội dung bài học!');
+   });
+}
+function initLesson() {
+   document.body.className = localStorage.getItem('theme') || 'dark-mode';
+   renderDoneStatus();
+   if (window.Prism) Prism.highlightAll();
+}
+</script></body></html>

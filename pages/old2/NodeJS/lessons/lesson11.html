@@ -1,0 +1,203 @@
+<html><head><title>Lesson 11 == Async/Await ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../NodeJS-learning.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 11 -- Async/Await -//</h1><pre>
+# Khái niệm  
+	
+	Async/await không làm thay đổi cách Node.js hoạt động (vẫn bất đồng bộ, không block main thread), mà chỉ làm code trông giống code đồng bộ hơn, giúp tránh "callback hell" và làm code dễ debug. Hãy tưởng tượng bạn viết code như đang đọc một câu chuyện tuyến tính, thay vì lồng ghép nhiều lớp callback hoặc then().
+
+
+# Cú pháp và Sử dụng Cơ bản
+
+	Async/await bao gồm hai từ khóa chính:
+
+		async: Đặt trước một hàm để biến nó thành hàm bất đồng bộ. Hàm async luôn trả về một Promise (dù bạn có return giá trị gì đi nữa).
+		
+		await: Chỉ dùng bên trong hàm async, nó "dừng" thực thi hàm cho đến khi Promise resolve (hoàn thành), rồi lấy giá trị resolve đó. Await không block toàn bộ chương trình – Node.js vẫn xử lý các task khác trong lúc chờ.
+
+
+
+	## Ví dụ Cơ bản: Async/Await đơn giản
+
+async function getData() {
+  console.log('Starting...');
+  const result = await someAsyncOperation();
+  console.log(`Result: ${result}`);
+  return result;
+}
+
+function someAsyncOperation() {
+  return new Promise(resolve => {
+    setTimeout(() => resolve('Operation completed'), 1000);
+  });
+}
+
+// Gọi hàm async
+getData().then(data => console.log('Final data:', data));
+
+
+
+	Starting...
+Result: Operation completed
+Final data: Operation completed
+
+
+	getData().then(): Vì getData trả về Promise, bạn có thể chain .then() để xử lý kết quả cuối cùng.
+
+
+	Insight chuyên sâu: Trong thực tế, async/await rất hữu ích cho các API call hoặc đọc file. Ví dụ, nếu không dùng await, bạn phải dùng .then() lồng nhau, làm code dài dòng. Async/await giúp code "phẳng" hơn, dễ đọc cho team lớn.
+
+
+
+
+	## Ví dụ Thực tế: Đọc File với Async/Await
+
+		fs.promises: Đây là phiên bản Promise của module fs (File System). Nếu dùng fs thông thường (callback-based), bạn phải convert sang Promise bằng util.promisify.
+		await fs.readFile(): Chờ đọc file hoàn tất, lấy nội dung dưới dạng string UTF-8.
+		Lợi ích: Code trông như đọc file đồng bộ, nhưng thực tế bất đồng bộ.
+
+
+
+
+# Xử Lý Lỗi với Try/Catch
+
+	Async/await cho phép dùng try/catch như code đồng bộ, thay vì .catch() lồng ghép. Đây là điểm mạnh so với Promises thuần.
+
+	## Ví dụ: Fetch Data với Error Handling
+
+
+async function fetchUserData() {
+  try {
+    const response = await fetch('https://api.example.com/users/1');
+    if (!response.ok) {
+      throw new Error(`HTTP error: ${response.status}`);
+    }
+    const user = await response.json();
+    console.log('User data:', user);
+    return user;
+  } catch (error) {
+    console.error('Error fetching user data:', error);
+    throw error; // Re-throw nếu cần propagate lỗi lên trên
+  }
+}
+
+// Gọi và catch ngoài
+fetchUserData().catch(error => {
+  console.log('Caught outside:', error.message);
+});
+
+
+
+	- try { ... }: Chứa code có thể throw lỗi (như fetch fail hoặc JSON parse error).
+	- throw new Error(): Tạo lỗi tùy chỉnh nếu response không OK (ví dụ: 404).
+	- catch (error) { ... }: Bắt mọi lỗi từ await (Promise reject).
+	- Kết hợp với .catch(): Bạn có thể catch ngoài hàm async nếu cần xử lý lỗi ở level cao hơn.
+
+	Insight: Trong production, luôn log lỗi chi tiết (sử dụng Winston hoặc Pino logger) và tránh lộ thông tin nhạy cảm cho client. Async/await làm error handling dễ hơn, nhưng nhớ rằng nếu không catch, lỗi sẽ propagate lên event loop và crash app nếu không handle uncaughtException.
+
+
+
+
+# Chạy Promises Song Song (Parallel)
+
+	Async/await mặc định chạy sequential (tuần tự), nhưng bạn có thể dùng Promise.all() để parallelize, cải thiện performance.
+
+	## Ví dụ: Sequential vs Parallel
+
+function fetchData(id) {
+  return new Promise(resolve => {
+    setTimeout(() => resolve(`Data for ID ${id}`), 1000);
+  });
+}
+
+// Sequential: ~3 giây
+async function fetchSequential() {
+  console.time('sequential');
+  const data1 = await fetchData(1);
+  const data2 = await fetchData(2);
+  const data3 = await fetchData(3);
+  console.timeEnd('sequential');
+  return [data1, data2, data3];
+}
+
+// Parallel: ~1 giây
+async function fetchParallel() {
+  console.time('parallel');
+  const results = await Promise.all([
+    fetchData(1),
+    fetchData(2),
+    fetchData(3)
+  ]);
+  console.timeEnd('parallel');
+  return results;
+}
+
+async function runDemo() {
+  console.log('Sequential:');
+  await fetchSequential();
+  console.log('Parallel:');
+  await fetchParallel();
+}
+
+runDemo();
+
+
+
+	- Sequential: Await từng cái một, tổng thời gian là tổng các delay (3s).
+	
+	- Parallel: Promise.all() chạy tất cả cùng lúc, await kết quả khi tất cả hoàn tất. Nếu một Promise reject, toàn bộ all() reject.
+	
+	- Insight: Trong API real-world, dùng parallel cho các fetch độc lập (như load user + posts + comments). Nhưng nếu có phụ thuộc (dependency), phải sequential. Để handle lỗi partial, dùng Promise.allSettled() (từ ES2020).
+
+
+
+
+# So Sánh Async/Await vs Promises vs Callbacks
+
+Pattern,Pros,Cons
+Callbacks,"- Đơn giản, hỗ trợ rộng rãi
+- Không cần hiểu Promise","- Callback hell (lồng ghép sâu)
+- Xử lý lỗi phức tạp (check error param)
+- Khó debug"
+Promises,"- Chain .then() dễ dàng
+- Xử lý lỗi tốt hơn (.catch())
+- Composable (kết hợp nhiều Promise)","- Vẫn cần nesting cho flow phức tạp
+- Ít readable hơn async/await"
+Async/Await,"- Code sạch, giống synchronous
+- Try/catch dễ dùng
+- Debug dễ (stack trace rõ ràng)","- Phải hiểu Promise trước
+- Dễ nhầm lẫn block execution (thực tế không)"
+
+
+	Callbacks: Lồng ghép, dễ "pyramid of doom".
+	Promises: Chain .then(), nhưng vẫn hơi verbose.
+	Async/Await: Sạch sẽ nhất, lý tưởng cho code phức tạp.
+	
+	
+	Insight: Trong dự án lớn, async/await là standard. Nếu dùng callback legacy (như cũ fs.readFile), convert sang Promise bằng util.promisify. Tránh mix styles trong cùng module để code consistent.	
+	
+# 	Best Practices (Thực Hành Tốt Nhất)
+	
+	Dựa trên bài học và kinh nghiệm:
+	
+		1. Async luôn trả Promise: Nhớ await hoặc .then() khi gọi. Ví dụ: async function() { return 'Hi'; } trả Promise<'Hi'>, không phải string. 
+		
+		2. Sử dụng Promise.all cho parallel: Tránh sequential không cần thiết để optimize speed.
+	
+		3. Luôn handle lỗi: Try/catch hoặc .catch(). Unhandled rejection có thể crash app (Node.js warn từ v15).
+	
+		4. Tránh mix callback với async: Convert callback functions sang Promise. Ví dụ với fs:
+		
+			const util = require('util');
+			const fs = require('fs');
+			const readFile = util.promisify(fs.readFile);
+			async function read() {
+			const data = await readFile('file.txt', 'utf8');
+			}	
+			
+		5. Giữ hàm async focused: Mỗi hàm async làm một việc (Single Responsibility Principle).
+		
+		6.Top-level await (Node.js >=14.8): Trong ESM (.mjs), bạn có thể await ngoài hàm async, ví dụ import dynamic.
+
+		Insight thêm: Trong performance-critical app, theo dõi async context với Async Hooks (perf_hooks). Tránh await trong loop lớn (dùng Promise.all với map). Test async code với Jest/Mocha, dùng await trong test cases.
+
+
+
+</pre><a id='backBottom' href='../NodeJS-learning.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

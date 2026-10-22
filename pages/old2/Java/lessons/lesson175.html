@@ -1,0 +1,162 @@
+<html><head><title>Lesson 175 == Phaser ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 175 -- Phaser -//</h1><pre>
+# 1. Khái niệm
+
+	Phaser = một barrier đa pha (multi-phase barrier).
+	
+	Khác với CyclicBarrier: số thread (parties) có thể thay đổi động (register/deregister).
+	
+	Hỗ trợ nhiều phase liên tiếp, mỗi phase kết thúc khi tất cả registered parties gọi arrive().
+	
+	👉 Có thể tưởng tượng Phaser = CyclicBarrier 2.0 + CountDownLatch 2.0.
+
+Phaser phaser = new Phaser(int parties); // khởi tạo với số parties ban đầu
+
+phaser.register();     // thêm một party (dynamic)
+phaser.bulkRegister(n); // thêm nhiều party
+phaser.arrive();       // báo đã xong phase, KHÔNG chờ
+phaser.arriveAndAwaitAdvance(); // báo xong phase + chờ các party khác
+phaser.arriveAndDeregister();   // báo xong và rút khỏi phaser
+phaser.getPhase();     // phase hiện tại
+
+
+
+
+# 3. Ví dụ cơ bản
+
+Phaser phaser = new Phaser(3); // 3 parties
+
+for (int i = 0; i < 3; i++) {
+    final int id = i;
+    new Thread(() -> {
+        for (int phase = 0; phase < 3; phase++) {
+            System.out.println("Thread " + id + " working in phase " + phase);
+            try { Thread.sleep((long)(Math.random() * 1000)); } catch (InterruptedException e) {}
+            phaser.arriveAndAwaitAdvance(); // đồng bộ
+        }
+    }).start();
+}
+
+
+	Tất cả threads hoàn thành phase 0 → advance phase 1.
+	Tất cả hoàn thành phase 1 → advance phase 2.
+	Cứ thế, multi-phase synchronization.
+	Tất cả threads hoàn thành phase 0 → advance phase 1.
+	Tất cả hoàn thành phase 1 → advance phase 2.
+	Cứ thế, multi-phase synchronization.
+
+
+# 4. So với CountDownLatch / CyclicBarrier
+
+| Feature         | CountDownLatch | CyclicBarrier       | Phaser                  |
+| --------------- | -------------- | ------------------- | ----------------------- |
+| Use once        | ✔              | ❌                   | ❌                       |
+| Reusable        | ❌              | ✔                   | ✔ (multi-phase)         |
+| Parties fixed   | ✔              | ✔                   | ❌ (register/deregister) |
+| Barrier action  | ❌              | ✔                   | ✔ (via `onAdvance()`)   |
+| Multi-phase     | ❌              | ✔ (reuse per cycle) | ✔ (phase counter)       |
+| Dynamic parties | ❌              | ❌                   | ✔                       |
+
+	👉 Nếu số thread thay đổi, hoặc có nhiều phase phức tạp → Phaser là lựa chọn duy nhất.
+
+
+# 5. Hook nâng cao – onAdvance
+
+	Bạn có thể override:	
+
+Phaser phaser = new Phaser(3) {
+    @Override
+    protected boolean onAdvance(int phase, int registeredParties) {
+        System.out.println("Phase " + phase + " completed, parties: " + registeredParties);
+        return registeredParties == 0; // return true → terminate
+    }
+};
+
+	onAdvance được gọi khi tất cả parties hoàn thành 1 phase.
+	Nếu trả về true → Phaser terminate (không dùng được nữa).
+	Đây là cách định nghĩa termination condition.
+
+
+# 6. Use cases senior-level
+
+	- Iterative algorithms với dynamic thread pool
+		Ví dụ: simulation mà số agent thay đổi (một số join/leave).
+
+	- Staged pipelines 
+		Data processing nhiều stage, mỗi stage = 1 phase.
+
+	- Testing / benchmark 
+		Start đồng thời nhiều thread, rồi repeat nhiều vòng test.
+
+	- Replace CyclicBarrier in real systems 
+		Khi thread pool reuse thread, hoặc số lượng worker không cố định.
+
+
+
+# 7. Pitfalls & Best practices
+
+	- Thread bị treo vì không deregister 
+		Nếu thread kết thúc mà không gọi arriveAndDeregister() → Phaser vẫn chờ → deadlock.
+
+	- onAdvance blocking 
+		Cũng như CyclicBarrier, không được block nặng trong onAdvance.
+
+	- Phaser termination 
+		Khi terminated → tất cả await trả về ngay, cần kiểm tra isTerminated().
+
+	- Memory visibility
+		Giống barrier khác, khi phase advance → đảm bảo happens-before giữa các phase.
+
+
+# 8. Senior insight: hiệu năng
+
+	Phaser implement bằng CAS + spinning trước khi park → performance tốt khi số phase ngắn.
+	Nhưng overhead lớn hơn CountDownLatch hoặc CyclicBarrier nếu chỉ cần 1 lần sync.
+	Rule of thumb:
+		- One-shot event → CountDownLatch.
+		- Fixed parties, nhiều vòng → CyclicBarrier.
+		- Dynamic parties, nhiều vòng → Phaser.
+
+
+# 9. Ví dụ nâng cao – Worker pool
+
+
+Phaser phaser = new Phaser(1); // register main
+
+for (int i = 0; i < 5; i++) {
+    phaser.register();
+    new Thread(() -> {
+        while (!phaser.isTerminated()) {
+            try {
+                // work...
+                Thread.sleep(500);
+            } catch (InterruptedException e) {}
+            phaser.arriveAndAwaitAdvance();
+        }
+    }).start();
+}
+
+// main thread waits 3 phases
+for (int i = 0; i < 3; i++) {
+    phaser.arriveAndAwaitAdvance();
+}
+phaser.forceTermination();
+
+Main + workers chạy đồng bộ 3 vòng, rồi main terminate phaser.
+
+
+# 10. Mindset senior
+
+	Phaser không chỉ là barrier, mà là framework cho đồng bộ nhiều vòng với dynamic membership.
+	
+	Nó ít được dùng vì khó hiểu, nhưng trong distributed simulation, game engine, hoặc workflow pipeline → rất mạnh.
+	
+	Khi thấy CountDownLatch + reset + dynamic thread hack code → hãy thay bằng Phaser.
+
+
+	CountDownLatch = fire-once gate.
+	CyclicBarrier = fixed-party rendezvous, multi-use.
+	Phaser = multi-phase, dynamic-party rendezvous, mạnh nhất nhưng cũng phức tạp nhất.
+
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

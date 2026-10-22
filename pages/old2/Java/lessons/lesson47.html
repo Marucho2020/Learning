@@ -1,0 +1,100 @@
+<html><head><title>Lesson 47 == Random Access ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 47 -- Random Access -//</h1><pre># Khái niệm  
+	RandomAccess trong Java là một interface trong Java Collections Framework dùng để chỉ những lớp danh sách (list) hỗ trợ việc truy cập đến các phần tử theo index một cách nhanh chóng, không phụ thuộc vào cấu trúc dữ liệu bên trong. Điều này đặc biệt quan trọng khi làm việc với các cấu trúc dữ liệu bên trong. Điều này đặc biệt quan trọng khi làm việc với các cấu trúc dữ liệu như mảng, nơi bạn có thể truy cập trực tiếp bất kỳ bằng phần tử nào bằng chỉ số. 
+
+	RandomAccess là một MAKER INTERFACE (giao diện đánh dấu) trong java.util có nghĩa là nó không chứa phương thức nào cần phải thực hiện mà chỉ đơn giản đánh dấu các lớp List hỗ trợ truy xuất nhanh (constant time access) đến các phần tử của list bằng index 
+	
+	## Cấu trúc hỗ trợ RandomAccess : 
+		Ví dụ , array trong java hoặc ArrayLisst đều hỗ trợ truy cập nhanh tới các phần tử thông qua chỉ số. Còn các cấu trúc như LinkedList không hỗ trợ, vì phải đi qua từng phần tử để đến mục tiêu(dẫn đến độ phức tạp tuyến tính O(n))
+		
+		
+# Các implements class của RandomAccess (Các lớp triển khai của RandomAccess)
+
+	Các lớp List triển khai RandomAccess đều có thể truy cập phần tử bất kỳ trong danh sách với thời gian ổn định(O(1)). Một số lớp phổ biến: 
+		
+		## ArrayList 
+			Lớp này hỗ trợ RandomAccess vì nó sử dụng mảng bên trong để lưu trữ phần tử 
+			
+		## Vector  
+			Cũng hỗ trợ RandomAccess, nhưng vector ít được sử dụng trong các phiên bản mới của Java 
+			
+			CopyOnWriteArrayList : Lớp danh sách thread-safe dựa trên mảng hỗ trợ RandomAccess 
+			
+		Các lớp khác như LinkedList không triển khai RandomAccess, vì chúng không có khả năng truy xuất nhanh các phần tử qua chỉ số 
+
+# Tại sao cần RandomAccess 
+	Khi làm việc với các danh sách trong Java , nếu danh sách là RandomAccess, việc truy cập phần tử bằng chỉ số sẽ rất nhanh, tức là O(1). Tuy nhiên nếu danh sách không hỗ trợ RandomAccess, truy cập đến một phần tử qua chỉ số yêu cầu duyệt qua các phần tử trước đó, điều này sẽ có độ phức tạp O(n)
+	
+# Ví dụ về RandomAccess 
+
+	## Ví dụ 1: ArrayList (Hỗ trợ RandomAccess) 
+		import java.util.ArrayList;
+		import java.util.List;
+		
+		public class RandomAccessExample {
+			public static void main(String[] args) {
+				List<String> list = new ArrayList<>();
+				list.add("A");
+				list.add("B");
+				list.add("C");
+		
+				if (list instanceof RandomAccess) {
+					System.out.println("Danh sách này hỗ trợ RandomAccess");
+				} else {
+					System.out.println("Danh sách này không hỗ trợ RandomAccess");
+				}
+		
+				// Truy cập phần tử nhanh chóng
+				System.out.println(list.get(0)); // A
+			}
+		}
+		
+		
+	## Ví dụ 2: LinkedList (Không hỗ trợ RandomAccess)
+		import java.util.LinkedList;
+		import java.util.List;
+		
+		public class RandomAccessExample {
+			public static void main(String[] args) {
+				List<String> list = new LinkedList<>();
+				list.add("A");
+				list.add("B");
+				list.add("C");
+		
+				if (list instanceof RandomAccess) {
+					System.out.println("Danh sách này hỗ trợ RandomAccess");
+				} else {
+					System.out.println("Danh sách này không hỗ trợ RandomAccess");
+				}
+		
+				// Truy cập phần tử, nhưng sẽ chậm hơn so với ArrayList
+				System.out.println(list.get(0)); // A
+			}
+		}
+
+	
+	
+	
+# Tác dụng thực tế của RandomAccess 
+		
+		
+	RandomAccess đặc biệt hữu ích khi bạn cần thao tác với các danh sách lớn và yêu cầu hiệu suất cao khi truy cập phần tử theo chỉ số. Đối với ArrayList(hỗ trợ RandomAccess), khi bạn gọi get(index), việc truy xuất sẽ mất O(1) thời gian. Còn LinkedList(không hỗ trợ RandomAccess) , truy xuất phần tử phải duyệt qua từng node, dẫn đến độ phức tạp O(n)
+	
+# Phương thức ListIterator và RandomAccess 
+	Nếu bạn muốn duyệt qua các phần tử của một danh sách mà không phải phụ thuộc vào RandomAccess, bạn có thể sử dụng ListIterator, một công cụ linh hoạt để duyệt qua danh sách. Tuy nhiên khi danh sách hỗ trợ RandomAccess, bạn có thể tối ưu hóa việc duyệt phần tử bằng cách sử dụng chỉ số thay vì phải đi qua tất cả các phần tử như trong trường hợp của LinkedList 	
+	
+# Hiệu suất 
+	Sử dụng ArrayList : 
+		Khi cần truy cập nhiều phần tử ngẫu nhiên(random access) với hiệu suất cao, bạn nên sử dụng ArrayList thay vì LinkedList 
+		
+	Sử dụng LinkedList : 
+		Khi bạn cần thực hiện các thao tác chèn, xóa phần tử ở đầu hoặc giữa danh sách nhiều hơn là chỉ truy cập qua chỉ số, LinkedList sẽ là lựa chọn hợp lý, vì thao tác chèn và xóa phần tử trong LinkedList có độ phức tạo O(1), trong khi ArrayList lại cần phải di chuyển các phần tử .  
+		
+		
+# Tóm lại  
+	RandomAccess là một giao diện đánh dấu cho các danh sách(List) hỗ trợ truy cập phần tử nhanh chóng bằng chỉ số(O(1)) 
+	ArrayList, Vector , và CopyOnWriteArrayList hỗ trợ RandomAccess 
+	LinkedList không hỗ trợ RandomAccess, và truy cập phần tử nó sẽ có độ phức tạp O(n)
+	Sử dụng ArrayList nếu cần truy cập nhanh các phần tử, và LinkedList nếu cần hiệu quả lớn hơn với các thao tác thêm, xóa phần tử  
+	
+	
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

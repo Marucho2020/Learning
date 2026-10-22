@@ -1,0 +1,169 @@
+<html><head><title>Lesson 27 == local components ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../vue-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 27 -- local components -//</h1><pre># Khái niệm 
+	Local components là các component được định nghĩa chỉ trong phạm vi của một Vue instance hoặc một component cha cụ thể, thay vì toàn cục như Vue.component.
+	
+	## lợi ích 
+		Giới hạn phạm vi: Chỉ có thể sử dụng trong Vue instance hoặc component cha nơi nó được định nghĩa, tránh xung đột tên và tăng tính đóng gói.
+		Tối ưu hóa: Giảm tải cho ứng dụng vì không cần đăng ký component toàn cục.
+		Bảo trì dễ hơn: Dễ quản lý trong các ứng dụng lớn khi chỉ sử dụng component ở nơi cần thiết.
+		
+		
+# 	2. Cách định nghĩa Local Components
+	- Local components được khai báo trong thuộc tính components của một Vue instance hoặc trong một component cha.
+
+	- Cú pháp:
+new Vue({
+  el: '#app',
+  components: {
+    'component-name': {
+      // Định nghĩa component
+      template: `...`,
+      data() { return { ... } },
+      methods: { ... }
+    }
+  }
+});
+
+	component-name: Tên component (thường dùng kebab-case, ví dụ: my-component). 
+	Component này chỉ có thể được sử dụng trong template của Vue instance hoặc component cha nơi nó được khai báo.
+
+# 3. Ví dụ cụ thể
+	Giả sử bạn muốn tạo một component cục bộ my-counter để hiển thị và tăng số đếm, chỉ sử dụng trong một Vue instance.
+	
+	## Bước 1: Định nghĩa Local Component 
+<script>
+new Vue({
+  el: '#app',
+  components: {
+    'my-counter': {
+      data() {
+        return {
+          count: 0
+        };
+      },
+      template: `
+        <div>
+          <p>Count: {{ count }}</p>
+          <button @click="count++">Increment</button>
+        </div>
+      `
+    }
+  }
+});
+</script>		
+
+	Component my-counter được định nghĩa trong thuộc tính components.
+	Nó có dữ liệu count và một nút để tăng giá trị.
+	
+	
+	## Bước 2: Sử dụng trong Template 
+	
+<div id="app">
+  <my-counter></my-counter>
+</div>	
+	<my-counter> chỉ có thể được sử dụng trong phạm vi <div id="app">, vì nó là component cục bộ của Vue instance này.
+
+
+# Kết quả 
+	Một giao diện hiển thị: Count: 0 với một nút. Mỗi lần nhấp nút, count tăng lên (1, 2, 3, ...).
+	Component my-counter không thể được sử dụng ở ngoài #app hoặc trong Vue instance khác.
+
+
+# 4. So sánh Local Components và Global Components 
+	## Global Components (dùng Vue.component)
+		Đăng ký bằng Vue.component('name', {...}).
+		Có thể sử dụng ở bất kỳ đâu trong ứng dụng. 
+			
+			
+		Ví dụ: 
+Vue.component('my-button', {
+  template: `<button>Click me</button>`
+});
+	my-button có thể được dùng trong bất kỳ template nào.
+	
+	
+	## Local Components
+		Đăng ký trong components của một Vue instance hoặc component cha.
+		Chỉ sử dụng được trong phạm vi đó.
+		Phù hợp khi component chỉ cần dùng ở một vài nơi cụ thể.
+		
+		
+	## 	Khi nào dùng gì? 
+		Global: Cho các component phổ biến, dùng nhiều nơi (ví dụ: nút, thẻ input tùy chỉnh).
+		Local: Cho các component chuyên biệt, chỉ dùng trong một phần cụ thể của ứng dụng (ví dụ: một form đặc thù).
+	
+	
+# 5. Ví dụ nâng cao	
+	Kết hợp nhiều local components và truyền dữ liệu qua props:
+	
+	## Định nghĩa nhiều Local Components 
+		
+<script>
+new Vue({
+  el: '#app',
+  data: {
+    message: 'Hello from parent'
+  },
+  components: {
+    'greeting-component': {
+      props: ['message'],
+      template: `<h3>{{ message }}</h3>`
+    },
+    'counter-component': {
+      data() {
+        return { count: 0 };
+      },
+      template: `
+        <div>
+          <p>Count: {{ count }}</p>
+          <button @click="count++">Increment</button>
+        </div>
+      `
+    }
+  }
+});
+</script>	
+	
+	
+	## Sử dụng trong Template 
+<div id="app">
+  <greeting-component :message="message"></greeting-component>
+  <counter-component></counter-component>
+</div>
+
+
+	## Kết quả
+greeting-component hiển thị: <h3>Hello from parent</h3>.
+counter-component hiển thị số đếm và nút tăng.
+Cả hai component chỉ hoạt động trong <div id="app">.
+
+
+
+# 6. Lưu ý quan trọng
+	Tên component: Nên dùng kebab-case (my-counter) để tránh nhầm lẫn với thẻ HTML.
+	Props và Events: Local components vẫn hỗ trợ đầy đủ props, $emit, và các tính năng khác như global components.
+	Single File Components (SFC): Trong các dự án lớn (dùng Vue CLI/Vite), local components thường được định nghĩa trong các file .vue riêng và import vào:
+<!-- Parent.vue -->
+<template>
+  <div>
+    <my-counter></my-counter>
+  </div>
+</template>
+<script>
+import MyCounter from './MyCounter.vue';
+export default {
+  components: {
+    MyCounter
+  }
+};
+</script>	
+Hiệu suất: Local components giúp giảm tải vì chỉ được đăng ký ở nơi cần, không như global components.
+
+
+# 7. Ứng dụng thực tế
+	Sử dụng local components trong ứng dụng lớn để:
+		- Tạo các thành phần giao diện chỉ dùng trong một trang cụ thể (ví dụ: form đăng nhập, bảng dữ liệu).
+		- Đóng gói logic và giao diện trong một phạm vi nhỏ, tránh xung đột.
+	Kết hợp với props và $emit để giao tiếp giữa component cha và con.
+
+
+</pre><a id='backBottom' href='../vue-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

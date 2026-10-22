@@ -1,0 +1,70 @@
+<html><head><title>Lesson 70 == java.base ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 70 -- java.base -//</h1><pre>
+# Khái niệm 
+	Trong Java 9, hệ thống module được giới thiệu (JPMS - Java Platform Module System), và java.base là module lõi của JDK 
+		- java.base chứa các API cơ bản nhất mà mọi ứng dụng Java cần 
+		- Tự động được import vào tất cả các module, không thể bị loại bỏ 
+		
+		➡ Không có java.base thì JVM không thể hoạt động 
+		
+# java.base chứa gì 
+		
+		Module java.base chứa các package cốt lõi như : 
+		
+			Package							Chức năng
+			java.lang					String, Math, Object, System, Thread...
+			java.util					Collections, List, Set, Map, Date, Optional...
+			java.io						Input/Output Streams, File, Reader/Writer...
+			java.nio					NIO (Non-blocking IO), Buffer, Charset...
+			java.net					Networking API (HTTP, URL, Socket)...
+			java.security				API bảo mật, mã hóa, hash...
+			java.time					Date/Time API (Java 8+)
+			java.math					BigInteger, BigDecimal (số lớn, số chính xác cao)
+
+
+		💡 Mọi class cơ bản của Java đều nằm trong java.base.
+
+
+# java.base hoạt động thế nào ? 
+	
+	🔹 a) không cần requires java.base 
+		- Khi tạo module, bạn không cần requires java.base vì nó được import mặc định  
+		
+				module mymodule {
+					requires java.sql;  // Chỉ cần khai báo các module khác ngoài java.base
+				}
+
+	
+	🔹 b) java.base không phụ thuộc vào module nào khác 
+		- Tất cả các module khác trong JDK đều phụ thuộc vào java.base 
+		- Nhưng java.base không phụ thuộc vào bất kỳ nhóm module nào khác 
+	
+	🔹 Ví dụ Dependency Tree của java.sql
+	
+			$ jdeps --module java.sql
+			java.sql -> java.base
+			java.sql -> java.logging
+
+			➡ java.sql cần java.base để hoạt động.
+
+
+# Tại sao  java.base quan trọng trong hệ thống lớn 
+	
+	## ✅ Giảm kích thước ứng dụng 
+		- Trước Java 9 , tất cả các JAR của JDK đều được nạp vào JVM 
+		- Giờ đây, nếu ứng dụng không cần java.desktop, ta có thể bỏ module đó 
+		
+	## ✅ Tăng bảo mật và kiểm soát 
+		- Trước đây, Java không thể kiểm soát code nào được truy cập vào package nào 
+		- Bây giờ, module system ngăn chặn truy cập trái phép giữa các phần của ứng dụng 
+	
+	## ✅ Tối ưu hóa JVM và ứng dụng AI , Microservice 
+		- Trong ứng dụng AI, Spring Boot , gRPC, Microservices, ta chỉ cần nạp các module cần thiết 
+		- Hệ thống nhẹ hơn, tốc độ nhanh hơn 
+
+
+5. Kết luận
+🚀 java.base là module lõi của Java, không thể bị loại bỏ.
+💡 Nắm vững java.base giúp tối ưu hóa, bảo mật, và thiết kế hệ thống tốt hơn.
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

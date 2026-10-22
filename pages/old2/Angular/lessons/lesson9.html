@@ -1,0 +1,88 @@
+<html><head><title>Lesson 9 == Filters ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../angular-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 9 -- Filters -//</h1><pre># Khái niệm 
+	
+	Filters trong AngularJS là công cụ giúp định dạng, sắp xếp, lọc, chuyển đổi dữ liệu ngay khi hiển thị ra view.
+	Không thay đổi giá trị gốc của biến – chỉ thay đổi cách hiển thị ra giao diện.
+
+
+#📌 Cách dùng cơ bản 
+	
+	{{ expression | filter }}
+	
+	{{ expression | filter1 | filter2 }}
+
+
+
+# 🧰 Các filter phổ biến (built-in) 
+	
+	##  1 . uppercase – Chuyển thành chữ in hoa
+		{{ name | uppercase }}
+
+	## 2. lowercase – Chuyển thành chữ thường 
+		{{ name | lowercase }}
+
+
+	## 3. currency – Hiển thị dạng tiền tệ
+		{{ price | currency }}
+					// Kết quả: $123.45
+		
+		// hoặc 		
+		{{ price | currency:"¥" }}		 ->  ¥123.45 	
+
+	## 4. number – Định dạng số
+		{{ 1234.56789 | number:2 }} 	->  1,234.57
+
+
+	## 5. date – Hiển thị ngày tháng 
+		{{ today | date:"yyyy-MM-dd" }}		->  
+
+
+	## 6. filter – Lọc phần tử theo điều kiện 
+		<li ng-repeat="x in names | filter:'Jane'">{{ x }}</li>
+				→ Hiển thị các phần tử chứa từ "Jane" 
+				
+	## 	7. orderBy – Sắp xếp 		
+		<li ng-repeat="x in names | orderBy:'name'">{{ x.name }}</li>
+			
+				
+				
+# ⚠️ Filter dùng ở đâu? 
+
+	##  1. Trong biểu thức {{ ... }}:
+		{{ name | uppercase }}
+
+
+	## Trong directive như ng-repeat: 
+		<li ng-repeat="x in names | orderBy:'age'">{{ x.name }}</li>
+
+
+
+# 🧠 Custom Filter (viết filter riêng)
+	
+	Bạn có thể định nghĩa filter của chính mình:
+	
+	app.filter('reverse', function() {
+		return function(input) {
+			return input.split("").reverse().join("");
+		};
+		});
+
+
+	{{ "hello" | reverse }}		-> olleh
+	
+	
+	
+# 	💡 Best Practice
+
+| Việc làm                                    | Lý do                                               |
+| ------------------------------------------- | --------------------------------------------------- |
+| Dùng filter trong view để định dạng         | Đơn giản, rõ ràng                                   |
+| Không lạm dụng filter phức tạp trong view   | Nếu phức tạp → nên xử lý trong controller           |
+| Dùng `filter` + `orderBy` trong `ng-repeat` | Giúp người dùng tìm kiếm và sắp xếp dữ liệu dễ dàng |
+
+	
+	Filter là vũ khí mạnh trong AngularJS để xử lý dữ liệu khi hiển thị.
+	Rất tiện dụng với danh sách, chuỗi, số, ngày tháng...
+	Nếu logic quá phức tạp thì nên xử lý tại controller thay vì viết filter custom trong view.
+
+
+</pre><a id='backBottom' href='../angular-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

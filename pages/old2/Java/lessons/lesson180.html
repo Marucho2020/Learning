@@ -1,0 +1,82 @@
+<html><head><title>Lesson 180 == General-purpose Functional Interface  汎用関数インターフェース ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 180 -- General-purpose Functional Interface  汎用関数インターフェース -//</h1><pre>	
+# Khái niệm 
+	汎用 (はんよう / han’yō) = “phổ dụng, dùng chung, general-purpose”
+	関数インターフェース = “functional interface” (tức interface chỉ có đúng 1 abstract method – dùng cho lambda).
+
+→ Ghép lại: 汎用関数インターフェース = General-purpose Functional Interfaces in Java.
+
+
+	Java 8 giới thiệu package java.util.function với cả một họ functional interfaces “phổ dụng” mà ai cũng có thể tái sử dụng, thay vì tự định nghĩa interface riêng. Đây chính là 汎用関数インターフェース.
+
+
+
+# Một số nhóm chính: 
+
+	## Function<T, R> 
+	
+		- Đầu vào: T
+		- Đầu ra: R
+		- Dùng để chuyển đổi dữ liệu.
+
+
+	## Consumer<T>
+	
+		- Đầu vào: T
+		- Không trả về gì (void).
+		- Dùng để thực thi hành động có side-effect.	
+	
+	
+	
+	## Supplier<T> 
+	
+		Không đầu vào.
+		Trả về T.
+		Dùng để sinh ra dữ liệu.	
+			
+	
+	## Predicate<T>
+		Đầu vào: T
+		Trả về boolean.
+		Dùng để test điều kiện.
+	
+	
+	## UnaryOperator<T> và BinaryOperator<T>
+		- Phiên bản đặc biệt của Function nhưng input/output cùng kiểu.
+		- Dùng nhiều trong xử lý toán học, reduce, accumulate.
+	
+#3. Tại sao gọi là “汎用 (phổ dụng, dùng chung)”?
+
+	Trước Java 8, dev phải tự định nghĩa các interface như MyFilter, MyTransformer chỉ để truyền lambda.
+	
+	Sau Java 8, chỉ cần dùng mấy functional interfaces chuẩn → code thống nhất, giảm boilerplate.
+	
+	Các lib/framework (Spring, Reactor, Stream API…) đều dựa trên mấy interface này.
+
+
+# 4. Ý nghĩa ở level senior
+
+	Đây không chỉ là “lambda sugar” mà là cách Java chuẩn hóa mô hình lập trình hàm (functional programming model).
+
+	Khi hiểu đúng, bạn sẽ biết:
+
+		- Khi nào nên chọn Function vs Predicate.
+		- Cách compose chúng: andThen, compose, negate, and, or...
+		- Cách tận dụng với Stream API để biến code từ imperative → declarative
+	
+	Ở tầm kiến trúc: 汎用関数インターフェース cho phép bạn viết API mở rộng dễ hơn. Ví dụ:	
+
+	public <T, R> List<R> mapList(List<T> input, Function<T, R> mapper) {
+    return input.stream().map(mapper).toList();
+}
+
+
+
+汎用関数インターフェース = General-purpose Functional Interface trong Java.
+
+Nó là nhóm interface chuẩn (Function, Predicate, Supplier, Consumer, …) trong java.util.function.
+
+Giá trị: chuẩn hóa functional programming trong Java, giúp code ngắn gọn, tái sử dụng, dễ kết hợp.
+
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

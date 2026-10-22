@@ -1,0 +1,138 @@
+<html><head><title>Lesson 23 == Inner/Outer Product, ma trận mật độ (density matrix) ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../quantum-computing-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 23 -- Inner/Outer Product, ma trận mật độ (density matrix) -//</h1><pre>
+# 🧠 Mục tiêu bài học 
+	1. Hiểu rõ: 
+		Inner product (tích trong)
+		Outer product (tích ngoài)
+		Density matrix (ma trận mật độ)
+		
+	2. Biết cách tính toán bằng NumPy 
+	3. Biết ý nghĩa vật lý, đặc biệt là xác suất, trạng thái hỗn hợp và pure state 
+
+# 	1. ⚔️ Inner Product (Tích trong) 
+	## Định nghĩa:
+		Tích trong là phép nhân vector phức kiểu:
+			⟨ψ∣ϕ⟩=conjugate-transpose(ψ)⋅ϕ
+		Nó là một số phức, biểu thị xác suất chồng lấn (overlap) giữa hai trạng thái.
+		
+		
+	## 	Trong Qubit: 
+
+import numpy as np
+
+ket0 = np.array([[1], [0]])
+ket1 = np.array([[0], [1]])
+
+bra0 = ket0.T.conj()  # ⟨0|
+bra1 = ket1.T.conj()  # ⟨1|
+
+inner = bra0 @ ket0  # ⟨0|0⟩ = 1
+print(inner)  # [[1]]
+
+
+	## Kết luận: 
+		⟨0∣0⟩\=1
+		⟨0∣0⟩\= 0 -> trực giao  (orthogonal) 
+		
+
+# 2. 🌐 Outer Product (Tích ngoài) 
+	Định nghĩa: 
+			∣ψ⟩⟨ϕ∣
+			
+	→ tạo ma trận từ hai vector: một cột, một hàng.
+
+	## Ví dụ: 
+ket0 = np.array([[1], [0]])
+bra1 = ket1.T.conj()
+
+outer = ket0 @ bra1  # |0⟩⟨1|
+print(outer)
+
+
+Kết quả:
+[[0, 1],
+ [0, 0]]
+
+
+	## Ứng dụng: 
+		Outer product tạo ra các ma trận chiếu (projector) như:
+		∣0⟩⟨0∣	= [[1 , 0 ], [0,0]]
+		
+		
+# 🧊 Density Matrix (Ma trận mật độ)
+
+	# Định nghĩa:
+		Trạng thái lượng tử có thể mô tả bằng ma trận:
+				ρ=∣ψ⟩⟨ψ∣
+
+		→ Đối với pure state (trạng thái tinh khiết), density matrix là outer product chính nó.
+
+
+	Ví dụ:
+psi = np.array([[1/np.sqrt(2)], [1/np.sqrt(2)]])  # |+⟩
+rho = psi @ psi.T.conj()
+print(rho)
+		
+Kết quả: 
+[[0.5 0.5]
+ [0.5 0.5]]
+
+→ Đây là ma trận mật độ của trạng thái |+⟩.
+
+
+# 4. 💡 Pure State vs Mixed State
+| Loại trạng thái | Đặc điểm                            | Dạng density matrix |                  |   |
+| --------------- | ----------------------------------- | ------------------- | ---------------- | - |
+| **Pure**        | Vector xác định, dạng outer product | (\rho =             | \psi⟩⟨\psi       | ) |
+| **Mixed**       | Xác suất phân phối nhiều trạng thái | (\rho = \sum p\_i   | \psi\_i⟩⟨\psi\_i | ) |
+	
+
+# 5. 🔍 Kiểm tra tính chất density matrix
+
+	Ma trận mật độ hợp lệ cần thoả:
+		1. Hermitian: p = p† 
+		2. Trace bằng 1: Tr(ρ) = 1
+		3. Positive semi-definite:  mọi giá trị riêng ≥ 0 
+		
+print("Trace =", np.trace(rho))
+print("Hermitian check =", np.allclose(rho, rho.T.conj()))
+eigvals = np.linalg.eigvals(rho)
+print("Eigenvalues =", eigvals)
+
+
+# 6. 🧪 Thực hành tổng hợp
+
+import numpy as np
+
+# Trạng thái |+⟩ = (|0⟩ + |1⟩)/√2
+ket_plus = np.array([[1], [1]]) / np.sqrt(2)
+
+# Outer product → density matrix
+rho = ket_plus @ ket_plus.T.conj()
+
+# Kiểm tra
+print("ρ =\n", rho)
+print("Trace =", np.trace(rho))
+print("Hermitian?", np.allclose(rho, rho.T.conj()))
+print("Eigenvalues =", np.linalg.eigvals(rho))
+
+
+
+# 7. 🔧 Ứng dụng trong Lập trình Lượng tử
+
+	Inner Product: tính xác suất, độ tương đồng giữa trạng thái.
+	Outer Product: tạo projector, gate conditional, biểu diễn trạng thái.
+	Density Matrix: mô tả nhiễu, khử đồng bộ, và các hệ lượng tử không tinh khiết
+
+
+# ✅ Tổng kết nhanh
+
+| Khái niệm      | Dùng để làm gì                              |
+| -------------- | ------------------------------------------- |
+| Inner Product  | So sánh, xác suất giữa các trạng thái       |
+| Outer Product  | Tạo ma trận từ vector, làm projector/gate   |
+| Density Matrix | Mô tả trạng thái lượng tử (cả pure & mixed) |
+| Pure / Mixed   | Phân biệt trạng thái tinh khiết và hỗn hợp  |
+
+
+
+</pre><a id='backBottom' href='../quantum-computing-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

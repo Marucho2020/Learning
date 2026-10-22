@@ -1,0 +1,123 @@
+<html><head><title>Lesson 5 == Biến var ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 5 -- Biến var -//</h1><pre># Khái niệm 
+		var là một TỪ KHÓA giúp khai báo biến cục bộ( local variable type interface) được giới thiệu từ Java 10. Nó giúp trình biên dịch  tự động suy luận kiểu dữ liệu của biến mà không cần lập trình viên khai báo tường minh 
+		
+	##!! Lưu ý quan trọng  
+		- var không phải kiểu dữ liệu, nó chỉ là một công cụ suy luận kiểu(type interface)
+		- Khi sử dụng var, trình biên dịch sẽ xác định kiểu dữ liệu dựa vào giá trị gán ban đầu. 
+		- var chỉ áp dụng cho biến cục bộ(local variables), không dùng được cho biến instance hoặc biến class 
+			-> Tức là chỉ được sử dụng trong nội bộ thân của một hàm để chống chế khi việc chưa xác định được chính xác kiểu dữ liệu của biến là gì khi khai báo mà cứ đặt tạm là var để cho trình biên dịch có thể biên dịch được
+		
+		- Khi sử dụng để khai báo thay thế cho các kiểu dữ liệu Collection dài dòng như List<String> list = List.of(...)
+# Cú pháp  
+	var variableName = value; 
+	
+	Trình biên dịch tự động xác định kiểu dữ liệu của variableName dựa vào value 
+	
+	
+	## Ví dụ 1: khai báo cơ bản  
+	public static void main(String[] args) {
+        var number = 10;  // Kiểu int
+        var name = "Java"; // Kiểu String
+        var price = 19.99; // Kiểu double
+
+        System.out.println(number + " is an " + ((Object) number).getClass().getSimpleName());
+        System.out.println(name + " is a " + ((Object) name).getClass().getSimpleName());
+        System.out.println(price + " is a " + ((Object) price).getClass().getSimpleName());
+    }
+		
+
+# 3. var và các kiểu dữ liệu phức tạp  (Collection, object )
+
+	## Ví dụ 2: Sử dụng với danh sách (List )
+		// khởi tạo một List mà không cần phải sử dụng cú pháp khai báo Collection dài dòng  
+		var list = List.of("Java" , "Python" , "C++");
+		
+		// Sử dụng biến var để duyệt vòng lặp không cần quan tâm kiểu dữ liệu của các item là gì 
+		for(var item : list){
+			System.out.println(item);
+		}
+
+
+	## Ví dụ 3 : Sử dụng với Map 
+		// khởi tạo một map sử dụng biến var Kiểu Map<Integer, String>
+		var map = Map.of(1, "One", 2, "Two", 3, "Three"); 
+
+		//Duyệt qua từng phần tử của map và sử dụng biến var cho từng item 
+		for(var entry : map.entrySet()){
+			System.out.println(entry.getKey() + " : " + entry.getValue());
+		}
+		
+# 4 . var có thể và không thể sử dụng ở đâu  		
+
+
+			Được phép sử dụng								Không được phép sử dụng
+			
+			Biến cục bộ trong phương thức					Biến instance (class fields)
+			Biến trong vòng lặp (for, while)				Tham số của phương thức
+			Biến trong khối lệnh {}							Kiểu trả về của phương thức
+			Trong try-with-resources						Trong interface
+
+
+
+	## Ví dụ không hợp lệ 
+	public class Test {
+		var name = "John"; // ❌ Lỗi: Không thể dùng var cho biến instance
+	}
+	
+	void sayHello(var name) { // ❌ Lỗi: Không thể dùng var trong tham số
+        System.out.println("Hello " + name);
+    }
+	
+
+5. Các giới hạn và lưu ý khi dùng var 
+
+	## var yêu cầu phải có giá trị khởi tạo,
+		var x; // ❌ Lỗi: Không thể suy luận kiểu nếu không có giá trị ban đầu
+	
+	
+	## var không thể sử dụng với null , không thể gán cho giá trị biến null 
+		var data = null; // ❌ Lỗi: Trình biên dịch không thể xác định kiểu của `null`
+		String data = null; // ✅ Hợp lệ
+	
+	
+	## var không thể dùng với kiểu mơ hồ(lambda hoặc method reference)
+		var function = () -> System.out.println("Hello"); // ❌ Lỗi: Không xác định được kiểu của lambda
+
+
+# Ưu điểm và nhược điểm của var 
+	
+✅ Ưu điểm
+✔ Giảm bớt sự lặp lại trong khai báo biến
+✔ Cải thiện khả năng đọc mã nguồn (đặc biệt với danh sách, map, generics)
+✔ Giúp mã nguồn linh hoạt hơn, vì kiểu dữ liệu có thể thay đổi khi logic thay đổi
+
+❌ Nhược điểm
+✘ Khó đọc khi làm việc với kiểu phức tạp (đặc biệt với nhiều lập trình viên mới)
+✘ Không thể dùng trong mọi trường hợp (không dùng được cho biến instance, tham số, kiểu trả về)
+✘ Có thể gây khó hiểu nếu sử dụng không hợp lý	
+
+
+
+#7 Khi nào nên dùng và không nên dùng var 
+	
+Nên dùng var khi...										Không nên dùng var khi...
+Khi kiểu dữ liệu hiển nhiên và dễ hiểu					Khi kiểu dữ liệu quá phức tạp và khó đoán
+Khi làm việc với danh sách, map, stream					Khi khai báo biến instance hoặc biến class
+Khi muốn code gọn hơn và dễ đọc							Khi làm việc với API công khai hoặc cần kiểu tường minh
+	
+
+#8. So sánh var với final val 
+	
+	## Bạn có thể kết hợp var với final để biến trở thành hằng số , điều này tương tự khai báo biến thông thường nhưng ngắn gọn hơn 
+		final var PI = 3.1415; // Không thể thay đổi giá trị của PI sau khi gán
+
+
+# 9 Tổng kết   
+
+	- var là một công cụ giúp trình biên dịch tự động suy luận kiểu dữ liệu dựa vào giá trị gán ban đầu.
+	- Chỉ áp dụng cho biến cục bộ, không dùng được với biến instance, tham số phương thức hoặc kiểu trả về.
+	- Giúp code ngắn gọn, dễ đọc, nhưng có thể gây khó hiểu nếu lạm dụng.
+	- Không thay đổi cách hoạt động của Java, chỉ là cách viết ngắn gọn hơn.
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

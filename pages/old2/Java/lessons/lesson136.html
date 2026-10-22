@@ -1,0 +1,165 @@
+<html><head><title>Lesson 136 == StampedLock ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 136 -- StampedLock -//</h1><pre>
+# Khái niệm 
+	StampedLock – một trong những cơ chế đồng bộ hiện đại nhất trong Java kể từ Java 8, được thiết kế tối ưu cho hệ thống đa luồng tốc độ cao, với mục tiêu thay thế ReentrantReadWriteLock.
+
+
+# 🔧 1. Vấn đề với ReentrantReadWriteLock 
+	
+	ReentrantReadWriteLock chia khóa làm hai loại:
+		- Read lock (chia sẻ): nhiều thread cùng đọc
+		- Write lock (độc quyền): chỉ 1 thread ghi
+
+
+	## Nhược điểm: 
+		- Chi phí lớn để lấy lock
+		- Khi nhiều thread đọc + 1 thread ghi, lock upgrade rất tốn kém
+		- Không hỗ trợ lock-free optimistic read
+		- Không hỗ trợ downgrade thông minh
+
+
+# ✅ 2. StampedLock – thiết kế hiện đại, high-performance
+
+	Không chỉ có read/write lock, mà còn có:
+	
+		✔️ Optimistic read (không block, không lock)
+		✔️ Precise validation sau khi đọc
+		✔️ Stamp (long token) để theo dõi trạng thái
+		✔️ Support lock upgrade/downgrade thủ công
+
+
+
+# 🧱 3. Cấu trúc và cách hoạt động 
+
+StampedLock lock = new StampedLock();
+long stamp = lock.tryOptimisticRead();
+
+if (lock.validate(stamp)) {
+    // dữ liệu không bị ghi trong lúc đọc
+} else {
+    // fallback: lock.readLock()
+}
+
+
+
+	## Các loại lock: 
+| Lock                  | Blocking?      | Shared? | Khi dùng                                         |
+| --------------------- | -------------- | ------- | ------------------------------------------------ |
+| `writeLock()`         | ✅ block        | ❌       | Khi update dữ liệu                               |
+| `readLock()`          | ✅ block        | ✅       | Khi đọc dữ liệu và cần đảm bảo không thay đổi    |
+| `tryOptimisticRead()` | ❌ non-blocking | ✅       | Đọc nhanh và kiểm tra sau                        |
+| `validate(stamp)`     | ❌              | ❌       | Kiểm tra xem dữ liệu có bị ghi sau khi đọc không |
+	
+
+
+# 🎯 4. Ví dụ dùng StampedLock chuẩn hóa
+
+class Point {
+    private double x, y;
+    private final StampedLock sl = new StampedLock();
+
+    // Ghi
+    void move(double deltaX, double deltaY) {
+        long stamp = sl.writeLock();
+        try {
+            x += deltaX;
+            y += deltaY;
+        } finally {
+            sl.unlockWrite(stamp);
+        }
+    }
+
+    // Đọc với optimistic lock
+    double distanceFromOrigin() {
+        long stamp = sl.tryOptimisticRead();
+        double currentX = x, currentY = y;
+        if (!sl.validate(stamp)) {
+            stamp = sl.readLock();
+            try {
+                currentX = x;
+                currentY = y;
+            } finally {
+                sl.unlockRead(stamp);
+            }
+        }
+        return Math.sqrt(currentX * currentX + currentY * currentY);
+    }
+}
+
+	➡ Nếu không có ghi xảy ra → tránh được chi phí lock
+	➡ Nếu ghi xảy ra → fallback sang read lock
+
+
+# 🧠 5. Khác biệt với ReentrantReadWriteLock
+
+| Tính năng              | `StampedLock`                                | `ReentrantReadWriteLock`      |
+| ---------------------- | -------------------------------------------- | ----------------------------- |
+| Optimistic read        | ✅ Có                                         | ❌ Không                       |
+| Downgrade write → read | ✅ Có (manual)                                | ✅                             |
+| Upgrade read → write   | ⚠️ Không trực tiếp (phải release & lock lại) | ✅ Có                          |
+| Lock reentrancy        | ❌ Không reentrant                            | ✅ Có                          |
+| Performance            | ✅ Cao hơn                                    | ❌ Chậm hơn khi contention lớn |
+| API phức tạp           | ⚠️ Cao                                       | Trung bình                    |
+
+
+
+# ⚠️ 6. Lưu ý quan trọng (cạm bẫy senior)
+
+	##❌ Không reentrant:
+	
+long s1 = lock.writeLock();
+long s2 = lock.writeLock(); // 💥 Deadlock – không tự động reentrant như `ReentrantLock`
+
+	## ⚠️ Phải luôn quản lý stamp thủ công:
+
+	Nếu bạn quên unlockRead(stamp) hoặc dùng sai stamp, hậu quả là:
+
+		- Deadlock
+		- Lost lock
+		- Race condition không rõ nguyên nhân
+
+	❌ Không dùng StampedLock cho các use-case đơn giản:
+	→ Nó phức tạp, nên chỉ phù hợp cho các hệ thống yêu cầu cực cao về hiệu năng và concurrency
+
+
+
+# 🧪 7. Khi nào nên dùng StampedLock? 
+| Use case                                      | Có dùng `StampedLock`?                                       |
+| --------------------------------------------- | ------------------------------------------------------------ |
+| Cache nhiều thread đọc, ít thread ghi         | ✅ Rất phù hợp                                                |
+| Đếm, đo, log, mà muốn tránh lock              | ✅ Dùng optimistic read                                       |
+| Bài toán cần upgrade lock (đọc → ghi)         | ⚠️ Cân nhắc – không dễ dùng                                  |
+| Logic phức tạp, cần nhiều thread nesting lock | ❌ Không – dùng `ReentrantReadWriteLock` hoặc `ReentrantLock` |
+| Dùng trong cấu trúc dữ liệu custom concurrent | ✅ (ví dụ như ConcurrentLinkedTree)                           |
+
+
+# 🔧 8. Bonus: Mẫu nâng cấp lock đúng cách
+
+long stamp = lock.readLock();
+try {
+    if (needWrite()) {
+        long ws = lock.tryConvertToWriteLock(stamp);
+        if (ws != 0L) {
+            stamp = ws;
+            // now it's write lock
+        } else {
+            lock.unlockRead(stamp);
+            stamp = lock.writeLock(); // slow path
+        }
+    }
+    // do stuff
+} finally {
+    lock.unlock(stamp);
+}
+
+
+
+# ✅ Tổng kết
+
+	- StampedLock = hiện đại, hiệu năng cực cao, tối ưu cho tình huống read nhiều, write ít
+	- Nó đưa ra một level điều khiển lock thấp hơn, phù hợp cho hệ thống real-time, low-latency
+	- Phải quản lý logic và lifecycle thủ công
+	- Không phù hợp với beginner hoặc code đơn giản
+	- Nếu dùng đúng cách → outperform mọi lock trong Java
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

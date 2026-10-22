@@ -1,3 +1,641 @@
-<html><head><title>Lesson 61 == Lộ trình ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 61 -- Lộ trình -//</h1><pre># Lộ trình 100 ngày học AIP-C01 — Trọng tâm: Kiến trúc AI hiện đại & Agentic AI
+<!DOCTYPE html><html lang='vi'><head><meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0'>
+<title>Lesson 61 -- AIP-C01  --=Citation & Source Attribution trong RAG response -//</title>
+<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css'>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js'></script>
+<script id='MathJax-script' async src='https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'></script>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; margin: 0; padding: 20px; transition: 0.3s; }
+.dark-mode { background-color: #121212; color: #e0e0e0; }
+.light-mode { background-color: #ffffff; color: #333333; }
+.container { max-width: 950px; margin: auto; }
+h1 { text-align: center; color: #3498db; margin: 20px 0; font-size: 26px; }
+.nav-bar { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 20px 0; }
+.nav-btn { text-decoration: none; padding: 10px 18px; background: #3498db; color: white; border-radius: 6px; font-weight: bold; font-size: 15px; display: inline-block; transition: 0.2s; }
+.nav-btn:hover { background: #2980b9; }
+.nav-btn.home-nav { background: #6c757d; }
+.nav-btn.home-nav:hover { background: #5a6268; }
+.nav-btn.disabled { background: #aaa; cursor: not-allowed; opacity: 0.5; }
+.done-btn { display: block; margin: 15px auto; padding: 10px 24px; border: 2px solid #2ecc71; background: transparent; color: #2ecc71; border-radius: 25px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+.done-btn.completed { background: #2ecc71; color: white; }
+.content-box { position: relative; margin: 20px 0; }
+pre { padding: 20px; border-radius: 8px; white-space: pre-wrap; word-break: break-word; overflow-x: auto; font-family: 'Consolas', 'Courier New', monospace; font-size: 15px; }
+.dark-mode pre { background: #1a1a1a; color: #f8f8f2; border: 1px solid #333; }
+.light-mode pre { background: #f8f9fa; color: #212529; border: 1px solid #e9ecef; }
+.copy-btn { position: absolute; top: 12px; right: 12px; padding: 6px 12px; font-size: 12px; background: #555; color: white; border: none; border-radius: 4px; cursor: pointer; opacity: 0.8; }
+.copy-btn:hover { opacity: 1; background: #2ecc71; }
+.theme-toggle-btn { display: block; margin: 20px auto; padding: 8px 16px; background: transparent; border: 1px solid #888; color: inherit; border-radius: 5px; cursor: pointer; }
+</style></head><body onload='initLesson()'>
+<div class='container'>
+<div class='nav-bar'><a class='nav-btn' href='lesson59.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../aws-bedrock-agent-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson61.html'>Bài sau ➡️</a></div><h1>Lesson 61 -- AIP-C01  --=Citation & Source Attribution trong RAG response -//</h1>
+<button id='doneButton' class='done-btn' onclick='toggleDone()'>Mark as Done ⚪</button>
+<div class='content-box'>
+<button class='copy-btn' onclick='copyContent()'>📋 Copy nội dung</button>
+<pre><code id='lessonCode'>		
+	Citation là cơ chế nối câu trả lời của LLM ngược về nguồn dữ liệu cụ thể đã được retrieve, để người dùng kiểm chứng	
+	
+		
+# 	1. Bản chất — nói thẳng	
+	Hãy hình dung RAG:	
+		
+		User Question
+			  ↓
+		Query
+			  ↓
+		Retriever
+			  ↓
+		Top-K Chunks
+			  ↓
+		LLM
+			  ↓
+		Answer		
+		
+		
+	## Nếu thêm citation:	
 
-</pre><a id='backBottom' href='../aws-bedrock-agent-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
+User Question
+      ↓
+Retriever
+      ↓
+┌──────────────────────────────┐
+│ Chunk A                      │
+│ source = handbook.pdf        │
+│ page = 12                    │
+│ section = Leave Policy       │
+│ chunk_id = abc123            │
+└──────────────────────────────┘
+      ↓
+     LLM
+      ↓
+Answer + Citation
+      ↓
+「有給休暇は年間20日です。[1]」
+                         ↓
+              handbook.pdf, p.12
+
+
+	Citation không phải là một tính năng của LLM.
+	Nó là một data lineage / provenance mechanism:
+		"Thông tin này trong câu trả lời xuất phát từ dữ liệu nào?"
+		Đây là điểm gốc cần nhớ.
+
+
+
+# 2. Citation khác với việc "LLM tự ghi nguồn"
+
+	Cách nguy hiểm
+
+	Prompt:
+		Answer the question and cite your sources.
+
+	LLM tự viết:
+		有給休暇は年間20日です。
+		Source: Employee Handbook, page 12
+
+	Vấn đề:
+		LLM có thể bịa citation.
+
+	Ví dụ tài liệu không có page 12 nhưng model vẫn viết:
+		Source: Employee Handbook, page 12
+		Đây là hallucination của source attribution.
+
+
+	Cách production
+	Retriever trả về:
+
+{
+  "text": "Employees receive 20 days of annual leave.",
+  "metadata": {
+    "source": "employee_handbook.pdf",
+    "page": 12,
+    "section": "Leave Policy",
+    "chunk_id": "abc123"
+  }
+}
+
+
+	LLM nhận cả:
+
+		[DOCUMENT_1]
+		Employees receive 20 days of annual leave.
+
+		source: employee_handbook.pdf
+		page: 12
+		chunk_id: abc123
+
+	Sau đó application layer tạo:
+		有給休暇は年間20日です。[1]
+
+	và mapping:
+
+		[1]
+		employee_handbook.pdf
+		Page 12
+		Leave Policy
+
+	Nguồn gốc phải đến từ metadata của retrieval pipeline, không nên để LLM tự phát minh.
+
+
+
+# 3. Citation thực sự giải quyết vấn đề gì?
+
+
+| Vấn đề        | Citation giúp gì?                      |
+| ------------- | -------------------------------------- |
+| Hallucination | Cho người dùng kiểm tra nguồn          |
+| Trust         | Biết câu trả lời dựa trên tài liệu nào |
+| Auditability  | Có thể truy ngược dữ liệu              |
+| Debugging     | Biết model sử dụng chunk nào           |
+
+
+
+	Đặc biệt với enterprise:
+		社員：「この回答、本当に規定に書いてある？」
+					  ↓
+		Citation
+					  ↓
+		規定.pdf
+		12ページ
+		「有給休暇...」
+
+	Đây là thứ mà chatbot thông thường không có.		
+			
+			
+
+
+# 4. Citation cần metadata gì?
+
+
+	Đây là phần cực kỳ quan trọng khi thiết kế RAG.
+
+	Tối thiểu:
+		{
+		  "source": "employee_handbook.pdf",
+		  "page": 12
+		}
+
+	Production nên có nhiều hơn:
+		{
+		  "document_id": "DOC-001",
+		  "source": "employee_handbook.pdf",
+		  "title": "Employee Handbook",
+		  "page": 12,
+		  "section": "Leave Policy",
+		  "chunk_id": "chunk-abc123",
+		  "version": "2026-04",
+		  "last_updated": "2026-04-01",
+		  "s3_uri": "...",
+		  "department": "HR"
+		}
+
+	Điểm quan trọng:
+		Citation quality phụ thuộc rất lớn vào metadata quality.
+
+
+	Nếu ingestion chỉ lưu:
+		"text": "Employees receive 20 days..."
+		thì sau này rất khó tạo citation tốt.
+
+
+
+# 5. Citation trong RAG pipeline nằm ở đâu?
+
+① Ingestion
+      ↓
+② Chunking
+      ↓
+③ Metadata
+      ↓
+④ Retrieval
+      ↓
+⑤ Generation + Citation
+
+
+
+# 6. Citation không nhất thiết phải là [1]
+
+
+Production UI có thể hiển thị:
+	有給休暇は年間20日です。
+
+📄 Employee Handbook
+   Page 12
+
+Hoặc:
+	有給休暇は年間20日です。 [Employee Handbook, p.12]
+
+
+	Nếu là enterprise chatbot, UX tốt thường cho phép:
+		Answer
+		   ↓
+		[Source 1]
+		   ↓
+		Open original document
+		   ↓
+		Jump to page / section
+		Đây mới là useful citation, chứ không chỉ là một dòng text "Source: xxx".
+
+
+
+
+# 7. Bedrock Knowledge Bases liên quan thế nào?
+
+Trong application architecture:
+
+	Bedrock Knowledge Base
+			↓
+	RetrieveAndGenerate
+			↓
+	Generated answer
+			+
+	Citations
+			↓
+	Application UI
+
+Đây là một pattern rất phù hợp cho enterprise RAG.
+
+
+
+# 8. Nhưng có một bẫy rất lớn
+
+
+	Citation ≠ Grounding.
+		Hai khái niệm liên quan nhưng không giống nhau.
+
+	Grounding
+		Câu trả lời có thực sự dựa trên retrieved information không?
+
+	Citation
+		Câu trả lời chỉ ra nguồn của information đó ở đâu?
+
+	Có citation.
+	Nhưng grounding sai.
+	Model đã trích nguồn đúng nhưng kết luận sai.
+
+
+# 9. Ngược lại cũng có trường hợp grounding tốt nhưng citation tệ
+
+
+	Retriever lấy đúng:
+
+	chunk:
+		「年間休暇は20日です。」
+
+	LLM:
+
+		年間休暇は20日です。
+
+	Grounding tốt.
+
+	Nhưng UI:
+		Source: company documents
+
+	Không biết:
+		file nào?
+		page nào?
+		version nào?
+		section nào?
+
+	Citation quality thấp.
+
+
+
+# 10. Vì vậy cần phân biệt 3 tầng
+
+
+              RAG Trustworthiness
+                     │
+        ┌────────────┼────────────┐
+        ↓            ↓            ↓
+   Retrieval      Grounding    Citation
+   Accuracy       Accuracy      Quality
+
+
+
+	Retrieval Accuracy
+		Có lấy đúng document/chunk không?
+
+	Grounding Accuracy
+		LLM có thực sự trả lời dựa trên chunk đó không?
+
+	Citation Quality
+		Người dùng có thể truy ngược câu trả lời về đúng nguồn không?
+
+	Ba cái không đồng nghĩa.
+
+
+
+# 11. Citation có thể dùng để debug RAG
+
+
+	Ví dụ user hỏi:
+		「2026年度の有給休暇は何日ですか？」
+
+	System trả lời:
+		20日です。[1]
+
+	Citation:
+		[1]
+		Employee Handbook 2025
+		Page 12
+
+	Bạn lập tức phát hiện:
+		Question
+		   ↓
+		2026年度
+		   ↓
+		Retriever
+		   ↓
+		2025 document ❌
+
+	Vấn đề có thể nằm ở:
+		metadata filtering
+		document version
+		data freshness
+		query formulation
+		retrieval ranking
+
+	Chứ không nhất thiết là LLM.
+	Đây là lý do citation rất quan trọng đối với observability.
+
+
+
+
+# 12. Citation + document version cực kỳ quan trọng
+
+
+	Enterprise RAG thường có:
+		Policy_v1.pdf
+		Policy_v2.pdf
+		Policy_v3.pdf
+
+	Nếu chỉ citation:
+		Policy.pdf
+		thì chưa đủ.
+
+	Nên:
+		Policy
+		Version: 2026-04
+		Page: 12
+
+	hoặc:
+
+	source:
+		s3://company-kb/policy/2026-04/policy.pdf
+
+	Nếu không quản lý version:
+		LLM answer
+			 ↓
+		Citation
+			 ↓
+		old document
+
+		Người dùng tưởng hệ thống trả lời theo policy hiện tại.
+		Đây là data freshness + provenance problem.
+
+
+
+
+# 13. Citation và Access Control
+
+
+	Một điểm Professional-level rất dễ bị gài.
+
+	Giả sử:
+		HR documents
+		Engineering documents
+		Finance documents
+
+	User A chỉ được:
+		Engineering
+
+	Nhưng hệ thống retrieval lấy:
+		HR salary.xlsx
+
+	và citation hiển thị:
+		HR Salary.xlsx
+		→ Security breach.
+
+	Vì vậy:
+		Citation không được trở thành side-channel làm lộ metadata của tài liệu mà user không có quyền truy cập.
+
+	Production architecture phải đảm bảo:
+		Authentication
+			  ↓
+		Authorization
+			  ↓
+		Retrieval filtering
+			  ↓
+		Generation
+			  ↓
+		Citation
+
+	Không phải:
+		Retrieve everything
+			  ↓
+		LLM decides what user can see ❌
+
+	LLM không phải authorization layer.
+
+
+
+
+# 14. AWS mapping
+
+| Thành phần                     | Vai trò                                           |
+| ------------------------------ | ------------------------------------------------- |
+| Amazon Bedrock Knowledge Bases | Retrieval + RAG + retrieved references/citations  |
+| S3                             | Original documents                                |
+| OpenSearch Serverless          | Vector search / hybrid retrieval tùy architecture |
+| Aurora PostgreSQL + pgvector   | Vector storage/search                             |
+| Bedrock model                  | Generation                                        |
+| Lambda                         | Citation formatting / post-processing             |
+| API Gateway                    | Expose application API                            |
+| CloudWatch                     | Logging/observability                             |
+| IAM                            | Authorization                                     |
+| S3 metadata                    | Document provenance/version information           |
+
+
+
+	Một architecture thực tế:
+
+
+                 User
+                   │
+                   ↓
+            API Gateway
+                   │
+                   ↓
+                Lambda
+                   │
+                   ↓
+        Bedrock Knowledge Base
+             │           │
+             ↓           ↓
+       Vector Store     Metadata
+             │
+             ↓
+          Retrieved
+           Chunks
+             │
+             ↓
+        Bedrock Model
+             │
+       ┌─────┴─────┐
+       ↓           ↓
+    Answer      Citations
+       │           │
+       └─────┬─────┘
+             ↓
+            UI
+
+
+
+# 15. Citation vs Reference vs Attribution 
+
+| Term                   | Ý nghĩa                                    |
+| ---------------------- | ------------------------------------------ |
+| **Citation**           | Chỉ ra nguồn cụ thể                        |
+| **Source attribution** | Gán thông tin cho nguồn                    |
+| **Provenance**         | Lineage/lịch sử nguồn gốc dữ liệu          |
+| **Reference**          | Tài liệu được tham chiếu                   |
+| **Grounding**          | Câu trả lời dựa trên dữ liệu được cung cấp |
+
+
+Thiết tốt :
+
+	Retrieved chunk
+	+
+	source metadata
+	+
+	document location
+			↓
+	LLM/application
+			↓
+	Answer + citation
+
+
+
+# 18. Trade-off thực tế 
+
+	Citation càng chi tiết:
+		Document
+		+ page
+		+ section
+		+ chunk
+		+ version
+		+ URL
+		+ timestamp
+
+	thì UX và auditability càng tốt.
+	
+	
+	Nhưng complexity tăng.
+	Ví dụ:
+		Simple RAG
+			↓
+		filename
+
+		Enterprise RAG
+			↓
+		document_id
+		version
+		page
+		section
+		chunk_id
+		URI
+		ACL
+		timestamp
+
+	Với hệ thống production, tôi sẽ ưu tiên provenance metadata ngay từ ingestion, thay vì đến lúc generation mới nghĩ cách "làm citation".
+
+	Đây là điểm kiến trúc rất quan trọng.
+
+
+
+# 19. Cách AWS ra đề
+
+	Khi thấy các keyword:
+		citation / source attribution / references / traceability / verify answer / supporting documents / provenance
+
+	hãy nghĩ ngay:
+
+		Retrieval result
+				+
+		Metadata
+				+
+		Grounded generation
+				+
+		Citation/reference
+
+
+
+
+# 20. Mental model để nhớ lâu
+
+
+	Đừng nhớ:
+		Citation = [1]
+
+	Hãy nhớ:
+		RAG
+		│
+		├── Retrieval
+		│     └── Lấy đúng dữ liệu?
+		│
+		├── Grounding
+		│     └── LLM có dựa đúng dữ liệu?
+		│
+		└── Citation
+			  └── Người dùng có truy ngược được nguồn?
+
+	Và sâu hơn:
+		Citation là "dấu vết nguồn gốc" của câu trả lời, không phải bằng chứng tự thân rằng câu trả lời đúng.
+		Đây là một trong những khác biệt giữa demo RAG và enterprise RAG có thể audit.
+
+
+
+
+</code></pre>
+</div>
+<div class='nav-bar'><a class='nav-btn' href='lesson59.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../aws-bedrock-agent-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson61.html'>Bài sau ➡️</a></div><button class='theme-toggle-btn' onclick='toggleTheme()'>🌓 Đổi Giao Diện</button>
+</div>
+<script>
+const lessonKey = 'aws-bedrock-agent-learning-list_lesson60.html';
+function toggleTheme() {
+   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';
+   document.body.className = mode;
+   localStorage.setItem('theme', mode);
+}
+function toggleDone() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   if (isDone) {
+       localStorage.removeItem(lessonKey);
+   } else {
+       localStorage.setItem(lessonKey, 'done');
+   }
+   renderDoneStatus();
+}
+function renderDoneStatus() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   let btn = document.getElementById('doneButton');
+   if (isDone) {
+       btn.className = 'done-btn completed';
+       btn.innerText = 'Đã Hoàn Thành ✅';
+   } else {
+       btn.className = 'done-btn';
+       btn.innerText = 'Đánh dấu đã học ⚪';
+   }
+}
+function copyContent() {
+   let text = document.getElementById('lessonCode').innerText;
+   navigator.clipboard.writeText(text).then(function() {
+       alert('✅ Đã sao chép nội dung bài học!');
+   });
+}
+function initLesson() {
+   document.body.className = localStorage.getItem('theme') || 'dark-mode';
+   renderDoneStatus();
+   if (window.Prism) Prism.highlightAll();
+}
+</script></body></html>

@@ -1,0 +1,197 @@
+<html><head><title>Lesson 211 == Functional Bulkhead & Rate Limiter ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 211 -- Functional Bulkhead & Rate Limiter -//</h1><pre># ⚙️ 1. Bối cảnh thực tế
+	Trong microservice thực tế, lỗi thường không đến từ bug mà từ quá tải:
+	
+	Có quá nhiều request đồng thời vào cùng một service (thường là API call đến DB hoặc external service).
+
+	Thread pool bị chiếm hết → request treo, timeout → cascade failure toàn hệ thống
+
+	## Giải pháp: 
+
+		Giới hạn concurrency (bulkhead).
+		Giới hạn request rate (rate limiter).
+		Nhưng làm thuần functional, không block, không annotation, không Redis.
+		
+
+# 🧩 2. Bulkhead Pattern — giới hạn số lượng concurrent call
+
+	## 🔸 Truyền thống (OOP cách cũ)
+		Ta thường dùng Semaphore hoặc ThreadPoolExecutor.
+
+Semaphore semaphore = new Semaphore(10);
+
+void handleRequest() {
+    if (semaphore.tryAcquire()) {
+        try {
+            process();
+        } finally {
+            semaphore.release();
+        }
+    } else {
+        reject();
+    }
+}
+
+
+	Cách này ổn, nhưng:
+
+		Cần try/finally → imperative style.
+		Khó compose.
+		Dễ block nếu dùng acquire().
+
+
+	## 🔸 Functional Bulkhead
+		Biến giới hạn concurrency thành một pure function wrapper, không phụ thuộc class hay thread pool.
+	
+<T> Supplier<CompletableFuture<T>> limitConcurrency(
+        Supplier<CompletableFuture<T>> fn,
+        Semaphore semaphore
+) {
+    return () -> {
+        if (semaphore.tryAcquire()) {
+            return fn.get()
+                     .whenComplete((r, e) -> semaphore.release());
+        } else {
+            return CompletableFuture.failedFuture(new RuntimeException("Bulkhead limit reached"));
+        }
+    };
+}
+	
+	Bây giờ bạn có thể wrap bất kỳ function nào:	
+	
+var limitedPayment = limitConcurrency(() -> callPaymentAPI(), new Semaphore(10));
+
+limitedPayment.get(); // sẽ fail nếu quá 10 request đang chạy
+	
+		→ Không block thread, chạy async, pure functional style.
+	
+	## 🧠 Mở rộng
+		Bạn có thể nâng cấp thành Higher-Order Function giống các bài trước:
+		Function<Supplier<CompletableFuture<T>>, Supplier<CompletableFuture<T>>> withBulkhead(int permits)
+
+		để compose được:
+withRetry(3)
+.andThen(withTimeout(Duration.ofSeconds(2)))
+.andThen(withBulkhead(10))
+.apply(() -> callService());
+	
+	
+	
+	
+# 🧮 3. Rate Limiter Pattern — giới hạn tốc độ request
+
+	## 🔸 Truyền thống
+		Thường dùng Redis hoặc Guava RateLimiter. Nhưng Redis = external state → không thuần functional.
+
+
+	## 🔸 Functional Token Bucket
+		Ta có thể tự tạo pure token bucket.
+
+	Ý tưởng:
+		Ta có thể tự tạo pure token bucket.
+	
+		Có tokens được sinh ra theo thời gian (ví dụ: 10 token/giây).
+		Mỗi request tiêu 1 token.
+		Nếu hết token → reject.
+
+class TokenBucket {
+    final int capacity;
+    final AtomicInteger tokens;
+    final long refillRateMillis;
+    final AtomicLong lastRefillTime = new AtomicLong(System.currentTimeMillis());
+
+    TokenBucket(int capacity, long refillRateMillis) {
+        this.capacity = capacity;
+        this.tokens = new AtomicInteger(capacity);
+        this.refillRateMillis = refillRateMillis;
+    }
+
+    boolean tryConsume() {
+        refill();
+        if (tokens.get() > 0) {
+            tokens.decrementAndGet();
+            return true;
+        }
+        return false;
+    }
+
+    private void refill() {
+        long now = System.currentTimeMillis();
+        long last = lastRefillTime.get();
+        long elapsed = now - last;
+        if (elapsed > refillRateMillis) {
+            int newTokens = (int) (elapsed / refillRateMillis);
+            tokens.set(Math.min(capacity, tokens.get() + newTokens));
+            lastRefillTime.set(now);
+        }
+    }
+}
+
+
+	## Sau đó, functional wrapper: 
+
+<T> Supplier<CompletableFuture<T>> withRateLimit(
+        Supplier<CompletableFuture<T>> fn, TokenBucket bucket
+) {
+    return () -> bucket.tryConsume()
+            ? fn.get()
+            : CompletableFuture.failedFuture(new RuntimeException("Rate limit exceeded"));
+}
+
+
+
+# 🧠 4. So sánh Bulkhead vs Rate Limiter
+
+| Pattern          | Giới hạn cái gì                              | Cơ chế       | Khi dùng                                    |
+| ---------------- | -------------------------------------------- | ------------ | ------------------------------------------- |
+| **Bulkhead**     | Số lượng *request đồng thời*                 | Semaphore    | Giới hạn concurrency (ví dụ DB connections) |
+| **Rate Limiter** | Số lượng *request trên một đơn vị thời gian* | Token bucket | Giới hạn tốc độ (throttling API, user spam) |
+
+	## Cả hai có thể dùng chung:
+
+withBulkhead(10)
+.andThen(withRateLimit(100, Duration.ofSeconds(1)))
+.apply(() -> callAPI());
+
+
+
+# 🏢 5. Enterprise Use Cases
+
+
+	## 💳 1. Payment Gateway
+		Bulkhead giới hạn 10 concurrent request tới Stripe.
+		Rate limiter giới hạn 100 req/s theo user ID.
+		
+	## 📊 2. API Gateway Multi-tenant
+		Mỗi tenantId có bucket riêng.
+		Functional map<tenantId, TokenBucket> lưu tại gateway.
+		Không cần Redis, không annotation.
+		
+var bucket = bucketMap.computeIfAbsent(userId, id -> new TokenBucket(100, 100));
+withRateLimit(() -> handleUserRequest(id), bucket).get();
+
+
+	## 🧠 3. Reactive Streaming
+		Flux hoặc Flow.Publisher có thể dùng functional limiter để điều tiết backpressure.
+
+
+# 🧩 6. Ưu điểm Functional Approach
+
+| Ưu điểm                 | Giải thích                                              |
+| ----------------------- | ------------------------------------------------------- |
+| ✅ Không block thread    | Sử dụng `CompletableFuture` hoặc reactive stream        |
+| ✅ Dễ test               | Bulkhead và bucket là pure object, testable             |
+| ✅ Compose được          | `.andThen()` chain resilience policy                    |
+| ✅ Không framework magic | Không cần `@RateLimiter`, `@Bulkhead`, hay Resilience4j |
+
+
+
+
+# 🔮 7. Tổng kết triết lý
+
+	Functional resilience không phải là “đem pattern OOP viết lại bằng lambda”,
+mà là chuyển từ stateful control → pure composition,
+để mỗi cơ chế resilience chỉ là một function transform policy, có thể gắn, tháo, thử nghiệm mà không phá code gốc.
+
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

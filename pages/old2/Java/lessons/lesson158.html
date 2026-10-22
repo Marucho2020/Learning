@@ -1,0 +1,132 @@
+<html><head><title>Lesson 158 == Functional Interface ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 158 -- Functional Interface -//</h1><pre>
+# 🔍 I. Định nghĩa Functional Interface
+
+	Functional Interface là interface chỉ có một abstract method duy nhất, được dùng để đại diện cho một hành vi (behavior). Nó có thể có các phương thức default hoặc static, nhưng chỉ duy nhất một abstract method.
+	
+
+@FunctionalInterface
+public interface Converter<F, T> {
+    T convert(F from);
+}
+
+	## Từ Java 8, có annotation @FunctionalInterface để: 
+		Giúp compiler báo lỗi nếu interface không tuân thủ quy tắc “chỉ một abstract method”
+		Gợi ý cho developer: “interface này dành để dùng với lambda”
+
+
+
+
+# ⚙️ II. Functional Interface hoạt động với Lambda như thế nào?
+
+	Converter<String, Integer> stringToInteger = (from) -> Integer.valueOf(from);
+	
+	Converter có 1 method duy nhất là convert(), nên ta có thể dùng lambda để đại diện cho method đó. 
+	
+	Compiler sẽ nội suy lambda (from) -> Integer.valueOf(from) thành phần thân của method convert.
+	
+	⚠️ Nếu một interface có nhiều abstract method → không thể dùng lambda.
+
+
+# 📦 III. Java Built-in Functional Interfaces (java.util.function)
+
+	Java 8 giới thiệu sẵn một loạt functional interface, có thể dùng với lambda và Stream API.
+
+
+	## 1. Predicate<T>
+		Predicate<String> isEmpty = str -> str.isEmpty();
+
+
+	## 2. Function<T, R> 
+		Function<String, Integer> length = s -> s.length();
+
+
+	## 3. Consumer<T> 
+		Consumer<String> printer = s -> System.out.println(s);
+ 
+	## 4. Supplier<T>
+		Supplier<LocalDateTime> now = () -> LocalDateTime.now();
+
+	## 5. UnaryOperator<T> / BinaryOperator<T>
+		UnaryOperator<Integer> square = x -> x * x;
+		BinaryOperator<Integer> add = (x, y) -> x + y;
+
+
+# 🧠 IV. Functional Interface vs OOP Inheritance
+
+	Functional Interface giúp bạn tách biệt hành vi ra khỏi cấu trúc đối tượng, một dạng behavioral abstraction.
+	
+	Thay vì tạo class với override method, bạn có thể truyền lambda để cấu hình hành vi.
+
+
+
+	➡️ Đặc biệt hiệu quả khi:
+	
+		Dùng với Streams (map, filter, reduce…)
+		Giao tiếp với API bất đồng bộ (callback)
+		Thay thế Strategy pattern bằng lambda
+
+
+# 🧪 V. Custom Functional Interface
+
+	## Khi nào cần tự tạo? 
+		Khi bạn cần interface với kiểu generic phức tạp
+		Khi Java không có built-in phù hợp
+		Khi cần mô tả hành vi domain-specific		
+		
+
+@FunctionalInterface
+public interface RetryableTask {
+    boolean execute() throws Exception;
+}
+	## 
+
+# 🧵 VI. Functional Interface trong hệ thống lớn
+
+
+	## 1. Dễ test và mock
+		Có thể mock hành vi thay vì mock cả object
+		Gọn gàng hơn khi viết test với Mockito hay AssertJ
+
+
+	## 2. Plug-and-Play behavior
+		Có thể truyền các hành vi dưới dạng lambda → dễ cấu hình runtime
+
+
+	## 3. Thay thế các Pattern truyền thống
+		
+		Command pattern → Runnable, Callable
+		Strategy pattern → Function, Predicate
+		Template method → lambda wrapping
+
+
+
+# 	🧠 VII. Kỹ thuật nâng cao
+
+	## 1. Composition của Functional Interface
+	
+Function<String, String> addPrefix = s -> ">>" + s;
+Function<String, String> toUpper = String::toUpperCase;
+Function<String, String> composed = addPrefix.andThen(toUpper);
+	
+	
+	## 2. Partial Application
+		Dùng lambda để đóng gói một phần tham số:
+	
+Function<String, Function<String, String>> greet = salutation -> name -> salutation + " " + name;
+Function<String, String> hello = greet.apply("Hello");
+	
+		
+	## 3. Currying (được hỗ trợ gián tiếp):
+	
+Function<Integer, Function<Integer, Integer>> add = x -> y -> x + y;
+	
+	
+# 	📚 VIII. Những lỗi thường gặp
+	
+	- Tạo interface có 2 abstract method nhưng vẫn nghĩ là Functional Interface
+	- Quên override equals/hashCode/toString nếu dùng trong cấu trúc dữ liệu
+	- Truyền lambda không đúng context → ClassCastException khó debug
+
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

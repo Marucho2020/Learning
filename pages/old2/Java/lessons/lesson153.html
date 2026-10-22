@@ -1,0 +1,55 @@
+<html><head><title>Lesson 153 == Java Stream API ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 153 -- Java Stream API -//</h1><pre>
+# 1. Stream là gì?
+	Là abstraction cho xử lý dữ liệu tuần tự hoặc song song (parallel)
+	Không lưu trữ dữ liệu, không làm thay đổi collection gốc.
+
+# 2. Luồng xử lý của Stream
+
+	- Nguồn (Source): Collection, array, I/O…
+	- Intermediate operations: filter, map, sorted, distinct (lười tính - lazy)
+	- Terminal operations: collect, forEach, reduce, count (kích hoạt - eager)
+	
+		→ Cần hiểu rõ: Stream chỉ thực sự chạy khi gọi terminal operation.
+
+# 3. Các nhóm hàm quan trọng 
+| Nhóm             | Hàm tiêu biểu                                        |
+| ---------------- | ---------------------------------------------------- |
+| Biến đổi dữ liệu | `map()`, `flatMap()`                                 |
+| Lọc              | `filter()`                                           |
+| Sắp xếp          | `sorted()`, `limit()`, `skip()`                      |
+| Tổng hợp         | `collect()`, `reduce()`, `count()`, `min()`, `max()` |
+| Song song        | `parallelStream()`                                   |
+
+
+# 4. Collector 
+
+	toList(), toSet(), joining(), groupingBy(), partitioningBy(), mapping()
+	
+	groupingBy() đặc biệt quan trọng cho xử lý dữ liệu phân nhóm
+
+Map<String, List<Employee>> grouped = 
+    employees.stream().collect(Collectors.groupingBy(Employee::getDepartment));
+
+
+# 5. Custom Collector
+	Tự định nghĩa Collector nếu muốn kết hợp xử lý dữ liệu đặc biệt (xem Collector.of())	
+
+
+# 6. Parallel Stream
+
+	Ưu điểm: tăng tốc xử lý với CPU đa nhân
+	Cảnh báo: không an toàn nếu source không thread-safe hoặc operation có side effect
+
+# III. Các lỗi và hiểu nhầm phổ biến (anti-patterns)
+
+| Vấn đề                                                      | Giải thích                                                                    |
+| ----------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| Dùng `stream().forEach()` để thay `for` loop có side effect | Vi phạm nguyên tắc **pure function** của Stream                               |
+| Gọi `stream()` nhiều lần                                    | Stream **không thể tái sử dụng**, phải tạo lại                                |
+| Dùng `parallelStream()` bừa bãi                             | Gây tốn tài nguyên, thậm chí **chậm hơn** nếu dữ liệu ít hoặc có shared state |
+
+
+
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

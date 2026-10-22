@@ -1,0 +1,514 @@
+<!DOCTYPE html><html lang='vi'><head><meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0'>
+<title>Lesson 68 -- AIP-C01  --=MCP — Model Context Protocol -//</title>
+<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css'>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js'></script>
+<script id='MathJax-script' async src='https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'></script>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; margin: 0; padding: 20px; transition: 0.3s; }
+.dark-mode { background-color: #121212; color: #e0e0e0; }
+.light-mode { background-color: #ffffff; color: #333333; }
+.container { max-width: 950px; margin: auto; }
+h1 { text-align: center; color: #3498db; margin: 20px 0; font-size: 26px; }
+.nav-bar { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 20px 0; }
+.nav-btn { text-decoration: none; padding: 10px 18px; background: #3498db; color: white; border-radius: 6px; font-weight: bold; font-size: 15px; display: inline-block; transition: 0.2s; }
+.nav-btn:hover { background: #2980b9; }
+.nav-btn.home-nav { background: #6c757d; }
+.nav-btn.home-nav:hover { background: #5a6268; }
+.nav-btn.disabled { background: #aaa; cursor: not-allowed; opacity: 0.5; }
+.done-btn { display: block; margin: 15px auto; padding: 10px 24px; border: 2px solid #2ecc71; background: transparent; color: #2ecc71; border-radius: 25px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+.done-btn.completed { background: #2ecc71; color: white; }
+.content-box { position: relative; margin: 20px 0; }
+pre { padding: 20px; border-radius: 8px; white-space: pre-wrap; word-break: break-word; overflow-x: auto; font-family: 'Consolas', 'Courier New', monospace; font-size: 15px; }
+.dark-mode pre { background: #1a1a1a; color: #f8f8f2; border: 1px solid #333; }
+.light-mode pre { background: #f8f9fa; color: #212529; border: 1px solid #e9ecef; }
+.copy-btn { position: absolute; top: 12px; right: 12px; padding: 6px 12px; font-size: 12px; background: #555; color: white; border: none; border-radius: 4px; cursor: pointer; opacity: 0.8; }
+.copy-btn:hover { opacity: 1; background: #2ecc71; }
+.theme-toggle-btn { display: block; margin: 20px auto; padding: 8px 16px; background: transparent; border: 1px solid #888; color: inherit; border-radius: 5px; cursor: pointer; }
+</style></head><body onload='initLesson()'>
+<div class='container'>
+<div class='nav-bar'><a class='nav-btn' href='lesson66.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../aws-bedrock-agent-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson68.html'>Bài sau ➡️</a></div><h1>Lesson 68 -- AIP-C01  --=MCP — Model Context Protocol -//</h1>
+<button id='doneButton' class='done-btn' onclick='toggleDone()'>Mark as Done ⚪</button>
+<div class='content-box'>
+<button class='copy-btn' onclick='copyContent()'>📋 Copy nội dung</button>
+<pre><code id='lessonCode'>
+
+	MCP là một chủ đề quan trọng để hiểu cách xây dựng hệ thống Agentic AI có thể kết nối với công cụ, dữ liệu và các hệ thống bên ngoài. Nhưng muốn hiểu đúng, cần phân biệt MCP với Function Calling, API, AWS Lambda và Amazon Bedrock AgentCore.
+
+	Luận điểm cốt lõi: MCP chuẩn hóa cách một AI application khám phá và sử dụng các công cụ, tài nguyên và prompt từ bên ngoài. Nó không phải LLM, không phải agent, không phải cơ sở dữ liệu và cũng không tự quyết định AI nên làm gì.
+
+
+
+
+# 1. Bản chất: MCP thực sự giải quyết vấn đề gì?
+
+
+	Giả sử bạn xây dựng một AI agent hỗ trợ quản lý công việc cho doanh nghiệp Nhật Bản. Agent cần thực hiện những việc sau:
+		- Đọc báo cáo tiến độ từ Google Drive hoặc S3.
+		- Truy vấn dữ liệu công việc từ PostgreSQL.
+		- Kiểm tra ticket trên Jira.
+		- Gửi thông báo qua LINE.
+		- Tạo báo cáo và lưu kết quả.
+
+	Nếu mỗi công cụ được tích hợp theo cách riêng, hệ thống sẽ nhanh chóng trở nên khó quản lý.
+
+
+	Vấn đề không phải là các API không tương thích với nhau. Vấn đề là mỗi AI application phải tự xây dựng và duy trì một lớp tích hợp riêng cho từng hệ thống.
+	MCP đưa ra một giao thức chung để các AI application giao tiếp với MCP server, thay vì buộc mọi ứng dụng phải hiểu cách tích hợp riêng của từng công cụ.
+
+
+	Có MCP: chuẩn hóa lớp tích hợp
+
+	Lưu ý: MCP không tự động biến mọi API thành MCP server. Bạn phải có MCP server tương ứng hoặc tự triển khai một adapter để bọc API hiện có.
+
+
+
+	Ví dụ đời thường
+		Hãy tưởng tượng USB-C:
+		
+		- Trước đây, mỗi thiết bị có thể yêu cầu một loại đầu nối khác nhau.
+		- USB-C chuẩn hóa hình dạng đầu nối và một phần cách thiết bị giao tiếp.
+		- Nhưng cắm được đầu nối không có nghĩa thiết bị tự có quyền truy cập mọi dữ liệu.
+		MCP có vai trò tương tự ở lớp giao tiếp phần mềm của AI. Tuy nhiên, MCP không phải chuẩn truyền tải dữ liệu vật lý và cũng không đồng nghĩa với việc mọi công cụ sẽ có cùng chức năng.
+
+
+
+
+# 2. Kiến trúc MCP: Host, Client, Server
+
+
+	MCP Host
+		Là ứng dụng AI điều phối tổng thể, ví dụ một IDE có AI, desktop AI application hoặc ứng dụng agent do bạn xây dựng. Host quản lý model, conversation và các MCP client.
+		Ví dụ: ứng dụng quản lý báo cáo chạy Claude hoặc một agent dùng Strands Agents.
+
+
+	MCP Client
+		Thành phần trong host thực hiện giao tiếp với một MCP server cụ thể, xử lý giao thức và trao đổi thông điệp với server đó.
+		Một host có thể quản lý nhiều client để kết nối nhiều MCP server.
+
+
+
+	MCP Server
+		Công bố các capability cho client, chẳng hạn tool truy vấn ticket, resource chứa tài liệu hoặc prompt template. Server thực hiện logic tích hợp với hệ thống phía sau.
+		Có thể chạy local hoặc ở môi trường remote tùy transport và cách triển khai.
+
+
+
+Luồng thực thi thực tế
+	Ví dụ người dùng yêu cầu: “Kiểm tra các ticket quá hạn và gửi báo cáo cho trưởng nhóm.”
+
+	Người dùng gửi yêu cầu đến AI application.
+	Model suy luận rằng cần đọc ticket rồi tổng hợp kết quả. Model hoặc agent chọn tool phù hợp.
+	MCP client gửi yêu cầu gọi tool đến MCP server quản lý Jira.
+	MCP server gọi Jira API bằng credential và quyền được cấp, rồi trả kết quả về.
+	Agent phân tích kết quả và quyết định có cần gọi thêm tool gửi tin nhắn hay không.
+	Nếu được phép, agent gọi tool gửi thông báo. MCP server tương ứng thực hiện thao tác và trả kết quả.
+
+
+	Điểm quan trọng: MCP không tự lập kế hoạch hay tự quyết định bước tiếp theo. Đó là trách nhiệm của agent runtime và model, cùng với logic điều phối do ứng dụng triển khai.
+	Ngoài ra, MCP không bắt buộc mọi agent phải gọi tuần tự từng tool. Một agent có thể gọi song song những tool độc lập nếu framework và logic điều phối hỗ trợ.
+
+
+
+
+# 3. Ba nhóm capability: Tools, Resources, Prompts
+
+	Đây là phần cần nắm chắc nhất về bản chất giao thức.
+
+
+| Capability | Bản chất                                                  | Ví dụ                                                           |
+| ---------- | --------------------------------------------------------- | --------------------------------------------------------------- |
+| Tools      | Thực hiện một hành động hoặc tính toán                    | `get_overdue_tickets`, `create_report`                          |
+| Resources  | Cung cấp dữ liệu theo URI để ứng dụng đọc hoặc tham chiếu | `file:///reports/monthly.md`, một resource chứa thông tin dự án |
+| Prompts    | Cung cấp prompt template có thể tái sử dụng               | Template phân tích tiến độ dự án                                |
+
+	
+
+
+# 3.1. Tools — công cụ thực thi
+
+	Ví dụ MCP server công bố tool:
+
+{
+  "name": "get_overdue_tickets",
+  "description": "Get overdue tickets for a project",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "project_id": {
+        "type": "string"
+      }
+    },
+    "required": ["project_id"]
+  }
+}
+
+	Model có thể hiểu rằng tool này nhận project_id, sau đó agent yêu cầu gọi tool với giá trị phù hợp.
+
+	{
+	  "project_id": "PROJ-123"
+	}
+
+
+
+Server thực hiện truy vấn và trả kết quả.
+Cần phân biệt hai việc:
+	- Tool discovery: tìm hiểu tool nào tồn tại, mô tả và schema của nó.
+	- Tool execution: thực sự gọi tool và xử lý kết quả.
+	MCP hỗ trợ cơ chế công bố và gọi tool. Agent framework chịu trách nhiệm quyết định thời điểm gọi, diễn giải kết quả và xử lý vòng lặp tiếp theo.
+
+
+
+
+
+# 3.2. Resources — cung cấp ngữ cảnh
+
+	Resources phù hợp khi ứng dụng cần đọc hoặc tham chiếu dữ liệu theo một định danh URI.
+
+	Ví dụ:
+		- project://PROJ-123/summary
+		- file:///reports/2026-10.md
+		
+	Ứng dụng có thể khám phá resource và yêu cầu đọc nội dung theo capability được server công bố.
+	Resources không đồng nghĩa với vector database hay RAG. Bạn có thể xây MCP server để truy cập dữ liệu từ S3, PostgreSQL, một API hoặc hệ thống tài liệu. Nếu muốn semantic retrieval, bạn vẫn phải triển khai pipeline embedding và retrieval thích hợp.
+	Một chi tiết dễ nhầm: resources thường được ứng dụng host kiểm soát cách đưa vào ngữ cảnh; chúng không tự động được model đọc hết chỉ vì server đã công bố.
+
+
+
+
+# 3.3. Prompts — template tái sử dụng
+
+	Ví dụ server công bố prompt weekly_project_review với tham số project_id.
+
+	Template có thể hướng dẫn AI:
+		- Tóm tắt tiến độ.
+		- So sánh với kế hoạch.
+		- Xác định blocker.
+		- Đề xuất việc cần ưu tiên tuần tới.
+
+
+	Prompt là nội dung hướng dẫn có cấu trúc, không phải model, không phải công cụ thực thi và cũng không phải một quy trình agent hoàn chỉnh.
+
+| Tiêu chí               | Tools                             | Resources                                                   | Prompts                                     |
+| ---------------------- | --------------------------------- | ----------------------------------------------------------- | ------------------------------------------- |
+| Mục đích chính         | Thực hiện hành động               | Cung cấp dữ liệu                                            | Tái sử dụng hướng dẫn                       |
+| Ví dụ                  | Gửi LINE message                  | Đọc báo cáo dự án                                           | Template review hằng tuần                   |
+| Thực thi side effect   | Có thể có                         | Thông thường không, nhưng việc đọc vẫn có thể tạo audit/log | Bản thân template không thực hiện hành động |
+| Ai quyết định sử dụng? | Agent/model và ứng dụng kiểm soát | Host/application quyết định cách đưa vào ngữ cảnh           | Host/application quyết định khi nào dùng    |
+
+
+
+	Lưu ý: Tools có thể thay đổi trạng thái hệ thống. Vì vậy, không nên cấp quyền ghi hoặc gửi thông báo chỉ vì một tool đã được công bố qua MCP.
+
+
+
+# 4. MCP khác Function Calling, API và AgentCore thế nào? 
+
+
+
+
+LỚP 1 — QUYẾT ĐỊNH
+	Agent / Model
+	Phân tích yêu cầu, chọn hành động và quyết định bước tiếp theo.
+
+LỚP 2 — CƠ CHẾ CHỌN TOOL
+	Function Calling / Tool Calling
+	Biểu diễn yêu cầu gọi một công cụ và các tham số của nó theo giao diện model hỗ trợ.
+
+LỚP 3 — GIAO THỨC TÍCH HỢP
+	MCP Client ↔ MCP Server
+	Chuẩn hóa discovery, trao đổi thông điệp và gọi capability của server.
+
+LỚP 4 — THỰC THI
+	API / SDK / Database / Lambda
+	Thực hiện công việc thật và truy cập hệ thống phía sau.
+	
+	
+	Sơ đồ trên là mô hình tư duy, không phải pipeline bắt buộc. Một agent có thể gọi API trực tiếp mà không sử dụng MCP; MCP server cũng có thể gọi API mà không dùng Lambda.
+
+
+
+
+
+# So sánh chính xác
+
+| Khái niệm         | Giải quyết vấn đề gì?                               | Có thay thế MCP không?                                                            |
+| ----------------- | --------------------------------------------------- | --------------------------------------------------------------------------------- |
+| Function Calling  | Model yêu cầu gọi tool với các tham số              | Không. Có thể dùng cùng MCP                                                       |
+| REST API          | Giao diện để phần mềm gọi chức năng qua HTTP        | Không. MCP server có thể bọc REST API                                             |
+| AWS Lambda        | Môi trường chạy code theo sự kiện hoặc invocation   | Không. Có thể triển khai logic MCP bằng một ứng dụng chạy trên Lambda nếu phù hợp |
+| AgentCore Runtime | Môi trường chạy và vận hành agent                   | Không. Agent có thể sử dụng MCP thông qua framework và client thích hợp           |
+| MCP               | Giao thức chuẩn hóa tương tác giữa client và server | Không thay thế runtime, model hay backend          
+
+
+
+# Ví dụ: không dùng MCP vẫn xây agent được
+	
+	Bạn có thể dùng Strands Agents để gọi một Python function:
+
+		def get_overdue_tickets(project_id: str):
+			return jira_client.search_overdue(project_id)
+
+
+	Agent sử dụng tool này trực tiếp. Không cần MCP.
+	Nếu sau đó bạn muốn cùng công cụ này được sử dụng bởi nhiều AI application khác nhau, việc đóng gói nó thành MCP server có thể đem lại lợi ích về tái sử dụng và khả năng tương tác.
+	Nhưng có một điều cần nói rõ: nếu bạn chỉ có một agent, một tool và không có nhu cầu dùng chung giao diện, MCP có thể chỉ làm tăng độ phức tạp. Không nên dùng MCP chỉ vì nó đang phổ biến.
+
+
+
+
+# 5. MCP trong kiến trúc AWS hiện đại
+
+	
+Với hệ thống GenAI production trên AWS, nên tách bạch ba trách nhiệm:
+
+	- Agent runtime: chạy vòng lặp agent, quản lý execution và tích hợp framework.
+	- Tool integration: cung cấp giao diện để agent sử dụng công cụ.
+	- Backend: thực thi nghiệp vụ, truy cập dữ liệu và áp dụng quyền truy cập.
+		
+		
+		
+	
+	
+# 	Mapping dịch vụ AWS
+	
+	
+
+| Thành phần                       | Vai trò                                                                                                                 |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Amazon Bedrock                   | Cung cấp khả năng inference cho model được hỗ trợ                                                                       |
+| Amazon Bedrock AgentCore Runtime | Chạy agent trong môi trường runtime được quản lý                                                                        |
+| AgentCore Gateway                | Cung cấp lớp gateway cho việc expose và quản lý các tool/API tương thích theo cấu hình được hỗ trợ; có thể dùng với MCP |
+| AgentCore Identity               | Hỗ trợ quản lý danh tính và credential cho các tương tác được hỗ trợ                                                    |
+| AgentCore Observability          | Hỗ trợ quan sát hoạt động agent và trace theo khả năng tích hợp                                                         |
+| AWS Lambda                       | Chạy nghiệp vụ phía sau hoặc adapter                                                                                    |
+| Amazon API Gateway               | Expose và quản lý API HTTP                                                                                              |
+| IAM                              | Kiểm soát quyền truy cập tài nguyên AWS                                                                                 |
+| Secrets Manager                  | Lưu trữ và quản lý vòng đời secret         	
+	
+	
+	
+	
+	
+	Điểm cần phân biệt: AgentCore Gateway và MCP không phải cùng một thứ. MCP là giao thức; Gateway là một lớp dịch vụ quản lý và expose công cụ. Tùy cấu hình, Gateway có thể giúp đưa các API hoặc Lambda thành tool mà agent sử dụng qua giao diện phù hợp, bao gồm MCP.
+	Đối với một MCP server tự xây dựng, bạn vẫn cần triển khai giao thức, authentication, authorization, xử lý lỗi và logic nghiệp vụ phù hợp. Việc dùng AgentCore Runtime để chạy agent không đồng nghĩa rằng server của bạn đã được expose an toàn qua mạng.
+		
+		
+	
+# Hai phương án triển khai 
+	
+Phương án A — Agent gọi Lambda/API trực tiếp
+	Phù hợp khi chỉ có một agent hoặc hệ thống tích hợp đơn giản, bạn muốn kiểm soát chặt chẽ các tool và giảm số lớp trung gian.
+	Ưu điểm: ít thành phần, dễ debug, ít overhead giao thức.
+
+
+Phương án B — MCP làm lớp tích hợp chung
+	Phù hợp khi nhiều agent hoặc nhiều ứng dụng cần dùng chung công cụ, hoặc khi muốn chuẩn hóa việc discovery và gọi tool giữa các framework hỗ trợ MCP.
+	Ưu điểm: tái sử dụng và giảm coupling. Chi phí: thêm server, network hop, bảo mật và vận hành.
+		
+		
+	MCP cũng không giải quyết vấn đề tranh chấp ghi dữ liệu trong hệ multi-agent. Nếu nhiều agent cùng cập nhật PostgreSQL, bạn vẫn cần transaction, locking hoặc optimistic concurrency, idempotency và cơ chế xử lý conflict ở backend. Chuẩn hóa giao thức gọi tool không đồng nghĩa với việc chuẩn hóa tính nhất quán dữ liệu.
+	
+	
+	
+# 	6. MCP transport: stdio và Streamable HTTP
+	
+	MCP không chỉ quy định những loại thông điệp được trao đổi; nó còn có các cơ chế transport để client và server giao tiếp.	
+	
+	
+	
+MCP không chỉ quy định những loại thông điệp được trao đổi; nó còn có các cơ chế transport để client và server giao tiếp.
+
+| Tiêu chí           | stdio                                                                             | Streamable HTTP                                                       |
+| ------------------ | --------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| Cách hoạt động     | Client khởi chạy server như tiến trình local và trao đổi dữ liệu qua stdin/stdout | Client giao tiếp với server qua HTTP; hỗ trợ streaming theo giao thức |
+| Môi trường phù hợp | Công cụ local, development, server chạy cùng máy                                  | Server remote, môi trường triển khai tập trung                        |
+| Quản lý tiến trình | Thường gắn với vòng đời tiến trình do client khởi chạy                            | Server được triển khai và vận hành riêng                              |
+| Bảo mật            | Phụ thuộc vào quyền của tiến trình và môi trường chạy                             | Cần thiết kế authentication, authorization và bảo vệ network          |
+| Vận hành           | Đơn giản khi chạy local                                                           | Phải quản lý endpoint, network, scale và availability                 |
+	
+	
+	
+	MCP hiện đại sử dụng Streamable HTTP làm transport HTTP chính trong đặc tả; không nên mặc định HTTP+SSE theo thiết kế cũ là lựa chọn mới cho mọi hệ thống. SSE có thể xuất hiện trong các hệ thống hoặc phiên bản triển khai cũ.
+	
+	
+	Với stdio, không được tùy tiện ghi log hoặc thông báo không thuộc giao thức ra stdout, vì có thể làm hỏng luồng giao tiếp. Nên ghi log ra stderr.
+
+	Với Streamable HTTP, cần bảo vệ endpoint khỏi truy cập trái phép, xác thực đúng đối tượng gọi và giới hạn quyền của tool.
+
+	Không được coi việc một request có nguồn gốc từ MCP client là bằng chứng người dùng có quyền thực hiện mọi thao tác mà server hỗ trợ.
+
+	Transport không quyết định business authorization. Quyền truy cập vẫn phải được kiểm tra tại server và backend	
+		
+		
+		
+	
+	
+# 	7. Security: phần quan trọng nhất khi đưa MCP vào production
+	
+	MCP tạo ra một giao diện chuẩn hóa để gọi tool, nhưng giao diện chuẩn hóa không tự tạo ra ranh giới bảo mật an toàn.
+	Hãy xét tình huống agent có hai tool:
+	
+	- read_project_report: chỉ đọc báo cáo.
+	- send_line_message: gửi tin nhắn thật đến khách hàng.
+	
+	Nếu agent bị prompt injection từ nội dung tài liệu, nó có thể bị dụ gọi tool gửi thông báo ngoài ý muốn. Việc sử dụng MCP không tự ngăn được tình huống đó.	
+		
+		
+		
+		
+		
+Những lớp bảo vệ cần có
+	1. Authentication
+		Xác định danh tính của client, service hoặc người dùng theo phương thức phù hợp với môi trường triển khai.
+
+
+	2. Authorization và least privilege
+		Chỉ cấp quyền cần thiết cho từng tool. Tool đọc dữ liệu không nên dùng credential có quyền ghi hoặc xóa toàn bộ cơ sở dữ liệu.
+
+
+	3. Kiểm tra tham số và nghiệp vụ
+		Validate schema, kiểm tra project/user scope, giới hạn kích thước dữ liệu và xác minh các điều kiện nghiệp vụ tại server.
+
+
+	4. Human-in-the-loop
+		Yêu cầu phê duyệt khi thao tác có rủi ro cao, chẳng hạn gửi thông báo hàng loạt, xóa dữ liệu hoặc thực hiện giao dịch.
+
+
+	5. Audit và observability
+		Ghi nhận ai gọi tool, tool nào được gọi, tham số cần thiết, kết quả, lỗi và thời gian thực thi; tránh ghi secret hoặc dữ liệu nhạy cảm không cần thiết.		
+			
+		
+		
+		
+	Ba lỗi kiến trúc thường gặp
+	
+	Lỗi 1: Tin tưởng description của tool. Description giúp model hiểu công cụ nhưng không phải một security policy. Server phải tự xác thực và kiểm tra quyền.
+	
+	Lỗi 2: Dùng chung một credential quyền cao cho mọi agent. Điều này làm tăng blast radius khi một agent hoặc tool bị xâm phạm. Nên giới hạn quyền theo danh tính, tài nguyên và hành động.
+	
+	Lỗi 3: Cho rằng MCP tự giải quyết prompt injection. MCP chuẩn hóa tương tác; nó không tự loại bỏ nội dung độc hại trong tài liệu, không bảo đảm model luôn chọn đúng tool và không thay thế kiểm soát quyền.		
+			
+			
+		
+# 8. Trade-off trong production		
+		
+		
+
+| Tiêu chí             | Lợi ích khi dùng MCP                                            | Chi phí hoặc rủi ro                                                          |
+| -------------------- | --------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| Khả năng tái sử dụng | Một server có thể được nhiều client tương thích sử dụng         | Phải duy trì tương thích và versioning                                       |
+| Latency              | Có thể giảm công sức tích hợp và chuẩn hóa đường gọi tool       | Có thể thêm network hop, handshake và serialization                          |
+| Scalability          | Server remote có thể được triển khai độc lập và scale riêng     | Phải quản lý connection, concurrency, timeout và backpressure                |
+| Security             | Có thể tập trung một phần logic truy cập và audit               | Tạo thêm endpoint và ranh giới tin cậy cần bảo vệ                            |
+| Accuracy             | Tool schema và description rõ ràng giúp agent hiểu cách sử dụng | Schema kém hoặc kết quả mơ hồ vẫn khiến model gọi sai                        |
+| Cost                 | Có thể giảm chi phí phát triển khi dùng nhiều client            | Tốn tài nguyên vận hành và bảo trì server; MCP không tự giảm token inference |
+		
+		
+	Không nên kết luận rằng MCP luôn chậm hơn hoặc luôn nhanh hơn. Latency thực tế phụ thuộc transport, topology, network, số lần gọi tool và thời gian xử lý của backend. Với một tool gọi database mất 500 ms, việc thêm một network hop nhỏ có thể không đáng kể; với agent gọi hàng chục tool liên tiếp, overhead cộng dồn có thể trở thành vấn đề.
+	
+	
+	
+	
+# 9. Exam Knowledge vs Production Knowledge
+	
+	
+	
+Exam Knowledge
+- Phân biệt protocol, model, agent runtime và backend API.
+- Hiểu vai trò của tool integration, schema, authentication và authorization.
+- Chọn kiến trúc theo yêu cầu tái sử dụng, bảo mật, latency và operational complexity.
+- Không giả định một giao thức tích hợp có thể tự cung cấp reasoning, orchestration hoặc quyền truy cập an toàn.
+
+
+Production Knowledge
+- Thiết kế MCP server với transport, authentication và authorization rõ ràng.
+- Quản lý tool discovery, versioning, timeout, retry và idempotency.
+- Tách danh tính agent khỏi quyền của người dùng cuối; xác định rõ acting identity và credential delegation.
+- Kiểm soát prompt injection, tool poisoning, rò rỉ dữ liệu và hành động có side effect.
+- Quan sát toàn bộ chuỗi agent → MCP → backend, bao gồm trace, audit và lỗi.
+
+
+Legacy Knowledge
+- HTTP+SSE xuất hiện trong các triển khai MCP cũ; cần nhận biết khi migration.
+- Các integration riêng cho từng framework vẫn có thể tồn tại trong hệ thống cũ. Không cần chuyển tất cả sang MCP nếu không có lợi ích kiến trúc rõ ràng.	
+	
+	
+	
+# 10. Keywords và exam traps
+	
+	
+	
+| Từ khóa trong scenario                      | Hướng phân tích                                                            |
+| ------------------------------------------- | -------------------------------------------------------------------------- |
+| Reuse tools across multiple AI applications | Xem xét MCP hoặc lớp tool integration dùng chung                           |
+| Framework-agnostic integration              | Ưu tiên giao diện chuẩn hóa nếu các client/framework hỗ trợ                |
+| Local tool process                          | Xem xét stdio và ranh giới quyền của tiến trình                            |
+| Remote tool server                          | Xem xét Streamable HTTP, authentication, authorization và network security |
+| Minimize latency and operational overhead   | So sánh với gọi API/tool trực tiếp; không thêm MCP nếu không cần           |
+| Least privilege                             | Phân quyền ở tool server và backend, không chỉ dựa vào model               |
+| High-risk actions                           | Human approval, kiểm tra nghiệp vụ và audit                                |
+| Concurrent updates                          | Transaction, concurrency control và idempotency ở backend                  |
+
+	
+# 	Cách AWS ra đề: xác định “best fit”
+
+
+Đừng chọn MCP chỉ vì đề có từ “AI agent”. Hãy tìm hidden requirement:
+
+	1. Nhiều ứng dụng dùng chung tool: MCP có thể giảm integration trùng lặp.
+	2. Chỉ một ứng dụng và cần tối giản: direct function/API integration có thể tốt hơn.
+	3. Có hành động nhạy cảm: phải có authorization và approval phù hợp; giao thức không đủ.
+	4. Nhiều agent cùng cập nhật dữ liệu: giải quyết concurrency tại backend.
+	5. Yêu cầu framework-agnostic: xác minh các framework và tool thực sự hỗ trợ giao thức tương ứng.
+
+Quy tắc chọn đáp án: chọn phương án thỏa constraint bắt buộc với ít thành phần và rủi ro vận hành không cần thiết nhất, chứ không chọn phương án có nhiều dịch vụ AWS nhất.
+	
+	
+	
+	
+	
+	
+</code></pre>
+</div>
+<div class='nav-bar'><a class='nav-btn' href='lesson66.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../aws-bedrock-agent-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson68.html'>Bài sau ➡️</a></div><button class='theme-toggle-btn' onclick='toggleTheme()'>🌓 Đổi Giao Diện</button>
+</div>
+<script>
+const lessonKey = 'aws-bedrock-agent-learning-list_lesson67.html';
+function toggleTheme() {
+   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';
+   document.body.className = mode;
+   localStorage.setItem('theme', mode);
+}
+function toggleDone() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   if (isDone) {
+       localStorage.removeItem(lessonKey);
+   } else {
+       localStorage.setItem(lessonKey, 'done');
+   }
+   renderDoneStatus();
+}
+function renderDoneStatus() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   let btn = document.getElementById('doneButton');
+   if (isDone) {
+       btn.className = 'done-btn completed';
+       btn.innerText = 'Đã Hoàn Thành ✅';
+   } else {
+       btn.className = 'done-btn';
+       btn.innerText = 'Đánh dấu đã học ⚪';
+   }
+}
+function copyContent() {
+   let text = document.getElementById('lessonCode').innerText;
+   navigator.clipboard.writeText(text).then(function() {
+       alert('✅ Đã sao chép nội dung bài học!');
+   });
+}
+function initLesson() {
+   document.body.className = localStorage.getItem('theme') || 'dark-mode';
+   renderDoneStatus();
+   if (window.Prism) Prism.highlightAll();
+}
+</script></body></html>

@@ -1,0 +1,70 @@
+<html><head><title>Lesson 30 == ng-switch ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../angular-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 30 -- ng-switch -//</h1><pre># Khái niệm 
+	Directive ng-switch trong AngularJS cho phép bạn hiển thị có điều kiện các phần tử HTML khác nhau dựa trên giá trị của một biểu thức — tương tự như câu lệnh switch trong JavaScript, nhưng dùng cho HTML template.
+
+# 🧠 Cách hoạt động tổng quát
+	ng-switch được đặt trên phần tử container (thường là <div>).
+	Bên trong đó, bạn dùng ng-switch-when="value" để xác định khối sẽ được hiển thị khi biểu thức trong ng-switch có giá trị tương ứng.
+	
+# ✅ Cú pháp
+<div ng-switch="expression">
+  <div ng-switch-when="value1">Hiển thị nếu expression == value1</div>
+  <div ng-switch-when="value2">Hiển thị nếu expression == value2</div>
+  <div ng-switch-default>Hiển thị nếu không trùng value nào</div>
+</div>
+
+# 📘 Ví dụ đơn giản
+<div ng-app="myApp" ng-controller="myCtrl">
+  <select ng-model="selectedColor">
+    <option value="red">Đỏ</option>
+    <option value="blue">Xanh</option>
+    <option value="green">Xanh lá</option>
+  </select>
+
+  <div ng-switch="selectedColor">
+    <p ng-switch-when="red">Bạn chọn màu đỏ.</p>
+    <p ng-switch-when="blue">Bạn chọn màu xanh dương.</p>
+    <p ng-switch-when="green">Bạn chọn màu xanh lá.</p>
+    <p ng-switch-default>Chưa chọn màu nào.</p>
+  </div>
+</div>
+
+>> js 
+angular.module('myApp', []).controller('myCtrl', function($scope) {
+  $scope.selectedColor = "";
+});
+
+
+# 🔍 Giải thích chi tiết
+| Thuộc tính               | Ý nghĩa                                       |
+| ------------------------ | --------------------------------------------- |
+| `ng-switch="expression"` | Giá trị để so sánh                            |
+| `ng-switch-when="value"` | Render phần tử nếu `expression === value`     |
+| `ng-switch-default`      | Render nếu không có `ng-switch-when` nào khớp |
+
+
+
+# 💡 Ưu điểm so với ng-if hoặc ng-show
+	ng-switch giúp tổ chức logic nhiều điều kiện phân nhánh phức tạp một cách rõ ràng, dễ đọc hơn.
+	Tránh phải viết nhiều ng-if, dẫn đến lặp code.
+	Hiệu suất tốt hơn nếu có nhiều khối rẽ nhánh cần loại bỏ hoàn toàn khỏi DOM khi không được chọn.
+
+# ⚠️ Lưu ý
+
+	Chỉ một phần tử con trong ng-switch được hiển thị tại một thời điểm.
+	Các phần tử con phải là sibling (cùng cấp con của phần tử ng-switch).
+
+# 🧠 Tóm lại:
+
+| Điểm mạnh của `ng-switch`                    |
+| -------------------------------------------- |
+| Gọn gàng hơn nhiều `ng-if`                   |
+| Tương tự `switch-case` trong JS              |
+| Dễ đọc và mở rộng logic hiển thị             |
+| Có thể thêm `ng-switch-default` làm fallback |
+
+
+
+
+
+
+</pre><a id='backBottom' href='../angular-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

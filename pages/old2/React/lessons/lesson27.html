@@ -1,0 +1,48 @@
+<html><head><title>Lesson 27 == Forward ref ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../react-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 27 -- Forward ref -//</h1><pre>
+# 1. What is forwardRef?
+	forwardRef là hàm wrap component để nhận ref từ cha và forward (chuyển tiếp) nó đến DOM element hoặc component con. Thường dùng cho:
+
+		- Focus input (ví dụ: tự động focus sau mount).
+		- Trigger animations (qua ref để gọi play/pause).
+		- Đo DOM elements (sử dụng getBoundingClientRect).
+		- Tích hợp thư viện bên thứ ba (như Chart.js cần canvas ref).
+
+	Insight chuyên gia: Ref trong React là cách escape hatch để imperative code. forwardRef giải quyết vấn đề: Component thông thường không nhận ref như prop, nên cần forward để cha truy cập con. Trong TypeScript, cần khai báo forwardRef với generics để type-safe (ví dụ: forwardRef<HTMLInputElement, Props>). Best practice: Chỉ dùng khi declarative không đủ; ưu tiên state/props.
+
+
+# 2. Basic Example: Ví dụ cơ bản
+
+
+	- import { forwardRef, useRef } from 'react';: forwardRef để wrap, useRef để tạo ref object (có .current lưu giá trị).
+	- const MyInput = forwardRef((props, ref) => ... );: Hàm forwardRef nhận callback với 2 tham số: props (các prop thông thường) và ref (ref từ cha). Trả về JSX với ref attached vào element cần (ở đây là <input>).
+	- {...props}: Spread props để MyInput nhận các prop như placeholder, value, v.v.
+	- Trong App(): useRef() tạo ref, truyền vào <MyInput ref={inputRef}>.
+	- inputRef.current.focus(): .current chứa DOM node (input element), gọi method focus() imperative.
+
+	Insight chuyên gia: Ví dụ này đơn giản nhưng thực tế: Useful cho form validation (focus error field) hoặc accessibility (focus sau dialog open). Lỗi phổ biến: Quên forward ref dẫn đến warning "Function components cannot be given refs". Trong functional components, ref chỉ forward nếu dùng forwardRef. Scale lên: Kết hợp useImperativeHandle để customize ref:
+
+import { forwardRef, useRef, useImperativeHandle } from 'react';
+
+const MyInput = forwardRef((props, ref) => {
+  const inputRef = useRef();
+  useImperativeHandle(ref, () => ({  // Expose chỉ method cần
+    focus: () => inputRef.current.focus(),
+    clear: () => inputRef.current.value = ''
+  }));
+  return <input ref={inputRef} {...props} />;
+});
+
+	Cha gọi inputRef.current.focus() hoặc .clear(). Điều này giữ encapsulation, tránh expose toàn DOM.
+
+
+# 3. Example Explained: Giải thích ví dụ
+
+	Wrap component với forwardRef để nhận ref như tham số thứ hai.
+	Component con attach ref vào DOM element.
+	Cha sử dụng ref để kiểm soát con (như focus).
+
+
+Insight chuyên gia: Trong class components, forwardRef không cần vì class nhận ref tự động, nhưng functional components (mặc định từ React 16+) cần explicit forward. Trong libraries, forwardRef giúp reusable components (ví dụ: Button wrap <button> với ref). Performance: Ref không trigger re-render, nên an toàn cho imperative actions. Test: Dùng Re
+
+
+</pre><a id='backBottom' href='../react-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

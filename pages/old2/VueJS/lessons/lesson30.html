@@ -1,0 +1,188 @@
+<html><head><title>Lesson 30 == v-slot ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../vue-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 30 -- v-slot -//</h1><pre>
+# Khái niệm 
+	v-slot là một chỉ thị (directive) được giới thiệu từ Vue 2.6 để quản lý các slot trong thành phần cha.
+	Nó thay thế cú pháp cũ là slot và slot-scope, mang lại cách viết rõ ràng và thống nhất hơn.
+	
+	## v-slot được dùng để:
+		
+		- Chèn nội dung vào slot mặc định (default slot).
+		- Chỉ định nội dung cho các slot có tên (named slots).
+		- Nhận dữ liệu từ slot có phạm vi (scoped slots) mà thành phần con gửi lên.
+
+
+
+	## 3. Cách sử dụng v-slot
+		Dưới đây là các cách sử dụng v-slot với các ví dụ cụ thể:
+		
+
+	## Ví dụ 1: Slot mặc định 
+		### Thành phần con (MyComponent.vue):
+		
+<template>
+  <div>
+    <slot></slot>  <!-- Slot mặc định -->
+  </div>
+</template>		
+
+
+		### Thành phần cha: 
+<template>
+  <my-component>
+    <p>Đây là nội dung cho slot mặc định.</p>
+  </my-component>
+</template>
+
+
+
+
+
+	## Ví dụ 2: Slot có tên (Named Slots) 
+		### Thành phần con (MyLayout.vue): 
+		
+<template>
+  <div>
+    <header>
+      <slot name="header"></slot>
+    </header>
+    <main>
+      <slot name="content"></slot>
+    </main>
+    <footer>
+      <slot name="footer"></slot>
+    </footer>
+  </div>
+</template>		
+
+	
+
+		### Thành phần cha: 
+<template>
+  <my-layout>
+    <template v-slot:header>
+      <h1>Nội dung tiêu đề</h1>
+    </template>
+    <template v-slot:content>
+      <p>Nội dung chính</p>
+    </template>
+    <template v-slot:footer>
+      <p>Nội dung chân trang</p>
+    </template>
+  </my-layout>
+</template>			
+
+		Giải thích: v-slot:header, v-slot:content, và v-slot:footer chỉ định nội dung sẽ đi vào các slot tương ứng trong <my-layout>.
+
+
+	## Ví dụ 3: Slot có phạm vi (Scoped Slots)
+
+		###  Thành phần con (UserList.vue):
+<template>
+  <ul>
+    <li v-for="user in users" :key="user.id">
+      <slot :user="user"></slot>  <!-- Gửi dữ liệu user lên cha -->
+    </li>
+  </ul>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      users: [
+        { id: 1, name: 'John' },
+        { id: 2, name: 'Jane' }
+      ]
+    };
+  }
+};
+</script>
+
+		### Thành phần cha: 
+<template>
+  <user-list>
+    <template v-slot="{ user }">
+      <span>{{ user.name }}</span>
+    </template>
+  </user-list>
+</template>			
+		
+		
+		Giải thích: Thành phần con gửi dữ liệu user qua slot. Thành phần cha nhận dữ liệu này bằng v-slot="{ user }" và hiển thị tên của từng người dùng.
+		
+		
+		
+# 	4. So sánh v-slot với cú pháp cũ 
+	
+		
+	## Trước Vue 2.6: 
+		Dùng slot="name" để chỉ định slot có tên. 
+		Dùng slot-scope="props" để nhận dữ liệu từ scoped slots.
+		
+		
+	## Với v-slot 	
+		Gộp chung cả hai tính năng vào một chỉ thị duy nhất. 
+		Phải sử dụng trên thẻ <template> hoặc trực tiếp trên thẻ thành phần (cho slot mặc định). 
+		Cú pháp rõ ràng và dễ đọc hơn.
+
+
+# 5. Một số lưu ý quan trọng
+
+	v-slot chỉ dùng được trên <template> hoặc thành phần: Không dùng được trên các thẻ HTML thông thường như <div>.
+	Cú pháp ngắn gọn: Trong Vue 3, bạn có thể dùng # thay cho v-slot. Ví dụ: #content tương đương với v-slot:content.
+	Scoped Slots linh hoạt: Thành phần con có thể gửi bất kỳ dữ liệu nào (đối tượng, hàm, v.v.) lên cha qua slot.
+	Tương thích ngược: Nếu dùng Vue < 2.6, bạn phải dùng cú pháp cũ (slot và slot-scope).
+
+
+# 6. Tại sao nên dùng v-slot? 
+	Rõ ràng: Giúp bạn dễ dàng biết nội dung được chèn vào slot nào và dữ liệu được truyền ra sao. 
+	Linh hoạt: Tăng khả năng tái sử dụng của thành phần bằng cách cho phép cha tùy chỉnh nội dung và hành vi.
+	Thống nhất: Cung cấp một cú pháp duy nhất cho mọi tình huống liên quan đến slot.
+
+
+# 7. Phân biệt named slot và scoped slot 
+
+	##  Named slots 
+		Chỉ để đặt tên và tổ chức nội dung slot.
+		Không quan tâm đến dữ liệu, chỉ cần biết "nội dung này vào slot nào".
+		Dùng v-slot:tenSlot (ví dụ: v-slot:header).
+
+
+	## Scoped slots 
+		Dùng để lấy dữ liệu từ con và tùy chỉnh nội dung slot dựa trên dữ liệu đó
+		Dùng v-slot="{ bienNhanDuLieu }" (ví dụ: v-slot="{ item }"). 
+
+
+# Khi nào named slot  , scoped slot   "trộn" vào nhau?
+<!-- Thành phần con -->
+<div>
+  <slot name="item" :item="item"></slot> <!-- Vừa có tên "item", vừa gửi dữ liệu -->
+</div>
+
+<!-- Thành phần cha -->
+<my-component>
+  <template v-slot:item="{ item }">
+    <span>{{ item.name }}</span>
+  </template>
+</my-component>
+
+	##	Giải thích:
+		name="item": Đây là named slot, chỉ định slot tên "item".
+		:item="item": Đây là scoped slot, gửi dữ liệu item lên cha. 
+		v-slot:item="{ item }": Cha vừa chọn slot "item" (named) vừa nhận dữ liệu item (scoped).
+
+Nếu thấy v-slot:tenSlot, đó là named slot.
+Nếu thấy v-slot="{ bien }", đó là scoped slot.
+Nếu thấy cả hai (như v-slot:tenSlot="{ bien }"), thì nó là sự kết hợp.
+
+
+# Cú pháp trong Vue 3 
+
+	Từ Vue 2.6, v-slot được dùng thay cho slot và slot-scope cũ.
+	Trong Vue 3, bạn có thể viết tắt:
+		v-slot:header thành #header.
+		v-slot="{ item }" thành #default="{ item }" (cho slot mặc định).
+		
+	Nhưng ý nghĩa không đổi, chỉ là cách viết gọn hơn.
+
+
+</pre><a id='backBottom' href='../vue-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

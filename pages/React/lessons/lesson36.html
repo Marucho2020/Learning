@@ -1,4 +1,37 @@
-<html><head><title>Lesson 36 == User Callback ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../react-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 36 -- User Callback -//</h1><pre>
+<!DOCTYPE html><html lang='vi'><head><meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0'>
+<title>Lesson 36 -- User Callback -//</title>
+<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css'>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js'></script>
+<script id='MathJax-script' async src='https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'></script>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; margin: 0; padding: 20px; transition: 0.3s; }
+.dark-mode { background-color: #121212; color: #e0e0e0; }
+.light-mode { background-color: #ffffff; color: #333333; }
+.container { max-width: 950px; margin: auto; }
+h1 { text-align: center; color: #3498db; margin: 20px 0; font-size: 26px; }
+.nav-bar { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 20px 0; }
+.nav-btn { text-decoration: none; padding: 10px 18px; background: #3498db; color: white; border-radius: 6px; font-weight: bold; font-size: 15px; display: inline-block; transition: 0.2s; }
+.nav-btn:hover { background: #2980b9; }
+.nav-btn.home-nav { background: #6c757d; }
+.nav-btn.home-nav:hover { background: #5a6268; }
+.nav-btn.disabled { background: #aaa; cursor: not-allowed; opacity: 0.5; }
+.done-btn { display: block; margin: 15px auto; padding: 10px 24px; border: 2px solid #2ecc71; background: transparent; color: #2ecc71; border-radius: 25px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+.done-btn.completed { background: #2ecc71; color: white; }
+.content-box { position: relative; margin: 20px 0; }
+pre { padding: 20px; border-radius: 8px; white-space: pre-wrap; word-break: break-word; overflow-x: auto; font-family: 'Consolas', 'Courier New', monospace; font-size: 15px; }
+.dark-mode pre { background: #1a1a1a; color: #f8f8f2; border: 1px solid #333; }
+.light-mode pre { background: #f8f9fa; color: #212529; border: 1px solid #e9ecef; }
+.copy-btn { position: absolute; top: 12px; right: 12px; padding: 6px 12px; font-size: 12px; background: #555; color: white; border: none; border-radius: 4px; cursor: pointer; opacity: 0.8; }
+.copy-btn:hover { opacity: 1; background: #2ecc71; }
+.theme-toggle-btn { display: block; margin: 20px auto; padding: 8px 16px; background: transparent; border: 1px solid #888; color: inherit; border-radius: 5px; cursor: pointer; }
+</style></head><body onload='initLesson()'>
+<div class='container'>
+<div class='nav-bar'><a class='nav-btn' href='lesson35.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../react-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson37.html'>Bài sau ➡️</a></div><h1>Lesson 36 -- User Callback -//</h1>
+<button id='doneButton' class='done-btn' onclick='toggleDone()'>Mark as Done ⚪</button>
+<div class='content-box'>
+<button class='copy-btn' onclick='copyContent()'>📋 Copy nội dung</button>
+<pre><code id='lessonCode'>
 #  Giới Thiệu Về Hook useCallback Trong React (Mức Độ Senior)
 
 	useCallback là một hook quan trọng trong React, được giới thiệu từ phiên bản 16.8, dùng để memoize (lưu cache) các callback functions, giúp tránh việc recreate function không cần thiết trong mỗi render. Điều này cải thiện performance bằng cách giảm re-renders của child components, đặc biệt khi kết hợp với React.memo hoặc useMemo. Ở mức độ senior, chúng ta cần hiểu sâu về referential equality (so sánh tham chiếu), cách hook hoạt động trong closure và dependency array, tích hợp với các hook khác để tránh stale closures hoặc infinite loops, và các tình huống tối ưu hóa trong large-scale apps (như với Context, Redux, hoặc heavy computations). Memoization ở đây dựa trên shallow compare của dependencies, tương tự useMemo, nhưng tập trung vào functions.
@@ -16,7 +49,7 @@
 
 		useMemo: Memoize bất kỳ value nào (số, object, array), dùng cho computations nặng.
 
-		useCallback: Là trường hợp đặc biệt của useMemo cho functions, tương đương useMemo(() => callback, deps). Dùng khi cần pass function làm prop hoặc dep.
+		useCallback: Là trường hợp đặc biệt của useMemo cho functions, tương đương useMemo(() =&gt; callback, deps). Dùng khi cần pass function làm prop hoặc dep.
 
 		Khác biệt: useMemo chạy computation mỗi khi deps đổi; useCallback chỉ return cached function mà không chạy nó.
 
@@ -42,30 +75,30 @@ function App() {
   const [count, setCount] = useState(0);
   const [todos, setTodos] = useState([]);
 
-  const increment = () => setCount(c => c + 1);
-  const addTodo = () => setTodos(t => [...t, 'New Todo']); // Recreate mỗi render
+  const increment = () =&gt; setCount(c =&gt; c + 1);
+  const addTodo = () =&gt; setTodos(t =&gt; [...t, 'New Todo']); // Recreate mỗi render
 
   console.log('App render');
   return (
-    <>
-      <Todos todos={todos} addTodo={addTodo} />
-      <hr />
-      <div>Count: {count} <button onClick={increment}>+</button></div>
-    </>
+    &lt;&gt;
+      &lt;Todos todos={todos} addTodo={addTodo} /&gt;
+      &lt;hr /&gt;
+      &lt;div&gt;Count: {count} &lt;button onClick={increment}&gt;+&lt;/button&gt;&lt;/div&gt;
+    &lt;/&gt;
   );
 }
 
 // Todos.js
 import { memo } from 'react';
 
-const Todos = memo(({ todos, addTodo }) => {
+const Todos = memo(({ todos, addTodo }) =&gt; {
   console.log('Todos render'); // Re-render dù todos không đổi
   return (
-    <>
-      <h2>My Todos</h2>
-      {todos.map((todo, index) => <p key={index}>{todo}</p>)}
-      <button onClick={addTodo}>Add Todo</button>
-    </>
+    &lt;&gt;
+      &lt;h2&gt;My Todos&lt;/h2&gt;
+      {todos.map((todo, index) =&gt; &lt;p key={index}&gt;{todo}&lt;/p&gt;)}
+      &lt;button onClick={addTodo}&gt;Add Todo&lt;/button&gt;
+    &lt;/&gt;
   );
 });
 	
@@ -82,16 +115,16 @@ function App() {
   const [count, setCount] = useState(0);
   const [todos, setTodos] = useState([]);
 
-  const increment = () => setCount(c => c + 1);
-  const addTodo = useCallback(() => setTodos(t => [...t, 'New Todo']), [setTodos]); // Memoize, deps rỗng nếu setTodos stable
+  const increment = () =&gt; setCount(c =&gt; c + 1);
+  const addTodo = useCallback(() =&gt; setTodos(t =&gt; [...t, 'New Todo']), [setTodos]); // Memoize, deps rỗng nếu setTodos stable
 
   console.log('App render');
   return (
-    <>
-      <Todos todos={todos} addTodo={addTodo} />
-      <hr />
-      <div>Count: {count} <button onClick={increment}>+</button></div>
-    </>
+    &lt;&gt;
+      &lt;Todos todos={todos} addTodo={addTodo} /&gt;
+      &lt;hr /&gt;
+      &lt;div&gt;Count: {count} &lt;button onClick={increment}&gt;+&lt;/button&gt;&lt;/div&gt;
+    &lt;/&gt;
   );
 }
 
@@ -110,26 +143,26 @@ function DebouncedSearch() {
   const [results, setResults] = useState([]);
 
   // Memoize debounce function
-  const debouncedSearch = useCallback((q) => {
-    const timer = setTimeout(() => {
+  const debouncedSearch = useCallback((q) =&gt; {
+    const timer = setTimeout(() =&gt; {
       // Giả lập API call
       console.log(`Searching for: ${q}`);
       setResults([`Kết quả 1 cho ${q}`, `Kết quả 2 cho ${q}`]);
     }, 500);
-    return () => clearTimeout(timer);
+    return () =&gt; clearTimeout(timer);
   }, []); // Deps rỗng, stable debounce
 
-  useEffect(() => {
+  useEffect(() =&gt; {
     if (query) {
       return debouncedSearch(query); // Cleanup previous timeout
     }
   }, [query, debouncedSearch]); // debouncedSearch stable nhờ useCallback
 
   return (
-    <>
-      <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Tìm kiếm..." />
-      <ul>{results.map((res, idx) => <li key={idx}>{res}</li>)}</ul>
-    </>
+    &lt;&gt;
+      &lt;input value={query} onChange={e =&gt; setQuery(e.target.value)} placeholder="Tìm kiếm..." /&gt;
+      &lt;ul&gt;{results.map((res, idx) =&gt; &lt;li key={idx}&gt;{res}&lt;/li&gt;)}&lt;/ul&gt;
+    &lt;/&gt;
   );
 }
 
@@ -149,39 +182,39 @@ const CounterContext = createContext();
 function CounterProvider({ children }) {
   const [count, setCount] = useState(0);
 
-  const increment = useCallback(() => setCount(c => c + 1), []); // Stable
-  const decrement = useCallback(() => setCount(c => c - 1), []);
+  const increment = useCallback(() =&gt; setCount(c =&gt; c + 1), []); // Stable
+  const decrement = useCallback(() =&gt; setCount(c =&gt; c - 1), []);
 
   return (
-    <CounterContext.Provider value={{ count, increment, decrement }}>
+    &lt;CounterContext.Provider value={{ count, increment, decrement }}&gt;
       {children}
-    </CounterContext.Provider>
+    &lt;/CounterContext.Provider&gt;
   );
 }
 
 function CounterDisplay() {
   const { count } = useContext(CounterContext);
-  return <h1>Count: {count}</h1>;
+  return &lt;h1&gt;Count: {count}&lt;/h1&gt;;
 }
 
 function CounterButtons() {
   const { increment, decrement } = useContext(CounterContext);
   console.log('Buttons render'); // Không re-render không cần
   return (
-    <>
-      <button onClick={increment}>+</button>
-      <button onClick={decrement}>-</button>
-    </>
+    &lt;&gt;
+      &lt;button onClick={increment}&gt;+&lt;/button&gt;
+      &lt;button onClick={decrement}&gt;-&lt;/button&gt;
+    &lt;/&gt;
   );
 }
 
 // App.js
 function App() {
   return (
-    <CounterProvider>
-      <CounterDisplay />
-      <CounterButtons />
-    </CounterProvider>
+    &lt;CounterProvider&gt;
+      &lt;CounterDisplay /&gt;
+      &lt;CounterButtons /&gt;
+    &lt;/CounterProvider&gt;
   );
 }
 
@@ -194,30 +227,30 @@ function App() {
 
 import { useState, useCallback, memo } from 'react';
 
-const ExpensiveItem = memo(({ item, onSelect }) => {
+const ExpensiveItem = memo(({ item, onSelect }) =&gt; {
   console.log(`Render item ${item}`); // Heavy render giả lập
-  return <li onClick={() => onSelect(item)}>{item}</li>;
+  return &lt;li onClick={() =&gt; onSelect(item)}&gt;{item}&lt;/li&gt;;
 });
 
 function FilteredList() {
   const [filter, setFilter] = useState('');
   const items = ['Apple', 'Banana', 'Cherry', 'Date', 'Elderberry'];
 
-  const handleSelect = useCallback((selected) => {
+  const handleSelect = useCallback((selected) =&gt; {
     alert(`Selected: ${selected}`);
   }, []); // Stable callback
 
-  const filteredItems = items.filter(item => item.toLowerCase().includes(filter.toLowerCase()));
+  const filteredItems = items.filter(item =&gt; item.toLowerCase().includes(filter.toLowerCase()));
 
   return (
-    <>
-      <input value={filter} onChange={e => setFilter(e.target.value)} placeholder="Lọc..." />
-      <ul>
-        {filteredItems.map(item => (
-          <ExpensiveItem key={item} item={item} onSelect={handleSelect} />
+    &lt;&gt;
+      &lt;input value={filter} onChange={e =&gt; setFilter(e.target.value)} placeholder="Lọc..." /&gt;
+      &lt;ul&gt;
+        {filteredItems.map(item =&gt; (
+          &lt;ExpensiveItem key={item} item={item} onSelect={handleSelect} /&gt;
         ))}
-      </ul>
-    </>
+      &lt;/ul&gt;
+    &lt;/&gt;
   );
 }
 
@@ -231,7 +264,7 @@ import { useCallback } from 'react';
 
 function useLogger(prefix) {
   // Memoize logger để stable trong deps khác
-  const log = useCallback((message) => {
+  const log = useCallback((message) =&gt; {
     console.log(`${prefix}: ${message}`);
   }, [prefix]);
 
@@ -242,19 +275,61 @@ function Component() {
   const logger = useLogger('MyComponent');
 
   // Sử dụng trong effect hoặc callback khác
-  return <button onClick={() => logger('Clicked')}>Log</button>;
+  return &lt;button onClick={() =&gt; logger('Clicked')}&gt;Log&lt;/button&gt;;
 }
 
 
 # Kết Luận Và Best Practices (Mức Chuyên Gia)
 
 	Khi dùng useCallback: Callback pass làm prop, deps trong useEffect, debounce/throttle, context values. Chỉ dùng nếu re-render costly (measure với React Profiler).
-	Tránh: Memoize primitive callbacks đơn giản (overhead > lợi ích); quên deps gây stale data.
+	Tránh: Memoize primitive callbacks đơn giản (overhead &gt; lợi ích); quên deps gây stale data.
 	Tích hợp: Với useMemo cho values, useEffect cho side effects, React.memo cho components.
-	Performance tip: Deps minimum, dùng updater functions (c => c + 1) để tránh deps trên state. Trong TS, type callback với React.FC hoặc generics.
+	Performance tip: Deps minimum, dùng updater functions (c =&gt; c + 1) để tránh deps trên state. Trong TS, type callback với React.FC hoặc generics.
 	Debug: React DevTools inspect memoized functions; console.log check renders.
 	Advanced: Kết hợp Immer/Proxy cho immutable, hoặc libs như ahooks cho pre-built memoized utils.
 
 
 
-</pre><a id='backBottom' href='../react-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
+</code></pre>
+</div>
+<div class='nav-bar'><a class='nav-btn' href='lesson35.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../react-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson37.html'>Bài sau ➡️</a></div><button class='theme-toggle-btn' onclick='toggleTheme()'>🌓 Đổi Giao Diện</button>
+</div>
+<script>
+const lessonKey = 'react-learning-list_lesson36.html';
+function toggleTheme() {
+   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';
+   document.body.className = mode;
+   localStorage.setItem('theme', mode);
+}
+function toggleDone() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   if (isDone) {
+       localStorage.removeItem(lessonKey);
+   } else {
+       localStorage.setItem(lessonKey, 'done');
+   }
+   renderDoneStatus();
+}
+function renderDoneStatus() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   let btn = document.getElementById('doneButton');
+   if (isDone) {
+       btn.className = 'done-btn completed';
+       btn.innerText = 'Đã Hoàn Thành ✅';
+   } else {
+       btn.className = 'done-btn';
+       btn.innerText = 'Đánh dấu đã học ⚪';
+   }
+}
+function copyContent() {
+   let text = document.getElementById('lessonCode').innerText;
+   navigator.clipboard.writeText(text).then(function() {
+       alert('✅ Đã sao chép nội dung bài học!');
+   });
+}
+function initLesson() {
+   document.body.className = localStorage.getItem('theme') || 'dark-mode';
+   renderDoneStatus();
+   if (window.Prism) Prism.highlightAll();
+}
+</script></body></html>

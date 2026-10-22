@@ -1,0 +1,133 @@
+<html><head><title>Lesson 43 == Delayed Interface ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 43 -- Delayed Interface -//</h1><pre>
+# Khái niệm  
+	Delayed là một interface trong Java thuộc gói java.util.concurrent. Nó được thiết kế cho các đối tượng có thể được lập lịch để xử lý sau một khoảng thời gian nhất định. Các đối tượng triển khai Delayed thường được sử dụng trong các hàng đợi ưu tiên có thời gian trễ(DelayQueue) 
+	
+		public interface Delayed extends Comparable<Delayed> {
+				long getDelay(TimeUnit unit);
+		}
+	
+		- getDelay(TimeUnit unit): Trả về khoảng thời gian trễ còn lại của đối tượng tính theo đơn vị thời gian (unit)
+		
+		- Comparable<Delayed> : Interface này mở rộng  nghĩa là các đối tượng Delayed cần được xắp xếp theo thời gian trễ của chúng  
+		
+# Ứng dụng thực tế của Delayed 
+			- Hàng đợi thực hiện tác vụ sau một khoảng thời gian(như hệ thống nhắn tin trễ)
+			- Hàng đợi yêu cầu retry sau khi thất bại 
+			- Cơ chế caching với thời gian hết hạn 
+			- Kiểm soát tốc độ thực thi tác vụ(Rate Limiting)
+			
+# Ví dụ cơ bản về Delayed 
+	Giả sử bạn đang lập trình một hệ thống nhắn tin, nơi một tin nhắn sẽ chỉ được xử lý sau một khoảng thời gian nhất định 
+		import java.util.concurrent.TimeUnit;
+		import java.util.concurrent.Delayed;
+		
+		class DelayedMessage implements Delayed {
+			private String message;
+			private long startTime;
+		
+			public DelayedMessage(String message, long delayInMillis) {
+				this.message = message;
+				this.startTime = System.currentTimeMillis() + delayInMillis;
+			}
+		
+			@Override
+			public long getDelay(TimeUnit unit) {
+				long diff = startTime - System.currentTimeMillis();
+				return unit.convert(diff, TimeUnit.MILLISECONDS);
+			}
+		
+			@Override
+			public int compareTo(Delayed other) {
+				return Long.compare(this.getDelay(TimeUnit.MILLISECONDS), other.getDelay(TimeUnit.MILLISECONDS));
+			}
+		
+			public String getMessage() {
+				return message;
+			}
+		}
+
+
+		import java.util.concurrent.DelayQueue;
+		
+		public class DelayedQueueExample {
+			public static void main(String[] args) throws InterruptedException {
+				DelayQueue<DelayedMessage> queue = new DelayQueue<>();
+		
+				queue.put(new DelayedMessage("Tin nhắn 1 sau 3 giây", 3000));
+				queue.put(new DelayedMessage("Tin nhắn 2 sau 5 giây", 5000));
+				queue.put(new DelayedMessage("Tin nhắn 3 sau 1 giây", 1000));
+		
+				while (!queue.isEmpty()) {
+					DelayedMessage msg = queue.take(); // take() sẽ chờ đến khi phần tử có thể lấy ra
+					System.out.println("Đã nhận được: " + msg.getMessage());
+				}
+			}
+		}
+
+		
+	## Ứng dụng nâng cao : Caching với thời gian hết hạn  
+		import java.util.concurrent.DelayQueue;
+		import java.util.concurrent.TimeUnit;
+		
+		class CacheItem implements Delayed {
+			private String key;
+			private long expireTime;
+		
+			public CacheItem(String key, long ttl) {
+				this.key = key;
+				this.expireTime = System.currentTimeMillis() + ttl;
+			}
+		
+			@Override
+			public long getDelay(TimeUnit unit) {
+				long remainingTime = expireTime - System.currentTimeMillis();
+				return unit.convert(remainingTime, TimeUnit.MILLISECONDS);
+			}
+		
+			@Override
+			public int compareTo(Delayed other) {
+				return Long.compare(this.getDelay(TimeUnit.MILLISECONDS), other.getDelay(TimeUnit.MILLISECONDS));
+			}
+		
+			public String getKey() {
+				return key;
+			}
+		}
+		
+		public class ExpiringCache {
+			private static final DelayQueue<CacheItem> cacheQueue = new DelayQueue<>();
+		
+			public static void main(String[] args) throws InterruptedException {
+				cacheQueue.put(new CacheItem("session_123", 4000));
+				cacheQueue.put(new CacheItem("session_456", 2000));
+		
+				while (!cacheQueue.isEmpty()) {
+					CacheItem expiredItem = cacheQueue.take();
+					System.out.println("Xóa khỏi cache: " + expiredItem.getKey());
+				}
+			}
+		}
+		
+		
+		CacheItem là một đối tượng có thời gian tồn tại (TTL - Time To Live).
+		Sau khi thời gian TTL hết hạn, mục cache sẽ tự động bị loại bỏ.
+		DelayQueue đảm bảo rằng chỉ những mục hết hạn mới bị xóa.
+
+# Những điểm cần lưu ý  
+
+	- Delayed là interface có một phương thức quan trọng getDelay(timeUnit unit)
+	- Các lớp triển khai Delayed phải xác định cách tính thời gian trễ và cách so sánh thứ tự ưu tiên 
+	- DelayQueue là một hàng đợi chỉ lấy được phần tử khi đã hết thời gian trễ  
+	
+	- Ứng dụng quan trọng của Delayed : 
+		- Lập lịch thực thi nhiệm vụ 
+		- Cache với thời gian hết hạn  
+		- Hàng đợi retry(thử lại sau khi thất bại )
+	- Sắp xếp trong DelayQueue dựa trên thời gian trễ còn lại 
+	
+		DelayQueue hoạt động như một PriorityQueue, sử dụng compareTo() để sắp xếp.
+		getDelay() phải tính toán chính xác thời gian trễ còn lại.
+		take() sẽ chờ đến khi phần tử có thể lấy được.
+	
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

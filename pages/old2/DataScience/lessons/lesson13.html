@@ -1,0 +1,71 @@
+<html><head><title>Lesson 13 == Stat Percentiles ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../DataScience-learning.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 13 -- Stat Percentiles -//</h1><pre>
+
+# 1. Khái niệm Percentiles là gì? 
+
+	Định nghĩa: Percentile thứ P (P%) là giá trị mà P% dữ liệu trong tập dữ liệu nhỏ hơn hoặc bằng nó. Ngược lại, (100 - P)% dữ liệu lớn hơn nó.
+
+	Ví dụ: Percentile 50% chính là median (giá trị trung vị) – giá trị ở giữa khi dữ liệu được sắp xếp.
+
+	Quartiles đặc biệt:
+	
+	Q1 (25%): 25% dữ liệu ≤ giá trị này.
+	Q2 (50%): Median.
+	Q3 (75%): 75% dữ liệu ≤ giá trị này.
+
+
+	Ý nghĩa: Percentiles không bị ảnh hưởng bởi outlier như mean (trung bình), nên chúng tốt hơn để mô tả dữ liệu lệch (skewed data). Trong phân tích dữ liệu, chúng giúp đánh giá hiệu suất (ví dụ: lương 90% percentile nghĩa là cao hơn 90% người khác) hoặc kiểm soát chất lượng.
+
+
+# 3. Cách Tính Percentiles Thủ Công (Chi Tiết Như Chuyên Gia)
+	Để tính percentile thứ P:
+
+	Sắp xếp dữ liệu theo thứ tự tăng dần.
+	
+	Tính vị trí: Sử dụng công thức nội suy tuyến tính (linear interpolation, mặc định trong NumPy):
+
+	Index = (P / 100) * (n - 1), trong đó n là số lượng dữ liệu.
+Nếu index là số nguyên k, giá trị = data[k].
+Nếu index = k + f (f là phần thập phân), giá trị = data[k] + f * (data[k+1] - data[k]).
+
+
+	Ví dụ cụ thể 1: Tính 10% percentile của Max_Pulse (như nhiệm vụ trong bài)
+
+		Dữ liệu Max_Pulse: 120, 120, 130, 130, 140, 140, 145, 145, 150, 150 (đã sắp xếp).
+		n = 10, P = 10.
+		Index = (10 / 100) * (10 - 1) = 0.1 * 9 = 0.9.
+		k = 0, f = 0.9.
+		Giá trị = 120 + 0.9 * (120 - 120) = 120 + 0 = 120.
+		Ý nghĩa: 10% các buổi tập có Max_Pulse ≤ 120 bpm. (Khớp với ví dụ trong bài.)
+
+
+
+	Ví dụ cụ thể 2: Tính 25% percentile của Average_Pulse (để minh họa)
+
+		Dữ liệu Average_Pulse: 80, 85, 90, 95, 100, 105, 110, 115, 120, 125 (đã sắp xếp).
+		n = 10, P = 25.
+		Index = 0.25 * 9 = 2.25.
+		k = 2, f = 0.25.
+		Giá trị = 90 + 0.25 * (95 - 90) = 90 + 0.25 * 5 = 90 + 1.25 = 91.25.
+		Ý nghĩa: 25% buổi tập có Average_Pulse ≤ 91.25 bpm. (Trong full data của W3Schools, giá trị này là 100, có lẽ do dữ liệu lớn hơn với nhiều giá trị lặp hoặc phân bố khác.)
+
+
+
+# 4. Minh Họa Với Python (Sử Dụng NumPy)
+
+
+import numpy as np
+
+# Dữ liệu mẫu từ Max_Pulse
+max_pulse = np.array([120, 120, 130, 130, 140, 140, 145, 145, 150, 150])
+
+# Tính 10% percentile
+percentile10 = np.percentile(max_pulse, 10)
+print(percentile10)  # Kết quả: 120.0
+
+np.array([...]): Tạo mảng dữ liệu.
+np.percentile(data, P): Tính percentile thứ P, với nội suy tuyến tính.
+Trong thực tế, với full_health_data (DataFrame Pandas), bạn làm: np.percentile(full_health_data["Max_Pulse"], 10).
+
+
+
+</pre><a id='backBottom' href='../DataScience-learning.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

@@ -1,0 +1,134 @@
+<html><head><title>Lesson 29 == SaSS Styling ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../react-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 29 -- SaSS Styling -//</h1><pre>	
+	Insight chuyên gia: Sass là lựa chọn phổ biến trong React vì tích hợp tốt với các công cụ build như Create React App (CRA) hoặc Vite, tự động compile .scss thành .css tại build time. So với CSS-in-JS (như styled-components), Sass nhẹ hơn về bundle size và gần với CSS truyền thống, phù hợp cho developer quen CSS. Nhược điểm: Không dynamic như CSS-in-JS (khó bind props/state trực tiếp). Trong modern React, Sass thường kết hợp với CSS Modules để scope styles, tránh global conflicts.
+	
+	
+	
+#1. What is Sass?
+	Sass là CSS preprocessor, chạy trên server (hoặc build tool) để chuyển .scss/.sass thành CSS gửi đến browser. Tính năng nổi bật:
+
+		- Variables: Lưu giá trị tái sử dụng (màu, kích thước).
+		- Nesting: Viết CSS lồng nhau, gọn gàng hơn.
+		- Mixins: Tái sử dụng block styles.
+		- Modules: Import/export styles, tổ chức code tốt hơn.
+
+		Insight chuyên gia: Sass có hai cú pháp: .scss (giống CSS, phổ biến hơn) và .sass (indented, ít dùng). Trong React, .scss được ưa chuộng vì dễ tích hợp. Build tools như Webpack (trong CRA/Vite) dùng sass-loader để compile. Best practice: Sử dụng Sass Modules thay @import (deprecated từ Sass 2022) để tree-shaking, giảm bundle size.
+
+
+# 2. Adding Sass to React
+
+	npm install sass
+
+	Sau khi cài, CRA/Vite tự động nhận diện file .scss và compile thành CSS trong build process. Không cần config thêm nếu dùng CRA/Vite.
+
+
+	Insight chuyên gia: Nếu dùng custom Webpack, cần thêm sass-loader, style-loader, và css-loader. Trong TypeScript projects, install @types/sass nếu cần type hints. Lưu ý: Sass tăng build time nhẹ, đặc biệt với file lớn; optimize bằng cách chia nhỏ files và dùng @use thay @import. Kiểm tra bundle size với webpack-bundle-analyzer để phát hiện bloat.
+
+
+# 3. Create a Sass File
+
+	Tạo file .scss (ví dụ: MyStyle.scss) giống file CSS, nhưng hỗ trợ cú pháp Sass.
+
+$myColor: red;  // Variable cho màu
+
+h1 {
+  color: $myColor;  // Sử dụng variable
+}
+
+
+$myColor: red;: Định nghĩa variable, có thể tái sử dụng trong file hoặc import sang file khác.
+h1 { color: $myColor; }: Áp dụng variable, giúp dễ maintain (chỉ đổi một chỗ nếu cần).
+
+	Insight chuyên gia: Variables là tính năng cơ bản nhưng mạnh, đặc biệt cho theming (light/dark mode). Best practice: Định nghĩa variables trong file riêng (ví dụ: _variables.scss) và import bằng @use. Ví dụ mở rộng với nesting:
+
+
+$myColor: red;
+
+.header {
+  h1 {
+    color: $myColor;
+    &:hover { color: darken($myColor, 10%); }  // Nesting + function
+  }
+}
+
+
+
+# 4. Import the Sass File
+
+	Import file .scss vào component React như CSS thông thường.
+
+import { createRoot } from 'react-dom/client';
+import './MyStyle.scss';  // Import file Sass
+
+function MyHeader() {
+  return (
+    <h1>My Header</h1>  // Áp dụng style từ MyStyle.scss
+  );
+}
+
+createRoot(document.getElementById('root')).render(
+  <MyHeader />
+);
+
+import './MyStyle.scss';: File .scss được compile thành CSS, áp dụng cho component.
+JSX: <h1> nhận style từ .scss (màu đỏ từ $myColor).
+
+Insight chuyên gia: Import .scss giống CSS, nhưng Sass cho phép tổ chức tốt hơn. Trong large-scale apps, dùng CSS Modules bằng cách đặt tên file
+
+
+
+
+# 5. Sass Modules 
+
+	Sass cung cấp built-in modules như sass:color, sass:math, giúp manipulate styles. Ví dụ dùng sass:color để điều chỉnh độ sáng màu.
+
+@use 'sass:color';  // Import module
+$myColor: red;
+
+h1 {
+  color: $myColor;  // Màu gốc
+}
+
+h2 {
+  color: color.adjust($myColor, $lightness: -20%);  // Đậm hơn
+}
+
+h3 {
+  color: color.adjust($myColor, $lightness: 20%);  // Nhạt hơn
+}
+
+
+	## JSX sử dụng:
+
+import { createRoot } from 'react-dom/client';
+import './MyStyle.scss';
+
+function MyHeader() {
+  return (
+    <div>
+      <h1>My Header 1</h1>  // Đỏ
+      <h2>My Header 2</h2>  // Đỏ đậm
+      <h3>My Header 3</h3>  // Đỏ nhạt
+    </div>
+  );
+}
+
+createRoot(document.getElementById('root')).render(
+  <MyHeader />
+);
+
+
+@use 'sass:color';: Import module sass:color để dùng functions như adjust.
+color.adjust($myColor, $lightness: -20%): Giảm độ sáng 20% (đậm hơn).
+color.adjust($myColor, $lightness: 20%): Tăng độ sáng 20% (nhạt hơn).
+
+	Insight chuyên gia: sass:color cực mạnh cho theming (ví dụ: Tạo palette từ base color). Các module khác như sass:math (cho calc, round), sass:string (cho string manipulation) cũng hữu ích. Ví dụ thực tế:
+
+
+@use 'sass:math';
+$base-size: 16px;
+h1 { font-size: math.div($base-size, 2); }  // 8px
+
+
+
+
+</pre><a id='backBottom' href='../react-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

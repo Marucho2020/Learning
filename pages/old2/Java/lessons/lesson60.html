@@ -1,0 +1,319 @@
+<html><head><title>Lesson 60 == Remote Interface & Remote Object ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 60 -- Remote Interface & Remote Object -//</h1><pre>
+//------------- Remote Interface -----------------//
+
+
+# Khái niệm 
+	- Remote Interface là một interface trong Java mà các object có thể gọi từ xa .
+	- Đóng vai trò hợp đồng(contract) giữa Client và Server 
+	- Mọi phương thức trong Remote Interface phải ném Remote Exception để xử lý lỗi mạng. 
+	- Remote Interface phải kế thừa java.rmi.Remote để trở thành một Remote Object hợp lệ. 
+	
+# Cách tạo Remote Interface 
+
+
+				import java.rmi.Remote;
+				import java.rmi.RemoteException;
+				
+				// Remote Interface phải kế thừa Remote
+				public interface Calculator extends Remote {
+					int add(int a, int b) throws RemoteException;
+					int subtract(int a, int b) throws RemoteException;
+				}
+
+
+			📌 Giải thích 
+				Kế thừa Remote -> Biến Interface này thành Remote Interface 
+				Các method ném Remote Exception -> vì phương thức gọi từ xa có thể bị lỗi mạng. 
+				
+//-------------- Remote Object ------------------------/
+
+# Khái niệm 
+		- RemoteObject là Class thực sự triển khai Remote Interface 
+		- Nó cung cấp thực thi(implementaion) cho các phương thức từ xa 
+		- Phải kế thừa UnicastRemoteObject để có thể được gọi từ xa 
+		
+# Cách tạo Remote Object  
+					import java.rmi.server.UnicastRemoteObject;
+					import java.rmi.RemoteException;
+					
+					// Lớp Remote Object phải kế thừa UnicastRemoteObject và implement Remote Interface
+					public class CalculatorImpl extends UnicastRemoteObject implements Calculator {
+					
+						// Constructor phải throw RemoteException
+						public CalculatorImpl() throws RemoteException {
+							super();
+						}
+					
+						// Triển khai phương thức từ xa
+						@Override
+						public int add(int a, int b) throws RemoteException {
+							return a + b;
+						}
+					
+						@Override
+						public int subtract(int a, int b) throws RemoteException {
+							return a - b;
+						}
+					}
+							
+
+
+				📌 Giải thích  
+					- Kế thừa UnicastRemoteObject -> Giúp Object có thể được truy cập từ xa 
+					- Constructor phải throws RemoteException -> Đảm bảo xử lỹ lỗi mạng khi tạo object 
+					- Triển khai các phương thức từ Remote Interface -> Cung cấp logic thực tế 
+						
+
+
+
+//---------------- RMI Registry ----------------------
+# Khái niệm 
+	- RMI Registry là một dịch vụ giúp đăng ký và tìm kiếm RemoteObject 
+	- Server phải đăng ký RemoteObject vào RMI Registry để Client có thể tìm thấy
+	
+	
+
+# Cách đăng ký Remote Obejct vào RMI Registry 
+	
+				import java.rmi.registry.LocateRegistry;
+				import java.rmi.registry.Registry;
+				
+				public class CalculatorServer {
+					public static void main(String[] args) {
+						try {
+							// Tạo một instance của Remote Object
+							CalculatorImpl calculator = new CalculatorImpl();
+				
+							// Tạo RMI Registry trên cổng 1099
+							Registry registry = LocateRegistry.createRegistry(1099);
+				
+							// Đăng ký Remote Object với tên "CalculatorService"
+							registry.rebind("CalculatorService", calculator);
+				
+							System.out.println("Calculator Server is running...");
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					}
+				}
+				
+
+			📌 Giải thích
+				- LocateRegistry.createRegistry(1099) -> Tạo RMI Registry trên cổng 1099
+				- registry.rebind("CalculatorService" , calculator) -> Đăng ký Remote Object với tên CalculatorService
+				- Bây giờ, Client có thể tìm và gọi CalculatorService từ xa 
+				
+				
+		
+//------------------ Client gọi Remote Object -------------------------------
+
+# Ví dụ Client kết nối và gọi phương thức từ xa 
+
+			import java.rmi.registry.LocateRegistry;
+			import java.rmi.registry.Registry;
+			
+			public class CalculatorClient {
+				public static void main(String[] args) {
+					try {
+						// Kết nối đến RMI Registry trên Server
+						Registry registry = LocateRegistry.getRegistry("localhost", 1099);
+			
+						// Tìm Remote Object với tên "CalculatorService"
+						Calculator calculator = (Calculator) registry.lookup("CalculatorService");
+			
+						// Gọi phương thức từ xa
+						int result = calculator.add(10, 20);
+						System.out.println("Result: " + result);
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+			}
+				
+				
+			📌 Giải thích
+				- LocateRegistry.getRegistry("localhost" , 1099) -> Kết nối đến RMI Registry 
+				- registry.lookup(CalculatorService)		-> Tìm kiếm RemoteObject theo tên
+				- Gọi calculator.add(10,20) -> Gọi phương thức từ xa trên Server 
+				
+				
+				
+
+# Tóm tắt lại các bước  				
+
+✅ Bước 1: Tạo Remote Interface
+✅ Bước 2: Tạo Remote Objec
+✅ Bước 3: Đăng ký Remote Object vào RMI Registry
+✅ Bước 4: Client tìm kiếm và gọi Remote Object		
+
+
+
+# Các câu hỏi thường gặp 
+❓ 	 1. Remote Interface bắt buộc phải kế thừa Remote không?
+	✅ Có, nếu không kế thừa Remote, nó không thể hoạt động như một Remote Object.
+	
+❓ 2. Tại sao Remote Object phải kế thừa UnicastRemoteObject?
+	✅ Vì UnicastRemoteObject giúp Java tự động tạo Stub và Skeleton để giao tiếp từ xa.
+	
+❓ 3. Tại sao phương thức trong Remote Interface phải throw	
+	✅ Vì gọi phương thức từ xa có thể bị lỗi mạng, mất kết nối, nên phải xử lý ngoại lệ.
+	
+❓ 4. Client và Server có thể chạy trên hai máy khác nhau không?	
+	✅ Được! Chỉ cần Server mở cổng 1099 và Client nhập đúng IP của Server.
+
+
+# So sánh giữa Java RMI và Rest API 
+Tiêu chí							Java RMI															REST API
+Mô hình						RPC (Remote Procedure Call)										RESTful (Stateless, Resource-Oriented)
+Giao thức					RMI dựa trên Java Object Serialization và TCP/IP				HTTP (GET, POST, PUT, DELETE)
+Ngôn ngữ hỗ trợ				Chỉ hoạt động với Java											Đa nền tảng (Java, Python, JS, C#...)
+Kiến trúc					Client - Server với RMI Registry								RESTful API (Client - Server)
+Truyền dữ liệu				Dùng Java Object Serialization (Stub/Skeleton)					JSON, XML
+Tính linh hoạt				Chặt chẽ, yêu cầu cả Client và Server phải dùng Java			Linh hoạt, có thể tích hợp với nhiều nền tảng
+Hiệu suất					Nhanh hơn trong môi trường Java									Có thể bị chậm do HTTP overhead
+Bảo mật						Cần cấu hình Security Manager và Policy							Dùng HTTPS, OAuth, JWT dễ triển khai hơn	
+
+
+🏆 3. Khi nào nên dùng Java RMI và REST API?
+Tình huống								Chọn Java RMI		Chọn REST API
+Ứng dụng Java nội bộ						✅					❌
+Hệ thống Microservices						❌					✅
+Giao tiếp giữa các ứng dụng Java			✅					❌
+API cho Web/Mobile							❌					✅
+Ứng dụng đòi hỏi hiệu suất cao				✅					❌
+Hệ thống phân tán đa nền tảng				❌					✅
+
+
+
+
+//-------------------------- Stub và Reflection API 
+
+# Khái niệm 
+	Java RMI (Remote Method Invocation) sử dụng Stub (Client Proxy) và Reflection API để thực hiện gọi phương thức từ xa một cách trong suốt 
+	
+		- Stub : Đóng vai trò trung gian giúp Client gửi yêu cầu đến Server 
+		- Reflection API : Giúp Server gọi phương thức trên Object thật mà không cần Skeleton (từ Java 1.2 trở đi)
+		
+	## Stub (Client Proxy)
+		Là một đối tượng đại diện cho Server ở phía Client. Khi Client gọi một phương thức từ xa, nó thực chất là đang gọi Stub, Stub sẽ : 
+			- Đóng gói(Marshalling) dữ liệu vào luồng byte 
+			- Gửi dữ liệu Server qua mạng 
+			- Nhận phản hồi từ server, giải mã(Unmarshalling) và trả kết quả cho Client
+			
+		Stub giúp Client gọi phương thức từ xa mà không cần quan tâm đến mạng và dữ liệu truyền tải  
+		
+# Reflection API thay thế Skeleton như thế nào ? 
+	
+	- Skeleton chứa mã sinh sẵn để nhận yêu cầu và gọi phương thức từ xa 
+	- Java 1.2 thay thế Skeleton bằng Reflection API, giúp Server tự động gọi đúng phương thức mà không cần Skeleton 
+	- Reflection API giúp Server có thể gọi bất kỳ phương thức nào của Object mà không cần mã sinh sẵn  
+	
+# Ví dụ về Java RMI với Stub & Reflection API 	
+		
+
+	##📌 Bước 1 : Tạo Remote Interface 
+	
+		public interface Calculator extends Remote {
+			int add(int a, int b) throws RemoteException;
+		}
+		
+		###  Điểm quan trọng: 
+			Giao diện phải kế thừa Remote để trở thành Remote Interface.
+			Phương thức phải khai báo throws RemoteException để xử lý lỗi mạng
+
+
+
+
+	##📌 Bước 2: Cài đặt Remote Object trên Server 
+		
+			import java.rmi.server.UnicastRemoteObject;
+			import java.rmi.RemoteException;
+			
+			public class CalculatorImpl extends UnicastRemoteObject implements Calculator {
+				protected CalculatorImpl() throws RemoteException {
+					super();
+				}
+			
+				public int add(int a, int b) throws RemoteException {
+					return a + b;
+				}
+			}
+			
+			
+			
+				###  Điểm quan trọng: 
+					Kế thừa UnicastRemoteObject, giúp tự động tạo Stub cho Client.
+					Không cần Skeleton vì Server sẽ sử dụng Reflection API để gọi add().
+					
+
+
+
+
+	## 📌 Bước 3: Tạo Server và Đăng ký Object với RMI Registry
+		
+
+			import java.rmi.registry.LocateRegistry;
+			import java.rmi.registry.Registry;
+			
+			public class Server {
+				public static void main(String[] args) {
+					try {
+						Calculator calculator = new CalculatorImpl();
+						Registry registry = LocateRegistry.createRegistry(1099);
+						registry.rebind("CalculatorService", calculator);
+						System.out.println("Server is running...");
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+			}
+
+			### 📌 Điểm quan trọng  
+			
+				Tạo đối tượng từ xa (CalculatorImpl).
+				Đăng ký nó vào RMI Registry với tên "CalculatorService"
+
+
+			
+	
+	## 📌 Bước 4: Tạo Client để gọi phương thức từ xa 
+			
+				import java.rmi.registry.LocateRegistry;
+				import java.rmi.registry.Registry;
+				
+				public class Client {
+					public static void main(String[] args) {
+						try {
+							Registry registry = LocateRegistry.getRegistry("localhost", 1099);
+							Calculator stub = (Calculator) registry.lookup("CalculatorService");
+							int result = stub.add(5, 3);
+							System.out.println("Kết quả: " + result);
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					}
+				}
+
+	
+	
+			## 📌Điểm quan trọng:
+			
+				Lấy Stub từ RMI Registry và gọi add().
+				Stub tự động gửi yêu cầu đến Server mà Client không cần quan tâm đến kết nối mạng.
+
+	
+	
+	
+# 	🎯 4. Stub & Reflection API Hoạt Động Như Thế Nào?
+
+	## 🔹 Khi Client gọi stub.add(5,3), quá trình diễn ra như sau:
+			1./ Client gọi stub.add(5,3) trên Stub.
+			2./ Stub sử dụng Reflection API để mã hóa (Marshalling) dữ liệu và gửi đến Server.
+			3./ Server nhận yêu cầu, dùng Reflection API để xác định phương thức add() trên Object thực tế.
+			4./ Server thực thi CalculatorImpl.add(5,3), trả về kết quả.
+			5./ Stub giải mã (Unmarshalling) và trả kết quả về Client.
+
+	📌 Reflection API giúp Server gọi phương thức động mà không cần Skeleton!
+	
+	
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

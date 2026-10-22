@@ -1,0 +1,141 @@
+<html><head><title>Lesson 142 == Redis Sentinel ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 142 -- Redis Sentinel -//</h1><pre># Khái niệm 
+	🔷 I. Mục tiêu của Redis Sentinel
+	Redis đơn nút không có HA – nếu master chết, client không thể ghi/đọc.
+	→ Redis Sentinel giúp: 
+
+| Mục tiêu                          | Chi tiết                            |
+| --------------------------------- | ----------------------------------- |
+| **Giám sát (Monitoring)**         | Kiểm tra master/slave có còn sống   |
+| **Thông báo lỗi (Notification)**  | Cảnh báo khi node chết              |
+| **Tự động chuyển đổi (Failover)** | Chọn slave lên làm master mới       |
+| **Cấu hình lại client**           | Gợi ý client chuyển sang master mới |
+
+
+# 🔧 II. Kiến trúc Redis Sentinel
++----------+      +----------+
+| Sentinel |<---->| Sentinel |<----> ...
++----------+      +----------+
+     |
+     v
++------------+       +------------+
+| Redis Master| <--->| Redis Slave|
++------------+       +------------+
+
+
+	## Thành phần:
+
+		- Sentinel Node: process độc lập, chạy song song với Redis
+		- Redis Master: node chính ghi dữ liệu
+		- Redis Slaves: replica đọc-only
+		- Client: tương tác với Sentinel hoặc trực tiếp Redis
+
+# 🧠 III. Cơ chế hoạt động
+	
+	## 1. Monitoring 
+		
+		- Sentinel định kỳ gửi PING đến Redis master/slaves và Sentinel khác
+		- Nếu n Sentinel đồng ý rằng 1 node down → đánh dấu subjectively down
+
+
+	## 2. Failover 
+		Nếu master được đánh dấu objectively down: 
+			
+			- Sentinel sẽ chọn 1 slave (ưu tiên sync tốt nhất)
+			- Gửi lệnh SLAVEOF NO ONE → biến nó thành master
+			- Các slave còn lại sẽ SLAVEOF master mới
+			- Gửi thông báo đến client	
+	
+		Consensus failover được thực hiện qua Raft-like voting giữa Sentinel → đảm bảo không chọn nhiều master
+
+
+# 🧩 IV. Điều kiện để Failover diễn ra 
+	
+			- Số lượng Sentinel ≥ quorum
+			- Master không phản hồi ≥ down-after-milliseconds
+			- Quá trình bầu cử (failover timeout) diễn ra thành công		
+	
+	
+	
+	
+# ⚙️ V. Config cơ bản (sentinel.conf) 
+		
+sentinel monitor mymaster 127.0.0.1 6379 2
+sentinel down-after-milliseconds mymaster 5000
+sentinel failover-timeout mymaster 10000
+sentinel parallel-syncs mymaster 1
+	
+	
+	
+| Config                    | Ý nghĩa                                        |
+| ------------------------- | ---------------------------------------------- |
+| `mymaster`                | Tên định danh logical                          |
+| `6379`                    | Cổng Redis master                              |
+| `2`                       | Quorum (tối thiểu Sentinel đồng ý để failover) |
+| `down-after-milliseconds` | Bao lâu thì coi master là chết                 |
+| `failover-timeout`        | Thời gian tối đa để failover                   |
+	
+	
+	
+# 	📦 VI. Ưu điểm của Redis Sentinel 
+
+| Ưu điểm                         | Ghi chú                       |
+| ------------------------------- | ----------------------------- |
+| ✅ Tự động failover              | Không cần con người can thiệp |
+| ✅ Không phụ thuộc vào cloud     | Có thể chạy on-premises       |
+| ✅ Lightweight                   | Là Redis process              |
+| ✅ Client update được master mới | Với driver hỗ trợ Sentinel    |
+
+
+
+	
+# 	🧨 VII. Cạm bẫy thực tế (senior nên biết)
+
+
+	## 1. Split-brain
+	
+		Nếu cấu hình quorum thấp → 2 Sentinel nhóm khác nhau cùng bầu ra 2 master → loạn dữ liệu
+		➤ Fix: quorum đủ cao và odd number Sentinel (3, 5, 7...)
+	
+
+	## 2. Client không hỗ trợ Sentinel protocol 
+		
+		Một số Redis client không tự động phát hiện master mới
+		➤ Fix: dùng Redis client hỗ trợ Sentinel (JedisSentinelPool, Lettuce Sentinel, v.v.)
+
+	## 3. Sentinel không độc lập
+
+		Nếu Sentinel nằm chung máy với Redis → khi Redis chết, Sentinel chết theo → mất failover
+		➤ Fix: Deploy Sentinel trên các node riêng biệt
+	
+
+	## 4. Replication lag 
+		
+		Nếu chọn slave có lag để promote → data loss
+		➤ Fix: Sentinel chọn slave sync gần nhất (INFO replication)
+
+
+# 🔁 VIII. So sánh với các cơ chế HA khác
+
+
+| Cơ chế                            | Ưu                                                       | Nhược                                        |
+| --------------------------------- | -------------------------------------------------------- | -------------------------------------------- |
+| **Sentinel**                      | Đơn giản, built-in, hoạt động tốt cho small/medium scale | Manual scaling, limited topology             |
+| **Redis Cluster**                 | Sharding + HA                                            | Không hỗ trợ multi-key transaction, phức tạp |
+| **Keepalived + Virtual IP**       | Active-passive switch bằng IP                            | Không tự failover data                       |
+| **Proxy-based (e.g., Twemproxy)** | Ẩn master/slave khỏi client                              | Không tự failover, cần thêm logic            |
+
+
+# ✅ Tổng kết – Kiến thức cần nhớ cấp độ senior
+
+
+| Khía cạnh          | Nội dung                                                              |
+| ------------------ | --------------------------------------------------------------------- |
+| Mục tiêu           | Giám sát Redis, tự failover khi master chết                           |
+| Cấu hình chính     | `monitor`, `quorum`, `down-after`, `failover-timeout`                 |
+| Cơ chế đồng thuận  | Vote giữa Sentinel, không dùng Raft chính thức nhưng concept tương tự |
+| Pitfall thường gặp | Quorum sai, split-brain, Sentinel đồng chết, client không hỗ trợ      |
+| Kiến trúc đúng     | ≥3 Sentinel riêng biệt, Slave sync chặt, client hỗ trợ Sentinel API   |
+
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

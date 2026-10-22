@@ -1,0 +1,117 @@
+<html><head><title>Lesson 4 == Thuật toán Shor ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../quantum-computing-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 4 -- Thuật toán Shor -//</h1><pre>
+# Khái niệm 
+	Thuật toán Shor là một thuật toán lượng tử mang tính đột phá, được Peter Shor đề xuất vào năm 1994. Nó có khả năng phân tích một số nguyên thành thừa số nguyên tố với độ phức tạp tính toán vượt trội so với các thuật toán cổ điển. Đây chính là lý do nó trở thành mối đe dọa đối với các hệ thống mã hóa như RSA, vốn dựa trên độ khó của bài toán phân tích thừa số nguyên tố 
+	
+# Ý nghĩa  
+		- Đối với máy tính cổ điển : Việc phân tích một số nguyên lớn thành thừa số nguyên tố là bài toán khó(độ phức tạp thuộc lớp NP), không có thuật toán hiệu quả 
+		- Đối với máy tính lượng tử : Thuật toán Shor có thể giải bài toán này trong thời gian đa thức nhờ sử dụng biến đổi Fourier lượng tử (Quantum Fourier Transform - QFT) và các tính chất số học 
+		
+	Khi máy tính lượng tử đủ mạnh được xây dựng, thuật toán Shor có thể phá vỡ hệ mã RSA bằng cách phân tích thừa số của số nguyên có hàng nghìn bit chỉ trong vài giây 
+	
+# Cấu trúc thuật toán Shor 
+	
+	## Đầu vào : 
+		- một số nguyên N cần phân tích thừa số 
+		- Một số nguyên a được chọn ngẫu nhiên sao cho 1 < a <  N và a không phải là bội số của N 
+		
+	## Đầu ra  : 
+		Hai số nguyên tố p , q sao cho N = p x q 
+
+
+# Các bước chính  
+	1. Kiểm tra N có phải số chẵn không : 
+		Nếu N chẵn, trả về 2 và N/2 
+		
+	2. Kiểm tra liệu N có phải lũy thừa nguyên tố không 
+		Nếu N = p^k với p là nguyên tố, thì trả về p 
+		
+	3. Chọn một số nguyên a ngẫu nhiên  
+		Chọn a sao cho gcd(a , N ) = 1
+		Nếu gcd(a , N) != 1 tức là tìm thấy một ước số ngay lập tức 
+		
+	4. Tìm chu kỳ r của hàm f(x) = a^x mod N bằng máy tính lượng tử 
+		Đây là bước lượng tử chính, sử dụng Quantum Fourier Transform (QFT) để tìm chu kỳ r của hàm tuần hoàn f(x)
+		
+		Máy tính lượng tử giúp tìm chu kỳ r với tốc độ đa thức, trong khi máy tính cổ điển chỉ có thể làm điều này với độ phức tạp siêu đa thức. 
+		
+	5. Kiểm tra r có phải là số chẵn không 
+		Nếu r là số lẻ , quay lại bước 3 với giá trị a khác 
+		
+	6. Tính toán các ước số của N 
+		Dựa vào r, ta có a^(r/2) +- 1 
+		Tính gcd(a^(r/2) - 1, N )
+		Nếu kết quả không phải 1 hoặc N , ta tìm được thừa số của N 
+
+
+# . Ví dụ cụ thể (N = 15)
+
+	Giả sử ta muốn phân tích N = 15 thành thừa số 
+	
+	## Bước 1 : Chọn a 
+		Chọn ngẫu nhiên a = 2 thỏa mãn 1 < a < N 
+
+	## Bước 2 : Tìm chu kỳ r
+		Tính f(x) = 2^x mod 15:
+
+				x			mod15
+				0			1
+				1			2
+				2			4
+				3			8
+				4			16 ≡ 1 (mod 15)
+				
+				
+				### Giải thích 
+					Ký hiệu ≡ (đồng dư, tương đương) trong mod có nghĩa là hai số có cùng phần dư khi chia cho một số khác 
+					Công thức tổng quát : 
+										a≡b (mod n)
+									Có nghĩa là a chia cho n có cùng dư như b . Hay nói các khác : a - b chia hết cho n 
+				
+		-> Chu kỳ r = 4 
+		
+	## Bước 3 : Kiểm tra r có phải số chẵn không 
+		Vì r = 4 (số chẵn), ta tiếp tục 
+
+	## Bước 4 : Tính ước số 
+		Tính gcd (2 ^(4/2)  - 1.15 ) = gcd( 4 - 1,15) = gcd(3 , 15) = 3
+		
+		Tương tự, tính gcd( 2^(4/2) + 1.15) = gcd(4  + 1.15) = gcd(5 , 15) = 5
+		Kết quả 15 = 3 x 5 -> Phân tích thành công 
+		
+		
+# Thành phần lượng tử trong thuật toán Shor 
+
+	Phần cốt lõi giúp thuật toán này nhanh hơn máy tính cổ điển chính là biến đổi Fourier lượng tử (QFT): 
+		- Máy tính lượng tử tạo ra trạng thái chồng chất của nhiều giá trị x 
+		- QFT giúp tìm ra chu kỳ r nhanh chóng 
+		- Kết hợp với thuật toán cổ điển Euclid để tìm thừa số của N  
+
+
+	## Mạch lượng tử chính của thuật toán Shor gồm : 
+		1. Đăng ký lượng tử đầu vào (chuẩn bị trạng thái chồng chất )
+		2. Tính toán phép lũy thừa  a^x mod N bằng lượng tử 
+		3. Áp dụng biển đổi Fourier lượng tử (QFT) để tìm chu kỳ r
+		4. Đo và xử lý kết quả bằng máy tính cổ điển 
+		
+		
+# Độ phức tạp của thuật toán Shor
+	- Máy tính cổ điển : Phân tích thừa số nguyên tố có độ phức tạp siêu đa thức (O(eclogN​))) 
+	- Máy tính lượng tử : Thuật toán Shor có độ phức tạp đa thức “(O((log⁡N)^3))” nhanh hơn đáng kể 
+
+
+# Ứng dụng và tác động  
+	- Đe dọa hệ mã hóa RSA : RSA dựa trên độ khó của việc phân tích số nguyên lớn thành thừa số. nếu máy tính lượng tử mạnh mẽ được chế tạo, toàn bộ hệ thống mã hóa sẽ bị phá vỡ 
+	- Thúc đẩy mã hóa lượng tử : Do nguy cơ từ thuật toán Shor, người ta đã nghiên cứu mã hóa hậu lượng tử (Post-Quantum Cryptography) như lattice-based cryptography. 
+	
+7. Tổng kết
+✅ Thuật toán Shor là một ứng dụng mạnh mẽ của máy tính lượng tử, cho phép phân tích số nguyên thành thừa số trong thời gian đa thức.
+✅ Biến đổi Fourier lượng tử (QFT) là yếu tố then chốt giúp thuật toán này vượt trội hơn so với thuật toán cổ điển.
+✅ Nó đặt ra thách thức lớn cho các hệ thống mã hóa hiện tại như RSA, thúc đẩy sự phát triển của mật mã hậu lượng tử.	
+	
+
+
+// Ví dụ 
+		ShorAlgorithmsExample.ipynb
+
+
+</pre><a id='backBottom' href='../quantum-computing-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

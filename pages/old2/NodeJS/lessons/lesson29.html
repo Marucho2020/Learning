@@ -1,0 +1,206 @@
+<html><head><title>Lesson 29 == Crypto Module ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../NodeJS-learning.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 29 -- Crypto Module -//</h1><pre>
+# TỔNG QUAN: Crypto Module là gì?
+
+	Crypto = Mã hóa (Cryptography) – giúp bạn bảo vệ dữ liệu trong ứng dụng.
+	Node.js tích hợp sẵn OpenSSL → bạn có thể dùng các thuật toán mã hóa mạnh, an toàn, đã được kiểm chứng.
+	
+	
+const crypto = require('crypto'); // ← Dùng ngay, không cần cài
+
+
+
+# 6 CHỨC NĂNG CHÍNH (PHẢI BIẾT KHI ĐI LÀM)
+
+Chức năng,Dùng để làm gì?,Ví dụ thực tế
+1. Hash,Băm dữ liệu → không thể đảo ngược,Lưu mật khẩu
+2. HMAC,Xác thực + toàn vẹn dữ liệu,"API key, webhook"
+3. Mã hóa đối xứng,Mã hóa/giải mã dữ liệu,"Mã hóa file, tin nhắn"
+4. Mã hóa bất đối xứng,Gửi dữ liệu an toàn,"HTTPS, JWT"
+5. Chữ ký số,Xác minh người gửi,Ký hợp đồng điện tử
+6. Tạo số ngẫu nhiên an toàn,"Tạo khóa, salt, IV",Tạo token
+
+
+
+
+# 1. HASH – Băm dữ liệu (Không thể đảo ngược) 
+
+const hash = crypto.createHash('sha256')
+                   .update('hello')
+                   .digest('hex');
+console.log(hash); 
+// → 2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824
+
+
+
+
+	## Thuật toán nào nên dùng?
+
+Thuật toán,An toàn?,Dùng khi
+md5,Không,Chỉ để checksum file
+sha1,Không,"Cũ, không dùng"
+sha256,Rất tốt,Mặc định dùng
+sha512,Cực tốt,Cần độ an toàn cao
+
+
+
+# 2. LƯU MẬT KHẨU AN TOÀN (QUAN TRỌNG NHẤT!)
+
+	Không bao giờ lưu mật khẩu dạng text hoặc SHA256 đơn thuần!
+
+
+	## Sai lầm phổ biến:
+
+// ĐỪNG LÀM THẾ NÀY!
+const hash = crypto.createHash('sha256').update(password).digest('hex');
+
+	→ Dễ bị rainbow table attack
+
+
+	## ĐÚNG: Dùng Salt + scrypt/bcrypt
+
+function hashPassword(password) {
+  const salt = crypto.randomBytes(16).toString('hex'); // ngẫu nhiên
+  const hash = crypto.scryptSync(password, salt, 64).toString('hex');
+  return { salt, hash }; // lưu cả 2 vào DB
+}
+
+function verifyPassword(password, salt, storedHash) {
+  const hash = crypto.scryptSync(password, salt, 64).toString('hex');
+  return hash === storedHash;
+}
+
+
+	## Tại sao scrypt tốt?
+
+		Chậm có chủ đích → chống brute-force
+		Dùng bộ nhớ → chống GPU attack
+
+	Chuyên gia khuyên: Dùng bcrypt (thư viện) thay scrypt trong production:
+npm install bcrypt
+
+const bcrypt = require('bcrypt');
+const hash = await bcrypt.hash(password, 12); // 12 = độ khó
+const isValid = await bcrypt.compare(password, hash);
+
+
+
+# 3. HMAC – Xác thực tin nhắn (API, Webhook)
+
+const secret = 'my-secret-key';
+const message = 'user123';
+
+const hmac = crypto.createHmac('sha256', secret)
+                   .update(message)
+                   .digest('hex');
+
+
+	## Dùng để:
+		Xác minh người gửi đúng
+		Đảm bảo dữ liệu không bị sửa
+		
+// So sánh an toàn (chống timing attack)
+crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b))
+
+
+
+# 4. MÃ HÓA ĐỐI XỨNG (AES) – Mã hóa file, tin nhắn
+
+	Cùng 1 key để mã hóa + giải mã
+
+function encrypt(text, password) {
+  const key = crypto.scryptSync(password, 'salt', 32); // 256-bit key
+  const iv = crypto.randomBytes(16); // IV phải ngẫu nhiên mỗi lần!
+
+  const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
+  let encrypted = cipher.update(text, 'utf8', 'hex');
+  encrypted += cipher.final('hex');
+
+  return { iv: iv.toString('hex'), data: encrypted };
+}
+
+function decrypt(encrypted, iv, password) {
+  const key = crypto.scryptSync(password, 'salt', 32);
+  const decipher = crypto.createDecipheriv('aes-256-cbc', key, Buffer.from(iv, 'hex'));
+  let decrypted = decipher.update(encrypted, 'hex', 'utf8');
+  decrypted += decipher.final('utf8');
+  return decrypted;
+}
+
+
+	Lưu ý vàng:
+		IV phải ngẫu nhiên mỗi lần
+		Không bao giờ dùng lại IV + key
+
+
+# 5. MÃ HÓA BẤT ĐỐI XỨNG (RSA) – Gửi key an toàn
+
+		Public key: mã hóa
+		Private key: giải mã
+
+// Tạo cặp khóa
+const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', {
+  modulusLength: 2048,
+  publicKeyEncoding: { type: 'spki', format: 'pem' },
+  privateKeyEncoding: { type: 'pkcs8', format: 'pem' }
+});
+
+// Mã hóa bằng public key
+const encrypted = crypto.publicEncrypt(publicKey, Buffer.from('secret')).toString('base64');
+
+// Giải mã bằng private key
+const decrypted = crypto.privateDecrypt(privateKey, Buffer.from(encrypted, 'base64')).toString();
+
+
+	Dùng khi nào?
+		Gửi session key qua mạng
+		Ký JWT, chữ ký số
+
+
+
+# 6. CHỮ KÝ SỐ – Xác minh người gửi
+
+const sign = crypto.createSign('sha256');
+sign.update('data');
+const signature = sign.sign(privateKey, 'base64');
+
+const verify = crypto.createVerify('sha256');
+verify.update('data');
+const isValid = verify.verify(publicKey, signature, 'base64');
+
+	→ Dùng trong: hợp đồng điện tử, cập nhật phần mềm
+
+
+
+
+# 7. TẠO SỐ NGẪU NHIÊN AN TOÀN
+
+crypto.randomBytes(16).toString('hex'); // → khóa, token
+crypto.randomUUID(); // → "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+
+
+# TÓM TẮT NHANH – BẢNG CHEAT SHEET
+
+Mục đích,Dùng gì?,Ví dụ
+Lưu mật khẩu,bcrypt hoặc scrypt + salt,"bcrypt.hash(pw, 12)"
+Xác thực API,HMAC-SHA256,"createHmac('sha256', key)"
+Mã hóa file,AES-256-CBC + IV ngẫu nhiên,createCipheriv
+Gửi key an toàn,RSA,publicEncrypt
+Ký tin nhắn,RSA + createSign,sign.sign(privateKey)
+Tạo token,crypto.randomBytes(32),.toString('hex')
+
+
+
+# LỜI KHUYÊN TỪ CHUYÊN GIA
+
+Đúng,Sai
+Dùng bcrypt cho mật khẩu,Dùng sha256(password)
+Dùng timingSafeEqual,Dùng === so sánh hash
+Tạo IV ngẫu nhiên mỗi lần,Dùng IV cố định
+Dùng randomBytes,Dùng Math.random()
+Dùng scrypt/PBKDF2,Dùng md5
+
+
+
+
+
+</pre><a id='backBottom' href='../NodeJS-learning.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

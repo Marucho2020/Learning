@@ -1,0 +1,242 @@
+<html><head><title>Lesson 76 == Cloud Practitioner ====trusted advisor ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 76 -- Cloud Practitioner ----trusted advisor -//</h1><pre>
+# Trusted Advisor là gì?
+
+
+	Định nghĩa bản chất
+		Trusted Advisor là một dịch vụ phân tích (Advisor) giúp kiểm tra toàn bộ tài khoản AWS của bạn và đưa ra các khuyến nghị (recommendations) để hệ thống:
+		Tiết kiệm chi phí (Cost Optimization)
+		Tăng hiệu năng (Performance)
+		Tăng tính bảo mật (Security)
+		Tăng khả năng chịu lỗi (Fault Tolerance)
+		Kiểm tra giới hạn dịch vụ (Service Quotas)
+		Kiểm tra vận hành (Operational Excellence)
+
+	Điểm quan trọng nhất:
+		Trusted Advisor không sửa lỗi giúp bạn.
+
+	Nó chỉ giống như một chuyên gia AWS đứng bên cạnh xem hệ thống và nói:
+		"EC2 này đang nhàn rỗi."
+		"S3 Bucket này đang public."
+		"Bạn sắp hết quota."
+		"Nên bật Multi-AZ."	
+	Quyết định sửa hay không vẫn là của bạn.			
+	
+	
+# Bản chất thật
+
+	Nhiều người nghĩ:
+		Trusted Advisor = Monitoring	
+		
+		
+		Sai.
+			Nó không monitor realtime như CloudWatch.	
+			
+		Nó giống:			
+			
+			CloudWatch
+			↓
+			Thu thập Metric
+			↓
+			Bạn tự phân tích
+
+			------------------------
+			Trusted Advisor
+			↓
+			AWS tự phân tích
+			↓
+			Đưa Recommendation	
+				
+				
+			Nó sử dụng rất nhiều AWS Best Practices.
+			Có thể hiểu đơn giản:
+			Trusted Advisor = AWS Expert System.	
+				
+				
+# 	Trusted Advisor kiểm tra những gì?
+	
+| Category               | Kiểm tra                                           |
+| ---------------------- | -------------------------------------------------- |
+| Cost Optimization      | EC2 nhàn rỗi, EBS không dùng, Elastic IP không gắn |
+| Security               | MFA, S3 Public, Security Group mở 0.0.0.0/0        |
+| Performance            | EBS throughput, CloudFront Optimization            |
+| Fault Tolerance        | Multi-AZ, Backup                                   |
+| Service Quotas         | Sắp đạt giới hạn EC2, VPC, IAM...                  |
+| Operational Excellence | Best Practices vận hành                            |
+	
+	
+# 	Mapping với dịch vụ AWS
+
+| Trusted Advisor kiểm tra | Dịch vụ        |
+| ------------------------ | -------------- |
+| Idle EC2                 | EC2            |
+| Unattached EBS           | EBS            |
+| Idle Load Balancer       | ELB            |
+| Public Bucket            | S3             |
+| MFA                      | IAM            |
+| Quota                    | Service Quotas |
+| Multi-AZ                 | RDS            |
+| Route53 Health           | Route53        |
+| Snapshot                 | EBS            |
+	
+	
+	
+#Ví dụ Cost Optimization
+
+		Bạn tạo
+		t3.large
+		24/24
+		CPU
+		2%
+		Trusted Advisor sẽ báo:
+			Underutilized EC2 Instance
+
+		Gợi ý:
+			Stop
+			Resize
+			Terminate
+			Không tự làm.	
+			
+	
+	
+# Ví dụ Security 	
+		
+	Bạn tạo
+		S3
+		Public Read
+
+	Trusted Advisor:
+
+		Warning
+		Bucket is publicly accessible.	
+			
+		
+# 	Ví dụ Fault Tolerance
+		
+	Bạn có:
+		Single-AZ RDS
+
+	Trusted Advisor:
+		Recommendation
+		Enable Multi-AZ	
+	
+	
+
+
+
+# Ví dụ Service Quotas
+
+
+Giả sử quota:
+
+	EC2
+	Running On-Demand
+	Limit
+	20
+
+	Bạn đang chạy
+		18
+
+	Trusted Advisor:
+
+		Warning
+		Approaching Service Limit
+
+	Đây là cảnh báo để tránh việc deploy thất bại do hết quota.
+
+
+
+# Ví dụ Operational Excellence 
+
+
+	Ví dụ:
+		Không backup
+		Không tagging
+		Không logging
+
+	Trusted Advisor sẽ gợi ý theo AWS Well-Architected Best Practices.
+
+
+# So sánh với CloudWatch 
+
+| Trusted Advisor         | CloudWatch       |
+| ----------------------- | ---------------- |
+| Phân tích Best Practice | Thu thập Metrics |
+| Recommendation          | Monitoring       |
+| Không realtime          | Realtime         |
+| Không Alarm             | Alarm            |
+| Không sửa               | Không sửa        |
+| AWS phân tích           | Bạn tự phân tích |
+
+
+
+# So sánh với AWS Config
+
+| Trusted Advisor   | AWS Config             |
+| ----------------- | ---------------------- |
+| Best Practice     | Compliance             |
+| Recommendation    | Rule Evaluation        |
+| Tư vấn            | Audit                  |
+| Không lưu lịch sử | Lưu lịch sử thay đổi   |
+| Tổng quan         | Chi tiết từng Resource |
+
+
+
+# Trade-off
+
+	Ưu điểm
+		Dễ dùng
+		Không cần tự phân tích
+		Theo AWS Best Practice
+		Giúp giảm chi phí
+		Tăng bảo mật
+		Tăng độ sẵn sàng
+
+	Nhược điểm
+
+		Không realtime như CloudWatch
+		Không thay thế AWS Config
+		Không tự sửa lỗi
+		Một số kiểm tra yêu cầu gói AWS Support cao hơn
+
+
+# Các từ khóa thường xuất hiện trong đề thi 
+
+	Recommendation
+	Best Practices
+	Cost Optimization
+	Fault Tolerance
+	Performance
+	Security
+	Operational Excellence
+	Service Quotas
+	Idle Resources
+	Underutilized EC2
+	Public Bucket
+	Unattached EBS
+	MFA
+	Multi-AZ
+
+
+# Cách AWS ra đề
+	AWS hiếm khi hỏi trực tiếp "Trusted Advisor là gì?". Thay vào đó, đề thường mô tả một nhu cầu:
+
+		Giảm chi phí: tìm EC2 nhàn rỗi, EBS không dùng, Elastic IP dư thừa.
+		Nâng cao bảo mật: phát hiện S3 public, IAM chưa bật MFA.
+		Tăng độ tin cậy: khuyến nghị bật Multi-AZ, kiểm tra backup.
+		Theo dõi quota: cảnh báo sắp chạm giới hạn dịch vụ.
+
+	Nếu câu hỏi nhấn mạnh "AWS Best Practices", "recommendations", "cost optimization", "service limit checks" thì đáp án rất thường là Trusted Advisor.
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre><a id='backBottom' href='../aws-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

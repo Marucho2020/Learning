@@ -1,0 +1,212 @@
+<html><head><title>Lesson 53 == JSON Serialization ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 53 -- JSON Serialization -//</h1><pre>	# Khái niệm  
+		JSON Serialization trong Java là quá trình biến đổi một object Java thành JSON String và ngược lại. từ JSON strign thành object Java. Kỹ thuật này rất quan trọng trong lập trình hiện đại, đặc biệt là khi làm việc với RESR API ,  Web Services , và lưu trữ dữ liệu nhẹ 
+		
+		+> Serialization : Chuyển object Java -> JSON String 
+		+> Deserialization : Chuyển JSON string -> Object Java 
+		
+			Ưu điểm  : 
+				Dễ đọc hơn so với XML 
+				Nhẹ và nhanh hơn XML Serialization 
+				Tương thích đa nền tảng, dễ trao đổi giữa các hệ thống  
+				
+		
+	# Các thư viện JSON phổ biến trong Java 
+		
+	Thư viện											Ưu điểm										Nhược điểm
+	Jackson (com.fasterxml.jackson)			Hiệu suất cao, hỗ trợ annotation mạnh mẽ				Cấu hình hơi phức tạp
+	Gson (com.google.gson)					Dễ dùng, code đơn giản									Chậm hơn Jackson
+	org.json								Không cần annotation, dễ thao tác JSON thô				Không hỗ trợ tự động mapping object
+	
+	
+# JSON Serialization với Jackson(Tốt nhất )
+			## Thêm phụ thuộc 
+			
+				<dependencies>
+					<dependency>
+						<groupId>com.fasterxml.jackson.core</groupId>
+						<artifactId>jackson-databind</artifactId>
+						<version>2.16.0</version>
+					</dependency>
+				</dependencies>
+
+
+			## Chuyển Object java thành JSON string 
+				import com.fasterxml.jackson.databind.ObjectMapper;
+				class Person {
+					public String name;
+					public int age;
+				
+					public Person(String name, int age) {
+						this.name = name;
+						this.age = age;
+					}
+				}
+				
+				public class JacksonSerializationExample {
+					public static void main(String[] args) throws Exception {
+						Person person = new Person("Alice", 25);
+						
+						// Tạo ObjectMapper
+						ObjectMapper objectMapper = new ObjectMapper();
+				
+						// Chuyển Object → JSON
+						String json = objectMapper.writeValueAsString(person);
+						System.out.println("Serialized JSON: " + json);
+					}
+				}
+				
+				
+			--> {"name":"Alice","age":25}
+			
+			
+			## Chuyển JSON Strign thành Object Java 
+					String json = "{\"name\":\"Alice\",\"age\":25}";
+					
+					// Deserialize JSON → Object
+					Person person = objectMapper.readValue(json, Person.class);
+					System.out.println("Deserialized Object: " + person.name + ", " + person.age);
+					
+					Deserialized Object: Alice, 25
+
+
+
+
+
+
+			## Dùng Annotation để tùy chỉnh JSON Serialization
+				
+				## @JsonIgnore - Bỏ qua một field chi serialize 
+					import com.fasterxml.jackson.annotation.JsonIgnore;
+					
+					class User {
+						public String username;
+						
+						@JsonIgnore
+						public String password; // Không serialize field này
+					
+						public User(String username, String password) {
+							this.username = username;
+							this.password = password;
+						}
+					}
+										
+					--> {"username":"admin"}
+					
+					
+				###	@JsonProperty - Đổi tên field trong JSON 
+				
+						import com.fasterxml.jackson.annotation.JsonProperty;
+						class Car {
+							@JsonProperty("car_name")
+							public String name;
+						
+							public Car(String name) {
+								this.name = name;
+							}
+						}
+		
+						---> 	{"car_name":"Tesla"}
+
+
+				
+				### @JsonFormat - Định dạng ngày tháng 
+				
+						import com.fasterxml.jackson.annotation.JsonFormat;
+						import java.util.Date;
+						
+						class Event {
+							public String name;
+						
+							@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy")
+							public Date date;
+						
+							public Event(String name, Date date) {
+								this.name = name;
+								this.date = date;
+							}
+						}
+						
+						--> {"name":"Conference","date":"15-02-2025"}
+						
+						
+				
+				### @JsonInclude - bỏ qua field có giá trị null hoặc default 
+				
+					import com.fasterxml.jackson.annotation.JsonInclude;
+					@JsonInclude(JsonInclude.Include.NON_NULL)
+					class Product {
+						public String name;
+						public Double price; // Nếu null sẽ bị bỏ qua
+					
+						public Product(String name, Double price) {
+							this.name = name;
+							this.price = price;
+						}
+					}
+					
+					--> {"name":"Laptop"}
+					
+					
+
+
+				
+
+# GSON 
+	
+	Đơn giản và ít tùy chỉnh hơn Jackson 
+	
+	
+	## Dependency 
+			<dependency>
+				<groupId>com.google.code.gson</groupId>
+				<artifactId>gson</artifactId>
+				<version>2.10</version>
+			</dependency>
+
+
+
+	## Serializable đơn giản với GSON 
+		import com.google.gson.Gson;
+		class Student {
+			public String name;
+			public int age;
+		
+			public Student(String name, int age) {
+				this.name = name;
+				this.age = age;
+			}
+		}
+		
+		public class GsonExample {
+			public static void main(String[] args) {
+				Gson gson = new Gson();
+		
+				// Serialize
+				Student student = new Student("Bob", 22);
+				String json = gson.toJson(student);
+				System.out.println("Serialized JSON: " + json);
+		
+				// Deserialize
+				Student deserializedStudent = gson.fromJson(json, Student.class);
+				System.out.println("Deserialized Object: " + deserializedStudent.name);
+			}
+		}
+
+		--> {"name":"Bob","age":22}
+		
+		
+
+Câu hỏi																			Câu trả lời
+Khi nào nên dùng Jackson thay vì Gson?								Khi cần tốc độ và tùy chỉnh mạnh mẽ bằng annotation.
+@JsonIgnore dùng để làm gì?											Để bỏ qua một field khi serialize.
+@JsonProperty("id") có tác dụng gì?									Đổi tên field trong JSON thành "id".
+Gson có hỗ trợ annotation như Jackson không?						❌ Không, Gson không mạnh về annotation.
+Khi nào nên dùng @JsonInclude(JsonInclude.Include.NON_NULL)?		Khi muốn bỏ qua các field có giá trị null.
+
+
+Jackson mạnh hơn Gson, nhưng phức tạp hơn.
+Gson đơn giản, dễ dùng, nhưng ít tùy chỉnh hơn.
+
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

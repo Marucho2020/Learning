@@ -1,0 +1,134 @@
+<html><head><title>Lesson 164 == volatile ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 164 -- volatile -//</h1><pre>
+# 1. volatile là gì về mặt JMM
+
+	## Theo Java Memory Model, mỗi thread có thể cache giá trị biến trong CPU register hoặc thread-local cache, không phải lúc nào cũng đọc/ghi từ main memory (RAM).
+
+	## volatile đảm bảo:
+		- Visibility: Mọi thread luôn thấy giá trị mới nhất từ main memory.
+		- Happens-before: Mọi ghi (write) vào biến volatile sẽ xảy ra trước mọi đọc (read) biến đó ở thread khác.
+
+	## Không đảm bảo atomicity cho phép toán phức tạp (trừ đọc/ghi đơn giản). 
+
+volatile boolean running = true;
+
+public void stop() {
+    running = false; // write: flush ngay vào main memory
+}
+
+public void run() {
+    while (running) { // read: luôn đọc từ main memory
+        ...
+    }
+}
+
+
+# 2. Cách JVM triển khai volatile
+	Khi compile sang bytecode → volatile sinh ra các memory barrier:
+
+	## Store Barrier (trước khi ghi):
+		Đảm bảo tất cả các write trước đó được commit vào main memory.
+
+	## Load Barrier (sau khi đọc): 
+		Đảm bảo không cache giá trị cũ, luôn đọc mới từ main memory.
+	
+	## Trên CPU: 
+		- Với x86, thường mapping sang LOCK prefix trong instruction hoặc mfence.
+		- Với ARM, mapping sang dmb (Data Memory Barrier).	
+
+
+
+# 3. JIT và tối ưu hóa
+
+	- JIT (HotSpot C2 compiler) bình thường có thể reorder các lệnh đọc/ghi để tối ưu pipeline.
+	- Khi dùng volatile, JIT bị hạn chế reorder quanh vùng có volatile → giảm một số tối ưu.
+	- Lock Elision và hoisting (đưa lệnh ra ngoài loop) bị vô hiệu nếu biến volatile nằm trong loop.
+
+Ví dụ JIT optimization bị chặn:
+
+while (!flag) {  // flag volatile → không hoist ra ngoài
+    doSomething();
+}
+
+
+
+# 4. Khi nào nên dùng
+
+	Dùng để truyền tín hiệu trạng thái giữa thread mà không cần lock:
+		Flags: running, isReady, shutdownRequested.
+		Double-checked locking (DCL) khi khởi tạo singleton:
+	
+class Singleton {
+    private static volatile Singleton instance;
+
+    public static Singleton getInstance() {
+        if (instance == null) {
+            synchronized (Singleton.class) {
+                if (instance == null) {
+                    instance = new Singleton();
+                }
+            }
+        }
+        return instance;
+    }
+}
+
+Dùng cho biến được nhiều thread đọc nhưng hiếm khi ghi (read-mostly).
+
+
+# 5. Khi không nên dùng
+
+	- Khi cần atomicity (tăng/giảm counter, update list, ...):
+volatile int count = 0;
+count++; // KHÔNG an toàn (read → modify → write không atomic)
+
+	→ Dùng AtomicInteger hoặc synchronized / Lock.
+
+	Khi biến thay đổi quá thường xuyên:
+		- volatile gây cache miss liên tục, chậm hơn so với giữ local copy.
+		- Cực kỳ tệ nếu trong hot loop.
+
+
+# 6. False Sharing – kẻ thù thầm lặng
+	
+	- Xảy ra khi nhiều thread đọc/ghi các biến khác nhau nhưng nằm chung 1 cache line (thường 64 bytes).
+	- Với volatile, CPU invalidates cache line → ảnh hưởng thread khác dù không đụng cùng biến.
+	
+	## Giải pháp:
+		Padding:
+@Contended // (Java 8+, cần bật -XX:-RestrictContended)
+volatile long counter;
+
+	Hoặc nhét biến “đệm” giữa các biến được thread khác nhau ghi.
+
+
+
+# 7. So sánh với synchronized
+
+| Tiêu chí           | volatile                        | synchronized                |
+| ------------------ | ------------------------------- | --------------------------- |
+| **Visibility**     | Có                              | Có                          |
+| **Atomicity**      | Không (trừ đọc/ghi đơn giản)    | Có                          |
+| **Blocking**       | Không                           | Có (mutual exclusion)       |
+| **Overhead**       | Thấp hơn nếu chỉ cần visibility | Cao hơn                     |
+| **Memory barrier** | Chỉ ở read/write biến đó        | Ở entry/exit của toàn block |
+
+
+# 8. Tóm tắt tư duy senior
+
+	## volatile không thay thế lock → chỉ đảm bảo visibility và happens-before.
+	
+	## Dùng khi:
+	
+		- Truyền tín hiệu đơn giản giữa thread.
+		- Double-checked locking.
+		- Read-mostly shared config/state.
+
+	## Tránh khi:
+	
+		- Update phức tạp hoặc cần consistency nhiều biến.
+		- Nhiều ghi liên tục → overhead + false sharing.	
+	
+	
+	
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

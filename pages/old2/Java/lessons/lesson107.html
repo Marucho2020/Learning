@@ -1,0 +1,164 @@
+<html><head><title>Lesson 107 == Skip List ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 107 -- Skip List -//</h1><pre>
+# Khái niệm 
+	Skip List là một cấu trúc dữ liệu kết hợp giữa linked list và binary search tree,  được thiết kế để duy trì dữ liệu có thứ tự và hỗ trợ tìm kiếm, chèn xóa, hiệu quả O(log n)
+		
+		Ý tưởng : Thêm nhiều tầng (level) linked list phía trên để nhảy cóc qua các phần tử -> giúp tìm kiếm nhanh hơn mà không cần cấu trúc cây phức tạp  
+
+
+# 📊 2. Cấu trúc tổng quan 
+	
+	Skip List gồm nhiều lớp danh sách liên kết (linked list), mỗi lớp cao hơn là một bản rút gọn của lớp dưới: 
+	
+		Level 0: Là danh sách đầy đủ, chứa mọi phần tử.	
+		Level 1+: Chứa ngẫu nhiên một phần các phần tử (theo xác suất p). 
+		
+		Level 2:     A ----------- G
+		Level 1:     A ---- C ---- G
+		Level 0: A - B - C - D - E - F - G
+
+		Khi tìm G: A → C → G ở level 1 (bỏ qua hàng loạt phần tử trung gian).
+		Mỗi node có thể có nhiều “next pointers” ở các level khác nhau.
+		
+		
+# 🧪 3. Vì sao cần Skip List? 
+
+Thứ bạn cần 								| Giải pháp thường dùng		
+
+Tìm kiếm nhanh trên dữ liệu có thứ tự 		| Tree (AVL, Red-Black) 	
+Cấu trúc dễ concurrent (multi-thread) 		| Tree khó đồng bộ 			
+HashMap có thứ tự							 | TreeMap					
+
+	<next>
+		| Vấn đề 								| Skip List giải quyết
+		
+		| Cài đặt phức tạp, xoay node			| Đơn giản, randomize, dễ song song
+		| Dễ deadlock 							| Skip List dễ parallelize
+		| Nhưng phức tạp 						| ConcurrentSkipListMap là giải pháp		
+
+
+
+# ⏱️ 4. Độ phức tạp 
+	
+Operation 			| Thời gian
+Search 				| O(log n)
+Insert 				| O(log n)
+Delete 				| O(log n)
+Space				| O(n)
+
+So với TreeMap (Red-Black Tree): hiệu năng tương đương, nhưng cài đặt đơn giản và dễ song song hóa hơn.
+
+
+
+
+# ⚙️ 5. Triển khai thủ công Skip List (Java simplified) 
+
+class SkipNode {
+    int value;
+    SkipNode[] forward;
+
+    public SkipNode(int level, int value) {
+        this.value = value;
+        this.forward = new SkipNode[level + 1];
+    }
+}
+
+class SkipList {
+    private static final int MAX_LEVEL = 4;
+    private final double P = 0.5;
+    private SkipNode head = new SkipNode(MAX_LEVEL, Integer.MIN_VALUE);
+    private int level = 0;
+
+    private int randomLevel() {
+        int lvl = 0;
+        while (Math.random() < P && lvl < MAX_LEVEL) lvl++;
+        return lvl;
+    }
+
+    public void insert(int value) {
+        SkipNode[] update = new SkipNode[MAX_LEVEL + 1];
+        SkipNode current = head;
+
+        for (int i = level; i >= 0; i--) {
+            while (current.forward[i] != null && current.forward[i].value < value) {
+                current = current.forward[i];
+            }
+            update[i] = current;
+        }
+
+        current = current.forward[0];
+        if (current == null || current.value != value) {
+            int newLevel = randomLevel();
+            if (newLevel > level) {
+                for (int i = level + 1; i <= newLevel; i++) {
+                    update[i] = head;
+                }
+                level = newLevel;
+            }
+
+            SkipNode newNode = new SkipNode(newLevel, value);
+            for (int i = 0; i <= newLevel; i++) {
+                newNode.forward[i] = update[i].forward[i];
+                update[i].forward[i] = newNode;
+            }
+        }
+    }
+}
+
+🧠 Tư duy: Mỗi khi insert, ta chọn ngẫu nhiên mức độ "level" mà node này sẽ tồn tại. Càng cao, càng nhảy xa.
+
+
+
+# 🔧 6. Skip List trong Java chuẩn (sẵn có) 
+
+	Java đã có sẵn Skip List trong java.util.concurrent:
+	
+	✅ ConcurrentSkipListMap / ConcurrentSkipListSet
+	ConcurrentSkipListMap<String, Integer> map = new ConcurrentSkipListMap<>();
+	map.put("a", 1);
+	map.put("b", 2);
+	
+	System.out.println(map.get("a")); // 1
+	System.out.println(map.ceilingKey("a")); // a
+	System.out.println(map.tailMap("a")); // {a=1, b=2}
+
+	Ưu điểm 				 | Mô tả
+	Thread-safe				 | Hỗ trợ nhiều thread mà không cần synchronized
+	Sorted					 | Duy trì key theo thứ tự tăng
+	Non-blocking reads 		 | High-performance dưới nhiều thread
+
+
+	Được dùng trong các hệ thống cần truy cập đồng thời mà vẫn giữ thứ tự như cache, scheduler, hoặc log indexing.
+	
+
+# 💥 7. Khi nào nên dùng Skip List? 
+	
+Tình huống 										| Dùng Skip List?
+Cần dữ liệu duy trì thứ tự theo key 			| ✅
+Cần tìm kiếm nhanh O(log n) 					| ✅
+Cần đa luồng, không block 						| ✅
+Cần dễ hiểu, dễ debug hơn tree  				| ✅
+Cần cực kỳ tối ưu cho memory  					| ❌ (tree có thể tốt hơn)
+Chỉ cần tìm kiếm key đơn giản 					| ❌ HashMap là đủ
+
+
+
+# 🧱 8. So sánh với TreeMap
+
+Tính năng 				| SkipListMap 						| TreeMap (Red-Black Tree)
+Thread-safe				| ✅ (ConcurrentSkipListMap) 		| ❌
+Thứ tự					| Có 								| Có
+Hiệu năng 				| O(log n), tốt khi concurrent 		| O(log n), tốt khi đơn luồng
+Dễ mở rộng song song 	| Rất tốt 							| Khó vì cấu trúc cây xoay
+Bộ nhớ 					| Tốn hơn vì thêm pointer 			| Tốt hơn
+
+
+
+# 📌 Tổng kết
+
+Hiểu Skip List là hiểu được một cấu trúc dữ liệu thay thế tree nhưng phù hợp hơn với các hệ thống phân tán, concurrent, real-time, và cần logic đơn giản hơn cây xoay.
+
+Biết sử dụng ConcurrentSkipListMap là vũ khí mạnh trong xây dựng scheduler, priority queue, job ordering, real-time indexing.
+
+Khi cần kiểm soát logic thread-safe + ordered access mà không cần block → Skip List là ứng cử viên số 1.
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

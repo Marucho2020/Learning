@@ -1,0 +1,102 @@
+<html><head><title>Lesson 10 == Functions graphic ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../DataScience-learning.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 10 -- Functions graphic -//</h1><pre>
+# 1. Tập Dữ Liệu Sức Khỏe (The Sports Watch Data Set)
+	
+	Định nghĩa chính: Bài sử dụng lại bảng dữ liệu sức khỏe từ đồng hồ thể thao (10 hàng, 6 cột: Duration, Average_Pulse, Max_Pulse, Calorie_Burnage, Hours_Work, Hours_Sleep), đã xuất hiện trong các bài trước (database table, data preparation). Bài này tập trung vào hai cột: Average_Pulse (nhịp tim trung bình) và Calorie_Burnage (calo đốt cháy).
+	
+	
+	# Giải thích chi tiết và chuyên sâu:
+	
+		Cấu trúc dữ liệu: Đây là dữ liệu có cấu trúc (structured data), lưu trong DataFrame (như bài "Python DataFrame"). Mỗi hàng là một observation (buổi tập), mỗi cột là một variable.
+	
+		Tập trung vào Average_Pulse và Calorie_Burnage: Hai cột này có mối quan hệ tuyến tính mạnh (tương quan r ≈ 1.0 từ bài đầu tiên), phù hợp để vẽ và phân tích hàm tuyến tính.
+	
+		Minh họa chuyên sâu: Tái tạo DataFrame từ dữ liệu
+	
+import pandas as pd
+health_data = pd.DataFrame({
+    'Duration': [30, 30, 45, 45, 45, 60, 60, 60, 75, 75],
+    'Average_Pulse': [80, 85, 90, 95, 100, 105, 110, 115, 120, 125],
+    'Max_Pulse': [120, 120, 130, 130, 140, 140, 145, 145, 150, 150],
+    'Calorie_Burnage': [240, 250, 260, 270, 280, 290, 300, 310, 320, 330],
+    'Hours_Work': [10, 10, 8, 8, 0, 7, 7, 8, 0, 8],
+    'Hours_Sleep': [7, 7, 7, 7, 7, 8, 8, 8, 8, 8]
+})
+print(health_data[['Average_Pulse', 'Calorie_Burnage']])	
+	
+	
+	Phân tích: Dữ liệu cho thấy khi Average_Pulse tăng 10 bpm, Calorie_Burnage tăng 20 calo, gợi ý mối quan hệ tuyến tính (như bài trước: y = 2x + 80).
+	
+	Kết nối với bài trước: Bảng này là dữ liệu đã làm sạch (bài "Data Preparation"), loại bỏ lỗi như “9000” hay “AF”. Bài về hàm tuyến tính đã xác định công thức f(x) = 2x + 80 dựa trên dữ liệu này.
+	
+	Ứng dụng thực tế: Dữ liệu tương tự được thu thập từ thiết bị như Fitbit, dùng để phân tích hiệu suất tập luyện.
+	
+	
+	
+	
+# 2. Vẽ Dữ Liệu Với Python (Plot the Existing Data in Python)	
+	
+	Định nghĩa chính: Sử dụng thư viện Matplotlib để vẽ đồ thị đường (line plot) của Average_Pulse (x-axis) và Calorie_Burnage (y-axis) để kiểm tra mối quan hệ.
+	
+	Mã ví dụ từ bài:
+import matplotlib.pyplot as plt
+health_data.plot(x='Average_Pulse', y='Calorie_Burnage', kind='line')
+plt.ylim(ymin=0)
+plt.xlim(xmin=0)
+plt.show()
+	
+	## Giải thích chi tiết và chuyên sâu:
+		Import Matplotlib: import matplotlib.pyplot as plt – pyplot là module chính để vẽ đồ thị (đã giới thiệu ở bài "Python Libraries").
+	
+		Hàm plot(): health_data.plot(x='Average_Pulse', y='Calorie_Burnage', kind='line') – Vẽ đồ thị đường:
+	
+			x='Average_Pulse': Trục x là cột Average_Pulse.
+			y='Calorie_Burnage': Trục y là cột Calorie_Burnage.
+			kind='line': Vẽ đường thẳng nối các điểm dữ liệu (khác với scatter plot trong bài đầu tiên).	
+			
+	
+		Giới hạn trục: plt.ylim(ymin=0) và plt.xlim(xmin=0) đặt giới hạn trục y và x bắt đầu từ 0, đảm bảo đồ thị dễ đọc và hợp lý (nhịp tim/calo không âm)
+	
+		Hiển thị: plt.show() hiển thị đồ thị.
+		
+		Sửa lỗi trong bài: Mã bài này thực tế tạo line plot, nhưng đồ thị minh họa trong bài là scatter plot với đường tuyến tính (giống bài đầu tiên). Để khớp với hình minh họa, nên dùng scatter plot và thêm đường tuyến tính:
+		
+		
+		Output đồ thị: Đường thẳng (blue line) đi qua các điểm, cho thấy mối quan hệ tuyến tính giữa Average_Pulse và Calorie_Burnage. Slope=2 (calo tăng 20 khi pulse tăng 10).
+		Ứng dụng thực tế: Trong phân tích doanh thu, vẽ line/scatter plot để kiểm tra mối quan hệ giữa chi phí quảng cáo và doanh số, giúp xác định mô hình dự đoán.
+		Lời khuyên chuyên gia: Dùng scatter plot để kiểm tra tuyến tính trước khi áp dụng mô hình tuyến tính. Thêm plt.legend() và plt.xlabel()/ylabel() để đồ thị dễ hiểu hơn.		
+		
+		
+# 	3. Diễn Giải Đồ Thị (The Graph Output)	
+		
+		
+	Định nghĩa chính: Đồ thị cho thấy Calorie_Burnage tăng tỷ lệ thuận với Average_Pulse, xác nhận Average_Pulse có thể dùng để dự đoán Calorie_Burnage. Bài chỉ ra pattern: Khi Average_Pulse tăng 10 bpm, Calorie_Burnage tăng 20 calo
+
+	# Giải thích chi tiết và chuyên sâu:
+		Mối quan hệ tuyến tính:
+
+	Đồ thị scatter với đường tuyến tính (y = 2x + 80) cho thấy các điểm dữ liệu nằm gần hoặc trên đường, xác nhận mối quan hệ tuyến tính mạnh (r ≈ 1.0 từ bài đầu).
+
+	Ví dụ từ bài:
+
+		- Average_Pulse = 80 → Calorie_Burnage = 240.
+		- Average_Pulse = 90 → Calorie_Burnage = 260.
+		- Average_Pulse = 100 → Calorie_Burnage = 280.
+		- Pattern: Pulse tăng 10 → Calo tăng 20, phù hợp với slope=2 (y = 2x + 80).
+
+
+	## Tại sao đường không kéo dài đến y-axis?:
+
+
+		Bài giải thích: Không có observation nào với Average_Pulse = 0 hoặc Calorie_Burnage = 0. Giá trị nhỏ nhất là Average_Pulse = 80 (Calorie_Burnage = 240).
+		
+		Chuyên sâu: Intercept (b=80) là giá trị lý thuyết khi x=0, nhưng không thực tế (nhịp tim 0 không có nghĩa). Đồ thị chỉ vẽ trong phạm vi dữ liệu (80-125 bpm).
+
+
+		Ứng dụng thực tế: Trong y tế, scatter plot giúp bác sĩ thấy mối quan hệ giữa nhịp tim và calo, hỗ trợ thiết kế chương trình tập luyện. Trong kinh doanh, dùng để dự đoán doanh thu từ số lượng khách truy cập.
+
+		Chuyên sâu: Dùng correlation để xác nhận tuyến tính:
+	
+		Lời khuyên chuyên gia: Luôn kiểm tra scatter plot trước khi áp dụng hồi quy tuyến tính. Nếu điểm dữ liệu phân tán không theo đường thẳng, cần mô hình phi tuyến (như polynomial regression).	
+		
+		
+</pre><a id='backBottom' href='../DataScience-learning.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

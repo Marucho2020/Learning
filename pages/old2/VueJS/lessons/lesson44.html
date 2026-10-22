@@ -1,0 +1,156 @@
+<html><head><title>Lesson 44 == Vue Build ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../vue-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 44 -- Vue Build -//</h1><pre>
+# Khái niệm 
+	Build là quá trình chuyển đổi mã nguồn Vue.js (bao gồm các file .vue, JavaScript, CSS, v.v.) thành các file tĩnh (HTML, JavaScript, CSS) tối ưu hóa để chạy trên trình duyệt trong môi trường sản xuất.
+
+	## 	Mục đích: 
+		- Tối ưu hóa hiệu suất: Giảm kích thước file, loại bỏ mã không cần thiết.
+		- Đóng gói: Kết hợp các module, xử lý các tài nguyên (hình ảnh, font).
+		- Tương thích: Đảm bảo ứng dụng chạy trên các trình duyệt khác nhau.		
+	
+	## Công cụ phổ biến 
+		- Vue CLI: Công cụ truyền thống cho Vue 2 và Vue 3, dựa trên Webpack.
+		- Vite: Công cụ hiện đại, nhanh hơn, được khuyến nghị cho Vue 3.
+		
+		
+# 2. Tổng quan quy trình Build 		
+
+	- Khởi tạo dự án: Tạo một dự án Vue mới bằng Vue CLI hoặc Vite.
+	- Phát triển ứng dụng: Viết mã Vue (component, router, form, animations, v.v.).
+	- Build ứng dụng: Chạy lệnh build để tạo các file tối ưu cho sản xuất.
+	- Triển khai: Đăng tải các file build lên server hoặc dịch vụ hosting (như Netlify, Vercel).			
+		
+# 3. Khởi tạo dự án		
+		
+	Để bắt đầu, bạn cần tạo một dự án Vue mới. W3Schools giới thiệu hai công cụ chính:
+ 	
+		
+	## 	a. Vue CLI 
+	
+	Vue CLI là công cụ dòng lệnh chính thức của Vue.js, phù hợp cho cả Vue 2 và Vue 3
+		npm install -g @vue/cli
+	
+	Tạo dự án : 
+		vue create my-project
+		
+	Chọn các tùy chọn như Vue 2/Vue 3, TypeScript, Router, Vuex, ESLint, v.v.
+	Kết quả: Tạo một thư mục my-project với cấu trúc chuẩn (bao gồm src, public, package.json).	
+	
+	
+	Chạy dự án ở chế độ phát triển: 
+		cd my-project
+		npm run serve
+	
+	Mở trình duyệt tại http://localhost:8080 để xem ứng dụng.
+	
+	
+	## b. Vite
+		Vite là công cụ build hiện đại, nhanh hơn Vue CLI, được khuyến nghị cho Vue 3.
+		
+		Tạo dự án với Vite
+			npm create vite@latest my-project -- --template vue
+			
+		Chọn template vue (hoặc vue-ts nếu dùng TypeScript).
+		Kết quả: Tạo một dự án với cấu trúc đơn giản hơn Vue CLI.	
+		
+	Cài đặt dependencies và chạy:
+		cd my-project
+		npm install
+		npm run dev	
+	
+		Mở trình duyệt tại http://localhost:5173 (cổng mặc định của Vite).
+		
+
+# Vue CLI vs Vite 
+	
+	Vue CLI:
+		- Dựa trên Webpack, phù hợp cho dự án lớn, nhiều tính năng tích hợp (như Babel, ESLint).
+		- Khởi động chậm hơn, đặc biệt với dự án lớn.
+	Vite:
+		- Dựa trên ES modules và Rollup, khởi động nhanh, build nhanh.
+		- Đơn giản hơn, khuyến nghị cho Vue 3.
+		- Ít tính năng tích hợp sẵn, nhưng có thể thêm plugin.
+
+# 4. Build ứng dụng
+
+	Sau khi phát triển xong, bạn cần build ứng dụng để tạo các file sẵn sàng triển khai.
+
+	a. Build với Vue CLI
+		Lệnh build:
+			- npm run build
+
+		Kết quả:
+			Tạo thư mục dist/ chứa các file tĩnh:
+				index.html: File HTML chính.
+				js/, css/: File JavaScript và CSS được tối ưu hóa.
+				Các tài nguyên khác (hình ảnh, font).
+
+		Các file được: 
+			Nén: Giảm kích thước (minified).
+			Tối ưu hóa: Loại bỏ mã không dùng (tree-shaking).
+			Phân chia (code-splitting): Tạo các chunk để tải dần.
+
+
+		Cấu hình:
+			File vue.config.js cho phép tùy chỉnh build (ví dụ: thay đổi đường dẫn output, thêm plugin).
+			
+# b. Build với Vite
+
+	npm run build
+	
+	Kết quả:
+		Tạo thư mục dist/ tương tự Vue CLI, nhưng thường nhỏ hơn và nhanh hơn.
+		Vite sử dụng Rollup để tối ưu hóa, hỗ trợ code-splitting và tree-shaking
+
+	Cấu hình:
+		File vite.config.js để tùy chỉnh (ví dụ: thêm plugin, thay đổi cổng).
+		
+	Xem trước build
+		Với Vue CLI:
+			npm run serve dist
+
+		Với Vite: 
+			npm run preview
+			
+		Mở trình duyệt để kiểm tra ứng dụng sau build.
+
+
+# 5. Triển khai ứng dụng 
+	Sau khi build, bạn cần đăng tải thư mục dist/ lên server hoặc dịch vụ hosting.
+	
+		a. Triển khai lên server
+			Copy thư mục dist/ vào thư mục gốc của server (ví dụ: /var/www/html trên Apache).
+			Cấu hình server để trả về index.html cho mọi đường dẫn (hỗ trợ Vue Router)
+			Nginx:
+location / {
+  try_files $uri $uri/ /index.html;
+}
+
+		Apache:
+			
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+  RewriteRule ^index\.html$ - [L]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule . /index.html [L]
+</IfModule>
+
+
+# 6. Tối ưu hóa cho sản xuất
+
+
+	- Lazy Loading 
+		Tải component chỉ khi cần:
+			const routes = [
+  { path: '/about', component: () => import('./components/About.vue') }
+];
+		
+		
+	- Tree-Shaking: Loại bỏ mã không sử dụng (tự động với Vite/Rollup hoặc Webpack).
+	- Minification: Nén file JavaScript/CSS (mặc định trong build production).
+	- CDN: Sử dụng CDN cho các thư viện lớn (như Vue, Vue Router). 	
+		
+		
+		
+</pre><a id='backBottom' href='../vue-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

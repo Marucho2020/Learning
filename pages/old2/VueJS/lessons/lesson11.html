@@ -1,0 +1,77 @@
+<html><head><title>Lesson 11 == modifiers ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../vue-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 11 -- modifiers -//</h1><pre>
+# Khái niệm 
+	Event modifiers là các hậu tố (suffix) được thêm vào v-on (hoặc @) để điều chỉnh cách xử lý sự kiện, giảm mã JavaScript thủ công.
+	Cú pháp: @sự-kiện.modifier="hàm".
+	Mục đích: Xử lý các hành vi sự kiện phổ biến như ngăn tải lại trang, dừng lan truyền sự kiện, hoặc giới hạn kích hoạt.
+	
+	
+
+
+# Ví dụ cơ bản: 
+<div id="app">
+  <form @submit.prevent="onSubmit">
+    <button type="submit">Submit</button>
+  </form>
+</div>
+
+<script>
+const app = Vue.createApp({
+  methods: {
+    onSubmit() {
+      alert('Form submitted!');
+    }
+  }
+})
+app.mount('#app')
+</script>
+
+
+		## Giải thích: 
+			@submit.prevent: Ngăn hành vi mặc định của form (tải lại trang) và gọi hàm onSubmit.
+
+
+
+# 2. Các Event Modifiers phổ biến
+
+
+	## a.prevent 
+		Ngăn hành vi mặc định (như submit form, nhảy link). Ví dụ:
+		
+		<a @click.prevent="doSomething" href="https://example.com">Click me</a>
+		Ngăn nhảy link, chỉ gọi doSomething.
+		
+		
+	## b. stop 
+
+<div @click="parentClick">
+  <button @click.stop="childClick">Click me</button>
+</div>
+	Chỉ gọi childClick, không gọi parentClick.
+
+
+	## c. once
+		Sự kiện chỉ kích hoạt một lần. Ví dụ:
+		doOnce chỉ chạy lần đầu tiên nhấn.
+		
+		<button @click.once="doOnce">Click once</button>
+
+		
+
+	## d.capture
+		Xử lý sự kiện ở giai đoạn capture (trước bubbling). Ví dụ:
+		<div @click.capture="doThis">...</div>
+		
+		
+
+	## e. self 
+		Chỉ kích hoạt nếu sự kiện xảy ra trên chính phần tử đó. Ví dụ:
+		<div @click.self="doThis">...</div>
+		
+		
+
+	## f. Key Modifiers
+		Gắn với phím cụ thể, như .enter, .space. Ví dụ:
+		<input @keyup.enter="submit">
+		Gọi submit khi nhấn phím Enter.
+		
+</pre><a id='backBottom' href='../vue-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

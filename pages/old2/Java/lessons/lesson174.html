@@ -1,0 +1,137 @@
+<html><head><title>Lesson 174 == CyclicBarrier ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 174 -- CyclicBarrier -//</h1><pre>
+🔹 CyclicBarrier – Barrier đồng bộ vòng lặp
+# 1. Khái niệm
+
+	- CyclicBarrier là một barrier point cho n thread gặp nhau tại cùng một điểm (rendezvous).
+	- Khi tất cả thread gọi await(), barrier trip → tất cả thread được unpark.
+	- Điểm quan trọng: Cyclic → có thể reset/reuse nhiều lần (trong nhiều vòng).
+
+
+
+# 2. Constructor & optional Runnable
+
+CyclicBarrier(int parties) // số thread cần chờ
+CyclicBarrier(int parties, Runnable barrierAction) // action chạy khi barrier trip
+
+
+	barrierAction chạy trong 1 thread cuối cùng đến barrier.
+	Dùng cho coordinator task, ví dụ log, merge, update global state.
+
+
+
+
+
+# 3. Basic usage
+
+int N = 3;
+CyclicBarrier barrier = new CyclicBarrier(N, () -> System.out.println("All threads reached barrier"));
+
+for (int i = 0; i < N; i++) {
+    final int id = i;
+    new Thread(() -> {
+        try {
+            System.out.println("Thread " + id + " working...");
+            Thread.sleep((long)(Math.random()*1000));
+            System.out.println("Thread " + id + " waiting at barrier");
+            barrier.await();
+            System.out.println("Thread " + id + " passed barrier");
+        } catch (InterruptedException | BrokenBarrierException e) {}
+    }).start();
+}
+
+
+
+# 4. Key points senior-leve
+
+	## Reusable
+		Khác CountDownLatch, bạn có thể dùng barrier nhiều lần.
+		Ví dụ multi-phase computation, iterative algorithm.
+
+	## BrokenBarrierException
+
+		Barrier bị break nếu một thread interrupt hoặc timeout.
+		Khi đó tất cả thread chờ khác sẽ nhận BrokenBarrierException → phải handle.
+ 
+
+	## Timeout 
+		await(timeout, TimeUnit) → tránh deadlock nếu thread chậm hoặc bị lỗi.	
+
+
+	## Barrier Action 
+	
+		Chỉ chạy 1 thread cuối cùng.
+		Không nên làm blocking operation → sẽ delay tất cả thread khác.
+
+
+# 5. Use cases
+
+
+	## Iterative parallel algorithms 
+		Example: simulation bước thời gian, N particles update → barrier để đồng bộ bước.
+
+	## Divide-and-conquer multi-phase computation 
+		Thread làm việc trên phần dữ liệu riêng → barrier merge/gather kết quả.	
+
+	## Testing / synchronization
+		Giống CountDownLatch nhưng multi-phase, reusable.
+
+
+
+# 6. Comparison with CountDownLatch
+
+| Feature                  | CountDownLatch                     | CyclicBarrier                        |
+| ------------------------ | ---------------------------------- | ------------------------------------ |
+| One-time use             | ✔                                  | ❌ (reusable)                         |
+| Number of parties fixed? | ✔                                  | ✔ (n threads)                        |
+| Wait direction           | Threads chờ, others call countDown | Threads chờ nhau (rendezvous)        |
+| Action on barrier        | ❌                                  | ✔ optional Runnable                  |
+| Typical use              | Wait until N tasks finish          | Synchronize N threads multiple times |
+| Resettable               | ❌                                  | ✔ (`reset()` method)                 |
+
+
+
+#7. Comparison with Phaser 
+
+| Feature           | CyclicBarrier | Phaser                          |
+| ----------------- | ------------- | ------------------------------- |
+| Number of parties | Fixed         | Dynamic (register/deregister)   |
+| Multi-phase       | Yes           | Yes, flexible                   |
+| Reset             | Yes           | Implicit after phase completion |
+| Barrier action    | Runnable      | `onAdvance` callback            |
+
+
+
+
+# 8. Pitfalls senior-level
+
+	Blocking barrierAction → làm chậm tất cả threads.
+	
+	Interrupt / timeout → gây BrokenBarrierException, nếu không handle → crash.
+	
+	Mất cân bằng số thread → nếu không đủ thread gọi await(), barrier vĩnh viễn block.
+	
+	Thread reuse trong pool → nếu barrier dùng trong executor pool, beware deadlock khi số thread pool < parties.
+
+
+
+# 9. Senior-level mindset
+
+
+	CyclicBarrier = multi-phase rendezvous point.
+	Khi design parallel algorithms, phân tích:
+		Bao nhiêu thread cần đồng bộ?
+		Bao nhiêu phase?
+		Barrier có thể bị interrupt/timed out?
+
+	Nếu thread dynamic hoặc join/leave liên tục → dùng Phaser.
+	BarrierAction = opportunity để chạy coordinator task → không block, lightweight
+
+
+# 👉 Tóm lại:
+
+CountDownLatch = chờ một lần → one-way, fire-once.
+CyclicBarrier = reusable barrier → synchronize N threads nhiều lần.
+Phaser = dynamic, multi-phase → generalization của barrier.
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

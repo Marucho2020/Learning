@@ -1,0 +1,154 @@
+<html><head><title>Lesson 20 == Linear Regression Table ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../DataScience-learning.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 20 -- Linear Regression Table -//</h1><pre>
+
+# 1. Khái Niệm Tổng Quát Về Bảng Hồi Quy
+
+	Bảng hồi quy là một bảng tóm tắt kết quả từ mô hình hồi quy tuyến tính. Hồi quy tuyến tính là phương pháp thống kê để mô hình hóa mối quan hệ giữa một biến phụ thuộc (dependent variable) – thường gọi là Y (biến bạn muốn dự đoán) – và một hoặc nhiều biến độc lập (independent variables) – thường gọi là X (biến giải thích).
+
+
+	Công thức cơ bản của hồi quy tuyến tính đơn giản (simple linear regression):
+		 Y = \beta_0 + \beta_1 X + \epsilon 
+
+		$\beta_0$: Hệ số chặn (intercept) – giá trị dự đoán của Y khi X = 0.
+		$\beta_1$: Hệ số góc (slope) – mức độ thay đổi của Y khi X tăng 1 đơn vị.
+		$\epsilon$: Sai số ngẫu nhiên (error term).
+
+	Bảng hồi quy giúp bạn:
+
+		- Đánh giá mô hình có tốt không (ví dụ: mô hình giải thích bao nhiêu phần trăm biến thiên của dữ liệu?).
+		- Kiểm tra ý nghĩa thống kê của các hệ số (có phải mối quan hệ là ngẫu nhiên không?).
+		- Dự đoán và ra quyết định dựa trên dữ liệu.
+
+
+
+# 2. Các Thành Phần Chính Của Bảng Hồi Quy
+	Dựa trên output tiêu chuẩn từ thư viện như statsmodels (sẽ giải thích ở phần code), bảng thường được chia thành 3 phần chính:
+
+	## Phần 1: Tóm tắt mô hình (Model Summary):
+
+		- Dep. Variable: Biến phụ thuộc (Y).
+		- Model: Loại mô hình (OLS).
+		- Method: Phương pháp ước lượng (Least Squares).
+		- No. Observations: Số lượng dữ liệu (n).
+		- Df Residuals: Độ tự do phần dư (n - k - 1, với k là số biến độc lập).
+		- Df Model: Độ tự do mô hình (k).
+
+
+	## Phần 2: Thống kê hồi quy tổng quát (Omnibus Statistics):
+
+		- R-squared: Tỷ lệ biến thiên của Y được giải thích bởi X (0-1, càng cao càng tốt, ví dụ 0.8 nghĩa là 80%).
+		- Adjusted R-squared: Phiên bản điều chỉnh cho số biến (tránh overfitting).
+		- F-statistic: Giá trị F để kiểm tra mô hình có ý nghĩa không (p-value của F < 0.05 thì mô hình tốt).
+		- Prob (F-statistic): p-value của F-test.
+
+
+	## Phần 3: Hệ số và thống kê của chúng (Coefficients Table)
+	
+		- coef: Giá trị hệ số ($\beta_0$ cho Intercept, $\beta_1$ cho X).
+		- std err: Sai số chuẩn (standard error) – độ biến động của hệ số.
+		- t: Giá trị t-statistic (coef / std err) để kiểm tra hệ số có khác 0 không.
+		- P>|t|: p-value (nếu < 0.05, hệ số có ý nghĩa thống kê).
+		- [0.025, 0.975]: Khoảng tin cậy 95% cho hệ số.
+	
+		Ngoài ra, có các thống kê chẩn đoán như Durbin-Watson (kiểm tra tự tương quan), Jarque-Bera (kiểm tra phân phối chuẩn của phần dư).
+	
+	
+# 	3. Ví Dụ Cụ Thể Từ Bài Học: Bảng Hồi Quy Với Average_Pulse Làm Biến Giải Thích
+	Bài học sử dụng dữ liệu sức khỏe (full_health_data từ "data.csv"), với:	
+	
+Duration,Average_Pulse,Max_Pulse,Calorie_Burnage,Hours_Work,Hours_Sleep
+30,80,120,240,8,7
+45,85,130,280,7,8
+...,...,...,...,...,...	
+	
+		Mô hình kiểm tra xem nhịp tim trung bình có ảnh hưởng đến lượng calo đốt cháy không. Kết quả điển hình: Hệ số $\beta_1$ dương, nghĩa là nhịp tim cao hơn dẫn đến đốt calo nhiều hơn.
+	
+	
+# 4. Hướng Dẫn Tạo Bảng Hồi Quy Trong Python
+	
+		Bài học cung cấp code ví dụ sử dụng thư viện statsmodels – một thư viện mạnh mẽ cho mô hình thống kê trong Python. Đây là cách chuyên nghiệp hơn so với scikit-learn (sklearn), vì statsmodels cung cấp output chi tiết kiểu R (ngôn ngữ thống kê).
+	
+import pandas as pd
+import statsmodels.formula.api as smf
+
+# Đọc dữ liệu từ file CSV
+full_health_data = pd.read_csv("data.csv", header=0, sep=",")
+
+# Tạo mô hình OLS: Y ~ X (Calorie_Burnage ~ Average_Pulse)
+model = smf.ols('Calorie_Burnage ~ Average_Pulse', data=full_health_data)
+
+# Fit mô hình (ước lượng hệ số)
+results = model.fit()
+
+# In bảng hồi quy
+print(results.summary())
+
+
+	## Giải Thích Chi Tiết Code 
+
+
+		- import pandas as pd: Thư viện để xử lý dữ liệu bảng (DataFrame).
+		- import statsmodels.formula.api as smf: Phần formula.api cho phép viết công thức kiểu R (Y ~ X), dễ đọc hơn.
+		- pd.read_csv("data.csv", header=0, sep=","): Đọc file CSV, header=0 nghĩa là dòng đầu là tên cột, sep="," là dấu phân cách.
+		- smf.ols('Calorie_Burnage ~ Average_Pulse', data=full_health_data): Tạo mô hình OLS. '~' nghĩa là "phụ thuộc vào". Nếu nhiều biến X, viết Y ~ X1 + X2.
+		- model.fit(): Ước lượng hệ số bằng phương pháp bình phương nhỏ nhất (least squares) – giảm thiểu tổng bình phương sai số.
+		- results.summary(): Trả về bảng hồi quy đầy đủ dưới dạng text.
+
+			Lưu ý: Bạn cần file "data.csv" để chạy. Nếu không có, bạn có thể tải từ W3Schools hoặc tạo dữ liệu mẫu. Statsmodels không yêu cầu scale dữ liệu, nhưng trong thực tế, kiểm tra giả định (linearity, normality, homoscedasticity) trước khi tin tưởng mô hình.
+
+
+# 5. Giải Thích Chi Tiết Output Của Bảng Hồi Quy
+
+	Giả sử chúng ta chạy code với dữ liệu mẫu từ W3Schools (dữ liệu sức khỏe với ~100 quan sát), output điển hình của results.summary() trông như thế này (dựa trên dữ liệu thực tế tương tự):
+
+                            OLS Regression Results                            
+==============================================================================
+Dep. Variable:        Calorie_Burnage   R-squared:                       0.752
+Model:                            OLS   Adj. R-squared:                  0.749
+Method:                 Least Squares   F-statistic:                     295.2
+Date:                Mon, 28 Oct 2025   Prob (F-statistic):           1.32e-32
+Time:                        12:00:00   Log-Likelihood:                -612.34
+No. Observations:                  100   AIC:                             1229.
+Df Residuals:                       98   BIC:                             1234.
+Df Model:                            1                                         
+Covariance Type:            nonrobust                                         
+=================================================================================
+                    coef    std err          t      P>|t|      [0.025      0.975]
+---------------------------------------------------------------------------------
+Intercept       -100.5     20.1    -5.00      0.000    -140.4     -60.6
+Average_Pulse      3.2      0.186    17.18      0.000       2.83       3.57
+==============================================================================
+Omnibus:                        1.234   Durbin-Watson:                   1.95
+Prob(Omnibus):                  0.540   Jarque-Bera (JB):                1.12
+Skew:                          -0.15    Prob(JB):                        0.57
+Kurtosis:                       2.78   Cond. No.                         500.
+==============================================================================
+
+	Phân Tích Chi Tiết (Như Chuyên Gia):
+	
+		Dep. Variable: Calorie_Burnage – biến bạn dự đoán
+		
+		R-squared: 0.752: Mô hình giải thích 75.2% biến thiên của calo
+		đốt cháy bằng nhịp tim. Tốt cho dữ liệu thực tế (không phải 100% vì có noise).
+		
+		Adj. R-squared: 0.749: Gần giống R-squared vì chỉ 1 biến X, nhưng nếu thêm biến thừa, nó sẽ giảm.
+
+		F-statistic: 295.2, Prob(F): 1.32e-32: Mô hình có ý nghĩa (p < 0.05), không phải ngẫu nhiên.
+
+		Hệ số:
+
+			Intercept: -100.5 (p=0.000): Khi nhịp tim = 0, calo đốt = -100.5 (có thể không thực tế, nhưng toán học ok).
+			Average_Pulse: 3.2 (p=0.000): Mỗi nhịp tim tăng 1, calo tăng 3.2. Ý nghĩa cao (t=17.18 lớn).
+			Khoảng tin cậy: Hệ số Average_Pulse nằm giữa 2.83 và 3.57 với 95% chắc chắn.
+	
+		Chẩn đoán:
+		
+			Durbin-Watson ~2: Không tự tương quan (tốt).
+			Jarque-Bera p=0.57: Phần dư phân phối gần chuẩn (tốt cho giả định OLS).
+			Cond. No. 500: Không multicollinearity nghiêm trọng.		
+		
+		Nếu p-value > 0.05, hệ số không ý nghĩa – có thể loại biến X.
+		
+		
+		
+		
+</pre><a id='backBottom' href='../DataScience-learning.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

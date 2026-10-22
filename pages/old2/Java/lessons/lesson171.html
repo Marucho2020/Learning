@@ -1,0 +1,131 @@
+<html><head><title>Lesson 171 == Exchanger ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 171 -- Exchanger -//</h1><pre>
+# Khái niệm 
+	🔹 Exchanger – Cơ chế trao đổi dữ liệu song phương
+	Exchanger<V> là một synchronization point cho hai thread trao đổi dữ liệu trực tiếp:	
+		Thread A gọi exchange(valueA) → block cho đến khi Thread B gọi exchange(valueB).
+		Sau khi bắt tay, A nhận valueB, B nhận valueA.
+	
+	Khác với BlockingQueue (một producer, nhiều consumer, hoặc buffer nhiều phần tử), Exchanger là rendezvous point 1–1, 2 chiều.	
+	
+	
+#	2. Cơ chế hoạt động
+
+	Nội bộ: Exchanger dùng một arena (slot) để giữ giá trị từ thread đầu tiên.
+
+	Khi thread thứ hai tới:
+		- CAS ghép cặp hai giá trị.
+		- Cả hai thread được unpark và nhận dữ liệu của đối phương.
+
+	Có thể kèm timeout:
+	
+	V other = exchanger.exchange(myValue, 1, TimeUnit.SECONDS);
+	Nếu hết timeout mà chưa có thread nào ghép → TimeoutException.
+
+
+# 3. Use case thực tế
+	
+	## 	Pipeline giữa hai thread: 
+		
+		- Ví dụ 1 thread producer tạo buffer dữ liệu, 1 thread consumer xử lý buffer.
+		- Dùng Exchanger<Buffer> để swap buffer → không cần copy.
+
+	## Double buffering: 
+		
+		- Producer viết vào buffer A, consumer đọc buffer B.
+		- Khi cả hai xong, gọi exchange() → swap buffer.
+		- Kỹ thuật này rất tối ưu khi xử lý batch (image processing, logging, batch I/O).
+
+	## Genetic algorithms / simulations: 
+		- Hai worker thread trao đổi "population state" hoặc intermediate result định kỳ.
+	
+
+# 4. Ưu điểm vs Nhược điểm
+	
+	## ✅ Ưu điểm: 
+		
+		- Rất nhẹ, trực tiếp, không cần middle buffer.
+		- Gọn cho bài toán 2-thread rendezvous.
+		- Hạn chế contention vì chỉ cần 2 bên match.	
+	
+	
+	## ⚠️ Nhược điểm / trap senior: 
+		
+		- Chỉ dành cho 2 thread – không phải replacement cho BlockingQueue.
+		- Nếu mất cân bằng load (1 thread nhanh, 1 thread chậm) → thread nhanh block mãi.
+		- Nếu lạm dụng trong hệ thống nhiều thread → dễ gây deadlock hoặc starvation.
+		- Không có “buffering” → dữ liệu phải được trao đổi ngay.
+
+	
+
+# 5. Ví dụ senior-level: Double Buffer
+
+
+class ExchangerDemo {
+    static Exchanger<List<Integer>> exchanger = new Exchanger<>();
+
+    public static void main(String[] args) {
+        ExecutorService exec = Executors.newFixedThreadPool(2);
+
+        exec.submit(() -> { // Producer
+            List<Integer> buffer = new ArrayList<>();
+            try {
+                for (int i = 0; i < 5; i++) {
+                    buffer.clear();
+                    buffer.add(i);
+                    System.out.println("Produced: " + buffer);
+                    // swap buffer with consumer
+                    buffer = exchanger.exchange(buffer);
+                }
+            } catch (InterruptedException e) {}
+        });
+
+        exec.submit(() -> { // Consumer
+            List<Integer> buffer = new ArrayList<>();
+            try {
+                for (int i = 0; i < 5; i++) {
+                    buffer = exchanger.exchange(buffer);
+                    System.out.println("Consumed: " + buffer);
+                }
+            } catch (InterruptedException e) {}
+        });
+
+        exec.shutdown();
+    }
+}
+
+	Cả producer và consumer sẽ liên tục hoán đổi buffer.
+	Không cần lock, không cần copy dữ liệu.
+
+
+
+# 6. So sánh với các pattern khác
+
+
+| Công cụ            | Đặc điểm          | Khi nào dùng                                         |
+| ------------------ | ----------------- | ---------------------------------------------------- |
+| `BlockingQueue`    | 1-N, có buffer    | Khi nhiều producer/consumer, decoupling tốc độ       |
+| `SynchronousQueue` | 1-1, không buffer | Producer/consumer bắt tay trực tiếp, không giữ state |
+| `Exchanger`        | 1-1, **2 chiều**  | Khi cần **swap dữ liệu** giữa 2 threads              |
+
+
+
+# 7. Best practices (senior mindset)
+
+	## Dùng Exchanger khi: 
+	
+		Bạn biết chắc chỉ có 2 threads làm việc cùng nhau.
+		Bài toán có double-buffering / swapping dữ liệu.
+		
+	## Tránh dùng khi: 
+		Có nhiều producer/consumer → chuyển sang BlockingQueue.
+		Thread speed imbalance lớn → dễ block vô thời hạn.		
+
+
+	Luôn consider timeout để tránh deadlock ẩn.
+
+Exchanger là point-to-point data swapper, cực kỳ hiệu quả cho 2-thread pipelines (double buffering, batch handoff). Nhưng nó không scale và rất dễ trở thành bottleneck nếu thiết kế sai. Đây là tool dành cho case đặc thù, không phải vũ khí chung như BlockingQueue hay ConcurrentHashMap.
+
+
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

@@ -1,4 +1,37 @@
-<html><head><title>Lesson 13 == React Router ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../react-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 13 -- React Router -//</h1><pre>
+<!DOCTYPE html><html lang='vi'><head><meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0'>
+<title>Lesson 13 -- React Router -//</title>
+<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css'>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js'></script>
+<script id='MathJax-script' async src='https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'></script>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; margin: 0; padding: 20px; transition: 0.3s; }
+.dark-mode { background-color: #121212; color: #e0e0e0; }
+.light-mode { background-color: #ffffff; color: #333333; }
+.container { max-width: 950px; margin: auto; }
+h1 { text-align: center; color: #3498db; margin: 20px 0; font-size: 26px; }
+.nav-bar { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 20px 0; }
+.nav-btn { text-decoration: none; padding: 10px 18px; background: #3498db; color: white; border-radius: 6px; font-weight: bold; font-size: 15px; display: inline-block; transition: 0.2s; }
+.nav-btn:hover { background: #2980b9; }
+.nav-btn.home-nav { background: #6c757d; }
+.nav-btn.home-nav:hover { background: #5a6268; }
+.nav-btn.disabled { background: #aaa; cursor: not-allowed; opacity: 0.5; }
+.done-btn { display: block; margin: 15px auto; padding: 10px 24px; border: 2px solid #2ecc71; background: transparent; color: #2ecc71; border-radius: 25px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+.done-btn.completed { background: #2ecc71; color: white; }
+.content-box { position: relative; margin: 20px 0; }
+pre { padding: 20px; border-radius: 8px; white-space: pre-wrap; word-break: break-word; overflow-x: auto; font-family: 'Consolas', 'Courier New', monospace; font-size: 15px; }
+.dark-mode pre { background: #1a1a1a; color: #f8f8f2; border: 1px solid #333; }
+.light-mode pre { background: #f8f9fa; color: #212529; border: 1px solid #e9ecef; }
+.copy-btn { position: absolute; top: 12px; right: 12px; padding: 6px 12px; font-size: 12px; background: #555; color: white; border: none; border-radius: 4px; cursor: pointer; opacity: 0.8; }
+.copy-btn:hover { opacity: 1; background: #2ecc71; }
+.theme-toggle-btn { display: block; margin: 20px auto; padding: 8px 16px; background: transparent; border: 1px solid #888; color: inherit; border-radius: 5px; cursor: pointer; }
+</style></head><body onload='initLesson()'>
+<div class='container'>
+<div class='nav-bar'><a class='nav-btn' href='lesson12.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../react-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson14.html'>Bài sau ➡️</a></div><h1>Lesson 13 -- React Router -//</h1>
+<button id='doneButton' class='done-btn' onclick='toggleDone()'>Mark as Done ⚪</button>
+<div class='content-box'>
+<button class='copy-btn' onclick='copyContent()'>📋 Copy nội dung</button>
+<pre><code id='lessonCode'>
 # 1. Tổng quan về React Router
 	Tóm tắt: React Router là thư viện phổ biến để quản lý điều hướng (routing) trong ứng dụng React, cho phép hiển thị các component khác nhau dựa trên URL. Create React App không tích hợp sẵn routing, nên bạn cần cài đặt react-router-dom.
 	
@@ -73,32 +106,32 @@ import NoPage from "./pages/NoPage";
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Layout />}>
-          <Route index element={<Home />} />
-          <Route path="blogs" element={<Blogs />} />
-          <Route path="contact" element={<Contact />} />
-          <Route path="*" element={<NoPage />} />
-        </Route>
-      </Routes>
-    </BrowserRouter>
+    &lt;BrowserRouter&gt;
+      &lt;Routes&gt;
+        &lt;Route path="/" element={&lt;Layout /&gt;}&gt;
+          &lt;Route index element={&lt;Home /&gt;} /&gt;
+          &lt;Route path="blogs" element={&lt;Blogs /&gt;} /&gt;
+          &lt;Route path="contact" element={&lt;Contact /&gt;} /&gt;
+          &lt;Route path="*" element={&lt;NoPage /&gt;} /&gt;
+        &lt;/Route&gt;
+      &lt;/Routes&gt;
+    &lt;/BrowserRouter&gt;
   );
 }
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(<App />);
+root.render(&lt;App /&gt;);
 
 
 	BrowserRouter: Bao bọc toàn bộ ứng dụng, cung cấp khả năng điều hướng dựa trên lịch sử trình duyệt.
 
 	Routes: Chứa danh sách các Route, định nghĩa ánh xạ giữa URL và component.
 
-<Route path="/" element={<Layout />}>: Route gốc, render component Layout.
-<Route index element={<Home />}: Route mặc định cho /, render Home bên trong Layout.
-<Route path="blogs" element={<Blogs />}: Route /blogs, render Blogs.
-<Route path="contact" element={<Contact />}: Route /contact, render Contact.
-<Route path="*" element={<NoPage />}: Route catch-all, render NoPage cho bất kỳ URL không khớp.
+&lt;Route path="/" element={&lt;Layout /&gt;}&gt;: Route gốc, render component Layout.
+&lt;Route index element={&lt;Home /&gt;}: Route mặc định cho /, render Home bên trong Layout.
+&lt;Route path="blogs" element={&lt;Blogs /&gt;}: Route /blogs, render Blogs.
+&lt;Route path="contact" element={&lt;Contact /&gt;}: Route /contact, render Contact.
+&lt;Route path="*" element={&lt;NoPage /&gt;}: Route catch-all, render NoPage cho bất kỳ URL không khớp.
 
 
 	## Nested Routes: 
@@ -121,61 +154,61 @@ root.render(<App />);
 	
 # 5. Các Component Trang
 
-	Tóm tắt: Mỗi trang là một component, trong đó Layout chứa giao diện chung và sử dụng Outlet để render các route con. Link được dùng để điều hướng thay vì thẻ <a>.
+	Tóm tắt: Mỗi trang là một component, trong đó Layout chứa giao diện chung và sử dụng Outlet để render các route con. Link được dùng để điều hướng thay vì thẻ &lt;a&gt;.
 
 	## Layout.js: 
 		
 import { Outlet, Link } from "react-router-dom";
 
-const Layout = () => {
+const Layout = () =&gt; {
   return (
-    <>
-      <nav>
-        <ul>
-          <li>
-            <Link to="/">Home</Link>
-          </li>
-          <li>
-            <Link to="/blogs">Blogs</Link>
-          </li>
-          <li>
-            <Link to="/contact">Contact</Link>
-          </li>
-        </ul>
-      </nav>
-      <Outlet />
-    </>
+    &lt;&gt;
+      &lt;nav&gt;
+        &lt;ul&gt;
+          &lt;li&gt;
+            &lt;Link to="/"&gt;Home&lt;/Link&gt;
+          &lt;/li&gt;
+          &lt;li&gt;
+            &lt;Link to="/blogs"&gt;Blogs&lt;/Link&gt;
+          &lt;/li&gt;
+          &lt;li&gt;
+            &lt;Link to="/contact"&gt;Contact&lt;/Link&gt;
+          &lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/nav&gt;
+      &lt;Outlet /&gt;
+    &lt;/&gt;
   );
 };
 
 export default Layout;
 
 	- Outlet: Điểm đánh dấu nơi các component con (như Home, Blogs) sẽ được render.
-	- Link: Thay thế thẻ <a>, điều hướng mà không tải lại trang, giữ lịch sử trình duyệt.
+	- Link: Thay thế thẻ &lt;a&gt;, điều hướng mà không tải lại trang, giữ lịch sử trình duyệt.
 	- Cơ chế: Layout cung cấp thanh điều hướng (nav) chung, còn Outlet hiển thị nội dung của route con (ví dụ: Home khi URL là /).
 
 	// Home.js
-const Home = () => {
-  return <h1>Home</h1>;
+const Home = () =&gt; {
+  return &lt;h1&gt;Home&lt;/h1&gt;;
 };
 export default Home;
 
 
 	// NoPage.js: 
 	
-const NoPage = () => {
-  return <h1>404</h1>;
+const NoPage = () =&gt; {
+  return &lt;h1&gt;404&lt;/h1&gt;;
 };
 export default NoPage;
 
 
-	- URL /: Hiển thị thanh điều hướng từ Layout và <h1>Home</h1>.
-	- URL /blogs: Hiển thị thanh điều hướng và <h1>Blog Articles</h1>.
-	- URL /contact: Hiển thị thanh điều hướng và <h1>Contact Me</h1>.
-	- URL bất kỳ (như /xyz): Hiển thị thanh điều hướng và <h1>404</h1>.
+	- URL /: Hiển thị thanh điều hướng từ Layout và &lt;h1&gt;Home&lt;/h1&gt;.
+	- URL /blogs: Hiển thị thanh điều hướng và &lt;h1&gt;Blog Articles&lt;/h1&gt;.
+	- URL /contact: Hiển thị thanh điều hướng và &lt;h1&gt;Contact Me&lt;/h1&gt;.
+	- URL bất kỳ (như /xyz): Hiển thị thanh điều hướng và &lt;h1&gt;404&lt;/h1&gt;.
 
 	- Outlet: Hoạt động như một placeholder, cho phép lồng các route con trong route cha.
-	- Link vs. a: <Link> sử dụng history API để điều hướng client-side, nhanh hơn và mượt mà hơn <a> (gây tải lại trang).
+	- Link vs. a: &lt;Link&gt; sử dụng history API để điều hướng client-side, nhanh hơn và mượt mà hơn &lt;a&gt; (gây tải lại trang).
 	- Layout Route: Tạo giao diện chung (như header, footer) cho tất cả các trang, giảm lặp mã.
 
 
@@ -184,43 +217,43 @@ export default NoPage;
 // src/pages/Layout.js
 import { Outlet, Link } from 'react-router-dom';
 
-const Layout = () => {
+const Layout = () =&gt; {
   return (
-    <>
-      <nav>
-        <ul>
-          <li><Link to="/">Home</Link></li>
-          <li><Link to="/blogs">Blogs</Link></li>
-          <li><Link to="/contact">Contact</Link></li>
-        </ul>
-      </nav>
-      <Outlet />
-    </>
+    &lt;&gt;
+      &lt;nav&gt;
+        &lt;ul&gt;
+          &lt;li&gt;&lt;Link to="/"&gt;Home&lt;/Link&gt;&lt;/li&gt;
+          &lt;li&gt;&lt;Link to="/blogs"&gt;Blogs&lt;/Link&gt;&lt;/li&gt;
+          &lt;li&gt;&lt;Link to="/contact"&gt;Contact&lt;/Link&gt;&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/nav&gt;
+      &lt;Outlet /&gt;
+    &lt;/&gt;
   );
 };
 export default Layout;
 
 // src/pages/Home.js
-const Home = () => {
-  return <h1>Welcome to the Home Page</h1>;
+const Home = () =&gt; {
+  return &lt;h1&gt;Welcome to the Home Page&lt;/h1&gt;;
 };
 export default Home;
 
 // src/pages/Blogs.js
-const Blogs = () => {
-  return <h1>Latest Blog Posts</h1>;
+const Blogs = () =&gt; {
+  return &lt;h1&gt;Latest Blog Posts&lt;/h1&gt;;
 };
 export default Blogs;
 
 // src/pages/Contact.js
-const Contact = () => {
-  return <h1>Contact Us</h1>;
+const Contact = () =&gt; {
+  return &lt;h1&gt;Contact Us&lt;/h1&gt;;
 };
 export default Contact;
 
 // src/pages/NoPage.js
-const NoPage = () => {
-  return <h1>404 - Page Not Found</h1>;
+const NoPage = () =&gt; {
+  return &lt;h1&gt;404 - Page Not Found&lt;/h1&gt;;
 };
 export default NoPage;
 
@@ -235,21 +268,21 @@ import NoPage from './pages/NoPage';
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Layout />}>
-          <Route index element={<Home />} />
-          <Route path="blogs" element={<Blogs />} />
-          <Route path="contact" element={<Contact />} />
-          <Route path="*" element={<NoPage />} />
-        </Route>
-      </Routes>
-    </BrowserRouter>
+    &lt;BrowserRouter&gt;
+      &lt;Routes&gt;
+        &lt;Route path="/" element={&lt;Layout /&gt;}&gt;
+          &lt;Route index element={&lt;Home /&gt;} /&gt;
+          &lt;Route path="blogs" element={&lt;Blogs /&gt;} /&gt;
+          &lt;Route path="contact" element={&lt;Contact /&gt;} /&gt;
+          &lt;Route path="*" element={&lt;NoPage /&gt;} /&gt;
+        &lt;/Route&gt;
+      &lt;/Routes&gt;
+    &lt;/BrowserRouter&gt;
   );
 }
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(<App />);
+root.render(&lt;App /&gt;);
 
 
 	- Cấu trúc: Các file được tổ chức trong thư mục pages.
@@ -269,10 +302,52 @@ root.render(<App />);
 	- Tạo thư mục pages cho các component trang.
 	- Sử dụng BrowserRouter, Routes, Route để định nghĩa route.
 	- Layout Route: Dùng Layout và Outlet để tạo giao diện chung.
-	- Link: Sử dụng <Link> thay <a> để điều hướng client-side.
+	- Link: Sử dụng &lt;Link&gt; thay &lt;a&gt; để điều hướng client-side.
 	- Catch-all Route: path="*" cho trang 404.
 	- Thực hành: Xây dựng ứng dụng đa trang với điều hướng.
 
 
 
-</pre><a id='backBottom' href='../react-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
+</code></pre>
+</div>
+<div class='nav-bar'><a class='nav-btn' href='lesson12.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../react-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson14.html'>Bài sau ➡️</a></div><button class='theme-toggle-btn' onclick='toggleTheme()'>🌓 Đổi Giao Diện</button>
+</div>
+<script>
+const lessonKey = 'react-learning-list_lesson13.html';
+function toggleTheme() {
+   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';
+   document.body.className = mode;
+   localStorage.setItem('theme', mode);
+}
+function toggleDone() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   if (isDone) {
+       localStorage.removeItem(lessonKey);
+   } else {
+       localStorage.setItem(lessonKey, 'done');
+   }
+   renderDoneStatus();
+}
+function renderDoneStatus() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   let btn = document.getElementById('doneButton');
+   if (isDone) {
+       btn.className = 'done-btn completed';
+       btn.innerText = 'Đã Hoàn Thành ✅';
+   } else {
+       btn.className = 'done-btn';
+       btn.innerText = 'Đánh dấu đã học ⚪';
+   }
+}
+function copyContent() {
+   let text = document.getElementById('lessonCode').innerText;
+   navigator.clipboard.writeText(text).then(function() {
+       alert('✅ Đã sao chép nội dung bài học!');
+   });
+}
+function initLesson() {
+   document.body.className = localStorage.getItem('theme') || 'dark-mode';
+   renderDoneStatus();
+   if (window.Prism) Prism.highlightAll();
+}
+</script></body></html>

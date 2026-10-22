@@ -1,13 +1,46 @@
-<html><head><title>Lesson 32 == Vue Teleport ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../vue-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 32 -- Vue Teleport -//</h1><pre># Khái niệm 
+<!DOCTYPE html><html lang='vi'><head><meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0'>
+<title>Lesson 32 -- Vue Teleport -//</title>
+<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css'>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js'></script>
+<script id='MathJax-script' async src='https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'></script>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; margin: 0; padding: 20px; transition: 0.3s; }
+.dark-mode { background-color: #121212; color: #e0e0e0; }
+.light-mode { background-color: #ffffff; color: #333333; }
+.container { max-width: 950px; margin: auto; }
+h1 { text-align: center; color: #3498db; margin: 20px 0; font-size: 26px; }
+.nav-bar { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 20px 0; }
+.nav-btn { text-decoration: none; padding: 10px 18px; background: #3498db; color: white; border-radius: 6px; font-weight: bold; font-size: 15px; display: inline-block; transition: 0.2s; }
+.nav-btn:hover { background: #2980b9; }
+.nav-btn.home-nav { background: #6c757d; }
+.nav-btn.home-nav:hover { background: #5a6268; }
+.nav-btn.disabled { background: #aaa; cursor: not-allowed; opacity: 0.5; }
+.done-btn { display: block; margin: 15px auto; padding: 10px 24px; border: 2px solid #2ecc71; background: transparent; color: #2ecc71; border-radius: 25px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+.done-btn.completed { background: #2ecc71; color: white; }
+.content-box { position: relative; margin: 20px 0; }
+pre { padding: 20px; border-radius: 8px; white-space: pre-wrap; word-break: break-word; overflow-x: auto; font-family: 'Consolas', 'Courier New', monospace; font-size: 15px; }
+.dark-mode pre { background: #1a1a1a; color: #f8f8f2; border: 1px solid #333; }
+.light-mode pre { background: #f8f9fa; color: #212529; border: 1px solid #e9ecef; }
+.copy-btn { position: absolute; top: 12px; right: 12px; padding: 6px 12px; font-size: 12px; background: #555; color: white; border: none; border-radius: 4px; cursor: pointer; opacity: 0.8; }
+.copy-btn:hover { opacity: 1; background: #2ecc71; }
+.theme-toggle-btn { display: block; margin: 20px auto; padding: 8px 16px; background: transparent; border: 1px solid #888; color: inherit; border-radius: 5px; cursor: pointer; }
+</style></head><body onload='initLesson()'>
+<div class='container'>
+<div class='nav-bar'><a class='nav-btn' href='lesson31.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../vue-js-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson33.html'>Bài sau ➡️</a></div><h1>Lesson 32 -- Vue Teleport -//</h1>
+<button id='doneButton' class='done-btn' onclick='toggleDone()'>Mark as Done ⚪</button>
+<div class='content-box'>
+<button class='copy-btn' onclick='copyContent()'>📋 Copy nội dung</button>
+<pre><code id='lessonCode'># Khái niệm 
 	Teleport là một tính năng trong Vue 3 cho phép bạn "dịch chuyển" (render) một phần nội dung của component đến một vị trí khác trong DOM, không bị giới hạn bởi cấu trúc DOM của component mẹ.
 	
-	Điều này hữu ích khi bạn cần đặt nội dung (như modal, tooltip, hoặc notification) ở một vị trí cụ thể trong DOM (thường là trực tiếp dưới <body>), nhưng vẫn muốn quản lý logic của nó trong component hiện tại.
+	Điều này hữu ích khi bạn cần đặt nội dung (như modal, tooltip, hoặc notification) ở một vị trí cụ thể trong DOM (thường là trực tiếp dưới &lt;body&gt;), nhưng vẫn muốn quản lý logic của nó trong component hiện tại.
 	
 	
 # 	2. Tại sao cần Teleport? 
 	
 	## Vấn đề với DOM thông thường: 
-		Nội dung của một component thường được render bên trong cây DOM của nó. Ví dụ, một modal trong một component sẽ nằm trong <div> của component đó, dẫn đến:
+		Nội dung của một component thường được render bên trong cây DOM của nó. Ví dụ, một modal trong một component sẽ nằm trong &lt;div&gt; của component đó, dẫn đến:
 
 		CSS khó quản lý: Modal có thể bị ảnh hưởng bởi style của parent (như overflow: hidden hoặc position: relative).
 
@@ -18,7 +51,7 @@
 
 
 	## Teleport giải quyết 
-		Cho phép render nội dung ở bất kỳ đâu trong DOM (thường là <body> hoặc một container riêng).
+		Cho phép render nội dung ở bất kỳ đâu trong DOM (thường là &lt;body&gt; hoặc một container riêng).
 		
 		Vẫn giữ logic và trạng thái của nội dung trong component gốc.
 
@@ -26,38 +59,38 @@
 
 # 3. Cách sử dụng Teleport 
 
-	Sử dụng thẻ <teleport> với thuộc tính to, chỉ định vị trí đích trong DOM (CSS selector).
-	Nội dung bên trong <teleport> sẽ được render tại vị trí đích, nhưng logic (data, methods) vẫn thuộc về component chứa <teleport>.
+	Sử dụng thẻ &lt;teleport&gt; với thuộc tính to, chỉ định vị trí đích trong DOM (CSS selector).
+	Nội dung bên trong &lt;teleport&gt; sẽ được render tại vị trí đích, nhưng logic (data, methods) vẫn thuộc về component chứa &lt;teleport&gt;.
 	
 		to: Một CSS selector (như 'body', '#modal-container') hoặc một HTMLElement.
 
 
 # 4. Ví dụ cơ bản 
-	Giả sử bạn muốn tạo một modal component và render nó trực tiếp dưới <body>.
+	Giả sử bạn muốn tạo một modal component và render nó trực tiếp dưới &lt;body&gt;.
 	
 	## HTML cấu trúc 
-<body>
-  <div id="app">
-    <!-- Ứng dụng Vue -->
-  </div>
-  <!-- Modal sẽ được render trực tiếp dưới <body> -->
-</body>	
+&lt;body&gt;
+  &lt;div id="app"&gt;
+    &lt;!-- Ứng dụng Vue --&gt;
+  &lt;/div&gt;
+  &lt;!-- Modal sẽ được render trực tiếp dưới &lt;body&gt; --&gt;
+&lt;/body&gt;	
 
 	## Modal Component
 	
-<template>
-  <div>
-    <button @click="showModal = true">Open Modal</button>
-    <teleport to="body" v-if="showModal">
-      <div class="modal">
-        <h2>Modal Content</h2>
-        <button @click="showModal = false">Close</button>
-      </div>
-    </teleport>
-  </div>
-</template>
+&lt;template&gt;
+  &lt;div&gt;
+    &lt;button @click="showModal = true"&gt;Open Modal&lt;/button&gt;
+    &lt;teleport to="body" v-if="showModal"&gt;
+      &lt;div class="modal"&gt;
+        &lt;h2&gt;Modal Content&lt;/h2&gt;
+        &lt;button @click="showModal = false"&gt;Close&lt;/button&gt;
+      &lt;/div&gt;
+    &lt;/teleport&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
 
-<script>
+&lt;script&gt;
 export default {
   data() {
     return {
@@ -65,9 +98,9 @@ export default {
     };
   }
 };
-</script>
+&lt;/script&gt;
 
-<style>
+&lt;style&gt;
 .modal {
   position: fixed;
   top: 50%;
@@ -77,12 +110,12 @@ export default {
   padding: 20px;
   box-shadow: 0 0 10px rgba(0,0,0,0.5);
 }
-</style>
+&lt;/style&gt;
 
 
 	## Giải thích 
-		- <teleport to="body">:
-			Nội dung bên trong <teleport> (div modal) sẽ được render trực tiếp dưới <body>, không nằm trong <div id="app">.
+		- &lt;teleport to="body"&gt;:
+			Nội dung bên trong &lt;teleport&gt; (div modal) sẽ được render trực tiếp dưới &lt;body&gt;, không nằm trong &lt;div id="app"&gt;.
 
 
 		- Logic trong component:
@@ -93,42 +126,42 @@ export default {
 
 
 		- Kết quả DOM: 
-<body>
-  <div id="app">
-    <button>Open Modal</button>
-  </div>
-  <div class="modal">
-    <h2>Modal Content</h2>
-    <button>Close</button>
-  </div>
-</body>			
+&lt;body&gt;
+  &lt;div id="app"&gt;
+    &lt;button&gt;Open Modal&lt;/button&gt;
+  &lt;/div&gt;
+  &lt;div class="modal"&gt;
+    &lt;h2&gt;Modal Content&lt;/h2&gt;
+    &lt;button&gt;Close&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/body&gt;			
 
 
 
 # 5. Ví dụ với Container riêng
-	Nếu bạn muốn render modal vào một container cụ thể thay vì <body>:
+	Nếu bạn muốn render modal vào một container cụ thể thay vì &lt;body&gt;:
 
 	## HTML 
-<body>
-  <div id="app"></div>
-  <div id="modal-container"></div> <!-- Container cho modal -->
-</body>	
+&lt;body&gt;
+  &lt;div id="app"&gt;&lt;/div&gt;
+  &lt;div id="modal-container"&gt;&lt;/div&gt; &lt;!-- Container cho modal --&gt;
+&lt;/body&gt;	
 
 
 	## Component 
-<template>
-  <div>
-    <button @click="showModal = true">Open Modal</button>
-    <teleport to="#modal-container" v-if="showModal">
-      <div class="modal">
-        <h2>Custom Modal</h2>
-        <button @click="showModal = false">Close</button>
-      </div>
-    </teleport>
-  </div>
-</template>
+&lt;template&gt;
+  &lt;div&gt;
+    &lt;button @click="showModal = true"&gt;Open Modal&lt;/button&gt;
+    &lt;teleport to="#modal-container" v-if="showModal"&gt;
+      &lt;div class="modal"&gt;
+        &lt;h2&gt;Custom Modal&lt;/h2&gt;
+        &lt;button @click="showModal = false"&gt;Close&lt;/button&gt;
+      &lt;/div&gt;
+    &lt;/teleport&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
 
-<script>
+&lt;script&gt;
 export default {
   data() {
     return {
@@ -136,36 +169,36 @@ export default {
     };
   }
 };
-</script>		
+&lt;/script&gt;		
 
-	## <teleport to="#modal-container"> 
-		Modal sẽ được render trong <div id="modal-container">, không phải <body>.
+	## &lt;teleport to="#modal-container"&gt; 
+		Modal sẽ được render trong &lt;div id="modal-container"&gt;, không phải &lt;body&gt;.
 
 
 
 # 6. Lưu ý quan trọng 
 
 	## Chỉ có trong Vue 3 : 
-		<teleport> là tính năng mới trong Vue 3, không có trong Vue 2.
+		&lt;teleport&gt; là tính năng mới trong Vue 3, không có trong Vue 2.
 		
 	## Vị trí đích phải tồn tại: 
-		Selector trong to (như 'body' hoặc '#modal-container') phải trỏ đến một phần tử có thật trong DOM khi <teleport> được render. Nếu không, Vue sẽ báo lỗi.
+		Selector trong to (như 'body' hoặc '#modal-container') phải trỏ đến một phần tử có thật trong DOM khi &lt;teleport&gt; được render. Nếu không, Vue sẽ báo lỗi.
 
 	## Giữ trạng thái:
-		Dù nội dung được render ở nơi khác, logic (data, computed, methods) vẫn thuộc về component chứa <teleport>.
+		Dù nội dung được render ở nơi khác, logic (data, computed, methods) vẫn thuộc về component chứa &lt;teleport&gt;.
 		
 	## CSS và Scoped Styles 
-		Nếu dùng <style scoped> trong component, style vẫn áp dụng cho nội dung trong <teleport>, vì Vue thêm thuộc tính data-v-* để đảm bảo tính đóng gói.
+		Nếu dùng &lt;style scoped&gt; trong component, style vẫn áp dụng cho nội dung trong &lt;teleport&gt;, vì Vue thêm thuộc tính data-v-* để đảm bảo tính đóng gói.
 
 	## Nhiều Teleport 
-		Bạn có thể dùng nhiều <teleport> trong cùng một component, mỗi cái trỏ đến đích khác nhau.
+		Bạn có thể dùng nhiều &lt;teleport&gt; trong cùng một component, mỗi cái trỏ đến đích khác nhau.
 		
 	## Vô hiệu hóa Teleport: 
-		Thuộc tính :disabled="true" trên <teleport> sẽ khiến nội dung render tại vị trí gốc (không dịch chuyển).
+		Thuộc tính :disabled="true" trên &lt;teleport&gt; sẽ khiến nội dung render tại vị trí gốc (không dịch chuyển).
 
 # 7. Ứng dụng thực tế 
 
-	Modal/Dialog: Đặt modal trực tiếp dưới <body> để đảm bảo hiển thị trên cùng và không bị ảnh hưởng bởi style của parent.
+	Modal/Dialog: Đặt modal trực tiếp dưới &lt;body&gt; để đảm bảo hiển thị trên cùng và không bị ảnh hưởng bởi style của parent.
 	
 	Tooltip/Popover: Render tooltip ở cấp cao để quản lý z-index dễ dàng.
 	
@@ -177,15 +210,15 @@ export default {
 # Ví dụ các trường hợp có thể sử dụng 
 	
 	Vue chỉ chọn phần tử đầu tiên khớp với selector trong DOM. 	
-	Nếu selector trong to không khớp với bất kỳ phần tử nào trong DOM khi <teleport> được render, Vue sẽ:
-		- Không render nội dung của <teleport>.
+	Nếu selector trong to không khớp với bất kỳ phần tử nào trong DOM khi &lt;teleport&gt; được render, Vue sẽ:
+		- Không render nội dung của &lt;teleport&gt;.
 		- Có thể báo lỗi trong console (tùy môi trường dev).	
 	
 	
 	## trỏ đến thẻ con trực tiếp  con của thẻ body 
-		<teleport to="body">
-			<div class="modal">Modal Content</div>
-		</teleport>
+		&lt;teleport to="body"&gt;
+			&lt;div class="modal"&gt;Modal Content&lt;/div&gt;
+		&lt;/teleport&gt;
 
 
 	## trỏ đến id 
@@ -199,9 +232,9 @@ export default {
 	## Trỏ đến thuộc tính name 
 		- Cú pháp: to="[name=modal-container]"
 		- Ý nghĩa: Nội dung sẽ được render bên trong phần tử có thuộc tính name="modal-container". Đây là một CSS selector theo thuộc tính.
-			Lưu ý: Thuộc tính name thường được dùng trong các thẻ như <input> hoặc <form>, nên việc dùng [name=...] hiếm gặp hơn so với ID hoặc class.
+			Lưu ý: Thuộc tính name thường được dùng trong các thẻ như &lt;input&gt; hoặc &lt;form&gt;, nên việc dùng [name=...] hiếm gặp hơn so với ID hoặc class.
 			
-	## Lưu ý: Thuộc tính name thường được dùng trong các thẻ như <input> hoặc <form>, nên việc dùng [name=...] hiếm gặp hơn so với ID hoặc class. 
+	## Lưu ý: Thuộc tính name thường được dùng trong các thẻ như &lt;input&gt; hoặc &lt;form&gt;, nên việc dùng [name=...] hiếm gặp hơn so với ID hoặc class. 
 	
 		- Cú pháp: to="table", to="header", hoặc kết hợp với selector cụ thể như to="table.my-table".
 		- Ý nghĩa: Nội dung sẽ được render bên trong phần tử đầu tiên khớp với thẻ được chỉ định.
@@ -209,9 +242,51 @@ export default {
 	## Trỏ đến selector phức tạp 
 		Bạn có thể sử dụng bất kỳ CSS selector hợp lệ nào, ví dụ:
 			- to=".modal-container .inner" (trỏ đến phần tử .inner bên trong .modal-container).
-			- to="header:first-child" (trỏ đến thẻ <header> đầu tiên).
+			- to="header:first-child" (trỏ đến thẻ &lt;header&gt; đầu tiên).
 			- to="[data-modal=true]" (trỏ đến phần tử có thuộc tính data-modal="true").
 		
 
 
-</pre><a id='backBottom' href='../vue-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
+</code></pre>
+</div>
+<div class='nav-bar'><a class='nav-btn' href='lesson31.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../vue-js-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson33.html'>Bài sau ➡️</a></div><button class='theme-toggle-btn' onclick='toggleTheme()'>🌓 Đổi Giao Diện</button>
+</div>
+<script>
+const lessonKey = 'vue-js-learning-list_lesson32.html';
+function toggleTheme() {
+   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';
+   document.body.className = mode;
+   localStorage.setItem('theme', mode);
+}
+function toggleDone() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   if (isDone) {
+       localStorage.removeItem(lessonKey);
+   } else {
+       localStorage.setItem(lessonKey, 'done');
+   }
+   renderDoneStatus();
+}
+function renderDoneStatus() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   let btn = document.getElementById('doneButton');
+   if (isDone) {
+       btn.className = 'done-btn completed';
+       btn.innerText = 'Đã Hoàn Thành ✅';
+   } else {
+       btn.className = 'done-btn';
+       btn.innerText = 'Đánh dấu đã học ⚪';
+   }
+}
+function copyContent() {
+   let text = document.getElementById('lessonCode').innerText;
+   navigator.clipboard.writeText(text).then(function() {
+       alert('✅ Đã sao chép nội dung bài học!');
+   });
+}
+function initLesson() {
+   document.body.className = localStorage.getItem('theme') || 'dark-mode';
+   renderDoneStatus();
+   if (window.Prism) Prism.highlightAll();
+}
+</script></body></html>

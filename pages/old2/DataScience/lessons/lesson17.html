@@ -1,0 +1,168 @@
+<html><head><title>Lesson 17 == Correlation Matrix ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../DataScience-learning.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 17 -- Correlation Matrix -//</h1><pre>
+# 1. Khái niệm Ma trận Tương quan là gì?
+	
+	Định nghĩa: Ma trận tương quan là một bảng vuông hiển thị hệ số tương quan (correlation coefficients) giữa tất cả các cặp biến trong tập dữ liệu.
+
+		Mỗi ô trong ma trận biểu thị hệ số tương quan Pearson giữa hai biến (từ -1 đến 1).
+
+		Các hàng và cột đại diện cho các biến, và các giá trị trên đường chéo chính (diagonal) luôn là 1 (vì một biến luôn tương quan hoàn hảo với chính nó).
+
+	Hệ số tương quan Pearson:
+
+		$   r = 1   $: Mối quan hệ tuyến tính dương hoàn hảo.
+		$   r = 0   $: Không có mối quan hệ tuyến tính.
+		$   r = -1   $: Mối quan hệ tuyến tính âm hoàn hảo.
+
+	Ma trận tương quan giúp xác định nhanh các biến có mối quan hệ mạnh (gần 1 hoặc -1) hoặc yếu (gần 0).
+	
+	Rất hữu ích trong phân tích dữ liệu khám phá (exploratory data analysis - EDA) để chọn biến cho mô hình hoặc phát hiện đa cộng tuyến (multicollinearity).
+
+
+	Ma trận tương quan sử dụng tập dữ liệu full_health_data (chưa được cung cấp chi tiết), nhưng có một số quan sát:
+
+		Duration và Calorie_Burnage: Tương quan cao ($ r = 0.89 $), cho thấy thời gian tập luyện dài hơn dẫn đến đốt nhiều calo hơn.
+		Average_Pulse và Calorie_Burnage: Tương quan rất thấp ($ r = 0.02 $), cho thấy gần như không có mối quan hệ tuyến tính.
+		Lưu ý quan trọng: Tương quan thấp không có nghĩa là không có mối quan hệ (có thể là quan hệ phi tuyến hoặc bị ảnh hưởng bởi yếu tố khác).
+
+
+
+# 2. Dữ liệu Ví dụ
+
+Duration,Average_Pulse,Max_Pulse,Calorie_Burnage,Hours_Work,Hours_Sleep
+30,80,120,240,10,7
+30,85,120,250,10,7
+45,90,130,260,8,7
+45,95,130,270,8,7
+45,100,140,280,0,7
+60,105,140,290,7,8
+60,110,145,300,7,8
+60,115,145,310,8,8
+75,120,150,320,0,8
+75,125,150,330,8,8
+
+
+Lưu ý: Ma trận tương quan trong bài học được tính trên full_health_data, có thể lớn hơn và có các giá trị tương quan khác. Dưới đây, tôi sẽ minh họa với dữ liệu mẫu nhỏ này và giải thích sự khác biệt với kết quả bài học.
+
+
+# 3. Tính Ma trận Tương quan Thủ Công (Ví dụ với Dữ liệu Mẫu)
+	Để hiểu cách hoạt động, tôi sẽ tính hệ số tương quan giữa Duration và Calorie_Burnage trong dữ liệu mẫu để minh họa.
+
+$r = \frac{\sum (x_i - \bar{x})(y_i - \bar{y})}{\sqrt{\sum (x_i - \bar{x})^2 \sum (y_i - \bar{y})^2}}$
+
+Bước 1: Tính Trung bình
+
+Bước 2: Tính Khoảng cách và Tích
+
+Duration (xi x_i xi​),Calorie_Burnage (yi y_i yi​),xi−xˉ x_i - \bar{x} xi​−xˉ,yi−yˉ y_i - \bar{y} yi​−yˉ​,(xi−xˉ)(yi−yˉ) (x_i - \bar{x})(y_i - \bar{y}) (xi​−xˉ)(yi​−yˉ​)
+30,240,-22.5,-45,1012.5
+30,250,-22.5,-35,787.5
+45,260,-7.5,-25,187.5
+45,270,-7.5,-15,112.5
+45,280,-7.5,-5,37.5
+60,290,7.5,5,37.5
+60,300,7.5,15,112.5
+60,310,7.5,25,187.5
+75,320,22.5,35,787.5
+75,330,22.5,45,1012.5
+
+
+	Trong dữ liệu mẫu, chúng ta đã tính trong bài trước rằng $ r = 1 $ (tương quan hoàn hảo). Tuy nhiên, bài học cho biết trong full_health_data, $ r = 0.02 $. Điều này cho thấy:
+
+	Dữ liệu mẫu nhỏ có thể bị bias hoặc đơn giản hóa quá mức.
+	Trong tập dữ liệu lớn, mối quan hệ giữa Average_Pulse và Calorie_Burnage có thể không tuyến tính hoặc bị ảnh hưởng bởi các yếu tố khác (như outliers, biến khác).
+	
+	Lưu ý quan trọng: Tương quan thấp ($ r = 0.02 $) không có nghĩa là Average_Pulse không ảnh hưởng đến Calorie_Burnage. Có thể:
+		
+	Mối quan hệ là phi tuyến (non-linear).
+	Có biến khác (confounding variable) ảnh hưởng.
+	Cần phân tích thêm (ví dụ: kiểm tra scatter plot, phân tích phi tuyến).
+
+
+# 4. Minh Họa Với Python (Sử Dụng Pandas và Seaborn)
+
+	Bài học sử dụng hàm corr() trong Pandas để tạo ma trận tương quan và thư viện Seaborn để vẽ heatmap.
+
+import pandas as pd
+import numpy as np
+
+# Dữ liệu mẫu
+health_data = pd.DataFrame({
+    'Duration': [30, 30, 45, 45, 45, 60, 60, 60, 75, 75],
+    'Average_Pulse': [80, 85, 90, 95, 100, 105, 110, 115, 120, 125],
+    'Max_Pulse': [120, 120, 130, 130, 140, 140, 145, 145, 150, 150],
+    'Calorie_Burnage': [240, 250, 260, 270, 280, 290, 300, 310, 320, 330],
+    'Hours_Work': [10, 10, 8, 8, 0, 7, 7, 8, 0, 8],
+    'Hours_Sleep': [7, 7, 7, 7, 7, 8, 8, 8, 8, 8]
+})
+
+# Tính ma trận tương quan, làm tròn 2 chữ số
+Corr_Matrix = round(health_data.corr(), 2)
+print(Corr_Matrix)
+
+
+
+Duration  Average_Pulse  Max_Pulse  Calorie_Burnage  Hours_Work  Hours_Sleep
+Duration         1.00           0.96       0.92             0.96      -0.74         0.87
+Average_Pulse    0.96           1.00       0.96             1.00      -0.67         0.79
+Max_Pulse        0.92           0.96       1.00             0.96      -0.61         0.74
+Calorie_Burnage  0.96           1.00       0.96             1.00      -0.67         0.79
+Hours_Work      -0.74          -0.67      -0.61            -0.67       1.00        -0.62
+Hours_Sleep      0.87           0.79       0.74             0.79      -0.62         1.00
+
+
+
+Duration và Calorie_Burnage: $ r = 0.96 $, rất cao, phù hợp với bài học ($ r = 0.89 $ trong full_health_data).
+Average_Pulse và Calorie_Burnage: $ r = 1.0 $, khác với bài học ($ r = 0.02 $), do dữ liệu mẫu nhỏ có mối quan hệ tuyến tính hoàn hảo.
+Hours_Work có tương quan âm với các biến khác (ví dụ: $ r = -0.67 $ với Calorie_Burnage), cho thấy làm việc nhiều có thể giảm calo đốt cháy.
+
+
+
+	## Vẽ Heatmap bằng Seaborn
+
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Tính ma trận tương quan
+correlation_full_health = health_data.corr()
+
+# Vẽ heatmap
+axis_corr = sns.heatmap(
+    correlation_full_health,
+    vmin=-1, vmax=1, center=0,
+    cmap=sns.diverging_palette(50, 500, n=500),
+    square=True,
+    annot=True  # Hiển thị giá trị trong ô
+)
+plt.title('Correlation Heatmap of Health Data')
+plt.show()
+
+
+
+# 6. Ứng dụng Thực tế và Lưu ý Chuyên gia
+
+	## Ứng dụng: 
+		Khám phá dữ liệu (EDA): Ma trận tương quan giúp xác định nhanh các biến quan trọng cho mô hình dự đoán. Ví dụ, Duration có thể là biến tốt để dự đoán Calorie_Burnage.
+
+		Machine Learning: Phát hiện đa cộng tuyến (multicollinearity). Nếu hai biến có $ r > 0.8 $, có thể cần loại bỏ một biến để tránh trùng lặp thông tin.
+
+		Khoa học: Trong y học, ma trận tương quan có thể giúp tìm mối liên hệ giữa các chỉ số sức khỏe (như nhịp tim, calo, thời gian tập).
+		
+		Tài chính: Xác định các tài sản có tương quan âm để đa dạng hóa danh mục đầu tư.	
+		
+	## 	Lưu ý:
+		
+		
+		- Tương quan không phải nhân quả: Tương quan cao giữa Duration và Calorie_Burnage không có nghĩa thời gian tập gây ra calo đốt cháy (có thể có biến khác ảnh hưởng).
+		- Hạn chế của Pearson: Chỉ đo lường quan hệ tuyến tính. Nếu mối quan hệ là phi tuyến, dùng Spearman hoặc Kendall correlation.
+		- Outliers: Các giá trị ngoại lai có thể làm sai lệch $ r $. Kiểm tra bằng scatter plot trước.
+		- Kích thước mẫu: Với dữ liệu nhỏ (10 quan sát), tương quan có thể không ổn định. full_health_data lớn hơn sẽ cho kết quả đáng tin cậy hơn.		
+		
+		
+	## 	Mẹo chuyên gia:
+		
+		- Dùng sns.pairplot(df) để vẽ scatter plot cho tất cả cặp biến, kết hợp với heatmap để hiểu rõ hơn.
+		- Kiểm tra ý nghĩa thống kê của tương quan bằng scipy.stats.pearsonr() để xem $ r $ có đáng kể không (p-value < 0.05).
+		- Nếu dữ liệu có nhiều biến, lọc các tương quan mạnh ($ |r| > 0.7 $) để tập trung phân tích.		
+		
+
+</pre><a id='backBottom' href='../DataScience-learning.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

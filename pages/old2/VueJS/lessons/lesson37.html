@@ -1,0 +1,265 @@
+<html><head><title>Lesson 37 == Computed Properties ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../vue-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 37 -- Computed Properties -//</h1><pre>	
+# 1. Computed Property là gì?
+	Computed Property là một tính năng trong Vue.js cho phép bạn tạo các giá trị tính toán dựa trên dữ liệu reactive (như data hoặc ref). Nó giống như một biến phụ thuộc vào các giá trị khác, tự động cập nhật khi dữ liệu nguồn thay đổi.
+
+	## Đặc điểm: 
+		Reactive: Computed property tự động theo dõi các phụ thuộc reactive và chỉ tính toán lại khi cần (caching).
+		
+		Hiệu suất: Không tính toán lại trừ khi dữ liệu phụ thuộc thay đổi, tiết kiệm tài nguyên hơn so với gọi hàm thông thường trong template.
+		
+		Dùng như biến: Trong template, computed property được sử dụng như một biến, không cần gọi như hàm (ví dụ: {{ myComputed }} thay vì myComputed()).
+
+
+# 2. Computed Property trong Vue 2 (Options API) 
+
+	## Cách sử dụng
+		- Trong Vue 2, computed properties được định nghĩa trong tùy chọn computed của component, bên trong object được export.
+		- Mỗi computed property là một hàm trả về giá trị tính toán dựa trên data, props, hoặc các computed properties khác.
+
+<template>
+  <div>
+    <p>Count: {{ count }}</p>
+    <p>Double Count: {{ doubleCount }}</p>
+    <button @click="increment">Increment</button>
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      count: 0
+    };
+  },
+  computed: {
+    doubleCount() {
+      return this.count * 2; // Tính toán dựa trên count
+    }
+  },
+  methods: {
+    increment() {
+      this.count++;
+    }
+  }
+};
+</script>
+
+
+	## Giải thích 
+		
+	doubleCount:
+		- Là một computed property, trả về count * 2.
+		- Được truy cập qua this.count (dữ liệu từ data).
+		- Tự động cập nhật khi count thay đổi.
+	Caching: doubleCount chỉ tính toán lại khi count thay đổi, không phải mỗi lần template render.
+	Trong template: Sử dụng {{ doubleCount }} như một biến, không cần gọi doubleCount().
+
+
+	## Getter và Setter 
+		Computed properties trong Vue 2 hỗ trợ cả getter (lấy giá trị) và setter (gán giá trị).
+		Mặc định, chỉ cần định nghĩa getter (như ví dụ trên). Nếu cần setter, bạn phải định nghĩa cả hai.
+
+
+<template>
+  <div>
+    <p>Full Name: {{ fullName }}</p>
+    <input v-model="fullName" />
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      firstName: 'John',
+      lastName: 'Doe'
+    };
+  },
+  computed: {
+    fullName: {
+      get() {
+        return `${this.firstName} ${this.lastName}`;
+      },
+      set(newValue) {
+        const names = newValue.split(' ');
+        this.firstName = names[0];
+        this.lastName = names[1] || '';
+      }
+    }
+  }
+};
+</script>
+
+	Getter: Trả về firstName và lastName ghép lại.
+	Setter: Khi gán giá trị mới cho fullName (qua v-model), tách chuỗi thành firstName và lastName.
+
+
+# 3. Computed Property trong Vue 3 
+	Vue 3 hỗ trợ computed properties trong cả Options API và Composition API. Options API hoạt động giống Vue 2, nhưng Composition API sử dụng hàm computed() để tạo computed properties.
+	
+
+	## a. Options API trong Vue 3 
+		Hoàn toàn giống Vue 2, sử dụng tùy chọn computed trong object.
+		Ví dụ tương tự như trên, không thay đổi cú pháp.
+
+
+	## b. Composition API với computed() 
+		
+		- Trong Composition API, bạn import hàm computed từ vue và sử dụng nó để tạo computed properties trong setup() hoặc <script setup>.
+		- Hàm computed nhận một getter function (hoặc object với get và set) và trả về một reactive ref chứa giá trị tính toán.
+
+<template>
+  <div>
+    <p>Count: {{ count }}</p>
+    <p>Double Count: {{ doubleCount }}</p>
+    <button @click="increment">Increment</button>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed } from 'vue';
+
+// Dữ liệu reactive
+const count = ref(0);
+
+// Computed property
+const doubleCount = computed(() => count.value * 2);
+
+// Method
+const increment = () => {
+  count.value++;
+};
+</script>
+
+
+	// Ví dụ với setup()
+	
+<template>
+  <div>
+    <p>Count: {{ count }}</p>
+    <p>Double Count: {{ doubleCount }}</p>
+    <button @click="increment">Increment</button>
+  </div>
+</template>
+
+<script>
+import { ref, computed } from 'vue';
+
+export default {
+  setup() {
+    const count = ref(0);
+
+    const doubleCount = computed(() => count.value * 2);
+
+    const increment = () => {
+      count.value++;
+    };
+
+    return {
+      count,
+      doubleCount,
+      increment
+    };
+  }
+};
+</script>
+
+
+	##  Giải thích 
+		
+	computed(() => count.value * 2):
+		- Tạo một computed property dựa trên count.value.
+		- Trả về một ref (doubleCount), giá trị truy cập qua doubleCount.value (nhưng trong template, Vue tự động unwrap .value).
+	Caching: Giống Vue 2, doubleCount chỉ tính toán lại khi count.value thay đổi.
+	Trong template: Sử dụng {{ doubleCount }} như biến, không cần .value.
+
+
+
+	## Getter và Setter trong Composition API 
+		Tương tự Vue 2, bạn có thể định nghĩa getter và setter cho computed property.
+		
+<template>
+  <div>
+    <p>Full Name: {{ fullName }}</p>
+    <input v-model="fullName" />
+  </div>
+</template>
+
+<script setup>
+import { ref, computed } from 'vue';
+
+const firstName = ref('John');
+const lastName = ref('Doe');
+
+const fullName = computed({
+  get() {
+    return `${firstName.value} ${lastName.value}`;
+  },
+  set(newValue) {
+    const names = newValue.split(' ');
+    firstName.value = names[0];
+    lastName.value = names[1] || '';
+  }
+});
+</script>		
+
+
+	Getter: Tạo chuỗi từ firstName và lastName.
+	Setter: Cập nhật firstName và lastName khi fullName thay đổi qua v-model.
+
+
+# 5. So sánh với Methods
+	##  Computed:
+		- Có caching, chỉ tính toán khi phụ thuộc thay đổi.
+		- Dùng như biến ({{ doubleCount }}).
+		- Phù hợp cho giá trị tính toán dựa trên dữ liệu reactive.
+	
+
+	##  Methods 
+		- Không có caching, gọi lại mỗi khi render.
+		- Dùng như hàm ({{ doubleCount() }}).
+		- Phù hợp cho logic xử lý sự kiện hoặc tác vụ không cần cache.
+
+
+<template>
+  <div>
+    <!-- Computed: Chỉ tính toán khi count thay đổi -->
+    <p>Double (Computed): {{ doubleCount }}</p>
+    <!-- Method: Tính toán mỗi lần render -->
+    <p>Double (Method): {{ doubleCountMethod() }}</p>
+    <button @click="count++">Increment</button>
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      count: 0
+    };
+  },
+  computed: {
+    doubleCount() {
+      return this.count * 2;
+    }
+  },
+  methods: {
+    doubleCountMethod() {
+      return this.count * 2;
+    }
+  }
+};
+</script>
+
+
+
+# 6. Ứng dụng thực tế
+
+	- Hiển thị dữ liệu tính toán: Ghép tên họ, tính tổng giá sản phẩm, định dạng ngày giờ.
+	- Lọc danh sách: Tạo danh sách lọc dựa trên input người dùng.
+	- Tối ưu hiệu suất: Tránh tính toán lặp lại trong template.
+	- Getter/Setter: Đồng bộ dữ liệu hai chiều với v-model.
+	
+	
+	
+</pre><a id='backBottom' href='../vue-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

@@ -1,0 +1,92 @@
+<html><head><title>Lesson 4 == Angular JS Directive ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../angular-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 4 -- Angular JS Directive -//</h1><pre>
+# Khái niệm  
+	
+	Directive là một "chỉ thị" đặc biệt mà AngularJS hiểu và xử lý nó khi render HTML 
+		
+		
+<div ng-app="" ng-init="quantity=1; price=5">
+  <p>Total: {{ quantity * price }}</p>
+</div>
+
+
+ng-app — khai báo một app Angular.
+ng-init — khởi tạo biến.
+{{ quantity * price }} — biểu thức Angular.
+Tất cả những cái này là built-in directives.	
+	
+	
+	
+# 🧠 II. Các directive phổ biến (gần như bắt buộc phải biết) 
+		
+| Directive             | Chức năng                                                          |
+| --------------------- | ------------------------------------------------------------------ |
+| `ng-app`              | Khởi tạo ứng dụng AngularJS                                        |
+| `ng-init`             | Khởi tạo biến (chỉ dùng demo, không khuyến khích trong production) |
+| `ng-model`            | Ràng buộc dữ liệu 2 chiều (two-way binding) với input              |
+| `ng-bind`             | Hiển thị giá trị, tương đương với `{{ }}` nhưng rõ ràng hơn        |
+| `ng-repeat`           | Lặp qua danh sách (giống `for` trong JavaScript)                   |
+| `ng-if`               | Điều kiện hiển thị (nếu đúng mới render vào DOM)                   |
+| `ng-show` / `ng-hide` | Điều kiện hiển thị/ẩn, nhưng vẫn tồn tại trong DOM                 |
+| `ng-click`            | Bắt sự kiện click                                                  |
+
+
+# 💡 III. Ví dụ cụ thể 
+	
+	## 1. ng-model 
+		<input ng-model="name">
+		<p>Hello {{ name }}</p>
+		
+		→ Gõ gì vào input thì tự động cập nhật trong {{ name }}. 
+
+			
+
+	## 2. ng-repeat 
+		
+		<ul>
+		<li ng-repeat="x in cars">{{ x }}</li>
+		</ul>
+		
+		$scope.cars = ["Toyota", "Honda", "Nissan"];
+		
+	
+	## 3. ng-if, ng-show, ng-hide 
+	
+		<p ng-if="isLoggedIn">Welcome!</p>
+		<p ng-show="error">Something went wrong.</p>
+
+	
+	
+	
+	
+	
+# 	🔧 IV. Tự viết directive riêng (custom directive) 
+	AngularJS cho phép bạn viết directive riêng nếu muốn mở rộng HTML theo ý bạn.
+	
+	
+	app.directive("myWelcome", function() {
+	return {
+		template: "<h1>Welcome!</h1>"
+	};
+	});
+	
+	
+	<div my-welcome></div>
+		Tạo ra tag tùy chỉnh giống như component.
+
+
+# 🧨 V. Lưu ý quan trọng 
+	
+AngularJS render lại các directive mỗi khi có sự thay đổi trong scope — vì thế phải cẩn thận khi dùng directive với logic phức tạp.
+
+Tránh dùng ng-init để quản lý state trong ứng dụng thật, hãy dùng controller hoặc service.
+
+
+| 🎯 Mục tiêu         | Nội dung                                                          |
+| ------------------- | ----------------------------------------------------------------- |
+| Directive là gì     | "Chỉ thị" mở rộng HTML của AngularJS                              |
+| Có bao nhiêu loại?  | Built-in (như `ng-model`, `ng-repeat`) và custom (do bạn tự viết) |
+| Khi nào dùng?       | Khi cần xử lý tương tác DOM một cách khai báo, dễ kiểm soát       |
+| Nên học kỹ cái nào? | `ng-model`, `ng-repeat`, `ng-if`, `ng-click` — rất thường dùng    |
+
+
+</pre><a id='backBottom' href='../angular-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

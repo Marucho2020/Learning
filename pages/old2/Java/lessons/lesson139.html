@@ -1,0 +1,153 @@
+<html><head><title>Lesson 139 == DAG (Directed Acyclic Graph) → ứng dụng vào Task Pipeline ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 139 -- DAG (Directed Acyclic Graph) → ứng dụng vào Task Pipeline -//</h1><pre>
+# 🔷 I. DAG là gì? 
+	## 🧠 Định nghĩa: 
+		DAG (Directed Acyclic Graph) 
+		DAG là đồ thị có hướng và không có chu trình 
+		Một tập các nút (node) và cạnh (edge) trong đó mọi cạnh đều hướng một chiều và không thể quay về gốc
+
+
+A → B → C
+↓         ↑
+D → E → F
+
+	Bạn không thể bắt đầu từ A và quay lại A → không có vòng lặp (acyclic)
+	Mỗi node đại diện cho một task, edge là dependency
+
+
+
+# 🔧 II. Vì sao DAG lại quan trọng trong Task Pipeline?
+
+	## 🎯 Ý tưởng cốt lõi: 
+		Một pipeline phức tạp luôn có các bước phụ thuộc nhau, và có thể thực thi song song nếu không phụ thuộc.
+		
+		
+	## DAG → Biểu diễn: 
+		
+		- Thứ tự thực hiện task
+		- Các task nào có thể chạy song song
+		- Phát hiện deadlock / vòng lặp (cycle)
+		- Tối ưu hóa toàn cục pipeline
+
+# 🔄 III. DAG thực tế trong Task Pipeline
+
+| Hệ thống                                    | Mô tả                                                   |
+| ------------------------------------------- | ------------------------------------------------------- |
+| **Apache Airflow**                          | Mỗi pipeline là một DAG – mỗi node là `Operator` (task) |
+| **Spark DAG Scheduler**                     | Biểu diễn các stage tính toán (RDD transformation)      |
+| **TensorFlow Computation Graph**            | Toán tử tensor (op) nối với nhau qua DAG                |
+| **CI/CD Pipeline (GitHub Actions, GitLab)** | Job phụ thuộc vào job khác                              |
+| **n8n, Prefect, Dagster**                   | Workflow automation dạng DAG                            |
+
+
+
+# 🧠 IV. Các tính chất & kỹ thuật cần nắm cấp độ senior
+
+	##  1. Topological Sort 
+	
+		- Sắp xếp các task theo thứ tự có thể chạy
+		- Đảm bảo không có task nào chạy trước khi phụ thuộc của nó xong
+
+	List<Task> topoSorted = topologicalSort(tasks);
+	Nếu phát hiện vòng lặp → throw CycleDependencyException.
+
+# 2. Critical Path Optimization
+
+	Đường dài nhất trong DAG → giới hạn thời gian thực thi toàn pipeline
+	Nếu bạn muốn tối ưu thời gian, tối ưu critical path đầu tiên
+
+
+# 3. Parallelism & Concurrency (Song song và đồng thời )
+
+		- Nếu A → B, nhưng C độc lập → có thể chạy A và C song song
+		- DAG giúp hệ thống scheduler phân chia task vào nhiều thread/node
+	
+
+# 4. Incremental Execution
+
+	- DAG cho phép cache node đã hoàn thành (memoization)
+	- Ví dụ: Spark DAG + lineage = chỉ recompute phần nào thay đổi
+
+
+# 📦 V. DAG Task Scheduler – thành phần thiết kế
+
+| Thành phần             | Vai trò                                       |
+| ---------------------- | --------------------------------------------- |
+| **DAG Builder**        | Nhận input, xây DAG                           |
+| **Cycle Detector**     | Kiểm tra logic sai                            |
+| **Topological Sorter** | Đảm bảo thứ tự                                |
+| **Task Executor**      | Gửi task sang thread/worker                   |
+| **Event Bus**          | Lắng nghe khi task xong, trigger task kế tiếp |
+
+
+
+
+# ⚙️ VI. Code mẫu simplified (pseudo Java)
+
+class Task {
+    String id;
+    List<Task> dependsOn;
+    Runnable logic;
+}
+
+void executeDAG(List<Task> tasks) {
+    Map<Task, Integer> inDegree = calcInDegree(tasks);
+    Queue<Task> ready = new LinkedList<>();
+
+    // Bắt đầu với task không phụ thuộc
+    for (Task t : tasks)
+        if (inDegree.get(t) == 0) ready.add(t);
+
+    while (!ready.isEmpty()) {
+        Task t = ready.poll();
+        runAsync(t.logic, () -> {
+            for (Task next : findDependents(t, tasks)) {
+                inDegree.put(next, inDegree.get(next) - 1);
+                if (inDegree.get(next) == 0) ready.add(next);
+            }
+        });
+    }
+}
+
+
+
+# 🔥 VII. Pitfall trong thiết kế Task DAG
+
+| Vấn đề                          | Hệ quả                                                      |
+| ------------------------------- | ----------------------------------------------------------- |
+| Cycle                           | Deadlock, lặp vô tận                                        |
+| Không theo dõi trạng thái task  | Task chạy lại nhiều lần hoặc bị skip                        |
+| Granularity quá nhỏ             | Overhead lớn hơn lợi ích (task scheduling > task execution) |
+| Không phân biệt I/O vs CPU task | Không tận dụng được executor đúng                           |
+| Không tính Critical Path        | Không optimize đúng chỗ                                     |
+
+
+# 🧠 VIII. Các tối ưu cấp độ senior
+
+
+	1. Memoization node output
+		→ Nếu node B chạy rồi với input giống hệt → không cần chạy lại
+	
+	2. Parallelism-aware task batching
+		→ Gom task không phụ thuộc vào nhau để chạy trong 1 batch → giảm context switching
+	
+	3. Pre-scheduling / Early materialization
+		→ Ước lượng DAG trước để phân bổ resource trước khi chạy
+	
+	4. Dynamic DAG (Recursive DAG / Conditional DAG)
+		→ DAG thay đổi runtime dựa vào kết quả task trước
+		(Ví dụ: A → B, nếu B thất bại → chuyển sang B’)
+
+# ✅ Tổng kết
+
+| Khái niệm     | Ý nghĩa senior level                         |
+| ------------- | -------------------------------------------- |
+| DAG           | Biểu diễn pipeline không vòng lặp            |
+| Topo Sort     | Đảm bảo dependency                           |
+| Critical Path | Nút thắt cổ chai, cần tối ưu                 |
+| DAG Scheduler | Hệ thống chạy task tuần tự/song song         |
+| DAG Runtime   | Có thể tracking trạng thái, rollback, resume |
+
+
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

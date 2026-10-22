@@ -1,0 +1,156 @@
+<html><head><title>Lesson 209 == Composable Resilience Layers ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 209 -- Composable Resilience Layers -//</h1><pre>
+
+# 🔍 1. Vấn đề cần giải quyết
+	Trong thực tế, khi bạn tích hợp API (Payment, Email, Billing, 3rd party), bạn sẽ áp dụng nhiều cơ chế resilience đồng thời:
+
+		Retry để tự thử lại khi lỗi tạm thời.
+		
+		Timeout để tránh request treo vô hạn.
+		
+		Circuit Breaker để ngắt sớm khi downstream “chết”.
+		
+		Fallback để xử lý graceful degrade.
+		
+	Thông thường, với Spring hay Resilience4j, ta có kiểu:
+
+@Retryable
+@CircuitBreaker
+@TimeLimiter
+public String callApi() { ... }
+
+	Nhưng điều này rất khó kiểm soát, vì:
+
+		Logic bị rải ở annotation và AOP proxy.
+		
+		Thứ tự thực thi không rõ.
+		
+		Không thể test unit dễ dàng.
+		
+	Functional approach cho phép ta compose rõ ràng toàn bộ resilience pipeline.		
+
+
+
+# ⚙️ 2. Functional Composition: Cách ghép các Resilience Layer
+	Giả sử ta đã có ba HOF (higher-order function):
+
+Function<Supplier<CompletableFuture<String>>, Supplier<CompletableFuture<String>>> withRetry(int n)
+Function<Supplier<CompletableFuture<String>>, Supplier<CompletableFuture<String>>> withTimeout(Duration d)
+Function<Supplier<CompletableFuture<String>>, Supplier<CompletableFuture<String>>> withCircuitBreaker(CircuitBreaker cb)
+
+	→ Mỗi cái nhận vào một function, và trả ra một function được bọc thêm logic resilience.
+
+
+	Bây giờ, ta compose chúng lại:
+
+Supplier<CompletableFuture<String>> resilientCall =
+    withRetry(3)
+    .andThen(withTimeout(Duration.ofSeconds(2)))
+    .andThen(withCircuitBreaker(cb))
+    .apply(() -> callExternalApi());
+
+	Cú pháp .andThen() ở đây là function chaining thuần Java — mỗi tầng decorator bọc logic resilience quanh tầng bên trong.
+
+
+
+
+# 🧩 3. Pure Decorator Pattern
+
+	Không còn annotation hay magic — đây là decorator pattern thuần functional:
+
+		- Mỗi “wrapper” chỉ nhận và trả function.
+		- Không thay đổi function gốc.
+		- Không cần bean, proxy, AOP.
+
+	## Ví dụ minh họa đơn giản: 
+
+public static <T> Supplier<T> withRetry(Supplier<T> fn, int n) {
+    return () -> {
+        int attempts = 0;
+        while (true) {
+            try {
+                return fn.get();
+            } catch (Exception e) {
+                if (++attempts >= n) throw e;
+            }
+        }
+    };
+}
+
+public static <T> Supplier<T> withTimeout(Supplier<T> fn, Duration timeout) {
+    return () -> CompletableFuture.supplyAsync(fn::get)
+        .orTimeout(timeout.toMillis(), TimeUnit.MILLISECONDS)
+        .join();
+}
+
+
+	Và cuối cùng:
+Supplier<String> call = () -> externalService.call();
+Supplier<String> resilient = withRetry(withTimeout(call, Duration.ofSeconds(2)), 3);
+	Tất cả cấu trúc và kết hợp bằng function.
+
+
+
+# 💡 4. “Policy Pipeline” — Định nghĩa bằng DSL Functional
+
+	Tư duy xa hơn — ta có thể tạo DSL resilience policy để định nghĩa chính sách.
+
+ResiliencePolicy policy = ResiliencePolicy.builder()
+    .retry(3)
+    .timeout(Duration.ofSeconds(2))
+    .circuitBreaker(cb)
+    .fallback(ex -> "fallback-response")
+    .build();
+
+
+
+Supplier<CompletableFuture<String>> safeCall = policy.apply(() -> callApi());
+
+
+Khi đó, ta đã có thể:
+	Serialize policy sang JSON hoặc YAML để quản lý GitOps.
+	Inject vào service qua Spring Cloud Config.
+	Thay đổi chính sách resilience mà không cần redeploy code.
+
+
+
+# 🏢 5. Ứng dụng thực tế trong Microservice Gateway
+
+Trong enterprise system (ví dụ API Gateway hoặc Orchestrator):	
+
+	- Ta cần nhiều layer resilience cho mỗi endpoint.
+	- Ví dụ: Payment API có retry 5 lần, timeout 1s; Email API retry 2 lần, timeout 5s, circuit breaker riêng.
+
+	Áp dụng pattern này:
+
+var paymentPolicy = withRetry(5)
+    .andThen(withTimeout(Duration.ofSeconds(1)))
+    .andThen(withCircuitBreaker(paymentBreaker));
+
+var emailPolicy = withRetry(2)
+    .andThen(withTimeout(Duration.ofSeconds(5)))
+    .andThen(withCircuitBreaker(emailBreaker));
+
+paymentPolicy.apply(() -> paymentService.call());
+emailPolicy.apply(() -> emailService.send());
+
+
+
+Resilient pipeline tường minh.
+Không phụ thuộc framework.
+Có thể test, log, và mở rộng dễ dàng.
+
+
+
+# 🧠 Tổng kết triết lý bài này
+
+| Thành phần      | Tư duy imperative truyền thống | Tư duy functional resilience   |
+| --------------- | ------------------------------ | ------------------------------ |
+| Retry           | @Retryable                     | `withRetry(fn, n)`             |
+| Timeout         | `Future.get(timeout)`          | `withTimeout(fn, d)`           |
+| Circuit Breaker | `Resilience4j annotation`      | `withCircuitBreaker(fn)`       |
+| Composition     | Annotation stacking            | Function chaining `.andThen()` |
+| Config          | YAML cố định                   | DSL / policy functional        |
+
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

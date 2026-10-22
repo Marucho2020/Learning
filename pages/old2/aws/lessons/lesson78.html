@@ -1,0 +1,328 @@
+<html><head><title>Lesson 78 == Cloud Practitioner ===Tag ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 78 -- Cloud Practitioner --=Tag -//</h1><pre># 1. Tag là gì? (Bản chất) 
+	Tag là metadata (siêu dữ liệu) được gắn vào Resource để giúp con người quản lý Resource.
+
+
+	Nói đơn giản:
+		Tag không làm thay đổi cách Resource hoạt động.
+		Nó chỉ thêm "thông tin mô tả" để AWS hoặc con người biết Resource đó thuộc ai, dùng làm gì, tính tiền cho ai...
+
+	Giống như dán nhãn lên đồ đạc.
+
+
+	Ví dụ:
+
+	Bạn có 100 chiếc laptop.
+	Nếu không dán nhãn:
+		Laptop 1
+		Laptop 2
+		Laptop 3
+		...
+		Laptop 100
+
+	Bạn sẽ không biết:
+		của phòng nào
+		của nhân viên nào
+		dùng cho dự án gì
+
+	Nếu dán tag:
+		Owner = Nguyen
+		Department = HR
+		Project = CRM
+		Environment = Production
+
+	thì việc quản lý cực kỳ dễ.
+	AWS cũng hoạt động giống hệt như vậy.
+
+
+# 2. Tag gồm những gì?
+
+	Một Tag luôn là
+		Key = Value
+
+
+	Ví dụ
+		Project = Payment
+		Environment = Production
+		Owner = TeamA
+		CostCenter = IT001
+		AWS không hiểu "Project" nghĩa là gì.
+
+
+	AWS chỉ lưu:
+		Project
+		↓
+		Payment
+	Chính doanh nghiệp tự quy định ý nghĩa.
+
+
+3. Ví dụ thực tế
+	Một công ty có:
+		EC2
+		RDS
+		S3
+		Lambda
+		VPC
+		EBS
+		ALB
+	Tổng cộng
+		6000 resources
+
+	Cloud Engineer nhìn vào sẽ thấy
+		i-0a1234
+		i-0b1234
+		bucket-abc
+		bucket-xyz
+		db-01
+		db-02
+			
+	
+	Không ai biết
+
+		server nào của Production
+		server nào của Dev
+		server nào của Team A
+		server nào đang dùng
+		Sau khi Tag
+	
+	
+		Project = ERP
+		Environment = Production
+		Owner = Finance
+		Application = Payroll	
+			
+	Lập tức có thể filter toàn bộ tài nguyên.		
+	
+	
+# 	4. Tag dùng để làm gì?
+
+	Đây là phần AWS cực kỳ thích hỏi.
+
+| Mục đích          | Có dùng Tag không? |
+| ----------------- | ------------------ |
+| Quản lý Resource  | ✅                  |
+| Phân chia chi phí | ✅                  |
+| IAM Policy        | ✅                  |
+| Automation        | ✅                  |
+| Backup            | ✅                  |
+| Billing Report    | ✅                  |
+| Tìm kiếm          | ✅                  |
+
+
+
+	## 4.1 Cost Allocation
+		Ví dụ
+		AWS bill
+		$200,000
+		CEO hỏi
+		Team AI tiêu bao nhiêu?
+		Nếu không Tag
+		Không biết.
+		Nếu Tag
+		
+		CostCenter = AI
+		CostCenter = HR
+		CostCenter = Sales
+
+		AWS Cost Explorer sẽ thống kê
+			AI
+			$70,000
+			HR
+			$40,000
+			Sales
+			$90,000
+
+		Đây gọi là
+		Cost Allocation Tags
+		Rất hay thi.
+
+
+
+	## 4.2 IAM 
+		Có thể giới hạn quyền dựa trên Tag.
+		Ví dụ
+		Developer A
+		chỉ được sửa
+
+			Project = AI
+		không được động vào
+			Project = Banking
+			IAM Policy sẽ kiểm tra
+			aws:ResourceTag/Project
+			Đây là ABAC (Attribute-Based Access Control).
+
+
+
+	## 4.3 Automation
+
+			Ví dụ
+
+			Environment = Dev
+			Lambda chạy mỗi tối
+			↓
+			Shutdown toàn bộ EC2 có
+			Environment = Dev
+			để tiết kiệm tiền.
+			Không cần liệt kê từng server.
+
+
+
+	## 4.4 Backup
+			AWS Backup có thể backup
+			Backup = Daily
+		hoặc
+			Backup = Weekly
+			Thay vì chọn từng EC2.
+
+
+
+	## 4.5 Organization
+
+			Công ty lớn
+			100 AWS Accounts
+			50000 resources
+			Tag là cách duy nhất để quản lý.
+
+
+# 5. Mapping với AWS Services
+
+| Service         | Tag được dùng như thế nào |
+| --------------- | ------------------------- |
+| EC2             | Quản lý server            |
+| S3              | Cost Allocation           |
+| RDS             | Backup Policy             |
+| Lambda          | Automation                |
+| EBS             | Snapshot Policy           |
+| AWS Backup      | Backup Selection          |
+| Cost Explorer   | Cost Allocation           |
+| Resource Groups | Search                    |
+| IAM             | Access Control            |
+| Organizations   | Governance                |
+
+
+
+# 6. Tag KHÔNG làm được gì?
+
+
+	Đây là bẫy cực kỳ phổ biến.
+
+	Tag KHÔNG:
+		❌ tăng CPU
+
+		❌ tăng RAM
+
+		❌ tăng Security
+
+		❌ tăng Availability
+
+		❌ tăng Performance
+
+		❌ thay đổi Network
+
+		❌ thay đổi Storage
+
+	Tag chỉ là
+
+	Metadata
+
+
+# 8. So sánh dễ nhầm
+
+| Khái niệm   | Bản chất                      |
+| ----------- | ----------------------------- |
+| Name        | Chỉ là tên hiển thị           |
+| Tag         | Metadata gồm nhiều Key-Value  |
+| Resource ID | AWS tạo, duy nhất             |
+| ARN         | Định danh đầy đủ của Resource |
+
+# 9. Trade-off
+
+		Ưu điểm
+			Quản lý cực dễ
+			Cost Allocation
+			Automation
+			IAM
+			Governance
+			Reporting
+
+		Nhược điểm
+			Phải thống nhất quy tắc đặt Tag.
+			Thiếu Tag sẽ khó quản lý.
+			Sai Tag có thể khiến Automation, Backup hoặc IAM áp dụng nhầm.
+
+
+
+# 10. Các từ khóa thường xuất hiện trong đề thi
+
+		Tag
+		Resource Tag
+		Cost Allocation Tag
+		Billing
+		Filter
+		Search
+		Automation
+		AWS Backup
+		AWS Organizations
+		IAM Condition
+		ABAC
+		Cost Explorer
+		Resource Groups
+		Metadata
+
+
+
+# 11. Cách AWS ra đề
+
+
+
+	Dạng 1
+		"Công ty muốn biết mỗi phòng ban tiêu bao nhiêu tiền."
+		Đáp án
+		✅ Cost Allocation Tags
+
+	Dạng 2
+		"Developer chỉ được quản lý EC2 của chính nhóm mình."
+		Đáp án
+		✅ IAM + Resource Tags (ABAC)
+
+	Dạng 3
+		"Muốn backup toàn bộ server Production."
+		Đáp án
+		✅ AWS Backup + Tag
+		Không phải chọn từng EC2.
+
+	Dạng 4
+		"Muốn tự động tắt toàn bộ Development EC2 vào ban đêm."
+		Đáp án
+		✅ Lambda/EventBridge + Tag
+
+	Dạng 5 (Bẫy)
+		"Tag giúp tăng hiệu năng quản lý EC2."
+		Sai.
+		Tag chỉ hỗ trợ quản lý, không cải thiện hiệu năng.
+
+
+
+
+# 12. Tóm tắt ghi nhớ
+
+| Ý                   | Ghi nhớ                                   |
+| ------------------- | ----------------------------------------- |
+| Bản chất            | Metadata gắn vào Resource                 |
+| Cấu trúc            | Key = Value                               |
+| Ảnh hưởng hoạt động | Không                                     |
+| Dùng cho            | Quản lý, Billing, IAM, Automation, Backup |
+| Rất hay thi         | Cost Allocation Tag, ABAC, AWS Backup     |
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre><a id='backBottom' href='../aws-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

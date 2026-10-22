@@ -1,0 +1,82 @@
+<html><head><title>Lesson 8 == Scope ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../angular-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 8 -- Scope -//</h1><pre># Khái niệm 
+	$scope là một object đặc biệt trong AngularJS đóng vai trò cầu nối giữa Controller và View 
+		- Dữ liệu bạn khai báo trong controller được gán vào $scope 
+		- View (HTML) sẽ truy cập vào các biến đó qua các biểu thức như {{ }} ng-model, ng-bind
+		
+		
+# Cấu trúc scope dạng cây  
+	Mỗi controller trong AngularJS có phạm vi riêng (scope riêng). Các scope này có thể lồng nhau nếu controller lồng nhau:
+	
+	$rootScope
+	├── $scope của Controller A
+	│     └── $scope của Controller A1
+	└── $scope của Controller B
+	→ Điều này nghĩa là: scope con kế thừa scope cha, nhưng không ngược lại.
+
+
+# 🔹 $rootScope 
+
+	Đây là phạm vi gốc – tồn tại suốt toàn bộ ứng dụng Angular.
+	Nếu bạn gán biến vào $rootScope, mọi controller đều có thể truy cập.
+	Tuy nhiên, không nên lạm dụng vì nó làm logic trở nên khó kiểm soát.
+
+	
+app.run(function($rootScope) {
+  $rootScope.color = "blue";
+});
+
+
+# 📌 Ví dụ cụ thể
+
+	<div ng-app="myApp" ng-controller="myCtrl">
+		<h1>{{ color }}</h1>
+	</div>
+		
+
+Nếu bạn dùng $rootScope.color = "blue" trong run(), và không có $scope.color = ... thì sẽ hiển thị: blue.	
+
+
+
+
+# 	🧨 Cạm bẫy khi lồng controller
+
+<div ng-controller="ParentCtrl">
+  <p>{{ message }}</p>
+
+  <div ng-controller="ChildCtrl">
+    <p>{{ message }}</p>
+  </div>
+</div>
+
+
+app.controller('ParentCtrl', function($scope) {
+  $scope.message = "Hello from Parent";
+});
+
+app.controller('ChildCtrl', function($scope) {
+  $scope.message = "Hello from Child";
+});
+
+→ Ở đây ChildCtrl ghi đè biến message — nhưng chỉ trong phạm vi con.
+Nếu không có $scope.message trong ChildCtrl, nó sẽ kế thừa từ ParentCtrl.
+
+
+
+# 💡 Best Practice
+| Việc làm                                          | Có nên? | Giải thích                        |
+| ------------------------------------------------- | ------- | --------------------------------- |
+| Dùng `$scope` để chia sẻ dữ liệu trong controller | ✅       | Làm đúng theo kiến trúc AngularJS |
+| Dùng `$rootScope` để truyền dữ liệu toàn cục      | ⚠️      | Chỉ dùng khi thật sự cần thiết    |
+| Dùng nhiều controller lồng nhau                   | ⚠️      | Cần kiểm soát rõ phạm vi biến     |
+| Dùng `controller as` + tránh `$scope`             | ✅       | Hiện đại, dễ bảo trì              |
+
+
+# ✅ Kết luận
+
+	Scope trong AngularJS là cốt lõi của Data Binding.
+	Là nơi giữ dữ liệu cho từng controller.
+	Lồng scope cần hiểu rõ về kế thừa vs ghi đè để tránh bug khó lường.
+	Nếu dự án còn AngularJS mà bạn đang maintain → nên chuyển dần sang dùng controller as, tránh scope.
+
+
+</pre><a id='backBottom' href='../angular-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

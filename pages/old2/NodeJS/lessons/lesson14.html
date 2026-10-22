@@ -1,0 +1,391 @@
+<html><head><title>Lesson 14 == Module ESM ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../NodeJS-learning.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 14 -- Module ESM -//</h1><pre>
+
+# Giới thiệu về ES Modules
+
+	ES Modules là chuẩn chính thức để đóng gói và tái sử dụng code JavaScript, được thiết kế để thay thế CommonJS trong các ứng dụng hiện đại. ESM có các lợi ích chính:
+
+		- Cú pháp rõ ràng: Dùng import/export thay vì require/module.exports.
+		- Phân tích tĩnh: Compiler có thể phân tích import/export trước khi chạy, hỗ trợ tree-shaking (loại bỏ code không dùng, giảm kích thước bundle).
+		- Top-level await: Cho phép dùng await ngoài hàm async, hữu ích cho việc khởi tạo module.
+		- Chuẩn hóa: ESM là chuẩn chung của JavaScript, hoạt động cả trong trình duyệt và Node.js.
+
+		Node.js trước đây chỉ hỗ trợ CommonJS, nhưng từ phiên bản 12, ESM được tích hợp, và từ phiên bản 14, nó trở nên ổn định hơn. Bạn có thể chọn giữa CommonJS và ESM tùy thuộc vào nhu cầu dự án.
+
+		Insight: ESM là lựa chọn tốt cho dự án mới, đặc biệt khi tích hợp với frontend (React, Vue) hoặc dùng các công cụ như Vite/Webpack (hỗ trợ tree-shaking). Tuy nhiên, CommonJS vẫn phổ biến trong các dự án legacy hoặc khi làm việc với thư viện chưa hỗ trợ ESM tốt.
+
+
+# So sánh CommonJS và ES Modules
+
+
+
+Feature,CommonJS,ES Modules
+File Extension,.js (mặc định),.mjs hoặc .js (với config)
+Import Syntax,require(),import
+Export Syntax,module.exports / exports,export / export default
+Import Timing,Dynamic (runtime),Static (parsed trước khi chạy)
+Top-level Await,Không hỗ trợ,Hỗ trợ
+File URL,Không cần .js trong require,Cần .mjs hoặc .js trong import
+
+
+	## Ví dụ: CommonJS
+
+	math.js
+function add(a, b) {
+  return a + b;
+}
+function subtract(a, b) {
+  return a - b;
+}
+module.exports = { add, subtract };
+
+
+	app.js
+const math = require('./math');
+console.log(math.add(5, 3)); // 8
+
+
+
+
+	## Ví dụ: ES Modules
+		math.mjs
+
+export function add(a, b) {
+  return a + b;
+}
+export function subtract(a, b) {
+  return a - b;
+}
+
+		app.mjs
+		
+import { add, subtract } from './math.mjs';
+console.log(add(5, 3)); // 8
+
+
+
+	CommonJS dùng require và module.exports, không cần file extension (./math thay vì ./math.js).
+	ESM dùng import/export, yêu cầu file extension (./math.mjs hoặc ./math.js nếu config đúng).
+	ESM phân tích import tĩnh, giúp công cụ như Webpack tối ưu hóa bundle.
+
+	Insight: ESM yêu cầu khai báo import/export rõ ràng, giúp code dễ đoán hơn. Tuy nhiên, việc bắt buộc dùng file extension có thể gây phiền hà trong dự án lớn, trừ khi bạn cấu hình package.json đúng cách.
+
+
+
+
+# Cách kích hoạt ES Modules trong Node.js
+
+	Để sử dụng ESM, bạn cần cấu hình Node.js để nhận diện file hoặc project như ESM. Bài học liệt kê ba cách:
+
+	## 1. Sử dụng đuôi .mjs
+
+File với đuôi .mjs được Node.js tự động coi là ESM. Đây là cách đơn giản nhất, không cần cấu hình thêm.
+
+// math.mjs
+export const add = (a, b) => a + b;
+
+// app.mjs
+import { add } from './math.mjs';
+console.log(add(2, 3)); // 5
+
+
+
+	## 2. Cấu hình "type": "module" trong package.json
+		Thêm dòng "type": "module" vào package.json để tất cả file .js trong dự án được coi là ESM.
+
+{
+  "name": "my-app",
+  "version": "1.0.0",
+  "type": "module"
+}
+
+
+// math.js
+export const add = (a, b) => a + b;
+
+// app.js
+import { add } from './math.js';
+console.log(add(2, 3)); // 5
+
+
+
+
+	## 3. Dùng cờ --input-type=module
+	Chạy file với lệnh:
+		node --input-type=module script.js
+
+
+Insight: Cách .mjs phù hợp cho dự án nhỏ hoặc khi mix CommonJS và ESM. Cách "type": "module" lý tưởng cho dự án mới, nhưng cần đảm bảo tất cả file đều tuân theo ESM (file .js không có "type": "module" sẽ là CommonJS). Nếu dự án lớn, hãy dùng .mjs cho ESM và .cjs cho CommonJS để tránh nhầm lẫn.
+
+
+
+
+# Cú pháp Import và Export
+	ESM cung cấp cú pháp linh hoạt hơn CommonJS. Tôi sẽ giải thích các kiểu export/import với ví dụ.
+
+
+	## Export Syntax
+
+		### 1. Named Exports 
+		
+			Export từng hàm/biến riêng lẻ hoặc danh sách cuối file.
+
+// greetings.mjs
+export function sayHello() {
+  console.log('Hello');
+}
+
+export function sayGoodbye() {
+  console.log('Goodbye');
+}
+
+// Hoặc export danh sách
+function add(a, b) {
+  return a + b;
+}
+function subtract(a, b) {
+  return a - b;
+}
+export { add, subtract };
+
+
+
+
+
+		### 2. Default Export
+			Chỉ một default export trên mỗi module, thường dùng cho chức năng chính.
+
+// main.mjs
+export default function mainFunction() {
+  console.log('I am the default export');
+}
+
+
+
+
+		### Mixed Exports
+			Kết hợp default và named exports.
+
+// main.mjs
+export const VERSION = '1.0.0';
+function main() {
+  console.log('Main function');
+}
+export { main as default };
+
+
+
+
+
+
+	## Import Syntax
+
+		### Importing Named Exports 
+		
+// app.mjs
+import { sayHello, sayGoodbye } from './greetings.mjs';
+sayHello(); // Hello
+
+// Đổi tên để tránh xung đột
+import { add as sum, subtract as minus } from './math.mjs';
+console.log(sum(5, 3)); // 8
+
+// Import toàn bộ như object
+import * as math from './math.mjs';
+console.log(math.add(7, 4)); // 11		
+
+
+
+
+
+
+		### Importing Default Exports
+
+// app.mjs
+import mainFunction from './main.mjs';
+mainFunction(); // I am the default export
+
+// Default import có thể đặt tên tùy ý
+import anyName from './main.mjs';
+anyName();
+
+
+
+
+
+		### Importing Both 
+
+import main, { VERSION } from './main.mjs';
+console.log(VERSION); // 1.0.0
+main(); // Main function
+
+		Insight: Named exports tốt cho utilities (nhiều hàm), default exports phù hợp cho class hoặc object chính của module. Tránh lạm dụng default exports trong thư viện lớn để dễ refactor.
+
+
+
+
+
+# Dynamic Imports
+	ESM hỗ trợ dynamic imports, cho phép load module theo điều kiện hoặc on-demand, trả về Promise.
+
+
+
+	## Ví dụ: Dynamic Imports
+
+// app.mjs
+async function loadModule(moduleName) {
+  try {
+    const module = await import(`./${moduleName}.mjs`);
+    return module;
+  } catch (error) {
+    console.error(`Failed to load ${moduleName}:`, error);
+  }
+}
+
+const moduleName = process.env.NODE_ENV === 'production' ? 'prod' : 'dev';
+loadModule(moduleName).then(module => {
+  module.default();
+});
+
+(async () => {
+  const mathModule = await import('./math.mjs');
+  console.log(mathModule.add(10, 5)); // 15
+})();
+
+
+	import() trả về Promise, cho phép load module bất đồng bộ.
+	Hữu ích cho code-splitting (tải code theo nhu cầu) hoặc load module theo điều kiện (prod/dev).
+
+
+	Insight: Dynamic imports rất mạnh trong ứng dụng lớn (như SPA với React/Vue) để giảm thời gian tải ban đầu. Trong Node.js, nó hữu ích khi cần load module dựa trên config hoặc môi trường.
+
+
+
+# Top-level Await
+
+	ESM cho phép dùng await ngoài hàm async, tại cấp module (top-level), điều mà CommonJS không hỗ trợ.
+
+// data-loader.mjs
+console.log('Loading data...');
+const response = await fetch('https://jsonplaceholder.typicode.com/todos/1');
+const data = await response.json();
+console.log('Data loaded!');
+export { data };
+
+
+	await tại top-level tạm dừng thực thi module cho đến khi Promise resolve.
+	Hữu ích cho: load config, kết nối database, hoặc khởi tạo module.
+
+	Insight: Top-level await lý tưởng cho việc khởi tạo ứng dụng (e.g., kết nối MongoDB trước khi export service). Tuy nhiên, dùng cẩn thận vì nó làm module load chậm hơn, ảnh hưởng đến các module import nó.
+
+
+
+
+
+# Best Practices
+
+
+
+	## 1. Luôn dùng file extension: 
+
+import { add } from './utils.mjs'; // Tốt
+import { add } from './utils'; // Xấu, có thể lỗi
+
+	Lý do: ESM yêu cầu đường dẫn rõ ràng để phân tích tĩnh.
+
+
+
+	## 2.Dùng index.mjs cho thư mục:
+
+// utils/index.mjs
+export * from './string-utils.mjs';
+export * from './number-utils.mjs';
+
+// app.mjs
+import { formatString, add } from './utils/index.mjs';
+
+	Giúp tổ chức module gọn gàng.
+
+
+
+	## 3. Giúp tổ chức module gọn gàng. 
+
+		Named exports cho utilities.
+		Default exports cho class hoặc chức năng chính.
+
+// utilities.mjs
+export function validate() { /* ... */ }
+export function format() { /* ... */ }
+
+// UserService.mjs
+export default class UserService { /* ... */ }
+
+
+
+
+	## 4. Xử lý chuyển đổi từ CommonJS: 
+		ESM có thể import CommonJS:
+
+import fs from 'fs'; // default import là module.exports
+
+
+		CommonJS import ESM qua dynamic import
+(async () => {
+  const { default: module } = await import('./module.mjs');
+})();
+
+
+
+
+
+	## Dual Package Hazard:
+Để hỗ trợ cả ESM và CommonJS, dùng "exports" trong package.json:
+
+
+{
+  "exports": {
+    ".": {
+      "import": "./index.mjs",
+      "require": "./index.cjs"
+    }
+  }
+}
+
+	Insight: Trong dự án lớn, dùng index.mjs để tổ chức module theo feature (e.g., users/index.mjs). Nếu mix ESM và CommonJS, hãy test kỹ để tránh lỗi runtime (như require ESM không đúng cách). Dùng TypeScript với ESM để tăng type safety.
+
+
+
+
+# Tổng kết và Lời khuyên
+
+	ESM là bước tiến lớn trong Node.js, mang lại cú pháp hiện đại và tính năng mạnh mẽ. Key takeaways:
+
+		- ESM vs CommonJS: ESM có cú pháp chuẩn, hỗ trợ tree-shaking, top-level await.
+		- Kích hoạt ESM: Dùng .mjs, "type": "module", hoặc cờ --input-type=module.
+		- Import/Export: Named exports cho utilities, default exports cho chức năng chính.
+		- Dynamic Imports: Tải module theo nhu cầu, giảm thời gian load.
+		- Top-level Await: Khởi tạo module bất đồng bộ, nhưng dùng cẩn thận.
+
+
+	## Ví dụ thực tế với Express:
+
+// routes/users.mjs
+import express from 'express';
+const router = express.Router();
+
+router.get('/:id', (req, res) => {
+  res.json({ id: req.params.id });
+});
+
+export default router;
+
+// app.mjs
+import express from 'express';
+import userRoutes from './routes/users.mjs';
+
+const app = express();
+app.use('/users', userRoutes);
+app.listen(3000, () => console.log('Server running'));
+
+
+
+</pre><a id='backBottom' href='../NodeJS-learning.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

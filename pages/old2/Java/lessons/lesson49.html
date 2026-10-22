@@ -1,0 +1,168 @@
+<html><head><title>Lesson 49 == Iterator và Iteration ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 49 -- Iterator và Iteration -//</h1><pre>
+
+# Khái niệm  
+
+	## Iteration (Duyệt qua phần tử)
+		Là quá trình lặp qua các phần tử của một tập hợp Collection như List, Set, Map 
+		
+	## Iterator (Design Pattern)	
+		Là một thiết kế mẫu (Design Pattern) giúp duyệt các phần tử trong một Collection mà không cần biết chi tiết cấu trúc chi tiết bên trong  
+		
+	-> Java cung cấp Iterator như một Interface trong java.util, giúp duyệt phần tử của Collection một cách an toàn và có thể loại bỏ phần tử khi đang duyệt 
+	
+	
+	## Các bài toán thường hay sử dụng Iterator 
+		Thường được sử dụng trong các bài toán thao tác với tập hợp dữ liệu lớn, yêu cầu truy cập tuần tự, và có thể cần xóa hoặc sửa dữ liệu khi duyệt. Dưới đây là những bài toán phổ biến thường sử dụng Iterator trong java 
+		
+			- Xóa phần tử thỏa mãn điều kiện (Remove Elements While Iterating)
+				
+			- Duyệt danh sách liên kết (LinkedList Traversal)
+			
+			- Duyệt Map (Key-Value Traversal)
+			....
+	Bài toán						Loại Iterator nên dùng								Điểm nổi bật
+	Xóa phần tử khi duyệt			Iterator									Tránh ConcurrentModificationException
+	Duyệt LinkedList				Iterator									Hiệu suất cao hơn for loop
+	Duyệt Map						Iterator<Map.Entry<K,V>>					Truy cập key-value dễ dàng
+	Duyệt ngược List				ListIterator								Hỗ trợ duyệt 2 chiều
+	Custom Iterable					Iterable<T>									Hỗ trợ for-each cho class tùy chỉnh
+	Duyệt song song					Spliterator									Tối ưu hiệu suất
+	Tách từ trong chuỗi				StringTokenizer								Nhanh hơn split()
+	
+	
+# Sử dụng Iterator trong Java 
+		
+		### Ví dụ sử dụng Iterator cơ bản  
+		import java.util.*;
+		public class IteratorExample {
+			public static void main(String[] args) {
+				List<String> list = new ArrayList<>(Arrays.asList("A", "B", "C", "D"));
+		
+				Iterator<String> iterator = list.iterator(); // Lấy Iterator từ list
+		
+				while (iterator.hasNext()) { // Kiểm tra còn phần tử không
+					String item = iterator.next(); // Lấy phần tử tiếp theo
+					System.out.println(item);
+				}
+			}
+		}
+		
+		remove() có thể xóa phần tử khỏi Collection trong khi duyệt.
+	
+	
+
+	## Xóa phần tử trong khi duyệt (Iterator với for-each)
+		Thông thường khi duyệt qua danh sách phần tử mà thêm xóa phần tử sẽ gây ra lỗi vì đang duyệt mà -> ConcurrentModificationException 
+		
+		### Ví dụ gây ra lỗi ConcurrentModificationException 
+			import java.util.*;
+			public class IteratorRemoveExample {
+				public static void main(String[] args) {
+					List<String> list = new ArrayList<>(Arrays.asList("A", "B", "C", "D"));
+			
+					for (String item : list) { // Sử dụng for-each
+						if (item.equals("B")) {
+							list.remove(item); // Gây ConcurrentModificationException
+						}
+					}
+				}
+			}
+
+		
+		-> Lý do lỗi xảy ra: for-each sử dụng Iterator ngầm, nhưng remove() từ Collection trực tiếp làm thay đổi cấu trúc list, gây ra ConcurrentModificationException 
+		
+		--> Ta sử dụng Iterator.remove() sẽ giải quyết được lỗi này 
+		
+		## Ví dụ sử dụng Iterator.remove() an toàn vì nó cập nhật trạng thái bên trong của Iterator 
+			Iterator<String> iterator = list.iterator();
+			while (iterator.hasNext()) {
+				if (iterator.next().equals("B")) {
+					iterator.remove(); // Xóa phần tử an toàn
+				}
+			}
+
+	
+	
+# ListIterator - Iterator nâng cao 
+	## Nếu bạn cần duyệt theo cả 2 chiều(forward & backward) trong List hãy dùng ListIterator : 
+		
+		import java.util.*;
+		public class ListIteratorExample {
+			public static void main(String[] args) {
+				List<String> list = new ArrayList<>(Arrays.asList("A", "B", "C", "D"));
+				ListIterator<String> listIterator = list.listIterator();
+		
+				// Duyệt xuôi
+				while (listIterator.hasNext()) {
+					System.out.print(listIterator.next() + " "); // Output: A B C D
+				}
+		
+				System.out.println();
+		
+				// Duyệt ngược
+				while (listIterator.hasPrevious()) {
+					System.out.print(listIterator.previous() + " "); // Output: D C B A
+				}
+			}
+		}
+
+	## ListIterator có thể : 
+		- Duyệt xuôi(next()) và ngược(previois)
+		- Thêm phần tử (add())
+		- Sửa phần tử(set())
+		- Xóa phần tử(remove()) an toàn  
+		
+# Iterabale Interface - tùy chỉnh Iterator 
+	
+	Nếu bạn muốn một class có thể sử dụng trong for-each, hãy triển khai Iterable<T>
+	-> Tức là ta biến một Class thành một dạng Danh sách để duyệt được ấy 
+	Iterable giúp class có thể dùng for-each loop mà không cần gọi iterator() thủ công 
+		
+		### Ví dụ  
+		import java.util.*;
+		class CustomCollection implements Iterable<String> {
+			private List<String> data = Arrays.asList("X", "Y", "Z");
+		
+			@Override
+			public Iterator<String> iterator() {
+				return data.iterator(); // Trả về Iterator của List
+			}
+		}
+		
+		public class IterableExample {
+			public static void main(String[] args) {
+				CustomCollection collection = new CustomCollection();
+		
+				for (String item : collection) { // for-each có thể dùng vì đã implement Iterable
+					System.out.println(item);
+				}
+			}
+		}
+
+# Spliterator - Iterator tối ưu cho Stream  
+	Java 8 giới thiệu Spliterator<T> như một cách mạnh mẽ hơn để duyệt dữ liệu song song  
+	Spliterator hỗ trợ duyệt song song (parallel processing ) giúp tôi ưu hiệu suất khi xử lý dữ liệu lớn  
+	
+	
+		import java.util.*;
+		public class SpliteratorExample {
+			public static void main(String[] args) {
+				List<String> list = Arrays.asList("A", "B", "C", "D");
+		
+				Spliterator<String> spliterator = list.spliterator();
+				spliterator.forEachRemaining(System.out::println);
+			}
+		}
+
+# So sánh cách duyệt Collection  	
+	
+Cách			Duyệt					Có thể xóa?							Hỗ trợ duyệt ngược?				Hỗ trợ song song?
+for-each		Dễ dùng					❌ Không							❌ Không							❌ Không
+Iterator		Cơ bản					✅ Có (remove())					❌ Không							❌ Không
+ListIterator	Nâng cao				✅ Có (remove(), set(), add())		✅ Có								❌ Không
+Spliterator		Hiệu suất cao			❌ Không							❌ Không							✅ Có
+
+
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

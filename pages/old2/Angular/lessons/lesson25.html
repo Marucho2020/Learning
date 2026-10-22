@@ -1,0 +1,58 @@
+<html><head><title>Lesson 25 == ng-csp ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../angular-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 25 -- ng-csp -//</h1><pre>
+
+# Khái niệm 
+	💡 CSP là gì? 
+		CSP (Content Security Policy) là một cơ chế bảo mật của trình duyệt nhằm ngăn chặn:
+		
+		Cross-site scripting (XSS)
+		Các cuộc tấn công bằng cách chèn script độc hại
+		
+	Khi CSP được bật, các script inline (viết trực tiếp trong HTML) như: ...sẽ không được phép chạy. 
+<script>
+  alert("Hello");
+</script>
+
+		
+		
+# 	❗Vấn đề của AngularJS với CSP
+	
+		
+	AngularJS ban đầu sử dụng rất nhiều "inline JavaScript", ví dụ như: 		
+		
+	ng-init="someFunction()"		
+	Biểu thức nội dòng ({{ 1 + 2 }})	
+	Sử dụng Function(...) constructor (nội bộ)
+	=> Khi bật CSP, AngularJS sẽ bị giới hạn, hoặc không hoạt động đúng nếu không cấu hình đúng.
+	
+	
+# ✅ Giải pháp: Thêm ng-csp directive
+
+	Khi bạn thêm ng-csp vào trong phần <body> hoặc <html>, AngularJS sẽ:
+	Bỏ qua việc sử dụng eval() và Function(...)
+	Chạy ở CSP-compatible mode
+	
+	<body ng-app="myApp" ng-csp>
+	...
+	</body>
+
+# 🧠 Khi nào cần ng-csp? 
+			
+	## Khi bạn bật CSP trên server hoặc meta tag, ví dụ:
+		<meta http-equiv="Content-Security-Policy" content="script-src 'self'">
+	
+		
+	## 	Khi AngularJS bị lỗi kiểu: 
+		Unsafe eval 
+		Refused to execute inline script because it violates the following Content Security Policy directive
+		
+		
+# 📌 Tóm tắt 
+			
+	| Mục                     | Nội dung                             |
+| ----------------------- | ------------------------------------ |
+| CSP là gì?              | Chính sách bảo mật chống XSS         |
+| AngularJS có vấn đề gì? | Sử dụng nhiều inline JS và `eval()`  |
+| Giải pháp               | Thêm `ng-csp` vào HTML               |
+| Khi nào dùng?           | Khi bật CSP trong server hoặc header |
+	
+</pre><a id='backBottom' href='../angular-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

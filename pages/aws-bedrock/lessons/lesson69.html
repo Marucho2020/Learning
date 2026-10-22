@@ -1,0 +1,403 @@
+<!DOCTYPE html><html lang='vi'><head><meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0'>
+<title>Lesson 70 -- AIP-C01  --=AgentCore Gateway -//</title>
+<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css'>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js'></script>
+<script id='MathJax-script' async src='https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'></script>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; margin: 0; padding: 20px; transition: 0.3s; }
+.dark-mode { background-color: #121212; color: #e0e0e0; }
+.light-mode { background-color: #ffffff; color: #333333; }
+.container { max-width: 950px; margin: auto; }
+h1 { text-align: center; color: #3498db; margin: 20px 0; font-size: 26px; }
+.nav-bar { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 20px 0; }
+.nav-btn { text-decoration: none; padding: 10px 18px; background: #3498db; color: white; border-radius: 6px; font-weight: bold; font-size: 15px; display: inline-block; transition: 0.2s; }
+.nav-btn:hover { background: #2980b9; }
+.nav-btn.home-nav { background: #6c757d; }
+.nav-btn.home-nav:hover { background: #5a6268; }
+.nav-btn.disabled { background: #aaa; cursor: not-allowed; opacity: 0.5; }
+.done-btn { display: block; margin: 15px auto; padding: 10px 24px; border: 2px solid #2ecc71; background: transparent; color: #2ecc71; border-radius: 25px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+.done-btn.completed { background: #2ecc71; color: white; }
+.content-box { position: relative; margin: 20px 0; }
+pre { padding: 20px; border-radius: 8px; white-space: pre-wrap; word-break: break-word; overflow-x: auto; font-family: 'Consolas', 'Courier New', monospace; font-size: 15px; }
+.dark-mode pre { background: #1a1a1a; color: #f8f8f2; border: 1px solid #333; }
+.light-mode pre { background: #f8f9fa; color: #212529; border: 1px solid #e9ecef; }
+.copy-btn { position: absolute; top: 12px; right: 12px; padding: 6px 12px; font-size: 12px; background: #555; color: white; border: none; border-radius: 4px; cursor: pointer; opacity: 0.8; }
+.copy-btn:hover { opacity: 1; background: #2ecc71; }
+.theme-toggle-btn { display: block; margin: 20px auto; padding: 8px 16px; background: transparent; border: 1px solid #888; color: inherit; border-radius: 5px; cursor: pointer; }
+</style></head><body onload='initLesson()'>
+<div class='container'>
+<div class='nav-bar'><a class='nav-btn' href='lesson68.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../aws-bedrock-agent-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson70.html'>Bài sau ➡️</a></div><h1>Lesson 70 -- AIP-C01  --=AgentCore Gateway -//</h1>
+<button id='doneButton' class='done-btn' onclick='toggleDone()'>Mark as Done ⚪</button>
+<div class='content-box'>
+<button class='copy-btn' onclick='copyContent()'>📋 Copy nội dung</button>
+<pre><code id='lessonCode'>
+	
+# 1. Bản chất: AgentCore Gateway giải quyết vấn đề gì? 	
+	
+Hãy tưởng tượng bạn đang xây dựng một hệ thống AI agent quản lý báo cáo công việc cho doanh nghiệp. Agent cần thực hiện các thao tác:
+	- Tra cứu tiến độ công việc trong PostgreSQL.
+	- Lấy thông tin khách hàng từ CRM.
+	- Gửi thông báo qua LINE.
+	- Gọi API nội bộ để cập nhật trạng thái công việc.
+	- Đọc dữ liệu từ một hệ thống legacy.
+	
+Nếu mỗi agent tự tích hợp trực tiếp với từng API, bạn sẽ sớm gặp vấn đề:
+	- Mỗi agent phải tự quản lý kết nối và cách gọi tool.
+	- Logic xác thực, phân quyền bị lặp lại.
+	- Khi API thay đổi, nhiều agent phải sửa theo.
+	- Khó kiểm soát agent nào được phép truy cập tài nguyên nào.
+	- Khó quan sát và kiểm toán các lần gọi tool.
+	
+Amazon Bedrock AgentCore Gateway là lớp trung gian chuẩn hóa việc đưa các API, Lambda function và những công cụ khác thành các tool mà AI agent có thể khám phá và gọi theo một giao diện thống nhất.
+		
+	Lưu ý quan trọng: Gateway không phải là LLM, không phải agent runtime và cũng không tự động thay thế backend nghiệp vụ. Nó chuẩn hóa và quản lý lớp giao tiếp giữa agent với các công cụ phía sau.	
+	
+	
+	Agent vẫn quyết định khi nào cần gọi tool; backend vẫn thực hiện nghiệp vụ thực tế.
+	
+	
+	
+# 	2. Phân biệt Gateway, Target, Tool và MCP
+	
+	
+	Đây là phần cốt lõi. Nếu không phân biệt được bốn khái niệm này, bạn sẽ rất dễ thiết kế sai kiến trúc agent.
+
+		Gateway — cổng giao tiếp tập trung
+		Là endpoint mà agent kết nối đến. Một Gateway có thể tổng hợp nhiều tool hoặc định tuyến tới các dịch vụ khác.
+
+		Target — nguồn cung cấp capability
+		Xác định Gateway kết nối tới đâu: Lambda, API được mô tả bằng OpenAPI hoặc Smithy, MCP server, hay HTTP endpoint tùy loại target.
+
+
+		Tool — hành động agent có thể gọi
+		Ví dụ get_task_status, search_customer, update_project_status. Tool có tên, mô tả, input schema và hành vi thực thi được xác định bởi hệ thống phía sau.
+
+		MCP — giao thức giao tiếp
+		Model Context Protocol định nghĩa cách client khám phá và gọi tool, cùng những capability khác như prompts và resources. MCP không phải database, không phải agent và cũng không phải chính Gateway.	
+			
+			
+	Ví dụ liên tưởng:
+	- Gateway = trung tâm điều phối.
+	- Target = đường kết nối đến từng hệ thống.
+	- Tool = chức năng cụ thể mà agent sử dụng.
+	- MCP = quy tắc giao tiếp chung giữa các bên.
+	
+	AWS xác nhận Gateway có thể tổng hợp các MCP target thành một MCP endpoint thống nhất; ngoài ra còn có HTTP target và inference target với hành vi khác nha	
+		
+		
+		
+# 	2.1 Ba loại Target cần phân biệt
+	   
+	
+	
+| Loại             | Chức năng                                              | Ví dụ                               |
+| ---------------- | ------------------------------------------------------ | ----------------------------------- |
+| MCP target       | Tổng hợp capability thành catalog MCP thống nhất       | Lambda, OpenAPI, MCP server         |
+| HTTP target      | Chuyển tiếp request tới HTTP service hoặc agent khác   | AgentCore Runtime, agent hỗ trợ A2A |
+| Inference target | Định tuyến request suy luận tới model provider phù hợp | Chọn model dựa trên trường `model`  |
+
+	Điểm cần nhớ: không phải mọi Target đều chuyển API thành MCP tool theo cùng một cách. MCP target hỗ trợ tổng hợp capability; HTTP target thiên về proxy/pass-through; inference target phục vụ định tuyến inference.
+	
+	
+	
+	
+# 	3. AgentCore Gateway hoạt động như thế nào?
+	
+	Giả sử agent nhận yêu cầu:
+		“Tìm những task quá hạn của dự án A và cập nhật trạng thái của task có ID 123 thành completed.”
+
+	Luồng xử lý có thể như sau:
+
+		Bước 1 — Agent hiểu yêu cầu
+			Agent lập kế hoạch và xác định cần tra cứu task trước, sau đó mới cập nhật trạng thái.
+
+		Bước 2 — Khám phá tool
+			MCP client lấy danh sách tool bằng `tools/list`, hoặc sử dụng cơ chế tìm kiếm tool nếu được cấu hình.
+
+		Bước 3 — Gọi tool tra cứu
+			Agent gọi `get_overdue_tasks(project_id="A")` thông qua `tools/call`.
+
+		Bước 4 — Gateway định tuyến và xác thực
+			Gateway kiểm tra cơ chế xác thực inbound, sau đó sử dụng cấu hình credential/authorization thích hợp để gọi target.
+
+		Bước 5 — Backend thực thi
+			API hoặc Lambda truy vấn dữ liệu, áp dụng logic nghiệp vụ và trả kết quả.
+
+		Bước 6 — Agent quyết định hành động tiếp theo
+			Agent đọc kết quả rồi mới quyết định có gọi `update_task_status` hay không. Gateway không tự suy luận bước nghiệp vụ này.	
+			
+		
+		
+	Tài liệu AWS mô tả việc sử dụng Gateway qua MCP và các operation như tools/list, tools/call; cách xác thực inbound và outbound được cấu hình riêng.		
+			
+		
+	## Một điểm cực kỳ quan trọng	
+		Gateway không đồng nghĩa với business orchestration.
+			
+		Nếu cần bảo đảm cập nhật task phải theo một quy trình nghiêm ngặt, chẳng hạn kiểm tra quyền → kiểm tra trạng thái hiện tại → phê duyệt → cập nhật DB → phát event, bạn vẫn cần thiết kế logic nghiệp vụ trong backend hoặc dùng workflow orchestration phù hợp.
+		Đừng giao trách nhiệm bảo đảm tính nhất quán dữ liệu cho LLM. LLM có thể quyết định muốn làm gì; backend phải xác định được phép làm gì và làm như thế nào cho an toàn.	
+			
+			
+			
+	
+	
+# 	4. Security: Inbound authorization khác Outbound authorization
+
+
+	Hãy tưởng tượng Gateway nhận yêu cầu từ một agent, sau đó gọi Salesforce hoặc một API nội bộ. Có hai câu hỏi độc lập:
+		1. Ai được phép gọi Gateway?
+		2. Gateway được phép dùng danh tính nào để gọi hệ thống đích?
+
+
+
+
+	Inbound
+		Agent → Gateway
+		Xác thực client hoặc agent truy cập Gateway bằng cơ chế như OAuth/JWT hoặc AWS IAM SigV4, tùy cấu hình.
+
+	Outbound
+		Gateway → Target
+		Xác định credential nào được dùng khi gọi API, MCP server hoặc AWS service phía sau.
+
+
+
+	Hai lớp này không tự động thay thế nhau. Một client được xác thực hợp lệ khi vào Gateway không có nghĩa là nó được quyền đọc mọi dữ liệu hoặc thực hiện mọi thao tác ở backend.
+
+
+
+# 4.1 Các chiến lược outbound thường gặp 
+
+
+| Cơ chế                 | Khi nào phù hợp?                                        | Lưu ý                                          |
+| ---------------------- | ------------------------------------------------------- | ---------------------------------------------- |
+| Gateway IAM role       | Gateway gọi dịch vụ AWS bằng quyền của service role     | Phải giới hạn IAM policy theo least privilege  |
+| OAuth                  | API bên ngoài yêu cầu access token                      | Cần quản lý token, scope, expiry và refresh    |
+| API key                | Dịch vụ đích sử dụng API key                            | Không nhúng secret vào prompt hoặc source code |
+| Caller IAM credentials | Cần giữ quyền IAM của caller khi gọi target tương thích | Phụ thuộc loại authorizer và target            |
+| JWT passthrough        | Target cần nhận token ban đầu để tự xử lý quyền         | Không dùng được cho mọi loại target            |
+
+Đây là các cơ chế khác nhau, không phải những lựa chọn có thể thay thế tùy ý. AWS mô tả rõ các điều kiện cấu hình credential provider, bao gồm giới hạn áp dụng của `CALLER_IAM_CREDENTIALS` và `JWT_PASSTHROUGH`.&amp;#x20;
+
+
+
+
+# 4.2 Ví dụ lỗi bảo mật thường gặp
+
+
+	Giả sử công ty có 100 nhân viên. Agent có thể gọi tool get_employee_salary.
+	Nếu Gateway chỉ kiểm tra rằng agent đã đăng nhập, nhưng backend không xác minh nhân viên hiện tại có quyền xem lương của người khác hay không, hệ thống vẫn có thể rò rỉ dữ liệu.
+	
+	Kiến trúc tốt cần phân biệt:
+		- Authentication: Ai đang gọi?
+		- Authorization: Người đó được phép làm gì?
+		- Data authorization: Người đó được phép truy cập bản ghi nào?
+		- Business validation: Hành động có hợp lệ với trạng thái nghiệp vụ hiện tại không?
+			
+		
+	Gateway là một lớp quan trọng trong security architecture, nhưng không thay thế authorization và validation ở backend.	
+		
+		
+		
+		
+# 	5. Semantic tool search: Vì sao không nên đưa hàng nghìn tool vào prompt?	
+		
+		
+	Giả sử doanh nghiệp có 1.000 tool:
+		- search_customer
+		- search_invoice
+		- search_project
+		- get_invoice_status
+		- get_project_status
+		- Và hàng trăm tool chuyên biệt khác.		
+				
+				
+	Nếu đưa toàn bộ mô tả tool vào context ở mỗi lần gọi LLM, bạn có thể tăng token consumption, độ trễ và độ phức tạp khi chọn tool.
+	AgentCore Gateway có khả năng tìm kiếm tool theo ngữ nghĩa để hỗ trợ tìm những tool phù hợp với ngữ cảnh.		
+			
+			
+		
+	Ví dụ, agent nhận yêu cầu “Tìm hóa đơn chưa thanh toán của khách hàng X”. Thay vì chỉ dựa vào một danh sách dài, cơ chế tìm kiếm có thể giúp xác định các tool liên quan đến hóa đơn và trạng thái thanh toán.
+	Tuy nhiên, cần hiểu đúng ba điều:
+	
+		1. Semantic search giúp tìm capability phù hợp, không bảo đảm agent luôn chọn đúng tool.
+		2. Tìm đúng tool không đồng nghĩa với việc truyền đúng tham số.
+		3. Tìm đúng tool và tham số vẫn không bảo đảm thao tác được phép thực hiện.
+		
+	Do đó, production system vẫn cần schema rõ ràng, mô tả tool tốt, kiểm tra tham số, quyền truy cập và xử lý lỗi.		
+			
+		
+		
+# DEFAULT listing và DYNAMIC listing		
+		
+			
+	Đối với MCP server target, AWS hỗ trợ hai chế độ khám phá capability:
+	
+	- DEFAULT: Gateway đồng bộ capability vào catalog. Khi tool, prompt hoặc resource của MCP server thay đổi, cần đồng bộ lại để catalog phản ánh định nghĩa mới.
+	- DYNAMIC: Gateway lấy capability từ MCP server khi có yêu cầu khám phá. Chế độ này có những giới hạn riêng, trong đó tài liệu AWS nêu không tương thích với semantic search và outbound OAuth ba bên (3LO) trong chế độ này.		
+			
+			
+	Đây là một trade-off thực tế: catalog được đồng bộ trước giúp tìm kiếm và quản lý tập trung, trong khi khám phá động phù hợp với một số tình huống cần lấy capability trực tiếp tại thời điểm gọi.		
+		
+		
+		
+		
+# 	6. Áp dụng vào hệ thống quản lý báo cáo công việc	
+		
+	Giả sử bạn xây dựng LINE bot hỗ trợ doanh nghiệp vừa và nhỏ tại Nhật Bản. Hệ thống cần đọc báo cáo, tra cứu tiến độ, cập nhật task và gửi thông báo.	
+		
+		
+		
+
+	LINE Bot / Web App
+		Người dùng gửi yêu cầu
+	Backend API
+		Xác thực người dùng, session, tenant và quyền nghiệp vụ
+
+	AgentCore Runtime
+		Chạy agent loop và điều phối tool use
+
+	AgentCore Gateway
+		Tool catalog, routing và tích hợp xác thực
+
+	Task API / Lambda
+		Aurora PostgreSQL
+
+	Notification API
+		LINE Messaging API		
+			
+			
+
+Một cách chia trách nhiệm hợp lý:
+
+	- Backend API: Xác thực người dùng, quản lý tenant, kiểm soát session và những ràng buộc nghiệp vụ cấp ứng dụng.
+	- AgentCore Runtime: Chạy agent, quản lý vòng lặp suy luận và gọi tool theo quyết định của agent.
+	- AgentCore Gateway: Cung cấp giao diện tool thống nhất, định tuyến tới target và quản lý các cơ chế xác thực tương ứng.
+	- Lambda/API: Thực thi logic nghiệp vụ và kiểm tra đầu vào.
+	- Aurora PostgreSQL: Lưu dữ liệu có cấu trúc, giao dịch và ràng buộc nhất quán.
+	- LINE Messaging API: Gửi thông báo theo quyền và luồng nghiệp vụ đã xác định.
+			
+			
+			
+	Có cần middleware để tránh xung đột database giữa nhiều agent không?
+	Có thể cần, nhưng không phải cứ dùng Gateway là phải có middleware riêng.		
+			
+			
+	Ví dụ, hai agent cùng cập nhật một task. Gateway chỉ giúp chuẩn hóa đường gọi tool; nó không tự tạo transaction chung cho nhiều agent và cũng không tự giải quyết race condition.
+	
+	Các giải pháp cần xem xét tùy nghiệp vụ:
+	- Transaction và constraint ở database.
+	- Optimistic locking bằng version hoặc điều kiện cập nhật.
+	- Idempotency key cho thao tác có thể bị retry.
+	- API nghiệp vụ làm điểm kiểm soát duy nhất cho các lệnh ghi.
+	- SQS hoặc Step Functions khi cần xử lý tuần tự, retry hoặc điều phối workflow dài.
+	
+	Không nên mặc định tuần tự hóa mọi thao tác: điều đó có thể làm giảm throughput không cần thiết. Chỉ khóa hoặc tuần tự hóa những tài nguyên và nghiệp vụ thực sự cần bảo đảm thứ tự.		
+			
+
+# 7. Trade-off trong Production
+
+| Tiêu chí        | Lợi ích của Gateway                                                  | Chi phí hoặc rủi ro                                                               |
+| --------------- | -------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| Security        | Tập trung cấu hình xác thực và credential integration                | Cấu hình sai ở điểm trung tâm có thể ảnh hưởng nhiều tool                         |
+| Maintainability | Chuẩn hóa giao diện và giảm tích hợp lặp lại                         | Phải quản lý target, schema và capability catalog                                 |
+| Scalability     | Dịch vụ được quản lý, giảm nhu cầu tự vận hành gateway server        | Vẫn cần đánh giá quota, throughput và giới hạn dịch vụ                            |
+| Latency         | Có thể giảm số lần kết nối và công việc tích hợp thủ công            | Thêm một hop mạng; discovery, OAuth và downstream call có thể tăng latency        |
+| Cost            | Giảm công sức tự xây dựng, vận hành và bảo mật lớp tích hợp          | Có chi phí dịch vụ và chi phí của target/backend; cần kiểm tra bảng giá hiện hành |
+| Accuracy        | Schema và mô tả tool rõ ràng có thể giúp agent sử dụng tool đúng hơn | Gateway không bảo đảm chất lượng suy luận hay kết quả nghiệp vụ                   |
+
+	Quan điểm thiết kế: Gateway đáng dùng khi bạn có nhiều tool, nhiều agent, nhiều hệ thống đích hoặc yêu cầu quản trị tập trung. Với một agent nội bộ chỉ gọi hai hàm đơn giản, việc thêm một lớp dịch vụ có thể không mang lại đủ lợi ích để bù cho độ phức tạp và latency.
+
+	Không nên chọn Gateway chỉ vì kiến trúc trông hiện đại hơn. Hãy chọn vì bạn thực sự cần chuẩn hóa giao tiếp, quản lý quyền và tích hợp ở quy mô lớn.		
+
+
+# 8. Professional-level exam scenario
+
+Một công ty Nhật Bản xây dựng hệ thống AI hỗ trợ nhân viên tra cứu hóa đơn và quản lý dự án. Công ty có 20 agent chạy trên AgentCore Runtime, 300 tool nằm trong nhiều MCP server và một số API REST nội bộ. Các yêu cầu:
+
+	- Mỗi agent có thể khám phá những tool phù hợp.
+	- Tất cả agent cần sử dụng một điểm truy cập tool thống nhất.
+	- API bên ngoài yêu cầu OAuth; các Lambda nội bộ dùng IAM.
+	- Không được để credential xuất hiện trong prompt.
+	- Khi MCP server bổ sung tool mới, hệ thống cần cập nhật khả năng khám phá tool.
+	- Các thao tác ghi dữ liệu phải tuân thủ quy tắc nghiệp vụ và quyền của người dùng.
+
+
+
+# Exam trap cần ghi nhớ
+
+
+	Bẫy 1 — Có Gateway nghĩa là bảo mật đã hoàn chỉnh
+	Sai. Cần phân biệt inbound authentication, outbound authentication, authorization và business-level access control.
+
+
+	Bẫy 2 — Gateway tự chọn hành động cho agent
+	Sai. Gateway cung cấp và thực thi lớp giao tiếp tool; agent hoặc orchestrator quyết định chiến lược hành động.
+
+
+	Bẫy 3 — Thêm tool vào MCP server là mọi client lập tức thấy tool mới
+	Không phải lúc nào cũng đúng. Với DEFAULT listing, cần chú ý đồng bộ capability catalog khi các định nghĩa thay đổi. DYNAMIC listing có hành vi khác và có những giới hạn riêng.
+
+
+
+# 9. Keywords cần nhớ cho AIP-C01
+
+
+| Keyword                    | Ý nghĩa cần liên tưởng                                             |
+| -------------------------- | ------------------------------------------------------------------ |
+| Unified endpoint           | Một điểm truy cập tập trung cho tool                               |
+| MCP target aggregation     | Tổng hợp nhiều capability MCP                                      |
+| Inbound authorization      | Ai được phép gọi Gateway?                                          |
+| Outbound authorization     | Gateway dùng credential nào để gọi target?                         |
+| Credential provider        | Nguồn và cơ chế cung cấp credential                                |
+| Semantic tool search       | Tìm tool phù hợp theo ý nghĩa                                      |
+| Capability synchronization | Cập nhật catalog tool/prompt/resource                              |
+| Least privilege            | Mỗi danh tính chỉ có quyền cần thiết                               |
+| Backend validation         | Kiểm tra nghiệp vụ không giao phó cho LLM                          |
+| HTTP passthrough           | Chuyển tiếp request thay vì mặc định chuyển mọi thứ thành MCP tool |
+
+
+
+</code></pre>
+</div>
+<div class='nav-bar'><a class='nav-btn' href='lesson68.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../aws-bedrock-agent-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson70.html'>Bài sau ➡️</a></div><button class='theme-toggle-btn' onclick='toggleTheme()'>🌓 Đổi Giao Diện</button>
+</div>
+<script>
+const lessonKey = 'aws-bedrock-agent-learning-list_lesson69.html';
+function toggleTheme() {
+   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';
+   document.body.className = mode;
+   localStorage.setItem('theme', mode);
+}
+function toggleDone() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   if (isDone) {
+       localStorage.removeItem(lessonKey);
+   } else {
+       localStorage.setItem(lessonKey, 'done');
+   }
+   renderDoneStatus();
+}
+function renderDoneStatus() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   let btn = document.getElementById('doneButton');
+   if (isDone) {
+       btn.className = 'done-btn completed';
+       btn.innerText = 'Đã Hoàn Thành ✅';
+   } else {
+       btn.className = 'done-btn';
+       btn.innerText = 'Đánh dấu đã học ⚪';
+   }
+}
+function copyContent() {
+   let text = document.getElementById('lessonCode').innerText;
+   navigator.clipboard.writeText(text).then(function() {
+       alert('✅ Đã sao chép nội dung bài học!');
+   });
+}
+function initLesson() {
+   document.body.className = localStorage.getItem('theme') || 'dark-mode';
+   renderDoneStatus();
+   if (window.Prism) Prism.highlightAll();
+}
+</script></body></html>

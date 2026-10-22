@@ -1,0 +1,255 @@
+<html><head><title>Lesson 22 == Vue $emit ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../vue-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 22 -- Vue $emit -//</h1><pre># Khái niệm 
+	$emit là một phương thức trong Vue.js cho phép component con phát ra (emit) một sự kiện tùy chỉnh để thông báo cho component cha.
+	Component cha có thể lắng nghe sự kiện này và xử lý dữ liệu mà component con gửi lên.
+	
+	
+# 2. Cú pháp cơ bản 
+	Trong component con:
+		this.$emit('event-name', payload);
+
+	event-name: Tên sự kiện tùy chỉnh (ví dụ: 'update', 'delete').
+	payload: Dữ liệu (tùy chọn) được gửi kèm sự kiện đến component cha.
+
+	## Trong component cha (template):
+	<child-component @event-name="handlerFunction"></child-component>
+	@event-name: Lắng nghe sự kiện từ component con.
+	handlerFunction: Hàm trong component cha được gọi khi sự kiện xảy ra, nhận payload làm tham số.
+	
+# 3. Ví dụ cụ thể
+	Giả sử bạn có một component con ButtonCounter đếm số lần nhấp chuột và gửi số đếm lên component cha.
+	
+
+	## Bước 1: Tạo Component Con 
+	
+<script>
+Vue.component('button-counter', {
+  data() {
+    return {
+      count: 0
+    };
+  },
+  template: `
+    <button @click="increment">Click me: {{ count }}</button>
+  `,
+  methods: {
+    increment() {
+      this.count++;
+      this.$emit('update-count', this.count); // Phát sự kiện 'update-count' với dữ liệu count
+    }
+  }
+});
+</script>	
+	Mỗi lần nhấp vào nút, count tăng và component con phát sự kiện update-count với giá trị count.
+	
+	
+	
+	
+	
+	## Bước 2: Sử dụng trong Component Cha 
+<div id="app">
+  <h3>Total clicks: {{ total }}</h3>
+  <button-counter @update-count="updateTotal"></button-counter>
+</div>
+
+<script>
+new Vue({
+  el: '#app',
+  data: {
+    total: 0
+  },
+  methods: {
+    updateTotal(count) {
+      this.total = count; // Cập nhật total dựa trên dữ liệu từ component con
+    }
+  }
+});
+</script>
+
+	Mỗi lần nhấp vào nút trong button-counter, component con gửi giá trị count lên component cha qua sự kiện update-count.
+	Component cha cập nhật total và hiển thị số lần nhấp: "Total clicks: X".
+	
+# 4. Tại sao cần $emit?
+	Giao tiếp một chiều: Vue khuyến khích dữ liệu chảy từ cha xuống con qua props và từ con lên cha qua $emit. Điều này giữ mã dễ hiểu và tránh lỗi.
+	Tái sử dụng: Component con có thể được sử dụng ở nhiều nơi, và component cha quyết định cách xử lý sự kiện.
+	Linh hoạt: $emit cho phép truyền bất kỳ dữ liệu nào (số, chuỗi, object, v.v.) từ con lên cha.
+	
+# 	5. Lưu ý quan trọng
+	Tên sự kiện: Tên sự kiện nên rõ ràng và theo chuẩn kebab-case (ví dụ: update-count, không phải updateCount).
+	
+	Payload: Dữ liệu gửi qua $emit có thể là bất kỳ kiểu dữ liệu nào, nhưng cần được xử lý đúng trong hàm của component cha.
+	
+	Nhiều sự kiện: Một component con có thể phát nhiều sự kiện khác nhau:
+	
+	Không lạm dụng: Chỉ sử dụng $emit khi cần giao tiếp từ con lên cha. Nếu cần truyền dữ liệu từ cha xuống con, hãy dùng props.
+	
+	
+# 6. Ví dụ nâng cao	
+	
+	Gửi nhiều dữ liệu qua $emit:
+		
+<script>
+Vue.component('user-form', {
+  data() {
+    return {
+      name: '',
+      email: ''
+    };
+  },
+  template: `
+    <div>
+      <input v-model="name" placeholder="Name">
+      <input v-model="email" placeholder="Email">
+      <button @click="submit">Submit</button>
+    </div>
+  `,
+  methods: {
+    submit() {
+      this.$emit('user-submitted', { name: this.name, email: this.email });
+    }
+  }
+});
+</script>
+
+<div id="app">
+  <user-form @user-submitted="handleSubmit"></user-form>
+  <p>User: {{ userInfo.name }} - {{ userInfo.email }}</p>
+</div>
+
+<script>
+new Vue({
+  el: '#app',
+  data: {
+    userInfo: { name: '', email: '' }
+  },
+  methods: {
+    handleSubmit(user) {
+      this.userInfo = user; // Cập nhật dữ liệu từ component con
+    }
+  }
+});
+</script>	
+	
+	Component con user-form phát sự kiện user-submitted với một object chứa name và email.
+	Component cha nhận object này và cập nhật userInfo.
+	
+
+# Sử dụng emit trong Vue3 
+
+	## Component con (ChildComponent.vue) 
+<template>
+  <button @click="sendMessage">Send Message</button>
+</template>
+
+<script>
+export default {
+  // Khai báo sự kiện tùy chỉnh
+  emits: ['custom-event'],
+  methods: {
+    sendMessage() {
+      // Phát sự kiện với dữ liệu
+      this.$emit('custom-event', 'Hello from child!');
+    }
+  }
+};
+</script>		
+
+
+	## Component cha (Parent.vue) 
+		
+<template>
+  <div>
+    <ChildComponent @custom-event="handleCustomEvent" />
+    <p>Message from child: {{ message }}</p>
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      message: ''
+    };
+  },
+  methods: {
+    handleCustomEvent(payload) {
+      this.message = payload; // Nhận dữ liệu từ child
+    }
+  }
+};
+</script>
+
+
+# Lưu ý
+	- Khai báo emits: Trong Vue 3, việc khai báo sự kiện trong emits là tùy chọn nhưng được khuyến khích để cải thiện khả năng đọc và debug.
+	- Dữ liệu kèm theo: $emit có thể gửi nhiều tham số, ví dụ: this.$emit('custom-event', param1, param2).
+	- Bảo mật: Đảm bảo dữ liệu gửi qua $emit được xử lý an toàn trong component cha.
+	- Composition API: Trong Composition API, $emit được truy cập qua defineEmits:
+	- defineEmits chỉ được gọi một lần: Trong <script setup>, defineEmits là một macro chỉ được gọi một lần duy nhất để định nghĩa tất cả các sự kiện mà component con có thể phát ra. Bạn không thể gọi defineEmits nhiều lần để tạo các biến emit1, emit2 riêng biệt.
+	- Cú pháp đúng: Tất cả các sự kiện cần được liệt kê trong một mảng duy nhất khi gọi defineEmits. Sau đó, một hàm emit được trả về để phát các sự kiện đã khai báo.
+
+<script setup>
+const emit = defineEmits(['custom-event']);
+function sendMessage() {
+  emit('custom-event', 'Hello from child!');
+}
+</script>
+
+	## Cú pháp đúng trong Composition API 
+	
+	
+		### Component con (ChildComponent.vue)
+		
+<script setup>
+const emit = defineEmits(['custom-event-1', 'custom-event-2']);
+
+function triggerEvent1() {
+  emit('custom-event-1', 'Hello from event 1!');
+}
+
+function triggerEvent2() {
+  emit('custom-event-2', 'Hello from event 2!');
+}
+</script>
+
+<template>
+  <div>
+    <button @click="triggerEvent1">Send Event 1</button>
+    <button @click="triggerEvent2">Send Event 2</button>
+  </div>
+</template>		
+		
+
+
+		### Component cha (Parent.vue)
+		
+<script setup>
+import { ref } from 'vue';
+import ChildComponent from './ChildComponent.vue';
+
+const message1 = ref('');
+const message2 = ref('');
+
+function handleEvent1(payload) {
+  message1.value = payload;
+}
+
+function handleEvent2(payload) {
+  message2.value = payload;
+}
+</script>
+
+<template>
+  <div>
+    <ChildComponent 
+      @custom-event-1="handleEvent1" 
+      @custom-event-2="handleEvent2" 
+    />
+    <p>Event 1: {{ message1 }}</p>
+    <p>Event 2: {{ message2 }}</p>
+  </div>
+</template>
+
+
+
+	
+</pre><a id='backBottom' href='../vue-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

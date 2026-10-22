@@ -1,0 +1,189 @@
+<html><head><title>Lesson 10 == Conditional Rendering ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../react-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 10 -- Conditional Rendering -//</h1><pre>
+# 1. Tổng quan về Conditional Rendering
+
+	Tóm tắt: Trong React, Conditional Rendering cho phép bạn hiển thị các component hoặc nội dung khác nhau dựa trên điều kiện (ví dụ: một biến, prop, hoặc trạng thái). Có ba cách chính để thực hiện: if statement, logical && operator, và ternary operator.
+
+	## Conditional Rendering là gì? 
+		Là kỹ thuật hiển thị giao diện có điều kiện, tương tự như cách bạn sử dụng if hoặc các biểu thức logic trong JavaScript để quyết định hiển thị nội dung nào.
+
+	## Tại sao quan trọng?: 
+		Giúp tạo giao diện động, thay đổi dựa trên dữ liệu hoặc hành động người dùng (ví dụ: hiển thị thông báo đăng nhập khi người dùng chưa đăng nhập).
+		
+		Tăng tính linh hoạt và tương tác của ứng dụng.
+		
+		Đơn giản hóa logic giao diện bằng cách chia nhỏ các trường hợp hiển thị.
+
+	## Nguyên tắc: 
+		JSX không hỗ trợ câu lệnh if trực tiếp trong {} (vì {} chỉ chứa biểu thức).
+
+		Bạn cần sử dụng các kỹ thuật JavaScript như if, &&, hoặc toán tử ternary để điều khiển việc render.
+
+	Quan trọng: Conditional Rendering là một phần không thể thiếu để xây dựng các ứng dụng React tương tác, từ việc hiển thị nội dung động đến xử lý trạng thái người dùng.
+	
+	
+	
+# 2. Phương pháp 1: Sử dụng if Statement
+	Tóm tắt: Sử dụng câu lệnh if bên ngoài JSX để quyết định component nào được render.
+	
+	## Ví dụ: 
+	
+function MissedGoal() {
+  return <h1>MISSED!</h1>;
+}
+
+function MadeGoal() {
+  return <h1>Goal!</h1>;
+}
+
+function Goal(props) {
+  const isGoal = props.isGoal;
+  if (isGoal) {
+    return <MadeGoal />;
+  }
+  return <MissedGoal />;
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<Goal isGoal={false} />);
+
+
+	- Component Goal nhận prop isGoal.
+	- Dùng if để kiểm tra isGoal: nếu true, trả về <MadeGoal />; nếu false, trả về <MissedGoal />.
+	- Kết quả: <h1>MISSED!</h1> (vì isGoal={false}).
+	
+	
+	## Logic phức tạp 
+		Bạn có thể dùng if-else hoặc switch để xử lý nhiều điều kiện
+		
+function Goal(props) {
+  const score = props.score;
+  if (score > 0) {
+    return <MadeGoal />;
+  } else if (score === 0) {
+    return <h1>Tie!</h1>;
+  } else {
+    return <MissedGoal />;
+  }
+}
+
+	Tính linh hoạt: if phù hợp khi bạn cần trả về các component hoàn toàn khác nhau hoặc thực hiện logic trước khi render.
+
+
+
+## 3. Phương pháp 2: Sử dụng Logical && Operator
+
+	Tóm tắt: Sử dụng toán tử && trong JSX để chỉ hiển thị nội dung nếu điều kiện là true
+
+	## Ví dụ 
+
+function Garage(props) {
+  const cars = props.cars;
+  return (
+    <>
+      <h1>Garage</h1>
+      {cars.length > 0 &&
+        <h2>
+          You have {cars.length} cars in your garage.
+        </h2>
+      }
+    </>
+  );
+}
+
+const cars = ['Ford', 'BMW', 'Audi'];
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<Garage cars={cars} />);
+
+
+
+	- cars.length > 0: Kiểm tra điều kiện (nếu mảng cars không rỗng).
+	- Toán tử &&: Nếu điều kiện là true, phần tử sau && được render; nếu false, không render gì.
+	
+	## Ưu điểm: 
+		Ngắn gọn, có thể viết trực tiếp trong JSX.
+		Phù hợp khi chỉ cần hiển thị hoặc ẩn một phần tử.
+	
+	## Nhược điểm
+		Chỉ render khi điều kiện là true, không có trường hợp else.
+	
+		Nguyên lý &&: Trong JavaScript, true && expression trả về expression, còn false && expression trả về false (không render gì trong JSX).
+		
+		Cẩn thận với giá trị falsy: Nếu điều kiện trả về 0, "", hoặc null, JSX sẽ render giá trị đó. Để tránh, chuyển đổi thành boolean:	
+			
+		{Boolean(cars.length) && <h2>You have {cars.length} cars.</h2>}
+	
+	
+# 4. Phương pháp 3: Sử dụng Ternary Operator	
+	Tóm tắt: Sử dụng toán tử ba ngôi (condition ? true : false) trong JSX để chọn giữa hai nội dung dựa trên điều kiện.
+	
+	## Ví dụ:
+	
+function Goal(props) {
+  const isGoal = props.isGoal;
+  return (
+    <>
+      {isGoal ? <MadeGoal /> : <MissedGoal />}
+    </>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<Goal isGoal={false} />);
+
+
+	- isGoal ? <MadeGoal /> : <MissedGoal />: Nếu isGoal là true, render <MadeGoal />; nếu false, render <MissedGoal />.
+	- Kết quả: <h1>MISSED!</h1> (vì isGoal={false}).
+
+# 5. Ví dụ thực tế
+
+// Car.js
+function Car({ name }) {
+  return <li>{name}</li>;
+}
+
+// Garage.js
+function Garage({ cars, isOpen }) {
+  return (
+    <div>
+      <h1>Garage Status: {isOpen ? 'Open' : 'Closed'}</h1>
+      {isOpen && (
+        <>
+          <h2>Cars in Garage</h2>
+          {cars.length > 0 ? (
+            <ul>
+              {cars.map((car, index) => (
+                <Car key={index} name={car} />
+              ))}
+            </ul>
+          ) : (
+            <p>No cars in the garage.</p>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+// index.js
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import Garage from './Garage';
+
+const cars = ['Ford', 'BMW', 'Audi'];
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<Garage cars={cars} isOpen={true} />);
+
+
+# 6. Bài học rút ra
+
+	Conditional Rendering: Hiển thị nội dung dựa trên điều kiện trong React.
+	Phương pháp: 
+		- if Statement: Dùng ngoài JSX, phù hợp với logic phức tạp.
+		- Logical &&: Ngắn gọn, chỉ hiển thị khi điều kiện true.
+		- Ternary Operator: Linh hoạt, chọn giữa hai nội dung trong JSX.
+	
+	Ứng dụng: Tạo giao diện động, như hiển thị thông báo, danh sách, hoặc component khác nhau.
+	
+	
+	
+</pre><a id='backBottom' href='../react-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

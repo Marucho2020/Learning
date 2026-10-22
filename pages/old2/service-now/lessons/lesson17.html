@@ -1,0 +1,168 @@
+<html><head><title>Lesson 17 == Wildcard * ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../service-now-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 17 -- Wildcard * -//</h1><pre>
+	Wildcard = ký tự đại diện *
+
+	👉 Nghĩa là:
+		“áp dụng rule này cho TẤT CẢ field (hoặc nhiều object cùng lúc)”
+
+
+		
+		
+		
+# 	Trong ACL nó xuất hiện ở đâu?
+		
+	Trong field của ACL:
+		Table: incident
+		Field: * ← wildcard
+
+	👉 nghĩa là:
+		incident.*.read
+		→ đọc toàn bộ field của bảng incident		
+				
+			
+		
+#	🔥 3. So sánh cho rõ 
+		
+	##Không wildcard:	
+		incident.short_description.read
+		→ chỉ apply cho field short_description		
+		
+		
+		
+	## Có wildcard: 		
+		incident.*.read
+		→ apply cho mọi field trong incident		
+			
+		
+		
+💣 4. Vấn đề nguy hiểm (đây mới là thứ quan trọng)		
+		
+		
+	Wildcard = scope cực rộng
+
+	👉 nó có thể:
+		override các rule nhỏ hơn
+		gây conflict khó debug		
+			
+		
+		
+		
+# ⚔️ 5. Case thực tế 		
+		
+		
+	Bạn tạo:
+		Rule 1:
+			incident.*.read → allow cho role IT
+		
+		
+		Rule 2:
+			incident.salary.read → deny
+		
+		
+		
+		Kết quả:
+
+		👉 user IT:
+			đọc được mọi thứ ✅
+			nhưng KHÔNG đọc được salary ❌
+
+			→ vì deny field cụ thể thắng		
+		
+		
+# 🧨 6. Sai lầm phổ biến		
+		
+		
+	❌ Junior nghĩ:
+		wildcard = tiện → dùng cho nhanh
+		→ Sai.		
+			
+		
+		
+	❌ Hậu quả:
+		rule chồng chéo
+		không biết rule nào đang apply
+		debug = ác mộng	
+		
+		
+		
+# 🧠 7. Bản chất hệ thống 		
+		
+	Wildcard không phải là “syntax tiện lợi”
+	👉 nó là:
+	“mass rule injection vào toàn bộ field”		
+			
+		
+		
+		
+# 🔬 8. Cách engine hiểu wildcard		
+		
+		
+	incident.*.read	
+		
+		
+	→ internally =	
+		
+		incident.field1.read
+		incident.field2.read
+		incident.field3.read
+		...		
+				
+	👉 tức là nó expand logic ra toàn bộ field	
+		
+		
+# ⚠️ 9. Interaction với thứ khác 
+
+
+	Wildcard sẽ interact với:
+		deny rule
+		field-specific rule
+		parent table ACL
+		👉 tạo ra behavior rất khó đoán nếu không hiểu order
+
+
+
+# 🧠 10. Tư duy senior 
+
+
+	Đừng hỏi:
+		“Wildcard là gì?”
+
+	Hỏi:
+		“Wildcard này đang ảnh hưởng tới bao nhiêu field và rule nào nó override?”
+
+
+
+		
+# 🔥 11. Khi nào nên dùng wildcard 		
+		
+		
+	✔ OK khi:
+		define default rule cho table
+		setup baseline security	
+				
+		
+		
+#🚫 12. Khi KHÔNG nên dùng	
+		
+		❌ Khi:
+
+		có nhiều field sensitive
+		system đã có nhiều ACL
+		team đông người (dễ conflict)		
+				
+		
+		
+# 💥 13. Cách nhớ chuẩn 		
+		
+	* = toàn bộ
+	dùng sai = mở toang cửa hoặc khóa nhầm tất cả		
+		
+		
+		
+# 🚨 14. Kết luận thẳng 		
+		
+	Wildcard giúp nhanh → nhưng mất kiểm soát
+	Là nguyên nhân chính gây bug ACL
+	Không hiểu rõ → đừng dùng		
+		
+		
+</pre><a id='backBottom' href='../service-now-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

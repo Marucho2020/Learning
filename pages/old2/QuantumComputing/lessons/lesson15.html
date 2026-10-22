@@ -1,0 +1,111 @@
+<html><head><title>Lesson 15 == Thuật toán Quantum Fourier Transform (QFT) ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../quantum-computing-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 15 -- Thuật toán Quantum Fourier Transform (QFT) -//</h1><pre>
+# Khái niệm 
+		 là một trong những công cụ mạnh nhất của máy tính lượng tử – là trái tim của Shor’s Algorithm, đóng vai trò quan trọng trong việc phân tích chu kỳ, ước lượng pha, giải hệ phương trình tuần hoàn
+		 
+		QFT = Quantum Fourier Transform 
+
+		→ Là phiên bản lượng tử của Discrete Fourier Transform (DFT) trong xử lý tín hiệu. 
+
+# Định nghĩa toán học 	
+	
+	Nếu đầu vào là trạng thái  
+		∣x⟩=∣x_0 x_1 ... x_n-1 ⟩
+		
+	
+	Thì sau QFT ta có : 
+		
+
+	## ⛳ Mục tiêu: 
+		Biến trạng thái lượng tử |x⟩ thành hình dạng sóng hài hòa, nhấn mạnh chu kỳ, tần số 
+		Dùng để tìm chu kỳ tiềm ẩn, ước lượng pha,... 
+		
+		
+
+# 🧠 II. Trực giác về QFT 
+	
+	❓ Tại sao cần Fourier trong lượng tử?
+	Trong xử lý tín hiệu: Fourier giúp tách tín hiệu thành tần số
+	
+	Trong lượng tử: biên độ cũng là “tín hiệu”
+	
+	QFT cho phép bạn biến đổi biểu diễn lượng tử từ "time domain" sang "frequency domain"
+
+
+# 🌊 Trong ngôn ngữ đơn giản: 
+	Nếu trạng thái lượng tử là tổ hợp chập chờn của nhiều qubit, thì QFT sẽ “làm nổi bật” chu kỳ ẩn trong đó, giống như cách ta dùng FFT để phân tích nhạc ra các nốt nhạc chính. 
+
+# 🏗️ III. Cách thực hiện QFT trên mạch lượng tử 
+	Cho n qubit đầu vào |x⟩ = |x_0x_1...x_{n-1}⟩, ta thực hiện các bước sau:
+		
+	## ⚙️ 1. Áp dụng Hadamard lên qubit đầu tiên 
+		Biến |0⟩ hoặc |1⟩ thành superposition 
+		
+	## ⚙️ 2. Áp dụng Phase shift theo các qubit tiếp theo 
+		Dùng các cổng như: 
+			
+		R_k = [ [1 , 0 ] , [0 ,  e^(2πi/ 2^(k))]]
+
+	## ⚙️ 3. Swap đảo chiều các qubit 
+		Do QFT đảo thứ tự bit → cần swap đầu-cuối
+	
+
+# Ví dụ: QFT cho 3 qubit 
+	Giả sử |x_0x_1x_2⟩
+		1. Hadamard lên x_0 
+		2. Controlled-R₂ giữa x_1 và x_0 
+		3. Controlled-R₃ giữa x_2 và x_0
+		4. Tiếp tục tương tự với x_1, x_2
+		5. Cuối cùng: SWAP(x_0, x_2) để đảo bit 
+		Mỗi qubit phải chịu Hadamard + phase shift từ tất cả qubit phía sau.
+
+
+# Độ phức tạp 
+
+# Ứng dụng thực tế 
+					Classical DFT				Quantum QFT
+
+Số phép toán			O(N^2 )					O(n^2)(với n = log_2N)
+
+			
+Tốc độ					Chậm với N lớn			Cực nhanh với số qubit nhỏ
+	
+→ Đây là lý do tại sao Shor’s Algorithm cực nhanh: dùng QFT để tìm chu kỳ mod N
+
+
+# 🎯 V. Ứng dụng thực tế của QFT 
+	
+Ứng dụng							Vai trò QFT
+Shor’s Algorithm					Tìm chu kỳ hàm 
+Phase Estimation					Tìm trị số eigenvalue ẩn
+Hệ thống lượng tử định kỳ			Giải bài toán tuần hoàn/phân tích chu kỳ
+Solving linear equations			Trong thuật toán Harrow-Hassidim-Lloyd (HHL)
+
+
+
+# VI. Code mô phỏng đơn giản QFT trong Qiskit (Python)
+
+
+		
+		QFTAlgorithmByQiskit.ipynb
+		
+										  ┌───┐   
+q_0: ──────■──────────────────────■───────┤ H ├─X─
+           │                ┌───┐ │P(π/2) └───┘ │ 
+q_1: ──────┼────────■───────┤ H ├─■─────────────┼─
+     ┌───┐ │P(π/4)  │P(π/2) └───┘               │ 
+q_2: ┤ H ├─■────────■───────────────────────────X─
+     └───┘       
+
+
+
+# 🧩 Kết luận 
+	
+Đặc điểm					Ý nghĩa
+QFT là gì?				Biến đổi Fourier trên trạng thái lượng tử
+Ưu thế					Biến trạng thái hỗn hợp → tần số → dễ đo
+Ứng dụng				Phân tích chu kỳ, phase estimation, Shor, HHL
+Tốc độ					Cực nhanh (O(n²) gate) so với cổ điển (O(N log N))
+
+
+
+</pre><a id='backBottom' href='../quantum-computing-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

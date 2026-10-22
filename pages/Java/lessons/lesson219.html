@@ -1,4 +1,37 @@
-<html><head><title>Lesson 219 == thiết kế API dùng generic functional interfaces (汎用関数インターフェース ) ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 219 -- thiết kế API dùng generic functional interfaces (汎用関数インターフェース ) -//</h1><pre>
+<!DOCTYPE html><html lang='vi'><head><meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0'>
+<title>Lesson 219 -- thiết kế API dùng generic functional interfaces (汎用関数インターフェース ) -//</title>
+<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css'>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js'></script>
+<script id='MathJax-script' async src='https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'></script>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; margin: 0; padding: 20px; transition: 0.3s; }
+.dark-mode { background-color: #121212; color: #e0e0e0; }
+.light-mode { background-color: #ffffff; color: #333333; }
+.container { max-width: 950px; margin: auto; }
+h1 { text-align: center; color: #3498db; margin: 20px 0; font-size: 26px; }
+.nav-bar { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 20px 0; }
+.nav-btn { text-decoration: none; padding: 10px 18px; background: #3498db; color: white; border-radius: 6px; font-weight: bold; font-size: 15px; display: inline-block; transition: 0.2s; }
+.nav-btn:hover { background: #2980b9; }
+.nav-btn.home-nav { background: #6c757d; }
+.nav-btn.home-nav:hover { background: #5a6268; }
+.nav-btn.disabled { background: #aaa; cursor: not-allowed; opacity: 0.5; }
+.done-btn { display: block; margin: 15px auto; padding: 10px 24px; border: 2px solid #2ecc71; background: transparent; color: #2ecc71; border-radius: 25px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+.done-btn.completed { background: #2ecc71; color: white; }
+.content-box { position: relative; margin: 20px 0; }
+pre { padding: 20px; border-radius: 8px; white-space: pre-wrap; word-break: break-word; overflow-x: auto; font-family: 'Consolas', 'Courier New', monospace; font-size: 15px; }
+.dark-mode pre { background: #1a1a1a; color: #f8f8f2; border: 1px solid #333; }
+.light-mode pre { background: #f8f9fa; color: #212529; border: 1px solid #e9ecef; }
+.copy-btn { position: absolute; top: 12px; right: 12px; padding: 6px 12px; font-size: 12px; background: #555; color: white; border: none; border-radius: 4px; cursor: pointer; opacity: 0.8; }
+.copy-btn:hover { opacity: 1; background: #2ecc71; }
+.theme-toggle-btn { display: block; margin: 20px auto; padding: 8px 16px; background: transparent; border: 1px solid #888; color: inherit; border-radius: 5px; cursor: pointer; }
+</style></head><body onload='initLesson()'>
+<div class='container'>
+<div class='nav-bar'><a class='nav-btn' href='lesson218.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../java-learning-list.html'>📋 Mục Lục</a><span class='nav-btn disabled'>Hết bài 🏁</span></div><h1>Lesson 219 -- thiết kế API dùng generic functional interfaces (汎用関数インターフェース ) -//</h1>
+<button id='doneButton' class='done-btn' onclick='toggleDone()'>Mark as Done ⚪</button>
+<div class='content-box'>
+<button class='copy-btn' onclick='copyContent()'>📋 Copy nội dung</button>
+<pre><code id='lessonCode'>
 # 🔥 Mục tiêu cấp senior
 
 Khi bạn thiết kế API, bạn không bao giờ hardcode behavior.
@@ -13,8 +46,8 @@ Bạn xuất hiện dưới dạng pipeline và để user truyền vào Functio
 
 	## Junior thường viết API kiểu này: 
 
-public List<User> filterActiveUsers(List<User> users) {
-    List<User> result = new ArrayList<>();
+public List&lt;User&gt; filterActiveUsers(List&lt;User&gt; users) {
+    List&lt;User&gt; result = new ArrayList&lt;&gt;();
     for (User u : users) {
         if (u.isActive()) result.add(u);
     }
@@ -37,7 +70,7 @@ public List<User> filterActiveUsers(List<User> users) {
 	API chỉ nên làm “framework”, còn logic là thứ user tự đưa vào.
 
 
-public <T> List<T> filter(List<T> list, Predicate<T> predicate) {
+public &lt;T&gt; List&lt;T&gt; filter(List&lt;T&gt; list, Predicate&lt;T&gt; predicate) {
     return list.stream().filter(predicate).toList();
 }
 
@@ -46,7 +79,7 @@ public <T> List<T> filter(List<T> list, Predicate<T> predicate) {
 	## User tự inject:
 
 var activeUsers = filter(users, User::isActive);
-var vipUsers    = filter(users, u -> u.getRank() >= 5);
+var vipUsers    = filter(users, u -&gt; u.getRank() &gt;= 5);
 
 
 	API thuần sạch — logic nằm ngoài.
@@ -61,8 +94,8 @@ Cấp độ cao hơn:
 	Expose API theo kiểu pipeline, giống Reactor hoặc Resilience4j.
 
 
-public <T> Function<T, T> withLogging(Function<T, T> fn) {
-    return (t) -> {
+public &lt;T&gt; Function&lt;T, T&gt; withLogging(Function&lt;T, T&gt; fn) {
+    return (t) -&gt; {
         log.info("Input: {}", t);
         var r = fn.apply(t);
         log.info("Output: {}", r);
@@ -77,8 +110,8 @@ public <T> Function<T, T> withLogging(Function<T, T> fn) {
 var pipeline =
         withLogging(
                 withTracing(
-                        withValidation(x -> x > 10,    // predicate
-                                      x -> x * 2)      // function
+                        withValidation(x -&gt; x &gt; 10,    // predicate
+                                      x -&gt; x * 2)      // function
                 )
         );
 
@@ -114,27 +147,27 @@ API chỉ chứa khung (framework).
 
 public class PaymentFlow {
 
-    private Predicate<Payment> fraudCheck = p -> true;
-    private Function<Payment, Payment> discountFn = p -> p;
-    private Consumer<Payment> audit = p -> {};
+    private Predicate&lt;Payment&gt; fraudCheck = p -&gt; true;
+    private Function&lt;Payment, Payment&gt; discountFn = p -&gt; p;
+    private Consumer&lt;Payment&gt; audit = p -&gt; {};
 
-    public PaymentFlow fraud(Predicate<Payment> pred) {
+    public PaymentFlow fraud(Predicate&lt;Payment&gt; pred) {
         this.fraudCheck = pred;
         return this;
     }
 
-    public PaymentFlow discount(Function<Payment, Payment> fn) {
+    public PaymentFlow discount(Function&lt;Payment, Payment&gt; fn) {
         this.discountFn = fn;
         return this;
     }
 
-    public PaymentFlow audit(Consumer<Payment> consumer) {
+    public PaymentFlow audit(Consumer&lt;Payment&gt; consumer) {
         this.audit = consumer;
         return this;
     }
 
-    public Function<Payment, Payment> build() {
-        return (p) -> {
+    public Function&lt;Payment, Payment&gt; build() {
+        return (p) -&gt; {
             if (!fraudCheck.test(p))
                 throw new RuntimeException("Fraud detected");
             var discounted = discountFn.apply(p);
@@ -150,9 +183,9 @@ public class PaymentFlow {
 	## User dùng:
 var pipeline =
     new PaymentFlow()
-        .fraud(p -> p.amount() < 10000)
-        .discount(p -> p.withAmount(p.amount() * 0.9))
-        .audit(p -> logger.info("AUDIT {}", p))
+        .fraud(p -&gt; p.amount() &lt; 10000)
+        .discount(p -&gt; p.withAmount(p.amount() * 0.9))
+        .audit(p -&gt; logger.info("AUDIT {}", p))
         .build();
 
 
@@ -215,4 +248,46 @@ Không subclass, không override, không AOP.
 
 
 
-</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
+</code></pre>
+</div>
+<div class='nav-bar'><a class='nav-btn' href='lesson218.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../java-learning-list.html'>📋 Mục Lục</a><span class='nav-btn disabled'>Hết bài 🏁</span></div><button class='theme-toggle-btn' onclick='toggleTheme()'>🌓 Đổi Giao Diện</button>
+</div>
+<script>
+const lessonKey = 'java-learning-list_lesson219.html';
+function toggleTheme() {
+   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';
+   document.body.className = mode;
+   localStorage.setItem('theme', mode);
+}
+function toggleDone() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   if (isDone) {
+       localStorage.removeItem(lessonKey);
+   } else {
+       localStorage.setItem(lessonKey, 'done');
+   }
+   renderDoneStatus();
+}
+function renderDoneStatus() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   let btn = document.getElementById('doneButton');
+   if (isDone) {
+       btn.className = 'done-btn completed';
+       btn.innerText = 'Đã Hoàn Thành ✅';
+   } else {
+       btn.className = 'done-btn';
+       btn.innerText = 'Đánh dấu đã học ⚪';
+   }
+}
+function copyContent() {
+   let text = document.getElementById('lessonCode').innerText;
+   navigator.clipboard.writeText(text).then(function() {
+       alert('✅ Đã sao chép nội dung bài học!');
+   });
+}
+function initLesson() {
+   document.body.className = localStorage.getItem('theme') || 'dark-mode';
+   renderDoneStatus();
+   if (window.Prism) Prism.highlightAll();
+}
+</script></body></html>

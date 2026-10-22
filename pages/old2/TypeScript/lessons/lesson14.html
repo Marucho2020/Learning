@@ -1,0 +1,209 @@
+<html><head><title>Lesson 14 == TypeScript Generics ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../type-script-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 14 -- TypeScript Generics -//</h1><pre>
+# 1. TypeScript Generics là gì? 
+	Generics (Kiểu chung) trong TypeScript là cách tạo ra các hàm, class, hoặc interface có thể làm việc với nhiều kiểu dữ liệu khác nhau, nhưng vẫn giữ được tính an toàn kiểu (type safety). Thay vì cố định một kiểu cụ thể (như string hay number), bạn sử dụng một placeholder (thường là T) để biểu diễn kiểu, giúp mã tái sử dụng và linh hoạt hơn.
+	
+	Ví dụ: Một hàm trả về giá trị bạn truyền vào: 
+
+function identity<T>(value: T): T {
+  return value;
+}
+
+console.log(identity<string>("Hello")); // Output: Hello (kiểu string)
+console.log(identity<number>(123)); // Output: 123 (kiểu number)
+
+	T là một kiểu chung, cho phép hàm identity hoạt động với bất kỳ kiểu dữ liệu nào.
+	
+ 	
+	
+#	2. Tại sao cần Generics? 
+
+
+		- Tái sử dụng mã: Generics cho phép viết hàm hoặc class hoạt động với nhiều kiểu dữ liệu mà không cần viết lại mã cho từng kiểu.
+		- An toàn kiểu: Không như kiểu any (cho phép mọi kiểu nhưng mất kiểm tra kiểu), generics đảm bảo TypeScript vẫn kiểm tra kiểu chính xác.
+		- Tránh lặp mã: Thay vì viết nhiều hàm tương tự cho string, number, v.v., generics giúp bạn dùng một hàm duy nhất.
+
+
+
+		## Ví dụ không dùng generics (lặp mã):
+
+function identityString(value: string): string {
+  return value;
+}
+function identityNumber(value: number): number {
+  return value;
+}
+
+
+
+		## Dùng generics (gọn hơn): 
+function identity<T>(value: T): T {
+  return value;
+}		
+
+
+# 3. Cú pháp cơ bản của Generics
+	Generics sử dụng ký hiệu <T> (hoặc bất kỳ ký tự nào, như <U>, <K>) để định nghĩa một kiểu chung. T được thay thế bằng kiểu cụ thể khi hàm hoặc class được sử dụng. 
+	
+	## a. Generics trong hàm 
+		
+function getValue<T>(value: T): T {
+  return value;
+}
+
+let str = getValue<string>("Hello"); // T là string
+let num = getValue<number>(42); // T là number
+
+
+	Bạn chỉ định kiểu cụ thể (string, number) khi gọi hàm, hoặc TypeScript sẽ tự suy ra kiểu nếu có thể: 
+	let result = getValue(42); // TypeScript suy ra T là number
+	
+	
+	## b. Generics với nhiều tham số kiểu
+		Bạn có thể dùng nhiều kiểu chung:
+		
+		
+function merge<T, U>(obj1: T, obj2: U): T & U {
+  return { ...obj1, ...obj2 };
+}
+
+let result = merge<{ name: string }, { age: number }>(
+  { name: "Alice" },
+  { age: 25 }
+);
+console.log(result); // Output: { name: "Alice", age: 25 }
+
+
+
+	## c. Generics trong Class 
+class Box<T> {
+  content: T;
+
+  constructor(value: T) {
+    this.content = value;
+  }
+
+  getContent(): T {
+    return this.content;
+  }
+}
+
+let stringBox = new Box<string>("Hello");
+console.log(stringBox.getContent()); // Output: Hello
+
+let numberBox = new Box<number>(123);
+console.log(numberBox.getContent()); // Output: 123		
+
+Class Box có thể chứa bất kỳ kiểu dữ liệu nào (string, number, v.v.) nhờ generics.
+	
+	## d. Generics với Interface
+
+interface Pair<K, V> {
+  key: K;
+  value: V;
+}
+
+let pair: Pair<string, number> = { key: "age", value: 25 };
+console.log(pair); // Output: { key: "age", value: 25 }
+
+	Interface Pair dùng generics để định nghĩa kiểu của key và value.
+
+
+# 4. Ràng buộc Generics (Generic Constraints)
+
+	Đôi khi, bạn muốn giới hạn kiểu mà generics có thể nhận. Sử dụng extends để thêm ràng buộc:
+
+function printLength<T extends { length: number }>(item: T): void {
+  console.log(item.length);
+}
+
+printLength("Hello"); // Output: 5 (string có thuộc tính length)
+printLength([1, 2, 3]); // Output: 3 (array có thuộc tính length)
+printLength(123); // Lỗi: number không có thuộc tính length
+
+	 * T extends { length: number } đảm bảo T phải có thuộc tính length.
+
+
+
+# 5. Default Generic Types
+
+	Bạn có thể đặt kiểu mặc định cho generics:
+
+function identity<T = string>(value: T): T {
+  return value;
+}
+
+console.log(identity("Hello")); // OK, T là string (mặc định)
+console.log(identity<number>(123)); // OK, T là number
+
+
+
+# 6. Hiểu sâu hơn về Generics
+
+	Để hiểu sâu về generics, hãy nghĩ chúng như một cách để viết mã "tổng quát": 
+
+		- Tính linh hoạt: Generics giống như một khuôn mẫu (template) cho phép hàm/class làm việc với bất kỳ kiểu nào, miễn là tuân theo các ràng buộc (nếu có).
+		- So sánh với any: Dùng any làm mất kiểm tra kiểu, còn generics giữ được an toàn kiểu. Ví dụ:
+
+function badIdentity(value: any): any {
+  return value; // Không biết kiểu trả về
+}
+function goodIdentity<T>(value: T): T {
+  return value; // Biết chính xác kiểu trả về
+}
+
+
+		- Ứng dụng thực tế: Generics rất phổ biến trong các thư viện như React (với hooks), Angular, hoặc các cấu trúc dữ liệu như danh sách, hàng đợi, v.v. Ví dụ trong React:
+		
+function useState<T>(initial: T): [T, (newValue: T) => void] {
+  // Logic của useState
+}
+
+ 
+
+		- Nguyên lý thiết kế: Generics lấy cảm hứng từ các ngôn ngữ như Java và C#, nhưng được điều chỉnh để phù hợp với tính linh hoạt của JavaScript. 
+		
+# 7. Cảnh báo khi sử dụng Generics
+
+	- Đừng lạm dụng: Generics mạnh mẽ nhưng có thể làm mã phức tạp nếu dùng quá nhiều hoặc không cần thiết.
+	- Hiểu ràng buộc: Nếu không dùng extends, generics có thể nhận bất kỳ kiểu nào, dẫn đến lỗi runtime nếu bạn giả định sai về kiểu.
+
+function getProperty<T>(obj: T, key: string): any {
+  return obj[key]; // Lỗi: key không chắc chắn tồn tại trên T
+}
+
+	## Giải pháp: Ràng buộc T với keyof:
+function getProperty<T, K extends keyof T>(obj: T, key: K): T[K] {
+  return obj[key];
+}
+
+
+	Hiểu runtime: Generics chỉ tồn tại trong lúc biên dịch. Khi biên dịch thành JavaScript, chúng bị xóa (type erasure), nên không ảnh hưởng đến hiệu suất nhưng cần kiểm tra cẩn thận.
+
+# 8. Mẹo sử dụng Generics hiệu quả
+
+
+	- Dùng tên kiểu rõ ràng: Thay vì chỉ T, dùng tên như TItem, TKey để mã dễ đọc hơn.
+	- Kết hợp với keyof: Để truy cập thuộc tính an toàn: 
+let obj = { name: "Alice", age: 25 };
+let value = getProperty(obj, "name"); // Output: Alice
+
+	- Sử dụng trong thư viện: Khi viết thư viện hoặc hàm tái sử dụng, generics giúp hỗ trợ nhiều kiểu dữ liệu mà vẫn an toàn.
+	
+	- Kiểm tra kiểu: Kết hợp generics với type guard để tăng độ an toàn:
+
+function isArray<T>(value: T | T[]): value is T[] {
+  return Array.isArray(value);
+}
+
+
+
+# 9. Kết luận
+
+
+	- Generics là công cụ mạnh mẽ trong TypeScript để viết mã tái sử dụng, linh hoạt và an toàn kiểu.
+	- Chúng hữu ích trong hàm, class, và interface, đặc biệt khi làm việc với dữ liệu đa dạng (như API, thư viện, hoặc DOM).
+	- Sử dụng ràng buộc (extends) và keyof để kiểm soát chặt chẽ kiểu dữ liệu.
+
+
+
+</pre><a id='backBottom' href='../type-script-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

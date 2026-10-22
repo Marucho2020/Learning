@@ -1,0 +1,118 @@
+<html><head><title>Lesson 56 == opt_expose ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../vue-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 56 -- opt_expose -//</h1><pre># Khái niệm  
+	defineExpose là một macro trong <script setup> của Vue 3, cho phép component con rõ ràng khai báo các thuộc tính hoặc phương thức mà nó muốn public (công khai) để component cha truy cập.
+	Theo mặc định, trong <script setup>, không có gì trong component được tự động công khai cho cha, trừ khi được khai báo qua defineExpose.
+	
+
+# Cách hoạt động
+	Trong <script setup>, bạn gọi defineExpose với một object chứa các thuộc tính, phương thức hoặc giá trị mà bạn muốn component cha có thể truy cập.
+	
+	Component cha có thể sử dụng ref để lấy instance của component con và truy cập các thành phần được khai báo trong defineExpose.
+
+# Ví dụ
+
+<script setup>
+import { ref } from 'vue';
+
+const count = ref(0);
+
+function increment() {
+  count.value++;
+}
+
+// Công khai count và increment cho component cha
+defineExpose({
+  count,
+  increment
+});
+</script>
+
+<template>
+  <div>
+    <p>Count: {{ count }}</p>
+    <button @click="increment">Increment</button>
+  </div>
+</template>	
+	
+	
+	
+	## Component cha (Parent.vue) 
+		
+<script setup>
+import { ref } from 'vue';
+import ChildComponent from './ChildComponent.vue';
+
+// Tạo ref để tham chiếu đến component con
+const childRef = ref(null);
+
+function callChildMethod() {
+  if (childRef.value) {
+    childRef.value.increment(); // Gọi phương thức increment của con
+    console.log(childRef.value.count); // Truy cập count của con
+  }
+}
+</script>
+
+<template>
+  <div>
+    <ChildComponent ref="childRef" />
+    <button @click="callChildMethod">Call Child Method</button>
+  </div>
+</template>	
+	
+	
+	
+# Giải thích 	
+	
+	## 	Component con:
+		- defineExpose({ count, increment }) công khai biến count và phương thức increment để component cha có thể truy cập.
+		- Nếu không có defineExpose, component cha không thể truy cập trực tiếp vào count hoặc increment.
+
+
+
+	## Component cha 
+<script setup>
+import { ref } from 'vue';
+import ChildComponent from './ChildComponent.vue';
+
+// Tạo ref để tham chiếu đến component con
+const childRef = ref(null);
+
+function callChildMethod() {
+  if (childRef.value) {
+    childRef.value.increment(); // Gọi phương thức increment của con
+    console.log(childRef.value.count); // Truy cập count của con
+  }
+}
+</script>
+
+<template>
+  <div>
+    <ChildComponent ref="childRef" />
+    <button @click="callChildMethod">Call Child Method</button>
+  </div>
+</template>		
+
+
+
+	## Giải thích 
+
+		Component con:
+			Trong Options API, sự kiện được khai báo trong mảng emits và sử dụng this.$emit để phát sự kiện.
+			Trong Composition API với <script setup>, sử dụng defineEmits để khai báo sự kiện và nhận một hàm emit để phát sự kiện.
+
+
+		## Component cha 
+			
+			- Lắng nghe sự kiện bằng @custom-event và gán một hàm xử lý (như handleCustomEvent) để nhận dữ liệu từ component con.
+			- Kết quả: Khi nhấn nút trong component con, sự kiện custom-event được phát, component cha nhận dữ liệu và cập nhật giao diện (ví dụ: hiển thị thông điệp).
+
+
+# Lưu ý
+
+	- Khai báo emits: Trong Vue 3, khai báo sự kiện trong emits hoặc defineEmits là khuyến nghị để tăng tính minh bạch và hỗ trợ kiểm tra lỗi.
+	- Dữ liệu payload: $emit có thể gửi nhiều tham số, ví dụ: emit('custom-event', param1, param2).
+	- Bảo mật: Đảm bảo dữ liệu gửi qua $emit được xử lý an toàn trong component cha.
+	- Hiệu suất: Sử dụng $emit hợp lý để tránh phát quá nhiều sự kiện không cần thiết, ảnh hưởng đến hiệu suất.
+
+
+</pre><a id='backBottom' href='../vue-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

@@ -1,0 +1,85 @@
+<html><head><title>Lesson 14 == Thuật toán Simon ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../quantum-computing-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 14 -- Thuật toán Simon -//</h1><pre>
+
+# Khái niệm 
+	Thuật toán Simon là một trong những bằng chứng đầu tiên cho thấy máy tính lượng tử có thể giải bài toán mà máy tính cổ điển không thể giải hiệu quả . 
+	
+✅ 1. Bài toán Simon là gì?
+		Giả sử bạn có một hàm bí ẩn  f: {0,1}ⁿ → {0,1}ⁿ.
+		Nhưng nó có tính chất đặc biệt 
+			Có một chuỗi nhị phân s ≠ 0ⁿ, sao cho: 
+				∀x:f(x)=f(x⊕s) 
+			
+			Nghĩa là: f(x) luôn bằng với f(x XOR s)`.
+			Do đó, mỗi giá trị output xuất hiện hai lần — tại x và x ⊕ s. 
+
+		🎯 Nhiệm vụ: Tìm s. 
+		
+		
+	## Với máy tính cổ điển 
+	Bạn phải thử hàng đống giá trị x, lưu kết quả f(x), và so sánh tìm cặp x1, x2 sao cho f(x1) = f(x2), rồi từ đó suy ra x1 ⊕ x2 = s. 
+		 Trung bình cần  O(2^(n/2)) lần thửu 
+		 
+	
+	## Với máy tính lượng tử (thuật toán Simon )
+		Chỉ cần O(n) lần lặp -> tìm được s  nhanh hơn theo cấp số mũ 
+		
+# ✅ 2. Ý tưởng cốt lõi 
+	Ta sử dụng superposition + interfrence để triệt tiêu tất cả trạng thái vô ích, giữ lại thông tin về s trong qubit 
+	
+
+# 🧠 3. Các bước của thuật toán Simon 
+
+	## Bước 0 : Chuẩn bị hệ thống 
+		Sử dụng 2 thanh ghi (registers): 
+		
+			Thanh ghi x: n qubit đầu 
+			Thanh ghi f(x): n qubit sau
+
+	
+	# Bước 1 : Khởi tạo 
+		Tất cả qubit ở trạng thái:
+			|0⟩^(⊗n) ⊗ |0⟩^(⊗n)
+
+
+	
+	# Bước 2 : Áp dụng Hadamard lên thanh ghi đầu x 
+		Biến  |0⟩^n thành superposition toàn bộ trạng thái x : 
+			
+			1/sqrt(2ⁿ)  ∑​∣x⟩⊗∣0⟩”   
+
+
+	# Bước 3 : Gọi hàm lượng tử Uf(Oracle )
+		Biến  |x⟩|0⟩ → |x⟩|f(x)⟩ 
+			1/sqrt(2ⁿ) ∑∣x⟩∣f(x)⟩
+
+		Vì f(x) = f(x ⊕ s) nên |f(x)⟩ không là cơ sở duy nhất → ta có các cặp x và x⊕s có cùng f(x).
+		
+		
+	# Bước 4 : Đo thanh ghi thứ hai (f(x))	
+		Việc đo khiến hệ thống sụp đổ thành chỉ các trạng thái có cùng f(x) — tức là chỉ còn 2 trạng thái: 
+			1/sqrt(2) (∣x⟩+∣x⊕s⟩) 
+			
+			
+			
+	# Bước 5 : Áp dụng Hadamard lên thanh ghi đầu 
+		Đây là phần quan trọng : Hadamard biến  |x⟩ + |x⊕s⟩ thành tổ hợp sóng có đặc trưng về s. 
+		Sau tính toán , ta thu được một vector y sao cho 
+			y⋅s=0 (mod 2) 
+		=> y là vector vuông góc (mod 2) với s. 
+
+		
+			
+	# Bước 6 : Lặp lại khoảng n lần 
+		Mỗi lần đo, bạn có một phương trình tuyến tính  
+			y ^(i)⋅s=0
+		=> Sau khoảng n lần, bạn có hệ đủ phương trình tuyến tính mod 2 để giải s bằng phương pháp Gaussian elimination (mod 2).	
+			
+# Ứng dụng  
+	
+Simon là bài toán nhân tạo, không có ứng dụng thực tế, nhưng:
+	Là động lực trực tiếp dẫn đến Shor’s Algorithm
+	Là bằng chứng đầu tiên cho Quantum Supremacy (1994)
+
+
+			
+</pre><a id='backBottom' href='../quantum-computing-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

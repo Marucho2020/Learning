@@ -1,0 +1,252 @@
+<html><head><title>Lesson 37 == useMemo ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../react-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 37 -- useMemo -//</h1><pre>
+# Giới Thiệu Về Hook useMemo Trong React (Mức Độ Senior) 
+	useMemo là một hook quan trọng trong React, được giới thiệu từ phiên bản 16.8, dùng để memoize (lưu cache) các giá trị tính toán, giúp tránh việc recalculate không cần thiết trong mỗi render. Điều này cải thiện performance bằng cách giảm computations nặng nề, đặc biệt trong các component với dữ liệu phức tạp hoặc child components memoized. Ở mức độ senior, chúng ta cần hiểu sâu về memoization mechanism dựa trên dependencies, cách hook tích hợp với reconciliation process của React, xử lý stale values trong closures, và tối ưu hóa trong scenarios như large datasets, virtualization, hoặc SSR (Server-Side Rendering). Memoization ở đây dựa trên shallow compare của dependency array, giúp stable references cho values như objects/arrays, tránh unnecessary re-renders.	
+	
+	
+# 	1. Cơ Chế Hoạt Động Nội Bộ Của useMemo
+	Định nghĩa cơ bản: useMemo(computeFunction, dependencies) nhận một function compute (trả về value cần memoize) và mảng dependencies, trả về value memoized. Compute chỉ chạy khi deps thay đổi (shallow compare: === cho primitives, reference cho objects). Nếu deps là [], compute chạy chỉ lần đầu (mount).	
+	
+	Memoization và Performance: React lưu cache value trong fiber node, so sánh deps trong render phase. Nếu deps không đổi, return cached value, tránh re-compute. Điều này giảm CPU usage cho heavy ops như sorting large arrays, filtering, hoặc complex calculations.	
+	
+	
+	## 	So sánh với useCallback:
+	useMemo: Memoize bất kỳ value (số, object, array, etc.), dùng cho computations trả về data.
+	
+	useCallback: Memoize function (callback), tương đương useMemo(() => fn, deps). Dùng khi cần stable function reference (props, deps).
+	
+	Khác biệt: useMemo chạy compute và cache result; useCallback cache function mà không chạy nó ngay. Cả hai đều giúp stable props để tránh re-render child với React.memo.
+	
+
+	## 	Lifecycle:
+		Compute chạy sync trong render (trước DOM paint), nên tránh blocking ops (dùng Web Workers nếu cần). Cache persist qua renders, reset khi deps đổi hoặc unmount.
+
+	## Pitfalls chuyên sâu: 
+	
+		- Missing deps: Quên dep gây stale values (compute capture old closures).
+		- Over-memoization: Memoize simple values gây overhead (allocation cost > lợi ích).
+		- Mutable returns: Nếu return mutable object và mutate nó, gây bugs (luôn return immutable).
+		- Infinite loops: Nếu dep bao gồm value từ compute, gây loop.
+		- SSR considerations: Compute chạy trên server, đảm bảo deterministic (không random).	
+	
+# 	Ví dụ cơ bản
+	Sửa vấn đề performance với expensive calculation.
+	
+// Không useMemo - vấn đề
+import { useState } from 'react';
+
+function App() {
+  const [count, setCount] = useState(0);
+  const [todos, setTodos] = useState([]);
+
+  const calculation = expensiveCalculation(count); // Chạy mỗi render, gây lag khi addTodo
+
+  const increment = () => setCount(c => c + 1);
+  const addTodo = () => setTodos(t => [...t, 'New Todo']);
+
+  return (
+    <div>
+      <h2>My Todos</h2>
+      {todos.map((todo, index) => <p key={index}>{todo}</p>)}
+      <button onClick={addTodo}>Add Todo</button>
+      <hr />
+      Count: {count} <button onClick={increment}>+</button>
+      <h2>Expensive Calculation: {calculation}</h2>
+    </div>
+  );
+}
+
+const expensiveCalculation = (num) => {
+  console.log('Calculating...'); // Log mỗi render
+  let result = num;
+  for (let i = 0; i < 1000000000; i++) {
+    result += 1;
+  }
+  return result;
+};	
+	
+	Giải thích: Khi addTodo, component re-render, expensiveCalculation chạy lại dù không liên quan đến todos, gây delay.
+	
+	## Giải pháp với useMemo:
+	
+import { useState, useMemo } from 'react';
+
+function App() {
+  const [count, setCount] = useState(0);
+  const [todos, setTodos] = useState([]);
+
+  const calculation = useMemo(() => {
+    try {
+      return expensiveCalculation(count);
+    } catch (error) {
+      console.error('Calculation error:', error);
+      return 0; // Fallback
+    }
+  }, [count]); // Chỉ re-compute khi count đổi
+
+  const increment = () => setCount(c => c + 1);
+  const addTodo = () => setTodos(t => [...t, 'New Todo']);
+
+  return (
+    <div>
+      <h2>My Todos</h2>
+      {todos.map((todo, index) => <p key={index}>{todo}</p>)}
+      <button onClick={addTodo}>Add Todo</button>
+      <hr />
+      Count: {count} <button onClick={increment}>+</button>
+      <h2>Expensive Calculation: {calculation}</h2>
+    </div>
+  );
+}
+
+const expensiveCalculation = (num) => {
+  console.log('Calculating...');
+  let result = num;
+  for (let i = 0; i < 1000000000; i++) {
+    result += 1;
+  }
+  return result;
+};	
+	
+	Giải thích: useMemo cache result, chỉ chạy khi count đổi. AddTodo không trigger re-compute, cải thiện speed.	
+	
+	
+	
+# 	2. Use Case Nâng Cao: Memoize Objects/Arrays Để Stable Props
+
+	Dùng để stable complex data, tránh re-render child.
+	Ví dụ: Filtered List Với Large Data:
+
+import { useState, useMemo, memo } from 'react';
+
+const Item = memo(({ item }) => {
+  console.log(`Render ${item.name}`); // Heavy render giả lập
+  return <li>{item.name} - {item.price}</li>;
+});
+
+function ProductList() {
+  const [filter, setFilter] = useState('');
+  const products = useMemo(() => Array.from({ length: 1000 }, (_, i) => ({ id: i, name: `Product ${i}`, price: i * 10 })), []); // Memoize large array
+
+  const filteredProducts = useMemo(() => {
+    return products.filter(product => product.name.toLowerCase().includes(filter.toLowerCase()));
+  }, [products, filter]); // Re-compute chỉ khi filter/products đổi
+
+  return (
+    <>
+      <input value={filter} onChange={e => setFilter(e.target.value)} placeholder="Lọc sản phẩm..." />
+      <ul>
+        {filteredProducts.map(product => <Item key={product.id} item={product} />)}
+      </ul>
+    </>
+  );
+}
+
+
+# 3. Use Case Nâng Cao: Tích Hợp Với useEffect Và API Data
+
+	Dùng để derive state từ fetched data, tránh re-compute trong effect
+	Ví dụ: Process API Data Với Memoization:
+	
+	
+	import { useState, useEffect, useMemo } from 'react';
+
+function DataProcessor() {
+  const [data, setData] = useState([]);
+  const [sortBy, setSortBy] = useState('name');
+
+  useEffect(() => {
+    fetch('https://jsonplaceholder.typicode.com/users')
+      .then(res => res.json())
+      .then(setData);
+  }, []);
+
+  const sortedData = useMemo(() => {
+    console.log('Sorting data...');
+    return [...data].sort((a, b) => a[sortBy].localeCompare(b[sortBy]));
+  }, [data, sortBy]); // Re-sort chỉ khi data/sortBy đổi
+
+  return (
+    <>
+      <select value={sortBy} onChange={e => setSortBy(e.target.value)}>
+        <option value="name">Name</option>
+        <option value="email">Email</option>
+      </select>
+      <ul>
+        {sortedData.map(user => <li key={user.id}>{user.name} - {user.email}</li>)}
+      </ul>
+    </>
+  );
+}
+
+
+
+# 4. Use Case Nâng Cao: Custom Hooks Với useMemo
+
+	Encapsulate memo logic reusable.
+
+import { useMemo } from 'react';
+
+function useFilteredData(data, filter) {
+  return useMemo(() => {
+    if (!data) return [];
+    return data.filter(item => item.toLowerCase().includes(filter.toLowerCase()));
+  }, [data, filter]); // Memoize filter
+}
+
+function SearchComponent() {
+  const [filter, setFilter] = useState('');
+  const items = ['Apple', 'Banana', 'Cherry', 'Date'];
+  const filtered = useFilteredData(items, filter);
+
+  return (
+    <>
+      <input value={filter} onChange={e => setFilter(e.target.value)} />
+      <ul>{filtered.map((item, idx) => <li key={idx}>{item}</li>)}</ul>
+    </>
+  );
+}
+
+
+
+
+# 5. Use Case Nâng Cao: Memoize Trong Context Để Giảm Re-Renders
+	Dùng cho value trong Provider, stable context.
+	Ví dụ: Theme Context Với Computed Styles:
+
+import { createContext, useContext, useState, useMemo } from 'react';
+
+const ThemeContext = createContext();
+
+function ThemeProvider({ children }) {
+  const [theme, setTheme] = useState('light');
+
+  const themeStyles = useMemo(() => ({
+    background: theme === 'light' ? 'white' : 'black',
+    color: theme === 'light' ? 'black' : 'white',
+    // Expensive computations here, e.g., generate CSS vars
+  }), [theme]); // Memoize object
+
+  return (
+    <ThemeContext.Provider value={{ theme, setTheme, styles: themeStyles }}>
+      {children}
+    </ThemeContext.Provider>
+  );
+}
+
+function ThemedComponent() {
+  const { styles } = useContext(ThemeContext);
+  return <div style={styles}>Themed Content</div>;
+}
+
+// App.js
+function App() {
+  return (
+    <ThemeProvider>
+      <ThemedComponent />
+    </ThemeProvider>
+  );
+}
+
+
+
+</pre><a id='backBottom' href='../react-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

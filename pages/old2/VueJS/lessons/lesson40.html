@@ -1,0 +1,116 @@
+<html><head><title>Lesson 40 == Vue.use , app.use() ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../vue-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 40 -- Vue.use , app.use() -//</h1><pre>
+# Khái niệm 
+	Vue.use(VueRouter) là phương thức được sử dụng trong Vue 2 để cài đặt và kích hoạt plugin Vue Router trong ứng dụng Vue. Phương thức Vue.use() là một API của Vue.js dùng để đăng ký các plugin (như Vue Router, Vuex) để tích hợp chúng với Vue.
+	
+# 	Cách hoạt động: 
+
+	Khi gọi Vue.use(VueRouter), Vue Router được đăng ký toàn cục, cho phép các component trong ứng dụng sử dụng các tính năng của router (như <router-link>, <router-view>, hoặc $router).
+	Vue Router sẽ thêm các thuộc tính và phương thức vào instance Vue, ví dụ:
+	$router: Đối tượng router để điều hướng (như $router.push('/home')).
+	$route: Đối tượng chứa thông tin về route hiện tại (như $route.params).
+
+# Ví dụ trong Vue 2 
+	
+import Vue from 'vue';
+import VueRouter from 'vue-router';
+import App from './App.vue';
+
+Vue.use(VueRouter); // Đăng ký Vue Router
+
+const routes = [
+  { path: '/home', component: Home }
+];
+
+const router = new VueRouter({
+  routes
+});
+
+new Vue({
+  router,
+  render: h => h(App)
+}).$mount('#app');
+
+	Vue.use(VueRouter) đảm bảo Vue Router hoạt động trong toàn ứng dụng.
+	
+	
+# 	Vue 3 khác như thế nào?
+	
+	Trong Vue 3, Vue.use() không còn được sử dụng để đăng ký Vue Router. Thay vào đó, bạn sử dụng phương thức app.use() trên instance của ứng dụng Vue được tạo bằng createApp.
+	
+	## Ví dụ trong Vue 3:
+	
+import { createApp } from 'vue';
+import App from './App.vue';
+import { createRouter, createWebHistory } from 'vue-router';
+
+const routes = [
+  { path: '/home', component: Home }
+];
+
+const router = createRouter({
+  history: createWebHistory(),
+  routes
+});
+
+const app = createApp(App);
+app.use(router); // Đăng ký router
+app.mount('#app');	
+	
+	
+# 	Khác biệt: 
+	
+	Vue 2: Vue.use(VueRouter) là toàn cục, áp dụng cho mọi instance Vue.
+	Vue 3: app.use(router) chỉ áp dụng cho instance ứng dụng cụ thể (app), cho phép nhiều ứng dụng Vue trong cùng một trang có router riêng.
+	
+
+
+
+#  Biến const routes = [...] có bắt buộc phải là routes không?
+	Không bắt buộc phải đặt tên là routes. Tên biến routes chỉ là một tên biến JavaScript thông thường, bạn có thể đặt bất kỳ tên nào miễn là bạn sử dụng tên đó nhất quán khi truyền vào createRouter (Vue 3) hoặc new VueRouter (Vue 2).
+	
+	## Yêu cầu bắt buộc: 
+		- Biến phải là một mảng chứa các route objects.
+		- Mỗi route object phải có ít nhất hai thuộc tính chính:
+		- path: Đường dẫn URL (ví dụ: /user/:id).
+		- component: Component sẽ render khi URL khớp với path.
+		- Cấu trúc của route object là quan trọng, không phải tên biến.
+
+
+	## Ví dụ với tên biến khác
+import { createRouter, createWebHistory } from 'vue-router';
+import User from './components/User.vue';
+
+const myCustomRoutes = [ // Đặt tên khác routes
+  { path: '/user/:id', component: User }
+];
+
+const router = createRouter({
+  history: createWebHistory(),
+  routes: myCustomRoutes // Truyền biến vào
+});
+
+export default router;	
+	
+	Giải thích:
+		- Biến myCustomRoutes thay cho routes, nhưng vẫn hoạt động vì nó là mảng chứa các route objects với path và component.
+		- Khi khởi tạo router, bạn truyền biến này vào thuộc tính routes của createRouter. Thuộc tính này yêu cầu tên là routes, nhưng tên biến JavaScript (như myCustomRoutes) thì tùy ý.
+	
+	
+	
+	## 	Cấu trúc Route Object 
+{
+  path: '/user/:id', // Đường dẫn, có thể chứa tham số động (:id)
+  component: User, // Component tương ứng
+  // Các thuộc tính tùy chọn khác
+  name: 'user', // Tên route
+  props: true, // Truyền params làm props
+  children: [...] // Route lồng nhau
+}		
+	
+		- Bắt buộc: path và component.
+		- Không phải router: Route object không phải là "biến router". Nó chỉ là một mô tả tuyến đường (route definition) được Vue Router sử dụng để ánh xạ URL với component.
+
+
+
+
+</pre><a id='backBottom' href='../vue-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

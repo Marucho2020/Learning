@@ -1,0 +1,157 @@
+<html><head><title>Lesson 17 == null và Undefine ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../type-script-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 17 -- null và Undefine -//</h1><pre># Khái niệm 
+	- null: Biểu thị một giá trị không tồn tại hoặc rỗng, thường được gán chủ động để chỉ rằng một biến không có giá trị hợp lệ.
+	
+	- undefined: Biểu thị một biến chưa được khởi tạo hoặc không có giá trị được gán.
+
+	Cả null và undefined đều là các kiểu dữ liệu nguyên thủy trong JavaScript, và TypeScript sử dụng chúng để tăng tính an toàn khi làm việc với các giá trị có thể không tồn tại.
+
+	let a: null = null; // Biến a chỉ có thể là null
+	let b: undefined = undefined; // Biến b chỉ có thể là undefined
+	let c: string | null = "Hello"; // c có thể là string hoặc null
+	c = null; // OK
+	c = undefined; // Lỗi: Type 'undefined' is not assignable to type 'string | null'
+
+
+
+# 2. Tại sao cần Null và Undefined? 
+
+
+		- Mô tả thực tế: Trong ứng dụng thực tế, nhiều giá trị có thể không tồn tại (ví dụ: dữ liệu từ API trả về null, hoặc một biến chưa được gán giá trị).
+		- An toàn kiểu: TypeScript yêu cầu khai báo rõ ràng liệu một biến có thể là null hoặc undefined, giúp phát hiện lỗi sớm trong quá trình biên dịch.
+		- Xử lý trường hợp biên (edge cases): Đảm bảo mã xử lý an toàn các tình huống khi giá trị không tồn tại, tránh lỗi runtime như Cannot read property of null.
+
+
+# 3. Cách sử dụng Null và Undefined trong TypeScript
+
+
+	## a. Khai báo kiểu với null và undefined
+		TypeScript cho phép bạn chỉ định rằng một biến có thể nhận giá trị null hoặc undefined bằng union types:
+		
+let name: string | null = "Alice";
+name = null; // OK
+name = undefined; // Lỗi: Type 'undefined' is not assignable to type 'string | null'
+
+let value: string | undefined = "Hello";
+value = undefined; // OK
+value = null; // Lỗi: Type 'null' is not assignable to type 'string | undefined'	
+		
+		Lưu ý: Mặc định, TypeScript không cho phép gán null hoặc undefined trừ khi bạn khai báo rõ ràng trong kiểu.
+		
+	## b. Strict Null Checks
+		TypeScript có tùy chọn strictNullChecks trong file tsconfig.json. Khi bật (true), bạn phải khai báo rõ ràng null hoặc undefined trong kiểu của biến:
+
+// tsconfig.json: { "strictNullChecks": true }
+let name: string = "Alice";
+name = null; // Lỗi: Type 'null' is not assignable to type 'string'
+
+		Khi tắt strictNullChecks, TypeScript cho phép gán null hoặc undefined cho bất kỳ kiểu nào, làm giảm tính an toàn kiểu.
+		Khuyến nghị: Luôn bật strictNullChecks để tận dụng tối đa an toàn kiểu của TypeScript.
+
+	## c. Kiểm tra Null/Undefined
+		Để xử lý null hoặc undefined an toàn, bạn có thể dùng các kỹ thuật sau:
+		
+			### 
+			Optional Chaining (?.):
+
+interface Person {
+  name: string;
+  address?: { street: string };
+}
+
+const person: Person = { name: "Alice" };
+console.log(person.address?.street); // undefined, không lỗi
+
+
+
+			### Type Guard:
+	
+function printName(name: string | null) {
+  if (name === null) {
+    console.log("No name provided");
+    return;
+  }
+  console.log(name.toUpperCase()); // TypeScript biết name là string
+}	
+	
+	
+			### Non-null Assertion Operator (!)
+				Dùng khi bạn chắc chắn giá trị không phải null hoặc undefined.
+	
+let element = document.getElementById("myElement")!; // TypeScript tin rằng element không null
+console.log(element.innerText);  
+
+			Cảnh báo: Dùng ! cẩn thận, vì nếu giá trị thực sự là null hoặc undefined, sẽ gây lỗi runtime.
+			
+			
+			### d. Null vs. Undefined 
+				null: Thường được gán chủ động để biểu thị "giá trị rỗng" (ví dụ: API trả về null khi không có dữ liệu).
+				
+				undefined: Thường xuất hiện khi biến chưa được gán hoặc thuộc tính không tồn tại.
+			
+			Trong thực tế:
+				- Dùng null khi bạn muốn biểu thị một giá trị rỗng có ý nghĩa.
+				- Dùng undefined khi giá trị chưa được xác định hoặc không tồn tại.
+			
+# 4. Hiểu sâu hơn về Null và Undefined			
+			
+			
+	## 	So sánh với JavaScript:
+		
+		- Trong JavaScript, null và undefined đều có thể xuất hiện mà không cần khai báo trước, dẫn đến lỗi runtime dễ xảy ra (như TypeError: Cannot read property of undefined).
+		
+		- TypeScript ép bạn phải khai báo rõ ràng null hoặc undefined (khi strictNullChecks bật), giúp phát hiện lỗi sớm.
+	
+		
+	## 	Tích hợp với TypeScript
+		
+		- null và undefined thường được dùng trong union types để mô tả các giá trị có thể không tồn tại.
+		
+		- Kết hợp với các Utility Types như NonNullable<T> để loại bỏ null và undefined:
+
+type MaybeString = string | null | undefined;
+type DefinitelyString = NonNullable<MaybeString>; // string
+
+	
+# Ứng dụng thực tế		
+			
+	API Handling: Dữ liệu từ API thường trả về null khi không có kết quả:
+	
+interface User {
+  name: string | null;
+  age: number | null;
+}
+
+async function fetchUser(): Promise<User> {
+  const response = await fetch('/api/user');
+  return response.json();
+}
+
+
+	DOM Manipulation: Các phương thức như document.getElementById trả về HTMLElement | null, yêu cầu kiểm tra hoặc ép kiểu:
+
+const element = document.getElementById("myElement") as HTMLElement | null;
+if (element) {
+  element.innerText = "Hello";
+}
+
+
+# Nguyên lý thiết kế:
+
+	- TypeScript khuyến khích xử lý rõ ràng các giá trị null và undefined để tránh các lỗi phổ biến trong JavaScript.
+	
+	- strictNullChecks là một phần của triết lý "an toàn kiểu" của TypeScript, buộc lập trình viên cân nhắc các trường hợp biên.
+
+# 5. Cảnh báo khi sử dụng Null và Undefined
+
+
+	- Tránh lạm dụng !: Non-null assertion (!) có thể gây lỗi runtime nếu giá trị thực sự là null hoặc undefined.
+
+let element = document.getElementById("myElement")!;
+element.innerText = "Hello"; // Lỗi runtime nếu element không tồn tại
+
+
+	- Kiểm tra cẩn thận: Luôn dùng if, optional chaining (?.), hoặc type guard để xử lý null/undefined an toàn.
+	- Hiểu sự khác biệt: null và undefined không giống nhau. Dùng sai ngữ cảnh có thể gây nhầm lẫn (ví dụ, gán null khi lẽ ra là undefined).
+
+
+</pre><a id='backBottom' href='../type-script-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

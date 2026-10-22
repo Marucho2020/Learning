@@ -1,0 +1,103 @@
+<html><head><title>Lesson 17 == FORMS ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../angular-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 17 -- FORMS -//</h1><pre>
+# Khái niệm 
+	Hiểu cách AngularJS quản lý Form, Validation, và trạng thái của input một cách tự động mà không cần viết JavaScript thuần.
+
+
+# 🔹 1. Tạo Form trong AngularJS 
+	
+<form name="myForm">
+  <input name="myInput" ng-model="myInput" required>
+</form>
+<p>Valid: {{myForm.myInput.$valid}}</p>
+
+	📌 Giải thích:
+
+		myForm: tên form (giống như biến trong controller)
+		myInput: tên field trong form
+		ng-model="...": liên kết dữ liệu giữa input và controller
+		required: bắt buộc phải nhập
+
+	👉 myForm.myInput.$valid trả về true hoặc false — AngularJS tự kiểm tra!
+	
+	
+	
+# 	🧠 2. Các trạng thái AngularJS theo dõi trong form 
+	AngularJS tự động tạo các thuộc tính (properties) để kiểm tra trạng thái của field:
+	
+| Thuộc tính   | Ý nghĩa                                                       |
+| ------------ | ------------------------------------------------------------- |
+| `$pristine`  | Chưa từng bị thay đổi                                         |
+| `$dirty`     | Đã từng thay đổi                                              |
+| `$touched`   | Đã từng được focus rồi blur                                   |
+| `$untouched` | Chưa bị focus lần nào                                         |
+| `$valid`     | Dữ liệu đúng (thỏa điều kiện như `required`, `minlength`,...) |
+| `$invalid`   | Dữ liệu sai                                                   |
+| `$submitted` | Form đã được submit                                           |
+	
+	
+	📌 Những thuộc tính này rất quan trọng khi bạn cần:
+
+		Đổi màu input khi lỗi
+		Disable nút Submit
+		Hiện lỗi khi người dùng rời input mà chưa nhập
+	
+	
+	
+# 	🔧 3. Hiển thị lỗi đơn giản
+	
+<form name="myForm">
+  <input name="myInput" ng-model="myInput" required>
+  <span ng-show="myForm.myInput.$touched && myForm.myInput.$invalid">Phải nhập nội dung</span>
+</form>
+
+	📌 ng-show chỉ hiện khi:
+	
+		Input đã được touch (đã click vào và blur)
+		Và nội dung invalid
+	
+	→ UX tốt: không hiện lỗi ngay từ đầu, chỉ hiện khi người dùng đã tương tác.	
+		
+	
+# 	💡 4. Điều kiện disable nút Submit
+	
+<form name="myForm">
+  <input name="username" ng-model="username" required>
+  <button ng-disabled="myForm.$invalid">Đăng ký</button>
+</form>
+	
+📌 Nếu form chưa hợp lệ, nút bị disable		
+	
+	
+	
+# 🧪 5. Góc nhìn thực tế trong dự án Nhật: 
+
+| Tình huống                            | Cách xử lý với AngularJS Form                                           |
+| ------------------------------------- | ----------------------------------------------------------------------- |
+| Form đăng ký tài khoản                | Kiểm tra từng input có `$touched` + `$invalid` để hiện lỗi              |
+| Disable nút “Tìm kiếm” nếu input rỗng | `ng-disabled="form.searchInput.$invalid"`                               |
+| Submit form → gọi API tìm kiếm        | Dùng `ng-submit="search()"` để gom dữ liệu từ `ng-model`                |
+| Highlight input lỗi                   | Dùng `ng-class="{'error': form.field.$invalid && form.field.$touched}"` |
+	
+
+
+# 🚫 Anti-pattern (cần tránh) 
+
+| Sai lầm thường gặp                 | Cách làm đúng                                          |
+| ---------------------------------- | ------------------------------------------------------ |
+| Gắn `onclick="validate()"`         | Dùng `ng-submit`, `ng-change` hoặc binding `$valid`    |
+| Ẩn/hiện lỗi bằng JS thuần          | Dùng `ng-show`, `ng-if` kết hợp `$touched`, `$invalid` |
+| Không kiểm tra `$valid` khi submit | Luôn kiểm tra `$invalid` trước khi gọi API             |
+
+
+# ✅ Tổng kết kiến thức quan trọng
+
+| Tính năng                        | Tác dụng                                |
+| -------------------------------- | --------------------------------------- |
+| `ng-model`                       | Binding dữ liệu từ input tới controller |
+| `name="..."` trong form          | Cho phép AngularJS quản lý từng field   |
+| `$valid`, `$invalid`, `$touched` | Cho biết trạng thái input               |
+| `ng-disabled`, `ng-show`         | Kết hợp trạng thái để điều khiển UI     |
+| `ng-submit="..."`                | Bắt event submit form đúng cách         |
+
+
+</pre><a id='backBottom' href='../angular-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

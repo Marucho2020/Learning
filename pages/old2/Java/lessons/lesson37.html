@@ -1,0 +1,145 @@
+<html><head><title>Lesson 37 == ArrayBlockingQueue ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 37 -- ArrayBlockingQueue -//</h1><pre># 1. Khái niệm  
+	Array BlockingQueue là một trong những cài đặt phổ biến của BlockingQueue trong Java. Nó rất quan trọng trong việc quản lý luồng dữ liệu trong các ứng dụng đa luồng, đặc biệt khi làm việc với bài toán Producer-Comsumer(Nhà sản xuất và người tiêu dùng )
+	
+	ArrayBlockingQueue là một hàn đợi(queue) tuần tự, có kích thước cố định được cài đặt dựa trên mảng array. Khi bạn tạo một đối tượng ArrayBlockingQueue, bạn phải chỉ định dung lượng tối đa của nó ngay từ đầu. Điều này có nghĩa là nó không thể mở rộng hoặc thu hẹp kích thước sau khi đã được khởi tạo. 
+	
+# 2. Đặc điểm của ArrayBlockingQueue 
+	## 1. Kích thước cố định : 
+	Dung lượng của hàng đợi được xác định khi tạo, và không thể thay đổi sau đó. 
+	
+	#Hỗ trợ đồng bộ hóa 
+		- Hàng đợi sử dụng cơ chế khóa(lock) để đảm bảo an toàn khi truy cập trong môi trường đa luồng 
+		- Khi một luồng thực hiện thao tác thêm(put) hoặc lấy (take), các luồng khác sẽ bị chặn cho đến khi thao tác hoàn tất. 
+		
+	## FIFO 
+		- Các phần tử được xử lý theo thứ tự chúng được thêm vào hàng đợi 
+		
+	# Hai khóa : (Two-lock queue)
+		ArrayBlockingQueue sử dụng hai loại khóa để đông bộ hóa:
+			Một cho thao tác thêm phần tử(enqueue)
+			Một cho thao tác lấy phần tử(dequeue)
+	# Hỗ trợ chặn (Blocking )
+		- Nếu hàng đợi đầy, các luồng cố gắng thêm phần tử sẽ bị chặn cho đến khi có không gian trống. 
+		- Nếu hàng đợi rỗng, các luồng cố gắng lấy phần tử sẽ bị chặn cho đến khi có phần tử được thêm vào 
+
+
+# 3.Các phương thức quan trọng của ArrayBlockingQueue 
+
+	offer(E e)               : Cố gắng thêm phần tử vào hàng đợi, nếu thành công trả về true, false nếu hàng đợi đã đầy 
+	put(E e)                 : Thêm phần tử vào hàng đợi, Nếu hàng đợi đầy, luồng sẽ bị chặn cho đến khi có không gian trống 
+	poll()                   : Lấy phần tử đầu tiên ra khỏi hàng đợi, nhưng không chặn , trả về null nếu hàng đợi rỗng 
+	take                     : Lấy phần tử đầu tiên ra khỏi hàng đợi, nếu hàng đợi rỗng, luồng sẽ bị chặn cho đến khi có phần tử 
+	remainingCapacity()      : Trả về số lượng phần tử kiểu int có thể thêm vào hàng đợi 
+	contais(Object o)        : Kiểm tra xem một phần tử có tồn tại trong hàng đợi hay không 
+	
+	
+# 4. Ví dụ sử dụng ArrayBlockingQueue 
+	1. Bài toán Producer-Comsumer Example 
+					import java.util.concurrent.ArrayBlockingQueue;
+					import java.util.concurrent.BlockingQueue;
+					
+					// Nhà sản xuất
+					class Producer implements Runnable {
+						private BlockingQueue<Integer> queue;
+					
+						public Producer(BlockingQueue<Integer> queue) {
+							this.queue = queue;
+						}
+					
+						@Override
+						public void run() {
+							try {
+								for (int i = 1; i <= 10; i++) {
+									System.out.println("Producer: Producing item " + i);
+									queue.put(i); // Thêm phần tử vào hàng đợi (chặn nếu đầy)
+									Thread.sleep(500); // Giả lập thời gian sản xuất
+								}
+							} catch (InterruptedException e) {
+								Thread.currentThread().interrupt();
+							}
+						}
+					}
+					
+					// Người tiêu dùng
+					class Consumer implements Runnable {
+						private BlockingQueue<Integer> queue;
+					
+						public Consumer(BlockingQueue<Integer> queue) {
+							this.queue = queue;
+						}
+					
+						@Override
+						public void run() {
+							try {
+								while (true) {
+									Integer item = queue.take(); // Lấy phần tử từ hàng đợi (chặn nếu rỗng)
+									System.out.println("Consumer: Consuming item " + item);
+									Thread.sleep(1000); // Giả lập thời gian tiêu thụ
+								}
+							} catch (InterruptedException e) {
+								Thread.currentThread().interrupt();
+							}
+						}
+					}
+					
+					public class ArrayBlockingQueueExample {
+						public static void main(String[] args) {
+							// Tạo hàng đợi có kích thước tối đa là 5
+							BlockingQueue<Integer> queue = new ArrayBlockingQueue<>(5);
+					
+							Thread producerThread = new Thread(new Producer(queue));
+							Thread consumerThread = new Thread(new Consumer(queue));
+					
+							producerThread.start();
+							consumerThread.start();
+						}
+					}
+
+			// Giải thích ví dụ:
+				Hàng đợi có kích thước cố định là 5:
+				
+				Nếu nhà sản xuất cố gắng thêm phần tử vào hàng đợi khi đầy, nó sẽ bị chặn.
+				Nếu người tiêu dùng cố gắng lấy phần tử khi hàng đợi rỗng, nó sẽ bị chặn.
+				Sự đồng bộ hóa tự động:
+				
+				ArrayBlockingQueue quản lý việc đồng bộ hóa giữa nhà sản xuất và người tiêu dùng, nên bạn không cần phải sử dụng từ khóa synchronized thủ công.
+				Kết quả đầu ra:
+				
+				Nhà sản xuất thêm phần tử vào hàng đợi, người tiêu dùng lấy phần tử từ hàng đợi theo thứ tự FIFO.
+
+
+# Ưu điểm của ArrayBlockingQueue 
+	#1. An toàn trong môi trường đa luồng : 
+		Không cần xử lý thử công việc đồng bộ hóa giữa các luồng 
+	# Đồng bộ hóa hiệu quả 
+		Sử dụng cơ chế khóa tối ưu hóa giúp giảm chi phí đồng bộ 
+	
+	# Đơn giản và dễ sử dụng :
+		API rõ ràng và phù hợp cho nhiều bài toán trong lập trình đa luồng 
+
+	# Hạn chế tài nguyên 
+		Giới hạn dung lượng giúp tránh các vấn đề như sử dụng quá nhiều bộ nhớ 
+		
+		
+Bài tập thực hành
+
+Bài tập 1:
+Tạo một ArrayBlockingQueue với kích thước là 3.
+Viết chương trình để thêm 10 số nguyên vào hàng đợi bằng một luồng và lấy chúng ra bằng một luồng khác.
+
+Bài tập 2:
+Thay đổi chương trình ví dụ trên để nhà sản xuất và người tiêu dùng có tốc độ khác nhau. Quan sát kết quả và giải thích tại sao việc đồng bộ hóa vẫn đảm bảo đúng thứ tự.
+
+Bài tập 3:
+Sử dụng ArrayBlockingQueue để quản lý các yêu cầu đến một máy chủ (như HTTP requests) và phân phối chúng cho một nhóm luồng xử lý (thread pool).		
+		
+		
+		public static void main(String[] args){
+			System.out.print(args.length);
+		}
+		
+		
+		
+		
+		
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

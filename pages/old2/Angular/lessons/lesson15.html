@@ -1,0 +1,101 @@
+<html><head><title>Lesson 15 == HTML DOM ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../angular-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 15 -- HTML DOM -//</h1><pre>
+# Khái niệm  
+	cách AngularJS thao tác với DOM một cách declarative (khai báo) — nghĩa là bạn không phải viết document.getElementById() hay innerHTML, mà chỉ cần gán biến trong $scope, AngularJS sẽ tự động cập nhật DOM.
+	
+	
+# 🔧 1. So sánh cách truyền thống và AngularJS 
+	
+	## ❌ Cách truyền thống (JavaScript thuần): 
+	<p id="demo"></p>
+	<script>
+	document.getElementById("demo").innerHTML = "Hello Angular!";
+	</script>
+	📌 Vấn đề: phải thao tác DOM bằng tay → dễ bug, khó maintain, không tái sử dụng đượ	
+
+	
+	## ✅ Cách AngularJS:
+	
+		<p ng-bind="greeting"></p>
+		$scope.greeting = "Hello Angular!";
+
+		📌 Điểm mạnh:
+
+			Không cần tìm DOM element bằng ID
+			Chỉ cần gán dữ liệu, AngularJS tự render
+	
+# 🧩 2. ng-disabled – điều khiển trạng thái DOM	
+	<input ng-model="myText">
+	<button ng-disabled="myText == ''">Gửi</button>
+	
+	📌 Ý nghĩa:
+
+	Khi myText rỗng → nút "Gửi" bị disable
+	DOM tự cập nhật theo biến myText (2 chiều)
+	
+	
+
+# 🧪 So sánh ng-disabled vs JavaScript thuần
+
+	## JS thuần: 
+		if (document.getElementById("text").value === "") {
+			document.getElementById("btn").disabled = true;
+		}
+		→ dài dòng, dễ bug.
+
+	
+	## Angular:
+		<button ng-disabled="input == ''">OK</button>
+		→ 1 dòng xử lý logic và DOM cùng lúc.
+
+
+# 🔁 3. ng-show, ng-hide – ẩn/hiện DOM phần tử
+
+
+	<p ng-show="isVisible">Nội dung đang hiển thị</p>
+	<button ng-click="isVisible = !isVisible">Toggle</button>
+	
+	📌 Rất hay dùng trong các hệ thống form: ẩn hiện tùy thuộc trạng thái form.
+
+
+# 🎛️ 4. ng-click để xử lý sự kiện thay vì onclick
+	
+	<button ng-click="count = count + 1">Tăng</button>
+	<p>{{ count }}</p>
+	
+	📌 Kết hợp với binding trực tiếp → UI cập nhật ngay lập tức, không cần DOM manipulation.
+
+
+#💡 5. Lý do AngularJS mạnh hơn JavaScript thuần
+
+| JS Thuần                                     | AngularJS                            |
+| -------------------------------------------- | ------------------------------------ |
+| DOM manipulation thủ công (`getElementById`) | Binding biến dữ liệu tự động         |
+| Logic và giao diện tách rời                  | Logic gắn liền với UI bằng directive |
+| Dễ sinh bug khi DOM thay đổi                 | Dễ bảo trì, dễ đọc                   |
+
+
+🧠 Góc nhìn thực tế ở dự án Nhật
+	
+| Tình huống            | Cách dùng                                                            |
+| --------------------- | -------------------------------------------------------------------- |
+| Form xác thực         | Dùng `ng-disabled`, `ng-show`, `ng-class` để báo lỗi/disable nút     |
+| Màn hình tìm kiếm     | Gõ keyword → `ng-model`, gọi API qua `$http`, binding kết quả về DOM |
+| Ẩn/hiện bảng/chi tiết | Dùng `ng-show`, `ng-if`, không cần viết JS logic riêng               |
+
+
+🧨 Cảnh báo 
+
+Nếu bạn vừa dùng ng-click, ng-show, ng-disabled nhưng lại đồng thời thao tác DOM bằng tay (JS thuần) thì dễ xảy ra xung đột, khó debug.
+
+
+✅ Kết luận 
+
+| Tính năng học được    | Ý nghĩa thực tế                                           |
+| --------------------- | --------------------------------------------------------- |
+| `ng-bind`, `ng-model` | Binding dữ liệu 2 chiều                                   |
+| `ng-disabled`         | Tự động control nút submit/OK                             |
+| `ng-show`, `ng-hide`  | Xử lý UI động mà không cần viết JS tay                    |
+| `ng-click`            | Viết logic sự kiện gọn gàng, không dính trực tiếp vào DOM |
+
+
+</pre><a id='backBottom' href='../angular-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

@@ -1,0 +1,112 @@
+<html><head><title>Lesson 96 == Cache ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 96 -- Cache -//</h1><pre>
+# Khái niệm  
+	
+		Cache = Lưu trữ tạm thời dữ liệu đã xử lý, nhằm tránh xử lý lại.
+		Nếu bạn gọi API hoặc truy vấn DB và kết quả không thay đổi trong 5 phút → không cần làm lại. Cache nó.
+
+
+# Mục tiêu 
+	
+Mục tiêu									Ý nghĩa thực tế
+Giảm latency							Truy vấn dữ liệu nhanh hơn → phản hồi nhanh hơn cho user
+Giảm tải backend						API/DB không phải tính lại → tiết kiệm CPU/RAM
+Tiết kiệm chi phí						Tránh gọi API trả phí (GPT, Cloud API...)
+Tăng khả năng chịu tải					Dễ scale vì cache hoạt động như buffer chống sốc
+Tăng độ ổn định							Khi service backend lỗi → có thể fallback từ cache
+
+
+# 💡 VÍ DỤ THỰC TẾ TRONG DỰ ÁN
+
+	## 1. Frontend / Client-side Cache 
+		- Trình duyệt cache ảnh, JS, CSS (cache-control headers)
+		- SWR/React Query cache kết quả API: tránh gọi lại mỗi lần load lại tab
+		- Service Worker Cache (PWA): để chạy offline
+
+
+	## 2. Backend API Cache (Controller level) 
+		### Với Spring Boot: 
+		
+			@Cacheable(value = "products", key = "#id")
+			public Product getProduct(Long id) { ... }
+		→ Lần đầu gọi, truy vấn DB. Sau đó, trả kết quả từ cache (ví dụ Redis). 
+		
+	## 	3. Database Query Cache 
+	
+		-   Hibernate cache (L1, L2)
+		-   Query result cache với Redis
+		-   Tăng tốc truy vấn phức tạp (JOIN, AGGREGATE...)
+			
+
+	## 4 . HTTP/API Gateway Cache 
+		API Gateway (Kong, Nginx, Cloudflare...) có thể cache response 
+		
+		Ví dụ: 
+			/weather/tokyo cache trong 10s
+			/exchange-rate cache 5 phút
+
+
+
+	## 5. Distributed Cache (dùng trong Microservices)
+	
+		Dùng Redis, Memcached như layer trung gian dữ liệu giữa services
+		Ví dụ: auth service cache access token, user info để các service khác không cần query DB
+
+
+
+# ⚙️ CÁC LOẠI CACHE PHỔ BIẾN 
+	
+Loại cache				Mô tả ngắn										Công cụ phổ biến
+In-memory				Nằm trong RAM app								Guava Cache, Caffeine
+Distributed				Dùng giữa nhiều server/service					Redis, Memcached
+HTTP cache				Cache response theo URL + headers				Nginx, Cloudflare, Varnish
+File cache				Lưu data tính toán (VD: image, model)			Local disk, CDN
+Build cache				Cache kết quả build/test để tăng tốc CI			GitHub Cache, Docker layer
+
+
+
+# 🧪 CÁC TRƯỜNG HỢP SỬ DỤNG CACHE CỤ THỂ 
+	
+
+Tình huống																	Giải pháp cache
+Gọi OpenAI API 1000 lần/ngày								Cache kết quả prompt trong Redis/SQLite
+Truy vấn getUserById(id) 10 lần/giây						@Cacheable với key = userId
+Trang sản phẩm truy cập nhiều								CDN + API Gateway Cache + Redis
+Thống kê realtime nhưng update mỗi phút						Cache query trong 30s → update async sau
+CI/CD chạy Maven build mất 5 phút							Cache .m2/ và Docker layers
+Mobile app load dữ liệu từ API								Cache offline (Room DB, localStorage, PWA SW)
+
+
+
+# 🔥 NHỮNG SAI LẦM CHẾT NGƯỜI KHI DÙNG CACHE 
+	
+
+			Không có chiến lược invalidation (xóa cache)
+			→ Dữ liệu stale, sai, hoặc bị leak thông tin
+			
+			Dùng cache cho dữ liệu thay đổi liên tục (stock, balance...)
+			→ Cache không phù hợp → gây lỗi nghiêm trọng
+			
+			Không có TTL (time-to-live)
+			→ Cache sống mãi, không dọn → memory leak hoặc dữ liệu lỗi thời
+			
+			Quên phân biệt cache theo user/session/region
+			→ Trả nhầm kết quả của người khác
+
+
+# 🧠 STRATEGY(chiến lược) CHO SENIOR/ARCHITECT 
+	
+	## 🔄 Cache Invalidation: 
+	
+		Cache không chỉ set là xong, mấu chốt là khi nào xóa hoặc làm mới (refresh).
+		TTL (time to live): hết hạn tự xóa
+		Manual invalidate: khi update data, gọi cache.evict(...)
+		Write-through, Read-through, Cache-aside: chiến lược phổ biến
+
+
+	## 🏗 Thiết kế Cache Layer: 
+		User → CDN → API Gateway (cache) → Backend → Redis → DB
+		
+	Cache theo tầng, mỗi tầng có TTL khác nhau
+	Tầng trên fail → dùng tầng dưới fallback
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

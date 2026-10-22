@@ -1,0 +1,162 @@
+<html><head><title>Lesson 130 == Define Assignment Analysis (DAA) ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 130 -- Define Assignment Analysis (DAA) -//</h1><pre>
+# Khái niệm 
+	là một phần cực kỳ quan trọng trong kiểm tra độ an toàn cấp độ ngôn ngữ, được quy định trong Java Language Specification (JLS) §16.
+	
+	Definite Assignment Analysis (DAA) là quá trình phân tích tĩnh mà compiler Java thực hiện để đảm bảo rằng mọi biến local đều được gán giá trị rõ ràng trước khi được sử dụng.
+	
+	## Ví dụ kinh điển:
+void foo() {
+    int x;
+    System.out.println(x); // ❌ Compile-time error
+}
+	 
+
+
+# 📘 2. JLS §16: LUẬT NGHIÊM NGẶT VỀ DAA
+
+	## 2.1. Local variables 
+		- Biến local phải được definitely assigned trước khi sử dụng.
+		- Không có giá trị mặc định như field (int default = 0, object = null).
+
+int x;
+if (condition) {
+    x = 5;
+}
+System.out.println(x); // ❌ Không chắc chắn x đã được gán
+
+
+
+	## 2.2. Final variables 
+		Biến final chỉ được phép gán duy nhất một lần.
+		Compiler sẽ xác minh rằng tất cả các path khả thi đều dẫn tới đúng 1 lần gán.
+		
+final int x;
+if (cond) x = 1;
+else x = 2;
+System.out.println(x); // ✅ OK
+
+
+if (cond) x = 1;
+System.out.println(x); // ❌ Có path không gán
+
+
+	## 2.3. Loops and DAA
+		JLS yêu cầu phân tích các vòng lặp một cách thận trọng:
+		
+int x;
+while (cond) {
+    x = 1;
+}
+System.out.println(x); // ❌ vì vòng lặp có thể không chạy
+
+
+
+	
+	## 2.4. DAA và try-catch-finally
+	
+final int x;
+try {
+    x = 1;
+} catch (Exception e) {
+    x = 2;
+}
+System.out.println(x); // ❌ nếu chưa có xử lý mọi path (finally không gán gì)
+	
+
+
+# 🧠 3. DAA = Static Control Flow Analysis
+
+DAA không phải runtime logic check mà là kiểm tra biểu đồ luồng điều khiển tĩnh (static control flow graph – CFG).
+
+Nó kiểm tra tất cả các path execution từ điểm khai báo đến điểm sử dụng biến. Nếu có bất kỳ path nào mà biến không được gán → lỗi compile.
+
+
+# 🧱 4. SO SÁNH VỚI CÁC LOẠI BIẾN 
+| Type             | Có default value?  | Phải gán trước dùng? | Subject to DAA? |
+| ---------------- | ------------------ | -------------------- | --------------- |
+| `local variable` | ❌                  | ✅                    | ✅               |
+| `instance field` | ✅ (default 0/null) | ❌                    | ❌               |
+| `static field`   | ✅                  | ❌                    | ❌               |
+| `final variable` | ❌                  | ✅ & only once        | ✅               |
+
+
+# 🔥 5. PHÂN TÍCH NÂNG CAO CHO FINAL (JLS §16.1) 
+
+	Biến final phải được gán:
+		Trước khi constructor hoàn tất
+		Hoặc trong static initializer block nếu là biến static
+		
+class A {
+    final int x;
+
+    A() {
+        x = 10; // ✅ OK
+    }
+}
+
+class B {
+    final int y;
+    B(boolean cond) {
+        if (cond) y = 1;
+        // ❌ Nếu cond = false thì y không gán → compile error
+    }
+}
+
+
+
+# 🧵 6. TƯ DUY SENIOR: TÁC ĐỘNG THỰC TẾ 
+
+
+	## ✅ Vì sao DAA là tốt? 
+		
+		Loại bỏ class bug tiềm ẩn: đảm bảo bạn không dùng rác bộ nhớ chưa khởi tạo
+		Tăng tính predictability: nhất quán giữa compile-time và runtime
+		Hỗ trợ tối ưu hóa code: giúp compiler loại bỏ path không cần thiết
+
+
+# ⚠️ 7. MỘT SỐ LỖ HỔNG & GÓC TỐI
+
+	##🔸 DAA không hiểu giá trị logic thực sự
+	
+final int x;
+if (true) x = 1;
+else x = 2;
+System.out.println(x); // ✅ (vì cả hai path đều gán)
+
+final int y;
+if (someConstMethod()) y = 1;
+else y = 2;
+// ❌ nếu compiler không inline được giá trị method → vẫn lỗi
+
+
+
+	## 🔸 DAA không nhận ra "return cuối cùng" 
+	
+final int x;
+if (cond) return;
+x = 10;
+System.out.println(x); // ❌ vì có path không gán (cond == true)
+
+
+
+
+	## 🔸 Loop bị giới hạn phân tích: 
+	
+final int x;
+for (;;) {
+    x = 10;
+    break;
+}
+System.out.println(x); // ❌ Java không đủ “thông minh” để infer điều này
+
+
+# 🛠 8. CÁCH DEBUG / LÀM VIỆC VỚI DAA
+
+	Kiểm tra lại mọi path điều kiện
+	Với final, đảm bảo gán đúng duy nhất 1 lần trên mọi nhánh
+	Không lạm dụng nhiều nested logic — DAA không xử lý tốt logic lồng nhau phức tạp
+	Với loop, không giả định vòng lặp chắc chắn chạy
+
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

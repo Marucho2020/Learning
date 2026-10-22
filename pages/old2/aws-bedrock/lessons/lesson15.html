@@ -1,0 +1,284 @@
+<html><head><title>Lesson 15 == AIP-C01  ===2. Model Provider vs Model Consumer (kiến trúc AWS) ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 15 -- AIP-C01  --=2. Model Provider vs Model Consumer (kiến trúc AWS) -//</h1><pre>
+# 1. Bản chất
+
+	Hãy quên AWS trước.
+	Hãy tưởng tượng giống ngành điện.
+	Có 2 loại công ty.
+	Công ty tạo ra điện
+	
+	
+	Ví dụ
+		EVN
+		Nhà máy thủy điện
+		Nhà máy nhiệt điện
+
+	Họ sản xuất điện.
+	=> Đây là Provider.
+
+
+	Công ty dùng điện
+
+	Ví dụ
+		Nhà hàng
+		Công ty IT
+		Gia đình
+
+	Họ không tạo điện.
+	Họ chỉ dùng điện.
+	=> Đây là Consumer.
+	AI cũng giống như vậy.	
+	
+
+
+# Model Provider là gì?
+	Model Provider là tổ chức xây dựng và sở hữu Foundation Model.
+
+
+
+	Họ phải:
+		thu thập dữ liệu
+		train model
+		đánh giá
+		tối ưu
+		phát hành model
+
+	Ví dụ
+		Anthropic
+		Meta
+		Cohere
+		AI21
+		Mistral
+		Amazon (Titan)
+		Stability AI
+
+	Họ tạo model.
+
+
+		Ví dụ
+			Anthropic tạo
+			Claude Sonnet
+			Claude Opus
+			Claude Haiku
+
+		Anthropic chính là Provider.
+
+
+	Amazon tạo
+		Titan Text
+		Titan Image
+		Titan Embedding
+	Amazon lúc này cũng là Provider.
+
+		Meta tạo
+		Llama
+		Meta là Provider.
+
+
+
+# Model Consumer là gì?
+
+	Consumer là người KHÔNG tạo model.
+	Họ chỉ sử dụng model.
+
+	Ví dụ
+		Một công ty bảo hiểm.
+		Họ muốn chatbot trả lời khách hàng.
+		Họ không có hàng triệu GPU để train LLM.
+		Họ cũng không muốn xây model.
+	Họ chỉ cần gọi API.
+
+	=> Họ là Consumer.
+
+
+
+	Ví dụ
+		Bạn dùng Claude trong Bedrock.
+		Bạn không sở hữu Claude.
+		Bạn chỉ gửi Prompt.
+		Claude trả kết quả.
+		Bạn chính là Consumer.
+
+
+
+
+
+# AWS nằm ở đâu?
+
+	Đây là điểm quan trọng nhất.
+	AWS có 2 vai.
+	Vai 1
+	AWS là Provider
+	Ví dụ
+		Titan Models.
+		Amazon tự train.
+		Amazon sở hữu.
+		Amazon bảo trì.
+
+	=> AWS = Model Provider.
+
+
+		Vai 2
+
+		AWS là Marketplace
+		AWS đóng vai trò trung gian.
+		
+		Ví dụ
+			Anthropic
+			↓
+			đưa Claude lên Bedrock
+			↓
+
+		Khách hàng gọi Claude qua Bedrock API
+		AWS không sở hữu Claude.
+		AWS chỉ cung cấp platform.
+
+
+		Nhiều người nghĩ
+		Bedrock = Claude.
+		Sai.
+		Claude thuộc Anthropic.
+		Bedrock chỉ là nền tảng truy cập.
+
+
+Anthropic --------\
+Meta --------------\
+AI21 ---------------\
+Mistral -------------> Amazon Bedrock -------------> Company A
+Amazon Titan -------/                |
+
+
+	Bedrock giống như App Store.
+	Claude giống App.
+
+
+
+
+# AWS kiếm tiền như thế nào?
+
+	Model Provider
+	↓
+	đưa model lên Bedrock
+	↓
+	Customer gọi API
+	↓
+	AWS tính tiền theo Token
+	↓
+	AWS chia doanh thu với Provider.
+	
+
+	AWS không cần tự tạo tất cả model.
+	AWS xây ecosystem.
+	Đây là tư duy Platform.
+
+
+
+# Mapping với dịch vụ AWS
+
+
+| Thành phần     | AWS                                                  |
+| -------------- | ---------------------------------------------------- |
+| Provider       | Anthropic, Amazon Titan, Meta, AI21, Cohere, Mistral |
+| Marketplace    | Amazon Bedrock                                       |
+| Consumer       | Ứng dụng của khách hàng                              |
+| API            | Bedrock Runtime API                                  |
+| Authentication | IAM                                                  |
+| Monitoring     | CloudWatch                                           |
+| Logging        | CloudTrail                                           |
+
+
+# So sánh Provider và Consumer
+
+| Tiêu chí            | Provider                  | Consumer            |
+| ------------------- | ------------------------- | ------------------- |
+| Tạo model           | Có                        | Không               |
+| Train model         | Có                        | Không               |
+| Fine-tune model gốc | Có                        | Thường không        |
+| Cung cấp API        | Có                        | Không               |
+| Gọi API             | Không phải mục đích chính | Có                  |
+| Trả tiền GPU        | Có                        | Không               |
+| Trả tiền theo token | Không                     | Có                  |
+| Ví dụ               | Anthropic                 | Công ty xây chatbot |
+
+
+
+# Liên hệ với Bedrock
+
+	Trong Bedrock
+	Provider
+	↓
+	đăng ký model
+	↓
+	Bedrock expose API
+	↓
+	Consumer gọi API.
+	Đây chính là mô hình
+	Provider → Platform → Consumer
+
+
+
+# Từ khóa rất hay gặp trong đề
+
+	Foundation Model Provider
+	Third-party model
+	Hosted model
+	Managed model
+	Amazon Titan
+	Anthropic Claude
+	Meta Llama
+	Bedrock Marketplace
+	Model access
+	InvokeModel API
+	Cross-provider API
+	Unified API
+
+Bedrock chính là abstraction layer.
+
+# Trade-off
+
+
+| Chọn Provider    | Ưu điểm                          | Nhược điểm                                     |
+| ---------------- | -------------------------------- | ---------------------------------------------- |
+| Amazon Titan     | Tích hợp AWS tốt, governance tốt | Một số tác vụ có thể kém hơn model chuyên biệt |
+| Anthropic Claude | Rất mạnh về reasoning            | Chi phí có thể cao hơn                         |
+| Meta Llama       | Mở, linh hoạt                    | Có thể cần tự vận hành nếu không dùng Bedrock  |
+| Mistral          | Nhanh, nhẹ                       | Không phải lúc nào cũng mạnh ở mọi benchmark   |
+
+
+
+Ý quan trọng cho kỳ thi: Trong Bedrock, bạn có thể thay đổi provider (Claude → Llama → Titan...) mà không cần thay đổi nhiều mã ứng dụng, vì Bedrock cung cấp một lớp API thống nhất. Tuy nhiên, khả năng hỗ trợ từng tham số (tool use, streaming, structured output...) vẫn có thể khác nhau giữa các model, nên không phải lúc nào cũng "thay thế 100%" được.
+
+
+Bẫy 5
+
+	Claude chạy trên server của Anthropic.
+	Không hoàn toàn đúng trong ngữ cảnh Bedrock.
+
+	Khi bạn gọi Claude qua Amazon Bedrock, hạ tầng suy luận (inference) được AWS quản lý trong Bedrock, còn Anthropic là nhà cung cấp mô hình (model provider). Đây là điểm AWS thường khai thác để đánh lừa giữa "ai sở hữu model" và "ai vận hành dịch vụ".
+
+
+
+
+# Tóm tắt cần nhớ (AIP-C01) 
+
+Model Provider
+    │
+    │  (xây dựng, huấn luyện, sở hữu Foundation Model)
+    ▼
+Anthropic / Amazon / Meta / AI21 / Cohere / Mistral
+    │
+    ▼
+Amazon Bedrock
+(Managed platform + Unified API + Governance)
+    │
+    ▼
+Model Consumer
+(Chatbot, RAG, AI Agent, Application)
+
+
+Công thức ghi nhớ cho kỳ thi:
+	Provider tạo model → Bedrock phân phối model → Consumer sử dụng model.
+
+
+
+
+</pre><a id='backBottom' href='../aws-bedrock-agent-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

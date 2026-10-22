@@ -1,0 +1,75 @@
+<html><head><title>Lesson 41 == useRouter() và useRoute() ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../vue-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 41 -- useRouter() và useRoute() -//</h1><pre>
+# Khái niệm 
+	useRouter() và useRoute() là hai composable functions trong Vue Router (phiên bản 4, dùng với Vue 3) được thiết kế để sử dụng trong Composition API. Chúng cung cấp cách truy cập vào router và route hiện tại trong các component hoặc hàm logic.
+	
+	## Composable là gì? 
+		Composable là một khái niệm trong Vue 3, ám chỉ các hàm tái sử dụng được xây dựng với Composition API để đóng gói logic. Chúng cho phép tách logic ra khỏi component, giúp mã dễ bảo trì và tái sử dụng.
+		
+		Ví dụ: useRouter() và useRoute() là composables của Vue Router, cung cấp API để làm việc với routing.
+
+
+# a. useRouter()	
+
+	## Chức năng: Trả về đối tượng router toàn cục, cho phép bạn thực hiện các hành động điều hướng (như chuyển trang, quay lại, v.v.).
+	
+	## Các phương thức phổ biến:
+			- router.push(path): Điều hướng đến một đường dẫn (ví dụ: router.push('/home')).
+			- router.replace(path): Thay thế route hiện tại mà không thêm vào lịch sử trình duyệt.
+			- router.back(): Quay lại trang trước.
+			- router.forward(): Tiến đến trang tiếp theo.
+
+
+
+	## Ví dụ: 
+<template>
+  <div>
+    <button @click="goToHome">Go to Home</button>
+  </div>
+</template>
+
+<script setup>
+import { useRouter } from 'vue-router';
+
+const router = useRouter();
+
+const goToHome = () => {
+  router.push('/home'); // Điều hướng đến /home
+};
+</script>
+
+	Giải thích: useRouter() cung cấp quyền truy cập vào instance router, tương đương $router trong Options API.
+
+
+
+# b. useRoute()
+
+
+	## Chức năng: Trả về đối tượng route hiện tại, chứa thông tin về URL hiện tại, như tham số (params), query string (query), hoặc path.
+	
+	## Các thuộc tính phổ biến:
+			- route.params: Tham số động trong URL (ví dụ: { id: '123' } cho /user/:id).
+			- route.query: Query string (ví dụ: { search: 'test' } cho /search?search=test).
+			- route.path: Đường dẫn hiện tại (ví dụ: /user/123).
+			- route.name: Tên của route (nếu được đặt).
+
+
+
+	## Ví dụ 
+<template>
+  <div>
+    <h1>User ID: {{ userId }}</h1>
+  </div>
+</template>
+
+<script setup>
+import { useRoute } from 'vue-router';
+
+const route = useRoute();
+const userId = route.params.id; // Lấy :id từ /user/:id
+</script>		
+
+	Giải thích: useRoute() cung cấp thông tin về route hiện tại, tương đương $route trong Options API.
+
+
+
+</pre><a id='backBottom' href='../vue-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

@@ -1,0 +1,164 @@
+<html><head><title>Lesson 25 == Regression Case ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../DataScience-learning.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 25 -- Regression Case -//</h1><pre>
+
+# BÀI TOÁN: DỰ ĐOÁN LƯỢNG CALO ĐỐT CHÁY
+
+Mục tiêu:
+	Dự đoán Calorie_Burnage (calo đốt cháy) dựa trên các yếu tố:
+	
+	Duration (thời gian tập, phút)
+	Average_Pulse (nhịp tim trung bình)
+	Max_Pulse
+	Hours_Work
+	Hours_Sleep
+
+
+
+
+# BƯỚC 1: HIỂU DỮ LIỆU (DATA.CSV)
+
+
+Cột,Ý nghĩa
+Duration,Thời gian tập luyện (phút)
+Average_Pulse,Nhịp tim trung bình
+Max_Pulse,Nhịp tim cao nhất
+Calorie_Burnage,Biến mục tiêu (Y)
+Hours_Work,Số giờ làm việc/ngày
+Hours_Sleep,Số giờ ngủ
+
+Mục tiêu: Tìm biến nào ảnh hưởng mạnh nhất đến calo đốt cháy?
+
+
+
+
+# BƯỚC 2: PHÂN TÍCH TỪNG BIẾN
+
+	## 1. Duration → Calorie_Burnage
+model = smf.ols('Calorie_Burnage ~ Duration', data=df).fit()
+
+Chỉ số,Giá trị
+Hệ số,~10.8
+P-value,< 0.001
+R²,~0.79
+
+Kết luận:
+
+Mỗi phút tập → tăng ~10.8 calo
+79% sự thay đổi calo được giải thích bởi thời gian tập
+Biến cực mạnh
+
+
+
+
+	## 2. Average_Pulse → Calorie_Burnage
+
+Chỉ số,Giá trị
+Hệ số,~0.33
+P-value,~0.82
+R²,~0.00
+
+Không có mối quan hệ ý nghĩa
+Mô hình tệ
+
+
+
+
+	## 3. Max_Pulse → Calorie_Burnage
+
+Chỉ số,Giá trị
+Hệ số,~2.1
+P-value,~0.05
+R²,~0.06
+
+Có ảnh hưởng nhẹ, nhưng không mạnh bằng Duration
+
+
+
+# BƯỚC 3: MULTIPLE REGRESSION (NÂNG CAO)
+
+model = smf.ols('Calorie_Burnage ~ Duration + Average_Pulse + Max_Pulse', data=df).fit()
+print(model.summary())
+
+
+Biến,Hệ số,P-value,Ý nghĩa
+Duration,10.5,<0.001,Rất mạnh
+Average_Pulse,0.1,>0.05,Không ý nghĩa
+Max_Pulse,0.8,>0.05,Không ý nghĩa
+
+R² ≈ 0.80 (tăng nhẹ so với chỉ Duration)
+
+Chỉ cần Duration là đủ – thêm biến khác không cải thiện nhiều
+
+
+
+# BƯỚC 4: LỖI TRONG BÀI W3SCHOOLS (BẠN PHẢI BIẾT!)
+
+Lỗi,Sửa lại
+Nói Average_Pulse có hệ số 0.3296 → sai dữ liệu,"Thực tế: hệ số ~0.33, nhưng P-value cao → không dùng được"
+Không dạy multiple regression,Đây là thiếu sót lớn
+Không giải thích Adjusted R²,Quan trọng khi so sánh mô hình
+
+
+
+
+# BƯỚC 5: CODE HOÀN CHỈNH (BẠN CẦN CHẠY)
+
+import pandas as pd
+import statsmodels.formula.api as smf
+import matplotlib.pyplot as plt
+
+# 1. Đọc dữ liệu
+df = pd.read_csv("data.csv")
+
+# 2. Mô hình tốt nhất: chỉ Duration
+model = smf.ols('Calorie_Burnage ~ Duration', data=df).fit()
+
+# 3. In kết quả
+print(model.summary())
+
+# 4. Dự đoán
+def predict_calo(duration):
+    return model.params['Intercept'] + model.params['Duration'] * duration
+
+print(f"60 phút tập → {predict_calo(60):.0f} calo")
+print(f"90 phút tập → {predict_calo(90):.0f} calo")
+
+# 5. Vẽ đồ thị
+plt.scatter(df['Duration'], df['Calorie_Burnage'], alpha=0.6)
+plt.plot(df['Duration'], model.predict(), color='red', linewidth=2)
+plt.xlabel('Thời gian tập (phút)')
+plt.ylabel('Calo đốt cháy')
+plt.title(f'R² = {model.rsquared:.3f} | Mỗi phút +{model.params["Duration"]:.1f} calo')
+plt.grid(True, alpha=0.3)
+plt.show()
+
+60 phút tập → 700 calo
+90 phút tập → 1050 calo
+
+
+
+
+# BƯỚC 6: KẾT LUẬN NHƯ CHUYÊN GIA
+
+Yếu tố,Đánh giá
+Biến quan trọng nhất,Duration
+Không nên dùng,Average_Pulse (P-value cao)
+Mô hình tốt nhất,Calorie_Burnage = 10.8 × Duration + b
+R²,~0.79 → rất tốt cho dữ liệu thực tế
+
+"Muốn đốt nhiều calo? Tập lâu vào! Nhịp tim trung bình không quan trọng bằng thời gian."
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre><a id='backBottom' href='../DataScience-learning.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

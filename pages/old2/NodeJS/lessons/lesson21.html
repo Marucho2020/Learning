@@ -1,0 +1,211 @@
+<html><head><title>Lesson 21 == https ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../NodeJS-learning.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 21 -- https -//</h1><pre>
+# 1. Introduction to the HTTPS Module
+	Định nghĩa: HTTPS Module là built-in module cung cấp HTTP over TLS/SSL – nghĩa là HTTP an toàn với mã hóa. Nó giống HTTP Module nhưng thêm encryption để bảo vệ data khỏi eavesdropping (nghe lén), tampering (thay đổi), và spoofing (giả mạo server).
+
+
+	## Tại sao dùng HTTPS? (Why Use HTTPS?)
+	
+		- Encrypts Data: Bảo vệ sensitive info (passwords, credit cards) – ví dụ: MITM attack (Man-in-the-Middle) không đọc được data.
+		- Authenticates Servers: Certs xác thực server thực sự (tránh phishing).
+		- Ensures Data Integrity: Dùng hashing để detect nếu data bị thay đổi.
+		- Builds Trust: Browser hiển thị padlock icon; không HTTPS thì warning "Not Secure".
+		- Improves SEO: Google ưu tiên HTTPS sites (từ 2014, mạnh hơn năm 2025 với AI search).
+		- Enables Modern Features: Geolocation, Web Push, Service Workers chỉ hoạt động trên HTTPS.	
+	
+	Sâu sắc: Năm 2025, 95%+ web traffic là HTTPS (theo Google Transparency Report). Không dùng HTTPS = rủi ro legal (GDPR, CCPA yêu cầu data protection) và mất users (browser block features).	
+		
+	
+	
+	## Cách hoạt động (How HTTPS Works):
+	
+		- Client (browser) connect server.
+		- Server gửi cert (public key).
+		- Client verify cert với CA (Certificate Authority) như Let's Encrypt.
+		- Handshake: Asymmetric encryption (RSA/ECDSA) để trao đổi symmetric key (AES).
+		- Data transfer: Symmetric encryption nhanh hơn.	
+	
+		Note: SSL deprecated từ lâu; dùng TLS (1.2+). TLS 1.3 (2018) loại bỏ weak ciphers, nhanh hơn.
+	
+	
+	
+# 	2. Getting Started with HTTPS
+
+	## Import Module
+
+const https = require('https');  // CommonJS
+// hoặc import https from 'https';  // ESM (package.json: "type": "module")
+
+
+	HTTPS vs HTTP API: Giống nhau (createServer, request, etc.), nhưng HTTPS cần options với certs. HTTP nhanh hơn nhưng không secure – dùng HTTP chỉ cho local dev.
+
+
+
+
+# 3. SSL/TLS Certificates
+
+	## Types:
+
+		- Self-Signed: Dev/test only (browser warning).
+		- DV (Domain Validated): Xác thực domain ownership (nhanh, rẻ).
+		- OV/EV: Xác thực organization (EV hiển thị company name ở browser bar).
+		- Wildcard: Bảo vệ *.domain.com.
+		- SAN (Multi-Domain): Nhiều domains trong 1 cert.
+
+
+
+	## Generating Self-Signed Certificates (dùng OpenSSL): 
+	
+openssl genrsa -out key.pem 2048
+openssl req -new -x509 -key key.pem -out cert.pem -days 365 -nodes	
+	
+	
+	
+	Với SAN (Subject Alternative Names) cho localhost/127.0.0.1:
+		Tạo file san.cnf như trong bài, rồi:
+		openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout key.pem -out cert.pem -config san.cnf -extensions 'v3_req'
+		Security Note: Self-signed gây warning – dùng cho dev. Năm 2025, dùng ECDSA keys (nhanh hơn RSA) và cert validity ngắn (90 days như Let's Encrypt).
+	
+	
+	
+	## Obtaining Trusted Certificates:
+		- Free: Let's Encrypt (tự động renew via Certbot), ZeroSSL.
+		- Paid: DigiCert, Comodo.
+		- Chuyên gia: Sử dụng ACME protocol để auto-renew. Trong cloud (AWS, GCP), dùng managed certs miễn phí.	
+	
+	
+	
+	
+# 	4. Creating an HTTPS Server
+	## Basic Example: 
+	
+const https = require('https');
+const fs = require('fs');
+
+const options = {
+  key: fs.readFileSync('key.pem'),
+  cert: fs.readFileSync('cert.pem'),
+  minVersion: 'TLSv1.2'  // Disable old versions
+};
+
+https.createServer(options, (req, res) => {
+  res.writeHead(200, { 'Content-Type': 'text/plain' });
+  res.end('Secure Hello World!\n');
+}).listen(3000, () => console.log('HTTPS server on 3000'));	const https = require('https');
+const fs = require('fs');
+
+const options = {
+  key: fs.readFileSync('key.pem'),
+  cert: fs.readFileSync('cert.pem'),
+  minVersion: 'TLSv1.2'  // Disable old versions
+};
+
+https.createServer(options, (req, res) => {
+  res.writeHead(200, { 'Content-Type': 'text/plain' });
+  res.end('Secure Hello World!\n');
+}).listen(3000, () => console.log('HTTPS server on 3000'));
+	
+	Chạy: node server.js, truy cập https://localhost:3000 (accept warning nếu self-signed).
+	
+	
+	## Advanced Config (từ bài, mở rộng):
+		Thêm ca chain nếu cần (intermediate certs).
+		Ciphers: Chỉ dùng strong ones (TLS_AES_256_GCM_SHA384, etc.).
+		OCSP Stapling: Cải thiện perf bằng cách server gửi OCSP response.
+		Session Resumption: Tái sử dụng sessions để giảm handshake time.	
+	
+		Mẹo pro: Port 443 cần root – dùng sudo hoặc reverse proxy. Handle errors: server.on('error', err => console.error(err));.
+	
+
+# 5. Making HTTPS Requests
+
+	Basic:
+
+https.get('https://example.com', (res) => {
+  res.on('data', chunk => console.log(chunk.toString()));
+}).on('error', err => console.error(err));
+
+
+	- With Options: Thêm headers, method (POST), body. Sử dụng rejectUnauthorized: false cho self-signed (dev only – rủi ro MITM).
+	- Sâu: Dùng agent để keep-alive connections, cải thiện perf cho multiple requests.
+
+
+
+
+# 6. HTTPS with Express.js
+
+	## Example:
+	
+const express = require('express');
+const https = require('https');
+const fs = require('fs');
+
+const app = express();
+app.get('/', (req, res) => res.send('Secure Express!'));
+
+https.createServer({
+  key: fs.readFileSync('key.pem'),
+  cert: fs.readFileSync('cert.pem')
+}, app).listen(3000);
+
+
+
+	- Best Practices: Dùng helmet cho security headers (npm i helmet).
+	- Nginx Reverse Proxy (production):
+	- Config Nginx như bài: listen 443 ssl, proxy_pass đến Node port 3000. Lợi ích: Offload TLS, load balancing.
+
+
+
+
+# 7. HTTP/2 with Node.js
+
+	Benefits: Multiplexing (parallel requests), header compression, server push – nhanh gấp 2-3x HTTP/1.1.
+
+	## Example: 
+	
+const http2 = require('http2');
+const fs = require('fs');
+
+const server = http2.createSecureServer({
+  key: fs.readFileSync('key.pem'),
+  cert: fs.readFileSync('cert.pem'),
+  allowHTTP1: true
+});
+
+server.on('stream', (stream, headers) => {
+  stream.respond({ ':status': 200 });
+  stream.end('HTTP/2 Hello!');
+});
+
+server.listen(8443);
+
+	Server Push: Push assets (CSS/JS) trước khi client request.
+
+
+	With Express: Dùng spdy hoặc native http2 (Node 18+).
+	Testing: curl --http2 https://localhost:8443 – check "h2" protocol.
+	Cập nhật 2025: Node hỗ trợ HTTP/3 experimental (undici module). HTTP/2 vẫn dominant, nhưng migrate sang HTTP/3 cho mobile/low-latency.
+
+
+# 8. Comparing HTTP and HTTPS
+	Bảng từ bài: HTTPS secure hơn, nhưng overhead (handshake ~100-200ms). Với HTTP/2+TLS 1.3, overhead giảm.
+
+
+
+# 9. Summary and Best Practices
+
+	- Key Takeaways: HTTPS mandatory cho security/perf. Quản lý certs tốt, dùng HTTP/2/3.
+	- Security Checklist: TLS 1.3, HSTS headers, secure ciphers, rate limiting.
+	- Performance: Session resumption, OCSP, short cert chains.
+
+
+
+
+# Mẹo chuyên gia:
+
+	- Sử dụng certbot cho auto-renew Let's Encrypt.
+	- Audit với ssllabs.com/ssltest.
+	- Trong production: Cloudflare/Nginx handle TLS, Node focus business logic.
+	- Common pitfalls: Quên renew certs (downtime), weak ciphers (vulnerable to attacks như DROWN).
+
+
+</pre><a id='backBottom' href='../NodeJS-learning.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

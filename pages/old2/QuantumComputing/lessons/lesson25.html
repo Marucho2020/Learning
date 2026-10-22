@@ -1,0 +1,96 @@
+<html><head><title>Lesson 25 == Kraus map và quantum channel ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../quantum-computing-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 25 -- Kraus map và quantum channel -//</h1><pre>
+
+# 1. 🎯 Mục tiêu của lý thuyết Kraus	
+	Trong một thế giới lý tưởng:
+		Trạng thái lượng tử 𝜌 tiến triển theo đơn vị (unitary):
+
+	Nhưng trong thực tế, có nhiễu và mất mát thông tin → không thể mô tả mọi sự tiến triển bằng unitary được nữa.
+	Ta cần một khuôn khổ tổng quát để mô hình hóa quá trình nhiễu – decoherence – đo – mất mát.
+	Đó chính là: Quantum Channels
+	→ được định nghĩa bởi Kraus Map (Operator-Sum Representation).
+
+# 2. 📦 Quantum Channel là gì?
+	Là một hàm ánh xạ trạng thái lượng tử sang trạng thái lượng tử khác, gọi là completely positive trace-preserving (CPTP) map.
+		ρ′\=E(ρ)
+
+	Nó đảm bảo:
+		Trace-preserving:  Tr(ρ′)\=1
+		Completely Positive: Kể cả khi hệ vướng với hệ khác thì vẫn không gây ra trạng thái bất hợp lệ (ví dụ: mật độ âm)
+	
+
+# 3. 🧮 Kraus Map – Biểu diễn toán học
+	Bất kỳ Quantum Channel nào cũng có thể viết dưới dạng:
+		E(ρ)\=k∑​Ek​ρEk†
+
+	Trong đó:
+		𝐸_k : gọi là Kraus operators
+		Chúng tuân thủ điều kiện:
+			k∑​Ek†​Ek​\=I  (đảm bảo trace-preserving)
+
+
+
+# 4. 📌 Ví dụ: Bit-flip noise 
+	Với xác suất p  trạng thái bị lật từ ∣0⟩↔∣1⟩ 
+	Kraus operators:  E0​\=1−p​⋅I,E1​\=p​⋅X 
+	
+	Áp dụng lên mật độ 𝜌
+			E(ρ)\=E0​ρE0†​+E1​ρE1†
+	
+# 	5. 💡 Ý nghĩa của Kraus Operators
+	
+	Mỗi 𝐸𝑘 đại diện cho một khả năng xảy ra trong hệ lượng tử.
+	Giống như “các nhánh trong thế giới lượng tử song song”.
+	Cộng lại để tính trạng thái tổng thể sau khi bị nhiễu. 
+	
+	
+# 6. 🔬 Một vài Quantum Channel phổ biến 
+		
+| Tên Channel           | Kraus Operators                                                                          |      |                                   |
+| --------------------- | ---------------------------------------------------------------------------------------- | ---- | --------------------------------- |
+| **Bit-flip**          | $E_0 = \sqrt{1 - p} I, \quad E_1 = \sqrt{p} X$                                           |      |                                   |
+| **Phase-flip**        | $E_0 = \sqrt{1 - p} I, \quad E_1 = \sqrt{p} Z$                                           |      |                                   |
+| **Depolarizing**      | $E_0 = \sqrt{1 - p} I, \ E_1 = \sqrt{p/3} X, \ E_2 = \sqrt{p/3} Y, \ E_3 = \sqrt{p/3} Z$ |      |                                   |
+| **Amplitude damping** | Được dùng để mô tả mất năng lượng (                                                      | 1⟩ → | 0⟩) – có tính “mũi tên thời gian” |
+	
+# 7. 📐 Biểu diễn đơn giản bằng Python + Numpy
+
+import numpy as np
+
+I = np.eye(2)
+X = np.array([[0, 1], [1, 0]])
+
+def bit_flip_channel(rho, p):
+    E0 = np.sqrt(1 - p) * I
+    E1 = np.sqrt(p) * X
+    return E0 @ rho @ E0.T.conj() + E1 @ rho @ E1.T.conj()
+
+# Trạng thái đầu: |0⟩
+ket0 = np.array([[1], [0]])
+rho = ket0 @ ket0.T.conj()
+
+# Áp dụng bit-flip noise
+rho_after = bit_flip_channel(rho, p=0.2)
+print(np.round(rho_after, 4))
+
+
+# 8. 🧠 Tầm quan trọng của Kraus Map 
+
+| Điểm mạnh                                                        | Ý nghĩa                                                     |
+| ---------------------------------------------------------------- | ----------------------------------------------------------- |
+| Tổng quát                                                        | Mô tả được mọi loại noise, decoherence, đo, mất mát...      |
+| Dễ kiểm tra tính CPTP                                            | Nếu thỏa điều kiện $\sum_k E_k^\dagger E_k = I$ thì luôn ổn |
+| Cơ sở để xây dựng **Quantum Error Correction**, Noise Simulation |                                                             |
+
+
+
+# 9. 📘 Tài liệu nên đọc thêm 
+
+Nielsen & Chuang – Chương 8 (Quantum Noise and Kraus maps)
+Qiskit Aer: noise.QuantumError module
+
+# 10. 🚀 Sắp tới học gì?
+Quantum Error Correction (QEC): dùng các phép đo để phát hiện + sửa lỗi lượng tử (giống CRC/checksum cổ điển)
+Superoperator representation – nâng cấp từ Kraus
+Chuyển sang học toán lượng tử tuần sau như bạn đã đề xuất
+
+</pre><a id='backBottom' href='../quantum-computing-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

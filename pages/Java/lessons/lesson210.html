@@ -1,4 +1,37 @@
-<html><head><title>Lesson 210 == Functional Fallback & Recovery Pattern ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 210 -- Functional Fallback & Recovery Pattern -//</h1><pre>
+<!DOCTYPE html><html lang='vi'><head><meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0'>
+<title>Lesson 210 -- Functional Fallback & Recovery Pattern -//</title>
+<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css'>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js'></script>
+<script id='MathJax-script' async src='https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'></script>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; margin: 0; padding: 20px; transition: 0.3s; }
+.dark-mode { background-color: #121212; color: #e0e0e0; }
+.light-mode { background-color: #ffffff; color: #333333; }
+.container { max-width: 950px; margin: auto; }
+h1 { text-align: center; color: #3498db; margin: 20px 0; font-size: 26px; }
+.nav-bar { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 20px 0; }
+.nav-btn { text-decoration: none; padding: 10px 18px; background: #3498db; color: white; border-radius: 6px; font-weight: bold; font-size: 15px; display: inline-block; transition: 0.2s; }
+.nav-btn:hover { background: #2980b9; }
+.nav-btn.home-nav { background: #6c757d; }
+.nav-btn.home-nav:hover { background: #5a6268; }
+.nav-btn.disabled { background: #aaa; cursor: not-allowed; opacity: 0.5; }
+.done-btn { display: block; margin: 15px auto; padding: 10px 24px; border: 2px solid #2ecc71; background: transparent; color: #2ecc71; border-radius: 25px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+.done-btn.completed { background: #2ecc71; color: white; }
+.content-box { position: relative; margin: 20px 0; }
+pre { padding: 20px; border-radius: 8px; white-space: pre-wrap; word-break: break-word; overflow-x: auto; font-family: 'Consolas', 'Courier New', monospace; font-size: 15px; }
+.dark-mode pre { background: #1a1a1a; color: #f8f8f2; border: 1px solid #333; }
+.light-mode pre { background: #f8f9fa; color: #212529; border: 1px solid #e9ecef; }
+.copy-btn { position: absolute; top: 12px; right: 12px; padding: 6px 12px; font-size: 12px; background: #555; color: white; border: none; border-radius: 4px; cursor: pointer; opacity: 0.8; }
+.copy-btn:hover { opacity: 1; background: #2ecc71; }
+.theme-toggle-btn { display: block; margin: 20px auto; padding: 8px 16px; background: transparent; border: 1px solid #888; color: inherit; border-radius: 5px; cursor: pointer; }
+</style></head><body onload='initLesson()'>
+<div class='container'>
+<div class='nav-bar'><a class='nav-btn' href='lesson209.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../java-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson211.html'>Bài sau ➡️</a></div><h1>Lesson 210 -- Functional Fallback & Recovery Pattern -//</h1>
+<button id='doneButton' class='done-btn' onclick='toggleDone()'>Mark as Done ⚪</button>
+<div class='content-box'>
+<button class='copy-btn' onclick='copyContent()'>📋 Copy nội dung</button>
+<pre><code id='lessonCode'>
 
 # ⚙️ 1. Vấn đề của try/catch trong hệ thống lớn
 
@@ -29,18 +62,18 @@ Functional approach giúp ta tách biệt hoàn toàn hai tầng này.
 
 
 
-# 🧩 2. Giới thiệu Try<T> Monad (hoặc Either<Error, T>)
+# 🧩 2. Giới thiệu Try&lt;T&gt; Monad (hoặc Either&lt;Error, T&gt;)
 
-	Try<T> là một container biểu diễn kết quả có thể thành công hoặc thất bại, thay thế hoàn toàn cho try/catch.
+	Try&lt;T&gt; là một container biểu diễn kết quả có thể thành công hoặc thất bại, thay thế hoàn toàn cho try/catch.
 
-	Giống như Optional<T>, nhưng có thêm error info:
+	Giống như Optional&lt;T&gt;, nhưng có thêm error info:
 
-	Try<T> = Success<T> | Failure<Throwable>
+	Try&lt;T&gt; = Success&lt;T&gt; | Failure&lt;Throwable&gt;
 
 	Ví dụ minh họa đơn giản:
 
 
-class Try<T> {
+class Try&lt;T&gt; {
     private final T value;
     private final Throwable error;
 
@@ -49,17 +82,17 @@ class Try<T> {
         this.error = error;
     }
 
-    public static <T> Try<T> of(Supplier<T> fn) {
+    public static &lt;T&gt; Try&lt;T&gt; of(Supplier&lt;T&gt; fn) {
         try {
-            return new Try<>(fn.get(), null);
+            return new Try&lt;&gt;(fn.get(), null);
         } catch (Throwable t) {
-            return new Try<>(null, t);
+            return new Try&lt;&gt;(null, t);
         }
     }
 
     public boolean isSuccess() { return error == null; }
     public T getOrElse(T fallback) { return isSuccess() ? value : fallback; }
-    public Try<T> recoverWith(Supplier<T> fallbackFn) {
+    public Try&lt;T&gt; recoverWith(Supplier&lt;T&gt; fallbackFn) {
         return isSuccess() ? this : Try.of(fallbackFn);
     }
 }
@@ -67,8 +100,8 @@ class Try<T> {
 
 	## Bây giờ, không cần try/catch, ta viết: 
 
-var result = Try.of(() -> payment.charge())
-                .recoverWith(() -> backupPayment.charge());
+var result = Try.of(() -&gt; payment.charge())
+                .recoverWith(() -&gt; backupPayment.charge());
 
 
 
@@ -80,18 +113,18 @@ var result = Try.of(() -> payment.charge())
 
 
 
-# 🧠 3. Either<Error, Result> — mô hình Monad mạnh hơn Try
+# 🧠 3. Either&lt;Error, Result&gt; — mô hình Monad mạnh hơn Try
 
-	Nếu bạn muốn phân biệt lỗi có loại cụ thể (ví dụ: network fail, validation fail, provider fail), ta dùng Either<L, R>.
+	Nếu bạn muốn phân biệt lỗi có loại cụ thể (ví dụ: network fail, validation fail, provider fail), ta dùng Either&lt;L, R&gt;.
 
 
-	Either<Error, PaymentResponse> result = payment.charge();
+	Either&lt;Error, PaymentResponse&gt; result = payment.charge();
 
 		Left = lỗi
 		Right = kết quả
 
 	Sau đó:
-		result.orElse(() -> backupPayment.charge());
+		result.orElse(() -&gt; backupPayment.charge());
 
 	Cách này an toàn hơn, vì error type là kiểu cụ thể (có thể sealed interface trong Java 17+).
 
@@ -100,11 +133,11 @@ var result = Try.of(() -> payment.charge())
 # 🔗 4. Policy chaining: withRetry().recoverWith(fallback)
 	Bây giờ ta kết hợp bài trước (Resilience composition) với fallback functional.
 
-Supplier<CompletableFuture<String>> resilient =
+Supplier&lt;CompletableFuture&lt;String&gt;&gt; resilient =
     withRetry(3)
     .andThen(withTimeout(Duration.ofSeconds(2)))
-    .apply(() -> callPaymentProvider())
-    .recoverWith(() -> callBackupProvider());
+    .apply(() -&gt; callPaymentProvider())
+    .recoverWith(() -&gt; callBackupProvider());
 
 	→ Khi callPaymentProvider() thất bại sau retry, fallback tự động chạy — không try/catch, không annotation.
 
@@ -121,10 +154,10 @@ Supplier<CompletableFuture<String>> resilient =
 
 
 	## Payment Orchestration:
-Try<PaymentResult> payment =
-    Try.of(() -> stripe.charge(request))
-       .recoverWith(() -> paypal.charge(request))
-       .recoverWith(() -> square.charge(request));
+Try&lt;PaymentResult&gt; payment =
+    Try.of(() -&gt; stripe.charge(request))
+       .recoverWith(() -&gt; paypal.charge(request))
+       .recoverWith(() -&gt; square.charge(request));
 
 	Ta có thể chain vô hạn provider fallback.
 	Và toàn bộ pipeline bất biến, test dễ dàng:
@@ -137,10 +170,10 @@ Try<PaymentResult> payment =
 # 🧰 6. Kết hợp Try + Logging + Metrics
 	Bạn có thể kết hợp log hoặc metrics mà vẫn giữ functional purity:
 
-Try.of(() -> stripe.charge(request))
-   .peekSuccess(r -> metrics.increment("payment.success"))
-   .peekFailure(e -> metrics.increment("payment.fail"))
-   .recoverWith(() -> paypal.charge(request));
+Try.of(() -&gt; stripe.charge(request))
+   .peekSuccess(r -&gt; metrics.increment("payment.success"))
+   .peekFailure(e -&gt; metrics.increment("payment.fail"))
+   .recoverWith(() -&gt; paypal.charge(request));
 
 	→ Xử lý observability ngay trong pipeline, không phá vỡ purity.
 
@@ -167,4 +200,46 @@ Functional fallback cho phép:
 	Không rơi vào callback hell hay AOP magic.
 
 
-</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
+</code></pre>
+</div>
+<div class='nav-bar'><a class='nav-btn' href='lesson209.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../java-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson211.html'>Bài sau ➡️</a></div><button class='theme-toggle-btn' onclick='toggleTheme()'>🌓 Đổi Giao Diện</button>
+</div>
+<script>
+const lessonKey = 'java-learning-list_lesson210.html';
+function toggleTheme() {
+   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';
+   document.body.className = mode;
+   localStorage.setItem('theme', mode);
+}
+function toggleDone() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   if (isDone) {
+       localStorage.removeItem(lessonKey);
+   } else {
+       localStorage.setItem(lessonKey, 'done');
+   }
+   renderDoneStatus();
+}
+function renderDoneStatus() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   let btn = document.getElementById('doneButton');
+   if (isDone) {
+       btn.className = 'done-btn completed';
+       btn.innerText = 'Đã Hoàn Thành ✅';
+   } else {
+       btn.className = 'done-btn';
+       btn.innerText = 'Đánh dấu đã học ⚪';
+   }
+}
+function copyContent() {
+   let text = document.getElementById('lessonCode').innerText;
+   navigator.clipboard.writeText(text).then(function() {
+       alert('✅ Đã sao chép nội dung bài học!');
+   });
+}
+function initLesson() {
+   document.body.className = localStorage.getItem('theme') || 'dark-mode';
+   renderDoneStatus();
+   if (window.Prism) Prism.highlightAll();
+}
+</script></body></html>

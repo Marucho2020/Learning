@@ -1,0 +1,103 @@
+<html><head><title>Lesson 23 == ArrayList ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 23 -- ArrayList -//</h1><pre>	 ArrayList là một lớp trong Java thuộc gói Java util, là một phần triển khai của giao diện List. Nó hoạt động như một mảng động cung cấp các tính năng linh hoạt hơn mảng thông thường 
+		# Đặc điểm chính : 
+			- Kích thước động : Tự động thay đổi kích thước khi thêm hoặc xóa các phần tử  
+			- Dựa trên mảng: Dữ liệu được lưu trữ trong một mảng nội bộ 
+			- Truy cập nhanh : Truy cập phần tử theo chỉ số(O(1)).
+			- Hiệu suất thêm/xóa : Thêm vào cuối nhanh(O(1)), nhưng thêm xóa ở giữa hoặc đầu danh sách có chi phí cao(O(n))
+			
+		# Các phương thức quan trọng  : 
+			- add(E e)	, add(int index,  E element )		: Thêm phần tử vào cuối hoặc vị trí index cụ thể -> nếu index > size() sẽ ném IndexOutOfBoundException  
+			
+			- remove(int index) và remove(Object o)  		: Xóa phần tử tại chỉ số hoặc theo giá trị, Nếu không tìm thấy giá trị, remove(Object O) không ném lỗi chỉ trả về false 
+			
+			- set(int index , E element ) : Thay thế phẩn tử tại chỉ số index 
+				
+			- get(int index) 	: Lấy phẩn tử tại chỉ số index 
+
+			- size() 		: Trả về số lượng phần tử trong danh sách  
+			
+		# Các phương thức nâng cao 
+			- isEmpty() 	: Kiểm tra danh sách có rỗng không 
+			- contains(Object o)	: Kiểm tra xem danh sách có chứa một phần tử cụ thể không 
+			- indexOf(Object o) và lastIndexOf(Object o)	: Trả về chỉ số xuất hiện đầu tiên hoặc cuối cùng trong phần tử 
+			- toArray()  : Chuyển đổi tử ArrayList sang Array 
+			- subList(int fromIndex , int toIndex) : Trả về một danh sách con (sublist) từ fromIndex đến toIndex -1 
+			
+		# Vấn đề hiệu suất  
+			Khi nào nên sử dụng ArrayList 
+				- Khi cần truy cập phần tử nhanh qua chỉ số 
+				- Khi số lượng thêm/xóa không lớn hoặc chủ yếu thao tác ở cuối danh sách 
+			 ## Nhược điểm của ArrayList 
+				
+				- Chi phí mở rộng mảng  
+					Khi mảng nội bộ đầy, ArrayList tạo ra một mảng mới với kích thước gấp 1.5 lần và sao chép dữ liệu từ mảng cũ sang mảng mới. Quá trình này tốn tài nguyên 
+				
+				- Xóa/ Thêm ở giữa hoặc đầu 
+					Khi xóa/ thêm ở giữa danh sách , các phần tử phía sau phải dịch chuyển(O(n))
+				
+				- Không đồng bộ (Non Thread-Safe )
+					ArrayList Không đồng bộ, không được phù hợp cho các ứng dụng đa luồng trừ khi được quản lý thủ công hoặc dùng 
+					Collections.synchronizedList 
+				
+		# So sánh với các cấu trúc khác  
+				Đặc điểm			ArrayList		LinkedList			Vector
+				Truy cập			Nhanh (O(1))	Chậm (O(n))			Nhanh (O(1))
+				Thêm/xóa ở đầu		Chậm (O(n))		Nhanh (O(1))		Chậm (O(n))
+				Đồng bộ				Không			Không				Có
+				Mở rộng kích thước	Gấp 1.5 lần		Không áp dụng		Gấp đôi
+				
+			
+		
+		# Chuyển đổi từ  ArrayList và các cấu trúc khác : 
+			Từ ArrayList sang mảng : 
+				ArrayList<String> lst = new ArrayList<>();
+				lst.add("a"); lst.add("b");
+				String[] arr = lst.toArray(new String[0]);
+				
+			Từ Mảng sang ArrayList 
+				String[] arr = {"a" , "b" , "c"};
+				ArrayList<String> lst = new ArrayList<>(Arrays.asList(arr));
+			
+			Từ ArrayList sang LinkedList: 
+				LinkedList<String> linkedList = new LinkedList<>(list);
+				
+		# Vấn đề đồng bộ hóa(Thread-Safety ) :
+			Đồng bộ hóa với Collections.synchronizedList
+				List<String> syncList = Collections.synchronizedList(new ArrayList<>());
+				
+			Ví dụ trong sử dụng đa luồng  
+				synchronized(list){
+					for(String s : list){
+						System.out.println(s);
+					}
+				}
+			
+		# Sử dụng ArrayList với Generics 
+			Generics giúp đảo bảo kiểu dữ liệu 
+			- Tránh lỗi Runtime 
+			
+			ArrayList<Integer> numbers = new ArrayList<>();
+			number.add(1)
+			int value = numbers.get(0		// không cần ép kiểu  
+			
+		
+		# Hiểu chi tiết về Sublist: 
+			Cách hoạt động : 
+				subList(int fromIndex , int toIndex) tạo một view trên danh sách gốc , không phải bản sao .
+				- Thay đổi giá trị trong sublist cũng thay đổi giá trị trong danh sách gốc 
+				- THAY ĐỔI CẤU TRÚC TRONG DANH SÁCH GỐC(THÊM / XÓA), VIỆC TRUY CẬP SUBLIST SẼ GÂY LỖI (ConcurrentModificationException)
+				
+				ArrayList<String> list = new ArrayList<>(Arrays.asList("a" , "b", "c" , "d" , e ));
+				List<String> subList = list.subList(1, 4)  // [b , c , d]  ->  getIndex  1 ,  2  , 3 
+				subList.set(1 , "x") // Thay đổi sublist cũng làm thay đổi giá trị của list gốc 
+				System.out.println(list)  // [a, b, x, d, e]
+			
+			
+			
+		# Các lỗi thường gặp khi làm việc với ArrayList 
+			- IndexOutOfBoundException : Thêm xóa các phần tử tại chỉ số không hợp lệ  
+			- ClassCastException : Xảy ra khi không sử dụng Generics và có ép kiểu sai 
+			- ConcurrentModificationException : Khi danh sách bị thay đổi trong khi đang duyệt bằng Iterator hoặc for-each 
+			
+			
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

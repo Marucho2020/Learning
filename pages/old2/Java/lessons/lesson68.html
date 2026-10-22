@@ -1,0 +1,494 @@
+<html><head><title>Lesson 68 == ThreadLocal & Stateless Servlet ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 68 -- ThreadLocal & Stateless Servlet -//</h1><pre>
+# Khái niệm 
+	Trong thiết kế hệ thống hiệu suất cao, việc quản lý dữ liệu thread-safe mà vẫn đảm bảo hiệu suất tốt là một bài toán quan trọng. ThreadLocal và Stateless Servlet là hai cách phổ biến giúp giải quyết vấn đề này. 
+	
+//------------------ ThreadLocal - Quản lý biến theo từng thread 
+
+# 🔹 Khái niệm  
+		ThreadLocal<T> là một biến cục bộ theo thread, có nghĩa là mỗi thread có một bản sao riêng biệt của biến đó. Nó giúp lưu dữ liệu độc lập cho từng thread, tránh tình trạng race condition trong môi trường đa luồng
+		
+# 🔹 Ứng dụng chính của ThreadLocal : 
+		- Lưu thông tin request, user session, transaction trong đa luồng 
+		- Tạo một bộ nhớ cache cục bộ theo từng thread 
+		- Quản lý context như database connection hoặc Spring Security Context 
+		
+# 	🔹 Cách sử dụng ThreadLocal 
+
+		## 📌 Dùng ThreadLocal để lưu biến user cho từng request
+
+			public class UserContext {
+				private static final ThreadLocal<String> currentUser = ThreadLocal.withInitial(() -> "Guest");
+			
+				public static void setUser(String user) {
+					currentUser.set(user);
+				}
+			
+				public static String getUser() {
+					return currentUser.get();
+				}
+			
+				public static void clear() {
+					currentUser.remove(); // Giải phóng tài nguyên tránh memory leak
+				}
+			}
+
+
+		## 📌 Cách sử dụng ThreadLocal trong servlet 
+			@WebServlet("/threadlocal")
+			public class ThreadLocalServlet extends HttpServlet {
+				protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+					String user = req.getParameter("user");
+					UserContext.setUser(user); // Lưu user vào ThreadLocal
+			
+					resp.getWriter().println("Current User: " + UserContext.getUser());
+			
+					UserContext.clear(); // Xóa sau khi dùng để tránh memory leak
+				}
+			}
+			
+
+# ✅ Lợi ích: 
+		Mỗi thread có một biến (curentUser) riêng, tránh lỗi race condition . 
+		Không cần đồng bộ hóa(synchronized), giúp cải thiện hiệu suất . 
+
+
+# ⚠ Lưu ý quan trọng 
+		- Nhớ gọi remove() sau khi sử dụng ! Nếu không, dữ liệu của thread cũ có thể bị tái sử dụng trong thread pool, gây lỗi bảo mật 
+		- Không sử dụng trong ứng dụng có nhiều tầng (distributed system), vì ThreadLocal chỉ hoạt động trong JVM 
+		
+		
+
+# 🔹 Ứng dụng thực tế của ThreadLocal 
+	
+	## Quản lý Transactional trong JDBC 
+		public class ConnectionManager {
+			private static final ThreadLocal<Connection> connectionHolder = new ThreadLocal<>();
+		
+			public static void setConnection(Connection conn) {
+				connectionHolder.set(conn);
+			}
+		
+			public static Connection getConnection() {
+				return connectionHolder.get();
+			}
+		
+			public static void clear() {
+				connectionHolder.remove();
+			}
+		}
+		
+		🔥 Trong hệ thống thực tế, Spring đã tích hợp ThreadLocal để quản lý transaction trong Hibernate.	
+
+
+
+//------------------ @Transactional thực sự làm gì 
+	
+# Khái niệm 
+	Khi bạn gắn @Transactional vào một method hoặc class trong Spring:
+	✅ Spring bắt đầu một transaction trước khi method chạy.
+	✅ Nếu method chạy thành công, transaction sẽ commit (lưu thay đổi vào DB).
+	✅ Nếu method gặp lỗi (throw Exception), transaction sẽ rollback (hủy bỏ thay đổi).
+
+
+# Ví dụ cơ bản 
+	
+		@Service
+		public class UserService {
+			@Transactional
+			public void createUser(User user) {
+				userRepository.save(user); // Lưu vào DB
+				sendEmail(user.getEmail()); // Nếu lỗi ở đây, transaction sẽ rollback
+			}
+		}
+			
+		➡ Nếu sendEmail() ném lỗi (Exception), userRepository.save(user) cũng bị rollback, tức là dữ liệu sẽ không lưu vào DB.
+
+
+
+# Những lỗi phổ biến khi dùng @Transactional
+
+	## ❌ 2.1. Gọi @Transactional từ chính class của nó 
+		Spring dùng proxy để quản lý @Transactional. Nếu bạn gọi method từ cùng một class, transaction sẽ không hoạt động 
+		
+			### ⚠ Sai cách
+
+				@Service
+				public class UserService {
+					@Transactional
+					public void createUser(User user) {
+						userRepository.save(user);
+					}
+				
+					public void registerUser(User user) {
+						createUser(user); // ❌ Gọi từ chính class -> Transaction không hoạt động!
+					}
+				}
+
+
+
+			### ✅ Đúng cách
+				- Gọi từ class khác hoặc dùng @Autowired chính class của nó 
+				
+						@Service
+						public class UserService {
+							@Autowired
+							private UserService self; // Inject chính nó
+						
+							@Transactional
+							public void createUser(User user) {
+								userRepository.save(user);
+							}
+						
+							public void registerUser(User user) {
+								self.createUser(user); // ✅ Transaction hoạt động
+							}
+						}
+
+
+
+			### 💡 Cách tốt hơn: Tách thành một service khác. 
+			
+			
+						@Service
+						public class UserTransactionService {
+							@Transactional
+							public void createUser(User user) {
+								userRepository.save(user);
+							}
+						}
+						
+						
+						
+						@Service
+						public class UserService {
+							@Autowired
+							private UserTransactionService userTransactionService;
+						
+							public void registerUser(User user) {
+								userTransactionService.createUser(user); // ✅ Transaction hoạt động
+							}
+						}
+
+
+
+
+
+	## ❌ 2.2. Không đặt @Transactional ở mức public 
+		Spring chỉ áp dụng transactional trên các method public. Nếu dùng private hoặc protected, transaction không có hiệu lực 
+			
+			
+			### ⚠ Sai cách 
+			
+			
+					@Service
+					public class UserService {
+						@Transactional
+						private void createUser(User user) { // ❌ Không hoạt động vì không phải public
+							userRepository.save(user);
+						}
+					}
+
+			### ✅ Cách đúng 
+			
+					@Service
+					public class UserService {
+						@Transactional
+						public void createUser(User user) { // ✅ Bắt buộc phải là public
+							userRepository.save(user);
+						}
+					}
+
+				
+
+
+	## ❌ 2.3. Chỉ RuntimeException mới kích hoạt rollback 
+	
+		Mặc định, @Transactional chỉ rollback khi gặp RuntimeException hoặc Error. Nếu method ném Checked Exception , nó sẽ không rollback 
+		
+		
+			### ⚠ Sai cách
+				
+
+					@Service
+					public class UserService {
+						@Transactional
+						public void createUser(User user) throws Exception { 
+							userRepository.save(user);
+							throw new Exception("Checked Exception xảy ra"); // ❌ Không rollback!
+						}
+					}
+
+			### ✅ Cách đúng 
+				Cấu hình @Transactional(rollbackFor = Exception.class):
+				
+					@Service
+					public class UserService {
+						@Transactional(rollbackFor = Exception.class)
+						public void createUser(User user) throws Exception {
+							userRepository.save(user);
+							throw new Exception("Checked Exception xảy ra"); // ✅ Rollback hoạt động
+						}
+					}
+					
+
+
+	## ❌ 2.4. Không đặt @Transactional đúng chỗ
+		
+		### ⚠ Sai: Đặt trên Controller 
+			
+				@RestController
+				@RequestMapping("/users")
+				public class UserController {
+					@Transactional // ❌ Sai! Không nên đặt ở Controller
+					@PostMapping
+					public void createUser(@RequestBody User user) {
+						userService.createUser(user);
+					}
+				}
+
+		
+		### ✅ Đúng: Đặt trên Service
+		
+				@Service
+				public class UserService {
+					@Transactional // ✅ Đặt ở Service
+					public void createUser(User user) {
+						userRepository.save(user);
+					}
+				}
+
+
+
+# Các mức cách hoạt động của Transactional 
+		
+		
+		Mức độ Isolation					Mô tả
+		DEFAULT						Dùng mức của DB (thường là READ COMMITTED).
+		READ UNCOMMITTED			Thấp nhất, đọc dữ liệu chưa commit (dễ bị lỗi Dirty Read).
+		READ COMMITTED				Chỉ đọc dữ liệu đã commit (tránh Dirty Read).
+		REPEATABLE READ				Đọc dữ liệu giống nhau trong cùng một transaction (tránh Phantom Read).
+		SERIALIZABLE				Cao nhất, đảm bảo không có xung đột dữ liệu.
+
+
+
+
+		### 📌 Ví dụ: Cấu hình Isolation Level 
+		
+		
+			@Transactional(isolation = Isolation.REPEATABLE_READ)
+			public void updateUserBalance(Long userId, BigDecimal amount) {
+				User user = userRepository.findById(userId).orElseThrow();
+				user.setBalance(user.getBalance().add(amount));
+				userRepository.save(user);
+			}
+
+
+# Kết luận : Dùng @Transactional thế nào cho đúng ? 
+	
+		✅ Luôn đặt @Transactional ở Service, không đặt ở Controller.
+		✅ Không gọi method @Transactional từ chính class của nó.
+		✅ Chỉ rollback với RuntimeException, nếu muốn rollback Exception thì phải dùng rollbackFor = Exception.class.
+		✅ Nhớ đặt method là public, vì Spring chỉ quản lý giao dịch trên method public.
+		✅ Cẩn thận với thread pool, async hoặc các method chạy song song, vì @Transactional chỉ hoạt động trong cùng một thread.
+
+
+
+
+
+//----------------------- Stateless Servlet -  Kiến trúc không lưu trạng thái 
+
+# Khái niệm 
+	🔹 Stateless Servlet là gì? 
+		Trong thiết kế web hiện đại, Stateless Servlet là một servlet không lưu trạng thái trên instance, nghĩa là: 
+			- Không lưu biến instance(private int counter;) để tránh lỗi đồng bộ hóa.
+			- Dữ liệu request đến và đi một cách độc lập, không phụ thuộc vào trạng thái cũ. 
+			
+	💡 Ứng dụng chính của Stateless Servlet 
+		Xây dựng RESTful API.
+		Thiết kế hệ thống mở rộng dễ dàng (scalable)
+		Tích hợp với microservices để giảm phụ thuộc 
+
+	
+# Cách triển khai State Servlet 
+	
+	###📌 Ví dụ 1: Stateless Servlet chỉ xử lý request mà không lưu trạng thái  
+	
+			@WebServlet("/stateless")
+			public class StatelessServlet extends HttpServlet {
+				protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+					String user = req.getParameter("user");
+					resp.getWriter().println("Hello, " + user);
+				}
+			}
+
+
+		🔥 Ưu điểm của Stateless Servlet:
+		✔ Không lưu biến instance → Không cần đồng bộ hóa.
+		✔ Dễ mở rộng, phù hợp với microservices, cloud-based.
+		✔ Tăng hiệu suất, giảm tài nguyên bộ nhớ.
+
+
+	### 📌 Ví dụ 2: Stateless Servlet xử lý tính toán nhưng không giữ trạng thái 
+	
+			@WebServlet("/calculate")
+			public class CalculationServlet extends HttpServlet {
+				protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+					int a = Integer.parseInt(req.getParameter("a"));
+					int b = Integer.parseInt(req.getParameter("b"));
+					int sum = a + b;
+					
+					resp.getWriter().println("Sum: " + sum);
+				}
+			}
+
+		🚀 Điểm mạnh:
+
+		Dữ liệu được truyền qua request, không lưu trên server.
+		Có thể scale out dễ dàng bằng load balancer.
+
+
+
+# Stateless Servlet trong Java EE 
+	
+Trong Java EE truyền thống, bạn có thể tạo một Stateless Servlet bằng cách sử dụng @WebServlet. Ví dụ:
+
+		@WebServlet("/stateless")
+		public class StatelessServlet extends HttpServlet {
+		
+			private static final long serialVersionUID = 1L;
+		
+			@Override
+			protected void doGet(HttpServletRequest request, HttpServletResponse response)
+					throws ServletException, IOException {
+				response.getWriter().write("Hello from Stateless Servlet");
+			}
+		}
+
+	## Điểm chính của Stateless Servlet 
+		
+			- Không lưu trạng thái giữa các request.
+			- Mỗi request được xử lý độc lập, không có session hoặc dữ liệu cục bộ (instance variables).
+			- Có thể mở rộng dễ dàng mà không lo vấn đề đồng bộ dữ liệu giữa các thread.
+
+
+
+
+
+# Stateless Servlet trong Spring 
+	Trong Spring, bạn không cần dùng Servlet trực tiếp mà thay thế bằng Spring Controller, vì Spring Boot sử dụng DispatcherServlet để xử lý request.
+	
+			@RestController
+			@RequestMapping("/stateless")
+			public class StatelessController {
+			
+				@GetMapping
+				public String statelessResponse() {
+					return "Hello from Stateless Controller";
+				}
+			}
+
+	# 🔹 Khác biệt giữa Stateless Servlet và Spring Controller 
+	
+	
+	Feature				Stateless Servlet (Java EE)								Spring Controller
+	Triển khai				Kế thừa HttpServlet										Dùng @RestController
+	Xử lý request			Dùng doGet(), doPost()									Dùng @GetMapping, @PostMapping
+	Cấu hình				web.xml hoặc @WebServlet								Spring Boot tự động cấu hình
+	Quản lý lifecycle		Java EE container quản lý								Spring container quản lý
+
+	
+	
+# 	Stateless vs Stateful trong Spring 
+	
+	
+	## Stateless (Không có trạng thái)
+		
+		- Mỗi request được xử lý độc lập.
+		
+		- Không giữ dữ liệu giữa các request (VD: không dùng instance variables).
+		
+		- Dễ dàng scale vì không có trạng thái cần đồng bộ.
+		
+		
+		
+	## Stateful (Có trạng thái) 
+		
+		- Giữ dữ liệu giữa các request bằng session hoặc shared state.
+		
+		- Cần cơ chế đồng bộ nếu chạy trên nhiều instance.
+	
+	
+	
+	
+	## Ví dụ về Stateful Bean (Không phải Stateless!) 
+	
+		@RestController
+		@RequestMapping("/stateful")
+		@SessionScope  // ⚠️ Lưu trạng thái trên session (Stateful)
+		public class StatefulController {
+			private int counter = 0; // ⚠️ Lưu dữ liệu giữa các request
+		
+			@GetMapping
+			public String statefulResponse() {
+				counter++;
+				return "Request count: " + counter;
+			}
+		}
+		➡ Mỗi request sẽ tăng giá trị counter, nghĩa là servlet này có trạng thái.
+	
+	
+	
+✔ Nếu hệ thống cần hiệu năng cao, dễ scale, thì nên dùng stateless (@RestController).
+✔ Nếu cần giữ trạng thái giữa các request (VD: shopping cart), thì có thể dùng stateful, nhưng cần cân nhắc về đồng bộ dữ liệu.
+
+👉 Tóm lại: Trong Spring, không cần dùng @WebServlet, thay vào đó, dùng @RestController và giữ kiến trúc stateless cho hệ thống linh hoạt hơn. 🚀	
+
+
+
+
+# 3. So sánh ThreadLocal và Stateless Servlet 
+
+
+	🔥 Tiêu chí							🏆 ThreadLocal												🚀 Stateless Servlet
+	Lưu trạng thái		✅ Có (cho từng thread)													❌ Không lưu trạng thái
+	Thread safety		✅ An toàn (vì mỗi thread có một bản sao riêng)							✅ An toàn (vì không lưu biến instance)
+	Ứng dụng chính		Lưu thông tin user session, transaction, DB connection					REST API, microservices, scalable system
+	Hiệu suất			⚡ Cao (vì không cần synchronized) nhưng có nguy cơ memory leak			⚡ Cao (vì không lưu trạng thái)
+	Khả năng mở rộng	❌ Không tốt (chỉ hoạt động trong phạm vi JVM)							✅ Tốt, dễ scale
+	Bảo mật				❌ Nếu không remove(), có thể bị rò rỉ dữ liệu giữa các request			✅ Bảo mật tốt, không lưu dữ liệu dài hạn
+
+
+
+# Khi nào dùng ThreadLocal & Stateless Servlet?
+ 
+
+
+🚀 Tình huống						✅ Nên dùng ThreadLocal															✅ Nên dùng Stateless Servlet
+Lưu dữ liệu theo request		Nếu cần giữ biến trong cùng một thread (VD: User Session, Transaction).			Nếu chỉ cần xử lý request độc lập, không giữ trạng thái.
+Ứng dụng REST API				❌ Không phù hợp																✅ Cực kỳ phù hợp
+Ứng dụng Microservices			❌ Không phù hợp (ThreadLocal chỉ hoạt động trong JVM)							✅ Rất phù hợp
+Giao dịch database				✅ Dùng để quản lý transaction trong JDBC										❌ Không phù hợp
+Hệ thống scale lớn				❌ Không mở rộng tốt															✅ Rất dễ scale
+	
+
+
+
+# 🔥 Kết luận 
+
+- Nếu cần lưu dữ liệu trong từng thread, hãy dùng ThreadLocal.
+- Nếu muốn hệ thống dễ scale, tối ưu REST API hoặc microservices, hãy dùng Stateless Servlet.
+
+
+
+
+
+
+//-------------------- @Controller và @RestController 
+
+
+Annotation							Mô tả
+@RestController				Trả về dữ liệu JSON/XML (RESTful API)
+@Controller					Trả về View (thường dùng với JSP, Thymeleaf)
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

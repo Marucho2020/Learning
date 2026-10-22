@@ -1,0 +1,217 @@
+<html><head><title>Lesson 32 == Vue Teleport ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../vue-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 32 -- Vue Teleport -//</h1><pre># Khái niệm 
+	Teleport là một tính năng trong Vue 3 cho phép bạn "dịch chuyển" (render) một phần nội dung của component đến một vị trí khác trong DOM, không bị giới hạn bởi cấu trúc DOM của component mẹ.
+	
+	Điều này hữu ích khi bạn cần đặt nội dung (như modal, tooltip, hoặc notification) ở một vị trí cụ thể trong DOM (thường là trực tiếp dưới <body>), nhưng vẫn muốn quản lý logic của nó trong component hiện tại.
+	
+	
+# 	2. Tại sao cần Teleport? 
+	
+	## Vấn đề với DOM thông thường: 
+		Nội dung của một component thường được render bên trong cây DOM của nó. Ví dụ, một modal trong một component sẽ nằm trong <div> của component đó, dẫn đến:
+
+		CSS khó quản lý: Modal có thể bị ảnh hưởng bởi style của parent (như overflow: hidden hoặc position: relative).
+
+		Z-index phức tạp: Modal có thể không hiển thị đúng trên cùng nếu parent có z-index thấp.
+
+	Khả năng truy cập: Một số nội dung (như dialog) cần nằm ở cấp cao trong DOM để hỗ trợ screen reader hoặc focus management.	
+
+
+
+	## Teleport giải quyết 
+		Cho phép render nội dung ở bất kỳ đâu trong DOM (thường là <body> hoặc một container riêng).
+		
+		Vẫn giữ logic và trạng thái của nội dung trong component gốc.
+
+
+
+# 3. Cách sử dụng Teleport 
+
+	Sử dụng thẻ <teleport> với thuộc tính to, chỉ định vị trí đích trong DOM (CSS selector).
+	Nội dung bên trong <teleport> sẽ được render tại vị trí đích, nhưng logic (data, methods) vẫn thuộc về component chứa <teleport>.
+	
+		to: Một CSS selector (như 'body', '#modal-container') hoặc một HTMLElement.
+
+
+# 4. Ví dụ cơ bản 
+	Giả sử bạn muốn tạo một modal component và render nó trực tiếp dưới <body>.
+	
+	## HTML cấu trúc 
+<body>
+  <div id="app">
+    <!-- Ứng dụng Vue -->
+  </div>
+  <!-- Modal sẽ được render trực tiếp dưới <body> -->
+</body>	
+
+	## Modal Component
+	
+<template>
+  <div>
+    <button @click="showModal = true">Open Modal</button>
+    <teleport to="body" v-if="showModal">
+      <div class="modal">
+        <h2>Modal Content</h2>
+        <button @click="showModal = false">Close</button>
+      </div>
+    </teleport>
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      showModal: false
+    };
+  }
+};
+</script>
+
+<style>
+.modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  padding: 20px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.5);
+}
+</style>
+
+
+	## Giải thích 
+		- <teleport to="body">:
+			Nội dung bên trong <teleport> (div modal) sẽ được render trực tiếp dưới <body>, không nằm trong <div id="app">.
+
+
+		- Logic trong component:
+			Biến showModal và sự kiện @click vẫn được quản lý trong component, dù modal được render ở nơi khác.
+			
+		- CSS: 
+			Modal sử dụng position: fixed và không bị ảnh hưởng bởi style của parent (như overflow: hidden của #app).
+
+
+		- Kết quả DOM: 
+<body>
+  <div id="app">
+    <button>Open Modal</button>
+  </div>
+  <div class="modal">
+    <h2>Modal Content</h2>
+    <button>Close</button>
+  </div>
+</body>			
+
+
+
+# 5. Ví dụ với Container riêng
+	Nếu bạn muốn render modal vào một container cụ thể thay vì <body>:
+
+	## HTML 
+<body>
+  <div id="app"></div>
+  <div id="modal-container"></div> <!-- Container cho modal -->
+</body>	
+
+
+	## Component 
+<template>
+  <div>
+    <button @click="showModal = true">Open Modal</button>
+    <teleport to="#modal-container" v-if="showModal">
+      <div class="modal">
+        <h2>Custom Modal</h2>
+        <button @click="showModal = false">Close</button>
+      </div>
+    </teleport>
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      showModal: false
+    };
+  }
+};
+</script>		
+
+	## <teleport to="#modal-container"> 
+		Modal sẽ được render trong <div id="modal-container">, không phải <body>.
+
+
+
+# 6. Lưu ý quan trọng 
+
+	## Chỉ có trong Vue 3 : 
+		<teleport> là tính năng mới trong Vue 3, không có trong Vue 2.
+		
+	## Vị trí đích phải tồn tại: 
+		Selector trong to (như 'body' hoặc '#modal-container') phải trỏ đến một phần tử có thật trong DOM khi <teleport> được render. Nếu không, Vue sẽ báo lỗi.
+
+	## Giữ trạng thái:
+		Dù nội dung được render ở nơi khác, logic (data, computed, methods) vẫn thuộc về component chứa <teleport>.
+		
+	## CSS và Scoped Styles 
+		Nếu dùng <style scoped> trong component, style vẫn áp dụng cho nội dung trong <teleport>, vì Vue thêm thuộc tính data-v-* để đảm bảo tính đóng gói.
+
+	## Nhiều Teleport 
+		Bạn có thể dùng nhiều <teleport> trong cùng một component, mỗi cái trỏ đến đích khác nhau.
+		
+	## Vô hiệu hóa Teleport: 
+		Thuộc tính :disabled="true" trên <teleport> sẽ khiến nội dung render tại vị trí gốc (không dịch chuyển).
+
+# 7. Ứng dụng thực tế 
+
+	Modal/Dialog: Đặt modal trực tiếp dưới <body> để đảm bảo hiển thị trên cùng và không bị ảnh hưởng bởi style của parent.
+	
+	Tooltip/Popover: Render tooltip ở cấp cao để quản lý z-index dễ dàng.
+	
+	Notification: Hiển thị thông báo ở một container riêng biệt.
+	
+	Accessible Components: Đặt các phần tử như dialog ở vị trí thích hợp trong DOM để hỗ trợ screen reader.
+	
+
+# Ví dụ các trường hợp có thể sử dụng 
+	
+	Vue chỉ chọn phần tử đầu tiên khớp với selector trong DOM. 	
+	Nếu selector trong to không khớp với bất kỳ phần tử nào trong DOM khi <teleport> được render, Vue sẽ:
+		- Không render nội dung của <teleport>.
+		- Có thể báo lỗi trong console (tùy môi trường dev).	
+	
+	
+	## trỏ đến thẻ con trực tiếp  con của thẻ body 
+		<teleport to="body">
+			<div class="modal">Modal Content</div>
+		</teleport>
+
+
+	## trỏ đến id 
+		- Cú pháp: to="#modal-container" 
+		- Ý nghĩa: Nội dung sẽ được render bên trong phần tử có id="modal-container".
+		
+	## Trỏ đến Class 
+		- Cú pháp: to=".modal-container"
+		- Ý nghĩa: Nội dung sẽ được render bên trong phần tử đầu tiên có class modal-container. Vue chỉ chọn phần tử khớp đầu tiên trong DOM.
+		
+	## Trỏ đến thuộc tính name 
+		- Cú pháp: to="[name=modal-container]"
+		- Ý nghĩa: Nội dung sẽ được render bên trong phần tử có thuộc tính name="modal-container". Đây là một CSS selector theo thuộc tính.
+			Lưu ý: Thuộc tính name thường được dùng trong các thẻ như <input> hoặc <form>, nên việc dùng [name=...] hiếm gặp hơn so với ID hoặc class.
+			
+	## Lưu ý: Thuộc tính name thường được dùng trong các thẻ như <input> hoặc <form>, nên việc dùng [name=...] hiếm gặp hơn so với ID hoặc class. 
+	
+		- Cú pháp: to="table", to="header", hoặc kết hợp với selector cụ thể như to="table.my-table".
+		- Ý nghĩa: Nội dung sẽ được render bên trong phần tử đầu tiên khớp với thẻ được chỉ định.
+
+	## Trỏ đến selector phức tạp 
+		Bạn có thể sử dụng bất kỳ CSS selector hợp lệ nào, ví dụ:
+			- to=".modal-container .inner" (trỏ đến phần tử .inner bên trong .modal-container).
+			- to="header:first-child" (trỏ đến thẻ <header> đầu tiên).
+			- to="[data-modal=true]" (trỏ đến phần tử có thuộc tính data-modal="true").
+		
+
+
+</pre><a id='backBottom' href='../vue-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

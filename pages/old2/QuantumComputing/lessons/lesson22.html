@@ -1,0 +1,105 @@
+<html><head><title>Lesson 22 == Tensor product và Tích Kronecker ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../quantum-computing-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 22 -- Tensor product và Tích Kronecker -//</h1><pre># Khái niệm 
+Tensor product là cách để kết hợp hai không gian vector (qubit) thành một hệ thống lớn hơn.
+
+	Nếu: 
+		Qubit A: trạng thái vector |ψ⟩ = [a, b]
+		Qubit B: trạng thái vector |ϕ⟩ = [c, d] 
+		
+	=> Hệ hai qubit là: 
+		|ψ⟩ ⊗ |ϕ⟩ = [a, b] ⊗ [c, d] = [a*c, a*d, b*c, b*d]
+ 
+	Kích thước tăng theo lũy thừa:
+		2 qubit → 4 phần tử, 3 qubit → 8 phần tử, ...	
+		
+	
+# 🧠 Mục tiêu bài học 
+	- Hiểu ý nghĩa vật lý và toán học của tensor product. 
+	- Biết cách tính tích Kronecker bằng tay và bằng NumPy. 
+	- Biết ứng dụng vào việc biểu diễn trạng thái nhiều qubit và ma trận gate trong lập trình lượng tử (Qiskit). 
+	- Thực hành: Tạo trạng thái nhiều qubit bằng tích tensor. 
+	
+	
+
+
+
+# 2. 🧮 Kronecker Product là gì? 
+
+	Định nghĩa toán học: 
+		Kronecker product là tích tensor giữa 2 ma trận. 
+		
+	Ví dụ: 
+A = [[1, 2],
+     [3, 4]]
+
+B = [[0, 5],
+     [6, 7]]
+
+
+
+# 3. 📘 Code ví dụ Kronecker bằng NumPy 
+import numpy as np
+
+# Hai vector qubit |0⟩ và |1⟩
+zero = np.array([1, 0])
+one = np.array([0, 1])
+
+# Trạng thái 2 qubit: |0⟩⊗|1⟩
+tensor_state = np.kron(zero, one)
+print("Tensor |0⟩⊗|1⟩ =", tensor_state)
+# Kết quả: [0 1 0 0] → chỉ có phần tử thứ 2 là 1 (vị trí |01⟩)
+
+Tạo 3 qubit: 
+# |0⟩⊗|1⟩⊗|1⟩
+state = np.kron(np.kron(zero, one), one)
+print("Tensor |0⟩⊗|1⟩⊗|1⟩ =", state)
+
+
+# 4. ⚡Ứng dụng: Trạng thái qubit nhiều qubit trong lượng tử
+
+Trong lượng tử:
+
+|0⟩ = [1, 0]
+
+|1⟩ = [0, 1]
+
+Trạng thái |01⟩ là:
+|0⟩ ⊗ |1⟩ = np.kron([1,0], [0,1]) = [0, 1, 0, 0] → đúng vị trí thứ 2.
+
+# 5. ✨ Tensor product với quantum gates
+Tương tự vector, ma trận gate cũng dùng tensor.
+
+Ví dụ: ma trận I và X:
+I = np.array([[1, 0],
+              [0, 1]])
+X = np.array([[0, 1],
+              [1, 0]])
+
+# Gate 2 qubit: I ⊗ X
+tensor_gate = np.kron(I, X)
+print("I ⊗ X =\n", tensor_gate)
+
+
+# 6. 🧪 Thực hành mini bài hôm nay
+# Tạo trạng thái 2 qubit |0⟩⊗|1⟩ và 3 qubit |0⟩⊗|1⟩⊗|0⟩
+zero = np.array([1, 0])
+one = np.array([0, 1])
+
+# |01⟩
+state_01 = np.kron(zero, one)
+print("|01⟩ =", state_01)
+
+# |010⟩
+state_010 = np.kron(np.kron(zero, one), zero)
+print("|010⟩ =", state_010)
+
+
+
+# 7. 🚀 Tổng kết
+| Khái niệm         | Ý nghĩa                                                  |
+| ----------------- | -------------------------------------------------------- |
+| Tensor product    | Gộp 2 vector/ma trận thành không gian lớn hơn            |
+| Kronecker product | Tensor product giữa 2 ma trận (áp dụng cho gate, vector) |
+| `np.kron(A, B)`   | Cách dùng Python để tính tích tensor                     |
+| Qiskit            | Dùng `tensor()` hoặc `Statevector.from_label()`          |
+
+</pre><a id='backBottom' href='../quantum-computing-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

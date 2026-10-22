@@ -1,0 +1,238 @@
+<html><head><title>Lesson 9 == React Event ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../react-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 9 -- React Event -//</h1><pre>
+# 1. Tổng quan về Events trong React 
+	Tóm tắt: React cho phép xử lý các sự kiện người dùng (như click, nhập liệu, di chuột) giống HTML, nhưng sử dụng cú pháp camelCase (ví dụ: onClick thay vì onclick) và gắn hàm xử lý sự kiện thông qua dấu {}. Các sự kiện trong React được gọi là Synthetic Events, là phiên bản bao bọc của sự kiện DOM gốc.
+
+
+	## Events là gì?: 
+		Events là các hành động do người dùng thực hiện (như nhấp chuột, nhập bàn phím) hoặc hệ thống kích hoạt (như tải xong trang). Trong React, bạn có thể gắn các hàm xử lý (event handlers) để phản hồi những sự kiện này.
+		
+	## 	So sánh với HTML:
+		HTML: Sự kiện viết thường (ví dụ: onclick="shoot()"), gọi hàm trực tiếp hoặc inline JavaScript.
+		
+		React: Sự kiện viết camelCase (ví dụ: onClick={shoot}), truyền tham chiếu hàm vào dấu {}.
+
+
+	## Tại sao quan trọng? : 
+		Xử lý sự kiện là cách chính để tạo tính tương tác trong ứng dụng React (ví dụ: nút bấm, form, hover).
+		
+		React cung cấp Synthetic Events, đảm bảo tính nhất quán trên các trình duyệt và cải thiện hiệu suất.
+		
+		
+	## Synthetic Events:
+		React bao bọc sự kiện DOM gốc bằng Synthetic Events, cung cấp API thống nhất và tối ưu hóa hiệu suất thông qua cơ chế event delegation (gắn sự kiện ở mức cao thay vì từng phần tử). 	
+		
+		
+		
+# 	2. Thêm Events trong React
+		Tóm tắt: Sự kiện trong React được thêm bằng cách gắn thuộc tính camelCase (như onClick, onChange) vào phần tử JSX và gán một hàm xử lý thông qua {}.
+
+
+	## Cú pháp cơ bản:
+	
+function Football() {
+  const shoot = () => {
+    alert("Great Shot!");
+  };
+
+  return (
+    <button onClick={shoot}>Take the shot!</button>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<Football />);
+
+
+	- Hàm xử lý: shoot là một arrow function, hiển thị alert khi được gọi.
+	- Gắn sự kiện: onClick={shoot} gán hàm shoot làm handler cho sự kiện click.
+	- Kết quả: Khi nhấp nút, alert "Great Shot!" xuất hiện.
+
+
+	## Khác biệt với HTML: 
+		HTML: <button onclick="shoot()">Take the Shot!</button> – gọi hàm trực tiếp hoặc inline.
+		
+		React: <button onClick={shoot}>Take the shot!</button> – truyền tham chiếu hàm, không gọi ngay (shoot thay vì shoot()).
+
+	
+	## 	Lưu ý:
+	
+		Nếu viết onClick={shoot()}, hàm shoot sẽ chạy ngay khi component render, gây lỗi logic.
+		
+		Các sự kiện phổ biến: onClick, onChange, onMouseOver, onKeyDown, onSubmit, v.v.
+		
+		
+	## 	Synthetic Events:
+		React không gắn sự kiện trực tiếp vào phần tử DOM mà sử dụng event delegation, gắn một listener duy nhất ở root của ứng dụng. Điều này giảm bộ nhớ và cải thiện hiệu suất.
+		
+	## 	camelCase: 
+		React sử dụng camelCase để thống nhất với JavaScript (ví dụ: onMouseEnter thay vì onmouseenter).
+		
+	## Hàm xử lý:
+		Thường định nghĩa bên trong component hoặc ngoài component, miễn là có thể truy cập được.
+		
+		
+# 3. Truyền tham số cho Event Handler		
+		
+	Tóm tắt: Để truyền tham số vào hàm xử lý sự kiện, sử dụng arrow function hoặc bind hàm.	
+		
+	## Ví dụ: 
+		
+function Football() {
+  const shoot = (a) => {
+    alert(a);
+  };
+
+  return (
+    <button onClick={() => shoot("Goal!")}>Take the shot!</button>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<Football />);		
+		
+		
+	Truyền tham số: onClick={() => shoot("Goal!")} sử dụng arrow function để gọi shoot với tham số "Goal!".
+	Kết quả: Khi nhấp nút, alert hiển thị "Goal!".	
+		
+		
+	## 	Tại sao cần arrow function?:
+	
+		- Nếu viết onClick={shoot("Goal!")}, hàm shoot sẽ chạy ngay khi render, không chờ click.
+		- Arrow function () => shoot("Goal!") đảm bảo hàm chỉ chạy khi sự kiện xảy ra.	
+	
+	
+	
+	## Cách khác – Bind 
+		
+function Football() {
+  const shoot = (a) => {
+    alert(a);
+  };
+
+  return (
+    <button onClick={shoot.bind(null, "Goal!")}>Take the shot!</button>
+  );
+}	
+	
+		- shoot.bind(null, "Goal!"): Ràng buộc tham số "Goal!" với hàm shoot, tạo hàm mới được gọi khi click.
+		- Lưu ý: Arrow function thường được dùng vì dễ đọc hơn bind.			
+	
+		
+		
+	## 	Hiệu suất: 
+		Arrow function trong onClick={() => ...} tạo một hàm mới mỗi lần render, có thể ảnh hưởng hiệu suất nếu component render nhiều lần. Để tối ưu, định nghĩa hàm xử lý bên ngoài hoặc sử dụng useCallback (sẽ học sau).
+		
+	## 	Truyền nhiều tham số:
+		
+const shoot = (a, b) => {
+  alert(`${a} by ${b}`);
+};
+<button onClick={() => shoot("Goal!", "Messi")}>Take the shot!</button>		
+		
+		
+		
+		
+# 4. React Event Object		
+		Tóm tắt: Hàm xử lý sự kiện trong React nhận một SyntheticEvent object, chứa thông tin về sự kiện (như loại sự kiện, mục tiêu, v.v.).
+		
+		
+		## Ví dụ
+		
+function Football() {
+  const shoot = (a, b) => {
+    alert(b.type); // b là SyntheticEvent
+  };
+
+  return (
+    <button onClick={(event) => shoot("Goal!", event)}>Take the shot!</button>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<Football />);		
+		
+	-	Event object: Tham số b trong shoot(a, b) là SyntheticEvent, chứa thuộc tính type (ở đây là "click").
+	-	Truyền event: onClick={(event) => shoot("Goal!", event)} truyền cả tham số "Goal!" và object event.
+	-	Kết quả: Alert hiển thị "click".		
+		
+		
+	## Thuộc tính SyntheticEvent: 
+		
+		- type: Loại sự kiện (ví dụ: "click", "change").
+		- target: Phần tử kích hoạt sự kiện (ví dụ: <button>).
+		- preventDefault(): Ngăn hành vi mặc định (như submit form).
+		- stopPropagation(): Ngăn sự kiện lan truyền (event bubbling).		
+		
+		
+	## 	Tính năng SyntheticEvent
+		
+		- Được tái sử dụng (pooled) để tối ưu hiệu suất, nên không thể truy cập bất đồng bộ (ví dụ: trong setTimeout).
+		- Nếu cần lưu giá trị event, dùng event.persist() hoặc lưu thuộc tính cụ thể (như event.target.value).		
+		
+		Ứng dụng: Event object rất hữu ích trong các form (như lấy giá trị input) hoặc khi cần kiểm soát hành vi sự kiện (như ngăn submit form).
+		
+		
+# 5. Ví dụ thực tế		
+		
+		
+// Button.js
+function Button({ label, onClick }) {
+  return <button onClick={onClick}>{label}</button>;
+}
+
+// App.js
+import Button from './Button';
+
+function App() {
+  const handleClick = (message, event) => {
+    alert(`${message} (Event type: ${event.type})`);
+  };
+
+  const buttonLabel = "Shoot!";
+  return (
+    <div>
+      <h1>Football Game</h1>
+      <Button
+        label={buttonLabel}
+        onClick={(e) => handleClick("Goal!", e)}
+      />
+    </div>
+  );
+}
+
+// index.js
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App';
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);		
+		
+		
+		- Component: Button nhận label và onClick qua props.
+		- Event Handler: handleClick nhận tham số message và event, hiển thị alert với thông tin sự kiện.
+		- Truyền tham số: onClick={(e) => handleClick("Goal!", e)} truyền cả tham số và event object.
+		- Kết quả: Khi nhấp nút, alert hiển thị "Goal! (Event type: click)".		
+		
+		
+		
+# 	6. Bài học rút ra	
+	## Events trong React: Xử lý sự kiện người dùng (như click, change) bằng cú pháp camelCase (onClick) và {}.
+
+	## Event Handler: 
+		
+		- Gắn hàm: onClick={shoot}.
+		- Truyền tham số: onClick={() => shoot("Goal!")}.
+		- Event object: onClick={(e) => shoot("Goal!", e)}.		
+	
+	## Synthetic Events:
+		Bao bọc sự kiện DOM, cung cấp API thống nhất và tối ưu hiệu suất.
+		
+	## Ứng dụng:
+		Xử lý sự kiện là nền tảng để tạo ứng dụng tương tác.
+		
+		
+
+
+
+</pre><a id='backBottom' href='../react-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

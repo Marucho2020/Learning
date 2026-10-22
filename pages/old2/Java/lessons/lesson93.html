@@ -1,0 +1,126 @@
+<html><head><title>Lesson 93 == CI/CD pipeline ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 93 -- CI/CD pipeline -//</h1><pre>
+# Khái niệm 
+	CI/CD (Continous Integration / Continuous Deployment) không chỉ là Jenkins với vài bước build, mà là một quy trình kỹ thuật và tổ chức để đảm bảo : 
+		- Tốc độ triển khai nhanh 
+		- Tính ổn định, an toàn 
+		- Khả năng scale và quản trị tốt trong tương lai 
+		
+# Tư duy của Senior về CI/CD 
+
+tách CI và CD về mặt chức năng: 
+		
+Thành phần						Mục tiêu chính									Công cụ thường dùng
+CI (Integration)			Build, Test, Static Check						Jenkins, GitHub Actions, GitLab CI
+CD (Delivery/Deployment)	Deploy code, Infra, Rollback				ArgoCD, Spinnaker, Flux, Helm, Terraform
+
+
+
+
+# Kiến trúc CI/CD PIPELINE chuẩn cho hệ thống  lớn 
+	
+
+                    ┌─────────────┐
+                    │ Developer   │
+                    └────┬────────┘
+                         ↓
+                  Push code (Git)
+                         ↓
+        ┌────────────────────────────────────┐
+        │            CI Pipeline             │
+        │  - Checkout source code            │
+        │  - Build (Java, Node, etc.)        │
+        │  - Run unit tests                  │
+        │  - Static code analysis (SonarQube)│
+        │  - Package (Docker, Jar, etc.)     │
+        └────────────────┬───────────────────┘
+                         ↓
+        ┌────────────────────────────────────┐
+        │       Artifact Storage (S3, ECR, Nexus, GHCR) │
+        └────────────────┬───────────────────┘
+                         ↓
+        ┌────────────────────────────────────┐
+        │            CD Pipeline             │
+        │  - Apply Infrastructure (IaC)      │
+        │  - Deploy to Staging               │
+        │  - Run Integration Tests           │
+        │  - Manual/Auto Approval            │
+        │  - Deploy to Production (Blue/Green, Canary) │
+        └────────────────────────────────────┘
+
+
+
+
+
+# 💣 3. NHỮNG CẠM BẪY CẦN TRÁNH 
+	
+	## ❌ Chạy kubectl apply trong CI 
+		→ Vi phạm Separation of Concerns, nên để CD tooll (như ArgoCD) tự pull
+		
+	## ❌ 3.2 Đưa secrets vào YAML hoặc Git 
+		→ Dùng Vault, Sealed Screts hoặc External Secrets Operator để tách secrets 
+		
+	## 	❌ 3.3 Không version hoá artifact
+		-> Mỗi build nên tạo tag version riêng, tránh deploy lại cùng tag "latest".
+
+
+
+# Công cụ ưu tiên dùng (chuẩn hiện đại)
+	
+Mục tiêu								Công cụ
+CI Pipeline						GitHub Actions / GitLab CI / Jenkins
+Code Quality					SonarQube / ESLint / PMD
+Docker Build					BuildKit / Kaniko / Jib (cho Java)
+Artifact Registry				GitHub Container Registry / ECR / Nexus
+CD Tool							ArgoCD (GitOps), Spinnaker (phức tạp hơn)
+Infra as Code					Terraform / Pulumi / Crossplane
+Secrets							Vault / Sealed Secrets / External Secrets
+
+
+
+# 5. TRIỂN KHAI CHUẨN GITOPS (CD HIỆN ĐẠI) 
+
+	GitOps là mô hình trong đó bạn không push code lên server mà để server tự đồng bộ từ Git 
+	
+	✅ Lợi ích: 
+		- Audit (kiểm toán ) được toàn bộ lịch sử deploy 
+		- Không cần cấp quyền cho CI push vào server 
+		- Rollback đơn giản bằng Git Revert 
+		
+	🔧 Công cụ: 
+		- ArgoCD : auto sync với repo Git chứa nhiều manifest Helm/Kustomize 
+		- Helm : Quản lý cấu hình như app version. replica , env 
+		- Terraform : quản lý hạ tầng AWS/GCP (VPC , DB, IAM)
+		
+# Quản lý môi trường Multi-Stage 
+		
+
+Env					Đặc điểm										Deploy strategy
+Dev				Tự động deploy mỗi push									Auto
+Staging			Deploy thủ công hoặc tag							Semi-Auto
+Prod			Require approval, Canary/Blue-Green					Manual hoặc auto có guardrails
+
+
+# Monitor và observability tích hợp CI/CD 
+	Một pipeline chuyên nghiệp phải tích hợp quan sát lỗi, không chỉ build và deploy.
+	
+Thành phần					Công cụ
+Metrics					Prometheus, Grafana
+Logs					Loki, ELK, Datadog
+Tracing					OpenTelemetry, Jaeger
+Alert					Alertmanager, PagerDuty
+
+
+
+
+
+# MẸO CHIẾN LƯỢC CỦA ARCHITECT 
+	
+			-  Decouple CI và CD hoàn toàn.
+			-  Không deploy trực tiếp từ CI.
+			-  Tất cả deploy phải qua Git version (GitOps).
+			-  Mọi thứ phải idempotent và repeatable.
+			-  Hệ thống phải rollback được trong 1 command (hoặc git revert).
+			-  Build image 1 lần, deploy nhiều môi trường, không rebuild.
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

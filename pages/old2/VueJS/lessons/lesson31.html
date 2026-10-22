@@ -1,0 +1,177 @@
+<html><head><title>Lesson 31 == Dynamic Components ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../vue-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 31 -- Dynamic Components -//</h1><pre>
+# Khái niệm 
+	Dynamic Components là một tính năng trong Vue.js cho phép bạn chuyển đổi giữa các component trong cùng một vị trí trong template bằng cách sử dụng thẻ <component> với thuộc tính :is.
+	Thay vì cố định một component cụ thể (như <my-component>), bạn có thể thay đổi component được render dựa trên một biến hoặc điều kiện.
+	
+# 2. Cách hoạt động 
+	Sử dụng thẻ <component> với thuộc tính :is để chỉ định component nào sẽ được render. 
+		Giá trị của :is có thể là: 
+			- Tên component (string, ví dụ: 'my-component').
+			- Một object component (được đăng ký hoặc import).
+			- Một biến hoặc biểu thức JavaScript trả về tên component hoặc object component.
+
+# 3. Ví dụ cơ bản
+	## Định nghĩa các component
+	
+<script>
+export default {
+  components: {
+    'component-a': {
+      template: `<div>Component A</div>`
+    },
+    'component-b': {
+      template: `<div>Component B</div>`
+    }
+  },
+  data() {
+    return {
+      currentComponent: 'component-a' // Mặc định render Component A
+    };
+  }
+};
+</script>
+
+	
+
+	## Sử dụng Dynamic Component 
+<template>
+  <div>
+    <button @click="currentComponent = 'component-a'">Show A</button>
+    <button @click="currentComponent = 'component-b'">Show B</button>
+    <component :is="currentComponent"></component>
+  </div>
+</template>	
+
+
+
+	## Giải thích 
+	<component :is="currentComponent"> sẽ render component-a hoặc component-b tùy thuộc vào giá trị của currentComponent.
+	
+	Khi người dùng nhấn nút "Show A", currentComponent được đặt thành 'component-a', và <component> render <div>Component A</div>.
+	
+	Tương tự, nhấn "Show B" sẽ render <div>Component B</div>.	
+	
+
+	## Kết quả 
+		Ban đầu: <div>Component A</div>
+		Sau khi nhấn "Show B": <div>Component B</div>
+		
+		
+# 4. Sử dụng với Scoped Slots hoặc Props 
+	Dynamic components có thể nhận props hoặc sử dụng scoped slots giống như các component thông thường.
+
+
+
+# Ví dụ với Props
+<script>
+export default {
+  components: {
+    'user-profile': {
+      props: ['name'],
+      template: `<div>Hello, {{ name }}</div>`
+    },
+    'user-settings': {
+      props: ['name'],
+      template: `<div>Settings for {{ name }}</div>`
+    }
+  },
+  data() {
+    return {
+      currentComponent: 'user-profile',
+      userName: 'John'
+    };
+  }
+};
+</script>
+
+<template>
+  <div>
+    <button @click="currentComponent = 'user-profile'">Profile</button>
+    <button @click="currentComponent = 'user-settings'">Settings</button>
+    <component :is="currentComponent" :name="userName"></component>
+  </div>
+</template>
+
+
+	<component :is="currentComponent" :name="userName"> truyền prop name vào component đang được render.
+	
+	Kết quả:
+		Nếu currentComponent là 'user-profile': <div>Hello, John</div>
+		Nếu currentComponent là 'user-settings': <div>Settings for John</div>
+
+# 5. Giữ trạng thái với <keep-alive>
+	Mặc định, khi chuyển đổi giữa các dynamic components, Vue sẽ hủy và tạo lại component mới, làm mất trạng thái (như dữ liệu trong data hoặc trạng thái giao diện).
+	Để giữ trạng thái, bạn có thể bọc <component> trong thẻ <keep-alive>.
+
+
+	## Ví dụ với <keep-alive> 
+<script>
+export default {
+  components: {
+    'component-a': {
+      data() {
+        return { count: 0 };
+      },
+      template: `
+        <div>
+          <p>Count: {{ count }}</p>
+          <button @click="count++">Increment</button>
+        </div>
+      `
+    },
+    'component-b': {
+      template: `<div>Component B</div>`
+    }
+  },
+  data() {
+    return {
+      currentComponent: 'component-a'
+    };
+  }
+};
+</script>
+
+<template>
+  <div>
+    <button @click="currentComponent = 'component-a'">Show A</button>
+    <button @click="currentComponent = 'component-b'">Show B</button>
+    <keep-alive>
+      <component :is="currentComponent"></component>
+    </keep-alive>
+  </div>
+</template>		
+	
+
+	## Giải thích 
+		<keep-alive> lưu trữ trạng thái của component-a (ví dụ: giá trị count) trong bộ nhớ, nên khi chuyển từ component-a sang component-b và quay lại, count không bị reset.
+		
+		Không có <keep-alive>, count sẽ reset về 0 mỗi khi component-a được render lại.
+	
+
+# 6. Lưu ý quan trọng 
+	
+
+	## Đăng ký component 
+		Component phải được đăng ký (toàn cục qua Vue.component hoặc cục bộ qua components) trước khi dùng trong :is.
+
+	## Cú pháp :is 
+		:is có thể nhận tên component (string), object component, hoặc một biểu thức trả về tên/object.
+		Ví dụ: :is="condition ? 'component-a' : 'component-b'".
+
+	## Hiệu suất 
+		Dynamic components rất hữu ích nhưng cần cẩn thận khi dùng <keep-alive> vì nó có thể tăng sử dụng bộ nhớ nếu lưu trữ nhiều component.
+		
+	## 	Vue 2 vs Vue 3: 
+		Cú pháp dynamic components giống nhau ở cả Vue 2 và Vue 3.
+		Vue 3 hỗ trợ thêm cú pháp v-is (ít dùng hơn) và cải thiện hiệu suất với <keep-alive>.
+
+	
+# 7. Ứng dụng thực tế 
+	
+	- Tab giao diện: Chuyển đổi giữa các tab (như Profile, Settings, Dashboard) mà mỗi tab là một component riêng.
+	- Form động: Render các form khác nhau dựa trên loại dữ liệu (ví dụ: form đăng ký, form chỉnh sửa).
+	- Ứng dụng phức tạp: Kết hợp với router hoặc trạng thái để hiển thị component phù hợp.
+
+
+
+</pre><a id='backBottom' href='../vue-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

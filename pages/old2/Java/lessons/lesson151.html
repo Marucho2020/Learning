@@ -1,0 +1,94 @@
+<html><head><title>Lesson 151 == Cache ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 151 -- Cache -//</h1><pre>
+
+| Đặc điểm           | Buffer                                                                       | Cache                                                   |
+| ------------------ | ---------------------------------------------------------------------------- | ------------------------------------------------------- |
+| **Mục đích**       | Giảm chi phí I/O giữa các luồng tốc độ khác nhau (disk ↔ CPU, network ↔ app) | Giảm độ trễ bằng cách lưu lại kết quả/đối tượng đã dùng |
+| **Thời điểm dùng** | Trước khi dữ liệu được xử lý                                                 | Sau khi dữ liệu được xử lý                              |
+| **Cập nhật**       | Ghi đè liên tục, FIFO                                                        | Thường dùng LRU/LFU, tùy chiến lược                     |
+| **Tính nhất quán** | Không quan trọng                                                             | Có thể cần invalidate khi source thay đổi               |
+| **Tình huống**     | File I/O, network, stream, pipeline                                          | Tính toán nặng, DB query, API gọi nhiều lần             |
+	
+	
+
+# ⚙️ 1. Cache trong Java – chuyên sâu
+
+	Cache = lưu kết quả tạm thời để tránh xử lý lại
+	Có thể nằm ở JVM, RAM, SSD, hoặc thậm chí ở tầng logic (Spring, Hibernate)
+
+# 🔹 Các chiến lược quản lý cache
+
+| Chiến lược                   | Mô tả                                 |
+| ---------------------------- | ------------------------------------- |
+| LRU (Least Recently Used)    | Xóa phần tử ít được dùng gần đây nhất |
+| LFU (Least Frequently Used)  | Xóa phần tử ít được dùng nhất         |
+| TTL (Time to Live)           | Hết thời gian thì xóa                 |
+| Write-through / Write-behind | Điều phối cache ↔ DB                  |
+
+
+# 🔸 Cache trong Java core
+	Không có sẵn cache mạnh → dùng:
+
+	- Guava Cache (Google)
+	- Caffeine (hiện đại, tối ưu)
+	- Ehcache, Infinispan, Redis...
+
+
+
+
+
+	## Ví dụ với Caffeine: 
+	
+Cache<String, User> userCache = Caffeine.newBuilder()
+    .maximumSize(10_000)
+    .expireAfterWrite(10, TimeUnit.MINUTES)
+    .build();
+
+User user = userCache.get("userId123", key -> userRepository.findById(key));
+	
+	
+	
+	
+# 	🔹 Spring Cache Abstraction
+
+@Cacheable("users")
+public User getUser(String id) {
+    return userRepository.findById(id);
+}
+
+	Spring tự wrap lại bằng proxy → khi bạn gọi lần đầu, cache sẽ lưu kết quả.
+	Bạn có thể chọn backend: Caffeine, Redis, Hazelcast, JCache...	
+
+
+# 🔸 Lưu ý về cache trong hệ phân tán
+
+	- Cache không đồng bộ giữa các node → phải dùng distributed cache (Redis, Hazelcast)
+	- Invalidation phức tạp → có thể dùng pub/sub để clear cache theo nhóm
+
+
+
+# 🧨 4. Sai lầm phổ biến ở cấp độ non-senior
+
+
+
+| Sai lầm                                                     | Tác hại                                    |
+| ----------------------------------------------------------- | ------------------------------------------ |
+| Dùng buffer nhưng không `flush()` đúng lúc                  | Dữ liệu không ghi ra file/socket           |
+| Cache dữ liệu sai context (VD: theo session thay vì global) | Lỗi logic, leak memory                     |
+| Cache không có TTL                                          | Memory overflow, stale data                |
+| Buffer size quá nhỏ                                         | Quá nhiều syscall → chậm                   |
+| Dùng `allocateDirect()` nhưng không release                 | Memory leak (nằm ngoài heap, GC không dọn) |
+
+
+
+# ⚙️ 5. Khi nào dùng cache – khi nào dùng buffer?
+
+| Mục đích                                 | Dùng Buffer | Dùng Cache |
+| ---------------------------------------- | ----------- | ---------- |
+| Tăng tốc xử lý I/O stream (file, socket) | ✅           | ❌          |
+| Tránh gọi DB/API nhiều lần               | ❌           | ✅          |
+| Truyền dữ liệu theo block                | ✅           | ❌          |
+| Lưu kết quả tạm thời để dùng lại         | ❌           | ✅          |
+
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

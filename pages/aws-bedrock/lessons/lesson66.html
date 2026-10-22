@@ -1,0 +1,299 @@
+<!DOCTYPE html><html lang='vi'><head><meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0'>
+<title>Lesson 67 -- AIP-C01  --=Tool Use & Function Calling -//</title>
+<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css'>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js'></script>
+<script id='MathJax-script' async src='https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'></script>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; margin: 0; padding: 20px; transition: 0.3s; }
+.dark-mode { background-color: #121212; color: #e0e0e0; }
+.light-mode { background-color: #ffffff; color: #333333; }
+.container { max-width: 950px; margin: auto; }
+h1 { text-align: center; color: #3498db; margin: 20px 0; font-size: 26px; }
+.nav-bar { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 20px 0; }
+.nav-btn { text-decoration: none; padding: 10px 18px; background: #3498db; color: white; border-radius: 6px; font-weight: bold; font-size: 15px; display: inline-block; transition: 0.2s; }
+.nav-btn:hover { background: #2980b9; }
+.nav-btn.home-nav { background: #6c757d; }
+.nav-btn.home-nav:hover { background: #5a6268; }
+.nav-btn.disabled { background: #aaa; cursor: not-allowed; opacity: 0.5; }
+.done-btn { display: block; margin: 15px auto; padding: 10px 24px; border: 2px solid #2ecc71; background: transparent; color: #2ecc71; border-radius: 25px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+.done-btn.completed { background: #2ecc71; color: white; }
+.content-box { position: relative; margin: 20px 0; }
+pre { padding: 20px; border-radius: 8px; white-space: pre-wrap; word-break: break-word; overflow-x: auto; font-family: 'Consolas', 'Courier New', monospace; font-size: 15px; }
+.dark-mode pre { background: #1a1a1a; color: #f8f8f2; border: 1px solid #333; }
+.light-mode pre { background: #f8f9fa; color: #212529; border: 1px solid #e9ecef; }
+.copy-btn { position: absolute; top: 12px; right: 12px; padding: 6px 12px; font-size: 12px; background: #555; color: white; border: none; border-radius: 4px; cursor: pointer; opacity: 0.8; }
+.copy-btn:hover { opacity: 1; background: #2ecc71; }
+.theme-toggle-btn { display: block; margin: 20px auto; padding: 8px 16px; background: transparent; border: 1px solid #888; color: inherit; border-radius: 5px; cursor: pointer; }
+</style></head><body onload='initLesson()'>
+<div class='container'>
+<div class='nav-bar'><a class='nav-btn' href='lesson65.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../aws-bedrock-agent-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson67.html'>Bài sau ➡️</a></div><h1>Lesson 67 -- AIP-C01  --=Tool Use & Function Calling -//</h1>
+<button id='doneButton' class='done-btn' onclick='toggleDone()'>Mark as Done ⚪</button>
+<div class='content-box'>
+<button class='copy-btn' onclick='copyContent()'>📋 Copy nội dung</button>
+<pre><code id='lessonCode'>	
+
+# 1. Bản chất: Tool Use giải quyết vấn đề gì?
+
+Khi có Tool Use, agent có thể:
+	1. Gọi tool get_project_tasks để lấy dữ liệu thật.
+	2. Phân tích task nào quá hạn.
+	3. Gọi tool create_ticket để tạo ticket.
+	4. Đọc kết quả trả về từ hệ thống.
+	5. Tổng hợp báo cáo cho người dùng.
+
+
+
+# 2. Function Calling và Tool Use khác nhau thế nào?
+
+Hai thuật ngữ thường được sử dụng gần như đồng nghĩa, nhưng có thể phân biệt theo góc nhìn kỹ thuật.
+Khái niệm				Bản chất
+Function Calling		Cơ chế để model tạo ra lời gọi hàm có cấu trúc, gồm tên hàm và arguments
+Tool Use				Khái niệm rộng hơn: model sử dụng một công cụ bên ngoài để lấy thông tin hoặc thực hiện hành động
+Tool Execution			Runtime thực sự chạy hàm, gọi API hoặc thực hiện tác vụ
+Agent Orchestration		Điều phối nhiều bước: suy luận, gọi tool, đọc kết quả, quyết định bước tiếp theo
+
+
+
+
+# 3. Tool Schema: hợp đồng giữa LLM và hệ thống
+
+	Đây là một trong những phần quan trọng nhất khi triển khai Tool Use.
+	Giả sử bạn muốn agent truy vấn trạng thái dự án. Bạn định nghĩa một tool như sau:
+
+tools = [
+    {
+        "name": "get_project_status",
+        "description": (
+            "Retrieve the current status of a project "
+            "using its project ID."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "project_id": {
+                    "type": "string",
+                    "description": "Unique project identifier"
+                }
+            },
+            "required": ["project_id"]
+        }
+    }
+]
+
+
+Schema nói cho model biết:
+	- Có những công cụ nào.
+	- Mỗi công cụ dùng để làm gì.
+	- Công cụ nhận những tham số nào.
+	- Tham số có kiểu dữ liệu gì.
+	- Tham số nào bắt buộc.
+
+
+
+Tại sao schema lại quan trọng?
+	LLM không tự động biết toàn bộ API nội bộ của doanh nghiệp. Schema chính là hợp đồng mô tả cách model có thể yêu cầu ứng dụng thực hiện công việc.
+	Ví dụ, nếu tool yêu cầu project_id là chuỗi nhưng model sinh ra một object lồng nhau, lời gọi có thể thất bại.
+	Nếu mô tả tool mơ hồ như "get data", model cũng có thể chọn nhầm công cụ khi có nhiều tool tương tự.
+
+
+
+	Có ba lớp cần kiểm tra độc lập:
+	1. Schema validation: tham số có đúng cấu trúc và kiểu dữ liệu không?
+	2. Business validation: dự án có tồn tại không? Ngày bắt đầu có trước ngày kết thúc không?
+	3. Authorization: người dùng hiện tại có quyền xem dự án đó không?
+
+
+	Schema hợp lệ không có nghĩa là request hợp lệ về nghiệp vụ hoặc được phép thực hiện.
+	Một sai lầm phổ biến là nghĩ rằng dùng JSON Schema sẽ giải quyết được vấn đề bảo mật. Không phải vậy. Schema kiểm tra hình dạng dữ liệu; nó không thay thế authorization, kiểm tra quyền sở hữu tài nguyên hoặc các quy tắc nghiệp vụ.
+
+
+
+# 4. Agent Loop: điều gì thực sự xảy ra khi gọi tool?
+
+
+Một agent sử dụng tool thường hoạt động theo vòng lặp:
+
+① Receive input
+	Nhận yêu cầu của người dùng cùng với context và lịch sử hội thoại cần thiết.
+
+② Invoke model
+	Gửi prompt và danh sách tool khả dụng cho LLM.
+
+③ Inspect model response
+	Model yêu cầu gọi tool, hay đã có thể trả lời trực tiếp?
+	
+	Có tool call
+		Validate → authorize → execute → capture result
+
+	Không có tool call
+		Kiểm tra và trả lời trực tiếp nếu phù hợp
+
+④ Return tool result to model
+	Model nhận kết quả thực tế, rồi quyết định cần gọi thêm tool hay kết thúc.
+
+⑤ Final response
+	Trả lời người dùng dựa trên kết quả và các bước đã hoàn thành.
+
+	Vòng lặp này có thể chạy nhiều lần. Một yêu cầu phức tạp có thể cần đọc dữ liệu, tính toán, cập nhật dữ liệu rồi xác minh kết quả.
+
+	Tuy nhiên, không nên để agent lặp vô hạn. Runtime production cần giới hạn số vòng lặp, thời gian chạy, ngân sách token và số lần gọi tool. Với thao tác ghi dữ liệu, còn cần chống thực thi trùng lặp khi retry.
+
+					
+					
+					
+					
+# 	Tool chaining và orchestration				
+					
+					
+	Giả sử người dùng hỏi:
+	Lấy doanh thu tháng này, so sánh với tháng trước, nếu giảm hơn 10% thì gửi cảnh báo cho quản lý.
+
+	Agent có thể thực hiện chuỗi sau:
+		1. get_monthly_revenue(current_month)
+		2. get_monthly_revenue(previous_month)
+		3. Tính tỷ lệ thay đổi.
+		4. Nếu giảm hơn 10%, gọi send_alert(manager_id, summary).
+		5. Tổng hợp kết quả.
+		Đây là tool chaining: kết quả của một bước ảnh hưởng đến bước tiếp theo.					
+							
+							
+	Nhưng đừng nhầm việc LLM tự chọn chuỗi công cụ với workflow có logic nghiệp vụ bắt buộc. Nếu điều kiện cảnh báo phải được thực hiện chính xác theo quy định tài chính, nên cân nhắc đặt phép tính và điều kiện trong code hoặc workflow có kiểm soát. LLM phù hợp để hiểu yêu cầu, diễn giải dữ liệu và xử lý các bước cần suy luận; nó không phải nơi lý tưởng để làm nguồn quyết định duy nhất cho mọi invariant quan trọng.						
+						
+						
+						
+# 5. Mapping sang AWS: triển khai ở đâu?
+	
+		Với kiến trúc agent hiện đại, có thể dùng Amazon Bedrock để inference và Amazon Bedrock AgentCore để xây dựng, triển khai và vận hành agent. AgentCore không bắt buộc phải dùng một framework agent cụ thể.					
+							
+					
+	Một kiến trúc production thực tế
+	Giả sử bạn đang xây dựng LINE bot hỗ trợ quản lý tiến độ công việc cho doanh nghiệp vừa và nhỏ:
+	- LINE gửi câu hỏi đến backend API.
+	- Backend xác thực người dùng và khởi tạo phiên agent.
+	- Agent chạy trên AgentCore Runtime, dùng Amazon Bedrock để suy luận.
+	- Agent gọi tool thông qua code orchestration hoặc AgentCore Gateway.
+	- Tool đọc/ghi dữ liệu qua backend service, Lambda và database.
+	- Hệ thống kiểm tra quyền, ghi audit log và trả kết quả về LINE.
+	Điểm cần chú ý: nếu nhiều agent hoặc nhiều session cùng cập nhật một database, AgentCore không tự giải quyết xung đột nghiệp vụ. Các thao tác quan trọng vẫn cần transaction, optimistic locking, idempotency hoặc cơ chế đồng bộ phù hợp ở tầng backend/database.
+	Vì vậy, khi thiết kế tool, hãy coi nó là một API nghiệp vụ có hợp đồng rõ ràng, có quyền hạn, có lỗi và có quy tắc vận hành — không đơn thuần là một hàm để LLM gọi.					
+						
+						
+						
+						
+# 	6. Bảo mật và độ tin cậy: những lỗi production dễ gặp nhất					
+						
+	## 6.1. Prompt injection không phải lỗi duy nhất					
+						
+	Kiến trúc an toàn cần thực thi các quy tắc ở tầng ngoài model:
+		- Chỉ công bố những tool cần thiết.
+		- Kiểm tra authorization trên server cho từng thao tác.
+		- Giới hạn tài nguyên theo danh tính người dùng.
+		- Yêu cầu phê duyệt đối với thao tác có tác động lớn.
+		- Ghi log hành động và kết quả.
+		- Không đưa credential bí mật vào prompt hoặc để model tự quyết định quyền truy cập.					
+							
+					
+					
+	
+	## 6.2. Những tình huống phải xử lý
+
+
+
+| Tình huống                          | Cách xử lý                                                                               |
+| ----------------------------------- | ---------------------------------------------------------------------------------------- |
+| Model sinh arguments sai            | Validate schema, trả lỗi có cấu trúc hoặc yêu cầu model sửa                              |
+| Tool timeout                        | Timeout có giới hạn; retry có điều kiện                                                  |
+| API trả lỗi 429                     | Backoff, jitter và giới hạn retry                                                        |
+| Gọi tool ghi dữ liệu bị retry       | Idempotency key hoặc cơ chế chống tạo bản ghi trùng                                      |
+| Hai agent cập nhật cùng một bản ghi | Transaction, optimistic locking hoặc cơ chế concurrency control                          |
+| Tool trả về nội dung độc hại        | Xem output là dữ liệu không đáng tin cậy; không biến nội dung đó thành chỉ thị đặc quyền |
+| Agent gọi tool không cần thiết      | Giới hạn tool, budget, vòng lặp và quyền thực thi                
+
+
+
+
+## 7. Trade-off khi thiết kế Tool Use
+
+| Tiêu chí                   | Nhiều tool nhỏ                             | Một tool tổng hợp lớn                                      |
+| -------------------------- | ------------------------------------------ | ---------------------------------------------------------- |
+| Độ chính xác lựa chọn tool | Có thể giảm nếu nhiều tool trùng chức năng | Ít lựa chọn hơn nhưng giao diện có thể phức tạp            |
+| Latency                    | Có thể tăng khi phải gọi nhiều bước        | Có thể thấp hơn nếu backend xử lý nhiều việc trong một lần |
+| Khả năng tái sử dụng       | Cao nếu thiết kế hợp lý                    | Phụ thuộc phạm vi chức năng                                |
+| Quyền hạn                  | Dễ phân tách quyền theo thao tác           | Có nguy cơ cấp quyền quá rộng                              |
+| Bảo trì                    | Nhiều giao diện cần quản lý                | Logic tổng hợp có thể khó kiểm thử                         |
+| Độ tin cậy                 | Từng bước dễ quan sát nhưng nhiều điểm lỗi | Ít bước hơn nhưng lỗi nội bộ có thể khó định vị            |
+
+	Không có quy tắc rằng càng nhiều tool càng tốt hoặc càng ít tool càng tốt.
+
+	Một thiết kế tốt có các đặc điểm:
+
+	- Mỗi tool có một mục đích rõ ràng.
+	- Tên và mô tả phân biệt được các tool tương tự.
+	- Input/output có cấu trúc ổn định.
+	- Tool chỉ thực hiện phạm vi quyền cần thiết.
+	- Các nghiệp vụ quan trọng có thể kiểm thử độc lập.
+	- Các chuỗi hành động dài được kiểm soát bởi orchestration phù hợp.
+
+	Nếu workflow có trình tự cố định, điều kiện rõ ràng và yêu cầu audit nghiêm ngặt, workflow được code hóa hoặc điều phối bằng Step Functions có thể phù hợp hơn việc để LLM tự quyết định mọi bước. Nếu các bước phụ thuộc vào ngôn ngữ tự nhiên, thông tin chưa biết hoặc kết quả tool, agentic orchestration có thể mang lại giá trị thực sự.
+
+
+
+
+
+# 8. AIP-C01: Exam Knowledge và các bẫy cần nhớ
+
+Exam Knowledge
+	- Hiểu cơ chế model lựa chọn tool và tạo arguments.
+	- Phân biệt model inference với việc thực thi tool.
+	- Biết thiết kế tool schema và xử lý kết quả trả về.
+	- Hiểu orchestration nhiều bước và cách xử lý lỗi.
+	- Xác định quyền IAM, xác thực và giới hạn quyền truy cập.
+	- Chọn kiến trúc phù hợp với latency, reliability, security và cost.
+
+	
+					
+
+</code></pre>
+</div>
+<div class='nav-bar'><a class='nav-btn' href='lesson65.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../aws-bedrock-agent-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson67.html'>Bài sau ➡️</a></div><button class='theme-toggle-btn' onclick='toggleTheme()'>🌓 Đổi Giao Diện</button>
+</div>
+<script>
+const lessonKey = 'aws-bedrock-agent-learning-list_lesson66.html';
+function toggleTheme() {
+   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';
+   document.body.className = mode;
+   localStorage.setItem('theme', mode);
+}
+function toggleDone() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   if (isDone) {
+       localStorage.removeItem(lessonKey);
+   } else {
+       localStorage.setItem(lessonKey, 'done');
+   }
+   renderDoneStatus();
+}
+function renderDoneStatus() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   let btn = document.getElementById('doneButton');
+   if (isDone) {
+       btn.className = 'done-btn completed';
+       btn.innerText = 'Đã Hoàn Thành ✅';
+   } else {
+       btn.className = 'done-btn';
+       btn.innerText = 'Đánh dấu đã học ⚪';
+   }
+}
+function copyContent() {
+   let text = document.getElementById('lessonCode').innerText;
+   navigator.clipboard.writeText(text).then(function() {
+       alert('✅ Đã sao chép nội dung bài học!');
+   });
+}
+function initLesson() {
+   document.body.className = localStorage.getItem('theme') || 'dark-mode';
+   renderDoneStatus();
+   if (window.Prism) Prism.highlightAll();
+}
+</script></body></html>

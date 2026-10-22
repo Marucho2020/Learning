@@ -1,0 +1,158 @@
+<html><head><title>Lesson 196 == Functional Pipeline vs OOP Layered Architecture ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 196 -- Functional Pipeline vs OOP Layered Architecture -//</h1><pre>
+# 1. Bản chất ngắn
+
+	OOP Layered (Service → Mapper → Repository): thiết kế theo đối tượng & trách nhiệm, dễ mô hình hóa domain state, encapsulation, dễ xài framework (Spring MVC, JPA).
+
+	Functional Pipeline: thiết kế theo dòng xử lý dữ liệu (pure functions, compose), tốt cho transform, validation, ETL, dataflow, concurrency safe (ít shared state).
+
+
+# 2. So sánh ngắn (table)
+
+| Tiêu chí    |                              OOP Layered | Functional Pipeline                        |
+| ----------- | ---------------------------------------: | ------------------------------------------ |
+| Tư duy      |                      Entities & behavior | Functions & data flow                      |
+| Testability |          Unit test methods, mock objects | Test pure functions dễ hơn (input->output) |
+| State       |          Mutable domain objects phổ biến | Prefer immutable data                      |
+| Concurrency |                        phải khóa/đồng bộ | Tự nhiên an toàn hơn (no shared mutable)   |
+| Readability |        Rõ ràng cho domain logic phức tạp | Rõ ràng cho pipelines & transforms         |
+| Debugging   |                 Stack traces predictable | Stack can be functional chains (harder)    |
+| Tooling     |                Fits Spring/Hibernate, DI | Fits Stream API, Reactor, FP libs          |
+| Refactor    | Add new behavior via subclass, interface | Compose new functions — less coupling      |
+
+
+
+
+
+
+
+# 3. Thiết kế OOP — phân tích sâu
+
+
+
+	Khi hợp: domain phức tạp với invariants, rich behavior trên entities, lifecycle, transactional boundaries.
+	Ví dụ: banking domain (transfer with ACID rules), order aggregates in DDD.
+	
+	Pattern phổ biến: Repository (persistence), Service (business), DTO/Mapper (API), Domain models (entities).
+	
+	Ưu: mạnh cho modelling, encapsulation, inspectable object graph, hỗ trợ transaction management.
+	
+	Khuyết: tend to accumulate mutable state and god-objects; harder to parallelize safely; often test needs heavy mocking.
+
+
+	Ví dụ OOP (Java)
+	
+@Service
+public class OrderService {
+    @Transactional
+    public void placeOrder(OrderDto dto) {
+        Order order = orderMapper.toEntity(dto);
+        inventory.reserve(order);
+        orderRepository.save(order);
+        paymentService.charge(order);
+    }
+}
+	
+	Rõ ràng, trạng thái và transaction liên kết.
+
+
+
+# 4. Functional design — phân tích sâu
+
+	Khi hợp: data transformations, validation pipelines, ETL, streaming, reactive systems, security rules (predicate chains), report aggregation.
+	
+	Ưu: small reusable functions, composition, easier unit testing, easier to reason about (pure functions), safer parallelism.
+	
+	Khuyết: modeling complex domain state & invariants có khi khó biểu diễn (but can with Algebraic Data Types in FP languages); debugger/traces có thể kém trực quan; JVM verbosity.
+
+	Java example (pipeline)
+
+Function<Employee, Boolean> isActive = e -> "ACTIVE".equals(e.getStatus());
+Function<Employee, EmployeeDto> toDto = e -> new EmployeeDto(e.getName(), e.getEmail());
+List<EmployeeDto> report = employees.stream()
+    .filter(isActive::apply)
+    .map(toDto::apply)
+    .collect(Collectors.toList());
+
+
+
+# 5. Khi nào chọn cái nào — quy tắc thực dụng
+
+	## Chọn OOP khi:
+
+		Bạn có aggregates phức tạp với invariants, nhiều hành vi nội tại.
+		
+		Cần transaction, domain events, lifecycle rõ ràng.
+		
+		Team đã heavy Spring/Hibernate và domain modeling quan trọng.
+
+
+	## Chọn Functional pipeline khi:
+
+		Tập trung data transformation (map/filter/agg).
+		
+		Viết validation / rule engines (compose predicates).
+		
+		Xử lý batch/streaming/ETL, hoặc muốn an toàn concurrency.
+		
+		Muốn pipelines dễ test và thay rule nhanh.
+
+		Hybrid = hiện thực: Dùng OOP cho domain & orchestration, dùng functional pipelines cho transform/validation/aggregation. Đa phần hệ lớn đều mix.
+
+	
+	
+#	6. Ví dụ thực tế so sánh (Authentication/Authorization)
+
+	## OOP (classic filter chain) 
+	
+		AuthFilter -> AuthenticationManager -> UserDetailsService -> Roles
+		Mạnh cho: stateful sessions, complex credential handling, DI-based services.
+
+	public class AuthFilter implements Filter {
+  // inject AuthenticationManager, etc.
+}
+
+
+	## Functional pipeline (rule composition)
+
+		Compose small functions/predicates: sanitize -> parseToken -> validateSignature -> checkClaims -> authorize(roles).
+
+Function<Request, Optional<User>> parse = req -> tryParse(req);
+Predicate<User> hasRole = u -> u.getRoles().contains("ADMIN");
+boolean allowed = parse.apply(req)
+                       .filter(hasRole::test)
+                       .isPresent();
+
+
+		Kết luận cho security: dùng functional cho validation và authorization predicates (độ an toàn cao, dễ test). Dùng OOP cho session management, integration with framework, policy persistence, audit logging.
+
+ 	
+	
+
+
+#7. Ở ngôn ngữ khác — ảnh hưởng phong cách
+
+
+	Scala, Haskell, Clojure, Elixir: FP-first — functional pipeline là mặc định, domain modeling theo ADT, dễ xử lý concurrency.
+	
+	Kotlin: hỗn hợp, DSL & extension methods giúp pipeline gọn.
+	
+	JavaScript/Node: functional patterns (Promises, RxJS) phổ biến cho IO-bound, event-driven systems.
+	
+	Python: functional có, nhưng OOP phổ biến; GIL giới hạn concurrency CPU-bound.
+	
+	Practical: Nếu bạn đang trên JVM, Scala/Kotlin dễ hơn để viết pure FP than Java. Nhưng Java 8+ đã có streams & lambdas đủ mạnh cho nhiều use-cases.
+
+
+
+# 10. Recommendation rút gọn (nói thẳng)
+
+	Đừng cố “ép” toàn bộ hệ thống sang functional nếu domain phức tạp và team không quen — sẽ phá productivity.
+	
+	Nhưng đừng bỏ phí: dùng functional pipeline cho tất cả chỗ xử lý data, validation, mapping, reporting, streaming.
+	
+	OOP cho domain & side-effect orchestration. Kết hợp hai phong cách smart: OOP để mô tả WHAT (domain), functional để mô tả HOW (data flow / rules).
+
+
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

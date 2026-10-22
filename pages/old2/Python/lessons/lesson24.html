@@ -1,0 +1,246 @@
+<html><head><title>Lesson 23 == Kế thừa trong python ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../python-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 23 -- Kế thừa trong python -//</h1><pre>		- Tính chất kế thừa trong python cũng giống với các ngôn ngữ lập trình khác 
+		- Trong python việc kế thừa class chỉ cần truyền class cha vào vị trí khai báo của class con và đặt bên trong cặp ngoặc ()
+		
+		
+				// e.g 1 ví dụ tạo một class SieuNhanGao kế thừa lại từ class SieuNhan và sử dụng thuộc tính của class cha 
+				class SieuNhan:
+					suc_manh = 100							#  thuộc tính của lớp cha 
+				
+				class SieuNhanGao(SieuNhan):
+					pass				
+				
+				sieu_nhan_gao = SieuNhanGao()
+				print(sieu_nhan_gao.suc_manh)				# gọi lại thuộc tính của lớp cha 
+
+				
+				
+				//e.g 2 ví dụ tạo một lớp SieuNhanGao kế thừa lại từ lớp SieuNhan và gọi phương thức của class cha 
+					class SieuNhan:
+						suc_manh = 100
+					
+						def run(self):								# Khi khai báo phương thức để có thể kế thừa thì bắt buộc phải truyền self 
+							print("Sieu Nhan CHAY TRON ")
+					
+					class SieuNhanGao(SieuNhan):
+						pass
+					
+					sieu_nhan_gao = SieuNhanGao()
+					sieu_nhan_gao.run()								# gọi method của lớp cha từ lớp con, nếu khai báo ở lớp cha ko truyền self thì chỗ này gọi sẽ báo lỗi 
+		
+
+				# e.g 3 : Khi kế thừa từ một lớp , mặc định nó sẽ được kế thừa constructor của lớp cha , tức là có thể dùng constructor của lớp cha để tạo instance cho lớp con 
+				class SieuNhan:
+					suc_manh = 100
+					def __init__(self, ten ,  vu_khi):
+						self.ten = ten
+						self.vu_khi = vu_khi
+				
+					def run(self):
+						print("Sieu Nhan {} cam vu khi {} dang chay trong".format(self.ten , self.vu_khi))
+				
+				
+				class SieuNhanGao(SieuNhan):
+						pass
+				sieu_nhan_gao_real = SieuNhanGao("DO" , "Kiem" )
+				sieu_nhan_gao_real.run()								// Sieu Nhan DO cam vu khi Kiem dang chay trong
+				
+				
+				
+				
+				
+				# e.g 4  Class con sẽ override lại constructor  và method của class cha , lúc này khi khởi tạo instance của class con bắt buộc phải dùng constructor của nó 
+				class SieuNhan:
+					suc_manh = 100
+					def __init__(self, ten ,  vu_khi):
+						self.ten = ten
+						self.vu_khi = vu_khi
+				
+					def run(self):
+						print("Sieu Nhan {} cam vu khi {} dang chay trong".format(self.ten , self.vu_khi))
+				
+				
+				class SieuNhanGao(SieuNhan):
+					def __init__(self , ten , vu_khi , mau_sac):
+						self.ten = ten
+						self.vu_khi = vu_khi
+						self.mau_sac= mau_sac
+				
+					def run():
+						print("Sieu Nhan {} cam vu khi {} co mau {}".format(self.ten , self.vu_khi , self.mau_sac))
+				
+				sieu_nhan_gao = SieuNhanGao("DO" , "Kiem")						// !!! lỗi ở đây vì k sử dụng đúng constructor
+				sieu_nhan_gao_real = SieuNhanGao("DO" , "Kiem" , "Xanh")
+				sieu_nhan_gao.run()
+				sieu_nhan_gao_real.run()
+				
+				
+				
+	# Các phương thức đặc biệt
+		- Special method , Magic method , Dunder method : là các tên thường được nhắc tới khi nói về method đặc biệt trong python 
+		
+		- phương thức đặc biệt là các phương thức được quy ước sẵn , định dạng chung của chúng là có 2 dấy _ trước và sau của tên method  :   __tênmethod__ 
+		
+		#####
+		__str__ 	: phương thức sử dụng giống với toString() trong java , ta có thể override hàm này trong class để lấy ra được thông tin cần mong muốn của class
+				# e.g 1 : Sử dụng phương thức __str__ để in ra giá trị mong muốn giống toString()
+				
+				class SieuNhan:
+					suc_manh = 50
+					def __init__(self,ten ,  vu_khi , mau_sac):
+						self.ten = ten
+						self.vu_khi = vu_khi
+						self.mau_sac = mau_sac
+					def __str__(self):											# Khai báo và phải có self mới có thể tham chiếu được vào properties của class 
+						return("Sieu Nhan Ten : {} ".format(self.ten))
+					
+				sieu_nhan = SieuNhan("Sieu Nhan Do" , "Sung" , "Do")
+				
+				print(sieu_nhan.__str__())							# Sieu Nhan Ten : Sieu Nhan Do 
+				
+				
+		
+		#####
+		__repr__	: gần giống với phương thức str nhưng nó sẽ in ra thông tin chi tiết của đối tượng để ta có thể khởi dựng lại nó
+		
+				# e.g 2 sử dụng hàm __repr__ để khai báo việc in ra giá trị của lớp 
+				
+				class SieuNhan:
+					suc_manh = 50
+					def __init__(self , ten):
+						self.ten = ten
+				
+					def __repr__(self):
+						return 'Ten :{} va duoc lay ra tu repr '.format(self.ten)
+				
+				sieu_nhan = SieuNhan("Sieu Nhan Do")
+				print(sieu_nhan.__repr__())								# Ten :Sieu Nhan Do va duoc lay ra tu repr 
+				print(sieu_nhan.__repr__)								# <bound method SieuNhan.__repr__ of Ten :Sieu Nhan Do va duoc lay ra tu repr >  Chỗ này ko có () tức k phải lời gọi hàm nên nó sẽ in ra thuộc tính repr của nó 
+				
+		
+
+		#####
+		__len__ 	: cũng là một special method để có thể sử dụng được 
+				
+				# e.g 3 : Ví dụ khai báo và sử dụng hàm __len__()
+				class SieuNhan:
+					suc_manh = 50
+					ten = "SIEU NHAN DO"
+					def __len__(self):
+						return len(self.ten)
+				
+				sieu_nhan = SieuNhan()
+				print(sieu_nhan.__len__())							// 12
+				
+		#####
+			__add__  : cũng là một special method và có thể sử dụng được 
+				class SieuNhan:
+					suc_manh = 50
+					ten = "SIEU NHAN DO"
+					def __add__(self , mot_sieu_nhan_khac):
+						return self.suc_manh + mot_sieu_nhan_khac.suc_manh
+				sieu_nhan = SieuNhan()
+				sieu_nhan_2 = SieuNhan()
+				print(sieu_nhan.__add__(sieu_nhan_2))					// 100
+
+
+# Getter , Setter ,  Deleter 		
+	- Sử dụng để làm việc với các thuộc tính ,  ta có thể tùy chỉnh sửa trước khi lấy ra giá trị của thuộc tính 
+	- Giống với chức năng của getter và setter trong java 
+	- tên của property và @property không được trùng lặp nhau, tức là trong một class chỉ có thể tồn tại một trong 2
+	- lưu ý : KHÔNG ĐƯỢC SỬ DỤNG TÊN CỦA PROPERTY THÔNG THƯỜNG GIỐNG VỚI TÊN CỦA PROPERTY METHOD 
+	
+	##### GETTER 
+	@property 										# sử dụng @property để khai báo đây là một thuộc tính chứ k phải một method thông thường  
+	
+	def email(self):
+		return self.ho + self.ten + '@gmail.com'
+		
+	-> sử dụng như một thuộc tính thông thường
+		print(sieuNhan.email)					// khác với hàm chỗ này ta sử dụng gọi thuộc tính nên k cần () 
+		
+		
+		
+		#e.g 1 Sử dụng getter để tạo một thuộc tính mới là phương thức 
+		class SieuNhan:
+			suc_manh =  50
+			ten = "Sieu Nhan"
+			email = "EMAIL"
+			
+			@property
+			def gmail(self):
+				return self.ten+self.email+'@gmail.com'
+		
+		sieuNhan = SieuNhan()
+		print(sieuNhan.gmail)						# Sieu NhanEMAIL@gmail.com
+		
+		
+		
+		
+		##### SETTER
+		@<propertyName>.setter
+		
+				-> @getGmail.setter
+		
+					#e.g 2 : Sử dụng setter để cập nhật lại giá trị khác cho thuộc tính của instance
+						class SieuNhan:
+							suc_manh = 100
+							ten = "Sieu Nhan Do"
+							email = "E-Mail"
+						
+							@property
+							def getGmail(self):										   # đây là property getter gmail
+								return self.ten +'.' +self.email+"@gmail.com"
+						
+							@getGmail.setter											# tại đây là property cập nhật lại gmail
+							def setGmail(self , newEmail):
+								self.email = newEmail
+							
+						sieuNhan = SieuNhan()
+						print(sieuNhan.getGmail)											# Sieu Nhan Do.E-Mail@gmail.com
+						sieuNhan.setGmail = "NEW-EMAIL"										# tại đây thực hiện việc set lại email mới cho property email của instance sieuNhan 
+						print(sieuNhan.getGmail)											# kiểm tra lại Sieu Nhan Do.NEW-EMAIL@gmail.com
+		
+		
+		#### Deleter
+		 - là công cụ giúp xóa thuộc tính vừa gán. xóa ở đây là việc gán một GIÁ TRỊ RÁC (giá trị không có ý nghĩa ) cho cái chúng ta muốn xóa , thường là None , 0 , list rỗng tùy từng kiểu dữ liệu mà ta muốn xóa 
+		 
+		 @<propertyName>.deleter 
+					-> @getGmail.deleter 
+						def deleteGmail
+				del sieuNhan.deleteGmail  		# sử dụng keyword del để báo python răng đây là thực hiện xóa 
+				
+		
+		
+				# e.g 3 sử dụng deleter để xóa tên 
+				class SieuNhan:
+					name = "Sieu Nhan Do"
+				
+					@property
+					def getName(self):
+						return self.name
+				
+					@getName.setter
+					def setName(self , newName):
+						self.name = newName
+				
+					@getName.deleter						# sử dụng @getName.deleter để khai báo property xóa 
+					def deleteName(self):
+						self.name = "NO-NAME"
+				
+				
+				sieuNhan = SieuNhan()
+				print(sieuNhan.getName)
+				sieuNhan.setName = "SIEU NHAN XANH "
+				print(sieuNhan.name)
+				del sieuNhan.deleteName						# thực hiện việc xóa 
+				print(sieuNhan.name)						# NO-NAME
+		
+		
+		
+		
+		
+		
+		
+		
+		
+</pre><a id='backBottom' href='../python-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

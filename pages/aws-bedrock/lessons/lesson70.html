@@ -1,0 +1,309 @@
+<!DOCTYPE html><html lang='vi'><head><meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0'>
+<title>Lesson 71 -- AIP-C01  --=AgentCore Gateway + MCP + enterprise API -//</title>
+<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css'>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js'></script>
+<script id='MathJax-script' async src='https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'></script>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; margin: 0; padding: 20px; transition: 0.3s; }
+.dark-mode { background-color: #121212; color: #e0e0e0; }
+.light-mode { background-color: #ffffff; color: #333333; }
+.container { max-width: 950px; margin: auto; }
+h1 { text-align: center; color: #3498db; margin: 20px 0; font-size: 26px; }
+.nav-bar { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 20px 0; }
+.nav-btn { text-decoration: none; padding: 10px 18px; background: #3498db; color: white; border-radius: 6px; font-weight: bold; font-size: 15px; display: inline-block; transition: 0.2s; }
+.nav-btn:hover { background: #2980b9; }
+.nav-btn.home-nav { background: #6c757d; }
+.nav-btn.home-nav:hover { background: #5a6268; }
+.nav-btn.disabled { background: #aaa; cursor: not-allowed; opacity: 0.5; }
+.done-btn { display: block; margin: 15px auto; padding: 10px 24px; border: 2px solid #2ecc71; background: transparent; color: #2ecc71; border-radius: 25px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+.done-btn.completed { background: #2ecc71; color: white; }
+.content-box { position: relative; margin: 20px 0; }
+pre { padding: 20px; border-radius: 8px; white-space: pre-wrap; word-break: break-word; overflow-x: auto; font-family: 'Consolas', 'Courier New', monospace; font-size: 15px; }
+.dark-mode pre { background: #1a1a1a; color: #f8f8f2; border: 1px solid #333; }
+.light-mode pre { background: #f8f9fa; color: #212529; border: 1px solid #e9ecef; }
+.copy-btn { position: absolute; top: 12px; right: 12px; padding: 6px 12px; font-size: 12px; background: #555; color: white; border: none; border-radius: 4px; cursor: pointer; opacity: 0.8; }
+.copy-btn:hover { opacity: 1; background: #2ecc71; }
+.theme-toggle-btn { display: block; margin: 20px auto; padding: 8px 16px; background: transparent; border: 1px solid #888; color: inherit; border-radius: 5px; cursor: pointer; }
+</style></head><body onload='initLesson()'>
+<div class='container'>
+<div class='nav-bar'><a class='nav-btn' href='lesson69.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../aws-bedrock-agent-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson71.html'>Bài sau ➡️</a></div><h1>Lesson 71 -- AIP-C01  --=AgentCore Gateway + MCP + enterprise API -//</h1>
+<button id='doneButton' class='done-btn' onclick='toggleDone()'>Mark as Done ⚪</button>
+<div class='content-box'>
+<button class='copy-btn' onclick='copyContent()'>📋 Copy nội dung</button>
+<pre><code id='lessonCode'>
+    
+# 	AgentCore Gateway + MCP + Enterprise API
+	
+	Bài này là bước chuyển từ việc hiểu từng thành phần AgentCore, MCP và API sang thiết kế một kiến trúc enterprise nơi AI Agent có thể sử dụng hệ thống doanh nghiệp một cách an toàn, có kiểm soát và vận hành được ở production.
+	
+	
+	Agent không nên được cấp quyền truy cập trực tiếp vào toàn bộ backend. AgentCore Gateway tạo một lớp trung gian chuẩn hóa các công cụ; MCP cung cấp giao thức để agent khám phá và gọi công cụ; Enterprise API thực hiện nghiệp vụ thực tế và vẫn chịu trách nhiệm bảo vệ dữ liệu.
+
+	Ba thành phần này giải quyết ba vấn đề khác nhau. Không nên nhầm chúng là ba công nghệ cạnh tranh nhau.
+		
+	
+# 1. Bản chất: Ba thành phần đứng ở đâu?	
+	
+	
+	AI Agent — Strands Agents / custom agent
+		Hiểu yêu cầu · lập kế hoạch · chọn tool · xử lý kết quả
+
+	MCP client / tool invocation
+	
+	Amazon Bedrock AgentCore Gateway
+		Expose tools · xác thực · authorization · kiểm soát quyền gọi tool
+		Lớp tích hợp và kiểm soát
+
+	MCP hoặc giao thức tích hợp phù hợp
+
+	Enterprise API / Lambda / MCP Server
+		Adapter · validation · business logic · service authorization
+
+	Enterprise systems
+		ERP · CRM · ticketing · order management · databases
+		
+	
+	Đây là kiến trúc logic điển hình, không phải mọi deployment đều bắt buộc phải có MCP Server riêng giữa Gateway và backend. Gateway có thể tích hợp trực tiếp với các target phù hợp, bao gồm API và Lambda, tùy loại target và cấu hình.
+	
+	
+	
+	
+# 	2. Phân biệt vai trò chính xác
+	
+	
+	AgentCore Gateway — lớp tool integration
+		Gateway đưa các hệ thống và chức năng khác nhau về một giao diện tool mà agent có thể sử dụng. Nó hỗ trợ các target và protocol phù hợp, đồng thời cung cấp cơ chế xác thực, kiểm soát truy cập và tích hợp với các hệ thống định danh.
+
+
+	MCP — giao thức giao tiếp
+		Model Context Protocol định nghĩa cách MCP client khám phá tool, đọc schema và gửi yêu cầu gọi tool tới MCP server. MCP không tự động biến một API thành an toàn và cũng không tự quyết định người dùng được phép xem đơn hàng nào.
+
+
+	Enterprise API — lớp nghiệp vụ
+		API thực hiện các hành động thật: tra cứu đơn hàng, hoàn tiền, cập nhật CRM, phê duyệt hoặc tạo ticket. Backend cần tự xác thực và kiểm tra quyền nghiệp vụ thích hợp, không được mặc định rằng mọi request từ Gateway đều hợp lệ.	
+		
+		
+	Một cách ghi nhớ:
+	- Gateway: Cho phép agent nhìn thấy và sử dụng những công cụ nào qua lớp tích hợp.
+	- MCP: Quy định cách client và server trao đổi thông tin về tool.
+	- API: Quyết định nghiệp vụ thực tế nào được thực thi trên hệ thống.
+
+
+
+# 3. Ví dụ production: AI Agent quản lý đơn hàng doanh nghiệp
+
+	Giả sử một công ty Nhật có hệ thống:
+		- ERP lưu đơn hàng và hóa đơn.
+		- CRM lưu thông tin khách hàng.
+		- Hệ thống vận chuyển theo dõi trạng thái giao hàng.
+		- Hệ thống thanh toán xử lý hoàn tiền.
+		- Nhân viên sử dụng LINE hoặc web chat để hỏi AI.
+
+
+
+	Nhân viên nhập:
+	「注文 ORD-123 の配送状況を確認し、遅延している場合は顧客への連絡チケットを作成してください。」
+
+	Hãy kiểm tra trạng thái đơn ORD-123 và tạo ticket liên hệ khách hàng nếu đơn bị trễ.
+
+
+Agent thực hiện điều gì?
+
+	1
+	Agent lập kế hoạch
+	Chọn tool get_order_status, sau đó dựa trên kết quả để quyết định có cần gọi create_support_ticket hay không.
+
+
+	2
+	Gateway tiếp nhận và kiểm soát
+	Kiểm tra danh tính của client theo inbound authorization đã cấu hình. Các quyền gọi tool và chính sách truy cập được thực thi theo thiết kế Gateway và target.
+
+
+	3
+	Tool gọi Enterprise API
+	get_order_status gọi API của hệ thống vận chuyển hoặc ERP. Gateway có thể dùng credential của service hoặc chuyển tiếp danh tính/token theo cấu hình được hỗ trợ.
+
+
+	4
+	Backend kiểm tra quyền nghiệp vụ
+	API xác minh nhân viên có quyền xem đơn hàng đó không, dữ liệu thuộc tenant nào, trạng thái có hợp lệ không. Nếu được phép, API trả về trạng thái giao hàng.
+
+
+	5
+	Agent quyết định hành động tiếp theo
+	Nếu đơn bị trễ, agent gọi create_support_ticket. Với hành động có tác động đáng kể, hệ thống có thể yêu cầu xác nhận của con người trước khi thực thi.
+
+
+	Lưu ý: các bước trên mô tả một thiết kế production đề xuất, không phải cam kết rằng Gateway tự động thực hiện tất cả các kiểm tra nghiệp vụ.
+
+
+
+# 4. Có bắt buộc phải viết MCP Server không?
+
+	Không. Đây là một bẫy kiến trúc quan trọng.
+		AgentCore Gateway hỗ trợ nhiều loại target, bao gồm Lambda, API Gateway, OpenAPI schema và MCP Server. Do đó, bạn có thể đưa API hiện hữu vào hệ thống mà không cần xây dựng một MCP Server độc lập cho mỗi API.
+
+
+
+
+	Phương án A — REST API hiện có
+		Ít thành phần hơn
+		Gateway tích hợp target dựa trên OpenAPI hoặc API Gateway. Phù hợp khi backend đã có API contract rõ ràng.
+		Đánh đổi: phải quản lý schema, mapping, lỗi và các giới hạn của target.
+
+
+
+	Phương án B — MCP Server hiện có
+		Chuẩn hóa tool
+		Gateway kết nối tới MCP Server và đồng bộ các capabilities mà server công bố. Phù hợp khi tổ chức đã có MCP Server hoặc cần tích hợp công cụ dùng chung.
+		Đánh đổi: thêm một thành phần phải vận hành, bảo mật và theo dõi.
+
+
+
+	Phương án C — Lambda adapter
+		Logic tùy chỉnh
+		Gateway gọi Lambda để ánh xạ input, kiểm tra điều kiện, kết nối SDK hoặc điều phối nhiều API.
+		Đánh đổi: thêm latency, chi phí thực thi và trách nhiệm bảo trì code.
+
+	Quy tắc lựa chọn: nếu API hiện hữu đã đáp ứng nghiệp vụ, hãy tái sử dụng nó. Chỉ xây dựng MCP Server riêng khi cần một lớp giao thức/công cụ độc lập, logic tùy chỉnh hoặc khả năng tái sử dụng mà target trực tiếp không đáp ứng tốt.
+
+
+
+
+# 5. Bảo mật: Inbound authorization, policy và outbound authorization
+
+	Đây là phần quan trọng nhất ở mức Professional. Hãy phân biệt xác thực người gọi, quyền gọi tool và quyền truy cập tài nguyên backend.
+	
+	Lớp 1 — Inbound authorization
+		Gateway kiểm tra caller khi request đi vào. Tùy cấu hình, đây có thể là JWT/OAuth hoặc AWS IAM SigV4.
+		Câu hỏi: Ai đang gọi Gateway?
+
+
+	Lớp 2 — Tool authorization / Policy Engine
+		Nếu gắn Policy Engine, Gateway có thể đánh giá quyền gọi tool theo principal, action, resource và điều kiện input. Policy in AgentCore sử dụng Cedar; chế độ ENFORCE thực thi quyết định, còn LOG_ONLY dùng để quan sát và kiểm thử policy.
+		Câu hỏi: Caller này được phép thực hiện hành động nào?
+
+
+	Lớp 3 — Outbound authorization
+		Gateway xác thực với target bằng cơ chế phù hợp: IAM role, OAuth, API key hoặc credential forwarding được hỗ trợ.
+		Câu hỏi: Gateway có credential nào để gọi hệ thống đích?
+
+
+	Lớp 4 — Backend authorization
+		Enterprise API tiếp tục kiểm tra quyền truy cập dữ liệu, tenant, ownership, trạng thái nghiệp vụ và các invariant quan trọng.
+		Câu hỏi: Hành động cụ thể trên tài nguyên này có hợp lệ không?	
+		
+		
+		
+	AWS phân biệt rõ inbound authorization với outbound authorization; ngoài ra, Policy Engine có thể cung cấp kiểm soát quyền gọi tool tại Gateway.	
+		
+
+
+#  Một ví dụ để thấy tại sao cần nhiều lớp
+	Giả sử nhân viên A chỉ được xem đơn hàng thuộc phòng kinh doanh của mình.
+	- Inbound: xác minh request thực sự đến từ client đã được cấp quyền.
+	- Tool policy: cho phép gọi get_order_status.
+	- Outbound: Gateway dùng service credential để gọi API ERP.
+	- Backend: ERP phải kiểm tra đơn hàng thuộc phạm vi mà nhân viên A được phép xem.
+	Nếu Gateway chỉ sử dụng một service credential chung để gọi ERP, ERP có thể nhìn thấy mọi request đều đến từ cùng một service identity. Nếu backend không nhận hoặc không xác minh được danh tính người dùng gốc, nó có thể không phân biệt được A với B.
+
+	Đây là điểm mù thường gặp: xác thực thành công tại Gateway không đồng nghĩa với việc đã bảo toàn authorization context của người dùng đến tận backend.
+
+	Khi cần bảo toàn danh tính người dùng, hãy thiết kế token propagation, OAuth token exchange hoặc cơ chế authorization tương ứng. Khi dùng service identity, phải có phương án kiểm tra quyền thay thế đáng tin cậy. Không được giả định Gateway tự động chuyển tiếp toàn bộ quyền của người dùng.
+
+
+
+# 6. Production design: Chọn kiến trúc theo yêu cầu
+
+
+
+| Yêu cầu                                     | Thiết kế nên ưu tiên                                          | Lý do                                         |
+| ------------------------------------------- | ------------------------------------------------------------- | --------------------------------------------- |
+| Nhiều API REST hiện có                      | Gateway + OpenAPI/API targets                                 | Tái sử dụng API contract                      |
+| Có MCP Server dùng chung                    | Gateway + MCP targets                                         | Tích hợp capabilities hiện hữu                |
+| API cần mapping hoặc logic tùy chỉnh        | Gateway + Lambda adapter                                      | Tách logic tích hợp khỏi agent                |
+| Quyền gọi tool khác nhau theo vai trò       | Gateway + Policy Engine                                       | Centralized, deterministic tool authorization |
+| Backend phải biết danh tính người dùng gốc  | OAuth/token exchange hoặc caller identity propagation phù hợp | Tránh nhầm service identity với user identity |
+| Hoàn tiền hoặc thao tác không thể đảo ngược | Policy + backend validation + approval workflow khi cần       | Giảm rủi ro do agent chọn sai tool hoặc input |
+
+
+
+# Một chi tiết rất đáng nhớ về Policy Engine
+	Ví dụ doanh nghiệp cho phép hoàn tiền tối đa 1.000 USD qua tool process_refund.
+
+	Policy có thể kiểm soát điều kiện amount &lt; 1000. Tuy nhiên, không nên coi policy ở Gateway là thay thế cho kiểm tra nghiệp vụ của API. Backend vẫn phải kiểm tra số dư, đơn hàng, currency, quyền sở hữu và idempotency.
+
+	Ngoài ra, policy cho phép một tool không có nghĩa là mọi input đều hợp lệ. Nếu cần chặn theo số tiền, tenant hoặc trạng thái giao dịch, các thuộc tính phải được đưa vào policy context một cách đáng tin cậy và được kiểm tra ở đúng lớp. 
+
+
+
+
+
+# 7. Trade-off: Cost, latency, security và complexity
+
+
+
+| Phương án                                       | Ưu điểm                                                          | Chi phí hoặc rủi ro                                                  |
+| ----------------------------------------------- | ---------------------------------------------------------------- | -------------------------------------------------------------------- |
+| Agent gọi API trực tiếp                         | Ít hop, kiến trúc đơn giản                                       | Khó quản trị tool và authorization tập trung khi số lượng agent tăng |
+| Agent → Gateway → API                           | Chuẩn hóa tool, tập trung kiểm soát truy cập                     | Thêm network hop, chi phí vận hành và một điểm cần theo dõi          |
+| Agent → Gateway → MCP Server → API              | Tái sử dụng MCP Server, phù hợp hệ sinh thái nhiều client        | Thêm hop, latency, lỗi kết nối và trách nhiệm vận hành               |
+| Gateway + Policy Engine + backend authorization | Kiểm soát quyền nhiều lớp, giảm phụ thuộc vào quyết định của LLM | Thêm công việc thiết kế policy, đồng bộ identity và kiểm thử         |
+
+
+
+Đối với production, cần theo dõi tối thiểu:
+	- Tỷ lệ tool invocation thành công và thất bại.
+	- Latency p50/p95 của từng tool và từng backend.
+	- Lỗi xác thực, lỗi authorization và policy denial.
+	- Retry, timeout, throttling và duplicate writes.
+	- Chi phí theo nghiệp vụ hoặc theo số lượt agent hoàn thành.
+	Đối với hành động ghi dữ liệu, hãy thiết kế idempotency và cơ chế xử lý retry. Một request timeout không chứng minh rằng backend chưa thực hiện hành động.
+
+
+
+
+</code></pre>
+</div>
+<div class='nav-bar'><a class='nav-btn' href='lesson69.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../aws-bedrock-agent-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson71.html'>Bài sau ➡️</a></div><button class='theme-toggle-btn' onclick='toggleTheme()'>🌓 Đổi Giao Diện</button>
+</div>
+<script>
+const lessonKey = 'aws-bedrock-agent-learning-list_lesson70.html';
+function toggleTheme() {
+   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';
+   document.body.className = mode;
+   localStorage.setItem('theme', mode);
+}
+function toggleDone() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   if (isDone) {
+       localStorage.removeItem(lessonKey);
+   } else {
+       localStorage.setItem(lessonKey, 'done');
+   }
+   renderDoneStatus();
+}
+function renderDoneStatus() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   let btn = document.getElementById('doneButton');
+   if (isDone) {
+       btn.className = 'done-btn completed';
+       btn.innerText = 'Đã Hoàn Thành ✅';
+   } else {
+       btn.className = 'done-btn';
+       btn.innerText = 'Đánh dấu đã học ⚪';
+   }
+}
+function copyContent() {
+   let text = document.getElementById('lessonCode').innerText;
+   navigator.clipboard.writeText(text).then(function() {
+       alert('✅ Đã sao chép nội dung bài học!');
+   });
+}
+function initLesson() {
+   document.body.className = localStorage.getItem('theme') || 'dark-mode';
+   renderDoneStatus();
+   if (window.Prism) Prism.highlightAll();
+}
+</script></body></html>

@@ -1,0 +1,144 @@
+<html><head><title>Lesson 12 == ⚔️ Normalize vs Standardize ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../service-now-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 12 -- ⚔️ Normalize vs Standardize -//</h1><pre>			
+			
+# 🧱 1. Normalize (Chuẩn hóa dữ liệu theo cấu trúc)
+
+
+	👉 Mục tiêu:
+		Loại bỏ trùng lặp
+		Tách data thành các bảng hợp lý
+		Đảm bảo data consistency
+
+	👉 Bản chất:
+		Thiết kế database schema
+
+
+
+	## Ví dụ (rất thực tế trong ServiceNow) 
+
+		❌ Không normalize:
+			Incident Table
+			- caller_name
+			- caller_department
+			👉 lặp lại hàng nghìn lần
+
+		✅ Normalize:
+
+			User Table
+			- name
+			- department
+
+			Incident Table
+			- caller_id (reference → User)
+
+		👉 dùng reference field + dot walk
+
+	⚠️ Nếu không normalize:
+		data inconsistency (department bị sai)
+		update nightmare
+		report sai
+
+
+
+
+# 🎯 2. Standardize (Chuẩn hóa cách biểu diễn dữ liệu)
+
+
+	👉 Mục tiêu:
+		Data đồng nhất format
+		Dễ xử lý / search / automation
+
+	👉 Bản chất:
+		Chuẩn hóa giá trị, không phải cấu trúc
+
+
+
+	Ví dụ:
+		❌ Không standardize:
+			"VN"
+			"Vietnam"
+			"Việt Nam"
+
+		✅ Standardize:
+			"VN"
+
+		Trong ServiceNow:
+			dùng:
+				Choice field
+				Dictionary
+				Data policy
+				UI policy
+
+
+
+# 🔥 So sánh thẳng
+
+| Aspect        | Normalize         | Standardize          |
+| ------------- | ----------------- | -------------------- |
+| Mục tiêu      | cấu trúc DB       | format dữ liệu       |
+| Tác động      | schema            | value                |
+| Công cụ       | table, reference  | choice, policy       |
+| Sai → hậu quả | DB rối, duplicate | data bẩn, khó search |
+| Level         | kiến trúc         | vận hành             |
+
+
+
+# 🧠 Góc nhìn senior (quan trọng) 
+
+❗ 1. Normalize sai → hệ thống chết chậm
+	duplicate data
+	không scale được
+	automation fail
+
+
+❗ 2. Standardize sai → AI / report vô dụng
+	cùng 1 thứ nhưng 10 cách viết
+	query không match
+
+
+# 🧨 3. Cái bẫy lớn 
+
+
+	Nhiều dev:
+		standardize thay vì normalize
+
+	Ví dụ:
+		tạo choice field cho department ❌
+		thay vì reference User table ✅
+
+	👉 đây là design ngu (thẳng luôn)
+
+
+
+# 🚀 4. Trong ServiceNow — cách làm đúng
+
+
+	Normalize:
+	dùng:
+		reference field
+		CMDB
+		relational structure
+
+
+
+	Standardize:
+			dùng:
+				choice list
+				data policy
+				script enforce format
+
+
+
+
+# 🧭 Kết luận
+	Normalize = thiết kế xương sống hệ thống
+	Standardize = giữ data sạch để dùng được 
+
+
+		👉 Thiếu 1 trong 2:
+
+		hoặc hệ thống không scale
+		hoặc data không usable
+
+
+
+</pre><a id='backBottom' href='../service-now-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

@@ -1,0 +1,178 @@
+<html><head><title>Lesson 3 == JS Requirements ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../NodeJS-learning.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 3 -- JS Requirements -//</h1><pre># Tổng Quan Phần "JavaScript Requirements"
+
+	Mục tiêu: Cung cấp kiến thức JavaScript cơ bản và cần thiết để làm việc với Node.js, tập trung vào:	
+
+		- Variables (Biến): Cách khai báo và sử dụng.
+		- Functions (Hàm): Cách định nghĩa hàm truyền thống và hiện đại.
+		- Objects & Arrays (Đối tượng & Mảng): Cấu trúc dữ liệu cơ bản.
+		- Asynchronous Programming (Lập trình bất đồng bộ): Callbacks, Promises, Async/Await.
+		- ES6+ Features (Tính năng hiện đại): Destructuring, Template Literals, Modules.
+
+	Tại sao cần? Node.js chạy JavaScript phía server, nhưng khác browser ở chỗ không có DOM (Document Object Model). Thay vào đó, bạn sẽ làm việc với file, mạng, và database. Các khái niệm này là nền tảng để hiểu code Node.js, như cách xử lý request HTTP hay đọc file bất đồng bộ.
+
+
+	Cách chạy code: Bạn có thể thử các ví dụ trong:
+
+
+# 1. Variables and Functions (Biến và Hàm) 
+
+// Variables (let, const, var)
+let name = 'Node.js';
+const version = 20;
+
+// Function declaration
+function greet(user) {
+  return `Hello, ${user}!`; // Template literal (ES6)
+}
+
+// Arrow function (ES6+)
+const add = (a, b) => a + b;
+
+console.log(greet('Developer')); // Output: Hello, Developer!
+console.log(add(5, 3)); // Output: 8	
+
+
+	## Giải thích chi tiết:
+		## Biến (Variables):
+
+		- let name = 'Node.js';: Khai báo biến có thể thay đổi giá trị. let giới hạn scope (block-scoped), an toàn hơn var. Ví dụ: name = 'JavaScript'; hợp lệ.
+		- const version = 20;: Khai báo hằng số, không thể gán lại giá trị. Tuy nhiên, nếu const chứa object/array, bạn vẫn có thể thay đổi nội dung bên trong. Ví dụ: const arr = [1]; arr.push(2); là OK, nhưng arr = [3]; gây lỗi.
+		- var (không dùng trong code ví dụ): Cách khai báo cũ, global-scoped, dễ gây lỗi (ít dùng trong Node.js hiện đại).
+		- Tại sao quan trọng? Trong Node.js, bạn sẽ dùng biến để lưu dữ liệu (như config server, kết quả từ database). const được ưa chuộng cho giá trị cố định, như module imports.
+
+
+	## Hàm (Functions):
+
+		- Function Declaration: function greet(user) { ... } là cách truyền thống. Hàm này nhận tham số user và trả về chuỗi dùng template literal (`Hello, ${user}!`), một tính năng ES6 cho phép nhúng biến vào chuỗi.
+		- Arrow Function: const add = (a, b) => a + b; là cú pháp ES6 ngắn gọn. Không cần từ khóa return nếu chỉ có một biểu thức. Arrow functions thường dùng trong Node.js cho callbacks ngắn hoặc functional programming.
+		- Ngữ cảnh Node.js: Hàm là cốt lõi của Node.js, đặc biệt trong callbacks (như http.createServer((req, res) => {...})) và xử lý bất đồng bộ.
+
+
+
+# 2. Objects and Arrays (Đối tượng và Mảng)
+
+// Object
+const user = {
+  name: 'Alice',
+  age: 25,
+  greet() {
+    console.log(`Hi, I'm ${this.name}`);
+  }
+};
+
+// Array
+const colors = ['red', 'green', 'blue'];
+
+// Array methods (ES6+)
+colors.forEach(color => console.log(color));
+const lengths = colors.map(color => color.length);
+
+
+# 	3. Asynchronous JavaScript (Lập Trình Bất Đồng Bộ)
+
+// 1. Callbacks (traditional)
+function fetchData(callback) {
+  setTimeout(() => {
+    callback('Data received!');
+  }, 1000);
+}
+
+// 2. Promises (ES6+)
+const fetchDataPromise = () => {
+  return new Promise((resolve) => {
+    setTimeout(() => resolve('Promise resolved!'), 1000);
+  });
+};
+
+// 3. Async/Await (ES8+)
+async function getData() {
+  const result = await fetchDataPromise();
+  console.log(result);
+}
+
+getData(); // Call the async function
+
+
+	## Giải thích chi tiết:
+	Tại sao bất đồng bộ? Node.js là non-blocking, dựa trên event loop để xử lý nhiều tác vụ cùng lúc (như đọc file, query database, xử lý request). Hiểu bất đồng bộ là yếu tố then chốt.
+
+	## 1. Callbacks: 
+		
+		- fetchData(callback): Hàm giả lập tác vụ bất đồng bộ (như đọc file). setTimeout mô phỏng độ trễ 1 giây. Sau 1s, gọi callback với dữ liệu.
+		- Vấn đề: Callback lồng nhau (callback hell) khiến code khó đọc nếu có nhiều tác vụ liên tiếp.
+		- Ngữ cảnh Node.js: Callbacks phổ biến trong các module core như fs.readFile. Ví dụ: fs.readFile('file.txt', (err, data) => {...}).
+
+
+	## 2. Promises: 
+
+		- fetchDataPromise(): Trả về một Promise, trạng thái có thể là pending, resolved, hoặc rejected. Ở đây, resolve trả về dữ liệu sau 1s.
+		- Ưu điểm: Dễ chain các tác vụ bằng .then() hoặc xử lý lỗi bằng .catch().
+		- Ngữ cảnh Node.js: Promises dùng nhiều trong API hiện đại, như fetch hoặc thư viện database (mongoose).		
+
+
+
+	## 3. Async/Await:
+	
+		- async function getData(): Hàm async luôn trả về Promise. await tạm dừng đến khi Promise resolve, làm code trông giống đồng bộ, dễ đọc hơn.
+		- Output: Sau 1s, in Promise resolved!.
+		- Ngữ cảnh Node.js: Async/Await là cách phổ biến nhất hiện nay để xử lý bất đồng bộ, đặc biệt trong Express.js hoặc khi gọi API.
+
+
+	Thử thêm lỗi vào Promise
+
+const fetchDataPromise = () => {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => reject('Error occurred!'), 1000);
+  });
+};
+async function getData() {
+  try {
+    const result = await fetchDataPromise();
+    console.log(result);
+  } catch (error) {
+    console.log(error); // Output: Error occurred!
+  }
+}
+getData();
+
+
+
+# 4. Destructuring & Template Literals (ES6+)
+
+const { name } = user;
+console.log(`Hello, ${name}!`);
+
+
+
+	## Destructuring: 
+		
+		const { name } = user;: Lấy thuộc tính name từ object user (từ phần Objects). name giờ là 'Alice'.
+		
+		Ngữ cảnh Node.js: Destructuring tiện khi làm việc với config hoặc response từ API. Ví dụ: const { id, username } = req.body trong Express.js.
+
+
+	## Template Literals: 
+		
+		`Hello, ${name}!`: Cú pháp ES6 cho phép nhúng biến vào chuỗi, thay thế nối chuỗi kiểu cũ ("Hello, " + name + "!")
+		.
+		Ngữ cảnh Node.js: Dùng để tạo response HTML, log, hoặc format dữ liệu.
+
+
+
+# 5. Key JavaScript Concepts (Tóm Tắt Khác)
+
+	##  Modules:
+
+		- require() (CommonJS): Cách truyền thống trong Node.js. Ví dụ: const fs = require('fs');.
+		- import/export (ES Modules): Hiện đại hơn, dùng với type: "module" trong package.json. Ví dụ: import fs from 'fs';.
+		- Ngữ cảnh: Node.js tổ chức code thành modules, bạn sẽ gặp nhiều trong phần sau.
+
+
+	## Error Handling:
+
+		- Dùng try/catch trong async/await hoặc .catch() cho Promises.
+		- Ví dụ: try { await someFunction(); } catch (err) { console.error(err); }.
+		- Ngữ cảnh: Quan trọng khi xử lý lỗi file, database, hoặc request.
+
+
+</pre><a id='backBottom' href='../NodeJS-learning.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

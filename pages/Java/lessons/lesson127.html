@@ -1,4 +1,37 @@
-<html><head><title>Lesson 127 == Segment Tree Beats ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 127 -- Segment Tree Beats -//</h1><pre># Khái niệm 
+<!DOCTYPE html><html lang='vi'><head><meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0'>
+<title>Lesson 127 -- Segment Tree Beats -//</title>
+<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css'>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js'></script>
+<script id='MathJax-script' async src='https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'></script>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; margin: 0; padding: 20px; transition: 0.3s; }
+.dark-mode { background-color: #121212; color: #e0e0e0; }
+.light-mode { background-color: #ffffff; color: #333333; }
+.container { max-width: 950px; margin: auto; }
+h1 { text-align: center; color: #3498db; margin: 20px 0; font-size: 26px; }
+.nav-bar { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 20px 0; }
+.nav-btn { text-decoration: none; padding: 10px 18px; background: #3498db; color: white; border-radius: 6px; font-weight: bold; font-size: 15px; display: inline-block; transition: 0.2s; }
+.nav-btn:hover { background: #2980b9; }
+.nav-btn.home-nav { background: #6c757d; }
+.nav-btn.home-nav:hover { background: #5a6268; }
+.nav-btn.disabled { background: #aaa; cursor: not-allowed; opacity: 0.5; }
+.done-btn { display: block; margin: 15px auto; padding: 10px 24px; border: 2px solid #2ecc71; background: transparent; color: #2ecc71; border-radius: 25px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+.done-btn.completed { background: #2ecc71; color: white; }
+.content-box { position: relative; margin: 20px 0; }
+pre { padding: 20px; border-radius: 8px; white-space: pre-wrap; word-break: break-word; overflow-x: auto; font-family: 'Consolas', 'Courier New', monospace; font-size: 15px; }
+.dark-mode pre { background: #1a1a1a; color: #f8f8f2; border: 1px solid #333; }
+.light-mode pre { background: #f8f9fa; color: #212529; border: 1px solid #e9ecef; }
+.copy-btn { position: absolute; top: 12px; right: 12px; padding: 6px 12px; font-size: 12px; background: #555; color: white; border: none; border-radius: 4px; cursor: pointer; opacity: 0.8; }
+.copy-btn:hover { opacity: 1; background: #2ecc71; }
+.theme-toggle-btn { display: block; margin: 20px auto; padding: 8px 16px; background: transparent; border: 1px solid #888; color: inherit; border-radius: 5px; cursor: pointer; }
+</style></head><body onload='initLesson()'>
+<div class='container'>
+<div class='nav-bar'><a class='nav-btn' href='lesson126.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../java-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson128.html'>Bài sau ➡️</a></div><h1>Lesson 127 -- Segment Tree Beats -//</h1>
+<button id='doneButton' class='done-btn' onclick='toggleDone()'>Mark as Done ⚪</button>
+<div class='content-box'>
+<button class='copy-btn' onclick='copyContent()'>📋 Copy nội dung</button>
+<pre><code id='lessonCode'># Khái niệm 
 	Segment Tree Beats là một dạng cải tiến cao cấp của SegmentTree, được thiết kế để xử lý các truy vấn phức tạp mà các dạng Lazy Propagation truyền thống không xử lý được hiệu quả
 	
 	
@@ -12,7 +45,7 @@ Khi bạn có những truy vấn phức tạp như sau:
 | Truy vấn số lần `A[i] == max` trong đoạn \[L, R]   | ❌ Không làm được                      | ✅ Làm được nếu Beats        |
 
 	📌 Ví dụ thực tế:
-Bạn có mảng điểm số người chơi, và muốn giảm điểm những người có điểm quá cao (ví dụ, tất cả A[i] > 90 thì A[i] := min(A[i], 90)) → rất giống "đánh bầm" cây, làm yếu dần phần tử mạnh nhất → Segment Tree Beats.
+Bạn có mảng điểm số người chơi, và muốn giảm điểm những người có điểm quá cao (ví dụ, tất cả A[i] &gt; 90 thì A[i] := min(A[i], 90)) → rất giống "đánh bầm" cây, làm yếu dần phần tử mạnh nhất → Segment Tree Beats.
 
 # 🧠 Ý tưởng chính – “Beating” logic 
 Mỗi node trong Segment Tree Beats lưu:
@@ -24,16 +57,16 @@ Mỗi node trong Segment Tree Beats lưu:
 
 	##💥 Khi ta cập nhật min(A[i], x) trong đoạn, nếu x ≥ max1:
 		→ Không làm gì (vì mọi phần tử đều ≤ x)
-		Nhưng nếu x < max1 và x ≥ max2:
+		Nhưng nếu x &lt; max1 và x ≥ max2:
 		→ Chỉ cần giảm max1 về x, update lại sum, không đụng gì khác.
-		Nếu x < max2 → không thể cập nhật node hiện tại, phải đệ quy xuống 2 con.
+		Nếu x &lt; max2 → không thể cập nhật node hiện tại, phải đệ quy xuống 2 con.
 
 
 # 🛠️ Ví dụ code xử lý min(A[i], x) (Beating step): 
 
 void applyMin(int node, int l, int r, int x) {
-    if (max1[node] <= x) return; // không cần làm gì
-    if (max2[node] < x) {
+    if (max1[node] &lt;= x) return; // không cần làm gì
+    if (max2[node] &lt; x) {
         // có thể cập nhật toàn bộ đoạn
         long delta = (long)(x - max1[node]) * cntMax[node];
         sum[node] += delta;
@@ -70,7 +103,7 @@ void applyMin(int node, int l, int r, int x) {
 
 | Vấn đề                                       | Có thể dùng Segment Tree Beats không? |
 | -------------------------------------------- | ------------------------------------- |
-| Game server: giảm chỉ số các user > 99 về 99 | ✅                                     |
+| Game server: giảm chỉ số các user &gt; 99 về 99 | ✅                                     |
 | Truy vấn số người có HP tối đa               | ✅                                     |
 | Truy vấn tổng HP trong đoạn                  | ✅                                     |
 | Truy vấn số lần max HP xuất hiện trong đoạn  | ✅                                     |
@@ -94,4 +127,46 @@ void applyMin(int node, int l, int r, int x) {
 		Khi Lazy Segment Tree không đủ
 		Nó có độ phức tạp logic cao, nhưng khi triển khai đúng sẽ cực kỳ hiệu quả cho những bài toán kiểu reduce/max/min conditional update.
 
-</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
+</code></pre>
+</div>
+<div class='nav-bar'><a class='nav-btn' href='lesson126.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../java-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson128.html'>Bài sau ➡️</a></div><button class='theme-toggle-btn' onclick='toggleTheme()'>🌓 Đổi Giao Diện</button>
+</div>
+<script>
+const lessonKey = 'java-learning-list_lesson127.html';
+function toggleTheme() {
+   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';
+   document.body.className = mode;
+   localStorage.setItem('theme', mode);
+}
+function toggleDone() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   if (isDone) {
+       localStorage.removeItem(lessonKey);
+   } else {
+       localStorage.setItem(lessonKey, 'done');
+   }
+   renderDoneStatus();
+}
+function renderDoneStatus() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   let btn = document.getElementById('doneButton');
+   if (isDone) {
+       btn.className = 'done-btn completed';
+       btn.innerText = 'Đã Hoàn Thành ✅';
+   } else {
+       btn.className = 'done-btn';
+       btn.innerText = 'Đánh dấu đã học ⚪';
+   }
+}
+function copyContent() {
+   let text = document.getElementById('lessonCode').innerText;
+   navigator.clipboard.writeText(text).then(function() {
+       alert('✅ Đã sao chép nội dung bài học!');
+   });
+}
+function initLesson() {
+   document.body.className = localStorage.getItem('theme') || 'dark-mode';
+   renderDoneStatus();
+   if (window.Prism) Prism.highlightAll();
+}
+</script></body></html>

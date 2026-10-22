@@ -1,0 +1,313 @@
+<html><head><title>Lesson 12 == Error Handling ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../NodeJS-learning.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 12 -- Error Handling -//</h1><pre>
+# Tại sao cần xử lý lỗi?
+	Xử lý lỗi (error handling) là yếu tố then chốt để đảm bảo ứng dụng Node.js hoạt động ổn định và thân thiện với người dùng. Theo bài học, lý do chính bao gồm:
+
+		- Ngăn ứng dụng crash bất ngờ: Một lỗi không được xử lý (unhandled error) có thể làm ứng dụng dừng đột ngột, gây mất trải nghiệm người dùng.
+		- Cung cấp phản hồi ý nghĩa: Thay vì lỗi chung chung, bạn có thể trả về thông báo cụ thể (e.g., "File không tồn tại").
+		- Dễ debug hơn: Lỗi được xử lý đúng cách cung cấp ngữ cảnh (context) rõ ràng, giúp tìm nguyên nhân nhanh chóng.
+		- Duy trì ổn định trong production: Ứng dụng production cần xử lý lỗi để tránh downtime hoặc mất dữ liệu.
+		- Đảm bảo cleanup tài nguyên: Đóng kết nối database, socket, hoặc file khi lỗi xảy ra.	
+
+
+	Insight chuyên sâu: Trong thực tế, một hệ thống không xử lý lỗi tốt có thể dẫn đến mất dữ liệu (data loss), rò rỉ tài nguyên (resource leaks), hoặc lộ thông tin nhạy cảm (e.g., stack trace cho hacker). Ví dụ, nếu bạn không xử lý lỗi khi ghi file, file có thể bị ghi nửa vời, dẫn đến dữ liệu hỏng. Trong môi trường production, bạn cần thêm logging (sử dụng Winston hoặc Pino) và monitoring (như Prometheus) để theo dõi lỗi.
+
+
+
+#  1. Lỗi JavaScript chuẩn (Standard JavaScript Errors)
+
+	Đây là các lỗi phát sinh từ code JavaScript, thường gặp trong mọi môi trường JS, không riêng Node.js:
+
+	## SyntaxError: Lỗi cú pháp, ví dụ khi parse JSON không hợp lệ:
+		JSON.parse('{invalid json}'); // SyntaxError: Unexpected token i in JSON
+
+
+	## TypeError: Truy cập thuộc tính/method trên giá trị không hợp lệ:
+
+		null.someProperty; // TypeError: Cannot read property 'someProperty' of null
+
+	## ReferenceError: Sử dụng biến chưa được định nghĩa
+		console.log(unknownVariable); // ReferenceError: unknownVariable is not defined	
+	
+		Insight: Những lỗi này thường do sai sót của developer (như quên kiểm tra null/undefined). Trong production, dùng linter (ESLint) và TypeScript để bắt lỗi sớm
+	
+	
+#2. Lỗi hệ thống (System Errors) 	
+	
+	Đây là lỗi liên quan đến hệ thống hoặc môi trường runtime, thường gặp trong Node.js khi tương tác với file, network, hoặc hệ điều hành:
+	
+	
+	## ENOENT: File hoặc thư mục không tồn tại:
+		
+const fs = require('fs');
+fs.readFile('nonexistent.txt', (err) => {
+  console.error(err.code); // 'ENOENT'
+});
+	
+	
+	## 	ECONNREFUSED hoặc ENOTFOUND: Kết nối mạng thất bại:
+const http = require('http');
+http.get('http://nonexistent-site.com', (res) => {}).on('error', (err) => {
+  console.error(err.code); // 'ECONNREFUSED' hoặc 'ENOTFOUND'
+});	
+	
+	Insight: Lỗi hệ thống thường có thuộc tính code (e.g., 'ENOENT') giúp bạn xác định nguyên nhân cụ thể. Trong thực tế, luôn kiểm tra err.code để xử lý lỗi theo ngữ cảnh, ví dụ trả về thông báo thân thiện với người dùng thay vì stack trace.	
+	
+	
+	
+# 	Các mẫu xử lý lỗi cơ bản
+	Node.js hỗ trợ nhiều cách xử lý lỗi, tùy thuộc vào pattern bất đồng bộ bạn sử dụng. Bài học nhấn mạnh error-first callbacks là mẫu phổ biến trong core modules của Node.js.
+
+	## Error-First Callbacks
+		Trong mẫu này, tham số đầu tiên của callback luôn là err (null nếu không có lỗi), theo sau là kết quả.
+
+const fs = require('fs');
+
+function readConfigFile(filename, callback) {
+  fs.readFile(filename, 'utf8', (err, data) => {
+    if (err) {
+      if (err.code === 'ENOENT') {
+        return callback(new Error(`Config file ${filename} not found`));
+      } else if (err.code === 'EACCES') {
+        return callback(new Error(`No permission to read ${filename}`));
+      }
+      return callback(err);
+    }
+
+    try {
+      const config = JSON.parse(data);
+      callback(null, config);
+    } catch (parseError) {
+      callback(new Error(`Invalid JSON in ${filename}`));
+    }
+  });
+}
+
+// Sử dụng
+readConfigFile('config.json', (err, config) => {
+  if (err) {
+    console.error('Failed to read config:', err.message);
+    return;
+  }
+  console.log('Config loaded successfully:', config);
+});
+
+
+		- fs.readFile: Đọc file bất đồng bộ, callback nhận err (nếu có) hoặc data.
+		- Kiểm tra err.code để xử lý lỗi cụ thể (ENOENT, EACCES).
+		- try/catch trong callback để bắt lỗi khi parse JSON.
+		- Nếu không có lỗi, gọi callback(null, config) theo convention (null = no error)
+
+	Insight: Error-first callbacks là cách cũ nhưng vẫn phổ biến trong core modules (fs, http). Tuy nhiên, chúng dễ dẫn đến "callback hell" khi có nhiều thao tác lồng nhau. Trong ứng dụng mới, nên chuyển sang Promises hoặc async/await để code sạch hơn.
+
+
+
+# Xử lý lỗi hiện đại với Async/Await
+	Với async/await (đã học ở bài trước), bạn có thể dùng try/catch để xử lý lỗi cả đồng bộ và bất đồng bộ, làm code dễ đọc hơn.
+
+	## Ví dụ: Try/Catch với Async/Await
+
+const fs = require('fs').promises;
+
+async function loadUserData(userId) {
+  try {
+    const data = await fs.readFile(`users/${userId}.json`, 'utf8');
+    const user = JSON.parse(data);
+    if (!user.email) {
+      throw new Error('Invalid user data: missing email');
+    }
+    return user;
+  } catch (error) {
+    if (error.code === 'ENOENT') {
+      throw new Error(`User ${userId} not found`);
+    } else if (error instanceof SyntaxError) {
+      throw new Error('Invalid user data format');
+    }
+    throw error; // Re-throw các lỗi khác
+  } finally {
+    console.log(`Finished processing user ${userId}`);
+  }
+}
+
+// Sử dụng
+(async () => {
+  try {
+    const user = await loadUserData(123);
+    console.log('User loaded:', user);
+  } catch (error) {
+    console.error('Failed to load user:', error.message);
+  }
+})();
+	
+	
+		- fs.promises.readFile: Phiên bản Promise của fs.readFile, phù hợp với async/await.
+		- try: Chứa code có thể throw lỗi (đọc file, parse JSON, validate email).
+		- catch: Xử lý lỗi cụ thể dựa trên error.code hoặc instanceof.
+		- finally: Chạy bất kể thành công hay thất bại, hữu ích cho cleanup (đóng file, connection).	
+	
+		Output ví dụ (nếu file không tồn tại):
+	
+Finished processing user 123
+Failed to load user: User 123 not found
+
+	Insight: Async/await với try/catch là cách hiện đại nhất, đặc biệt khi làm việc với API hoặc database. Trong API REST, bạn có thể map lỗi sang HTTP status code (e.g., 404 cho ENOENT). Luôn dùng finally cho cleanup để tránh resource leaks (như giữ kết nối database mở).
+	
+
+
+# Xử lý lỗi toàn cục (Global Error Handling)
+
+	Một số lỗi không được bắt bởi try/catch hoặc callback, ví dụ lỗi đồng bộ trong code hoặc Promise rejection không được xử lý. Node.js cung cấp hai event để xử lý:
+
+		uncaughtException: Bắt lỗi đồng bộ không được xử lý.
+		unhandledRejection: Bắt Promise rejection không được catch.
+
+
+const http = require('http');
+const server = http.createServer((req, res) => {});
+
+// Xử lý uncaughtException
+process.on('uncaughtException', (error) => {
+  console.error('UNCAUGHT EXCEPTION! Shutting down...');
+  console.error(error.name, error.message);
+  server.close(() => {
+    console.log('Process terminated due to uncaught exception');
+    process.exit(1);
+  });
+});
+
+// Xử lý unhandledRejection
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('UNHANDLED REJECTION! Shutting down...');
+  console.error('Unhandled Rejection at:', promise, 'Reason:', reason);
+  server.close(() => {
+    process.exit(1);
+  });
+});
+
+// Gây lỗi thử nghiệm
+Promise.reject(new Error('Something went wrong'));
+setTimeout(() => {
+  throw new Error('Uncaught exception after timeout');
+}, 1000);
+
+
+	unhandledRejection: Bắt lỗi từ Promise.reject không có .catch().
+	uncaughtException: Bắt lỗi đồng bộ như throw new Error.
+	server.close(): Đóng server trước khi exit để cleanup.
+	
+UNHANDLED REJECTION! Shutting down...
+Unhandled Rejection at: Promise { <rejected> Error: Something went wrong } Reason: Error: Something went wrong
+Process terminated due to uncaught exception
+
+	Insight: Trong production, không nên dựa vào uncaughtException để tiếp tục chạy app, vì trạng thái app có thể không ổn định sau lỗi (e.g., memory leak). Thay vào đó, dùng process manager như PM2 để tự động restart app sau crash. Luôn log lỗi (dùng logger như Winston) và gửi alert (qua Slack, Sentry) để đội ngũ xử lý nhanh.
+
+
+
+# Best Practices (Thực hành tốt nhất)
+
+	## Dos
+		1. Xử lý lỗi ở level phù hợp: Xử lý lỗi gần nơi nó xảy ra (e.g., trong middleware Express cho API errors).
+
+		2. Log lỗi với context đầy đủ: Bao gồm stack trace, request info, user ID, v.v. Ví dụ:
+		
+		3. Dùng custom error types: Tạo class lỗi riêng để dễ phân loại và xử lý (xem phần dưới).
+		
+		4.Cleanup trong finally: Đóng file, connection, hoặc clear timeout.
+		
+		5. Validate input sớm: Kiểm tra đầu vào để tránh lỗi (e.g., check userId trước khi query DB).
+		
+		
+		
+		
+	## 	Don'ts
+		1. Không bỏ qua lỗi: Tránh catch block rỗng (catch (err) {}), vì mất thông tin debug.
+		
+		2. Không lộ chi tiết lỗi nhạy cảm: Chỉ trả thông báo chung chung cho client (e.g., "Internal server error"), log chi tiết cho developer.
+		
+		3. Không dùng try/catch để điều khiển luồng: Ví dụ, không dùng lỗi để check điều kiện logic.
+		
+		4. Không nuốt lỗi mà không log: Luôn log trước khi bỏ qua lỗi.
+		
+		5. Không tiếp tục sau lỗi nghiêm trọng: Nếu database disconnect, không cố query tiếp
+		
+		
+		
+# Custom Error Types
+
+	Tạo class lỗi tùy chỉnh để phân loại và xử lý lỗi dễ dàng hơn:
+
+class ValidationError extends Error {
+  constructor(message, field) {
+    super(message);
+    this.name = 'ValidationError';
+    this.field = field;
+    this.statusCode = 400;
+  }
+}
+
+class NotFoundError extends Error {
+  constructor(resource) {
+    super(`${resource} not found`);
+    this.name = 'NotFoundError';
+    this.statusCode = 404;
+  }
+}
+
+function getUser(id) {
+  if (!id) {
+    throw new ValidationError('User ID is required', 'id');
+  }
+  throw new NotFoundError('User');
+}
+
+try {
+  getUser(null);
+} catch (error) {
+  console.error(error.name, error.message, error.statusCode);
+  // Output: ValidationError User ID is required 400
+}
+
+
+	Insight: Custom errors rất hữu ích trong API REST. Bạn có thể map statusCode sang HTTP response (e.g., res.status(400).json({ error: err.message })). Trong microservices, dùng custom errors để phân biệt giữa lỗi nghiệp vụ (business logic) và lỗi hệ thống.
+	
+
+
+# Tổng kết và Lời khuyên
+
+	Xử lý lỗi hiệu quả là yếu tố then chốt để xây dựng ứng dụng Node.js bền vững. Dưới đây là tóm tắt và một số lời khuyên thực tế:
+
+		- Hiểu loại lỗi: Phân biệt JavaScript errors (SyntaxError, TypeError) và system errors (ENOENT, ECONNREFUSED).
+		- Sử dụng pattern phù hợp: Error-first callbacks cho core modules, try/catch cho async/await.
+		- Global handlers: Dùng uncaughtException và unhandledRejection để cleanup trước khi crash, nhưng không lạm dụng.
+		- Best practices: Log lỗi chi tiết, dùng custom errors, validate input, cleanup tài nguyên.
+		- Production tips: Dùng logger (Winston, Pino), monitoring (Sentry, New Relic), và process manager (PM2).
+
+
+	## Ví dụ thực tế trong Express: 
+
+
+const express = require('express');
+const app = express();
+
+app.get('/user/:id', async (req, res, next) => {
+  try {
+    const id = req.params.id;
+    if (!id) throw new ValidationError('User ID is required', 'id');
+    const user = await loadUserData(id); // Hàm async ở trên
+    res.json(user);
+  } catch (error) {
+    next(error); // Chuyển lỗi tới middleware
+  }
+});
+
+// Error-handling middleware
+app.use((error, req, res, next) => {
+  console.error(error);
+  const status = error.statusCode || 500;
+  res.status(status).json({ error: error.message });
+});
+
+app.listen(3000);
+
+		
+		
+</pre><a id='backBottom' href='../NodeJS-learning.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

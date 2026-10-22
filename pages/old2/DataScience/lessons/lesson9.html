@@ -1,0 +1,92 @@
+<html><head><title>Lesson 9 == Linear Functions ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../DataScience-learning.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 9 -- Linear Functions -//</h1><pre>
+
+# 1. Hàm Tuyến Tính (Linear Functions)
+
+	Định nghĩa chính: Hàm tuyến tính liên kết một biến độc lập (independent variable, x) với một biến phụ thuộc (dependent variable, y) thông qua công thức y = f(x) = ax + b. Trong Data Science, hàm này giúp dự đoán và diễn giải mối quan hệ giữa các biến.
+
+	##  Giải thích chi tiết và chuyên sâu 
+		Mối quan hệ giữa các biến: Bài lấy ví dụ về Average_Pulse (nhịp tim trung bình) và Calorie_Burnage (calo đốt cháy). Giả định rằng Calorie_Burnage phụ thuộc vào Average_Pulse – khi nhịp tim tăng, calo đốt cháy cũng tăng. Do đó:
+
+
+		Independent variable (x): Average_Pulse – biến đầu vào, dùng để dự đoán.
+		Dependent variable (y): Calorie_Burnage – biến đầu ra, được dự đoán.	
+
+	## Công thức tuyến tính: y = ax + b
+	
+		y = f(x): Giá trị dự đoán (Calorie_Burnage).
+		x: Giá trị đầu vào (Average_Pulse).
+		a (slope): Độ dốc, biểu thị mức độ thay đổi của y khi x tăng 1 đơn vị. Ví dụ: Nếu a=2, khi nhịp tim tăng 1 bpm, calo tăng 2 đơn vị.
+
+		b (intercept): Giá trị của y khi x=0, cũng là điểm nơi đường thẳng cắt trục y (trục tung).
+
+
+	## Kết nối với bài trước 
+		Trong bài đầu tiên (hồi quy tuyến tính), chúng ta dùng scipy.stats.linregress để tính slope và intercept từ dữ liệu thực tế:
+
+import pandas as pd
+from scipy import stats
+health_data = pd.DataFrame({
+    'Average_Pulse': [80, 85, 90, 95, 100, 105, 110, 115, 120, 125],
+    'Calorie_Burnage': [240, 250, 260, 270, 280, 290, 300, 310, 320, 330]
+})
+slope, intercept, r, p, std_err = stats.linregress(health_data['Average_Pulse'], health_data['Calorie_Burnage'])
+print(f"Slope: {slope}, Intercept: {intercept}")
+
+		Ứng dụng thực tế: Hàm tuyến tính được dùng trong dự đoán doanh thu (x = chi phí quảng cáo, y = doanh thu), dự báo thời tiết (x = áp suất, y = nhiệt độ), hoặc phân tích y tế (x = liều thuốc, y = phản ứng cơ thể).
+
+		Lời khuyên chuyên gia: Hiểu slope và intercept giúp diễn giải mô hình. Slope lớn (như 10) cho thấy tác động mạnh của x lên y; intercept âm có thể không thực tế (ví dụ: calo âm khi nhịp tim = 0), cần kiểm tra dữ liệu.
+
+
+
+# 2. Hàm Tuyến Tính Với Một Biến Giải Thích (Linear Function With One Explanatory Variable)
+
+	Định nghĩa chính: Hàm tuyến tính với một biến giải thích (explanatory variable) dùng một biến x để dự đoán y. Bài đưa ra công thức ví dụ: f(x) = 2x + 80 để dự đoán Calorie_Burnage từ Average_Pulse.
+
+	## Giải thích chi tiết và chuyên sâu:
+
+		Công thức: f(x) = 2x + 80
+
+			f(x): Calorie_Burnage dự đoán.
+			x: Average_Pulse.
+			2 (slope): Calorie_Burnage tăng 2 đơn vị khi Average_Pulse tăng 1 bpm.
+			80 (intercept): Calorie_Burnage khi Average_Pulse = 0 (giá trị lý thuyết, có thể không thực tế).
+
+		Minh họa cụ thể: Tính Calorie_Burnage cho Average_Pulse = 100:
+
+def f(x):
+    return 2 * x + 80
+pulse = 100
+calories = f(pulse)
+print(f"Predicted Calorie_Burnage for pulse {pulse}: {calories}")
+
+		Output: 280 calo (gần với dữ liệu thực: 100 bpm → 280 calo).
+
+
+
+
+# 3. Vẽ Hàm Tuyến Tính (Plotting a Linear Function)
+
+	Định nghĩa chính: Hàm tuyến tính tạo ra một đường thẳng (linearity = straight line) khi vẽ trên đồ thị. Đường có thể dốc lên, dốc xuống, ngang, hoặc dọc. Bài minh họa đồ thị của f(x) = 2x + 80 với Average_Pulse (x-axis) và Calorie_Burnage (y-axis).
+
+
+	## Giải thích chi tiết và chuyên sâu:
+
+		Đồ thị:
+
+			X-axis: Average_Pulse (biến độc lập).
+			Y-axis: Calorie_Burnage (biến phụ thuộc).
+			Đường thẳng (blue line): Biểu diễn hàm f(x) = 2x + 80. Slope=2 cho thấy đường dốc lên (tăng). Intercept=80 là điểm cắt y-axis.
+			
+		Minh họa với Python (tái tạo đồ thị như bài đầu):
+
+		Phân tích: Scatter plot hiển thị dữ liệu thực (điểm), đường thẳng (blue line) là hàm 2x + 80. Điểm nằm trên đường, xác nhận mô hình tuyến tính phù hợp.
+
+
+	Ứng dụng thực tế: Vẽ hàm tuyến tính giúp trình bày insights cho stakeholders. Trong y tế, đồ thị này giúp bác sĩ thấy mối quan hệ giữa nhịp tim và calo, hỗ trợ tư vấn tập luyện.
+
+
+	Lời khuyên chuyên gia: Dùng Matplotlib/Seaborn để visualize. Kiểm tra tuyến tính bằng scatter plot trước khi áp dụng mô hình tuyến tính. Nếu đường cong xuất hiện, cân nhắc mô hình phi tuyến.
+
+
+
+</pre><a id='backBottom' href='../DataScience-learning.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

@@ -1,0 +1,228 @@
+<!DOCTYPE html><html lang='vi'><head><meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0'>
+<title>Lesson 69 -- AIP-C01  --=MCP Server vs MCP Client -//</title>
+<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css'>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js'></script>
+<script id='MathJax-script' async src='https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'></script>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; margin: 0; padding: 20px; transition: 0.3s; }
+.dark-mode { background-color: #121212; color: #e0e0e0; }
+.light-mode { background-color: #ffffff; color: #333333; }
+.container { max-width: 950px; margin: auto; }
+h1 { text-align: center; color: #3498db; margin: 20px 0; font-size: 26px; }
+.nav-bar { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 20px 0; }
+.nav-btn { text-decoration: none; padding: 10px 18px; background: #3498db; color: white; border-radius: 6px; font-weight: bold; font-size: 15px; display: inline-block; transition: 0.2s; }
+.nav-btn:hover { background: #2980b9; }
+.nav-btn.home-nav { background: #6c757d; }
+.nav-btn.home-nav:hover { background: #5a6268; }
+.nav-btn.disabled { background: #aaa; cursor: not-allowed; opacity: 0.5; }
+.done-btn { display: block; margin: 15px auto; padding: 10px 24px; border: 2px solid #2ecc71; background: transparent; color: #2ecc71; border-radius: 25px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+.done-btn.completed { background: #2ecc71; color: white; }
+.content-box { position: relative; margin: 20px 0; }
+pre { padding: 20px; border-radius: 8px; white-space: pre-wrap; word-break: break-word; overflow-x: auto; font-family: 'Consolas', 'Courier New', monospace; font-size: 15px; }
+.dark-mode pre { background: #1a1a1a; color: #f8f8f2; border: 1px solid #333; }
+.light-mode pre { background: #f8f9fa; color: #212529; border: 1px solid #e9ecef; }
+.copy-btn { position: absolute; top: 12px; right: 12px; padding: 6px 12px; font-size: 12px; background: #555; color: white; border: none; border-radius: 4px; cursor: pointer; opacity: 0.8; }
+.copy-btn:hover { opacity: 1; background: #2ecc71; }
+.theme-toggle-btn { display: block; margin: 20px auto; padding: 8px 16px; background: transparent; border: 1px solid #888; color: inherit; border-radius: 5px; cursor: pointer; }
+</style></head><body onload='initLesson()'>
+<div class='container'>
+<div class='nav-bar'><a class='nav-btn' href='lesson67.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../aws-bedrock-agent-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson69.html'>Bài sau ➡️</a></div><h1>Lesson 69 -- AIP-C01  --=MCP Server vs MCP Client -//</h1>
+<button id='doneButton' class='done-btn' onclick='toggleDone()'>Mark as Done ⚪</button>
+<div class='content-box'>
+<button class='copy-btn' onclick='copyContent()'>📋 Copy nội dung</button>
+<pre><code id='lessonCode'>	
+# 	MCP Server vs MCP Client — Hiểu đúng bản chất trong Agentic AI
+	
+	Trong MCP (Model Context Protocol), MCP Client là bên chủ động kết nối và gửi yêu cầu; MCP Server là bên cung cấp tools, resources hoặc prompts để Client sử dụng.
+	
+	Điểm dễ nhầm nhất: MCP Client không nhất thiết là LLM, và MCP Server không nhất thiết là một máy chủ chạy trên mạng. Đây là các vai trò trong giao thức MCP, không phải cách gọi cố định cho một loại máy hay một dịch vụ AWS.
+		
+	
+	
+# 1. Bản chất: Ai gọi ai? 
+	
+	Ví dụ: Bạn xây dựng một AI Agent có nhiệm vụ tra cứu tiến độ dự án.
+	- Agent Host: Ứng dụng quản lý vòng đời Agent.
+	- MCP Client: Thành phần bên trong ứng dụng kết nối với MCP Server.
+	- MCP Server: Công bố tool get_project_status.
+	- Database: Nơi lưu trạng thái dự án thực tế.
+	
+	Khi người dùng hỏi tiến độ dự án, Client giúp Agent gọi tool thông qua Server. Server xử lý yêu cầu, truy vấn database và trả kết quả.
+	Lưu ý: Agent Host có thể quản lý nhiều MCP Client, mỗi Client kết nối đến một MCP Server khác nhau.	
+		
+		
+		
+| Tiêu chí                  | MCP Client                            | MCP Server                               |
+| ------------------------- | ------------------------------------- | ---------------------------------------- |
+| Vai trò                   | Bên sử dụng giao thức để kết nối      | Bên cung cấp khả năng qua giao thức      |
+| Chủ động khởi tạo yêu cầu | Có                                    | Thường phản hồi yêu cầu                  |
+| Khám phá tools            | Gửi yêu cầu liệt kê tools             | Trả về danh sách tools                   |
+| Gọi tool                  | Gửi yêu cầu `tools/call`              | Thực thi hoặc chuyển tiếp yêu cầu        |
+| Trả kết quả               | Nhận và chuyển kết quả cho Host/Agent | Trả kết quả cho Client                   |
+| Số lượng                  | Có thể có nhiều Client                | Một ứng dụng có thể kết nối nhiều Server |
+| Chứa LLM?                 | Không bắt buộc                        | Không bắt buộc                           |
+| Có database?              | Không bắt buộc                        | Không bắt buộc                           |
+		
+	MCP Server không nhất thiết phải chứa database hoặc tự thực hiện mọi nghiệp vụ. Nó có thể chỉ là lớp adapter gọi API của một hệ thống khác.	
+	
+		
+	Quy trình:
+		1. Agent Host cung cấp ngữ cảnh và yêu cầu cho model.
+		2. Model quyết định cần tra cứu tiến độ và ticket.
+		3. Agent Host điều phối việc gọi tool; các MCP Client tương ứng gửi yêu cầu đến Server A và Server B.
+		4. Hai Server truy vấn hệ thống phía sau và trả kết quả.
+		5. Model tổng hợp kết quả thành câu trả lời.
+		
+	Điểm quan trọng: MCP không tự quyết định nên gọi tool nào và không tự biến ứng dụng thành Agent. MCP chuẩn hóa cách ứng dụng khám phá và gọi các khả năng bên ngoài. Phần reasoning, planning và điều phối thuộc Agent Host/orchestrator cùng model.	
+		
+		
+	
+# 4. MCP Server có phải là một process riêng không?
+
+
+
+Không nhất thiết phải là một server trên Internet. MCP hỗ trợ các kiểu giao tiếp khác nhau, phổ biến nhất là:
+
+| Transport         | Cách hoạt động                                               | Ví dụ                                              |
+| ----------------- | ------------------------------------------------------------ | -------------------------------------------------- |
+| `stdio`           | Client khởi chạy hoặc giao tiếp với process qua stdin/stdout | Một MCP Server chạy local để đọc file              |
+| `Streamable HTTP` | Client gửi yêu cầu qua HTTP; Server có thể hỗ trợ streaming  | MCP Server được triển khai trên hạ tầng dùng chung |
+
+Vì vậy, tên “Server” nói lên vai trò cung cấp dịch vụ theo giao thức, không bắt buộc phải có một máy chủ vật lý riêng.
+
+Cũng cần phân biệt:
+
+- MCP Client: Thành phần giao tiếp với MCP Server.
+- MCP Server: Thành phần công bố và xử lý các khả năng MCP.
+- Backend: Hệ thống nghiệp vụ thực sự, như database hoặc REST API.
+
+Ba thành phần này có thể nằm trên cùng một máy, hoặc phân tán trên nhiều dịch vụ và môi trường chạy.
+
+
+
+	Vì vậy, tên “Server” nói lên vai trò cung cấp dịch vụ theo giao thức, không bắt buộc phải có một máy chủ vật lý riêng.
+	Cũng cần phân biệt:
+	- MCP Client: Thành phần giao tiếp với MCP Server.
+	- MCP Server: Thành phần công bố và xử lý các khả năng MCP.
+	- Backend: Hệ thống nghiệp vụ thực sự, như database hoặc REST API.
+	
+	Ba thành phần này có thể nằm trên cùng một máy, hoặc phân tán trên nhiều dịch vụ và môi trường chạy.
+		
+		
+	
+	
+# 	5. Mapping với AWS AgentCore
+	
+	
+	Trong kiến trúc AWS GenAI hiện đại, có thể triển khai Agent bằng AgentCore Runtime kết hợp một framework như Strands Agents. MCP là giao thức kết nối công cụ, không phải bản thân runtime hay framework.
+	
+	
+
+| Thành phần                | Trách nhiệm                                                                                                         |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Strands Agents            | Framework để xây dựng logic và vòng lặp Agent                                                                       |
+| AgentCore Runtime         | Môi trường chạy Agent và xử lý các phiên tương tác                                                                  |
+| MCP Client trong ứng dụng | Kết nối và gọi MCP Server                                                                                           |
+| MCP Server                | Công bố tools/resources/prompts qua MCP                                                                             |
+| AgentCore Gateway         | Có thể đưa API, Lambda hoặc các dịch vụ được tích hợp thành tools để Agent sử dụng; hỗ trợ các mô hình tích hợp MCP |
+| IAM / AgentCore Identity  | Quản lý quyền và danh tính truy cập theo kiến trúc triển khai                                                       |
+| Backend database/API      | Thực hiện nghiệp vụ và lưu trữ dữ liệu                                                                              |
+	
+	
+	Không nên hiểu rằng AgentCore Runtime tự động tạo ra một MCP Client cho mọi Agent, hoặc mọi MCP Server bắt buộc phải chạy trong AgentCore.
+	
+	
+	
+	Một thiết kế production
+		Ví dụ Agent cần đọc trạng thái dự án và cập nhật ticket:
+		- Dùng AgentCore Runtime để chạy Agent.
+		- Dùng Strands Agents để điều phối vòng lặp model–tool.
+		- Dùng MCP Client kết nối tới Server cung cấp get_project_status và update_ticket.
+		- Dùng IAM hoặc cơ chế xác thực phù hợp để giới hạn quyền.
+		- Backend thực hiện kiểm tra quyền nghiệp vụ và tính hợp lệ trước khi cập nhật database.
+		
+		Nếu cập nhật ticket có tác động thực tế, không nên chỉ dựa vào model để quyết định có được phép ghi dữ liệu hay không. Phải có authorization, validation, audit log và human approval khi yêu cầu nghiệp vụ cần phê duyệt.
+			
+			
+			
+			
+# 	6. Trade-off: Dùng MCP có thực sự tốt hơn gọi API trực tiếp?		
+			
+MCP không phải lúc nào cũng là lựa chọn tối ưu. Nó giải quyết vấn đề chuẩn hóa tích hợp, không tự động làm hệ thống nhanh hơn hay an toàn hơn.	
+	
+	
+| Tiêu chí               | MCP                                               | Gọi API trực tiếp                |
+| ---------------------- | ------------------------------------------------- | -------------------------------- |
+| Tích hợp nhiều công cụ | Thuận lợi khi chuẩn hóa giao diện                 | Thường phải viết adapter riêng   |
+| Latency                | Có thêm chi phí giao tiếp/protocol                | Có thể ít tầng hơn               |
+| Khả năng tái sử dụng   | Cao khi nhiều ứng dụng dùng chung Server          | Phụ thuộc thiết kế API và client |
+| Bảo mật                | Vẫn phải thiết kế authn/authz                     | Vẫn phải thiết kế authn/authz    |
+| Vận hành               | Thêm quản lý kết nối, phiên bản, lỗi và logging   | Có thể đơn giản hơn nếu ít API   |
+| Khả năng mở rộng       | Có thể triển khai Server dùng chung hoặc phân tán | Phụ thuộc kiến trúc backend      |
+
+Quy tắc lựa chọn:
+
+- Một ứng dụng, một API nội bộ đơn giản: gọi API trực tiếp có thể hợp lý hơn.
+- Nhiều Agent hoặc ứng dụng cần dùng chung hệ sinh thái tools: MCP có lợi thế về khả năng tái sử dụng.
+- Hệ thống yêu cầu kiểm soát truy cập nghiêm ngặt: dù dùng MCP hay API trực tiếp, vẫn phải kiểm tra quyền tại ranh giới bảo mật phù hợp.
+- Latency cực thấp: cần đo toàn bộ đường đi, bao gồm model inference, tool invocation, mạng và backend; đừng mặc định MCP là nút thắt duy nhất.
+
+
+
+
+Cách AWS ra đề
+Các từ khóa cần nhận ra:
+	- Multiple applications / shared tools: Ưu tiên kiến trúc có khả năng tái sử dụng.
+	- Existing backend systems: Không cần viết lại toàn bộ hệ thống chỉ để đưa AI vào sử dụng.
+	- Least privilege / secure access: MCP không thay thế cơ chế authorization.
+	- Low latency / minimal operational overhead: Cân nhắc gọi API trực tiếp nếu chỉ có một vài tích hợp đơn giản.
+	- Standardized tool integration: MCP là ứng viên phù hợp.
+	
+Đừng chọn một giải pháp chỉ vì nó có thể hoạt động. Hãy chọn giải pháp giải quyết đúng constraint chính của đề bài với ít thay đổi không cần thiết nhất.
+
+
+
+</code></pre>
+</div>
+<div class='nav-bar'><a class='nav-btn' href='lesson67.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../aws-bedrock-agent-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson69.html'>Bài sau ➡️</a></div><button class='theme-toggle-btn' onclick='toggleTheme()'>🌓 Đổi Giao Diện</button>
+</div>
+<script>
+const lessonKey = 'aws-bedrock-agent-learning-list_lesson68.html';
+function toggleTheme() {
+   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';
+   document.body.className = mode;
+   localStorage.setItem('theme', mode);
+}
+function toggleDone() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   if (isDone) {
+       localStorage.removeItem(lessonKey);
+   } else {
+       localStorage.setItem(lessonKey, 'done');
+   }
+   renderDoneStatus();
+}
+function renderDoneStatus() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   let btn = document.getElementById('doneButton');
+   if (isDone) {
+       btn.className = 'done-btn completed';
+       btn.innerText = 'Đã Hoàn Thành ✅';
+   } else {
+       btn.className = 'done-btn';
+       btn.innerText = 'Đánh dấu đã học ⚪';
+   }
+}
+function copyContent() {
+   let text = document.getElementById('lessonCode').innerText;
+   navigator.clipboard.writeText(text).then(function() {
+       alert('✅ Đã sao chép nội dung bài học!');
+   });
+}
+function initLesson() {
+   document.body.className = localStorage.getItem('theme') || 'dark-mode';
+   renderDoneStatus();
+   if (window.Prism) Prism.highlightAll();
+}
+</script></body></html>

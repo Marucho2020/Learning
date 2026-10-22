@@ -1,4 +1,37 @@
-<html><head><title>Lesson 45 == Composition API ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../vue-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 45 -- Composition API -//</h1><pre># Khái niệm 
+<!DOCTYPE html><html lang='vi'><head><meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0'>
+<title>Lesson 45 -- Composition API -//</title>
+<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css'>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js'></script>
+<script id='MathJax-script' async src='https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'></script>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; margin: 0; padding: 20px; transition: 0.3s; }
+.dark-mode { background-color: #121212; color: #e0e0e0; }
+.light-mode { background-color: #ffffff; color: #333333; }
+.container { max-width: 950px; margin: auto; }
+h1 { text-align: center; color: #3498db; margin: 20px 0; font-size: 26px; }
+.nav-bar { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 20px 0; }
+.nav-btn { text-decoration: none; padding: 10px 18px; background: #3498db; color: white; border-radius: 6px; font-weight: bold; font-size: 15px; display: inline-block; transition: 0.2s; }
+.nav-btn:hover { background: #2980b9; }
+.nav-btn.home-nav { background: #6c757d; }
+.nav-btn.home-nav:hover { background: #5a6268; }
+.nav-btn.disabled { background: #aaa; cursor: not-allowed; opacity: 0.5; }
+.done-btn { display: block; margin: 15px auto; padding: 10px 24px; border: 2px solid #2ecc71; background: transparent; color: #2ecc71; border-radius: 25px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+.done-btn.completed { background: #2ecc71; color: white; }
+.content-box { position: relative; margin: 20px 0; }
+pre { padding: 20px; border-radius: 8px; white-space: pre-wrap; word-break: break-word; overflow-x: auto; font-family: 'Consolas', 'Courier New', monospace; font-size: 15px; }
+.dark-mode pre { background: #1a1a1a; color: #f8f8f2; border: 1px solid #333; }
+.light-mode pre { background: #f8f9fa; color: #212529; border: 1px solid #e9ecef; }
+.copy-btn { position: absolute; top: 12px; right: 12px; padding: 6px 12px; font-size: 12px; background: #555; color: white; border: none; border-radius: 4px; cursor: pointer; opacity: 0.8; }
+.copy-btn:hover { opacity: 1; background: #2ecc71; }
+.theme-toggle-btn { display: block; margin: 20px auto; padding: 8px 16px; background: transparent; border: 1px solid #888; color: inherit; border-radius: 5px; cursor: pointer; }
+</style></head><body onload='initLesson()'>
+<div class='container'>
+<div class='nav-bar'><a class='nav-btn' href='lesson44.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../vue-js-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson46.html'>Bài sau ➡️</a></div><h1>Lesson 45 -- Composition API -//</h1>
+<button id='doneButton' class='done-btn' onclick='toggleDone()'>Mark as Done ⚪</button>
+<div class='content-box'>
+<button class='copy-btn' onclick='copyContent()'>📋 Copy nội dung</button>
+<pre><code id='lessonCode'># Khái niệm 
 		
 	Composition API là một cách tiếp cận mới trong Vue 3 để định nghĩa logic của component, thay vì tổ chức mã theo các tùy chọn cố định như Options API (data, methods, computed, v.v.). Nó cho phép bạn:'
 	
@@ -12,7 +45,7 @@
 # 2. Cấu trúc cơ bản của Composition API 		
 		
 		
-	Composition API chủ yếu được sử dụng trong hàm setup() (hoặc cú pháp <script setup> trong Vue 3.2+). Nó cung cấp các API như ref, reactive, computed, watch, và các lifecycle hooks để quản lý trạng thái và logic.	
+	Composition API chủ yếu được sử dụng trong hàm setup() (hoặc cú pháp &lt;script setup&gt; trong Vue 3.2+). Nó cung cấp các API như ref, reactive, computed, watch, và các lifecycle hooks để quản lý trạng thái và logic.	
 		
 		
 	## 	a. Hàm setup() 
@@ -34,17 +67,17 @@ export default {
 			- Trả về một object chứa các biến/hàm để sử dụng trong template.
 		
 		
-	## 	b. Cú pháp <script setup>
+	## 	b. Cú pháp &lt;script setup&gt;
 		
-		Là cách viết ngắn gọn hơn, không cần setup() hay return. Tất cả biến/hàm trong <script setup> tự động có sẵn cho template.
+		Là cách viết ngắn gọn hơn, không cần setup() hay return. Tất cả biến/hàm trong &lt;script setup&gt; tự động có sẵn cho template.
 		
 		
-<script setup>
+&lt;script setup&gt;
 import { ref } from 'vue';
 
 const count = ref(0);
-const increment = () => count.value++;
-</script>
+const increment = () =&gt; count.value++;
+&lt;/script&gt;
 
 	
 # 3. Các API chính trong Composition API
@@ -65,19 +98,19 @@ const count = ref(0);
 
 		Ví dụ : 
 		
-<template>
-  <div>
-    <p>Count: {{ count }}</p>
-    <button @click="increment">Increment</button>
-  </div>
-</template>
+&lt;template&gt;
+  &lt;div&gt;
+    &lt;p&gt;Count: {{ count }}&lt;/p&gt;
+    &lt;button @click="increment"&gt;Increment&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
 
-<script setup>
+&lt;script setup&gt;
 import { ref } from 'vue';
 
 const count = ref(0);
-const increment = () => count.value++;
-</script>
+const increment = () =&gt; count.value++;
+&lt;/script&gt;
 
 
 
@@ -97,18 +130,18 @@ const state = reactive({ count: 0, name: 'John' });
 
 
 		Ví dụ:
-<template>
-  <div>
-    <p>Name: {{ state.name }}</p>
-    <input v-model="state.name" />
-  </div>
-</template>
+&lt;template&gt;
+  &lt;div&gt;
+    &lt;p&gt;Name: {{ state.name }}&lt;/p&gt;
+    &lt;input v-model="state.name" /&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
 
-<script setup>
+&lt;script setup&gt;
 import { reactive } from 'vue';
 
 const state = reactive({ name: 'John' });
-</script>		 
+&lt;/script&gt;		 
 
 	Lưu ý: reactive không hoạt động tốt với giá trị nguyên thủy (số, chuỗi); dùng ref cho các trường hợp này.
 
@@ -120,45 +153,45 @@ const state = reactive({ name: 'John' });
 		Cú pháp : 
 			
 		import { computed } from 'vue';
-		const double = computed(() => count.value * 2);
+		const double = computed(() =&gt; count.value * 2);
 
 		Ví dụ:
 
-<template>
-  <div>
-    <p>Count: {{ count }}</p>
-    <p>Double: {{ double }}</p>
-  </div>
-</template>
+&lt;template&gt;
+  &lt;div&gt;
+    &lt;p&gt;Count: {{ count }}&lt;/p&gt;
+    &lt;p&gt;Double: {{ double }}&lt;/p&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
 
-<script setup>
+&lt;script setup&gt;
 import { ref, computed } from 'vue';
 
 const count = ref(0);
-const double = computed(() => count.value * 2);
-</script>
+const double = computed(() =&gt; count.value * 2);
+&lt;/script&gt;
 
 	## d. watch
 		Theo dõi sự thay đổi của dữ liệu reactive và thực hiện hành động.
 		
 		Cú pháp
 import { watch } from 'vue';
-watch(count, (newValue, oldValue) => {
+watch(count, (newValue, oldValue) =&gt; {
   console.log(`Count changed from ${oldValue} to ${newValue}`);
 });
 
 
 		Ví dụ: 
-<script setup>
+&lt;script setup&gt;
 import { ref, watch } from 'vue';
 
 const count = ref(0);
-watch(count, (newValue) => {
+watch(count, (newValue) =&gt; {
   console.log(`Count is now: ${newValue}`);
 });
 
-const increment = () => count.value++;
-</script>
+const increment = () =&gt; count.value++;
+&lt;/script&gt;
 
 
 
@@ -169,19 +202,19 @@ const increment = () => count.value++;
 			
 		Cú pháp: 
 import { onMounted } from 'vue';
-onMounted(() => {
+onMounted(() =&gt; {
   console.log('Component mounted');
 });			
 			
 		Ví dụ: 
 		
-<script setup>
+&lt;script setup&gt;
 import { onMounted } from 'vue';
 
-onMounted(() => {
+onMounted(() =&gt; {
   console.log('Component is mounted!');
 });
-</script>			
+&lt;/script&gt;			
 			
 			
 			
@@ -192,26 +225,26 @@ Dưới đây là một ví dụ minh họa cách sử dụng Composition API đ
 			
 Ví dụ: Counter
 			
-<template>
-  <div>
-    <p>Count: {{ count }}</p>
-    <p>Double: {{ double }}</p>
-    <button @click="increment">Increment</button>
-  </div>
-</template>
+&lt;template&gt;
+  &lt;div&gt;
+    &lt;p&gt;Count: {{ count }}&lt;/p&gt;
+    &lt;p&gt;Double: {{ double }}&lt;/p&gt;
+    &lt;button @click="increment"&gt;Increment&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
 
-<script setup>
+&lt;script setup&gt;
 import { ref, computed, onMounted } from 'vue';
 
 const count = ref(0);
-const double = computed(() => count.value * 2);
+const double = computed(() =&gt; count.value * 2);
 
-const increment = () => count.value++;
+const increment = () =&gt; count.value++;
 
-onMounted(() => {
+onMounted(() =&gt; {
   console.log('Counter component mounted');
 });
-</script>			
+&lt;/script&gt;			
 			
 		Giải thích:
 		 - count: Biến reactive (dùng ref).
@@ -236,8 +269,8 @@ import { ref, computed } from 'vue';
 
 export function useCounter() {
   const count = ref(0);
-  const increment = () => count.value++;
-  const double = computed(() => count.value * 2);
+  const increment = () =&gt; count.value++;
+  const double = computed(() =&gt; count.value * 2);
 
   return { count, increment, double };
 }	
@@ -245,19 +278,19 @@ export function useCounter() {
 		
 	Sử dụng trong component:	
 		
-<template>
-  <div>
-    <p>Count: {{ count }}</p>
-    <p>Double: {{ double }}</p>
-    <button @click="increment">Increment</button>
-  </div>
-</template>
+&lt;template&gt;
+  &lt;div&gt;
+    &lt;p&gt;Count: {{ count }}&lt;/p&gt;
+    &lt;p&gt;Double: {{ double }}&lt;/p&gt;
+    &lt;button @click="increment"&gt;Increment&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
 
-<script setup>
+&lt;script setup&gt;
 import { useCounter } from './useCounter';
 
 const { count, increment, double } = useCounter();
-</script>		
+&lt;/script&gt;		
 		
 		
 	Lợi ích:
@@ -266,4 +299,46 @@ Thay thế mixins (trong Options API) với cách tiếp cận rõ ràng hơn.
 		
 		
 		
-</pre><a id='backBottom' href='../vue-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
+</code></pre>
+</div>
+<div class='nav-bar'><a class='nav-btn' href='lesson44.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../vue-js-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson46.html'>Bài sau ➡️</a></div><button class='theme-toggle-btn' onclick='toggleTheme()'>🌓 Đổi Giao Diện</button>
+</div>
+<script>
+const lessonKey = 'vue-js-learning-list_lesson45.html';
+function toggleTheme() {
+   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';
+   document.body.className = mode;
+   localStorage.setItem('theme', mode);
+}
+function toggleDone() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   if (isDone) {
+       localStorage.removeItem(lessonKey);
+   } else {
+       localStorage.setItem(lessonKey, 'done');
+   }
+   renderDoneStatus();
+}
+function renderDoneStatus() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   let btn = document.getElementById('doneButton');
+   if (isDone) {
+       btn.className = 'done-btn completed';
+       btn.innerText = 'Đã Hoàn Thành ✅';
+   } else {
+       btn.className = 'done-btn';
+       btn.innerText = 'Đánh dấu đã học ⚪';
+   }
+}
+function copyContent() {
+   let text = document.getElementById('lessonCode').innerText;
+   navigator.clipboard.writeText(text).then(function() {
+       alert('✅ Đã sao chép nội dung bài học!');
+   });
+}
+function initLesson() {
+   document.body.className = localStorage.getItem('theme') || 'dark-mode';
+   renderDoneStatus();
+   if (window.Prism) Prism.highlightAll();
+}
+</script></body></html>

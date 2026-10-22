@@ -1,0 +1,254 @@
+<html><head><title>Lesson 216 == Policy DSL (Domain-Specific Language for Resilience) ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 216 -- Policy DSL (Domain-Specific Language for Resilience) -//</h1><pre>
+Xây DSL thuần hàm để mô tả retry / timeout / circuit breaker / fallback… mà không dựa vào framework.
+
+
+# 1. VẤN ĐỀ
+
+
+Các hệ thống enterprise hay dựa vào:
+	Resilience4j
+	Spring Retry
+	Hystrix (đã chết)
+	Annotation magic @Retryable, @CircuitBreaker
+	
+
+Nhược điểm:
+
+	Ẩn logic → khó kiểm soát
+	Không test đơn vị từng policy
+	Coupling framework
+	Không minh bạch khi debugging
+	Không cấu hình được dạng code-as-policy
+	
+	Senior cần tách resilience thành domain model + functional pipeline.
+
+
+
+
+
+# 2. MỤC TIÊU (Rất rõ ràng)
+
+	Ta muốn:
+
+Policy
+   .retry(3)
+   .timeout(Duration.ofSeconds(2))
+   .circuitBreaker(5)
+   .apply(apiCall);
+
+Tất cả chỉ là pure value + pure function.
+Không annotation, không AOP.
+
+
+
+# 3. DOMAIN MODEL — CỐT LÕI DSL
+
+	Xây các policy thành “OBJECT bất biến” biểu diễn cấu hình, không thực thi ngay.
+
+public sealed interface Policy {
+    <T> Supplier<T> apply(Supplier<T> fn);
+
+    static Retry retry(int times) { return new Retry(times); }
+    static Timeout timeout(Duration d) { return new Timeout(d); }
+    static CircuitBreaker circuitBreaker(int threshold) { return new CircuitBreaker(threshold); }
+}
+
+
+	## Một policy cụ thể, ví dụ Retry: 
+
+public record Retry(int times) implements Policy {
+
+    @Override
+    public <T> Supplier<T> apply(Supplier<T> fn) {
+        return () -> {
+            int attempts = 0;
+            while (true) {
+                try {
+                    return fn.get();
+                } catch (Exception ex) {
+                    attempts++;
+                    if (attempts > times) throw ex;
+                }
+            }
+        };
+    }
+}
+
+
+apply trả về một Supplier mới, không thực thi ngay.
+Pure function: input = function, output = function.
+
+
+
+# 4. PIPELINE — COMPOSE CÁC POLICY
+
+	##Cần một composite để ghép nhiều policy lại:
+
+
+public record Composite(Policy p1, Policy p2) implements Policy {
+
+    @Override
+    public <T> Supplier<T> apply(Supplier<T> fn) {
+        return p1.apply(p2.apply(fn));
+    }
+}
+
+
+	##Tạo DSL chain:
+
+public static Policy compose(Policy... ps) {
+    return Arrays.stream(ps)
+        .reduce((a, b) -> new Composite(a, b))
+        .orElseThrow();
+}
+
+
+
+
+	## Sử dụng: 
+	
+	
+	var policy = compose(
+        Policy.retry(3),
+        Policy.timeout(Duration.ofSeconds(2)),
+        Policy.circuitBreaker(5)
+);
+
+var safeApi = policy.apply(apiCall);
+
+var result = safeApi.get();
+
+	
+	➡️ Đây chính là pipeline functional kiểu middleware, thứ senior phải nắm.
+	
+	
+#5. TIMEOUT POLICY (thuần hàm nhưng có side-effect được cô lập)
+
+public record Timeout(Duration duration) implements Policy {
+
+    @Override
+    public <T> Supplier<T> apply(Supplier<T> fn) {
+        return () -> {
+            ExecutorService es = Executors.newSingleThreadExecutor();
+            Future<T> f = es.submit(fn::get);
+            try {
+                return f.get(duration.toMillis(), TimeUnit.MILLISECONDS);
+            } finally {
+                es.shutdown();
+            }
+        };
+    }
+}
+
+	Ta cách ly state/side-effect trong policy, không làm bẩn hàm cuộc gọi gốc.
+
+
+# 6. CIRCUIT BREAKER POLICY (domain model chuẩn)
+
+	Senior phải hiểu: circuit breaker có 3 trạng thái: Closed → Open → Half-Open.
+	
+	## Domain model:
+
+public enum State { CLOSED, OPEN, HALF_OPEN }
+
+public record CircuitBreaker(int threshold, AtomicInteger fails, AtomicReference<State> state)
+        implements Policy {
+
+    public CircuitBreaker(int threshold) {
+        this(threshold, new AtomicInteger(0), new AtomicReference<>(State.CLOSED));
+    }
+
+    @Override
+    public <T> Supplier<T> apply(Supplier<T> fn) {
+        return () -> {
+            if (state.get() == State.OPEN)
+                throw new RuntimeException("Circuit OPEN");
+
+            try {
+                T res = fn.get();
+                fails.set(0);
+                return res;
+            } catch (Exception ex) {
+                if (fails.incrementAndGet() >= threshold)
+                    state.set(State.OPEN);
+                throw ex;
+            }
+        };
+    }
+}
+
+Dù có trạng thái, ta vẫn giữ purity của pipeline:
+Policy không phá logic nghiệp vụ.
+
+
+
+
+
+
+# 7. DSL TUYỆT ĐẸP DÀNH CHO ENTERPRISE
+
+	Điều khiến enterprise thích kiểu này:
+		Config file (GitOps):
+
+policy:
+  retry: 4
+  timeout: 1500ms
+  circuitBreaker:
+    fails: 5
+
+	Functional parser:
+
+var policy = PolicyParser.fromConfig(configNode);
+
+
+
+	## Parser chỉ là: 
+
+Policy composeFromYaml(Node n) {
+    List<Policy> ps = new ArrayList<>();
+    if (n.has("retry")) ps.add(Policy.retry(n.getInt("retry")));
+    if (n.has("timeout")) ps.add(Policy.timeout(n.getDuration("timeout")));
+    if (n.has("circuitBreaker"))
+        ps.add(Policy.circuitBreaker(n.get("circuitBreaker.fails")));
+    return compose(ps.toArray(Policy[]::new));
+}
+
+	➡️ GitOps + Functional DSL = pipeline resilience không dính framework, deploy ở bất kỳ runtime nào.
+
+
+# 8. TẦM NHÌN XA — TẠI SAO CÁCH NÀY THẮNG AOP/ANNOTATION?
+
+
+AOP, annotations:
+
+	ẩn logic
+	chồng lớp callback
+	khó test
+	khó debug
+	coupled vào Spring
+
+DSL functional:
+
+	pure, predictable
+	minh bạch từng policy
+	đọc code là thấy rõ pipeline
+	test từng block đơn giản
+	chạy được trong bất kỳ environment (Lambda, Quarkus, Micronaut, CLI app…)
+	
+	bật/tắt policy runtime dễ dàng
+
+Đây là cách các hệ thống hiện đại (Shopify, Twilio, Stripe) xoay sang:
+Resilience = pipeline thuần hàm + DSL bất biến.
+
+
+
+# 9. TỔNG KẾT CỐT LÕI
+
+	Bạn chỉ cần nhớ 3 ý:
+		Policy là data model bất biến mô tả resilience.
+		Mỗi policy nhận fn → trả fn' (decorator thuần hàm).
+		DSL chính là kết hợp policy thành pipeline.
+	Cấu trúc này nâng cấp hệ thống từ “dễ vỡ” lên “đáng tin cậy có kiểm soát”.
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

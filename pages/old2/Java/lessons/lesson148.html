@@ -1,0 +1,192 @@
+<html><head><title>Lesson 148 == Proxy Pattern ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 148 -- Proxy Pattern -//</h1><pre># 🧠 1. Proxy Pattern là gì?
+	Proxy là mẫu thiết kế cấu trúc cho phép thay mặt đối tượng khác để kiểm soát truy cập, thêm logic phụ trợ, mà không thay đổi logic chính.
+
+	## Cách hiểu: 
+		Bạn không gọi vào "đối tượng gốc", mà gọi vào đối tượng trung gian (Proxy) → proxy quyết định có nên gọi tiếp, làm thêm gì, hoặc trả lời giả.
+		
+		Nó giống như bảo vệ đứng trước cửa, hoặc cửa sổ ảo (virtual proxy) — bạn không biết thật hay giả, bạn chỉ giao tiếp với proxy.
+
+
+
+# 📦 2. Các loại Proxy 
+| Loại                 | Mục đích chính        | Ví dụ thực tế            |
+| -------------------- | --------------------- | ------------------------ |
+| **Remote Proxy**     | Gọi từ xa (RMI, gRPC) | Java RMI, REST client    |
+| **Virtual Proxy**    | Trì hoãn khởi tạo     | Hibernate lazy loading   |
+| **Protection Proxy** | Kiểm soát quyền       | Spring Security          |
+| **Caching Proxy**    | Cache dữ liệu         | Redis cache layer        |
+| **Smart Proxy**      | Logging, transaction  | Spring AOP               |
+| **Firewall Proxy**   | Chặn truy cập         | Proxy filter in firewall |
+	
+
+# 🔧 3. Static Proxy – Khởi đầu
+
+// Interface
+interface Service {
+    void doWork();
+}
+
+// Real class
+class RealService implements Service {
+    public void doWork() {
+        System.out.println("RealService: doing work");
+    }
+}
+
+// Proxy
+class ServiceProxy implements Service {
+    private RealService real;
+
+    public ServiceProxy(RealService real) {
+        this.real = real;
+    }
+
+    public void doWork() {
+        System.out.println("Proxy: before");
+        real.doWork();
+        System.out.println("Proxy: after");
+    }
+}
+
+	Nhược điểm:
+		Cứng nhắc, mỗi class cần 1 proxy tay
+		Không scale với nhiều method/class
+
+
+# 🔄 4. Dynamic Proxy (Java Reflection)
+	Java hỗ trợ proxy runtime cho interface-based objects thông qua java.lang.reflect.Proxy.
+
+
+	## Cách hoạt động: 
+		
+		- Java tạo 1 class proxy tại runtime
+		- Nó implement các interface bạn chỉ định
+		- Nó chuyển tất cả method calls vào 1 InvocationHandler
+
+import java.lang.reflect.*;
+
+interface Service {
+    void doWork();
+}
+
+class RealService implements Service {
+    public void doWork() {
+        System.out.println("Real: doing work");
+    }
+}
+
+class LoggingHandler implements InvocationHandler {
+    private Object target;
+
+    public LoggingHandler(Object target) {
+        this.target = target;
+    }
+
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        System.out.println("Before: " + method.getName());
+        Object result = method.invoke(target, args);
+        System.out.println("After: " + method.getName());
+        return result;
+    }
+}
+
+public class Test {
+    public static void main(String[] args) {
+        Service real = new RealService();
+        Service proxy = (Service) Proxy.newProxyInstance(
+            real.getClass().getClassLoader(),
+            new Class[]{Service.class},
+            new LoggingHandler(real)
+        );
+
+        proxy.doWork();
+    }
+}
+
+
+
+# ⚡ 5. CGLIB – Proxy cho class (không cần interface)
+
+	Dynamic Proxy chỉ áp dụng với interface. Nếu bạn muốn proxy 1 class (không implement interface) → dùng CGLIB (Code Generation Library).
+
+	Spring dùng CGLIB khi không có interface.	
+
+
+public class RealService {
+    public void run() {
+        System.out.println("Running...");
+    }
+}
+
+// Enhancer (CGLIB)
+Enhancer enhancer = new Enhancer();
+enhancer.setSuperclass(RealService.class);
+enhancer.setCallback(new MethodInterceptor() {
+    public Object intercept(Object obj, Method method, Object[] args, MethodProxy proxy) throws Throwable {
+        System.out.println("Before");
+        Object result = proxy.invokeSuper(obj, args);
+        System.out.println("After");
+        return result;
+    }
+});
+
+RealService proxy = (RealService) enhancer.create();
+proxy.run();
+
+
+
+# 💡 6. Proxy trong Spring (AOP, Transaction, Security...)
+
+| Thành phần                  | Cách hoạt động                                               |
+| --------------------------- | ------------------------------------------------------------ |
+| `@Transactional`            | Spring tạo proxy cho bean → thêm logic mở/commit transaction |
+| `@Secured`, `@PreAuthorize` | Proxy kiểm tra quyền trước khi gọi method                    |
+| `@Cacheable`                | Proxy chặn method, kiểm tra cache → trả về kết quả nếu đã có |
+| `@Async`                    | Proxy đẩy method call sang thread khác                       |
+| `@Aspect`                   | Spring AOP proxy method call → xử lý logic trước/sau/around  |
+
+
+
+	Spring Proxy default theo 2 chiến lược:
+		- Nếu có interface → dùng JDK Dynamic Proxy
+		- Nếu không → dùng CGLIB (class-based proxy)
+
+
+
+# 📉 7. Rủi ro & cảnh báo
+
+| Vấn đề                                                   | Mô tả                                                     |
+| -------------------------------------------------------- | --------------------------------------------------------- |
+| Không hỗ trợ final class / final method                  | Proxy không thể override                                  |
+| Gọi nội bộ (internal self-invocation) không bị intercept | `this.someMethod()` không qua proxy                       |
+| Dễ làm rối debug                                         | Stack trace chứa proxy class, khó trace lỗi               |
+| Lạm dụng → Anti-pattern                                  | Đôi khi dev dùng proxy để "trát xi măng" cho thiết kế tồi |
+
+
+
+# 🧠 8. Phân biệt Proxy với các Pattern khác
+
+
+| Pattern       | Mục tiêu chính                                |
+| ------------- | --------------------------------------------- |
+| **Proxy**     | Kiểm soát truy cập, xử lý logic phụ trước/sau |
+| **Decorator** | Thêm hành vi mà không thay đổi interface      |
+| **Adapter**   | Biến đổi interface này thành interface khác   |
+| **Facade**    | Ẩn đi logic phức tạp đằng sau API đơn giản    |
+
+	Proxy tập trung vào trung gian kiểm soát, còn Decorator tập trung vào mở rộng chức năng.
+
+# ✅ Tổng kết — Proxy ở level senior là gì?
+
+
+| Khía cạnh            | Nội dung                                                                          |
+| -------------------- | --------------------------------------------------------------------------------- |
+| Mục tiêu             | Trung gian xử lý gọi hàm, có thể kiểm soát, log, cache, validate...               |
+| Cách dùng trong Java | Static proxy, Dynamic proxy (interface), CGLIB (class)                            |
+| Framework ứng dụng   | Spring AOP, Transaction, Security, Caching, Async                                 |
+| Kỹ năng cần có       | Biết tạo InvocationHandler, viết interceptor logic rõ ràng, hiểu hiệu năng, debug |
+| Tư duy thiết kế      | Separation of concerns, Open/Closed, Middleware pipeline                          |
+
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

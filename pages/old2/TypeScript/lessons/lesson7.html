@@ -1,0 +1,159 @@
+<html><head><title>Lesson 7 == Object type ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../type-script-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 7 -- Object type -//</h1><pre>
+# 1. Object Types trong TypeScript là gì? 
+	Trong TypeScript, Object Types được sử dụng để định nghĩa cấu trúc của một đối tượng, bao gồm các thuộc tính (properties) và kiểu dữ liệu của chúng. Điều này giúp đảm bảo rằng đối tượng có đúng các thuộc tính cần thiết và giá trị của chúng thuộc đúng kiểu, tránh lỗi khi lập trình.
+
+
+# 2. Khai báo Object Types 
+	TypeScript cho phép định nghĩa kiểu đối tượng bằng cách chỉ định các thuộc tính và kiểu tương ứng. 
+	
+	## a. Cú pháp cơ bản 
+		Sử dụng dấu {} để liệt kê các thuộc tính và kiểu của chúng. 
+			
+let person: { name: string; age: number } = {
+  name: "John",
+  age: 25,
+};
+
+	person phải có thuộc tính name (kiểu string) và age (kiểu number).
+	Nếu thiếu thuộc tính hoặc gán sai kiểu, TypeScript sẽ báo lỗi
+	
+// let person: { name: string; age: number } = { name: "John" }; // Lỗi: Thiếu age
+// let person: { name: string; age: number } = { name: "John", age: "25" }; // Lỗi: age không phải number	
+	
+	
+	
+	
+	## b. Optional Properties 
+		Sử dụng dấu ? để đánh dấu thuộc tính tùy chọn (có thể có hoặc không).
+	
+	
+let person: { name: string; age?: number } = {
+  name: "John",
+}; // OK, age là tùy chọn
+person = { name: "Jane", age: 30 }; // OK	
+	
+	
+	
+	## c. Readonly Properties 
+		Sử dụng readonly để ngăn thuộc tính bị thay đổi sau khi khởi tạo.
+	
+	
+let person: { readonly name: string; age: number } = {
+  name: "John",
+  age: 25,
+};
+// person.name = "Jane"; // Lỗi: name là readonly
+person.age = 26; // OK	
+	
+	
+	
+# 3. Type Alias (Bí danh kiểu) 
+	Để tái sử dụng kiểu đối tượng, bạn có thể định nghĩa Type Alias bằng từ khóa type.
+	
+type Person = {
+  name: string;
+  age?: number;
+};
+let john: Person = { name: "John" };
+let jane: Person = { name: "Jane", age: 30 };
+
+	Person là một kiểu có thể tái sử dụng, giúp code gọn gàng và dễ bảo trì.
+	
+	
+	
+#	4. Interface 	
+	Interface là một cách khác để định nghĩa kiểu đối tượng, tương tự Type Alias nhưng thường được dùng cho các đối tượng phức tạp.
+
+interface Person {
+  name: string;
+  age?: number;
+}
+let john: Person = { name: "John" };
+
+	## Khác biệt với Type Alias:
+		Interface có thể mở rộng (extend) dễ dàng hơn.
+		Type Alias linh hoạt hơn (hỗ trợ union types, primitive types, v.v.).		
+
+
+
+
+
+# 5. Object Types trong hàm 
+	Object Types thường được dùng để định nghĩa tham số hoặc giá trị trả về của hàm.
+	
+	## Ví dụ: 
+		
+function greet(person: { name: string; age: number }): string {
+  return `Hello, ${person.name}! You are ${person.age} years old.`;
+}
+console.log(greet({ name: "John", age: 25 })); // Hello, John! You are 25 years old.
+
+
+	## Hoặc dùng Type Alias/Interface: 
+type Person = { name: string; age: number };
+function greet(person: Person): string {
+  return `Hello, ${person.name}! You are ${person.age} years old.`;
+}
+
+
+# 6. Mở rộng Object Types
+
+	## Interface Extending: 
+interface Person {
+  name: string;
+}
+interface Employee extends Person {
+  employeeId: number;
+}
+let emp: Employee = { name: "John", employeeId: 123 };		
+
+		Employee kế thừa name từ Person và thêm employeeId.
+
+
+	## Type Intersection (Kết hợp kiểu):
+
+type Person = { name: string };
+type Employee = Person & { employeeId: number };
+let emp: Employee = { name: "John", employeeId: 123 };
+
+# 	7. Ví dụ tổng hợp
+
+// Type Alias
+type Car = {
+  readonly brand: string;
+  model: string;
+  year?: number;
+};
+
+// Interface
+interface User {
+  name: string;
+  age: number;
+}
+
+// Sử dụng trong hàm
+function displayCar(car: Car): string {
+  return `${car.brand} ${car.model} ${car.year || "unknown year"}`;
+}
+
+let myCar: Car = { brand: "Toyota", model: "Camry" };
+console.log(displayCar(myCar)); // Toyota Camry unknown year
+
+let user: User = { name: "Jane", age: 30 };
+// myCar.brand = "Honda"; // Lỗi: brand là readonly
+
+
+
+# 8. Lưu ý thực tế 
+	
+	- Type Alias vs Interface: Dùng Interface khi cần mở rộng hoặc kế thừa; dùng Type Alias khi cần linh hoạt (như union types).
+	
+	- Optional Properties: Giúp xử lý các trường hợp dữ liệu không đầy đủ (ví dụ: dữ liệu từ API).
+	
+	- Readonly: Sử dụng để bảo vệ dữ liệu khỏi bị thay đổi ngoài ý muốn.
+	
+	- Type Inference: Nếu không khai báo kiểu rõ ràng, TypeScript có thể suy ra kiểu, nhưng nên khai báo để tăng tính rõ ràng.
+
+
+
+</pre><a id='backBottom' href='../type-script-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

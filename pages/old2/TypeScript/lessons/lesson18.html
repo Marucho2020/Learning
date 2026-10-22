@@ -1,0 +1,97 @@
+<html><head><title>Lesson 18 == DefinitelyTyped ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../type-script-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 18 -- DefinitelyTyped -//</h1><pre># Khái niệm  
+	DefinitelyTyped là một kho lưu trữ mã nguồn mở (repository) trên GitHub chứa các tệp định nghĩa kiểu (type definition files, có đuôi .d.ts) cho hàng ngàn thư viện JavaScript không được viết bằng TypeScript. Các tệp này cung cấp thông tin về kiểu dữ liệu (types) để TypeScript có thể kiểm tra kiểu tĩnh (static type checking) khi bạn sử dụng các thư viện JavaScript như Lodash, Axios, hoặc jQuery trong dự án TypeScript.
+
+	DefinitelyTyped là nơi cộng đồng đóng góp và duy trì các tệp định nghĩa kiểu, giúp tích hợp TypeScript với các thư viện JavaScript một cách an toàn và hiệu quả.
+
+	Ví dụ: Nếu bạn dùng thư viện Lodash (viết bằng JavaScript), bạn có thể cài đặt tệp định nghĩa kiểu từ DefinitelyTyped để TypeScript hiểu được các hàm và tham số của Lodash.
+
+
+
+# 2. Tại sao cần DefinitelyTyped?
+	
+	- Tích hợp TypeScript với JavaScript: Nhiều thư viện JavaScript phổ biến không có thông tin kiểu (type information) vì chúng không được viết bằng TypeScript. DefinitelyTyped cung cấp các tệp .d.ts để TypeScript hiểu cấu trúc của thư viện.
+	
+	- An toàn kiểu: Giúp TypeScript kiểm tra kiểu dữ liệu khi sử dụng thư viện, phát hiện lỗi sớm trong quá trình biên dịch.
+	
+	- Tăng năng suất: Cung cấp gợi ý mã (IntelliSense) trong các IDE như VS Code, giúp lập trình viên viết mã nhanh hơn và chính xác hơn.
+	
+	- Cộng đồng mạnh mẽ: DefinitelyTyped là dự án mã nguồn mở, được cộng đồng duy trì, đảm bảo hỗ trợ cho hầu hết các thư viện JavaScript phổ biến.
+
+# 3. Cách sử dụng DefinitelyTyped
+
+	##  Cài đặt Type Definitions
+Các tệp định nghĩa kiểu từ DefinitelyTyped được phân phối qua npm dưới dạng các gói @types/<tên-thư-viện>. Ví dụ, để sử dụng Lodash với TypeScript:
+
+	npm install --save-dev @types/lodash
+
+	Sau khi cài đặt, TypeScript tự động nhận diện tệp .d.ts từ gói @types/lodash, cho phép bạn sử dụng Lodash với kiểm tra kiểu:
+
+import _ from 'lodash';
+
+const array = [1, 2, 3, 4];
+const result = _.chunk(array, 2); // TypeScript biết result là number[][]
+console.log(result); // Output: [[1, 2], [3, 4]]
+
+	Nếu không có @types/lodash, TypeScript sẽ không biết kiểu của _.chunk và có thể báo lỗi hoặc suy ra kiểu any, làm mất an toàn kiểu.
+
+
+
+#b. Tệp .d.ts là gì? 
+
+	Tệp declaration file (.d.ts) chứa các khai báo kiểu mà không có mã thực thi (implementation). Chúng mô tả cấu trúc của thư viện JavaScript (hàm, tham số, giá trị trả về) để TypeScript hiểu.
+
+	Ví dụ, một phần của tệp @types/lodash có thể trông như sau:
+declare module 'lodash';
+declare function chunk<T>(array: T[], size?: number): T[][];	
+	
+	
+		Tệp này nói với TypeScript rằng hàm chunk nhận một mảng kiểu T và trả về mảng các mảng kiểu T[][].
+
+# c. Sử dụng với các thư viện phổ biến
+
+DefinitelyTyped hỗ trợ hàng ngàn thư viện, ví dụ:
+
+	jQuery: npm install --save-dev @types/jquery
+	Axios: npm install --save-dev @types/axios
+	Express: npm install --save-dev @types/express
+
+
+	## Ví dụ với Axios: 
+	
+import axios from 'axios';
+
+async function fetchData() {
+  const response = await axios.get<{ id: number; name: string }>('/api/users');
+  console.log(response.data.name); // TypeScript biết response.data có kiểu { id: number; name: string }
+}
+
+	Gói @types/axios cung cấp kiểu cho axios.get, đảm bảo TypeScript hiểu cấu trúc của response.
+
+# 4. Hiểu sâu hơn về DefinitelyTyped
+
+	Để hiểu sâu về DefinitelyTyped, hãy nghĩ nó như một cầu nối giữa thế giới JavaScript (không có kiểu) và TypeScript (yêu cầu kiểu):
+
+
+	## Cơ chế hoạt động:
+		- DefinitelyTyped chứa các tệp .d.ts được viết bởi cộng đồng, mô tả API của các thư viện JavaScript.
+		- Khi bạn cài đặt @types/<thư-viện>, TypeScript tự động sử dụng các tệp này để kiểm tra kiểu và cung cấp gợi ý mã.		
+		
+	## 	So sánh với TypeScript-native Libraries
+		- Một số thư viện hiện đại (như Vue 3, React) được viết bằng TypeScript, nên không cần @types vì chúng đã có kiểu tích hợp.
+		- DefinitelyTyped chủ yếu hỗ trợ các thư viện JavaScript cũ hơn hoặc thư viện chưa chuyển sang TypeScript.		
+		
+	##	Cộng đồng mã nguồn mở 
+		
+		- DefinitelyTyped là dự án cộng đồng, bất kỳ ai cũng có thể đóng góp tệp .d.ts nếu thư viện chưa được hỗ trợ.
+		- Ví dụ: Nếu bạn dùng một thư viện mới chưa có trong DefinitelyTyped, bạn có thể tự viết tệp .d.ts hoặc đóng góp vào kho.		
+		
+		
+	## 	Ứng dụng thực tế
+	
+		- Web Development: Khi dùng các thư viện như jQuery, Lodash, hoặc Axios trong dự án TypeScript, DefinitelyTyped giúp đảm bảo an toàn kiểu.
+		- Node.js: Các gói như @types/express hoặc @types/node giúp lập trình backend với TypeScript dễ dàng hơn.
+		- IntelliSense: Tệp @types cung cấp gợi ý mã trong IDE, ví dụ:		
+		import _ from 'lodash';
+		
+		
+</pre><a id='backBottom' href='../type-script-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

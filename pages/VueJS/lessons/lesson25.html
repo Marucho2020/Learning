@@ -1,4 +1,37 @@
-<html><head><title>Lesson 25 == $attrs ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../vue-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 25 -- $attrs -//</h1><pre># Khái niệm 
+<!DOCTYPE html><html lang='vi'><head><meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0'>
+<title>Lesson 25 -- $attrs -//</title>
+<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css'>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js'></script>
+<script id='MathJax-script' async src='https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'></script>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; margin: 0; padding: 20px; transition: 0.3s; }
+.dark-mode { background-color: #121212; color: #e0e0e0; }
+.light-mode { background-color: #ffffff; color: #333333; }
+.container { max-width: 950px; margin: auto; }
+h1 { text-align: center; color: #3498db; margin: 20px 0; font-size: 26px; }
+.nav-bar { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 20px 0; }
+.nav-btn { text-decoration: none; padding: 10px 18px; background: #3498db; color: white; border-radius: 6px; font-weight: bold; font-size: 15px; display: inline-block; transition: 0.2s; }
+.nav-btn:hover { background: #2980b9; }
+.nav-btn.home-nav { background: #6c757d; }
+.nav-btn.home-nav:hover { background: #5a6268; }
+.nav-btn.disabled { background: #aaa; cursor: not-allowed; opacity: 0.5; }
+.done-btn { display: block; margin: 15px auto; padding: 10px 24px; border: 2px solid #2ecc71; background: transparent; color: #2ecc71; border-radius: 25px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+.done-btn.completed { background: #2ecc71; color: white; }
+.content-box { position: relative; margin: 20px 0; }
+pre { padding: 20px; border-radius: 8px; white-space: pre-wrap; word-break: break-word; overflow-x: auto; font-family: 'Consolas', 'Courier New', monospace; font-size: 15px; }
+.dark-mode pre { background: #1a1a1a; color: #f8f8f2; border: 1px solid #333; }
+.light-mode pre { background: #f8f9fa; color: #212529; border: 1px solid #e9ecef; }
+.copy-btn { position: absolute; top: 12px; right: 12px; padding: 6px 12px; font-size: 12px; background: #555; color: white; border: none; border-radius: 4px; cursor: pointer; opacity: 0.8; }
+.copy-btn:hover { opacity: 1; background: #2ecc71; }
+.theme-toggle-btn { display: block; margin: 20px auto; padding: 8px 16px; background: transparent; border: 1px solid #888; color: inherit; border-radius: 5px; cursor: pointer; }
+</style></head><body onload='initLesson()'>
+<div class='container'>
+<div class='nav-bar'><a class='nav-btn' href='lesson24.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../vue-js-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson26.html'>Bài sau ➡️</a></div><h1>Lesson 25 -- $attrs -//</h1>
+<button id='doneButton' class='done-btn' onclick='toggleDone()'>Mark as Done ⚪</button>
+<div class='content-box'>
+<button class='copy-btn' onclick='copyContent()'>📋 Copy nội dung</button>
+<pre><code id='lessonCode'># Khái niệm 
 	Trong Vue.js, $attrs là một object chứa tất cả các thuộc tính và sự kiện được truyền từ component cha đến component con, nhưng không được khai báo trong props hoặc emits của component con.
 
 	Ví dụ: Nếu component cha truyền placeholder="Enter text" và @input="handleInput", nhưng component con không khai báo chúng trong props, thì chúng sẽ nằm trong $attrs.
@@ -17,26 +50,26 @@
 	Thay vì gắn từng thuộc tính riêng lẻ (như :placeholder="$attrs.placeholder", @input="$attrs.onInput"), v-bind="$attrs" gắn tất cả cùng lúc.
 	
 	Cú pháp:
-		<input v-bind="$attrs">
-		Điều này tương đương với việc áp dụng mọi thuộc tính và sự kiện trong $attrs (như placeholder, onInput) lên thẻ <input>.
+		&lt;input v-bind="$attrs"&gt;
+		Điều này tương đương với việc áp dụng mọi thuộc tính và sự kiện trong $attrs (như placeholder, onInput) lên thẻ &lt;input&gt;.
 
 
-# 3. Tại sao v-bind="$attrs" áp dụng placeholder và @input lên <input>?
-<script>
+# 3. Tại sao v-bind="$attrs" áp dụng placeholder và @input lên &lt;input&gt;?
+&lt;script&gt;
 Vue.component('my-input', {
   inheritAttrs: false,
   template: `
-    <div>
-      <label>Input: </label>
-      <input v-bind="$attrs" type="text">
-    </div>
+    &lt;div&gt;
+      &lt;label&gt;Input: &lt;/label&gt;
+      &lt;input v-bind="$attrs" type="text"&gt;
+    &lt;/div&gt;
   `
 });
-</script>
+&lt;/script&gt;
 
-<div id="app">
-  <my-input placeholder="Enter text" @input="handleInput"></my-input>
-</div>
+&lt;div id="app"&gt;
+  &lt;my-input placeholder="Enter text" @input="handleInput"&gt;&lt;/my-input&gt;
+&lt;/div&gt;
 
 	## Bước 1: Component cha truyền thuộc tính và sự kiện 
 		Component cha truyền:
@@ -55,31 +88,31 @@ $attrs = {
 };	
 	
 	## Bước 3: v-bind="$attrs" hoạt động
-		Khi sử dụng <input v-bind="$attrs">, Vue sẽ gắn toàn bộ các thuộc tính/sự kiện trong $attrs lên thẻ <input>.
+		Khi sử dụng &lt;input v-bind="$attrs"&gt;, Vue sẽ gắn toàn bộ các thuộc tính/sự kiện trong $attrs lên thẻ &lt;input&gt;.
 
 		Cụ thể: 
-			placeholder="Enter text" được áp dụng làm thuộc tính HTML của <input>.
-			onInput (tương ứng với @input) được gắn làm sự kiện, nên khi người dùng nhập vào <input>, hàm handleInput trong component cha sẽ được gọi.
+			placeholder="Enter text" được áp dụng làm thuộc tính HTML của &lt;input&gt;.
+			onInput (tương ứng với @input) được gắn làm sự kiện, nên khi người dùng nhập vào &lt;input&gt;, hàm handleInput trong component cha sẽ được gọi.
 
 
 
 		## Kết quả HTML: 
-			Thẻ <input> sẽ trở thành:
-			<input type="text" placeholder="Enter text">
+			Thẻ &lt;input&gt; sẽ trở thành:
+			&lt;input type="text" placeholder="Enter text"&gt;
 			
-			Sự kiện @input được gắn vào <input>, nên khi nhập dữ liệu, handleInput trong component cha sẽ chạy.
+			Sự kiện @input được gắn vào &lt;input&gt;, nên khi nhập dữ liệu, handleInput trong component cha sẽ chạy.
 
 # 4. Tại sao cần inheritAttrs: false? 
 
-	Mặc định, nếu không có inheritAttrs: false, các thuộc tính trong $attrs sẽ tự động được áp dụng lên phần tử gốc của component con (ở đây là <div>).
+	Mặc định, nếu không có inheritAttrs: false, các thuộc tính trong $attrs sẽ tự động được áp dụng lên phần tử gốc của component con (ở đây là &lt;div&gt;).
 	
-	Với inheritAttrs: false, bạn ngăn điều này xảy ra, và có thể tự quyết định áp dụng $attrs lên phần tử nào (như <input> thông qua v-bind="$attrs").
+	Với inheritAttrs: false, bạn ngăn điều này xảy ra, và có thể tự quyết định áp dụng $attrs lên phần tử nào (như &lt;input&gt; thông qua v-bind="$attrs").
 	
 	Không có inheritAttrs: false
-		placeholder và @input sẽ được áp dụng lên <div> (phần tử gốc), gây lỗi vì <div> không hỗ trợ placeholder và sự kiện @input không hoạt động đúng.
+		placeholder và @input sẽ được áp dụng lên &lt;div&gt; (phần tử gốc), gây lỗi vì &lt;div&gt; không hỗ trợ placeholder và sự kiện @input không hoạt động đúng.
 
 	Có inheritAttrs: false và v-bind="$attrs"
-		Bạn kiểm soát được $attrs chỉ áp dụng lên <input>, nơi chúng có ý nghĩa.
+		Bạn kiểm soát được $attrs chỉ áp dụng lên &lt;input&gt;, nơi chúng có ý nghĩa.
 		
 		
 		
@@ -88,14 +121,14 @@ $attrs = {
 
 	Linh hoạt: Component con không cần biết trước thuộc tính/sự kiện nào sẽ được truyền, giúp component dễ tái sử dụng.
 		
-	Bảo trì dễ: Nếu component cha truyền thêm thuộc tính (như disabled, value), chúng sẽ tự động được áp dụng lên <input> mà không cần sửa component con.
+	Bảo trì dễ: Nếu component cha truyền thêm thuộc tính (như disabled, value), chúng sẽ tự động được áp dụng lên &lt;input&gt; mà không cần sửa component con.
 
 
 	
 # 6. Ví dụ minh họa thêm 
 Nếu component cha truyền thêm thuộc tính:	
 
-<my-input placeholder="Enter text" @input="handleInput" disabled value="Test"></my-input>
+&lt;my-input placeholder="Enter text" @input="handleInput" disabled value="Test"&gt;&lt;/my-input&gt;
 
 
 	##  $attrs sẽ chứa:
@@ -106,18 +139,60 @@ $attrs = {
   value: "Test"
 };
 
-	## Với <input v-bind="$attrs">, thẻ <input> sẽ là
-	<input type="text" placeholder="Enter text" disabled value="Test">
+	## Với &lt;input v-bind="$attrs"&gt;, thẻ &lt;input&gt; sẽ là
+	&lt;input type="text" placeholder="Enter text" disabled value="Test"&gt;
 	Sự kiện @input vẫn hoạt động, gọi handleInput khi người dùng nhập.
 
 # 7. Tóm tắt
 	$attrs: Chứa các thuộc tính/sự kiện từ component cha mà component con không khai báo trong props/emits.
-	v-bind="$attrs": Gắn toàn bộ nội dung của $attrs (như placeholder, onInput) lên phần tử được chỉ định (ở đây là <input>).
+	v-bind="$attrs": Gắn toàn bộ nội dung của $attrs (như placeholder, onInput) lên phần tử được chỉ định (ở đây là &lt;input&gt;).
 	
 	
 	## Tại sao áp dụng được:
 	placeholder là thuộc tính HTML, được áp dụng trực tiếp.
 	onInput (tương ứng @input) là sự kiện, được gắn để kích hoạt hàm trong component cha.
-	inheritAttrs: false: Ngăn $attrs tự áp dụng lên phần tử gốc, cho phép bạn kiểm soát nơi áp dụng (như <input>).
+	inheritAttrs: false: Ngăn $attrs tự áp dụng lên phần tử gốc, cho phép bạn kiểm soát nơi áp dụng (như &lt;input&gt;).
 
-</pre><a id='backBottom' href='../vue-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
+</code></pre>
+</div>
+<div class='nav-bar'><a class='nav-btn' href='lesson24.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../vue-js-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson26.html'>Bài sau ➡️</a></div><button class='theme-toggle-btn' onclick='toggleTheme()'>🌓 Đổi Giao Diện</button>
+</div>
+<script>
+const lessonKey = 'vue-js-learning-list_lesson25.html';
+function toggleTheme() {
+   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';
+   document.body.className = mode;
+   localStorage.setItem('theme', mode);
+}
+function toggleDone() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   if (isDone) {
+       localStorage.removeItem(lessonKey);
+   } else {
+       localStorage.setItem(lessonKey, 'done');
+   }
+   renderDoneStatus();
+}
+function renderDoneStatus() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   let btn = document.getElementById('doneButton');
+   if (isDone) {
+       btn.className = 'done-btn completed';
+       btn.innerText = 'Đã Hoàn Thành ✅';
+   } else {
+       btn.className = 'done-btn';
+       btn.innerText = 'Đánh dấu đã học ⚪';
+   }
+}
+function copyContent() {
+   let text = document.getElementById('lessonCode').innerText;
+   navigator.clipboard.writeText(text).then(function() {
+       alert('✅ Đã sao chép nội dung bài học!');
+   });
+}
+function initLesson() {
+   document.body.className = localStorage.getItem('theme') || 'dark-mode';
+   renderDoneStatus();
+   if (window.Prism) Prism.highlightAll();
+}
+</script></body></html>

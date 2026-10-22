@@ -1,0 +1,217 @@
+<html><head><title>Lesson 7 == NodeJS Architecture ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../NodeJS-learning.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 7 -- NodeJS Architecture -//</h1><pre>
+
+#	Tổng Quan Phần "Node.js Architecture"
+
+	Mục tiêu: Hiểu kiến trúc của Node.js, bao gồm:
+
+		- Kiến trúc tổng thể: Single-threaded, event-driven, non-blocking I/O.
+		- Luồng xử lý request: Từ client request đến response qua event queue và event loop.
+		- Non-blocking vs Blocking: Cách Node.js xử lý tác vụ hiệu quả.
+		- Khi nào dùng Node.js: Các ứng dụng phù hợp và không phù hợp.
+		- Lợi ích chính: Hiệu suất cao, xử lý nhiều kết nối đồng thời, dễ dùng với JavaScript
+
+	Tại sao quan trọng? Hiểu kiến trúc giúp bạn:
+	
+		- Viết code tận dụng tối đa hiệu suất của Node.js.
+		- Tránh các lỗi phổ biến như chặn event loop.
+		- Chọn đúng công cụ cho dự án (ví dụ: Node.js cho API, không cho CPU-heavy tasks).
+
+		Tạo file .js (ví dụ: arch.js) và chạy bằng node arch.js.
+		Cần file myfile.txt cho các ví dụ về đọc file.
+		Dùng terminal hoặc VS Code để kiểm tra output.
+
+
+# 1. What is Node.js Architecture?
+
+	Node.js sử dụng kiến trúc single-threaded, event-driven, được thiết kế để xử lý nhiều kết nối đồng thời mà không chặn luồng chính.
+
+	Phù hợp cho scalable network applications, real-time apps, và APIs.
+	
+	Đặc điểm chính: Non-blocking I/O, event-driven, single-threaded với event loop, thực thi bất đồng bộ.	
+	
+	
+	# Giải thích chi tiết:
+	
+		Single-threaded: Node.js chỉ dùng một luồng chính (main thread) để chạy code JavaScript, khác với các ngôn ngữ như Java (multi-threaded). Tuy nhiên, nó vẫn xử lý nhiều tác vụ đồng thời nhờ event loop và non-blocking I/O.
+	
+		Event-driven: Node.js hoạt động theo mô hình sự kiện (event). Khi có sự kiện (như request HTTP, đọc file), Node.js gọi callback tương ứng thay vì chờ hoàn thành.
+	
+		Non-blocking I/O: Các tác vụ I/O (như đọc file, query database) không chặn luồng chính. Node.js giao các tác vụ nặng cho hệ điều hành và tiếp tục xử lý tác vụ khác.
+	
+		Ví dụ thực tế: Một server Node.js có thể xử lý hàng nghìn request HTTP cùng lúc (như chat app) mà không cần chờ từng request hoàn tất.
+	
+	Ngữ cảnh: Kiến trúc này làm Node.js lý tưởng cho ứng dụng cần xử lý nhiều kết nối (như server API, streaming), nhưng không tốt cho tác vụ nặng về CPU (như xử lý hình ảnh).
+
+
+
+
+
+# 2. Node.js Architecture Diagram
+Tài liệu mô tả luồng xử lý request:
+
+	## 1. Client Request Phase: 
+	
+		Client gửi request đến server Node.js.
+		Mỗi request được thêm vào Event Queue.
+
+
+	## 2. Event Loop Phase:
+
+		Event Loop liên tục kiểm tra Event Queue.
+		Lấy từng request một để xử lý.
+
+
+	## 3. Request Processing:
+
+		Tác vụ đơn giản (non-blocking) được xử lý ngay bởi main thread.
+		Tác vụ phức tạp (blocking) được giao cho Thread Pool.
+
+
+	## 4. Response Phase
+
+		Khi tác vụ blocking hoàn tất, callback được đưa vào Callback Queue.
+		Event Loop xử lý callback và gửi response về client.
+
+
+# Giải thích chi tiết:
+
+		Event Queue: Hàng đợi lưu các sự kiện (như request HTTP, file I/O). Ví dụ, khi 100 client gửi request cùng lúc, chúng xếp hàng trong Event Queue.
+		
+		Event Loop: Thành phần cốt lõi của Node.js (dùng thư viện Libuv), liên tục kiểm tra Event Queue và Callback Queue. Nó xử lý các tác vụ non-blocking trực tiếp và giao tác vụ blocking cho Thread Pool.
+		
+		Thread Pool: Một tập hợp luồng phụ (thường 4 luồng mặc định) xử lý tác vụ nặng (như đọc file lớn, mã hóa). Thread Pool được Libuv quản lý, không phải V8.
+		Callback Queue: Lưu các callback từ tác vụ blocking sau khi hoàn tất. Event Loop lấy callback từ đây để thực thi.
+		
+		Ví dụ thực tế: Khi client gửi request đến server Node.js, Event Loop xử lý request ngay nếu là tính toán đơn giản (như trả về "Hello World"). Nếu cần đọc file, nó giao cho Thread Pool và tiếp tục xử lý request khác.
+
+
+
+# Hình dung luồng:
+
+
+	1.Client gửi 3 request: R1, R2, R3 → Event Queue: [R1, R2, R3].
+	2.Event Loop lấy R1:
+	
+		Nếu R1 là tính toán đơn giản → Xử lý ngay, gửi response.
+		Nếu R1 cần đọc file → Giao Thread Pool, tiếp tục lấy R2.
+	
+	
+	3.Thread Pool hoàn tất R1, đẩy callback vào Callback Queue.
+	4.Event Loop lấy callback, gửi response cho R1.
+
+
+
+# 3. Non-blocking Examples
+
+	## 3.1. Non-blocking File Read
+
+
+const fs = require('fs');
+
+console.log('Before file read');
+
+fs.readFile('myfile.txt', 'utf8', (err, data) => {
+  if (err) throw err;
+  console.log('File contents:', data);
+});
+
+console.log('After file read');
+
+
+
+		### Giải thích chi tiết:
+		
+			fs.readFile: Hàm bất đồng bộ (non-blocking) trong module fs. Nó đọc file myfile.txt và gọi callback khi hoàn tất.
+		
+			Luồng thực thi:
+		
+				- In Before file read.
+				- fs.readFile giao tác vụ đọc file cho Thread Pool (Libuv), main thread không đợi.
+				- In After file read ngay lập tức.
+				- Khi file đọc xong, callback chạy, in File contents: Hello!.		
+		
+			Tại sao non-blocking? Main thread tiếp tục chạy mà không chờ đọc file, nhờ event loop giao việc cho Thread Pool.
+			
+			Ngữ cảnh: Hữu ích trong server khi cần đọc file (như config) mà không làm chậm các request khác.
+		
+		
+		
+		
+		
+	## 	3.2. Blocking vs Non-blocking Code
+		
+// Blocking code example
+console.log('Start of blocking code');
+const data = fs.readFileSync('myfile.txt', 'utf8'); // Blocks here
+console.log('Blocking operation completed');
+
+// Non-blocking code example
+console.log('Start of non-blocking code');
+fs.readFile('myfile.txt', 'utf8', (err, data) => {
+  if (err) throw err;
+  console.log('Non-blocking operation completed');
+});
+console.log('This runs before the file is read');		
+		
+		
+		
+Start of blocking code
+Blocking operation completed
+Start of non-blocking code
+This runs before the file is read
+Non-blocking operation completed	
+		
+		
+		
+		
+		### 	Giải thích chi tiết:
+		
+			### Blocking (fs.readFileSync):
+		
+				- Hàm đồng bộ (synchronous), chặn main thread cho đến khi đọc file xong.
+				- Luồng: In Start, chờ đọc file, in Blocking operation completed.
+				- Nhược điểm: Nếu file lớn hoặc nhiều request, server sẽ chậm vì main thread bị chặn.
+				
+				
+				
+				
+			### Non-blocking (fs.readFile):
+				
+				- Hàm bất đồng bộ, giao việc cho Thread Pool, main thread tiếp tục chạy.
+				- Luồng: In Start, in This runs before, callback chạy sau khi file đọc xong.
+				- Ưu điểm: Server vẫn xử lý request khác trong lúc chờ đọc file.				
+				
+				
+		Ngữ cảnh: Luôn ưu tiên non-blocking (fs.readFile, setTimeout, v.v.) trong Node.js để tận dụng event loop.		
+				
+				
+				
+
+# 4. When to Use Node.js			
+				
+	Node.js phù hợp cho:			
+				
+		- I/O-bound applications: File operations, database queries, network requests.
+		- Real-time applications: Chat apps, live notifications, collaboration tools.
+		- APIs: RESTful services, GraphQL APIs.
+		- Microservices: Các dịch vụ nhỏ, độc lập.				
+				
+	Không phù hợp cho:			
+				
+		CPU-intensive tasks (như xử lý hình ảnh, tính toán phức tạp) vì chặn event loop.		
+		Giải pháp:		
+				
+			Dùng Worker Threads để chạy tác vụ CPU-heavy trong luồng riêng.
+			Tách thành microservice bằng ngôn ngữ khác (như Python, Go).
+			Dùng native add-ons (C++ modules).	
+				
+	## 	Giải thích chi tiết:		
+				
+			- I/O-bound: Node.js giỏi xử lý tác vụ chờ I/O (như đọc file, query MongoDB) nhờ non-blocking. Ví dụ: Server API trả JSON từ database.
+			- Real-time: Event loop giúp xử lý WebSocket (như chat) hiệu quả. Ví dụ: Socket.IO cho ứng dụng chat.
+			- APIs/Microservices: Node.js với Express.js tạo REST/GraphQL API nhanh chóng, dễ mở rộng.
+			- CPU-intensive: Tác vụ như mã hóa video hoặc machine learning làm chậm event loop vì V8 chạy single-threaded. Worker Threads (từ Node.js 12.x) giúp cải thiện, nhưng vẫn không tối ưu bằng ngôn ngữ multi-threaded.				
+				
+				
+				
+</pre><a id='backBottom' href='../NodeJS-learning.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

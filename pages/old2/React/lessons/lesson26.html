@@ -1,0 +1,135 @@
+<html><head><title>Lesson 26 == useTransition ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../react-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 26 -- useTransition -//</h1><pre>
+# 1. What is useTransition? 
+
+	useTransition là một hook giúp quản lý hiệu suất bằng cách phân loại cập nhật trạng thái:
+
+		- Urgent updates: Cập nhật tức thì, ví dụ: Cập nhật giá trị input khi người dùng gõ.
+		- Non-urgent updates (transitions): Cập nhật có thể trì hoãn (như render danh sách kết quả search), không làm gián đoạn trải nghiệm người dùng.
+
+	Hook trả về:
+
+		- isPending: Boolean, true khi transition đang chạy.
+		- startTransition: Hàm để wrap các cập nhật non-urgent.
+
+		Insight chuyên gia: useTransition hoạt động dựa trên cơ chế priority scheduling của React. Khi bạn gọi setState trong startTransition, React xếp nó vào hàng đợi thấp hơn so với các cập nhật thông thường. Điều này giúp UI responsive trong các tình huống như search autocomplete, render danh sách lớn, hoặc chuyển đổi giao diện phức tạp. Lưu ý: Không dùng cho tất cả state updates, vì lạm dụng có thể làm UI "lagged" không cần thiết.
+
+
+# 2. When to Use Transitions?
+	## Sử dụng useTransition khi:
+
+		- Có thao tác chậm (slow operations) như lọc danh sách lớn, fetch API, hoặc tính toán phức tạp.
+		- Cập nhật không cần hiển thị ngay (non-critical), ví dụ: Kết quả tìm kiếm, danh sách gợi ý.
+		- Muốn giữ UI responsive trong khi xử lý background tasks.'
+		
+	## Ví dụ thực tế:
+	
+	Search bar với hàng nghìn kết quả.
+	Chuyển đổi giữa các tab với dữ liệu nặng.
+	Animation hoặc render giao diện phức tạp khi thay đổi state.
+
+	Insight chuyên gia: useTransition lý tưởng cho các ứng dụng SPA với dữ liệu lớn (như dashboard, e-commerce). Trong production, kết hợp với Suspense (cho lazy loading hoặc data fetching) để tối ưu hơn. Nếu không có React 18, bạn có thể dùng kỹ thuật như debouncing/throttling (với useEffect hoặc thư viện như Lodash) để đạt hiệu quả tương tự, nhưng phức tạp hơn.
+
+
+
+# 3. Basic Example: Search Feature
+
+	## Giải thích chi tiết:
+		Ví dụ này mô phỏng một search bar cơ bản, nơi input cập nhật ngay, nhưng kết quả tìm kiếm được đánh dấu là transition.
+
+import { useState, useTransition } from 'react';
+
+function SearchBar() {
+  const [text, setText] = useState('');  // State cho input
+  const [results, setResults] = useState('');  // State cho kết quả
+  const [isPending, startTransition] = useTransition();  // Hook useTransition
+
+  const handleChange = (e) => {
+    setText(e.target.value);  // Urgent: Cập nhật input ngay
+    startTransition(() => {  // Non-urgent: Cập nhật kết quả
+      setResults(e.target.value);
+    });
+  };
+
+  return (
+    <div>
+      <input value={text} onChange={handleChange} />  // Controlled input
+      {isPending ? <p>Loading...</p> : <p>Search results for: {results}</p>}  // Hiển thị loading hoặc kết quả
+    </div>
+  );
+}
+
+		- useState(''): Quản lý giá trị input (text) và kết quả (results).
+		- useTransition(): Trả về [isPending, startTransition]. isPending để kiểm tra trạng thái transition, startTransition để wrap cập nhật non-urgent.
+		- setText(e.target.value): Cập nhật ngay để input responsive (urgent).
+		- startTransition(() => { setResults(...) }): Đánh dấu cập nhật results là non-urgent, cho phép React trì hoãn nếu cần.
+		- Conditional rendering: Hiển thị "Loading..." khi isPending là true.
+
+
+	Insight chuyên gia: Ví dụ này đơn giản nhưng thể hiện rõ sức mạnh: Input không bị lag dù kết quả có thể chậm. Trong thực tế, results có thể đến từ API call (dùng useEffect hoặc fetch). Best practice: Hiển thị skeleton UI thay vì chỉ "Loading..." để UX tốt hơn. Lưu ý: isPending chỉ true khi transition chưa hoàn thành, nên kiểm tra kỹ logic.
+
+
+
+# 4. Real-World Example: Slow Search Feature
+	Ví dụ này mô phỏng tình huống thực tế: Render danh sách lớn (1000 items) khi search, nhưng vẫn giữ input mượt mà.
+
+import { useState, useTransition } from 'react';
+
+function SearchResults({ query }) {  // Component render kết quả
+  const items = [];
+  if (query) {
+    for (let i = 0; i < 1000; i++) {  // Giả lập xử lý nặng
+      items.push(<li key={i}>Result for {query} - {i}</li>);
+    }
+  }
+  return <ul>{items}</ul>;
+}
+
+function App() {
+  const [input, setInput] = useState('');  // State cho input
+  const [query, setQuery] = useState('');  // State cho query search
+  const [isPending, startTransition] = useTransition();  // Hook useTransition
+
+  const handleChange = (e) => {
+    setInput(e.target.value);  // Urgent: Cập nhật input ngay
+    startTransition(() => {  // Non-urgent: Cập nhật query
+      setQuery(e.target.value);
+    });
+  };
+
+  return (
+    <div>
+      <input
+        type="text"
+        value={input}
+        onChange={handleChange}
+        placeholder="Type to search..."
+      />
+      {isPending && <p>Loading results...</p>}  // Loading khi transition chạy
+      <SearchResults query={query} />  // Render danh sách
+    </div>
+  );
+}
+
+	Insight chuyên gia: Ví dụ này mô phỏng bottleneck thực tế (như render lớn hoặc API chậm). Trong production, kết hợp với Suspense và React.lazy để lazy load component hoặc data. Best practice: Dùng useDeferredValue thay useTransition nếu chỉ muốn trì hoãn giá trị (không cần wrap setState). Performance: Memoize SearchResults với React.memo để tránh re-render không cần thiết:
+
+	const SearchResults = React.memo(({ query }) => { ... });
+
+
+
+# 5. useTransition Hook: Chi tiết kỹ thuật
+
+	isPending: true khi transition đang chạy, dùng để hiển thị loading state.
+	startTransition: Hàm nhận callback chứa các setState non-urgent.
+
+	## Khi nào dùng? 
+		Urgent: Cập nhật UI tức thì (input, button click, toggle).
+		Non-urgent: Render phức tạp, lọc dữ liệu lớn, API calls không cần feedback ngay.
+
+	Insight chuyên gia: useTransition không làm code chạy nhanh hơn, mà chỉ sắp xếp ưu tiên render. Nếu cả urgent và non-urgent đều nhẹ, isPending có thể không bao giờ true. Trong SSR (như Next.js), useTransition cần cẩn thận vì server không hỗ trợ Concurrent Rendering. Debug: Dùng React DevTools để check render priorities. Nếu cần timeout cho transitions, dùng useTransition({ timeoutMs: 5000 }).
+
+
+# Kết luận và Lời khuyên học React
+	useTransition là công cụ mạnh để tối ưu UX trong React 18, đặc biệt cho các ứng dụng có xử lý nặng. 
+
+
+</pre><a id='backBottom' href='../react-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

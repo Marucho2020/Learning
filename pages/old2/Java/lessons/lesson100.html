@@ -1,0 +1,196 @@
+<html><head><title>Lesson 100 == 🏗️ Infrastructure as Code (IaC) – Hạ tầng dưới dạng mã ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 100 -- 🏗️ Infrastructure as Code (IaC) – Hạ tầng dưới dạng mã -//</h1><pre>
+
+# Khái niệm 
+	❓ IaC là gì? 
+		Hạ tầng không cấu hình bằng tay (click-click), mà định nghĩa bằng mã.
+		
+	Tất cả tài nguyên như: 
+		Server, Database, VPC, Subnet, Load Balancer 
+		EKS Cluster, S3 Bucket, IAM Role, Firewall
+				→ Được mô tả bằng file YAML / JSON / HCL / TypeScript
+				→ Lưu trên Git → Có version, rollback, review, CI/CD
+
+
+
+
+
+# 🧱 Phân Loại IaC: Có Tầng 
+	
+
+
+Tầng												Công cụ / File									Mục đích
+IaC Hệ thống (Provisioning)						Terraform, Pulumi, AWS CDK					Tạo cloud resource: VM, VPC, LB, Database...
+IaC Ứng dụng (App Infrastructure)				Dockerfile, docker-compose					Build & định nghĩa container, service
+IaC Điều phối (Orchestration)					Kubernetes YAML, Helm, ArgoCD				Tự động hóa triển khai, scaling, networking
+
+
+
+
+
+
+
+
+
+
+
+
+# 💡 Vì sao IaC là bắt buộc cho hệ thống hiện đại?
+
+
+		Lợi ích													Mô tả
+	Đồng nhất môi trường					Dev = Test = Prod, không "máy tao chạy được"
+	Version Control							Biết ai sửa gì, rollback được như code
+	Tự động hóa hoàn toàn					Deploy hạ tầng như deploy app
+	Audit và Security						Kiểm tra thay đổi, tuân thủ chính sách
+	Cost Estimation							Biết trước chi phí hạ tầng trước khi apply
+
+
+
+
+# 🛠️ CÁC CÔNG CỤ IaC PHỔ BIẾN 
+	
+
+
+Tool					Ngôn ngữ						Dùng cho							        	Ghi chú mạnh mẽ
+Terraform			    HCL								Cloud mọi loại (AWS, GCP, Azure, v.v)			Chuẩn công nghiệp
+Pulumi				    TypeScript, Python, Go			Cloud, infra, app								Dễ dùng cho dev (code thật)
+AWS CDK				    TypeScript, Python				AWS Infra (100%)								Native cho AWS
+CloudFormation		    YAML/JSON						AWS												Dễ tích hợp, nhưng verbose (rườm rà)
+Ansible				    YAML							Server config, post-deploy						Dễ viết, chạy được cục bộ
+
+
+
+
+
+
+# 🔧 1. Terraform – King of IaC 
+	Terraform = chuẩn công nghiệp cho cloud IaC.
+
+	
+	## Cấu trúc đơn giản: 
+		
+		resource "aws_s3_bucket" "my_bucket" {
+		bucket = "my-company-backup"
+		acl    = "private"
+		}
+
+
+	## Quy trình chuẩn: 
+		
+		terraform init      # Khởi tạo project
+		terraform plan      # Xem trước sẽ tạo/sửa gì
+		terraform apply     # Thực thi
+		terraform destroy   # Xóa toàn bộ
+		
+
+	## Tính năng hay:
+			State file quản lý resource
+			Module tái sử dụng hạ tầng
+			Hỗ trợ multi-cloud	
+
+
+
+
+
+
+
+
+# 🌀 2. Pulumi – Viết IaC bằng ngôn ngữ thật 
+	
+		import * as aws from "@pulumi/aws";
+		const bucket = new aws.s3.Bucket("my-bucket");
+
+	Phù hợp nếu team bạn là dev (JavaScript, TypeScript, Python) — không thích học HCL.
+
+
+
+
+
+# ☁️ 3. AWS CDK 
+	CDK = Cloud Development Kit → cho AWS native 
+	
+	
+		const bucket = new s3.Bucket(this, 'MyBucket', {
+		versioned: true,
+		removalPolicy: RemovalPolicy.DESTROY
+		});
+
+
+
+
+	# Lợi ích:
+			Kiểm soát AWS resource sâu
+			Tự động sinh ra CloudFormation
+			Đúng cú pháp, autocompletion
+
+
+
+
+
+
+# 🤖 4. Ansible – Khi cần configure server 
+	
+
+	Ansible = viết script để:
+	
+		Cài nginx, docker
+		Setup config file
+		Quản lý người dùng SSH
+
+
+		- name: Install nginx
+		apt:
+			name: nginx
+			state: latest
+	
+			
+	Không mạnh như Terraform trong provisioning, nhưng mạnh trong post-setup và cấu hình máy ảo.
+	
+	
+	
+	
+# 	🧠 Kiến trúc IaC chuẩn production 
+	
+	
+	## Tách biệt:
+	
+			infra/ → chứa Terraform hoặc CDK
+			app/ → chứa source code
+			ci-cd/ → chứa GitHub Actions / ArgoCD / Helm chart
+			Mỗi môi trường (dev/stage/prod) có folder riêng
+	
+	
+	
+	
+	## GitOps cho IaC: 
+	
+			Pull request để thay đổi hạ tầng
+			Terraform Plan chạy trên PR
+			Sau khi duyệt → Terraform Apply (qua GitHub Actions)
+	
+	
+	
+	
+	
+# 🔐 Terraform Cloud / Atlantis / Terragrunt 
+
+Công cụ							Mục đích
+Terraform Cloud				Hosted CI/CD cho IaC của HashiCorp
+Atlantis					Trigger Terraform Apply qua PR comment
+Terragrunt					Tổ chức nhiều module Terraform hiệu quả hơn
+
+
+
+
+# 🎯 Best Practice IaC cho Senior Architect
+	
+	
+		Không click hạ tầng → viết IaC cho tất cả
+		Lưu IaC trên Git → review, audit, rollback
+		Chạy Terraform Plan mỗi pull request
+		Dùng module để tái sử dụng (load balancer, VPC, database)
+		Không để secret trong code → dùng Vault / SOPS / GitHub Secrets	
+	
+	
+	
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

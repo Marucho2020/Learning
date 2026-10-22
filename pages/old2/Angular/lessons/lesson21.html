@@ -1,0 +1,72 @@
+<html><head><title>Lesson 21 == Includes ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../angular-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 21 -- Includes -//</h1><pre># Khái niệm 
+	cách bạn có thể "nhúng" (include) file HTML khác vào trong trang HTML chính bằng cách dùng AngularJS.
+	Đây là một kỹ thuật rất quan trọng trong AngularJS vì nó cho phép bạn chia nhỏ giao diện thành từng phần (modular UI) – dễ bảo trì, dễ tái sử dụng, và dễ mở rộng. 
+
+# 🔧 Cú pháp chính: ng-include
+	<div ng-include="'filename.html'"></div>
+	
+	ng-include là một directive của AngularJS.
+	Nhận vào chuỗi tên file HTML, đặt trong ' '.
+	Angular sẽ load nội dung của file đó và chèn vào DOM tại vị trí này.
+	
+# 📦 Ví dụ:
+	Giả sử bạn có 3 file:
+	📄 footer.html
+	📄 header.html
+	
+	📄 main.html
+	<!DOCTYPE html>
+<html ng-app="">
+  <body>
+
+    <div ng-include="'header.html'"></div>
+
+    <h1>Trang chính</h1>
+    <p>Nội dung chính ở đây</p>
+
+    <div ng-include="'footer.html'"></div>
+
+  </body>
+</html>
+
+	
+	➡️ Khi chạy main.html, Angular sẽ load file header.html và footer.html rồi hiển thị nội dung tại chỗ có ng-include.
+
+
+
+# 📌 Có thể dùng biến thay vì tên cứng
+	Bạn có thể bind file động:
+
+
+>> html 
+<div ng-include="templateUrl"></div>
+
+>> js 
+$scope.templateUrl = "header.html";
+
+→ Thay đổi templateUrl sẽ thay đổi nội dung được include.
+
+
+# ✅ Tóm tắt:
+| Mục đích                        | Giải thích                        |
+| ------------------------------- | --------------------------------- |
+| Tái sử dụng giao diện           | Tách header, footer, menu…        |
+| Dễ bảo trì                      | Sửa một lần dùng nhiều nơi        |
+| Kết hợp controller, scope riêng | Dễ mở rộng (khi tách theo module) |
+
+
+# ⚠️ Lưu ý:
+
+	File include phải cùng domain (nếu không, bị chặn CORS).
+	Nội dung trong file được include vẫn có thể dùng AngularJS bình thường (biến, binding, v.v.).
+	Nếu cần truyền dữ liệu vào file được include, phải xử lý bằng scope chung hoặc directive riêng.
+
+
+# 🧠 Kết luận:
+	Dùng ng-include giúp bạn chia nhỏ giao diện → code sạch hơn, có tổ chức.
+	Nếu bạn quen với các framework như React/Angular 2+, thì ng-include chính là tổ tiên sơ khai của Component hóa UI.
+	Nếu bạn đang build hệ thống nội bộ hoặc web tool dạng SPA (Single Page App), thì dùng ng-include sẽ giúp tăng tốc phát triển rất nhiều.
+
+
+
+</pre><a id='backBottom' href='../angular-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

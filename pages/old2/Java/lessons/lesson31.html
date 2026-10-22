@@ -1,0 +1,82 @@
+<html><head><title>Lesson 31 == == LinkedHashSet ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 31 -- -- LinkedHashSet -//</h1><pre>LinkedHashSet là một lớp trong Java được sử dụng để lưu trữ các phần tử duy nhất giống như HashSet, nhưng CÓ DUY TRÌ THỨ TỰ CHÈN.
+Đây là một trong những lựa chọn phù hợp khi bạn vừa muốn đảm bảo các phần tử không trùng lặp, vừa muốn bảo toàn thứ tự chèn.
+
+
+# 1. Đặc điểm của LinkedHashSet 
+	## 1/ Duy trì thứ tự chèn : 
+		- Các phần tử được lưu trữ trong thứ tự mà chúng được thêm vào (insertion order )
+		- Nếu thêm một phần tử đã tồn tại, thứ tự chèn sẽ không thay đổi 
+		
+	## 2/ Không cho phép phần tử trùng lặp :
+		- Giống HashSet, mỗi phần tử trong LinkedHashSet là duy nhất(xác định bằng method equals và hashCode())
+	
+	## 3/ Hiệu suất: 
+		- Chậm hơn HashSet một chút vì cần thêm chi phí để duy trì thứ tự chèn 
+		- Thời gian truy xuất trung bình O(1)cho các thao tác thêm, xóa, và kiểm tra giống HashSet
+		
+	## 4/ Cho phép chứa null : 
+		- LinkedHashSet cho phép chứa duy nhất một phần tử null 
+		
+	## 5/ Không đồng bộ( not syncronized)
+		- Nếu cần sử dụng trong môi trường đa luồng, bạn cần tự đồng bộ hóa bằng cách sử dụng Collections.syncronizedSet()
+		
+	
+# 2. Cách sử dụng LinkedHashSet 
+	
+	// tạo  LinkedHashSet 
+	LinkedHashSet<String> linkedHashSet = new LinkedHashSet<String>();
+		
+	// Thêm các phần tử 
+	linkedHashSet.add("Java");
+	linkedHashSet.add("Python");
+	linkedHashSet.add("Java");		// Không thêm được vì bị trùng phần tử 
+	
+		
+	## Các phương thức chính 
+	.add(E e)              : Thêm phần tử
+	.contains(E e)         : Kiểm tra xem có tồn tại ko 
+	.remove(E e)           : Xóa phần tử được truyền vào trong hashSet 
+	.clear()               : Xóa toàn bộ phần tử 
+
+
+# 3 So sánh LinkedHashSet với các lớp khác 
+		
+Đặc điểm					HashSet									LinkedHashSet						TreeSet
+Thứ tự lưu trữ				Không đảm bảo thứ tự					Duy trì thứ tự chèn					Sắp xếp tự nhiên hoặc theo Comparator
+Hiệu suất					Nhanh nhất								Chậm hơn HashSet một chút			Chậm nhất do cần sắp xếp
+Cho phép null				Một phần tử null						Một phần tử null					Không cho phép null
+Ứng dụng					Khi không cần thứ tự hoặc sắp xếp		Khi cần duy trì thứ tự chèn			Khi cần sắp xếp phần tử
+
+	
+#4 Một số đặc điểm chú ý : 
+	## Nguyên lý hoạt động nội bộ : 
+		- LinkedHashSet được trên khai dựa trên một HashMap và một danh sách liên kết kép (doubly linked list)
+		- HashMap dùng để đảm bảo không trùng lặp phần tử 
+		- Danh sách liên kết kép dùng để duy trì thứ tự chèn 
+	
+
+	## Mã giả cách lưu trữ bên trong  
+		- Khi thêm một phần tử 
+			+> HashMap sẽ kiểm tra xem phần tử có tồn tại hay chưa dựa vào hashCode 
+			+> Nếu không tồn tại, phần tử được thêm vào HashMap và liên kết trong danh sách 
+		- Khi duyệt qua các phần tử 
+			+> Danh sách liên kết kép đảm bảo các phần tử được duyệt theo thứ tự chèn 
+	
+	## Tùy chỉnh thứ tự truy cập 
+		- LinkedHashSet hỗ trợ chế độ access-order thông qua HashMap(chỉ áp dụng khi truy cập phần tử). Điều này không phổ biến nhưng rất hữu ích trong các cấu trúc dữ liệu như LRU Cache 
+		
+		// LRU Cache: Loại bỏ phần tử ít được truy cập nhất
+		LinkedHashSet<Integer> cache = new LinkedHashSet<>();
+		
+5. Lưu ý khi sử dụng LinkedHashSet 
+	## Khi nào nên sử dụng LinkedHashSet 
+		- Khi bạn cần các phần tử duy nhất và muốn duy trì thứ tự chèn 
+		- Khi dữ liệu nhỏ, vì LinkedHashSet chậm hơn HashSet 
+	## Khi nào không nên dùng LinkedHashSet?
+		- Khi bạn không quan tâm đến thứ tự chèn(sử dụng HashSet )
+		- Khi cần sắp xếp tự nhiên hoặc tùy chỉnh (sử dụng TreeSet)
+		
+
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

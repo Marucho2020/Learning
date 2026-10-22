@@ -1,0 +1,287 @@
+<html><head><title>Lesson 13 == Modules ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../NodeJS-learning.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 13 -- Modules -//</h1><pre>
+# Modules trong Node.js là gì?
+
+	Modules là các đơn vị code độc lập, cho phép bạn chia nhỏ ứng dụng thành các thành phần có thể tái sử dụng. Trong Node.js, mỗi file .js là một module. Lợi ích chính của modules bao gồm:
+
+		Tổ chức code: Chia code thành các file nhỏ, dễ quản lý.
+		Đóng gói (encapsulation): Ẩn chi tiết triển khai, chỉ expose những gì cần thiết.
+		Tránh xung đột namespace: Không để biến/hàm global gây xung đột.
+		Tăng tính tái sử dụng: Có thể import module vào nhiều dự án.
+
+	Node.js hỗ trợ hai hệ thống module:
+
+		- CommonJS: Hệ thống mặc định, dùng require() và module.exports. Bài này tập trung vào CommonJS.
+		- ES Modules (ESM): Chuẩn mới (từ ES6), dùng import/export. Được đề cập trong bài khác.
+
+	Insight: CommonJS vẫn phổ biến trong hệ sinh thái Node.js, đặc biệt với các thư viện cũ và core modules. Tuy nhiên, ESM đang được ưa chuộng trong các dự án mới nhờ cú pháp hiện đại và hỗ trợ tree-shaking.
+
+
+# Built-in Modules (Core Modules)
+
+	Node.js cung cấp nhiều module tích hợp sẵn (compiled vào binary), không cần cài đặt. Một số module phổ biến:
+
+		fs: Thao tác file (đọc, ghi, xóa, v.v.).
+		http: Tạo server/client HTTP.
+		path: Xử lý đường dẫn file.
+		os: Thông tin hệ điều hành (CPU, memory, v.v.).
+		events, util, crypto, url, querystring, v.v.
+	Để sử dụng, chỉ cần gọi require('<module-name>').
+
+	Ví dụ: Tạo HTTP Server đơn giản
+
+const http = require('http');
+
+http.createServer((req, res) => {
+  res.writeHead(200, { 'Content-Type': 'text/html' });
+  res.end('Hello World!');
+}).listen(8080);
+
+
+require('http'): Import module http tích hợp sẵn.
+http.createServer: Tạo server, xử lý request/response.
+res.writeHead: Set HTTP status code (200) và headers.
+Output: Truy cập http://localhost:8080, bạn sẽ thấy "Hello World!" trên trình duyệt.
+
+
+	Insight: Trong thực tế, bạn hiếm khi dùng http trực tiếp mà sẽ dùng framework như Express.js để xử lý routing, middleware, và các tính năng phức tạp hơn. Core modules như fs và path rất phổ biến khi làm việc với file hoặc đường dẫn.
+
+
+
+# Tạo và Export Modules
+
+	Trong Node.js, mỗi file .js là một module. Bạn có thể export hàm, object, class, hoặc bất kỳ giá trị nào từ module để sử dụng ở file khác. Có hai cách export chính trong CommonJS:
+
+
+	## 1. Export nhiều mục (Multiple Exports)
+	
+		Sử dụng exports (hoặc module.exports) để export nhiều hàm/object.
+
+	Ví dụ: utils.js
+
+
+
+const getCurrentDate = () => new Date().toISOString();
+
+const formatCurrency = (amount, currency = 'USD') => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: currency,
+  }).format(amount);
+};
+
+// Cách 1: Gán từng thuộc tính vào exports
+exports.getCurrentDate = getCurrentDate;
+exports.formatCurrency = formatCurrency;
+
+// Cách 2: Export object (cách ngắn gọn hơn)
+// module.exports = { getCurrentDate, formatCurrency };
+
+
+	## Giải thích:
+
+		- getCurrentDate: Trả về ngày giờ hiện tại dưới dạng ISO string.
+		- formatCurrency: Format số thành tiền tệ (e.g., 99.99 -> $99.99).
+		- exports.<tên>: Gán hàm vào object exports để export.
+		- Cách 2 dùng module.exports để export một object chứa nhiều thuộc tính, ngắn gọn hơn khi export nhiều thứ.
+
+
+
+
+
+# 2. Export một mục (Single Export)
+	Dùng module.exports để export một giá trị duy nhất (hàm, class, object, v.v.).
+	Ví dụ: logger.js
+
+class Logger {
+  constructor(name) {
+    this.name = name;
+  }
+
+  log(message) {
+    console.log(`[${this.name}] ${message}`);
+  }
+
+  error(error) {
+    console.error(`[${this.name}] ERROR:`, error.message);
+  }
+}
+
+module.exports = Logger;
+
+
+	Logger: Class để log message với tên prefix.
+	module.exports = Logger: Export toàn bộ class để file khác có thể tạo instance.
+
+
+
+# 3. Sử dụng Custom Modules
+
+	Import module bằng require() với đường dẫn tương đối (./) hoặc tuyệt đối.
+	Ví dụ: app.js
+
+const http = require('http');
+const path = require('path');
+const { getCurrentDate, formatCurrency } = require('./utils');
+const Logger = require('./logger');
+
+const logger = new Logger('App');
+
+const server = http.createServer((req, res) => {
+  try {
+    logger.log(`Request received for ${req.url}`);
+    res.writeHead(200, { 'Content-Type': 'text/html' });
+    res.write(`<h1>Welcome to our app!</h1>`);
+    res.write(`<p>Current date: ${getCurrentDate()}</p>`);
+    res.write(`<p>Formatted amount: ${formatCurrency(99.99)}</p>`);
+    res.end();
+  } catch (error) {
+    logger.error(error);
+    res.writeHead(500, { 'Content-Type': 'text/plain' });
+    res.end('Internal Server Error');
+  }
+});
+
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+  logger.log(`Server running at http://localhost:${PORT}`);
+});
+
+
+	- require('./utils'): Import getCurrentDate và formatCurrency từ utils.js bằng destructuring.
+	- require('./logger'): Import class Logger và tạo instance.
+	- Server trả về HTML với ngày giờ và số tiền format, xử lý lỗi bằng try/catch.
+
+	Output (khi truy cập http://localhost:3000)
+
+[App] Server running at http://localhost:3000
+[App] Request received for /
+
+	Insight: Trong dự án thực tế, tổ chức module tốt là chìa khóa. Ví dụ, bạn có thể tạo thư mục utils/ chứa nhiều file như date.js, currency.js, và dùng index.js để re-export tất cả. Điều này giúp code modular và dễ scale.
+
+
+
+# Module Loading và Caching
+	Node.js có cơ chế caching để tối ưu hiệu suất:
+
+		Khi require() một module lần đầu, Node.js tải và thực thi nó, rồi lưu vào cache.
+		Các lần require() sau trả về instance từ cache, không reload file.
+
+	Ví dụ minh họa caching:
+
+// counter.js
+let count = 0;
+module.exports = {
+  increment: () => count++,
+  getCount: () => count,
+};
+
+// app.js
+const counter1 = require('./counter');
+const counter2 = require('./counter');
+
+counter1.increment();
+console.log(counter1.getCount()); // 1
+console.log(counter2.getCount()); // 1 (same instance)
+
+
+	Giải thích: Cả counter1 và counter2 trỏ đến cùng instance của module counter trong cache, nên count được chia sẻ.
+
+	## Module Resolution
+		Khi gọi require('<module>'), Node.js tìm module theo thứ tự:
+
+			- Core modules: fs, http, v.v.
+			- node_modules: Tìm trong thư mục node_modules (cục bộ hoặc global).
+			- Local files: Tìm file với đường dẫn tương đối (./) hoặc tuyệt đối.
+
+		Insight: Caching giúp tiết kiệm tài nguyên, nhưng có thể gây vấn đề nếu module lưu trạng thái (như count ở trên). Trong trường hợp cần instance mới mỗi lần require, bạn có thể export factory function hoặc xóa cache (hiếm dùng, bằng delete require.cache).
+
+
+
+# Best Practices (Thực hành tốt nhất)
+
+
+	## Module Organization 
+
+		- Single responsibility: Mỗi module chỉ nên làm một việc (e.g., utils.js chỉ xử lý tiện ích).
+		- Tên file/thư mục rõ ràng: Dùng tên như logger.js, utils/date.js để dễ hiểu.
+		- Nhóm chức năng liên quan: Tạo thư mục như controllers/, services/ trong dự án lớn.
+		- Dùng index.js: Là entry point của thư mục, re-export các module con:
+
+// utils/index.js
+module.exports = {
+  date: require('./date'),
+  currency: require('./currency'),
+};
+
+
+	## Export Patterns
+
+		- Named exports (exports.<tên>): Dùng cho utilities hoặc nhiều hàm.
+		- Default exports (module.exports = ...): Dùng cho class hoặc object chính.
+		- Document API: Dùng JSDoc để mô tả module:
+
+/**
+ * Formats a number as currency
+ * @param {number} amount - Amount to format
+ * @param {string} [currency=USD] - Currency code
+ * @returns {string} Formatted currency string
+ */
+const formatCurrency = (amount, currency = 'USD') => { ... };
+
+	Khởi tạo module nếu cần: Ví dụ, truyền config khi import:
+
+
+
+// db.js
+module.exports = (dbConfig) => {
+  return {
+    connect: () => console.log(`Connected to ${dbConfig.host}`),
+  };
+};
+
+// app.js
+const db = require('./db')({ host: 'localhost' });
+
+
+	Insight: Trong dự án lớn, tổ chức module theo feature (e.g., user/controller.js, user/service.js) thay vì type (e.g., controllers/user.js). Điều này giúp dễ scale và maintain. Dùng ESM trong dự án mới để tận dụng import/export và top-level await
+
+
+# Tổng kết và Lời khuyên
+	Modules là nền tảng của ứng dụng Node.js, giúp code có tổ chức và tái sử dụng. Key takeaways:
+
+
+		CommonJS: Dùng require và module.exports, phù hợp với core modules và dự án cũ.
+		Built-in modules: fs, http, path, v.v., là công cụ mạnh mẽ để xây dựng ứng dụng.
+		Custom modules: Tạo file .js và export bằng exports hoặc module.exports.
+		Caching: Module chỉ load một lần, lưu ý khi làm việc với trạng thái.
+		Best practices: Tổ chức module rõ ràng, dùng named/default exports hợp lý, document API.
+
+
+	## Ví dụ thực tế với Express: 
+	
+
+// routes/users.js
+const express = require('express');
+const router = express.Router();
+const { getCurrentDate } = require('../utils');
+
+router.get('/:id', (req, res) => {
+  res.json({
+    id: req.params.id,
+    lastAccess: getCurrentDate(),
+  });
+});
+
+module.exports = router;
+
+// app.js
+const express = require('express');
+const app = express();
+const userRoutes = require('./routes/users');
+
+app.use('/users', userRoutes);
+app.listen(3000, () => console.log('Server running'));
+
+
+
+</pre><a id='backBottom' href='../NodeJS-learning.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

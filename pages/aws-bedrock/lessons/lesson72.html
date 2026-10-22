@@ -1,0 +1,443 @@
+<!DOCTYPE html><html lang='vi'><head><meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0'>
+<title>Lesson 73 -- AIP-C01--=AgentCore Memory -//</title>
+<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css'>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js'></script>
+<script id='MathJax-script' async src='https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'></script>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; margin: 0; padding: 20px; transition: 0.3s; }
+.dark-mode { background-color: #121212; color: #e0e0e0; }
+.light-mode { background-color: #ffffff; color: #333333; }
+.container { max-width: 950px; margin: auto; }
+h1 { text-align: center; color: #3498db; margin: 20px 0; font-size: 26px; }
+.nav-bar { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 20px 0; }
+.nav-btn { text-decoration: none; padding: 10px 18px; background: #3498db; color: white; border-radius: 6px; font-weight: bold; font-size: 15px; display: inline-block; transition: 0.2s; }
+.nav-btn:hover { background: #2980b9; }
+.nav-btn.home-nav { background: #6c757d; }
+.nav-btn.home-nav:hover { background: #5a6268; }
+.nav-btn.disabled { background: #aaa; cursor: not-allowed; opacity: 0.5; }
+.done-btn { display: block; margin: 15px auto; padding: 10px 24px; border: 2px solid #2ecc71; background: transparent; color: #2ecc71; border-radius: 25px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+.done-btn.completed { background: #2ecc71; color: white; }
+.content-box { position: relative; margin: 20px 0; }
+pre { padding: 20px; border-radius: 8px; white-space: pre-wrap; word-break: break-word; overflow-x: auto; font-family: 'Consolas', 'Courier New', monospace; font-size: 15px; }
+.dark-mode pre { background: #1a1a1a; color: #f8f8f2; border: 1px solid #333; }
+.light-mode pre { background: #f8f9fa; color: #212529; border: 1px solid #e9ecef; }
+.copy-btn { position: absolute; top: 12px; right: 12px; padding: 6px 12px; font-size: 12px; background: #555; color: white; border: none; border-radius: 4px; cursor: pointer; opacity: 0.8; }
+.copy-btn:hover { opacity: 1; background: #2ecc71; }
+.theme-toggle-btn { display: block; margin: 20px auto; padding: 8px 16px; background: transparent; border: 1px solid #888; color: inherit; border-radius: 5px; cursor: pointer; }
+</style></head><body onload='initLesson()'>
+<div class='container'>
+<div class='nav-bar'><a class='nav-btn' href='lesson71.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../aws-bedrock-agent-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson73.html'>Bài sau ➡️</a></div><h1>Lesson 73 -- AIP-C01--=AgentCore Memory -//</h1>
+<button id='doneButton' class='done-btn' onclick='toggleDone()'>Mark as Done ⚪</button>
+<div class='content-box'>
+<button class='copy-btn' onclick='copyContent()'>📋 Copy nội dung</button>
+<pre><code id='lessonCode'>
+Bài này tập trung vào một vấn đề cốt lõi: Làm thế nào để một AI Agent ghi nhớ thông tin có ích từ những lần tương tác trước, sử dụng lại đúng lúc, nhưng không nhầm lẫn giữa các user, session hoặc dữ liệu đã lỗi thời?
+
+Hãy tưởng tượng Bảo xây dựng một LINE bot cho doanh nghiệp Nhật Bản để quản lý tiến độ công việc.
+- Hôm nay, nhân viên nói: “Dự án A phải hoàn thành trước ngày 30/11.”
+- Ngày mai, nhân viên hỏi: “Dự án A còn bao nhiêu ngày?”
+- Một tuần sau, họ nói: “Từ nay báo cáo tiến độ của tôi phải theo format 進捗・課題・対応策.”
+Một chatbot không có cơ chế lưu và truy xuất memory sẽ phải dựa vào context đang có trong request hiện tại. Khi lịch sử không còn trong context, nó có thể không biết deadline hoặc format đã thống nhất.
+
+AgentCore Memory giải quyết phần nào vấn đề này bằng cách cung cấp hạ tầng memory cho agent: lưu trữ thông tin từ tương tác, tổ chức thông tin thành các dạng memory và truy xuất chúng khi cần. Nó không khiến mô hình tự nhiên có trí nhớ hoàn hảo, cũng không thay thế database nghiệp vụ.
+
+
+
+# 1. Bản chất: Memory không đồng nghĩa với lịch sử chat
+
+	Đây là điểm quan trọng nhất cần nắm.
+	Một hệ thống agent thực tế có ít nhất bốn loại thông tin khác nhau:
+
+	Conversation history — lịch sử hội thoại
+		Những câu hỏi, câu trả lời và tool call trong một cuộc hội thoại. Dùng để hiểu mạch trao đổi hiện tại.
+
+
+	Agent memory — trí nhớ của agent
+		Thông tin được chọn lọc hoặc tổng hợp từ những tương tác trước, có thể được truy xuất trong session hiện tại hoặc các session sau.
+
+	Business state — trạng thái nghiệp vụ
+		Deadline, số tiền, trạng thái đơn hàng, quyền phê duyệt, tiến độ chính thức. Nguồn dữ liệu chuẩn phải là hệ thống nghiệp vụ.
+
+
+	Knowledge Base — tri thức tài liệu
+		Quy trình, quy định, tài liệu hướng dẫn và thông tin được tìm kiếm thông qua RAG.
+
+
+	Ví dụ: người dùng từng nói deadline là ngày 30/11, nhưng sau đó dự án được cập nhật thành ngày 05/12 trong hệ thống quản lý dự án.
+
+		Nếu memory vẫn chứa ngày 30/11, agent không được phép xem nó là sự thật mới nhất. Nó phải lấy deadline hiện tại từ hệ thống nghiệp vụ.
+
+		Quy tắc production: Memory giúp agent hiểu bối cảnh và cá nhân hóa hành vi; database nghiệp vụ mới là nguồn có thẩm quyền đối với trạng thái nghiệp vụ.
+
+
+
+
+
+# 2. Kiến trúc AgentCore Memory: Short-term và Long-term
+
+	Amazon Bedrock AgentCore Memory phân biệt hai lớp memory chính.
+
+
+
+
+	Short-term memory
+		Raw events · Session context
+		Lưu các sự kiện tương tác nguyên bản: tin nhắn người dùng, phản hồi của agent và những thông tin được ứng dụng ghi lại trong session.
+		Ví dụ: toàn bộ diễn biến trao đổi về dự án A hôm nay.
+		
+					↓↑
+		Memory strategies: trích xuất và tổng hợp
+
+	Long-term memory
+		Structured memory records · Cross-session retrieval
+		Lưu các thông tin được chọn lọc từ tương tác, chẳng hạn sở thích, sự kiện đáng nhớ, kiến thức thực tế hoặc bản tóm tắt hội thoại.
+		Ví dụ: người dùng thích báo cáo theo format 進捗・課題・対応策.
+
+
+
+
+
+	## 2.1. Short-term memory: lưu sự kiện, không phải tự động hiểu mọi thứ
+
+	Đơn vị cơ bản của short-term memory là event.
+
+	Một event có thể chứa một tin nhắn hoặc một hoạt động được ghi lại trong quá trình agent thực thi. Mỗi event được gắn với actor và session, có dấu thời gian và không bị chỉnh sửa trực tiếp sau khi tạo.
+
+
+Ví dụ:
+
+| Event | Nội dung                                                     |
+| ----- | ------------------------------------------------------------ |
+| E1    | User: Dự án A đang chậm tiến độ.                             |
+| E2    | Agent: Nguyên nhân là gì?                                    |
+| E3    | User: API bên ngoài chưa ổn định.                            |
+| E4    | Agent: Tôi sẽ ghi nhận rủi ro và đề xuất phương án dự phòng. |
+
+
+
+	Khi người dùng tiếp tục cùng cuộc hội thoại, ứng dụng có thể truy xuất các event của session để xây dựng lại context.
+
+	Nhưng cần phân biệt hai việc:
+	- Lưu lịch sử: ghi lại điều gì đã xảy ra.
+	- Suy luận: hiểu nguyên nhân, xác định rủi ro và quyết định hành động tiếp theo.
+	Lưu event không tự động khiến Memory trở thành một hệ thống phân tích dự án. Agent vẫn cần model, logic orchestration và dữ liệu nghiệp vụ thích hợp.
+
+
+
+# 2.2. Long-term memory: chọn lọc điều đáng nhớ
+
+
+	Nếu giữ nguyên mọi câu nói làm context dài hạn, hệ thống sẽ tốn chi phí, khó truy xuất và dễ mang theo thông tin không còn hữu ích.
+
+	Long-term memory giải quyết vấn đề đó bằng các memory strategy. Các strategy có thể trích xuất thông tin, hợp nhất thông tin mới với record hiện có và trong một số strategy tạo ra insight từ nhiều trải nghiệm. Quá trình xử lý long-term memory là bất đồng bộ, nên không nên giả định rằng một event vừa ghi đã lập tức trở thành memory record có thể truy xuất.
+
+
+
+	Memory có thể tổng hợp thành:
+	Người dùng ưu tiên báo cáo ngắn, đặt 進捗 trước, sau đó trình bày 課題 và 対応策.
+
+	Đây là thông tin hữu ích cho các session tương lai. Nó không cần chứa nguyên văn mọi câu nói đã tạo ra insight đó.
+
+	Điểm cần nhớ cho kỳ thi: Short-term thiên về ghi lại tương tác; long-term thiên về trích xuất và truy xuất thông tin có ích qua nhiều session. Long-term memory không đơn giản chỉ là giữ nguyên lịch sử chat lâu hơn.
+
+
+
+
+# 3. Memory strategies: chọn loại trí nhớ theo requirement
+
+	AgentCore Memory hỗ trợ các built-in strategy cho các mục tiêu khác nhau. Ngoài ra, AWS hỗ trợ tùy chỉnh strategy có sẵn và xây dựng strategy tự quản lý.
+
+
+
+
+| Strategy          | Mục đích                                           | Ví dụ                                                    |
+| ----------------- | -------------------------------------------------- | -------------------------------------------------------- |
+| `SEMANTIC`        | Trích xuất facts và kiến thức có ý nghĩa           | Dự án A dùng API phiên bản 2.1                           |
+| `SUMMARIZATION`   | Tạo bản tóm tắt diễn biến hội thoại                | Tóm tắt các vấn đề và quyết định của session             |
+| `USER_PREFERENCE` | Ghi nhớ sở thích và cách người dùng muốn tương tác | Ưa chuộng báo cáo ngắn bằng tiếng Nhật                   |
+| `EPISODIC`        | Ghi nhớ các trải nghiệm hoặc sự kiện đáng chú ý    | Một lần triển khai thất bại do timeout và bài học rút ra |
+
+
+
+
+	Semantic memory — “Biết điều gì”.
+		Ví dụ: hệ thống nội bộ sử dụng PostgreSQL 16. Đây là một fact có thể hữu ích trong nhiều lần trao đổi.
+
+	Episodic memory — “Đã xảy ra chuyện gì”.
+		Ví dụ: lần triển khai ngày 15/10 thất bại do migration schema không tương thích. Điều đáng nhớ là một sự kiện cùng bối cảnh và kết quả.
+
+	User preference memory — “Người dùng thích hoặc yêu cầu điều gì”.
+		Ví dụ: người dùng muốn giải thích bằng tiếng Việt trước, sau đó mới trình bày thuật ngữ tiếng Nhật.
+
+	Không nên cố biến tất cả thành một loại memory. Một sở thích, một fact kỹ thuật và một sự kiện triển khai có yêu cầu trích xuất cũng như truy xuất khác nhau.
+
+
+
+
+Khi nào dùng built-in, override hay self-managed?
+
+
+	Built-in strategies(Ưu tiên khi phù hợp)
+		Dùng khi mục tiêu phổ biến như tóm tắt, ghi nhớ facts hoặc sở thích và bạn muốn giảm công sức vận hành pipeline trích xuất.
+
+	Built-in with overrides
+		Dùng khi muốn giữ pipeline của AWS nhưng điều chỉnh hướng dẫn trích xuất hoặc chọn model cho các bước được hỗ trợ. Cần cấu hình execution role phù hợp; việc gọi model cho các bước này có thể phát sinh chi phí riêng.
+
+	Self-managed strategies
+		Dùng khi cần tự kiểm soát pipeline, schema record, cách trích xuất/hợp nhất hoặc tích hợp với logic nghiệp vụ riêng. Đổi lại, đội ngũ phải tự xây dựng và vận hành nhiều thành phần hơn.
+
+
+
+
+	## AWS mô tả rõ các trade-off này trong tài liệu strategy.
+
+		Production recommendation: Bắt đầu bằng built-in strategy phù hợp, đo chất lượng memory thực tế rồi mới chuyển sang custom nếu có yêu cầu cụ thể. Không nên tự xây một memory pipeline phức tạp chỉ vì muốn kiểm soát mọi thứ ngay từ đầu.
+
+# 4. Actor, Session, Namespace — ba khái niệm phải phân biệt
+
+	Đây là phần dễ xuất hiện dưới dạng bẫy trong câu hỏi thiết kế hệ thống.
+
+
+	Actor ID — Ai đang tương tác?
+		Định danh người dùng hoặc thực thể tương tác. Ví dụ: employee-104.
+
+	Session ID — Cuộc tương tác nào?
+		Gom các event thuộc cùng một phiên. Ví dụ: session-2026-10-21-001.
+
+	Namespace — Memory được tổ chức ở đâu?
+		Phân chia các long-term memory records theo cấu trúc logic, chẳng hạn theo actor hoặc nhóm thông tin.
+
+
+	AWS dùng actorId và sessionId để tổ chức short-term events; long-term records được tổ chức thông qua namespace gắn với strategy.
+
+
+	Ví dụ cấu trúc minh họa:
+
+
+Memory resource
+├── Actor: employee-104
+│   ├── Session: session-A
+│   │   ├── Event 1
+│   │   └── Event 2
+│   └── Session: session-B
+│       └── Event 3
+└── Long-term memory namespace
+    └── /users/employee-104/preferences/
+        └── Report format preference
+
+	Đây là sơ đồ logic minh họa, không phải khẳng định rằng mọi strategy đều mặc định sử dụng đúng namespace này.
+
+
+
+# Bẫy: Session ID không phải User ID
+
+
+	Nếu mỗi lần người dùng mở LINE bot, hệ thống tạo một session mới thì session mới vẫn phải truy xuất được những long-term memories thuộc về đúng người đó.
+
+	Vì vậy:
+	- actorId ổn định qua các session của cùng một người.
+	- sessionId phân biệt từng phiên tương tác.
+	- Namespace phải được thiết kế nhất quán với cách tổ chức và truy xuất memory.
+	
+	Không nên sử dụng một actorId chung cho tất cả người dùng. Điều đó có thể làm sai phạm vi truy xuất và tạo nguy cơ rò rỉ dữ liệu giữa các user.
+
+
+
+
+# 5. Luồng xử lý trong production
+	Một hệ thống AgentCore Memory có thể vận hành theo luồng sau:
+
+
+
+	1. LINE / Web / API
+		Nhận request và xác thực user
+
+	2. Agent chạy trên AgentCore Runtime
+		Tạo context, gọi model và quyết định có dùng tool không
+
+	3. Retrieve memory
+		Lấy lịch sử session và long-term records phù hợp
+
+	4. LLM + tools + business APIs
+		Suy luận, truy vấn dữ liệu chuẩn và thực hiện nghiệp vụ
+
+	5. Save interaction events
+		Ghi lại tương tác; strategy xử lý long-term memory bất đồng bộ
+
+	Đây là kiến trúc tham khảo, không phải một chuỗi bắt buộc mà AgentCore tự động thực hiện trong mọi ứng dụng. Việc truy xuất, ghi event và đưa memory vào prompt phụ thuộc vào cách tích hợp. Với AgentCore harness có hỗ trợ memory, một số bước quản lý context có thể được thực hiện tự động theo cấu hình.
+
+
+
+# Thiết kế cho LINE bot quản lý tiến độ
+	Giả sử Bảo triển khai bot phục vụ 200 doanh nghiệp vừa và nhỏ, mỗi doanh nghiệp có nhiều nhân viên
+
+
+	Amazon API Gateway / Lambda: tiếp nhận webhook LINE, xác minh request và xử lý logic tích hợp.
+	Amazon Bedrock AgentCore Runtime: chạy agent và orchestration.
+	Amazon Bedrock AgentCore Memory: lưu interaction events và các long-term memories.
+	Amazon Bedrock: cung cấp foundation model để suy luận, tóm tắt hoặc trích xuất memory khi được cấu hình sử dụng.
+	Amazon Aurora PostgreSQL hoặc cơ sở dữ liệu nghiệp vụ phù hợp: lưu trạng thái dự án chính thức, deadline và quyền phê duyệt.
+	AWS IAM và các cơ chế authorization của ứng dụng: giới hạn quyền truy cập tool, memory và dữ liệu theo tenant.
+
+
+Ví dụ khi user hỏi: “Dự án A đang thế nào?”
+	1. Agent nhận diện user và tenant từ danh tính đã được xác minh, không tin mù quáng vào actorId do client tự gửi.
+	2. Agent truy xuất memory liên quan để biết ngữ cảnh trao đổi trước đó.
+	3. Agent gọi business API để lấy tiến độ và deadline mới nhất.
+	4. Model kết hợp bối cảnh với dữ liệu nghiệp vụ để tạo câu trả lời.
+	5. Ứng dụng ghi lại tương tác theo chính sách retention; long-term strategy có thể trích xuất insight để sử dụng về sau.
+
+
+
+# Tại sao phải có cả Memory lẫn database? 
+
+	Memory giúp biết rằng dự án từng gặp lỗi API timeout. Database cho biết tiến độ chính thức hiện tại là 70%. Hai thông tin bổ sung cho nhau, nhưng không thay thế nhau.
+
+
+
+# 6. Trade-off: Cost, latency, accuracy, security
+
+
+
+| Yếu tố                 | Chi phí hoặc rủi ro                                                   | Cách kiểm soát                                                                    |
+| ---------------------- | --------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| Cost                   | Ghi nhiều event, lưu lâu và trích xuất memory đều có thể tăng chi phí | Giới hạn retention, chọn strategy theo nhu cầu, đo chi phí trên mỗi user          |
+| Latency                | Truy xuất memory hoặc chờ model tổng hợp làm tăng thời gian phản hồi  | Giới hạn số record, truy xuất song song khi phù hợp, xử lý trích xuất bất đồng bộ |
+| Accuracy               | Memory sai, mâu thuẫn hoặc lỗi thời khiến agent trả lời sai           | Xác minh dữ liệu nghiệp vụ, quản lý cập nhật và đo chất lượng retrieval           |
+| Scalability            | Nhiều user và event làm tăng tải ghi/đọc, cũng như áp lực lên model   | Theo dõi throughput, quota, tải và độ trễ; kiểm thử ở quy mô dự kiến              |
+| Security               | Rò rỉ giữa user hoặc tenant; lưu thông tin nhạy cảm không cần thiết   | Identity đã xác minh, authorization, namespace phù hợp, retention và encryption   |
+| Operational complexity | Tự xây pipeline tăng công sức vận hành và debug                       | Dùng built-in trước, custom hóa khi có requirement đo được                        |
+
+
+	AgentCore Memory hỗ trợ cấu hình thời gian lưu raw events và mã hóa; AWS cho biết raw events có thể được cấu hình retention tối đa 365 ngày. Thay đổi thời hạn có hiệu lực đối với event được ghi sau đó, không tự động sửa thời hạn của các event cũ.
+
+
+
+# Một bẫy quan trọng: Long-term memory không nhất thiết cập nhật ngay
+
+
+	Giả sử user vừa nói: “Tôi không còn muốn báo cáo ngắn nữa; từ nay cần báo cáo chi tiết.”
+		Ứng dụng có thể ghi event thành công nhưng quá trình trích xuất và hợp nhất long-term memory vẫn đang chạy.
+		Nếu request tiếp theo lập tức truy xuất memory, record cũ có thể vẫn xuất hiện.
+		Đối với những thay đổi quan trọng, không nên dựa hoàn toàn vào pipeline trích xuất bất đồng bộ. Hãy xác định rõ đâu là dữ liệu phải cập nhật đồng bộ, đâu là insight có thể cập nhật sau.
+
+
+	Ví dụ:
+	- Thay đổi tùy chọn hiển thị: cập nhật preference có cấu trúc ngay trong hệ thống ứng dụng nếu cần hiệu lực tức thời.
+	- Thay đổi deadline chính thức: cập nhật business database qua API có kiểm tra quyền.
+	- Tóm tắt một cuộc họp: có thể tạo và hợp nhất memory bất đồng bộ.
+
+
+
+# 7. Exam Knowledge — keywords và trap của AIP-C01
+
+
+| Keyword trong scenario               | Hướng suy luận                                |
+| ------------------------------------ | --------------------------------------------- |
+| Maintain context across turns        | Short-term memory và session ID               |
+| Personalization across sessions      | Long-term memory và actor ID                  |
+| Extract key facts from conversations | Semantic memory strategy                      |
+| Remember user preferences            | User preference strategy                      |
+| Summarize previous interactions      | Summarization strategy                        |
+| Retrieve relevant past information   | Retrieve memory records phù hợp với query     |
+| Control memory retention             | Event expiration/retention configuration      |
+| Different users or tenants           | Actor scoping, namespace và authorization     |
+| Custom extraction logic              | Built-in overrides hoặc self-managed strategy |
+
+
+
+
+Những đáp án nghe hợp lý nhưng có thể sai
+	1. “Bật long-term memory là đủ để ghi nhớ mọi thứ ngay lập tức.” Sai vì trích xuất và hợp nhất có thể bất đồng bộ; chất lượng còn phụ thuộc strategy.
+
+	2. “Dùng cùng session ID là cách tốt nhất để nhận diện một người dùng qua nhiều ngày.” Sai về thiết kế định danh: session biểu diễn phiên, actor biểu diễn thực thể tương tác.
+
+	3. “Memory là nơi lưu trạng thái đơn hàng chính thức.” Sai nếu không có cơ chế nghiệp vụ bảo đảm tính nhất quán, cập nhật và authorization phù hợp.
+
+	4. “Namespace bảo đảm tuyệt đối rằng không có rò rỉ dữ liệu.” Sai. Namespace giúp tổ chức và giới hạn phạm vi logic, nhưng không thay thế authentication và authorization.
+
+	5. “Self-managed luôn tốt hơn built-in vì kiểm soát được nhiều hơn.” Sai. Kiểm soát tăng đồng nghĩa với công sức triển khai, kiểm thử, vận hành và trách nhiệm bảo trì tăng.
+
+	6. “Lưu tất cả lịch sử chat vô thời hạn sẽ cải thiện độ chính xác.” Sai. Context dài hơn không đồng nghĩa với grounding tốt hơn; retention, truy xuất liên quan và tính mới của thông tin mới là các yếu tố cần quản lý.
+
+
+
+# 9. Tóm tắt để ghi nhớ lâu
+
+	Short-term = Chuyện gì vừa xảy ra?
+		Lưu events để duy trì hoặc khôi phục context.
+
+	Long-term = Điều gì đáng nhớ?
+		Trích xuất facts, summaries, preferences hoặc episodes để tái sử dụng.
+
+	Actor = Ai?
+		Phạm vi nhận diện thực thể tương tác.
+
+	Session = Phiên nào?
+		Phạm vi một cuộc tương tác.
+
+	Namespace = Tổ chức memory ở đâu?
+		Cấu trúc logic để phân chia và truy xuất records.
+
+	Business database = Sự thật nghiệp vụ hiện tại là gì?
+		Nguồn chuẩn cho deadline, đơn hàng, trạng thái giao dịch và các dữ liệu cần tính nhất quán.
+
+	Câu chốt để nhớ: AgentCore Memory giúp agent không phải bắt đầu lại từ đầu, nhưng kiến trúc production vẫn phải tự bảo đảm danh tính, quyền truy cập, độ mới và tính đúng đắn của dữ liệu.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</code></pre>
+</div>
+<div class='nav-bar'><a class='nav-btn' href='lesson71.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../aws-bedrock-agent-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson73.html'>Bài sau ➡️</a></div><button class='theme-toggle-btn' onclick='toggleTheme()'>🌓 Đổi Giao Diện</button>
+</div>
+<script>
+const lessonKey = 'aws-bedrock-agent-learning-list_lesson72.html';
+function toggleTheme() {
+   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';
+   document.body.className = mode;
+   localStorage.setItem('theme', mode);
+}
+function toggleDone() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   if (isDone) {
+       localStorage.removeItem(lessonKey);
+   } else {
+       localStorage.setItem(lessonKey, 'done');
+   }
+   renderDoneStatus();
+}
+function renderDoneStatus() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   let btn = document.getElementById('doneButton');
+   if (isDone) {
+       btn.className = 'done-btn completed';
+       btn.innerText = 'Đã Hoàn Thành ✅';
+   } else {
+       btn.className = 'done-btn';
+       btn.innerText = 'Đánh dấu đã học ⚪';
+   }
+}
+function copyContent() {
+   let text = document.getElementById('lessonCode').innerText;
+   navigator.clipboard.writeText(text).then(function() {
+       alert('✅ Đã sao chép nội dung bài học!');
+   });
+}
+function initLesson() {
+   document.body.className = localStorage.getItem('theme') || 'dark-mode';
+   renderDoneStatus();
+   if (window.Prism) Prism.highlightAll();
+}
+</script></body></html>

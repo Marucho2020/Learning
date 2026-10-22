@@ -1,0 +1,44 @@
+<html><head><title>Lesson 14 == Try-catch ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 14 -- Try-catch -//</h1><pre>	Catch có thể bắt toàn bộ các class Exception và class con của nó -> NHƯNG KHÔNG THỂ BẮT ĐƯỢC OBJECT 
+	
+	Có 2 cách để ngăn chặn lỗi xảy ra ở một method : 1> Cho khối code có khả năng xảy ra lỗi trong method đó vào try-catch ,
+													2> Đặt Throws vào chỗ gọi hàm đó để bắt lỗi khi gọi hàm 
+													
+	- Khi bắt ngoại lệ từ 1 hàm , chỉ có thể bắt được chính ngoại lệ được ném ra hoặc CLASS CHA của ngoại lệ đó-> KHÔNG THỂ BẮT BẰNG NGOẠI LỆ CLASS CON ĐƯỢC VÌ SẼ BỊ SÓT  
+	
+	- Bắt buộc phải có try-catch khi gọi đến các method CheckedException, Và KHÔNG BẮT BUỘC khi gọi đến các method UncheckedException
+	
+	
+
+	# exception hierarchy 
+		- Khi viết khối try-catch bắt buộc phải viết theo thứ tự cây phân cấp trở lên, tức là class con, rồi class cha ... TUYỆT ĐỐI K ĐƯỢC VIẾT NGƯỢC NHƯ VÍ DỤ DƯỚI ĐÂY 
+		- Đối với các class ngoại lệ KHÔNG có quan hệ kế thừa thì viết thứ tự nào cũng được không quan trọng  
+		- Tại sao : Lỗi này liên quan đến tính chất đa hình(polimorphism) và cấu trúc kế thừa inheritance trong hệ thống ngoại lệ của Java ,Khối catch đầu tiên phù hợp được thực thi thì các khối sau sẽ được bỏ qua, vì vậy nó sẽ dễ dẫn tới việc có thể không thực hiện đúng chính xác ngoại lệ đang xảy ra vì nó thực  hiện vào lớp cha và thoát mất rồi, còn lớp chính xác hơn nằm ở dưới sẽ bị bỏ qua . -> Đảm bảo tính chính xác và tính dự đoán của chương trình  
+		- Nó còn giúp ngăn lỗi logic (unreachable code) , Tránh trường hợp ngoại lệ bị nuốt bởi khối cha 
+		- Tăng tính minh bạch và giúp mã dễ đọc, dễ bảo trì  
+		
+	### e.g lỗi 	
+	public static void main(String[] args){
+		try{
+			String a ;
+		}catch(Exception e){					// Exception là class cha 
+			e.printStackTrace();
+		}catch(RuntimeException e) {			// RuntimeException là class con của nó, viết theo thứ tự này sẽ lỗi 
+			e.printStackTrace();
+		}
+	
+	}
+	
+	### e.g đúng  
+		public static void main(String[] args){
+		try{
+			String a ;
+		}catch(RuntimeException e){					//  RuntimeException là class con của Exception nên phải viết trước
+			e.printStackTrace();
+		}catch(Exception e) {						// Exception là class cha nên phải viết sau 
+			e.printStackTrace();
+		}
+	
+	}
+	
+	
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

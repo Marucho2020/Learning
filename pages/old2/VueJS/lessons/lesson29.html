@@ -1,0 +1,200 @@
+<html><head><title>Lesson 29 == Scoped Slots trong Vue 3 ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../vue-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 29 -- Scoped Slots trong Vue 3 -//</h1><pre>
+# Khái niệm 
+	Trong Vue 3, scoped slots được cải tiến với cú pháp v-slot thống nhất và ngắn gọn hơn, sử dụng # thay cho v-slot. Scoped slots trong Vue 3 cũng tương tự Vue 2, nhưng có một số điểm khác biệt về cú pháp và cách tổ chức.
+
+# Điểm khác biệt chính so với Vue 2 
+
+	## Cú pháp ngắn gọn:
+		Vue 2: slot-scope="{ data }" hoặc v-slot="{ data }"
+		Vue 3: v-slot="{ data }" hoặc #default="{ data }"
+
+	## Thống nhất v-slot: 
+		Vue 3 chỉ dùng v-slot (hoặc #) cho cả default slots và named slots, loại bỏ slot và slot-scope của Vue 2.
+
+	## Hỗ trợ tốt hơn trong Single File Components: Scoped slots dễ dàng tích hợp với các công cụ như Vite hoặc Vue CLI. 
+	
+# Ví dụ Scoped Slots trong Vue 3
+
+	Giả sử bạn có một component todo-list với danh sách công việc, và component cha muốn tùy chỉnh cách hiển thị từng công việc.	
+
+	## Component Con (TodoList.vue) 
+		
+<template>
+  <div>
+    <h2>Todo List</h2>
+    <ul>
+      <li v-for="todo in todos" :key="todo.id">
+        <slot :todo="todo" :toggle="toggleTodo">
+          {{ todo.text }} ({{ todo.done ? 'Done' : 'Pending' }})
+        </slot>
+      </li>
+    </ul>
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      todos: [
+        { id: 1, text: 'Learn Vue', done: false },
+        { id: 2, text: 'Build app', done: true },
+        { id: 3, text: 'Deploy app', done: false }
+      ]
+    };
+  },
+  methods: {
+    toggleTodo(todo) {
+      todo.done = !todo.done; // Đổi trạng thái done
+    }
+  }
+};
+</script>
+
+	Component con truyền hai dữ liệu qua slot:
+	:todo="todo": Object chứa thông tin công việc (id, text, done).
+	:toggle="toggleTodo": Hàm để thay đổi trạng thái done.
+
+
+	## Component Cha
+	
+<template>
+  <div>
+    <todo-list>
+      <template #default="{ todo, toggle }">
+        <div>
+          <input type="checkbox" :checked="todo.done" @change="toggle(todo)">
+          <span :style="{ textDecoration: todo.done ? 'line-through' : 'none' }">
+            {{ todo.text }}
+          </span>
+        </div>
+      </template>
+    </todo-list>
+  </div>
+</template>
+
+<script>
+import TodoList from './TodoList.vue';
+
+export default {
+  components: { TodoList }
+};
+</script>	
+	
+	
+	Cú pháp #default: Đây là cách viết ngắn gọn của v-slot:default trong Vue 3.
+	Component cha nhận todo và toggle từ scoped slot, sử dụng để
+		Hiển thị checkbox với trạng thái todo.done.
+		Gọi hàm toggle(todo) khi checkbox thay đổi.
+		Áp dụng style gạch ngang nếu todo.done là true.
+
+
+	## Kết quả HTML
+<div>
+  <h2>Todo List</h2>
+  <ul>
+    <li>
+      <div>
+        <input type="checkbox">
+        <span>Learn Vue</span>
+      </div>
+    </li>
+    <li>
+      <div>
+        <input type="checkbox" checked>
+        <span style="text-decoration: line-through;">Build app</span>
+      </div>
+    </li>
+    <li>
+      <div>
+        <input type="checkbox">
+        <span>Deploy app</span>
+      </div>
+    </li>
+  </ul>
+</div>	
+	
+	
+	## Giải thích 
+		Nhiều dữ liệu: Component con truyền cả object todo và hàm toggleTodo, cho phép component cha tùy chỉnh giao diện và tương tác.
+		
+		Vue 3 cú pháp: #default="{ todo, toggle }" ngắn gọn và rõ ràng hơn Vue 2.
+		
+		Tương tác động: Component cha có thể gọi toggle(todo) để cập nhật trạng thái trong component con, nhờ hàm được truyền qua slot.
+	
+	
+# 3. Named Scoped Slots trong Vue 3	
+	Nếu component con có nhiều slot, bạn có thể dùng named scoped slots để truyền dữ liệu cho từng slot cụ thể.
+	
+	
+	## Component Con 
+<template>
+  <div>
+    <slot name="header" :title="title"></slot>
+    <slot :items="items"></slot> <!-- Default slot -->
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      title: 'My App',
+      items: ['Item 1', 'Item 2', 'Item 3']
+    };
+  }
+};
+</script>
+
+
+	## 	Component Cha
+<template>
+  <div>
+    <child-component>
+      <template #header="{ title }">			// chỉ định slot có name="header"
+        <h1>{{ title }}</h1>
+      </template>
+      <template #default="{ items }">			// chỉ định slot không có name và chỉ định nó là #default 
+        <ul>
+          <li v-for="item in items">{{ item }}</li>
+        </ul>
+      </template>
+    </child-component>
+  </div>
+</template>
+
+<script>
+import ChildComponent from './ChildComponent.vue';
+
+export default {
+  components: { ChildComponent }
+};
+</script>	
+	
+	Kết quả
+	Slot header hiển thị: <h1>My App</h1>.
+	Slot mặc định hiển thị danh sách: <ul><li>Item 1</li><li>Item 2</li><li>Item 3</li></ul>.
+	
+	
+	
+# 	4. Lưu ý quan trọng 
+
+	- Cú pháp Vue 3: Luôn dùng v-slot hoặc # cho scoped slots. Vue 3 không hỗ trợ slot-scope như Vue 2.
+	- Truyền nhiều dữ liệu: Scoped slots có thể truyền bất kỳ số lượng dữ liệu nào (object, hàm, số, chuỗi, v.v.) qua v-bind.
+	- Hiệu suất: Scoped slots không ảnh hưởng nhiều đến hiệu suất, nhưng cần cẩn thận khi truyền hàm hoặc dữ liệu phức tạp trong ứng dụng lớn.
+	- Tương thích với <slot> mặc định: Nếu component cha không cung cấp nội dung cho slot, nội dung mặc định trong <slot> sẽ được dùng.	
+	
+	
+# 	5. Ứng dụng thực tế
+	Danh sách động: Dùng scoped slots để hiển thị danh sách (bảng, menu, card) với giao diện tùy chỉnh.
+	Form tùy chỉnh: Component con cung cấp dữ liệu form, component cha quyết định cách hiển thị các trường.
+	Component giao diện: Tạo modal, card, hoặc layout mà component cha có thể tùy chỉnh nội dung và hành vi.
+	
+# 	6. Tóm tắt
+
+	Scoped Slots với nhiều dữ liệu: Component con truyền nhiều dữ liệu (object, hàm, v.v.) qua <slot :key="value">, component cha nhận bằng v-slot="{ key }".
+	Vue 3: Cú pháp v-slot hoặc # ngắn gọn, thống nhất cho default và named slots.
+	Linh hoạt: Cho phép component cha tùy chỉnh giao diện và logic dựa trên dữ liệu từ component con.
+	Ứng dụng: Tăng tính tái sử dụng và linh hoạt cho các component phức tạp.
+	
+</pre><a id='backBottom' href='../vue-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

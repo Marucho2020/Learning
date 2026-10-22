@@ -1,0 +1,196 @@
+<html><head><title>Lesson 19 == Linear Regression ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../DataScience-learning.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 19 -- Linear Regression -//</h1><pre>
+# 1. Khái niệm Hồi quy Tuyến tính
+
+	Định nghĩa: Hồi quy tuyến tính tìm mối quan hệ tuyến tính giữa một hoặc nhiều biến độc lập (explanatory variables) và một biến phụ thuộc (response variable). Mục tiêu là xây dựng một mô hình để dự đoán giá trị của biến phụ thuộc dựa trên các biến độc lập.
+
+		Công thức: y = slope.x + intercept  (cho hồi quy tuyến tính đơn giản với một biến độc lập).
+
+	Trong đó:
+
+			y : Biến phụ thuộc (ví dụ: Calorie_Burnage).
+			x : Biến độc lập (ví dụ: Average_Pulse).
+			Slope (độ dốc): Cho biết y thay đổi bao nhiêu khi x tăng 1 đơn vị.
+			Intercept (hệ số chặn): Giá trị của y khi x = 0 .
+
+
+
+	Phương pháp bình phương tối thiểu (Least Square Method):
+
+		- Mục tiêu: Vẽ một đường thẳng sao cho tổng bình phương khoảng cách (residuals) từ các điểm dữ liệu đến đường thẳng là nhỏ nhất.
+		- Residuals: Khoảng cách dọc từ mỗi điểm dữ liệu đến đường hồi quy, còn gọi là "lỗi" (errors).
+
+
+	Ý nghĩa: Hồi quy tuyến tính được sử dụng để:
+
+		- Hiểu mối quan hệ giữa các biến (ví dụ: Average_Pulse và Calorie_Burnage có liên quan không?).
+		- Dự đoán giá trị (ví dụ: dự đoán Calorie_Burnage dựa trên Average_Pulse và Duration).
+
+
+
+
+
+
+# 2. Dữ liệu Ví dụ
+
+	Bài học sử dụng tập dữ liệu full_health_data (từ file data.csv), nhưng không cung cấp chi tiết. Từ các bài trước, chúng ta có dữ liệu mẫu nhỏ (10 quan sát) để minh họa:
+
+Duration,Average_Pulse,Max_Pulse,Calorie_Burnage,Hours_Work,Hours_Sleep
+30,80,120,240,10,7
+30,85,120,250,10,7
+45,90,130,260,8,7
+45,95,130,270,8,7
+45,100,140,280,0,7
+60,105,140,290,7,8
+60,110,145,300,7,8
+60,115,145,310,8,8
+75,120,150,320,0,8
+75,125,150,330,8,8
+
+
+	Lưu ý: Trong dữ liệu mẫu này, có tương quan hoàn hảo ($ r = 1 $) giữa Average_Pulse và Calorie_Burnage, nhưng bài học cho biết trong full_health_data, tương quan rất thấp ($ r = 0.02 $). Điều này cho thấy full_health_data có nhiều quan sát hơn và phức tạp hơn. Tôi sẽ sử dụng dữ liệu mẫu để minh họa, nhưng cũng giải thích dựa trên ngữ cảnh full_health_data.
+
+
+
+
+# 3. Hồi quy Tuyến tính với Một Biến Độc lập (Average_Pulse)
+
+	Phương pháp Bình phương Tối thiểu
+
+		Mục tiêu: Tìm đường thẳng y = slope.x + intercept sao cho tổng bình phương residuals nhỏ nhất.
+
+		Residual: $ \text{Residual}_i = y_i - (\text{slope} \cdot x_i + \text{intercept}) $.
+		
+		Công thức tính slope và intercept:
+		
+		
+			$$\text{slope} = \frac{\sum (x_i - \bar{x})(y_i - \bar{y})}{\sum (x_i - \bar{x})^2}$$
+			$$\text{intercept} = \bar{y} - \text{slope} \cdot \bar{x}$$		
+		
+		
+		Tính Thủ Công (Dữ liệu Mẫu)	
+			Dùng dữ liệu mẫu để tính hồi quy tuyến tính giữa Average_Pulse ($ x $) và Calorie_Burnage ($ y $).
+		
+		
+		Bước 1: Tính trung bình:	
+			Average_Pulse: = 102.5
+			Calorie_Burnage: = 285 
+		
+		
+		Bước 2: Tính slope:
+			$\text{slope} = \frac{\sum (x_i - \bar{x})(y_i - \bar{y})}{\sum (x_i - \bar{x})^2}$
+		
+			slope = \frac{4115}{2062.5} = 2
+		
+			
+		
+		Bước 3: Tính intercept:
+			intercept = 285 - 2 .  102.5 = 285 - 205 = 80
+		
+		
+		Mô hình:  y = 2x + 80 .	
+		
+		Hệ số tương quan (r): Từ bài trước, $ r = 1 $, cho thấy mối quan hệ tuyến tính hoàn hảo trong dữ liệu mẫu.
+		
+		Dự đoán: Với $ x = 100 $ (Average_Pulse), $ y = 2 \cdot 100 + 80 = 280 $ (Calorie_Burnage), khớp với dữ liệu.
+		
+		Lưu ý: Trong full_health_data, $ r = 0.02 $, cho thấy mô hình hồi quy với chỉ Average_Pulse sẽ không chính xác, vì mối quan hệ tuyến tính yếu.
+		
+
+
+# 4. Minh Họa Với Python (Sử Dụng Scipy và Matplotlib)
+
+	Bài học sử dụng hàm stats.linregress từ Scipy để thực hiện hồi quy tuyến tính và vẽ scatter plot với đường hồi quy.
+
+
+import pandas as pd
+import matplotlib.pyplot as plt
+from scipy import stats
+
+# Dữ liệu mẫu
+health_data = pd.DataFrame({
+    'Average_Pulse': [80, 85, 90, 95, 100, 105, 110, 115, 120, 125],
+    'Calorie_Burnage': [240, 250, 260, 270, 280, 290, 300, 310, 320, 330]
+})
+
+x = health_data["Average_Pulse"]
+y = health_data["Calorie_Burnage"]
+
+# Hồi quy tuyến tính
+slope, intercept, r, p, std_err = stats.linregress(x, y)
+
+# Hàm dự đoán
+def myfunc(x):
+    return slope * x + intercept
+
+# Tạo giá trị dự đoán
+mymodel = list(map(myfunc, x))
+
+# Vẽ scatter plot và đường hồi quy
+plt.scatter(x, y)
+plt.plot(x, mymodel, color='red')
+plt.ylim(ymin=0, ymax=400)
+plt.xlim(xmin=0, xmax=150)
+plt.xlabel("Average_Pulse")
+plt.ylabel("Calorie_Burnage")
+plt.title("Linear Regression: Average_Pulse vs. Calorie_Burnage")
+plt.show()
+
+print(f"Slope: {slope}, Intercept: {intercept}, R: {r}, P-value: {p}, Std_err: {std_err}")
+
+
+
+	Kết quả (cho dữ liệu mẫu):
+
+		Slope: 2.0
+		Intercept: 80.0
+		R: 1.0 (hệ số tương quan, xác nhận mối quan hệ tuyến tính hoàn hảo)
+		P-value: Rất nhỏ (cho thấy mô hình có ý nghĩa thống kê)
+		Std_err: Sai số chuẩn của slope, đo lường độ tin cậy.
+
+
+
+# 6. Phân tích Kết quả và Ứng dụng Thực tế
+
+	Kết quả từ Dữ liệu Mẫu:
+
+		Mô hình: $ y = 2x + 80 $.
+		$ r = 1 $: Mối quan hệ tuyến tính hoàn hảo, dự đoán chính xác trong dữ liệu mẫu.
+		Tuy nhiên, dữ liệu mẫu nhỏ và đơn giản hóa, không phản ánh thực tế của full_health_data.
+
+	Kết quả từ full_health_data (theo bài học):
+		$ r = 0.02 $: Mối quan hệ tuyến tính giữa Average_Pulse và Calorie_Burnage rất yếu.
+
+		Đường hồi quy không thể dự đoán Calorie_Burnage chính xác, vì các điểm dữ liệu rải rác (scatter plot trong bài học cho thấy điều này).
+		Kết luận: Average_Pulse không đủ để dự đoán Calorie_Burnage. Cần thêm biến khác, như Duration, để cải thiện mô hình.
+
+
+
+	Tại sao cần Duration?	
+
+		- Từ bài học về ma trận tương quan, Duration có tương quan cao với Calorie_Burnage ($ r = 0.89 $).
+		- Trong thực tế, thời gian tập luyện (Duration) ảnh hưởng lớn đến calo đốt cháy, và kết hợp với Average_Pulse có thể tạo ra mô hình dự đoán chính xác hơn (hồi quy đa biến - multiple linear regression).
+
+	Ứng dụng:
+
+		- Dự đoán: Hồi quy tuyến tính được dùng để dự đoán (ví dụ: calo đốt cháy dựa trên nhịp tim và thời gian tập).
+		- Machine Learning: Là mô hình cơ bản để hiểu các mô hình phức tạp hơn (như hồi quy đa biến, hồi quy phi tuyến).
+		- Khoa học: Trong y học, hồi quy tuyến tính giúp dự đoán chỉ số sức khỏe dựa trên các yếu tố như nhịp tim, thời gian tập.
+		- Tài chính: Dự đoán giá cổ phiếu hoặc doanh thu dựa trên các yếu tố kinh tế.
+
+
+	Lưu ý chuyên gia:
+
+		Hạn chế của hồi quy đơn giản: Chỉ dùng một biến (Average_Pulse) thường không đủ, đặc biệt khi tương quan thấp ($ r = 0.02 $).
+		Hồi quy đa biến: Kết hợp nhiều biến (Average_Pulse, Duration) sẽ cải thiện độ chính xác. Công thức: $ y = b_0 + b_1x_1 + b_2x_2 $.
+
+
+
+	Kiểm tra giả định:
+
+		Mối quan hệ phải tuyến tính (kiểm tra bằng scatter plot).
+		Residuals phải phân phối ngẫu nhiên (kiểm tra bằng plot residuals).
+		Không có đa cộng tuyến (multicollinearity) khi dùng nhiều biến.
+
+
+
+</pre><a id='backBottom' href='../DataScience-learning.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

@@ -1,0 +1,210 @@
+<html><head><title>Lesson 52 == == Externalizable ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 52 -- -- Externalizable -//</h1><pre># Khái niệm 
+	Externalizable là một interface nâng cao của Serializable, cho phép bạn tự kiểm soát hoàn toàn quá trình serialize(chuyển obj thành byte stream) và deserialize(chuyển byte stream thành object) . Điều này giúp tiết kiệm dung lượng, cải thiện hiệu suất và cho phép tùy chỉnh dữ liệu khi lưu trữ. 
+	
+	+> Externalizable là một interface thuộc package java.io 
+	+> Nó mở rộng (extends) Serializable, nhưng không phải là marker interface (Khác với Serializable )
+	+> Yêu cầu class override và tự định nghĩa cách stream dữ liệu bằng 2 phương thức  
+					-   writeExternal(ObjectOutput out)				: Xác định cách object được ghi ra file/stream	 
+					-	readExternal(ObjectInput in)				: Xác định cách object  được đọc từ file/stream
+					
+					
+# Cách sử dụng Externalizable 
+	
+	## Khai báo class và implements Externalizable  
+	
+		import java.io.*;
+		class Person implements Externalizable {
+			private String name;
+			private int age;
+		
+			// Bắt buộc có constructor không tham số
+			public Person() {}
+		
+			public Person(String name, int age) {
+				this.name = name;
+				this.age = age;
+			}
+		
+			// Ghi dữ liệu theo cách tùy chỉnh
+			@Override
+			public void writeExternal(ObjectOutput out) throws IOException {
+				out.writeUTF(name);
+				out.writeInt(age);
+			}
+		
+			// Đọc dữ liệu theo cách tùy chỉnh
+			@Override
+			public void readExternal(ObjectInput in) throws IOException {
+				name = in.readUTF();
+				age = in.readInt();
+			}
+		
+			@Override
+			public String toString() {
+				return "Person{name='" + name + "', age=" + age + "}";
+			}
+		}
+
+
+	## Serialize đối tượng với Externalizable 
+	
+		public class ExternalizableWriteExample {
+		public static void main(String[] args) {
+			try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream("person.ext"))) {
+				Person person = new Person("Alice", 25);
+				out.writeObject(person);
+				System.out.println("Object has been serialized.");
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	## Deserialize đối tượng với Externalizable
+		public class ExternalizableReadExample {
+		public static void main(String[] args) {
+			try (ObjectInputStream in = new ObjectInputStream(new FileInputStream("person.ext"))) {
+				Person person = (Person) in.readObject();
+				System.out.println("Object has been deserialized: " + person);
+			} catch (IOException | ClassNotFoundException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+# Khác biệt giữa Serializable và Externalizable
+
+	Đặc điểm										Serializable									Externalizable
+	Có phải là marker interface không?				✅ Có											❌ Không
+	Cần khai báo phương thức gì?					❌ Không cần (JVM tự xử lý)						✅ writeExternal() và readExternal()
+	Có kiểm soát được dữ liệu khi serialize không?	❌ Không, JVM tự động serialize					✅ Có, ta phải tự viết code để serialize
+	Có cần constructor không tham số không?			❌ Không cần									✅ Bắt buộc
+	Hiệu suất										Chậm hơn do serialize tất cả dữ liệu			Nhanh hơn vì chỉ serialize dữ liệu cần thiết
+	Dung lượng file khi serialize					Lớn hơn vì lưu cả metadata						Nhỏ hơn nếu tối ưu
+	Có cần serialVersionUID không?					✅ Nên có để tránh lỗi							❌ Không cần vì tự kiểm soát serialization
+
+
+
+Khi nào nên dùng Externalizable?
+
+
+- Khi muốn giảm dung lượng file bằng cách chỉ serialize những field cần thiết.
+- Khi muốn tăng tốc độ serialize bằng cách bỏ qua metadata không cần thiết.
+- Khi dữ liệu cần mã hóa hoặc xử lý đặc biệt trước khi lưu.
+
+
+
+
+# Ví dụ nâng cao về Externalizable
+
+
+			class Employee implements Externalizable {
+			private String name;
+			private int age;
+			private transient double salary; // Sẽ không được serialize
+		
+			public Employee() {}
+		
+			public Employee(String name, int age, double salary) {
+				this.name = name;
+				this.age = age;
+				this.salary = salary;
+			}
+		
+			@Override
+			public void writeExternal(ObjectOutput out) throws IOException {
+				out.writeUTF(name);
+				out.writeInt(age);
+				// Không ghi salary vào stream
+			}
+		
+			@Override
+			public void readExternal(ObjectInput in) throws IOException {
+				name = in.readUTF();
+				age = in.readInt();
+				// Không đọc salary => salary mặc định là 0.0
+			}
+		
+			@Override
+			public String toString() {
+				return "Employee{name='" + name + "', age=" + age + ", salary=" + salary + "}";
+			}
+		}
+
+
+
+
+		Employee emp = new Employee("John", 30, 5000.0);
+		serialize(emp);
+		Employee deserializedEmp = deserialize();
+		System.out.println(deserializedEmp); // Employee{name='John', age=30, salary=0.0}
+
+
+
+# Mã hóa dữ liệu khi serialize 
+					class SecurePerson implements Externalizable {
+						private String name;
+						private int age;
+					
+						public SecurePerson() {}
+					
+						public SecurePerson(String name, int age) {
+							this.name = name;
+							this.age = age;
+						}
+					
+						@Override
+						public void writeExternal(ObjectOutput out) throws IOException {
+							out.writeUTF(encrypt(name)); // Mã hóa tên
+							out.writeInt(age);
+						}
+					
+						@Override
+						public void readExternal(ObjectInput in) throws IOException {
+							name = decrypt(in.readUTF()); // Giải mã tên
+							age = in.readInt();
+						}
+					
+						private String encrypt(String data) {
+							return new StringBuilder(data).reverse().toString(); // Đảo ngược chuỗi
+						}
+					
+						private String decrypt(String data) {
+							return new StringBuilder(data).reverse().toString(); // Đảo ngược lại
+						}
+					
+						@Override
+						public String toString() {
+							return "SecurePerson{name='" + name + "', age=" + age + "}";
+						}
+					}
+
+
+# Kết luận 
+						Câu hỏi																		Câu trả lời
+		
+		Externalizable có cần constructor không tham số không?						✅ Có, nếu không sẽ gặp java.io.InvalidClassException.
+		
+		Nếu không triển khai writeExternal() và readExternal(), điều gì xảy ra?		🛑 NotSerializableException.
+		
+		Khi nào nên dùng Externalizable thay vì Serializable?						Khi muốn tối ưu hóa serialize, giảm dung lượng file hoặc cần mã hóa dữ liệu.
+		
+		transient có tác dụng trong Externalizable không?							❌ Không, vì ta phải tự quyết định serialize field nào.
+		
+		Nếu chỉ ghi một phần dữ liệu vào writeExternal(), 							❌ Không bị lỗi, nhưng
+		khi deserialize có bị lỗi không?
+		
+		
+		==> Tóm lại : 
+		- Externalizable giúp tăng tốc độ và tối ưu hóa serialize.
+		
+		- Không có serialVersionUID, nên không gặp lỗi InvalidClassException nếu class thay đổi.
+		
+		- Phù hợp khi cần mã hóa, kiểm soát dữ liệu hoặc giảm kích thước file.
+		
+		- Cần có constructor không tham số, nếu không sẽ lỗi khi deserialize.
+		
+		- Nếu câu hỏi trong Java Gold có liên quan đến tối ưu hóa hoặc kiểm soát serialization, câu trả lời thường là Externalizable!		
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

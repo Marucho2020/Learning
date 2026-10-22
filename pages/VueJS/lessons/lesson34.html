@@ -1,7 +1,40 @@
-<html><head><title>Lesson 34 == Vue refs ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../vue-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 34 -- Vue refs -//</h1><pre># Khái niệm 
+<!DOCTYPE html><html lang='vi'><head><meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0'>
+<title>Lesson 34 -- Vue refs -//</title>
+<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css'>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js'></script>
+<script id='MathJax-script' async src='https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'></script>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; margin: 0; padding: 20px; transition: 0.3s; }
+.dark-mode { background-color: #121212; color: #e0e0e0; }
+.light-mode { background-color: #ffffff; color: #333333; }
+.container { max-width: 950px; margin: auto; }
+h1 { text-align: center; color: #3498db; margin: 20px 0; font-size: 26px; }
+.nav-bar { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 20px 0; }
+.nav-btn { text-decoration: none; padding: 10px 18px; background: #3498db; color: white; border-radius: 6px; font-weight: bold; font-size: 15px; display: inline-block; transition: 0.2s; }
+.nav-btn:hover { background: #2980b9; }
+.nav-btn.home-nav { background: #6c757d; }
+.nav-btn.home-nav:hover { background: #5a6268; }
+.nav-btn.disabled { background: #aaa; cursor: not-allowed; opacity: 0.5; }
+.done-btn { display: block; margin: 15px auto; padding: 10px 24px; border: 2px solid #2ecc71; background: transparent; color: #2ecc71; border-radius: 25px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+.done-btn.completed { background: #2ecc71; color: white; }
+.content-box { position: relative; margin: 20px 0; }
+pre { padding: 20px; border-radius: 8px; white-space: pre-wrap; word-break: break-word; overflow-x: auto; font-family: 'Consolas', 'Courier New', monospace; font-size: 15px; }
+.dark-mode pre { background: #1a1a1a; color: #f8f8f2; border: 1px solid #333; }
+.light-mode pre { background: #f8f9fa; color: #212529; border: 1px solid #e9ecef; }
+.copy-btn { position: absolute; top: 12px; right: 12px; padding: 6px 12px; font-size: 12px; background: #555; color: white; border: none; border-radius: 4px; cursor: pointer; opacity: 0.8; }
+.copy-btn:hover { opacity: 1; background: #2ecc71; }
+.theme-toggle-btn { display: block; margin: 20px auto; padding: 8px 16px; background: transparent; border: 1px solid #888; color: inherit; border-radius: 5px; cursor: pointer; }
+</style></head><body onload='initLesson()'>
+<div class='container'>
+<div class='nav-bar'><a class='nav-btn' href='lesson33.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../vue-js-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson35.html'>Bài sau ➡️</a></div><h1>Lesson 34 -- Vue refs -//</h1>
+<button id='doneButton' class='done-btn' onclick='toggleDone()'>Mark as Done ⚪</button>
+<div class='content-box'>
+<button class='copy-btn' onclick='copyContent()'>📋 Copy nội dung</button>
+<pre><code id='lessonCode'># Khái niệm 
 	Refs là một cách để truy cập trực tiếp vào:
 	
-		Phần tử DOM (như <input>, <div>) trong template.
+		Phần tử DOM (như &lt;input&gt;, &lt;div&gt;) trong template.
 		Instance của component (để gọi methods hoặc truy cập data).
 
 	Thay vì sử dụng các phương thức DOM truyền thống như document.getElementById, refs cung cấp một cách an toàn và tích hợp với hệ thống reactive của Vue.
@@ -16,23 +49,23 @@
 		2. Truy cập ref qua this.$refs.tenRef (Vue 2) hoặc ref() (Vue 3 Composition API) trong mã JavaScript.
 		
 	## 	Cú pháp cơ bản 
-<template>
-  <input ref="myInput" type="text" />
-  <button @click="focusInput">Focus Input</button>
-</template>
+&lt;template&gt;
+  &lt;input ref="myInput" type="text" /&gt;
+  &lt;button @click="focusInput"&gt;Focus Input&lt;/button&gt;
+&lt;/template&gt;
 
 
 # 3. Ví dụ: Truy cập phần tử DOM 
 	Vue 2 (Options API) 
 	
-<template>
-  <div>
-    <input ref="myInput" type="text" placeholder="Enter text" />
-    <button @click="focusInput">Focus Input</button>
-  </div>
-</template>
+&lt;template&gt;
+  &lt;div&gt;
+    &lt;input ref="myInput" type="text" placeholder="Enter text" /&gt;
+    &lt;button @click="focusInput"&gt;Focus Input&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
 
-<script>
+&lt;script&gt;
 export default {
   methods: {
     focusInput() {
@@ -40,27 +73,27 @@ export default {
     }
   }
 };
-</script>		
+&lt;/script&gt;		
 
 
 
 	## Vue 3 (Composition API) 
 	
-<template>
-  <div>
-    <input ref="myInput" type="text" placeholder="Enter text" />
-    <button @click="focusInput">Focus Input</button>
-  </div>
-</template>
+&lt;template&gt;
+  &lt;div&gt;
+    &lt;input ref="myInput" type="text" placeholder="Enter text" /&gt;
+    &lt;button @click="focusInput"&gt;Focus Input&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
 
-<script>
+&lt;script&gt;
 import { ref } from 'vue';
 
 export default {
   setup() {
     const myInput = ref(null); // Khai báo ref với giá trị ban đầu là null
 
-    const focusInput = () => {
+    const focusInput = () =&gt; {
       myInput.value.focus(); // Truy cập DOM qua .value
     };
 
@@ -70,11 +103,11 @@ export default {
     };
   }
 };
-</script>
+&lt;/script&gt;
 
 
 	## Giải thích 
-		ref="myInput": Gắn một tham chiếu tên myInput vào thẻ <input>.
+		ref="myInput": Gắn một tham chiếu tên myInput vào thẻ &lt;input&gt;.
 		Vue 2: Truy cập phần tử DOM qua this.$refs.myInput.
 		Vue 3: Sử dụng ref() để tạo biến myInput, và truy cập DOM qua myInput.value.
 		Kết quả: Khi nhấn nút, ô input sẽ được focus.
@@ -87,13 +120,13 @@ export default {
 	
 	
 	## Component con (ChildComponent.vue) 
-<template>
-  <div>
-    <p>{{ message }}</p>
-  </div>
-</template>
+&lt;template&gt;
+  &lt;div&gt;
+    &lt;p&gt;{{ message }}&lt;/p&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
 
-<script>
+&lt;script&gt;
 export default {
   data() {
     return {
@@ -106,21 +139,21 @@ export default {
     }
   }
 };
-</script>	
+&lt;/script&gt;	
 
 
 
 	## Component cha Vue 2
 		###  (Options API)   
 		
-<template>
-  <div>
-    <child-component ref="child"></child-component>
-    <button @click="changeChildMessage">Change Child Message</button>
-  </div>
-</template>
+&lt;template&gt;
+  &lt;div&gt;
+    &lt;child-component ref="child"&gt;&lt;/child-component&gt;
+    &lt;button @click="changeChildMessage"&gt;Change Child Message&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
 
-<script>
+&lt;script&gt;
 import ChildComponent from './ChildComponent.vue';
 
 export default {
@@ -131,18 +164,18 @@ export default {
     }
   }
 };
-</script>	
+&lt;/script&gt;	
 	
 	
 		###  Vue 3 
-<template>
-  <div>
-    <child-component ref="child"></child-component>
-    <button @click="changeChildMessage">Change Child Message</button>
-  </div>
-</template>
+&lt;template&gt;
+  &lt;div&gt;
+    &lt;child-component ref="child"&gt;&lt;/child-component&gt;
+    &lt;button @click="changeChildMessage"&gt;Change Child Message&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
 
-<script>
+&lt;script&gt;
 import { ref } from 'vue';
 import ChildComponent from './ChildComponent.vue';
 
@@ -151,7 +184,7 @@ export default {
   setup() {
     const child = ref(null); // Ref cho component con
 
-    const changeChildMessage = () => {
+    const changeChildMessage = () =&gt; {
       child.value.updateMessage('Updated from Parent!'); // Gọi method của component con
     };
 
@@ -161,30 +194,30 @@ export default {
     };
   }
 };
-</script>	
+&lt;/script&gt;	
 	
 	
 	## Giải thích
-		ref="child": Gắn tham chiếu child vào <child-component>.
+		ref="child": Gắn tham chiếu child vào &lt;child-component&gt;.
 		Truy cập instance:
 		Vue 2: this.$refs.child trả về instance của component con.
 		Vue 3: child.value trả về instance của component con.
 		Gọi method: Sử dụng updateMessage để thay đổi message trong component con.
-		Kết quả: Nhấn nút sẽ đổi nội dung <p> trong component con thành "Updated from Parent!".
+		Kết quả: Nhấn nút sẽ đổi nội dung &lt;p&gt; trong component con thành "Updated from Parent!".
 	
 	
 
 # 5. Refs với v-for 
 	Khi sử dụng ref trong v-for, this.$refs.tenRef (Vue 2) hoặc ref (Vue 3) sẽ trả về một mảng chứa các phần tử DOM hoặc instance component tương ứng.
 	
-<template>
-  <div>
-    <input v-for="item in items" :key="item" ref="inputs" type="text" />
-    <button @click="focusFirstInput">Focus First Input</button>
-  </div>
-</template>
+&lt;template&gt;
+  &lt;div&gt;
+    &lt;input v-for="item in items" :key="item" ref="inputs" type="text" /&gt;
+    &lt;button @click="focusFirstInput"&gt;Focus First Input&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
 
-<script>
+&lt;script&gt;
 import { ref } from 'vue';
 
 export default {
@@ -192,7 +225,7 @@ export default {
     const items = [1, 2, 3];
     const inputs = ref([]); // Mảng refs
 
-    const focusFirstInput = () => {
+    const focusFirstInput = () =&gt; {
       inputs.value[0].focus(); // Focus input đầu tiên
     };
 
@@ -203,11 +236,11 @@ export default {
     };
   }
 };
-</script>	
+&lt;/script&gt;	
 
 	## Giải thích 
-		ref="inputs" trong v-for tạo một mảng refs (inputs.value là một mảng các <input>).
-		inputs.value[0].focus(): Focus vào phần tử <input> đầu tiên trong mảng.
+		ref="inputs" trong v-for tạo một mảng refs (inputs.value là một mảng các &lt;input&gt;).
+		inputs.value[0].focus(): Focus vào phần tử &lt;input&gt; đầu tiên trong mảng.
 
 
 
@@ -256,7 +289,7 @@ if (this.$refs.myInput) {
 
 	## Liên kết giữa ref trong template và biến trong setup() 
 	
-		Khi bạn gắn ref="tenRef" vào một phần tử trong template (như <input ref="myInput">), Vue sẽ liên kết phần tử đó với biến ref có cùng tên (myInput) được khai báo trong setup().
+		Khi bạn gắn ref="tenRef" vào một phần tử trong template (như &lt;input ref="myInput"&gt;), Vue sẽ liên kết phần tử đó với biến ref có cùng tên (myInput) được khai báo trong setup().
 		
 		Tên của biến ref trong setup() (như const myInput = ref(null)) phải khớp với giá trị của thuộc tính ref trong template.
 
@@ -271,15 +304,15 @@ if (this.$refs.myInput) {
 		Nếu template có nhiều ref, mỗi ref sẽ được liên kết với một biến riêng biệt trong setup(). Vue đảm bảo rằng mỗi biến ref chỉ trỏ đến phần tử hoặc component tương ứng với tên của nó.
 		
 		
-<template>
-  <div>
-    <input ref="firstInput" type="text" placeholder="First input" />
-    <input ref="secondInput" type="text" placeholder="Second input" />
-    <button ref="myButton" @click="focusInputs">Focus Inputs</button>
-  </div>
-</template>
+&lt;template&gt;
+  &lt;div&gt;
+    &lt;input ref="firstInput" type="text" placeholder="First input" /&gt;
+    &lt;input ref="secondInput" type="text" placeholder="Second input" /&gt;
+    &lt;button ref="myButton" @click="focusInputs"&gt;Focus Inputs&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
 
-<script>
+&lt;script&gt;
 import { ref } from 'vue';
 
 export default {
@@ -289,13 +322,13 @@ export default {
     const secondInput = ref(null); // Liên kết với ref="secondInput"
     const myButton = ref(null); // Liên kết với ref="myButton"
 
-    const focusInputs = () => {
+    const focusInputs = () =&gt; {
       if (firstInput.value) {
         firstInput.value.focus(); // Focus vào input đầu tiên
       }
       // Có thể truy cập secondInput hoặc myButton
-      console.log(secondInput.value); // In ra <input> thứ hai
-      console.log(myButton.value); // In ra <button>
+      console.log(secondInput.value); // In ra &lt;input&gt; thứ hai
+      console.log(myButton.value); // In ra &lt;button&gt;
     };
 
     return {
@@ -306,7 +339,7 @@ export default {
     };
   }
 };
-</script>	
+&lt;/script&gt;	
 
 
 
@@ -316,20 +349,20 @@ export default {
 		ref="myButton" liên kết với const myButton = ref(null).
 
 	## Vue phân biệt: 
-		Vue sử dụng tên của thuộc tính ref trong template để khớp với tên biến trong setup(). Do đó, firstInput.value trỏ đến <input> đầu tiên, secondInput.value trỏ đến <input> thứ hai, và myButton.value trỏ đến <button>.
+		Vue sử dụng tên của thuộc tính ref trong template để khớp với tên biến trong setup(). Do đó, firstInput.value trỏ đến &lt;input&gt; đầu tiên, secondInput.value trỏ đến &lt;input&gt; thứ hai, và myButton.value trỏ đến &lt;button&gt;.
 		
 		
 	## Trường hợp đặc biệt 
 		### Nhiều ref trong v-for	
 				Nếu bạn dùng ref trong v-for, ref sẽ là một mảng chứa các phần tử DOM hoặc component tương ứng.
-<template>
-  <div>
-    <input v-for="item in items" :key="item" ref="inputs" type="text" />
-    <button @click="focusFirstInput">Focus First Input</button>
-  </div>
-</template>
+&lt;template&gt;
+  &lt;div&gt;
+    &lt;input v-for="item in items" :key="item" ref="inputs" type="text" /&gt;
+    &lt;button @click="focusFirstInput"&gt;Focus First Input&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
 
-<script>
+&lt;script&gt;
 import { ref } from 'vue';
 
 export default {
@@ -337,7 +370,7 @@ export default {
     const items = [1, 2, 3];
     const inputs = ref([]); // Mảng refs
 
-    const focusFirstInput = () => {
+    const focusFirstInput = () =&gt; {
       if (inputs.value[0]) {
         inputs.value[0].focus(); // Focus input đầu tiên
       }
@@ -350,10 +383,52 @@ export default {
     };
   }
 };
-</script>	
+&lt;/script&gt;	
 
-		Giải thích: ref="inputs" trong v-for tạo một mảng inputs.value, chứa tất cả các <input> trong vòng lặp. Vue tự động ánh xạ các phần tử theo thứ tự xuất hiện.
+		Giải thích: ref="inputs" trong v-for tạo một mảng inputs.value, chứa tất cả các &lt;input&gt; trong vòng lặp. Vue tự động ánh xạ các phần tử theo thứ tự xuất hiện.
 
 
 
-</pre><a id='backBottom' href='../vue-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
+</code></pre>
+</div>
+<div class='nav-bar'><a class='nav-btn' href='lesson33.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../vue-js-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson35.html'>Bài sau ➡️</a></div><button class='theme-toggle-btn' onclick='toggleTheme()'>🌓 Đổi Giao Diện</button>
+</div>
+<script>
+const lessonKey = 'vue-js-learning-list_lesson34.html';
+function toggleTheme() {
+   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';
+   document.body.className = mode;
+   localStorage.setItem('theme', mode);
+}
+function toggleDone() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   if (isDone) {
+       localStorage.removeItem(lessonKey);
+   } else {
+       localStorage.setItem(lessonKey, 'done');
+   }
+   renderDoneStatus();
+}
+function renderDoneStatus() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   let btn = document.getElementById('doneButton');
+   if (isDone) {
+       btn.className = 'done-btn completed';
+       btn.innerText = 'Đã Hoàn Thành ✅';
+   } else {
+       btn.className = 'done-btn';
+       btn.innerText = 'Đánh dấu đã học ⚪';
+   }
+}
+function copyContent() {
+   let text = document.getElementById('lessonCode').innerText;
+   navigator.clipboard.writeText(text).then(function() {
+       alert('✅ Đã sao chép nội dung bài học!');
+   });
+}
+function initLesson() {
+   document.body.className = localStorage.getItem('theme') || 'dark-mode';
+   renderDoneStatus();
+   if (window.Prism) Prism.highlightAll();
+}
+</script></body></html>

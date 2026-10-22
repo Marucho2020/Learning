@@ -1,0 +1,108 @@
+<html><head><title>Lesson 176 == callback- method - fallback ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 176 -- callback- method - fallback -//</h1><pre>
+# 🔹 1. method (phương thức bình thường)
+
+	Definition: khối logic có input/output, gọi xong thì trả kết quả (hoặc exception).
+	
+	Flow: synchronous, caller kiểm soát luồng.
+	
+	Error handling: dùng try/catch hoặc checked/unchecked exceptions.
+
+👉 Dùng khi: logic tuyến tính, đồng bộ, lỗi được ném trực tiếp về caller.
+
+
+
+
+# 🔹 2. callback (hàm gọi ngược)
+
+	Definition: bạn truyền một function/hàm/lambda vào API, API sẽ gọi ngược lại khi event/async task xong.
+	
+	Flow: control flow inverted (Inversion of Control). Caller không quyết định khi nào chạy → callee quyết định.
+
+	Error handling: lỗi thường propagate qua callback hoặc Future/CompletableFuture.
+
+CompletableFuture.supplyAsync(() -> fetchData())
+    .thenAccept(result -> System.out.println("Got: " + result))
+    .exceptionally(ex -> { 
+        System.err.println("Error: " + ex); 
+        return null; 
+    });
+
+
+	Ở đây, thenAccept và exceptionally chính là callback.
+	
+	👉 Dùng khi:
+
+		- Code bất đồng bộ (I/O, network, task background).
+		- Event-driven (UI, reactive systems).
+		- Bạn muốn non-blocking execution.
+		
+		
+#🔹 3. fallback (phương án thay thế khi fail) 		
+		
+	Definition: cơ chế degrade gracefully. Nếu main method thất bại (timeout, exception), hệ thống gọi fallback method để trả về kết quả thay thế.	
+		
+	Flow: vẫn synchronous hoặc asynchronous tùy implementation, nhưng luôn có default path khi main path fail.	
+		
+	Error handling: thay vì throw exception lên caller, bạn convert nó thành một response từ fallback.	
+		
+	Ví dụ (Spring Cloud Resilience4j / Hystrix style):	
+		
+public String getUserProfile(String id) {
+    return Try.of(() -> userService.fetchProfile(id))
+              .recover(ex -> defaultProfile(id))  // fallback
+              .get();
+}
+		
+		
+	👉 Dùng khi:	
+Distributed systems, microservices.
+
+Tránh propagation của lỗi, tăng resilience.
+
+Khi yêu cầu tính sẵn sàng > tính chính xác (ví dụ: search service down → trả về cached result).		
+		
+		
+# 🔹 So sánh trọng tâm		
+
+
+| Khía cạnh          | Method                  | Callback                       | Fallback                             |
+| ------------------ | ----------------------- | ------------------------------ | ------------------------------------ |
+| **Control flow**   | Caller quyết định       | Callee quyết định khi nào chạy | Caller gọi, nếu fail → fallback chạy |
+| **Đồng bộ**        | Thường sync             | Thường async/non-blocking      | Cả sync/async                        |
+| **Error handling** | throw exception         | propagate qua callback         | chuyển sang logic thay thế           |
+| **Use case**       | Business logic đơn giản | Event-driven, async            | Fault tolerance, resilience          |
+
+
+# 🔹 Mindset Senior
+
+	Method = "logic core" → dùng khi deterministic và đồng bộ.
+	
+	Callback = "event reaction" → dùng khi inversion of control / async.
+	
+	Fallback = "Plan B" → dùng khi resilience, degrade gracefully.
+
+
+	Trong một hệ thống microservices enterprise:
+
+		- Method là core logic.
+		- Callback xuất hiện trong messaging (Kafka consumer, HTTP async client).
+		- Fallback nằm trong resilience layer (Resilience4j, Hystrix, Polly).
+
+
+
+# 👉 Ví dụ thực chiến: 
+
+	## Giả sử bạn có một service gọi API từ bên ngoài:
+
+public CompletableFuture<User> getUser(String id) {
+    return httpClient.fetchAsync("/users/" + id)
+        .thenApply(response -> parseUser(response))     // callback
+        .exceptionally(ex -> cachedUser(id));           // fallback
+}
+
+	- fetchAsync → method call async.
+	- thenApply → callback khi response về.
+	- exceptionally → fallback khi API fail.
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

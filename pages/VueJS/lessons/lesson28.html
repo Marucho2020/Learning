@@ -1,4 +1,37 @@
-<html><head><title>Lesson 28 == Vue Slot ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../vue-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 28 -- Vue Slot -//</h1><pre># Mục đích 
+<!DOCTYPE html><html lang='vi'><head><meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0'>
+<title>Lesson 28 -- Vue Slot -//</title>
+<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css'>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js'></script>
+<script id='MathJax-script' async src='https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'></script>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; margin: 0; padding: 20px; transition: 0.3s; }
+.dark-mode { background-color: #121212; color: #e0e0e0; }
+.light-mode { background-color: #ffffff; color: #333333; }
+.container { max-width: 950px; margin: auto; }
+h1 { text-align: center; color: #3498db; margin: 20px 0; font-size: 26px; }
+.nav-bar { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 20px 0; }
+.nav-btn { text-decoration: none; padding: 10px 18px; background: #3498db; color: white; border-radius: 6px; font-weight: bold; font-size: 15px; display: inline-block; transition: 0.2s; }
+.nav-btn:hover { background: #2980b9; }
+.nav-btn.home-nav { background: #6c757d; }
+.nav-btn.home-nav:hover { background: #5a6268; }
+.nav-btn.disabled { background: #aaa; cursor: not-allowed; opacity: 0.5; }
+.done-btn { display: block; margin: 15px auto; padding: 10px 24px; border: 2px solid #2ecc71; background: transparent; color: #2ecc71; border-radius: 25px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+.done-btn.completed { background: #2ecc71; color: white; }
+.content-box { position: relative; margin: 20px 0; }
+pre { padding: 20px; border-radius: 8px; white-space: pre-wrap; word-break: break-word; overflow-x: auto; font-family: 'Consolas', 'Courier New', monospace; font-size: 15px; }
+.dark-mode pre { background: #1a1a1a; color: #f8f8f2; border: 1px solid #333; }
+.light-mode pre { background: #f8f9fa; color: #212529; border: 1px solid #e9ecef; }
+.copy-btn { position: absolute; top: 12px; right: 12px; padding: 6px 12px; font-size: 12px; background: #555; color: white; border: none; border-radius: 4px; cursor: pointer; opacity: 0.8; }
+.copy-btn:hover { opacity: 1; background: #2ecc71; }
+.theme-toggle-btn { display: block; margin: 20px auto; padding: 8px 16px; background: transparent; border: 1px solid #888; color: inherit; border-radius: 5px; cursor: pointer; }
+</style></head><body onload='initLesson()'>
+<div class='container'>
+<div class='nav-bar'><a class='nav-btn' href='lesson27.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../vue-js-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson29.html'>Bài sau ➡️</a></div><h1>Lesson 28 -- Vue Slot -//</h1>
+<button id='doneButton' class='done-btn' onclick='toggleDone()'>Mark as Done ⚪</button>
+<div class='content-box'>
+<button class='copy-btn' onclick='copyContent()'>📋 Copy nội dung</button>
+<pre><code id='lessonCode'># Mục đích 
 	Slots là một cơ chế trong Vue.js cho phép component con định nghĩa một "chỗ trống" (placeholder) mà component cha có thể điền nội dung (HTML, text, hoặc thậm chí các component khác).
 	
 	## 	Lợi ích 
@@ -7,147 +40,147 @@
 		Đóng gói tốt hơn: Component con vẫn giữ logic riêng, chỉ để component cha cung cấp nội dung hiển thị.
 		
 # 2. Cách hoạt động
-	Trong component con, bạn sử dụng thẻ <slot></slot> để tạo một vị trí mà nội dung từ component cha sẽ được chèn vào.
-	Trong component cha, bạn cung cấp nội dung bên trong thẻ mở và đóng của component con, và nội dung này sẽ thay thế <slot>.
+	Trong component con, bạn sử dụng thẻ &lt;slot&gt;&lt;/slot&gt; để tạo một vị trí mà nội dung từ component cha sẽ được chèn vào.
+	Trong component cha, bạn cung cấp nội dung bên trong thẻ mở và đóng của component con, và nội dung này sẽ thay thế &lt;slot&gt;.
 	
 	
 # 3. Ví dụ cơ bản: Default Slot 
 	
 	## Component Con 
 	
-<script>
+&lt;script&gt;
 Vue.component('my-card', {
   template: `
-    <div class="card">
-      <h2>Card Title</h2>
-      <slot></slot> <!-- Nội dung từ cha sẽ được chèn vào đây -->
-    </div>
+    &lt;div class="card"&gt;
+      &lt;h2&gt;Card Title&lt;/h2&gt;
+      &lt;slot&gt;&lt;/slot&gt; &lt;!-- Nội dung từ cha sẽ được chèn vào đây --&gt;
+    &lt;/div&gt;
   `
 });
-</script>
-	Thẻ <slot> là chỗ trống để component cha chèn nội dung.
+&lt;/script&gt;
+	Thẻ &lt;slot&gt; là chỗ trống để component cha chèn nội dung.
 	
 	
 	## Component Cha 
-<div id="app">
-  <my-card>
-    <p>This is the card content!</p> <!-- Nội dung này sẽ thay thế <slot> -->
-  </my-card>
-</div>
+&lt;div id="app"&gt;
+  &lt;my-card&gt;
+    &lt;p&gt;This is the card content!&lt;/p&gt; &lt;!-- Nội dung này sẽ thay thế &lt;slot&gt; --&gt;
+  &lt;/my-card&gt;
+&lt;/div&gt;
 
-<script>
+&lt;script&gt;
 new Vue({
   el: '#app'
 });
-</script>
+&lt;/script&gt;
 
 	## Kết quả HTML 
-<div class="card">
-  <h2>Card Title</h2>
-  <p>This is the card content!</p>
-</div>
+&lt;div class="card"&gt;
+  &lt;h2&gt;Card Title&lt;/h2&gt;
+  &lt;p&gt;This is the card content!&lt;/p&gt;
+&lt;/div&gt;
 
 
-	Nội dung <p>This is the card content!</p> từ component cha được chèn vào vị trí <slot> trong component con.
+	Nội dung &lt;p&gt;This is the card content!&lt;/p&gt; từ component cha được chèn vào vị trí &lt;slot&gt; trong component con.
 
 
 
 # 4. Default Content cho Slot
 
-	Bạn có thể cung cấp nội dung mặc định trong <slot> để hiển thị nếu component cha không truyền nội dung.
+	Bạn có thể cung cấp nội dung mặc định trong &lt;slot&gt; để hiển thị nếu component cha không truyền nội dung.
 	
 	## Ví dụ:
 	
-<script>
+&lt;script&gt;
 Vue.component('my-card', {
   template: `
-    <div class="card">
-      <h2>Card Title</h2>
-      <slot>Default content here</slot>
-    </div>
+    &lt;div class="card"&gt;
+      &lt;h2&gt;Card Title&lt;/h2&gt;
+      &lt;slot&gt;Default content here&lt;/slot&gt;
+    &lt;/div&gt;
   `
 });
-</script>
+&lt;/script&gt;
 		
-	Nếu component cha dùng <my-card></my-card> (không truyền nội dung), kết quả sẽ là:
-<div class="card">
-  <h2>Card Title</h2>
+	Nếu component cha dùng &lt;my-card&gt;&lt;/my-card&gt; (không truyền nội dung), kết quả sẽ là:
+&lt;div class="card"&gt;
+  &lt;h2&gt;Card Title&lt;/h2&gt;
   Default content here
-</div>
+&lt;/div&gt;
 
 
 ## 5. Named Slots
 	## Khi component con có nhiều slot, bạn có thể dùng named slots để chỉ định nội dung từ component cha sẽ chèn vào slot nào.
 	
-	## Sử dụng thuộc tính name trong <slot> và chỉ thị v-slot (hoặc # trong Vue 3) trong component cha. 
+	## Sử dụng thuộc tính name trong &lt;slot&gt; và chỉ thị v-slot (hoặc # trong Vue 3) trong component cha. 
 	
 
 
 	## Component Con 
-<script>
+&lt;script&gt;
 Vue.component('my-layout', {
   template: `
-    <div class="layout">
-      <header>
-        <slot name="header"></slot>
-      </header>
-      <main>
-        <slot name="main"></slot>
-      </main>
-      <footer>
-        <slot name="footer"></slot>
-      </footer>
-    </div>
+    &lt;div class="layout"&gt;
+      &lt;header&gt;
+        &lt;slot name="header"&gt;&lt;/slot&gt;
+      &lt;/header&gt;
+      &lt;main&gt;
+        &lt;slot name="main"&gt;&lt;/slot&gt;
+      &lt;/main&gt;
+      &lt;footer&gt;
+        &lt;slot name="footer"&gt;&lt;/slot&gt;
+      &lt;/footer&gt;
+    &lt;/div&gt;
   `
 });
-</script>
+&lt;/script&gt;
 
 
 	## Component Cha 
-<div id="app">
-  <my-layout>
-    <template v-slot:header>
-      <h1>Header Content</h1>
-    </template>
-    <template v-slot:main>
-      <p>Main Content</p>
-    </template>
-    <template v-slot:footer>
-      <p>Footer Content</p>
-    </template>
-  </my-layout>
-</div>		
+&lt;div id="app"&gt;
+  &lt;my-layout&gt;
+    &lt;template v-slot:header&gt;
+      &lt;h1&gt;Header Content&lt;/h1&gt;
+    &lt;/template&gt;
+    &lt;template v-slot:main&gt;
+      &lt;p&gt;Main Content&lt;/p&gt;
+    &lt;/template&gt;
+    &lt;template v-slot:footer&gt;
+      &lt;p&gt;Footer Content&lt;/p&gt;
+    &lt;/template&gt;
+  &lt;/my-layout&gt;
+&lt;/div&gt;		
 	
 	## 	Lưu ý: Trong Vue 3, bạn có thể viết ngắn gọn hơn với #: 
-<template #header>
-  <h1>Header Content</h1>
-</template>	
+&lt;template #header&gt;
+  &lt;h1&gt;Header Content&lt;/h1&gt;
+&lt;/template&gt;	
 	
 	
 	
 	## 	Kết quả HTML 
-<div class="layout">
-  <header>
-    <h1>Header Content</h1>
-  </header>
-  <main>
-    <p>Main Content</p>
-  </main>
-  <footer>
-    <p>Footer Content</p>
-  </footer>
-</div>	
+&lt;div class="layout"&gt;
+  &lt;header&gt;
+    &lt;h1&gt;Header Content&lt;/h1&gt;
+  &lt;/header&gt;
+  &lt;main&gt;
+    &lt;p&gt;Main Content&lt;/p&gt;
+  &lt;/main&gt;
+  &lt;footer&gt;
+    &lt;p&gt;Footer Content&lt;/p&gt;
+  &lt;/footer&gt;
+&lt;/div&gt;	
 	
 	
 	
 	
 # 	6. Scoped Slots 
 	Scoped slots cho phép component con truyền dữ liệu lên component cha để component cha sử dụng khi định nghĩa nội dung slot.
-	Sử dụng v-bind trong <slot> để truyền dữ liệu và v-slot để nhận dữ liệu trong component cha.
+	Sử dụng v-bind trong &lt;slot&gt; để truyền dữ liệu và v-slot để nhận dữ liệu trong component cha.
 
 	## 	Component Con
 		
-<script>
+&lt;script&gt;
 Vue.component('my-list', {
   data() {
     return {
@@ -155,40 +188,40 @@ Vue.component('my-list', {
     };
   },
   template: `
-    <ul>
-      <li v-for="item in items">
-        <slot :item="item"></slot> <!-- Truyền dữ liệu 'item' lên cha -->
-      </li>
-    </ul>
+    &lt;ul&gt;
+      &lt;li v-for="item in items"&gt;
+        &lt;slot :item="item"&gt;&lt;/slot&gt; &lt;!-- Truyền dữ liệu 'item' lên cha --&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
   `
 });
-</script>	
+&lt;/script&gt;	
 	
 	
 	## Component Cha 
-<div id="app">
-  <my-list>
-    <template v-slot="{ item }">
-      <span>{{ item.toUpperCase() }}</span> <!-- Nhận 'item' và tùy chỉnh -->
-    </template>
-  </my-list>
-</div>
+&lt;div id="app"&gt;
+  &lt;my-list&gt;
+    &lt;template v-slot="{ item }"&gt;
+      &lt;span&gt;{{ item.toUpperCase() }}&lt;/span&gt; &lt;!-- Nhận 'item' và tùy chỉnh --&gt;
+    &lt;/template&gt;
+  &lt;/my-list&gt;
+&lt;/div&gt;
 
 
 
 	## 	Giải thích: 
-		Component con truyền item qua <slot :item="item">.
+		Component con truyền item qua &lt;slot :item="item"&gt;.
 		Component cha nhận item bằng v-slot="{ item }". 
-		Nội dung <span>{{ item.toUpperCase() }}</span> thay thế <slot> cho mỗi item.
+		Nội dung &lt;span&gt;{{ item.toUpperCase() }}&lt;/span&gt; thay thế &lt;slot&gt; cho mỗi item.
 		
 	
 	
 	## Kết quả HTML 
-<ul>
-  <li><span>ITEM 1</span></li>
-  <li><span>ITEM 2</span></li>
-  <li><span>ITEM 3</span></li>
-</ul>	
+&lt;ul&gt;
+  &lt;li&gt;&lt;span&gt;ITEM 1&lt;/span&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;span&gt;ITEM 2&lt;/span&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;span&gt;ITEM 3&lt;/span&gt;&lt;/li&gt;
+&lt;/ul&gt;	
 	
 
 
@@ -213,10 +246,52 @@ Vue.component('my-list', {
 	
 # 9. Tóm tắt 
 	
-	Slots cho phép component cha chèn nội dung vào component con thông qua <slot>.
+	Slots cho phép component cha chèn nội dung vào component con thông qua &lt;slot&gt;.
 	Default Slot: Chèn nội dung đơn giản, có thể có nội dung mặc định.
 	Named Slots: Tổ chức nhiều vị trí nội dung với name và v-slot:name.
 	Scoped Slots: Truyền dữ liệu từ con lên cha để tùy chỉnh nội dung slot.
 	Giúp component linh hoạt, tái sử dụng và dễ bảo trì.
 
-</pre><a id='backBottom' href='../vue-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
+</code></pre>
+</div>
+<div class='nav-bar'><a class='nav-btn' href='lesson27.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../vue-js-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson29.html'>Bài sau ➡️</a></div><button class='theme-toggle-btn' onclick='toggleTheme()'>🌓 Đổi Giao Diện</button>
+</div>
+<script>
+const lessonKey = 'vue-js-learning-list_lesson28.html';
+function toggleTheme() {
+   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';
+   document.body.className = mode;
+   localStorage.setItem('theme', mode);
+}
+function toggleDone() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   if (isDone) {
+       localStorage.removeItem(lessonKey);
+   } else {
+       localStorage.setItem(lessonKey, 'done');
+   }
+   renderDoneStatus();
+}
+function renderDoneStatus() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   let btn = document.getElementById('doneButton');
+   if (isDone) {
+       btn.className = 'done-btn completed';
+       btn.innerText = 'Đã Hoàn Thành ✅';
+   } else {
+       btn.className = 'done-btn';
+       btn.innerText = 'Đánh dấu đã học ⚪';
+   }
+}
+function copyContent() {
+   let text = document.getElementById('lessonCode').innerText;
+   navigator.clipboard.writeText(text).then(function() {
+       alert('✅ Đã sao chép nội dung bài học!');
+   });
+}
+function initLesson() {
+   document.body.className = localStorage.getItem('theme') || 'dark-mode';
+   renderDoneStatus();
+   if (window.Prism) Prism.highlightAll();
+}
+</script></body></html>

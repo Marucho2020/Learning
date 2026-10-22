@@ -1,0 +1,18 @@
+<html><head><title>Lesson 7 == Tham chiếu   Garbage Collection ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 7 -- Tham chiếu   Garbage Collection -//</h1><pre>public class Main {
+    public static void main(String[] args) {
+        Person p1 = new Person(); // Tạo đối tượng mới
+        Person p2 = p1;           // p1 và p2 đều tham chiếu đến đối tượng Person
+
+        p1 = null;  // p1 không còn tham chiếu đến đối tượng nữa
+        // Tuy nhiên, p2 vẫn tham chiếu đến đối tượng Person
+        System.out.println(p2.age); // p2 vẫn có thể truy cập đối tượng
+    } 
+}
+
+Đối tượng sẽ bị garbage collection dọn dẹp khi không còn biến nào tham chiếu đến nó.
+Trong trường hợp bạn gán p1 = null;, đối tượng Person không bị dọn dẹp ngay lập tức vì p2 vẫn tham chiếu đến nó. Chỉ khi p2 cũng được gán null hoặc không còn tham chiếu đến đối tượng nữa, thì đối tượng này mới không có tham chiếu nào và có thể bị Garbage Collector dọn dẹp.
+
+Tóm lại: Chỉ khi không còn "sợi dây" nào kết nối đến đối tượng nữa (tức là tất cả các tham chiếu đều trỏ về null hoặc không còn tham chiếu đến đối tượng đó), thì Garbage Collector mới có thể dọn dẹp bộ nhớ cho đối tượng đó.
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

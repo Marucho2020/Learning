@@ -1,0 +1,147 @@
+<html><head><title>Lesson 168 == Thread Communication – wait/notify & Condition ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 168 -- Thread Communication – wait/notify & Condition -//</h1><pre>
+# 1. Gốc rễ: Monitor & Guarded Block 
+	Java monitor = intrinsic lock + condition queue.
+	
+	Khi thread gọi wait():
+		- Nhả lock.
+		- Chuyển thread vào waiting queue (gắn với monitor).
+
+	Khi gọi notify() hoặc notifyAll():
+		- Một hoặc nhiều thread được đánh thức → nhưng chỉ tiếp tục khi tái chiếm lock.
+
+
+
+	## 🔹 Guarded block pattern (quan trọng ở level senior): 
+	
+synchronized(lock) {
+    while (!condition) {
+        lock.wait();   // release lock, park thread
+    }
+    // do work khi condition thỏa mãn
+}
+	
+	 - Dùng while, không if → chống spurious wakeup (JVM có thể wakeup mà không có signal).
+	 - Đây là lý do nhiều junior code sai (dùng if → race).	
+	
+	
+	
+	
+# 2. wait/notify pitfalls (senior insight)	
+	
+	Lost wakeup: 
+		Nếu notify() gọi trước khi thread vào wait(), thread đó sẽ mãi ngủ.
+		→ Cần protocol đảm bảo producer/consumer handshake đúng.	
+	
+	
+	notify() vs notifyAll():
+		- notify(): chỉ đánh thức 1 thread, có thể gây starvation nếu nhiều consumer chờ.
+		- notifyAll(): đánh thức tất cả → tốn context switch nhưng an toàn hơn.	
+	
+	
+	Deadlock risk: nếu forgot while, hoặc signal sai lock, threads có thể block vĩnh viễn.
+	
+
+
+# 3. Condition – giải pháp hiện đại (java.util.concurrent.locks)
+
+
+	Tách biệt khỏi intrinsic monitor.
+	Mỗi Lock có thể tạo nhiều Condition (đa kênh chờ), khác với intrinsic monitor chỉ có 1 queue.
+
+	API: 
+		await() ~ wait()
+		
+		signal() ~ notify()
+		
+		signalAll() ~ notifyAll()
+
+
+	## 🔹 Ví dụ với Condition: 
+
+Lock lock = new ReentrantLock();
+Condition notEmpty = lock.newCondition();
+Queue<String> queue = new LinkedList<>();
+
+public void put(String x) throws InterruptedException {
+    lock.lock();
+    try {
+        queue.add(x);
+        notEmpty.signal(); // đánh thức consumer
+    } finally {
+        lock.unlock();
+    }
+}
+
+public String take() throws InterruptedException {
+    lock.lock();
+    try {
+        while (queue.isEmpty()) {
+            notEmpty.await();  // release lock, wait
+        }
+        return queue.poll();
+    } finally {
+        lock.unlock();
+    }
+}
+
+
+		Ưu điểm:
+		- Có thể có nhiều condition riêng (e.g. notEmpty, notFull) cho queue bounded.
+		- Tránh false wakeup handling phức tạp → explicit và rõ ràng hơn.
+
+
+# 4. Producer-Consumer – Case Study
+
+
+	## Với wait/notify: 
+		
+synchronized (lock) {
+    while (buffer.isEmpty()) lock.wait();
+    item = buffer.remove();
+    lock.notifyAll();
+}
+
+
+	## Với Condition (senior-preferred): 
+	
+while (buffer.isEmpty()) notEmpty.await();
+item = buffer.remove();
+notFull.signal();
+
+	Code rõ ràng hơn, đặc biệt khi có nhiều condition khác nhau (ví dụ: notFull & notEmpty).
+
+
+
+# 5. Trade-offs 
+
+| Feature                  | wait/notify                   | Condition                              |
+| ------------------------ | ----------------------------- | -------------------------------------- |
+| Lock type                | Intrinsic (`synchronized`)    | Explicit (`Lock`)                      |
+| Condition queues         | 1 queue duy nhất              | Nhiều queue độc lập                    |
+| Readability              | Ngắn gọn                      | Rõ ràng, tường minh                    |
+| Spurious wakeup handling | `while` bắt buộc              | `while` vẫn cần                        |
+| Control                  | Ít (notify có thể lạc target) | Chính xác (chỉ signal queue liên quan) |
+
+
+# 6. Best Practices / Senior Tips 
+
+	- Always use while loop khi await() hoặc wait() → chống spurious wakeup.
+	- Prefer Condition nếu có nhiều tình huống chờ khác nhau (multi-condition synchronization).
+	- Avoid naked notify():
+		+  Nếu uncertain, dùng notifyAll().
+	- notify() chỉ an toàn khi chắc chắn chỉ có 1 nhóm thread đang chờ.
+	- Document protocol rõ ràng: thread nào signal khi nào, condition gì cần kiểm tra → nếu không, debug deadlock rất khó.
+	- Trong business-critical system, dùng BlockingQueue thay vì tự viết producer-consumer bằng wait/notify → ít bug hơn, tối ưu hơn.
+
+
+
+# 7. Tư duy Senior
+
+	- wait/notify = low-level primitive, dễ bug → chỉ nên dùng khi viết framework hoặc cần tối ưu hóa đặc biệt.
+	- Condition = mid-level abstraction → explicit, dễ đọc, dễ maintain.
+	- BlockingQueue / Exchanger / Semaphore = high-level constructs → nên ưu tiên khi giải bài toán thực tế.
+	- Khi debug vấn đề multi-threading: “thread không chạy có thể không phải do bug logic, mà do lost signal / missed notify” → phải phân tích đường đi của signal.
+
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

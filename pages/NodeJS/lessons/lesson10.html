@@ -1,4 +1,37 @@
-<html><head><title>Lesson 10 == Promises ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../NodeJS-learning.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 10 -- Promises -//</h1><pre>
+<!DOCTYPE html><html lang='vi'><head><meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0'>
+<title>Lesson 10 -- Promises -//</title>
+<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css'>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js'></script>
+<script id='MathJax-script' async src='https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'></script>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; margin: 0; padding: 20px; transition: 0.3s; }
+.dark-mode { background-color: #121212; color: #e0e0e0; }
+.light-mode { background-color: #ffffff; color: #333333; }
+.container { max-width: 950px; margin: auto; }
+h1 { text-align: center; color: #3498db; margin: 20px 0; font-size: 26px; }
+.nav-bar { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 20px 0; }
+.nav-btn { text-decoration: none; padding: 10px 18px; background: #3498db; color: white; border-radius: 6px; font-weight: bold; font-size: 15px; display: inline-block; transition: 0.2s; }
+.nav-btn:hover { background: #2980b9; }
+.nav-btn.home-nav { background: #6c757d; }
+.nav-btn.home-nav:hover { background: #5a6268; }
+.nav-btn.disabled { background: #aaa; cursor: not-allowed; opacity: 0.5; }
+.done-btn { display: block; margin: 15px auto; padding: 10px 24px; border: 2px solid #2ecc71; background: transparent; color: #2ecc71; border-radius: 25px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+.done-btn.completed { background: #2ecc71; color: white; }
+.content-box { position: relative; margin: 20px 0; }
+pre { padding: 20px; border-radius: 8px; white-space: pre-wrap; word-break: break-word; overflow-x: auto; font-family: 'Consolas', 'Courier New', monospace; font-size: 15px; }
+.dark-mode pre { background: #1a1a1a; color: #f8f8f2; border: 1px solid #333; }
+.light-mode pre { background: #f8f9fa; color: #212529; border: 1px solid #e9ecef; }
+.copy-btn { position: absolute; top: 12px; right: 12px; padding: 6px 12px; font-size: 12px; background: #555; color: white; border: none; border-radius: 4px; cursor: pointer; opacity: 0.8; }
+.copy-btn:hover { opacity: 1; background: #2ecc71; }
+.theme-toggle-btn { display: block; margin: 20px auto; padding: 8px 16px; background: transparent; border: 1px solid #888; color: inherit; border-radius: 5px; cursor: pointer; }
+</style></head><body onload='initLesson()'>
+<div class='container'>
+<div class='nav-bar'><a class='nav-btn' href='lesson9.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../NodeJS-learning.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson11.html'>Bài sau ➡️</a></div><h1>Lesson 10 -- Promises -//</h1>
+<button id='doneButton' class='done-btn' onclick='toggleDone()'>Mark as Done ⚪</button>
+<div class='content-box'>
+<button class='copy-btn' onclick='copyContent()'>📋 Copy nội dung</button>
+<pre><code id='lessonCode'>
 # Tổng Quan Phần "Node.js Promises"
 
 	Mục tiêu: Hiểu Promises trong Node.js, bao gồm:
@@ -56,9 +89,9 @@
 	
 	## With Callbacks:
 	
-getUser(id, (err, user) => {
+getUser(id, (err, user) =&gt; {
   if (err) return handleError(err);
-  getOrders(user.id, (err, orders) => {
+  getOrders(user.id, (err, orders) =&gt; {
     if (err) return handleError(err);
     // Process orders...
   });
@@ -68,8 +101,8 @@ getUser(id, (err, user) => {
 	## 	
 	
 getUser(id)
-  .then(user => getOrders(user.id))
-  .then(orders => processOrders(orders))
+  .then(user =&gt; getOrders(user.id))
+  .then(orders =&gt; processOrders(orders))
   .catch(handleError);
 
 
@@ -96,9 +129,9 @@ getUser(id)
 
 	## 3.1. Basic Promise Creation
 
-const myPromise = new Promise((resolve, reject) => {
-  setTimeout(() => {
-    const success = Math.random() > 0.5;
+const myPromise = new Promise((resolve, reject) =&gt; {
+  setTimeout(() =&gt; {
+    const success = Math.random() &gt; 0.5;
     if (success) {
       resolve('Operation completed successfully');
     } else {
@@ -108,8 +141,8 @@ const myPromise = new Promise((resolve, reject) => {
 });
 
 myPromise
-  .then(result => console.log('Success:', result))
-  .catch(error => console.error('Error:', error.message));
+  .then(result =&gt; console.log('Success:', result))
+  .catch(error =&gt; console.error('Error:', error.message));
 
 
 
@@ -119,14 +152,14 @@ myPromise
 const fs = require('fs').promises;
 
 const promise1 = Promise.resolve('First result');
-const promise2 = new Promise((resolve) => setTimeout(() => resolve('Second result'), 1000));
+const promise2 = new Promise((resolve) =&gt; setTimeout(() =&gt; resolve('Second result'), 1000));
 const promise3 = fs.readFile('myfile.txt', 'utf8');
 
 Promise.all([promise1, promise2, promise3])
-  .then(results => {
+  .then(results =&gt; {
     console.log('Results:', results);
   })
-  .catch(error => {
+  .catch(error =&gt; {
     console.error('Error in one of the promises:', error);
   });
 
@@ -142,26 +175,26 @@ Promise.all([promise1, promise2, promise3])
 
 
 function getUser(userId) {
-  return new Promise((resolve) => {
-    setTimeout(() => resolve({ id: userId, name: 'John' }), 1000);
+  return new Promise((resolve) =&gt; {
+    setTimeout(() =&gt; resolve({ id: userId, name: 'John' }), 1000);
   });
 }
 
 function getUserPosts(user) {
-  return new Promise((resolve) => {
-    setTimeout(() => resolve(['Post 1', 'Post 2', 'Post 3']), 1000);
+  return new Promise((resolve) =&gt; {
+    setTimeout(() =&gt; resolve(['Post 1', 'Post 2', 'Post 3']), 1000);
   });
 }
 
 getUser(123)
-  .then(user => {
+  .then(user =&gt; {
     console.log('User:', user);
     return getUserPosts(user);
   })
-  .then(posts => {
+  .then(posts =&gt; {
     console.log('Posts:', posts);
   })
-  .catch(error => {
+  .catch(error =&gt; {
     console.error('Error:', error);
   });
 
@@ -209,8 +242,8 @@ getUser(123)
 
 myPromise
   .then(
-    result => console.log(result),
-    error => console.error(error)
+    result =&gt; console.log(result),
+    error =&gt; console.error(error)
   );
 
 	then: Nhận hai callback:
@@ -222,10 +255,10 @@ myPromise
 
 
 
-const myPromise = new Promise((resolve) => resolve('Success'));
+const myPromise = new Promise((resolve) =&gt; resolve('Success'));
 myPromise.then(
-  result => console.log(result),
-  error => console.error(error)
+  result =&gt; console.log(result),
+  error =&gt; console.error(error)
 );
 
 
@@ -234,8 +267,8 @@ myPromise.then(
 # 7. Promise.catch()
 
 myPromise
-  .then(result => console.log(result))
-  .catch(error => console.error(error));
+  .then(result =&gt; console.log(result))
+  .catch(error =&gt; console.error(error));
 
 
 	catch: Chuyên xử lý lỗi, gọn hơn then(null, errorHandler).
@@ -243,17 +276,17 @@ myPromise
 	Ngữ cảnh: Dùng sau chuỗi .then để bắt lỗi từ bất kỳ bước nào.
 
 
-const myPromise = new Promise((_, reject) => reject(new Error('Fail')));
-myPromise.then(result => console.log(result)).catch(error => console.error(error.message));
+const myPromise = new Promise((_, reject) =&gt; reject(new Error('Fail')));
+myPromise.then(result =&gt; console.log(result)).catch(error =&gt; console.error(error.message));
 
 
 
 # 8. Promise.finally()
 
 myPromise
-  .then(result => console.log(result))
-  .catch(error => console.error(error))
-  .finally(() => console.log('Operation completed'));
+  .then(result =&gt; console.log(result))
+  .catch(error =&gt; console.error(error))
+  .finally(() =&gt; console.log('Operation completed'));
 
 
 		finally: Chạy bất kể Promise fulfilled hay rejected.
@@ -269,14 +302,14 @@ myPromise
 const fs = require('fs').promises;
 
 const promise1 = Promise.resolve('First result');
-const promise2 = new Promise((resolve) => setTimeout(() => resolve('Second result'), 1000));
+const promise2 = new Promise((resolve) =&gt; setTimeout(() =&gt; resolve('Second result'), 1000));
 const promise3 = fs.readFile('data.txt', 'utf8');
 
 Promise.all([promise1, promise2, promise3])
-  .then(results => {
+  .then(results =&gt; {
     console.log('Results:', results);
   })
-  .catch(error => {
+  .catch(error =&gt; {
     console.error('Error in one of the promises:', error);
   });
 
@@ -291,11 +324,11 @@ Promise.all([promise1, promise2, promise3])
 
 # 10. Promise.race() for First Result
 
-const promise1 = new Promise(resolve => setTimeout(() => resolve('First result'), 1000));
-const promise2 = new Promise(resolve => setTimeout(() => resolve('Second result'), 500));
+const promise1 = new Promise(resolve =&gt; setTimeout(() =&gt; resolve('First result'), 1000));
+const promise2 = new Promise(resolve =&gt; setTimeout(() =&gt; resolve('Second result'), 500));
 
 Promise.race([promise1, promise2])
-  .then(result => {
+  .then(result =&gt; {
     console.log('Fastest result:', result);
   });
 
@@ -307,7 +340,7 @@ Promise.race([promise1, promise2])
 	Ngữ cảnh: Dùng cho timeout (như chờ API 5s, nếu không trả thì báo lỗi).
 	Ví dụ thực tế: Gọi API, nếu chậm thì trả về cached data.
 
-const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 700));
+const timeout = new Promise((_, reject) =&gt; setTimeout(() =&gt; reject(new Error('Timeout')), 700));
 Promise.race([promise1, promise2, timeout]).then(...).catch(...);
 
 
@@ -316,23 +349,23 @@ Promise.race([promise1, promise2, timeout]).then(...).catch(...);
 # 11. Error Handling in Promises
 
 function fetchData() {
-  return new Promise((_, reject) => {
+  return new Promise((_, reject) =&gt; {
     reject(new Error('Network error'));
   });
 }
 
 fetchData()
-  .then(data => console.log('Data:', data))
-  .catch(error => console.log('Error handled in catch:', error.message));
+  .then(data =&gt; console.log('Data:', data))
+  .catch(error =&gt; console.log('Error handled in catch:', error.message));
 function fetchData() {
-  return new Promise((_, reject) => {
+  return new Promise((_, reject) =&gt; {
     reject(new Error('Network error'));
   });
 }
 
 fetchData()
-  .then(data => console.log('Data:', data))
-  .catch(error => console.log('Error handled in catch:', error.message));
+  .then(data =&gt; console.log('Data:', data))
+  .catch(error =&gt; console.log('Error handled in catch:', error.message));
 
 Error handled in catch: Network error
 
@@ -347,4 +380,46 @@ Cách xử lý:
 
 
 
-</pre><a id='backBottom' href='../NodeJS-learning.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
+</code></pre>
+</div>
+<div class='nav-bar'><a class='nav-btn' href='lesson9.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../NodeJS-learning.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson11.html'>Bài sau ➡️</a></div><button class='theme-toggle-btn' onclick='toggleTheme()'>🌓 Đổi Giao Diện</button>
+</div>
+<script>
+const lessonKey = 'NodeJS-learning_lesson10.html';
+function toggleTheme() {
+   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';
+   document.body.className = mode;
+   localStorage.setItem('theme', mode);
+}
+function toggleDone() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   if (isDone) {
+       localStorage.removeItem(lessonKey);
+   } else {
+       localStorage.setItem(lessonKey, 'done');
+   }
+   renderDoneStatus();
+}
+function renderDoneStatus() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   let btn = document.getElementById('doneButton');
+   if (isDone) {
+       btn.className = 'done-btn completed';
+       btn.innerText = 'Đã Hoàn Thành ✅';
+   } else {
+       btn.className = 'done-btn';
+       btn.innerText = 'Đánh dấu đã học ⚪';
+   }
+}
+function copyContent() {
+   let text = document.getElementById('lessonCode').innerText;
+   navigator.clipboard.writeText(text).then(function() {
+       alert('✅ Đã sao chép nội dung bài học!');
+   });
+}
+function initLesson() {
+   document.body.className = localStorage.getItem('theme') || 'dark-mode';
+   renderDoneStatus();
+   if (window.Prism) Prism.highlightAll();
+}
+</script></body></html>

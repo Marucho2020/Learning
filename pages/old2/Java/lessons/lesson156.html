@@ -1,0 +1,76 @@
+<html><head><title>Lesson 156 == Exception Handling nâng cao ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 156 -- Exception Handling nâng cao -//</h1><pre>
+#	1. Nguyên tắc thiết kế Exception Handling cấp cao 
+
+	##	Phân biệt rõ lỗi Checked và Unchecked: 
+		Checked exception là các lỗi cần xử lý bắt buộc hoặc khai báo throws để caller biết.
+		Unchecked exception thường là lỗi logic, runtime, không bắt buộc catch.
+
+	## Không lạm dụng throws checked exception trên toàn bộ method → gây rối code, khó maintain. 
+	## 	Fail fast và fail safe:
+		
+		Fail fast khi lỗi nghiêm trọng, không thể tiếp tục.
+		Fail safe với lỗi không nghiêm trọng, log và tiếp tục.
+
+# 2. Thiết kế hierarchy Exception hợp lý
+
+	Xây dựng hierarchy exception riêng cho domain, ví dụ:
+		
+		public class AppException extends RuntimeException { ... }
+		public class ValidationException extends AppException { ... }
+		public class DatabaseException extends AppException { ... }
+
+	Giúp xử lý theo loại lỗi dễ dàng, tái sử dụng, gọn gàng.
+
+# 3. Checked vs Unchecked: Khi nào dùng gì?
+
+	Checked Exception phù hợp cho lỗi ngoại lệ có thể dự đoán được và caller có thể xử lý (ví dụ: IOException).
+	
+	Unchecked Exception cho lỗi logic, bug, hoặc khi xử lý không khả thi (NullPointerException, IllegalArgumentException).
+
+
+# 4. Advanced Exception Propagation & Wrapping
+
+	Không để exception “lọt” mà không wrap hoặc bổ sung thông tin:
+
+try {
+    // database call
+} catch(SQLException e) {
+    throw new DatabaseException("Failed to query user table", e);
+}
+	Giúp stacktrace rõ ràng, dễ debug.
+
+
+# 5. Exception Handling trong đa luồng / async
+
+	## Async Exception Handling phức tạp: 
+		Với CompletableFuture, bắt lỗi bằng .exceptionally(), .handle().
+		Trong Reactive, xử lý bằng onErrorResume(), onErrorMap().
+		
+	## Bắt buộc log và propagate đúng cách để không mất lỗi. 
+
+# 6. Global Exception Handling & Logging	
+
+	Dùng @ControllerAdvice + @ExceptionHandler trong Spring để tập trung xử lý lỗi API.
+	Log đầy đủ (stacktrace, context, request info).
+	Có thể tùy biến trả về response chuẩn hóa JSON lỗi.
+	
+# 7. Retry, Circuit Breaker & Fallback Patterns
+
+	Không phải lỗi nào cũng nên throw ngay.
+	Áp dụng retry logic thông minh với giới hạn, delay (Exponential Backoff).
+	Circuit Breaker bảo vệ hệ thống tránh cascade failure (Hystrix, Resilience4j).
+	Fallback methods cung cấp phương án dự phòng.
+
+
+# 8. Best Practices
+
+| Thực hành                                                   | Lý do                              |
+| ----------------------------------------------------------- | ---------------------------------- |
+| Không dùng exception để điều khiển luồng logic thường xuyên | Gây giảm performance, khó đọc code |
+| Luôn thêm thông tin ngữ cảnh khi throw mới exception        | Giúp debug dễ dàng                 |
+| Tận dụng checked exception cho API boundary                 | Caller biết phải xử lý             |
+| Tránh catch rộng quá mức (vd: catch Exception)              | Có thể che giấu lỗi quan trọng     |
+| Dùng logging framework phù hợp, tránh printStackTrace() thô | Quản lý log tập trung, dễ monitor  |
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

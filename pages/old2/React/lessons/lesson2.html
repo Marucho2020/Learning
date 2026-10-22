@@ -1,0 +1,53 @@
+<html><head><title>Lesson 2 == React Upgrade ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../react-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 2 -- React Upgrade -//</h1><pre>
+# React 18 
+
+
+# Root API
+		React 18 giới thiệu Root API mới, thay thế cho ReactDOM.render cũ. Cập nhật mã trong file index.js như sau:
+
+// Before (React 17 hoặc cũ hơn)
+import ReactDOM from 'react-dom';
+ReactDOM.render(<App />, document.getElementById('root'));
+
+// After (React 18)
+import ReactDOM from 'react-dom/client';
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+
+# Giải thích chi tiết: 
+
+	## 	 Sự khác biệt 
+		Cũ (ReactDOM.render): Đây là cách render ứng dụng trong React 17 và trước đó. Nó gắn trực tiếp component (ví dụ <App />) vào một phần tử DOM (thường là <div id="root"> trong index.html).
+
+		Mới (createRoot): React 18 giới thiệu createRoot, một API mới để tạo "root" cho ứng dụng React. Sau khi tạo root, bạn gọi root.render để hiển thị giao diện.
+
+	## Thay đổi cú pháp:
+
+		- Import: Thay vì react-dom, bạn nhập từ react-dom/client để sử dụng API mới.
+		- Tạo root: ReactDOM.createRoot(document.getElementById('root')) tạo một đối tượng root, đại diện cho điểm gắn kết của React vào DOM.
+		- Render: Gọi root.render(<App />) để hiển thị component chính (App) lên giao diện.
+
+
+	## Lợi ích của Root API 
+		
+		- Concurrent rendering: Root API cho phép React 18 sử dụng các tính năng đồng thời, như ưu tiên các bản cập nhật giao diện (ví dụ, xử lý các tác vụ nặng mà không làm giao diện bị đơ).
+		- Automatic batching: React 18 tự động nhóm các cập nhật trạng thái (state updates) để giảm số lần render, cải thiện hiệu suất.
+		- Hỗ trợ tương lai: Root API được thiết kế để tương thích với các tính năng mới như Suspense hoặc Server Components.
+
+
+
+	## Sâu sắc hơn:
+		- Hành vi cũ: Nếu bạn tiếp tục dùng ReactDOM.render sau khi nâng cấp lên React 18, ứng dụng sẽ hoạt động nhưng chỉ ở chế độ "legacy" (giống React 17), không tận dụng được các tính năng mới.
+		- Tính tương thích: Root API yêu cầu tất cả các thư viện liên quan (như react-router-dom, redux) phải tương thích với React 18. Nếu không, bạn có thể gặp lỗi như "Invalid hook call".
+		- Tác động đến mã: Trong hầu hết các trường hợp, chỉ cần thay đổi file index.js như trên là đủ. Các component hiện có thường không cần sửa đổi.	
+		 	-
+
+
+	## Lưu ý thực hành:
+	
+		- Mở file src/index.js trong dự án của bạn và cập nhật mã như ví dụ trên.
+		- Sau khi thay đổi, chạy npm start để kiểm tra xem ứng dụng có hoạt động bình thường không.
+		- Nếu gặp lỗi, kiểm tra console trình duyệt và file package.json để đảm bảo tất cả phụ thuộc đều tương thích.	
+
+	
+</pre><a id='backBottom' href='../react-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

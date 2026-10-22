@@ -1,0 +1,250 @@
+<html><head><title>Lesson 14 == Khái niệm cơ bản về DB trong service now ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../service-now-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 14 -- Khái niệm cơ bản về DB trong service now -//</h1><pre>
+# Parent / Child / Base / Core
+		Parent table: bảng cha
+		- Child table: bảng con
+		- Base table: bảng gốc, không extend từ ai
+		- Core table: bảng có sẵn trong ServiceNow
+		
+		
+# Custom Table
+		Không phải core nhưng vẫn liên kết được
+		Có thể reference tới core table
+		
+		
+		
+# Table Extension (Kế thừa bảng) 
+		
+		
+	Table con kế thừa toàn bộ field từ table cha
+	Có thể thêm field riêng
+
+	Ví dụ:
+	Task → Incident, Problem, Change		
+			
+		
+		
+# Database Views 		
+		
+		Join nhiều bảng để report
+		Là read-only virtual table
+
+	Ví dụ:
+		incident + metric definition + metric instance		
+		
+		
+		
+# Relationship Types 		
+		
+			
+	1. One-to-Many
+		Một record liên kết nhiều record
+		Ví dụ: 1 user → nhiều incident
+	
+	2. Many-to-Many
+		Nhiều record liên kết nhau
+		Ví dụ: students ↔ classes	
+			
+		
+# Reference Field (Trường tham chiếu) 		
+		
+		Lưu sys_id của record ở bảng khác
+		Tạo liên kết giữa các bảng
+
+	Ví dụ:
+		Caller trong Incident → tham chiếu User table
+
+	Đặc điểm:
+		Chỉ reference 1 table
+		Có thể search wildcard
+
+	Nếu muốn reference nhiều bảng → dùng Document ID		
+		
+		
+		
+# Field Label vs Field Name 		
+		
+		Label: hiển thị UI (ví dụ: First Name)
+		Field name: tên kỹ thuật (ví dụ: city)
+
+	Ví dụ:
+		Label: Location
+		Field name: city (trong sys_user table)		
+		
+		
+			
+# Lab 		
+		
+	Tạo table mới
+	Config list view
+	Update menu & module		
+	
+	
+	
+# 2. 🧩 sys_id — thứ bạn không được xem nhẹ 	
+	
+	
+		Là primary key thực sự
+		Không phải number (INC001234)
+
+	Sai lầm phổ biến:
+		dev dùng number để join → chết chắc khi migrate data
+
+	👉 Senior luôn:
+		join bằng sys_id
+		number chỉ là UI layer
+		
+	
+	
+# 	3. ⚠️ Field Name vs Label — bẫy chết người
+	
+	
+	Ví dụ:
+		Label: Location
+		Field: city
+
+	👉 Nếu bạn viết script mà dùng label → fail
+
+	Senior mindset:
+		luôn dùng field name
+		label chỉ dành cho UI	
+		
+	
+	
+	
+# 	4. 🔗 Reference Field — nền tảng của toàn bộ platform
+	
+		
+	Đây là thứ biến ServiceNow thành relational system:
+
+		Thực chất:
+			reference = foreign key (sys_id)
+
+		Nhưng:
+			UI cho phép lookup
+			Script cho phép dot-walking
+
+	Ví dụ:
+			current.caller_id.email
+		👉 Đây là điểm mạnh cực lớn	
+	
+	
+	
+	
+	
+# 5. 🧠 Dot-walking (ẩn trong tài liệu nhưng cực quan trọng)	
+	
+	Từ reference:
+		incident.caller_id.department.manager.email
+	
+		👉 Bạn đang traverse object graph, không chỉ DB
+	
+	
+	
+	
+# 6. ⚙️ Table Extension — thiết kế OOP trong database 	
+	
+	
+	Task table:
+		Là base class
+		Incident, Problem = subclass	
+			
+	
+	Task
+	 ├── Incident
+	 ├── Problem
+	 └── Change	
+	
+	❗ Sai lầm phổ biến:
+		Tạo table mới thay vì extend Task
+
+		👉 Hậu quả:
+			mất workflow
+			mất SLA
+			mất reporting chuẩn
+		
+	
+	
+# 	7. 🧱 Core vs Custom — chiến lược kiến trúc
+	
+	
+	Nếu giống Task → extend Task
+	Nếu domain riêng → custom table
+	Nếu chỉ thêm field → extend hoặc add field	
+		
+	
+	
+	
+# 	8. 🔄 Many-to-Many — không phải optional 
+	
+	
+	ServiceNow không xử lý tốt relational phức nếu bạn không dùng M2M table
+
+	Ví dụ:
+		User ↔ Role
+		CI ↔ Service
+
+	👉 Luôn cần table trung gian	
+		
+	
+	
+# 9. 📊 Database View — chỉ để report, không phải logic	9. 
+	
+	Sai lầm:
+		dùng DB View cho business logic
+
+	👉 Không:
+		nó read-only
+		performance tệ nếu lạm dụng	
+		
+		
+	
+# 10. 🧠 Schema Map — tool underrated 	
+	
+		
+	Senior dùng để:
+		debug data model
+		hiểu inheritance
+		audit system	
+	
+	
+	
+# 	⚠️ NHỮNG HIỂU LẦM NGUY HIỂM
+	
+		
+	❌ “Table = bảng SQL bình thường”
+		→ Sai. Nó có inheritance + metadata
+
+	❌ “Reference chỉ là dropdown”
+		→ Sai. Nó là relational backbone
+
+	❌ “Custom table càng nhiều càng tốt”
+		→ Sai. Bạn đang phá architecture	
+		
+	
+# 🚀 CÁCH DÙNG THỰC TẾ (LEVEL SENIOR) 	
+	
+	
+	Khi design feature, luôn hỏi:
+		Data này thuộc domain nào?
+		Có extend được Task không?
+		Quan hệ là:
+		1-n?
+		n-n?
+		Có cần reference không?
+		Có cần reporting → DB View không?	
+	
+# 🧩 TÓM LẠI 	
+	
+	Nếu bạn nhìn ServiceNow như:
+
+	“một hệ thống bảng”
+		→ bạn sẽ mãi ở level junior
+
+	Nếu bạn nhìn nó như:
+		“một hệ thống object + metadata + relational graph”
+		→ lúc đó bạn bắt đầu chạm vào level senior	
+	
+	
+	
+	
+</pre><a id='backBottom' href='../service-now-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

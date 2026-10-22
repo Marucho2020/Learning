@@ -1,0 +1,133 @@
+<html><head><title>Lesson 125 == Persitent Segment Tree ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 125 -- Persitent Segment Tree -//</h1><pre># Khái niệm 
+	Persistence trong cấu trúc dữ liệu là khả năng giữ lại lịch sử các phiên bản trước của cấu trúc sau mỗi thay đổi (update), mà không thay đổi phiên bản cũ.
+		- Full persistence: truy cập & cập nhật bất kỳ phiên bản nào.
+		- Partial persistence: chỉ truy cập phiên bản cũ, cập nhật chỉ phiên bản hiện tại.
+		- Functional persistence: không có trạng thái thay đổi — mỗi thao tác trả về một phiên bản mới (giống lập trình hàm).
+
+	→ Persistent Segment Tree = giữ lại nhiều phiên bản của segment tree, sau mỗi lần update mà không phá vỡ phiên bản cũ.
+	
+	
+# 	2. 🔧 So sánh Segment Tree thường vs Persistent Segment Tree 
+	| Đặc điểm          | Segment Tree thường      | Persistent Segment Tree              |
+| ----------------- | ------------------------ | ------------------------------------ |
+| Cập nhật (update) | Thay đổi trực tiếp       | Tạo phiên bản mới (dùng lại phần cũ) |
+| Truy vấn (query)  | Chỉ 1 phiên bản hiện tại | Truy vấn bất kỳ phiên bản nào        |
+| Lịch sử           | Không giữ                | Giữ từng phiên bản rõ ràng           |
+| Tốn bộ nhớ        | O(n)                     | O(n log n) (chia sẻ nút cũ)          |
+
+	
+	
+# 	3. ⚙️ Ứng dụng thực tế (cần biết khi thiết kế hệ thống)
+	
+| Trường hợp ứng dụng                                  | Giải thích                                                                                                |
+| ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| 🕓 Time-travel query                                 | Cần biết trạng thái dữ liệu ở 1 thời điểm trong quá khứ (log, lịch sử giao dịch, dữ liệu thời gian thực). |
+| ⏱ Versioned configuration / snapshot                 | Mỗi lần update cấu hình/dữ liệu → tạo version mới → rollback dễ dàng.                                     |
+| 🕹 Undo/Redo trong hệ thống phức tạp                 | Lưu lịch sử thay đổi dạng cây → dễ undo từng bước.                                                        |
+| 🧮 Dữ liệu không ổn định (time-varying)              | Như stock price, lượng truy cập server, lượt view theo giờ...                                             |
+| 🔐 Immutable data handling (Blockchain, DSL engines) | Không được thay đổi dữ liệu cũ → dùng persistence.                                                        |
+	
+	
+	
+# 	4. 🧠 Cốt lõi kỹ thuật
+	
+	## ❗ Ý tưởng chính: 
+		- Mỗi khi update, chỉ tạo lại các nút trên đường đi từ root đến leaf bị ảnh hưởng.
+		- Các phần khác của cây vẫn dùng lại được.
+		- Như vậy: O(log n) bộ nhớ/phiên bản → rất hiệu quả.
+
+
+
+	## 📌 Code nguyên lý:
+class Node {
+    int val;
+    Node left, right;
+
+    Node(int val, Node l, Node r) {
+        this.val = val;
+        this.left = l;
+        this.right = r;
+    }
+}
+
+Node update(Node node, int l, int r, int idx, int value) {
+    if (l == r) {
+        return new Node(value, null, null); // tạo nút mới
+    }
+    int mid = (l + r) / 2;
+    if (idx <= mid) {
+        return new Node(0,
+            update(node.left, l, mid, idx, value),
+            node.right
+        );
+    } else {
+        return new Node(0,
+            node.left,
+            update(node.right, mid + 1, r, idx, value)
+        );
+    }
+}
+	
+	
+		- node là root của version hiện tại.
+		- Mỗi lần update trả về root mới của version mới.
+		- Có thể lưu danh sách List<Node> versions để giữ từng root.
+	
+	
+	
+	
+	## ⏱ Truy vấn trên version: 
+int query(Node node, int l, int r, int ql, int qr) {
+    if (ql > r || qr < l) return 0;
+    if (ql <= l && r <= qr) return node.val;
+    int mid = (l + r) / 2;
+    return query(node.left, l, mid, ql, qr)
+         + query(node.right, mid+1, r, ql, qr);
+}
+	
+	
+	
+	
+# 5. 📦 Bộ nhớ & độ phức tạp 
+	
+	
+	- Tạo version mới: O(log n)
+	- Truy vấn version bất kỳ: O(log n)
+	- Tổng số node sau k lần update: O(k log n)
+	- Tối ưu hơn ArrayList snapshot hoặc clone object!
+	
+	
+# 	6. 📚 Kiến thức cần nắm để hiểu sâu Persistent Segment Tree:
+
+| Chủ đề                                     | Vì sao cần học?                              |
+| ------------------------------------------ | -------------------------------------------- |
+| Tree data structure                        | Hiểu cách phân chia và tổ chức dữ liệu       |
+| Immutable data / Functional DS             | Hiểu cách giữ dữ liệu không thay đổi         |
+| Memory sharing / Copy-on-write             | Tối ưu hiệu suất & không tạo bản sao toàn bộ |
+| Dynamic Programming on trees               | Kết hợp logic xử lý phân đoạn phức tạp       |
+| Advanced Java (immutability, memory model) | Để code Persistent DS đúng cách              |
+	
+	
+	
+# 	7. 🧪 Ứng dụng demo bạn có thể triển khai:
+	
+		- Lưu lịch sử giao dịch tài khoản theo từng phiên bản cập nhật.
+		- Thống kê tổng view của các bài viết tại các mốc thời gian khác nhau.
+		- Xây dựng hệ thống undo/redo cho hệ thống vẽ đồ họa (mỗi lần thay đổi là 1 version).
+		- Lưu cấu hình hệ thống, có thể rollback lại bất kỳ lúc nào.	
+	
+
+
+
+# 8. 🧱 So sánh với những giải pháp khác 
+
+| Giải pháp                 | Có persistence? | Có hỗ trợ query? | Hiệu suất      |
+| ------------------------- | --------------- | ---------------- | -------------- |
+| Array snapshot            | Có (deep copy)  | Có               | Rất chậm       |
+| Immutable Map/List (Java) | Có              | Có               | Tùy cấu trúc   |
+| Persistent Segment Tree   | Có (rất tốt)    | Có (O(log n))    | Tối ưu         |
+| Redis + versioned key     | Có              | Tùy              | Tốn tài nguyên |
+
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

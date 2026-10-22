@@ -1,0 +1,161 @@
+<html><head><title>Lesson 22 == File System Module ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../NodeJS-learning.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 22 -- File System Module -//</h1><pre>
+# 1. Introduction to Node.js File System
+
+	Định nghĩa: fs module cung cấp APIs để làm việc với files/directories: sync/async, callback/promise. Core module, no npm install.
+
+const fs = require('fs');  // CommonJS
+// hoặc import fs from 'fs';  // ESM (package.json: "type": "module")
+
+
+	## Promise-based (recommended cho async/await):
+	const fs = require('fs').promises;  // Hoặc import { readFile } from 'fs/promises';
+
+
+
+	## Common Use Cases (mở rộng):
+
+		- File Ops: Đọc/ghi JSON config, logs, images.
+		- Dir Ops: Quản lý uploads, cache, backups.
+		- Advanced: Streams cho big data (e.g., video streaming), watchers cho hot-reload (như Nodemon dùng fs.watch).
+
+	Performance Tip: Với large files (>100MB), dùng streams để tránh load toàn bộ vào RAM (OOM errors). Năm 2025, fs hỗ trợ Web Streams API cho browser-like code.
+
+
+
+# 2. Reading Files
+
+	Phương thức chính: fs.readFile(path, options, callback) – async, trả Buffer/string.
+
+	## Callback-based:
+const fs = require('fs');
+fs.readFile('myfile.txt', 'utf8', (err, data) => {
+  if (err) return console.error(err);
+  console.log(data);  // String nếu utf8, Buffer nếu không
+});
+
+
+
+	## Promise-based (Modern):
+const fs = require('fs').promises;
+async function read() {
+  try {
+    const data = await fs.readFile('myfile.txt', 'utf8');
+    console.log(data);
+  } catch (err) {
+    console.error(err);
+  }
+}
+read();
+
+
+
+	## Sync (chỉ cho scripts đơn giản): 
+try {
+  const data = fs.readFileSync('myfile.txt', 'utf8');
+} catch (err) {}
+
+	Chuyên gia sâu: Luôn specify encoding ('utf8') để tránh Buffer. Handle errors (ENOENT: file not exist). Với binary (images), omit encoding. Security: Sanitize paths để tránh path traversal (e.g., dùng path.resolve()).
+
+
+# 3. Creating and Writing Files
+	## writeFile: Tạo/overwrite file.
+
+const fs = require('fs').promises;
+async function write() {
+  await fs.writeFile('myfile.txt', 'Hello World', 'utf8');
+}
+
+
+	## appendFile: Append mà không overwrite.
+await fs.appendFile('log.txt', `\n${new Date()}: Event`, 'utf8');
+
+
+
+
+	## File Handles (low-level, cho control cao):
+const handle = await fs.open('file.txt', 'w');
+await handle.write('Content');
+await handle.close();  // Luôn close!
+
+	## Streams cho Large Files:
+
+const writable = fs.createWriteStream('bigfile.txt');
+writable.write('Chunk 1');
+writable.end('End');  // Auto close
+
+
+	Sâu sắc: Flags như 'w' (write, create if not exist), 'a' (append). Với JSON, dùng JSON.stringify(data, null, 2) cho pretty-print. Performance: Streams pipe() cho copy large files (e.g., readStream.pipe(writeStream)). Security: Set permissions (mode: 0o600) để tránh unauthorized access.
+
+
+
+# 4. Deleting Files and Directories
+
+	## unlink (xóa file):
+		await fs.unlink('file.txt');  // Throw nếu không exist, dùng access() để check
+
+
+	## Multiple Files:
+		await Promise.all(files.map(f => fs.unlink(f).catch(e => {})));
+
+
+
+	## Directories: fs.rm(dir, { recursive: true, force: true }) (Node 14+).
+		await fs.rm('dir', { recursive: true });
+
+
+	## Empty Dir (không xóa dir):
+
+		Loop readdir() và unlink/rm recursive.
+		Chuyên gia: force: true ignore non-exist errors. Security: Validate paths để tránh xóa root (e.g., dùng path.normalize()). Năm 2025, fs.rm tốt hơn rmdir (deprecated).
+
+
+
+	## 5. Renaming and Moving Files
+	
+		rename (rename/move):
+await fs.rename('old.txt', 'new.txt');  // Same dir
+await fs.rename('file.txt', 'newdir/file.txt');  // Move
+	
+	
+	
+	
+		 Cross-Device (nếu EXDEV error):
+			Copy rồi unlink (như ví dụ fallback).
+	
+	
+		Batch Rename:
+			Loop readdir(), match pattern, rename.
+	
+		
+		Atomic Operations (an toàn cho critical files):
+			Write temp, rename temp to target (atomic trên Unix).
+	
+			Sâu: rename atomic trên same filesystem. Với Windows, fallback copy. Security: Check existence trước rename để tránh overwrite accidental.	
+	
+	
+	## 6. Best Practices & Advanced Tips (Mở Rộng)
+		Async Priority: Tránh sync trừ CLI tools – async giữ app responsive.
+		Error Handling: Catch codes như ENOENT, EACCES (permissions). Dùng fs.access() để check exist/permissions.	
+		Permissions: Dùng fs.chmod(path, 0o755) – octal mode (owner/group/other).
+		Watching: fs.watch('file.txt', (event, filename) => {}) cho real-time changes (e.g., live reload).
+		Stats: fs.stat(path) trả size, mtime, isDirectory(), etc.
+		Symbolic Links: fs.symlink(target, path) cho shortcuts.
+		Performance: Với dirs lớn, dùng readdir withFileTypes. Streams cho I/O heavy.	
+	
+		Security
+	
+			- Path sanitization: path.resolve(__dirname, userInput) tránh ../ attacks.
+			- Umask: Set default permissions.
+			- Năm 2025: Kết hợp fs với WASI (WebAssembly System Interface) cho secure sandboxes.	
+	
+		Common Pitfalls: Quên close handles (leak FDs), không handle large files (OOM), ignore encoding (garbage text).
+	
+	
+# 	7. Tóm Tắt Và Lời Khuyên Chuyên Gia
+	fs là công cụ mạnh mẽ cho file ops, nhưng dùng cẩn thận để tránh data loss/security issues. Bắt đầu với promises/async cho modern code. Trong real apps, kết hợp với Express cho file uploads (multer middleware).	
+	
+	
+	
+https://www.w3schools.com/nodejs/nodejs_path.asp	
+	
+</pre><a id='backBottom' href='../NodeJS-learning.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

@@ -1,4 +1,37 @@
-<html><head><title>Lesson 22 == Vue $emit ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../vue-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 22 -- Vue $emit -//</h1><pre># Khái niệm 
+<!DOCTYPE html><html lang='vi'><head><meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0'>
+<title>Lesson 22 -- Vue $emit -//</title>
+<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css'>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js'></script>
+<script id='MathJax-script' async src='https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'></script>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; margin: 0; padding: 20px; transition: 0.3s; }
+.dark-mode { background-color: #121212; color: #e0e0e0; }
+.light-mode { background-color: #ffffff; color: #333333; }
+.container { max-width: 950px; margin: auto; }
+h1 { text-align: center; color: #3498db; margin: 20px 0; font-size: 26px; }
+.nav-bar { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 20px 0; }
+.nav-btn { text-decoration: none; padding: 10px 18px; background: #3498db; color: white; border-radius: 6px; font-weight: bold; font-size: 15px; display: inline-block; transition: 0.2s; }
+.nav-btn:hover { background: #2980b9; }
+.nav-btn.home-nav { background: #6c757d; }
+.nav-btn.home-nav:hover { background: #5a6268; }
+.nav-btn.disabled { background: #aaa; cursor: not-allowed; opacity: 0.5; }
+.done-btn { display: block; margin: 15px auto; padding: 10px 24px; border: 2px solid #2ecc71; background: transparent; color: #2ecc71; border-radius: 25px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+.done-btn.completed { background: #2ecc71; color: white; }
+.content-box { position: relative; margin: 20px 0; }
+pre { padding: 20px; border-radius: 8px; white-space: pre-wrap; word-break: break-word; overflow-x: auto; font-family: 'Consolas', 'Courier New', monospace; font-size: 15px; }
+.dark-mode pre { background: #1a1a1a; color: #f8f8f2; border: 1px solid #333; }
+.light-mode pre { background: #f8f9fa; color: #212529; border: 1px solid #e9ecef; }
+.copy-btn { position: absolute; top: 12px; right: 12px; padding: 6px 12px; font-size: 12px; background: #555; color: white; border: none; border-radius: 4px; cursor: pointer; opacity: 0.8; }
+.copy-btn:hover { opacity: 1; background: #2ecc71; }
+.theme-toggle-btn { display: block; margin: 20px auto; padding: 8px 16px; background: transparent; border: 1px solid #888; color: inherit; border-radius: 5px; cursor: pointer; }
+</style></head><body onload='initLesson()'>
+<div class='container'>
+<div class='nav-bar'><a class='nav-btn' href='lesson21.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../vue-js-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson23.html'>Bài sau ➡️</a></div><h1>Lesson 22 -- Vue $emit -//</h1>
+<button id='doneButton' class='done-btn' onclick='toggleDone()'>Mark as Done ⚪</button>
+<div class='content-box'>
+<button class='copy-btn' onclick='copyContent()'>📋 Copy nội dung</button>
+<pre><code id='lessonCode'># Khái niệm 
 	$emit là một phương thức trong Vue.js cho phép component con phát ra (emit) một sự kiện tùy chỉnh để thông báo cho component cha.
 	Component cha có thể lắng nghe sự kiện này và xử lý dữ liệu mà component con gửi lên.
 	
@@ -11,7 +44,7 @@
 	payload: Dữ liệu (tùy chọn) được gửi kèm sự kiện đến component cha.
 
 	## Trong component cha (template):
-	<child-component @event-name="handlerFunction"></child-component>
+	&lt;child-component @event-name="handlerFunction"&gt;&lt;/child-component&gt;
 	@event-name: Lắng nghe sự kiện từ component con.
 	handlerFunction: Hàm trong component cha được gọi khi sự kiện xảy ra, nhận payload làm tham số.
 	
@@ -21,7 +54,7 @@
 
 	## Bước 1: Tạo Component Con 
 	
-<script>
+&lt;script&gt;
 Vue.component('button-counter', {
   data() {
     return {
@@ -29,7 +62,7 @@ Vue.component('button-counter', {
     };
   },
   template: `
-    <button @click="increment">Click me: {{ count }}</button>
+    &lt;button @click="increment"&gt;Click me: {{ count }}&lt;/button&gt;
   `,
   methods: {
     increment() {
@@ -38,7 +71,7 @@ Vue.component('button-counter', {
     }
   }
 });
-</script>	
+&lt;/script&gt;	
 	Mỗi lần nhấp vào nút, count tăng và component con phát sự kiện update-count với giá trị count.
 	
 	
@@ -46,12 +79,12 @@ Vue.component('button-counter', {
 	
 	
 	## Bước 2: Sử dụng trong Component Cha 
-<div id="app">
-  <h3>Total clicks: {{ total }}</h3>
-  <button-counter @update-count="updateTotal"></button-counter>
-</div>
+&lt;div id="app"&gt;
+  &lt;h3&gt;Total clicks: {{ total }}&lt;/h3&gt;
+  &lt;button-counter @update-count="updateTotal"&gt;&lt;/button-counter&gt;
+&lt;/div&gt;
 
-<script>
+&lt;script&gt;
 new Vue({
   el: '#app',
   data: {
@@ -63,7 +96,7 @@ new Vue({
     }
   }
 });
-</script>
+&lt;/script&gt;
 
 	Mỗi lần nhấp vào nút trong button-counter, component con gửi giá trị count lên component cha qua sự kiện update-count.
 	Component cha cập nhật total và hiển thị số lần nhấp: "Total clicks: X".
@@ -87,7 +120,7 @@ new Vue({
 	
 	Gửi nhiều dữ liệu qua $emit:
 		
-<script>
+&lt;script&gt;
 Vue.component('user-form', {
   data() {
     return {
@@ -96,11 +129,11 @@ Vue.component('user-form', {
     };
   },
   template: `
-    <div>
-      <input v-model="name" placeholder="Name">
-      <input v-model="email" placeholder="Email">
-      <button @click="submit">Submit</button>
-    </div>
+    &lt;div&gt;
+      &lt;input v-model="name" placeholder="Name"&gt;
+      &lt;input v-model="email" placeholder="Email"&gt;
+      &lt;button @click="submit"&gt;Submit&lt;/button&gt;
+    &lt;/div&gt;
   `,
   methods: {
     submit() {
@@ -108,14 +141,14 @@ Vue.component('user-form', {
     }
   }
 });
-</script>
+&lt;/script&gt;
 
-<div id="app">
-  <user-form @user-submitted="handleSubmit"></user-form>
-  <p>User: {{ userInfo.name }} - {{ userInfo.email }}</p>
-</div>
+&lt;div id="app"&gt;
+  &lt;user-form @user-submitted="handleSubmit"&gt;&lt;/user-form&gt;
+  &lt;p&gt;User: {{ userInfo.name }} - {{ userInfo.email }}&lt;/p&gt;
+&lt;/div&gt;
 
-<script>
+&lt;script&gt;
 new Vue({
   el: '#app',
   data: {
@@ -127,7 +160,7 @@ new Vue({
     }
   }
 });
-</script>	
+&lt;/script&gt;	
 	
 	Component con user-form phát sự kiện user-submitted với một object chứa name và email.
 	Component cha nhận object này và cập nhật userInfo.
@@ -136,11 +169,11 @@ new Vue({
 # Sử dụng emit trong Vue3 
 
 	## Component con (ChildComponent.vue) 
-<template>
-  <button @click="sendMessage">Send Message</button>
-</template>
+&lt;template&gt;
+  &lt;button @click="sendMessage"&gt;Send Message&lt;/button&gt;
+&lt;/template&gt;
 
-<script>
+&lt;script&gt;
 export default {
   // Khai báo sự kiện tùy chỉnh
   emits: ['custom-event'],
@@ -151,19 +184,19 @@ export default {
     }
   }
 };
-</script>		
+&lt;/script&gt;		
 
 
 	## Component cha (Parent.vue) 
 		
-<template>
-  <div>
-    <ChildComponent @custom-event="handleCustomEvent" />
-    <p>Message from child: {{ message }}</p>
-  </div>
-</template>
+&lt;template&gt;
+  &lt;div&gt;
+    &lt;ChildComponent @custom-event="handleCustomEvent" /&gt;
+    &lt;p&gt;Message from child: {{ message }}&lt;/p&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
 
-<script>
+&lt;script&gt;
 export default {
   data() {
     return {
@@ -176,7 +209,7 @@ export default {
     }
   }
 };
-</script>
+&lt;/script&gt;
 
 
 # Lưu ý
@@ -184,22 +217,22 @@ export default {
 	- Dữ liệu kèm theo: $emit có thể gửi nhiều tham số, ví dụ: this.$emit('custom-event', param1, param2).
 	- Bảo mật: Đảm bảo dữ liệu gửi qua $emit được xử lý an toàn trong component cha.
 	- Composition API: Trong Composition API, $emit được truy cập qua defineEmits:
-	- defineEmits chỉ được gọi một lần: Trong <script setup>, defineEmits là một macro chỉ được gọi một lần duy nhất để định nghĩa tất cả các sự kiện mà component con có thể phát ra. Bạn không thể gọi defineEmits nhiều lần để tạo các biến emit1, emit2 riêng biệt.
+	- defineEmits chỉ được gọi một lần: Trong &lt;script setup&gt;, defineEmits là một macro chỉ được gọi một lần duy nhất để định nghĩa tất cả các sự kiện mà component con có thể phát ra. Bạn không thể gọi defineEmits nhiều lần để tạo các biến emit1, emit2 riêng biệt.
 	- Cú pháp đúng: Tất cả các sự kiện cần được liệt kê trong một mảng duy nhất khi gọi defineEmits. Sau đó, một hàm emit được trả về để phát các sự kiện đã khai báo.
 
-<script setup>
+&lt;script setup&gt;
 const emit = defineEmits(['custom-event']);
 function sendMessage() {
   emit('custom-event', 'Hello from child!');
 }
-</script>
+&lt;/script&gt;
 
 	## Cú pháp đúng trong Composition API 
 	
 	
 		### Component con (ChildComponent.vue)
 		
-<script setup>
+&lt;script setup&gt;
 const emit = defineEmits(['custom-event-1', 'custom-event-2']);
 
 function triggerEvent1() {
@@ -209,20 +242,20 @@ function triggerEvent1() {
 function triggerEvent2() {
   emit('custom-event-2', 'Hello from event 2!');
 }
-</script>
+&lt;/script&gt;
 
-<template>
-  <div>
-    <button @click="triggerEvent1">Send Event 1</button>
-    <button @click="triggerEvent2">Send Event 2</button>
-  </div>
-</template>		
+&lt;template&gt;
+  &lt;div&gt;
+    &lt;button @click="triggerEvent1"&gt;Send Event 1&lt;/button&gt;
+    &lt;button @click="triggerEvent2"&gt;Send Event 2&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/template&gt;		
 		
 
 
 		### Component cha (Parent.vue)
 		
-<script setup>
+&lt;script setup&gt;
 import { ref } from 'vue';
 import ChildComponent from './ChildComponent.vue';
 
@@ -236,20 +269,62 @@ function handleEvent1(payload) {
 function handleEvent2(payload) {
   message2.value = payload;
 }
-</script>
+&lt;/script&gt;
 
-<template>
-  <div>
-    <ChildComponent 
+&lt;template&gt;
+  &lt;div&gt;
+    &lt;ChildComponent 
       @custom-event-1="handleEvent1" 
       @custom-event-2="handleEvent2" 
-    />
-    <p>Event 1: {{ message1 }}</p>
-    <p>Event 2: {{ message2 }}</p>
-  </div>
-</template>
+    /&gt;
+    &lt;p&gt;Event 1: {{ message1 }}&lt;/p&gt;
+    &lt;p&gt;Event 2: {{ message2 }}&lt;/p&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
 
 
 
 	
-</pre><a id='backBottom' href='../vue-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
+</code></pre>
+</div>
+<div class='nav-bar'><a class='nav-btn' href='lesson21.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../vue-js-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson23.html'>Bài sau ➡️</a></div><button class='theme-toggle-btn' onclick='toggleTheme()'>🌓 Đổi Giao Diện</button>
+</div>
+<script>
+const lessonKey = 'vue-js-learning-list_lesson22.html';
+function toggleTheme() {
+   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';
+   document.body.className = mode;
+   localStorage.setItem('theme', mode);
+}
+function toggleDone() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   if (isDone) {
+       localStorage.removeItem(lessonKey);
+   } else {
+       localStorage.setItem(lessonKey, 'done');
+   }
+   renderDoneStatus();
+}
+function renderDoneStatus() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   let btn = document.getElementById('doneButton');
+   if (isDone) {
+       btn.className = 'done-btn completed';
+       btn.innerText = 'Đã Hoàn Thành ✅';
+   } else {
+       btn.className = 'done-btn';
+       btn.innerText = 'Đánh dấu đã học ⚪';
+   }
+}
+function copyContent() {
+   let text = document.getElementById('lessonCode').innerText;
+   navigator.clipboard.writeText(text).then(function() {
+       alert('✅ Đã sao chép nội dung bài học!');
+   });
+}
+function initLesson() {
+   document.body.className = localStorage.getItem('theme') || 'dark-mode';
+   renderDoneStatus();
+   if (window.Prism) Prism.highlightAll();
+}
+</script></body></html>

@@ -1,0 +1,143 @@
+<html><head><title>Lesson 24 == R-SQUARED ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../DataScience-learning.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 24 -- R-SQUARED -//</h1><pre>
+# PHẦN 1: R-SQUARED LÀ GÌ? (DỄ HIỂU NHẤT)
+
+	R² trả lời câu hỏi:
+	"Mô hình của tôi giải thích được bao nhiêu % sự thay đổi của dữ liệu?"
+
+
+	## Ví dụ đời thường: 
+		Bạn muốn dự đoán cân nặng của học sinh dựa trên chiều cao.
+		
+Học sinh,Chiều cao,Cân nặng
+A,160 cm,55 kg
+B,165 cm,58 kg
+C,170 cm,62 kg
+
+
+	→ Bạn vẽ đường thẳng hồi quy.
+		Nếu tất cả điểm nằm trên đường thẳng → R² = 1.0 (100% giải thích được)
+		Nếu điểm phân tán lung tung → R² = 0.0 (không giải thích được gì)
+
+
+# PHẦN 2: CÔNG THỨC R² (ĐƠN GIẢN NHẤT)
+
+$R^2 = 1 - \frac{\text{Tổng bình phương sai số (SSE)}}{\text{Tổng bình phương tổng (SST)}}$
+
+
+Thành phần,Ý nghĩa
+SSE,Khoảng cách từ điểm đến đường hồi quy
+SST,Khoảng cách từ điểm đến đường trung bình
+
+	R² càng cao → đường hồi quy càng gần các điểm hơn đường trung bình
+
+
+
+# PHẦN 3: HÌNH ẢNH MINH HỌA (TRỰC QUAN NHẤT)
+
+	Trường hợp 1: R² = 0.00 (mô hình tệ)
+
+
+Calorie_Burnage
+↑
+2000 |       o   o     o
+     |    o         o
+1000 | o     o   o     o
+     |   o o     o   o
+   0 +-------------------→ Average_Pulse
+       100   120   140   160
+
+→ Đường hồi quy: gần như ngang
+→ R² ≈ 0 → **không giải thích được gì**
+
+
+
+	## Trường hợp 2: R² = 0.79 (mô hình tốt) 
+
+Calorie_Burnage
+↑
+2000 |                 o
+     |             o
+1000 |         o
+     |     o
+   0 | o
+     +-------------------→ Duration (phút)
+       0   50  100  150  200
+
+→ Đường hồi quy: dốc lên
+→ R² = 0.79 → **giải thích 79% sự thay đổi**
+
+
+
+# PHẦN 4: GIẢI THÍCH CODE TRONG BÀI
+
+from scipy import stats
+
+x = full_health_data["Duration"]
+y = full_health_data["Calorie_Burnage"]
+
+slope, intercept, r, p, std_err = stats.linregress(x, y)
+
+Biến trả về,Ý nghĩa
+r,Hệ số tương quan Pearson → R² = r²
+p,P-value của hệ số góc
+
+Lưu ý: stats.linregress chỉ dùng cho hồi quy đơn biến, còn statsmodels cho nhiều biến.
+
+
+
+# PHẦN 5: PHÂN TÍCH KẾT QUẢ TRONG BÀI
+
+Chỉ số,Giá trị,Kết luận
+Hệ số,0.3296,Tăng 1 nhịp → +0.33 calo
+P-value,0.824,Không ý nghĩa
+R²,0.00,Mô hình không giải thích được gì
+
+
+	Kết luận:
+		Average_Pulse không phải biến tốt để dự đoán calo.
+
+
+
+	## Mô hình 2: Calorie_Burnage ~ Duration
+Chỉ số,Giá trị,Kết luận
+R²,0.79,Giải thích 79% biến thiên
+Đường hồi quy,Dốc lên rõ,Thời gian tập càng lâu → calo càng nhiều
+	Duration là biến dự đoán mạnh.
+
+
+# PHẦN 6: ADJUSTED R-SQUARED (NÂNG CAO)
+
+	R² tăng khi thêm biến → dù biến đó vô nghĩa!
+
+	## Ví dụ: 
+
+R² = 0.79 (1 biến: Duration)
+Thêm Hours_Sleep → R² = 0.80
+→ Tăng 0.01, nhưng có đáng không?
+
+	→ W3Schools làm tròn quá mức để minh họa.
+		Nhớ: R² = 0.001 vẫn là rất tệ, nhưng không phải bằng 0.
+
+
+# TÓM TẮT NHỚ NHANH (CHEAT SHEET)
+
+
+Chỉ số,Ý nghĩa,Tốt khi
+R²,% biến thiên được giải thích,"> 0.7 (tốt), > 0.9 (rất tốt)"
+P-value,Ý nghĩa thống kê,< 0.05
+Hệ số,Mức độ ảnh hưởng,Khác 0 + hợp lý thực tế
+Adjusted R²,So sánh mô hình,Cao hơn R² khi thêm biến
+
+
+
+# MẸO CHUYÊN GIA 
+Mẹo,Cách dùng
+Kết hợp 3 yếu tố,R² cao + P-value thấp + Hệ số hợp lý → Mô hình đáng tin
+Luôn vẽ đồ thị,Scatter plot + đường hồi quy → thấy ngay R²
+Không tin R² mù quáng,R² = 0.99 nhưng dữ liệu giả → vẫn sai
+Dùng Adjusted R²,Khi xây multiple regression
+
+
+
+
+</pre><a id='backBottom' href='../DataScience-learning.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

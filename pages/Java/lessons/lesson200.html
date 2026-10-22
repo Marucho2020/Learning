@@ -1,4 +1,37 @@
-<html><head><title>Lesson 200 == Function Lifting & Error Handling ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 200 -- Function Lifting & Error Handling -//</h1><pre>
+<!DOCTYPE html><html lang='vi'><head><meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0'>
+<title>Lesson 200 -- Function Lifting & Error Handling -//</title>
+<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css'>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js'></script>
+<script id='MathJax-script' async src='https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'></script>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; margin: 0; padding: 20px; transition: 0.3s; }
+.dark-mode { background-color: #121212; color: #e0e0e0; }
+.light-mode { background-color: #ffffff; color: #333333; }
+.container { max-width: 950px; margin: auto; }
+h1 { text-align: center; color: #3498db; margin: 20px 0; font-size: 26px; }
+.nav-bar { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 20px 0; }
+.nav-btn { text-decoration: none; padding: 10px 18px; background: #3498db; color: white; border-radius: 6px; font-weight: bold; font-size: 15px; display: inline-block; transition: 0.2s; }
+.nav-btn:hover { background: #2980b9; }
+.nav-btn.home-nav { background: #6c757d; }
+.nav-btn.home-nav:hover { background: #5a6268; }
+.nav-btn.disabled { background: #aaa; cursor: not-allowed; opacity: 0.5; }
+.done-btn { display: block; margin: 15px auto; padding: 10px 24px; border: 2px solid #2ecc71; background: transparent; color: #2ecc71; border-radius: 25px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+.done-btn.completed { background: #2ecc71; color: white; }
+.content-box { position: relative; margin: 20px 0; }
+pre { padding: 20px; border-radius: 8px; white-space: pre-wrap; word-break: break-word; overflow-x: auto; font-family: 'Consolas', 'Courier New', monospace; font-size: 15px; }
+.dark-mode pre { background: #1a1a1a; color: #f8f8f2; border: 1px solid #333; }
+.light-mode pre { background: #f8f9fa; color: #212529; border: 1px solid #e9ecef; }
+.copy-btn { position: absolute; top: 12px; right: 12px; padding: 6px 12px; font-size: 12px; background: #555; color: white; border: none; border-radius: 4px; cursor: pointer; opacity: 0.8; }
+.copy-btn:hover { opacity: 1; background: #2ecc71; }
+.theme-toggle-btn { display: block; margin: 20px auto; padding: 8px 16px; background: transparent; border: 1px solid #888; color: inherit; border-radius: 5px; cursor: pointer; }
+</style></head><body onload='initLesson()'>
+<div class='container'>
+<div class='nav-bar'><a class='nav-btn' href='lesson199.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../java-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson201.html'>Bài sau ➡️</a></div><h1>Lesson 200 -- Function Lifting & Error Handling -//</h1>
+<button id='doneButton' class='done-btn' onclick='toggleDone()'>Mark as Done ⚪</button>
+<div class='content-box'>
+<button class='copy-btn' onclick='copyContent()'>📋 Copy nội dung</button>
+<pre><code id='lessonCode'>
 # 🎯 Mục tiêu
 	Trong lập trình hướng hàm (Functional Programming – FP), ta không ném exception.
 Vì exception là side effect — nó phá vỡ purity (hàm không còn deterministic nữa).
@@ -6,11 +39,11 @@ Vì exception là side effect — nó phá vỡ purity (hàm không còn determi
 	→ Thay vào đó, ta “bọc” kết quả có thể lỗi trong một container an toàn như:
 
 
-		Optional<T> → khi kết quả có thể null
+		Optional&lt;T&gt; → khi kết quả có thể null
 		
-		Try<T> → khi kết quả có thể throw exception
+		Try&lt;T&gt; → khi kết quả có thể throw exception
 		
-		Either<L, R> → khi có kết quả hoặc lỗi tùy ý kiểu
+		Either&lt;L, R&gt; → khi có kết quả hoặc lỗi tùy ý kiểu
 		
 	Và khi function nhận/trả container này, ta gọi là Function Lifting.
 
@@ -27,16 +60,16 @@ String parseToUpper(String s) {
 	Nếu s có thể null, ta không muốn throw NullPointerException.
 	→ Ta “lift” nó thành một function nhận Optional và trả Optional.
 
-Function<Optional<String>, Optional<String>> lifted =
-    opt -> opt.map(String::toUpperCase);
+Function&lt;Optional&lt;String&gt;, Optional&lt;String&gt;&gt; lifted =
+    opt -&gt; opt.map(String::toUpperCase);
 
 
 
-lifted.apply(Optional.of("bao")); // => Optional["BAO"]
-lifted.apply(Optional.empty());   // => Optional.empty
+lifted.apply(Optional.of("bao")); // =&gt; Optional["BAO"]
+lifted.apply(Optional.empty());   // =&gt; Optional.empty
 
 
-	📌 Lifting = biến function T→R thành Optional<T>→Optional<R>.
+	📌 Lifting = biến function T→R thành Optional&lt;T&gt;→Optional&lt;R&gt;.
 
 
 
@@ -64,7 +97,7 @@ try {
 		Thành công (Right)
 		Lỗi hoặc thông báo cụ thể (Left)
 		
-Either<String, User> validate(User u) {
+Either&lt;String, User&gt; validate(User u) {
     return u.email().contains("@")
         ? Either.right(u)
         : Either.left("Invalid email");
@@ -81,7 +114,7 @@ Either<String, User> validate(User u) {
 
 | Use case                         | Ứng dụng lifting/error handling                                    |
 | -------------------------------- | ------------------------------------------------------------------ |
-| **Validation Pipeline**          | Mỗi bước validate trả `Either<Error, Data>`                        |
+| **Validation Pipeline**          | Mỗi bước validate trả `Either&lt;Error, Data&gt;`                        |
 | **IO-safe transformation**       | Đọc file, parse JSON, gọi API — tất cả dùng `Try`                  |
 | **Message Processing**           | Bọc từng bước trong `Try`, log lỗi nhưng không crash toàn pipeline |
 | **Stream pipeline với Optional** | Tránh null trong dữ liệu, chỉ process cái nào có giá trị           |
@@ -91,26 +124,26 @@ Either<String, User> validate(User u) {
 # 🔧 5. Ví dụ thực tế: Validation Pipeline
 
 
-Function<User, Either<String, User>> validateEmail =
-    u -> u.email().contains("@")
+Function&lt;User, Either&lt;String, User&gt;&gt; validateEmail =
+    u -&gt; u.email().contains("@")
         ? Either.right(u)
         : Either.left("Invalid email");
 
-Function<User, Either<String, User>> validateAge =
-    u -> u.age() > 18
+Function&lt;User, Either&lt;String, User&gt;&gt; validateAge =
+    u -&gt; u.age() &gt; 18
         ? Either.right(u)
         : Either.left("Underage");
 
-Function<User, Either<String, UserDTO>> toDTO =
-    u -> Either.right(new UserDTO(u.name(), u.email()));
+Function&lt;User, Either&lt;String, UserDTO&gt;&gt; toDTO =
+    u -&gt; Either.right(new UserDTO(u.name(), u.email()));
 
-Either<String, UserDTO> result =
+Either&lt;String, UserDTO&gt; result =
     validateEmail.apply(user)
                  .flatMap(validateAge)
                  .flatMap(toDTO);
 
-result.peek(dto -> System.out.println("OK: " + dto))
-      .peekLeft(err -> System.err.println("Error: " + err));
+result.peek(dto -&gt; System.out.println("OK: " + dto))
+      .peekLeft(err -&gt; System.err.println("Error: " + err));
 
 
 
@@ -123,7 +156,7 @@ result.peek(dto -> System.out.println("OK: " + dto))
 # 🧠 6. Khi không có Vavr
 	Ta có thể tự viết Try đơn giản:
 
-class Try<T> {
+class Try&lt;T&gt; {
     private final T value;
     private final Exception exception;
 
@@ -132,15 +165,15 @@ class Try<T> {
         this.exception = exception;
     }
 
-    static <T> Try<T> of(Callable<T> f) {
-        try { return new Try<>(f.call(), null); }
-        catch (Exception e) { return new Try<>(null, e); }
+    static &lt;T&gt; Try&lt;T&gt; of(Callable&lt;T&gt; f) {
+        try { return new Try&lt;&gt;(f.call(), null); }
+        catch (Exception e) { return new Try&lt;&gt;(null, e); }
     }
 
-    <R> Try<R> map(Function<T, R> f) {
-        if (exception != null) return new Try<>(null, exception);
-        try { return new Try<>(f.apply(value), null); }
-        catch (Exception e) { return new Try<>(null, e); }
+    &lt;R&gt; Try&lt;R&gt; map(Function&lt;T, R&gt; f) {
+        if (exception != null) return new Try&lt;&gt;(null, exception);
+        try { return new Try&lt;&gt;(f.apply(value), null); }
+        catch (Exception e) { return new Try&lt;&gt;(null, e); }
     }
 
     T getOrElse(T fallback) {
@@ -151,7 +184,7 @@ class Try<T> {
 
 	## Dùng:
 
-Try.of(() -> riskyOperation())
+Try.of(() -&gt; riskyOperation())
    .map(String::toUpperCase)
    .getOrElse("DEFAULT");
 
@@ -170,11 +203,53 @@ Try.of(() -> riskyOperation())
 
 | Khái niệm            | Mô tả                                             |
 | -------------------- | ------------------------------------------------- |
-| **Lifting**          | Biến `T→R` thành `Optional<T>→Optional<R>`        |
+| **Lifting**          | Biến `T→R` thành `Optional&lt;T&gt;→Optional&lt;R&gt;`        |
 | **Optional**         | Cho giá trị có thể trống                          |
 | **Try**              | Cho kết quả có thể exception                      |
 | **Either**           | Cho kết quả có thể “Right (ok)” hoặc “Left (lỗi)” |
 | **Ứng dụng thực tế** | Validation, I/O, API, ETL, pipeline an toàn       |
 
 
-</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
+</code></pre>
+</div>
+<div class='nav-bar'><a class='nav-btn' href='lesson199.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../java-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson201.html'>Bài sau ➡️</a></div><button class='theme-toggle-btn' onclick='toggleTheme()'>🌓 Đổi Giao Diện</button>
+</div>
+<script>
+const lessonKey = 'java-learning-list_lesson200.html';
+function toggleTheme() {
+   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';
+   document.body.className = mode;
+   localStorage.setItem('theme', mode);
+}
+function toggleDone() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   if (isDone) {
+       localStorage.removeItem(lessonKey);
+   } else {
+       localStorage.setItem(lessonKey, 'done');
+   }
+   renderDoneStatus();
+}
+function renderDoneStatus() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   let btn = document.getElementById('doneButton');
+   if (isDone) {
+       btn.className = 'done-btn completed';
+       btn.innerText = 'Đã Hoàn Thành ✅';
+   } else {
+       btn.className = 'done-btn';
+       btn.innerText = 'Đánh dấu đã học ⚪';
+   }
+}
+function copyContent() {
+   let text = document.getElementById('lessonCode').innerText;
+   navigator.clipboard.writeText(text).then(function() {
+       alert('✅ Đã sao chép nội dung bài học!');
+   });
+}
+function initLesson() {
+   document.body.className = localStorage.getItem('theme') || 'dark-mode';
+   renderDoneStatus();
+   if (window.Prism) Prism.highlightAll();
+}
+</script></body></html>

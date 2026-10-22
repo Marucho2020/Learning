@@ -1,4 +1,37 @@
-<html><head><title>Lesson 37 == Computed Properties ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../vue-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 37 -- Computed Properties -//</h1><pre>	
+<!DOCTYPE html><html lang='vi'><head><meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0'>
+<title>Lesson 37 -- Computed Properties -//</title>
+<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css'>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js'></script>
+<script id='MathJax-script' async src='https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'></script>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; margin: 0; padding: 20px; transition: 0.3s; }
+.dark-mode { background-color: #121212; color: #e0e0e0; }
+.light-mode { background-color: #ffffff; color: #333333; }
+.container { max-width: 950px; margin: auto; }
+h1 { text-align: center; color: #3498db; margin: 20px 0; font-size: 26px; }
+.nav-bar { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 20px 0; }
+.nav-btn { text-decoration: none; padding: 10px 18px; background: #3498db; color: white; border-radius: 6px; font-weight: bold; font-size: 15px; display: inline-block; transition: 0.2s; }
+.nav-btn:hover { background: #2980b9; }
+.nav-btn.home-nav { background: #6c757d; }
+.nav-btn.home-nav:hover { background: #5a6268; }
+.nav-btn.disabled { background: #aaa; cursor: not-allowed; opacity: 0.5; }
+.done-btn { display: block; margin: 15px auto; padding: 10px 24px; border: 2px solid #2ecc71; background: transparent; color: #2ecc71; border-radius: 25px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+.done-btn.completed { background: #2ecc71; color: white; }
+.content-box { position: relative; margin: 20px 0; }
+pre { padding: 20px; border-radius: 8px; white-space: pre-wrap; word-break: break-word; overflow-x: auto; font-family: 'Consolas', 'Courier New', monospace; font-size: 15px; }
+.dark-mode pre { background: #1a1a1a; color: #f8f8f2; border: 1px solid #333; }
+.light-mode pre { background: #f8f9fa; color: #212529; border: 1px solid #e9ecef; }
+.copy-btn { position: absolute; top: 12px; right: 12px; padding: 6px 12px; font-size: 12px; background: #555; color: white; border: none; border-radius: 4px; cursor: pointer; opacity: 0.8; }
+.copy-btn:hover { opacity: 1; background: #2ecc71; }
+.theme-toggle-btn { display: block; margin: 20px auto; padding: 8px 16px; background: transparent; border: 1px solid #888; color: inherit; border-radius: 5px; cursor: pointer; }
+</style></head><body onload='initLesson()'>
+<div class='container'>
+<div class='nav-bar'><a class='nav-btn' href='lesson36.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../vue-js-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson38.html'>Bài sau ➡️</a></div><h1>Lesson 37 -- Computed Properties -//</h1>
+<button id='doneButton' class='done-btn' onclick='toggleDone()'>Mark as Done ⚪</button>
+<div class='content-box'>
+<button class='copy-btn' onclick='copyContent()'>📋 Copy nội dung</button>
+<pre><code id='lessonCode'>	
 # 1. Computed Property là gì?
 	Computed Property là một tính năng trong Vue.js cho phép bạn tạo các giá trị tính toán dựa trên dữ liệu reactive (như data hoặc ref). Nó giống như một biến phụ thuộc vào các giá trị khác, tự động cập nhật khi dữ liệu nguồn thay đổi.
 
@@ -16,15 +49,15 @@
 		- Trong Vue 2, computed properties được định nghĩa trong tùy chọn computed của component, bên trong object được export.
 		- Mỗi computed property là một hàm trả về giá trị tính toán dựa trên data, props, hoặc các computed properties khác.
 
-<template>
-  <div>
-    <p>Count: {{ count }}</p>
-    <p>Double Count: {{ doubleCount }}</p>
-    <button @click="increment">Increment</button>
-  </div>
-</template>
+&lt;template&gt;
+  &lt;div&gt;
+    &lt;p&gt;Count: {{ count }}&lt;/p&gt;
+    &lt;p&gt;Double Count: {{ doubleCount }}&lt;/p&gt;
+    &lt;button @click="increment"&gt;Increment&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
 
-<script>
+&lt;script&gt;
 export default {
   data() {
     return {
@@ -42,7 +75,7 @@ export default {
     }
   }
 };
-</script>
+&lt;/script&gt;
 
 
 	## Giải thích 
@@ -60,14 +93,14 @@ export default {
 		Mặc định, chỉ cần định nghĩa getter (như ví dụ trên). Nếu cần setter, bạn phải định nghĩa cả hai.
 
 
-<template>
-  <div>
-    <p>Full Name: {{ fullName }}</p>
-    <input v-model="fullName" />
-  </div>
-</template>
+&lt;template&gt;
+  &lt;div&gt;
+    &lt;p&gt;Full Name: {{ fullName }}&lt;/p&gt;
+    &lt;input v-model="fullName" /&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
 
-<script>
+&lt;script&gt;
 export default {
   data() {
     return {
@@ -88,7 +121,7 @@ export default {
     }
   }
 };
-</script>
+&lt;/script&gt;
 
 	Getter: Trả về firstName và lastName ghép lại.
 	Setter: Khi gán giá trị mới cho fullName (qua v-model), tách chuỗi thành firstName và lastName.
@@ -105,53 +138,53 @@ export default {
 
 	## b. Composition API với computed() 
 		
-		- Trong Composition API, bạn import hàm computed từ vue và sử dụng nó để tạo computed properties trong setup() hoặc <script setup>.
+		- Trong Composition API, bạn import hàm computed từ vue và sử dụng nó để tạo computed properties trong setup() hoặc &lt;script setup&gt;.
 		- Hàm computed nhận một getter function (hoặc object với get và set) và trả về một reactive ref chứa giá trị tính toán.
 
-<template>
-  <div>
-    <p>Count: {{ count }}</p>
-    <p>Double Count: {{ doubleCount }}</p>
-    <button @click="increment">Increment</button>
-  </div>
-</template>
+&lt;template&gt;
+  &lt;div&gt;
+    &lt;p&gt;Count: {{ count }}&lt;/p&gt;
+    &lt;p&gt;Double Count: {{ doubleCount }}&lt;/p&gt;
+    &lt;button @click="increment"&gt;Increment&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
 
-<script setup>
+&lt;script setup&gt;
 import { ref, computed } from 'vue';
 
 // Dữ liệu reactive
 const count = ref(0);
 
 // Computed property
-const doubleCount = computed(() => count.value * 2);
+const doubleCount = computed(() =&gt; count.value * 2);
 
 // Method
-const increment = () => {
+const increment = () =&gt; {
   count.value++;
 };
-</script>
+&lt;/script&gt;
 
 
 	// Ví dụ với setup()
 	
-<template>
-  <div>
-    <p>Count: {{ count }}</p>
-    <p>Double Count: {{ doubleCount }}</p>
-    <button @click="increment">Increment</button>
-  </div>
-</template>
+&lt;template&gt;
+  &lt;div&gt;
+    &lt;p&gt;Count: {{ count }}&lt;/p&gt;
+    &lt;p&gt;Double Count: {{ doubleCount }}&lt;/p&gt;
+    &lt;button @click="increment"&gt;Increment&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
 
-<script>
+&lt;script&gt;
 import { ref, computed } from 'vue';
 
 export default {
   setup() {
     const count = ref(0);
 
-    const doubleCount = computed(() => count.value * 2);
+    const doubleCount = computed(() =&gt; count.value * 2);
 
-    const increment = () => {
+    const increment = () =&gt; {
       count.value++;
     };
 
@@ -162,12 +195,12 @@ export default {
     };
   }
 };
-</script>
+&lt;/script&gt;
 
 
 	##  Giải thích 
 		
-	computed(() => count.value * 2):
+	computed(() =&gt; count.value * 2):
 		- Tạo một computed property dựa trên count.value.
 		- Trả về một ref (doubleCount), giá trị truy cập qua doubleCount.value (nhưng trong template, Vue tự động unwrap .value).
 	Caching: Giống Vue 2, doubleCount chỉ tính toán lại khi count.value thay đổi.
@@ -178,14 +211,14 @@ export default {
 	## Getter và Setter trong Composition API 
 		Tương tự Vue 2, bạn có thể định nghĩa getter và setter cho computed property.
 		
-<template>
-  <div>
-    <p>Full Name: {{ fullName }}</p>
-    <input v-model="fullName" />
-  </div>
-</template>
+&lt;template&gt;
+  &lt;div&gt;
+    &lt;p&gt;Full Name: {{ fullName }}&lt;/p&gt;
+    &lt;input v-model="fullName" /&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
 
-<script setup>
+&lt;script setup&gt;
 import { ref, computed } from 'vue';
 
 const firstName = ref('John');
@@ -201,7 +234,7 @@ const fullName = computed({
     lastName.value = names[1] || '';
   }
 });
-</script>		
+&lt;/script&gt;		
 
 
 	Getter: Tạo chuỗi từ firstName và lastName.
@@ -221,17 +254,17 @@ const fullName = computed({
 		- Phù hợp cho logic xử lý sự kiện hoặc tác vụ không cần cache.
 
 
-<template>
-  <div>
-    <!-- Computed: Chỉ tính toán khi count thay đổi -->
-    <p>Double (Computed): {{ doubleCount }}</p>
-    <!-- Method: Tính toán mỗi lần render -->
-    <p>Double (Method): {{ doubleCountMethod() }}</p>
-    <button @click="count++">Increment</button>
-  </div>
-</template>
+&lt;template&gt;
+  &lt;div&gt;
+    &lt;!-- Computed: Chỉ tính toán khi count thay đổi --&gt;
+    &lt;p&gt;Double (Computed): {{ doubleCount }}&lt;/p&gt;
+    &lt;!-- Method: Tính toán mỗi lần render --&gt;
+    &lt;p&gt;Double (Method): {{ doubleCountMethod() }}&lt;/p&gt;
+    &lt;button @click="count++"&gt;Increment&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
 
-<script>
+&lt;script&gt;
 export default {
   data() {
     return {
@@ -249,7 +282,7 @@ export default {
     }
   }
 };
-</script>
+&lt;/script&gt;
 
 
 
@@ -262,4 +295,46 @@ export default {
 	
 	
 	
-</pre><a id='backBottom' href='../vue-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
+</code></pre>
+</div>
+<div class='nav-bar'><a class='nav-btn' href='lesson36.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../vue-js-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson38.html'>Bài sau ➡️</a></div><button class='theme-toggle-btn' onclick='toggleTheme()'>🌓 Đổi Giao Diện</button>
+</div>
+<script>
+const lessonKey = 'vue-js-learning-list_lesson37.html';
+function toggleTheme() {
+   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';
+   document.body.className = mode;
+   localStorage.setItem('theme', mode);
+}
+function toggleDone() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   if (isDone) {
+       localStorage.removeItem(lessonKey);
+   } else {
+       localStorage.setItem(lessonKey, 'done');
+   }
+   renderDoneStatus();
+}
+function renderDoneStatus() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   let btn = document.getElementById('doneButton');
+   if (isDone) {
+       btn.className = 'done-btn completed';
+       btn.innerText = 'Đã Hoàn Thành ✅';
+   } else {
+       btn.className = 'done-btn';
+       btn.innerText = 'Đánh dấu đã học ⚪';
+   }
+}
+function copyContent() {
+   let text = document.getElementById('lessonCode').innerText;
+   navigator.clipboard.writeText(text).then(function() {
+       alert('✅ Đã sao chép nội dung bài học!');
+   });
+}
+function initLesson() {
+   document.body.className = localStorage.getItem('theme') || 'dark-mode';
+   renderDoneStatus();
+   if (window.Prism) Prism.highlightAll();
+}
+</script></body></html>

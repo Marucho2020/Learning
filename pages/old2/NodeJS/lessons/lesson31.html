@@ -1,0 +1,136 @@
+<html><head><title>Lesson 31 == DNS Module ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../NodeJS-learning.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 31 -- DNS Module -//</h1><pre>
+DNS = Domain Name System = “Danh bạ Internet”
+Ví dụ: google.com → 142.250.190.78
+	Trong Node.js, bạn không cần cài thêm gì, chỉ cần:
+
+const dns = require('dns'); // hoặc require('node:dns')
+
+→ Bạn có thể tự tra IP từ domain, tra ngược domain từ IP, kiểm tra mail server, v.v.
+
+	Rất hay dùng khi:
+		Xây dựng proxy, CDN, load balancer
+		Chống spam, blacklist IP
+		Logging chi tiết (biết người dùng ở quốc gia nào)
+		Tự viết resolver nhanh hơn Cloudflare/Google
+	
+
+
+# TẤT CẢ CÁC HÀM QUAN TRỌNG NHẤT (có ví dụ chạy được ngay)
+
+	## 1. dns.lookup() – Dùng 99% trường hợp (SIÊU HAY DÙNG) 
+dns.lookup('google.com', (err, address, family) => {
+  if (err) throw err;
+  console.log('IP:', address);     // ví dụ: 142.250.190.78
+  console.log('Family:', family);  // IPv4 hoặc IPv6
+});
+dns.lookup('google.com', (err, address, family) => {
+  if (err) throw err;
+  console.log('IP:', address);     // ví dụ: 142.250.190.78
+  console.log('Family:', family);  // IPv4 hoặc IPv6
+});
+
+
+Kết quả:
+IP: 142.250.190.78
+Family: IPv4
+
+
+
+
+	## Tại sao dùng `lookup` là đủ cho hầu hết app
+		→ Nó dùng hệ điều hành để resolve → cực nhanh, có cache sẵn.
+
+
+
+# 2. dns.resolve4(), dns.resolve6() – Chỉ lấy IPv4 hoặc IPv6
+
+
+dns.resolve4('facebook.com', (err, addresses) => {
+  console.log('IPv4 của FB:', addresses);
+  // → ['157.240.241.35', ...]
+});
+
+dns.resolve6('google.com', (err, addresses) => {
+  console.log('IPv6 của Google:', addresses);
+});
+
+
+
+
+# 3. dns.reverse() – Tra ngược: IP → Tên miền (rất hay dùng để log)
+
+dns.reverse('8.8.8.8', (err, hostnames) => {
+  if (err) {
+    console.log('IP không có PTR record');
+    return;
+  }
+  console.log('Đây là máy chủ của:', hostnames);
+  // → [ 'dns.google' ]
+});
+
+
+# 4. dns.resolveMx() – Lấy mail server (chống spam cực mạnh)
+
+
+
+dns.resolveMx('gmail.com', (err, addresses) => {
+  if (err) throw err;
+  console.log(addresses);
+});
+/** Kết quả:
+[
+  { exchange: 'gmail-smtp-in.l.google.com', priority: 5 },
+  { exchange: 'alt1.gmail-smtp-in.l.google.com', priority: 10 },
+  ...
+]
+*/
+
+	Dùng để kiểm tra email người dùng đăng ký có thật không.
+
+
+# 5. dns.resolveTxt() – Lấy TXT record (xác minh domain, SPF, DKIM)
+
+dns.resolveTxt('google.com', (err, records) => {
+  console.log(records);
+  // → chứa v=spf1, google-site-verification=...
+});
+
+
+
+# 6. dns.resolveCname() – Lấy CNAME
+
+dns.resolveCname('www.github.com', (err, addresses) => {
+  console.log(addresses); // → ['github.com']
+});
+
+
+
+# 7. dns.promises – Dùng với async/await (hiện đại, sạch code)
+
+
+const dns = require('dns').promises;
+
+async function getInfo(domain) {
+  try {
+    const [ip, mx, txt] = await Promise.all([
+      dns.lookup(domain),
+      dns.resolveMx(domain),
+      dns.resolveTxt(domain)
+    ]);
+
+    console.log('Domain:', domain);
+    console.log('IP:', ip.address);
+    console.log('Mail servers:', mx);
+    console.log('TXT records:', txt.flat());
+  } catch (err) {
+    console.log('Không resolve được:', err.code);
+  }
+}
+
+getInfo('nodejs.org');
+
+
+
+
+
+</pre><a id='backBottom' href='../NodeJS-learning.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

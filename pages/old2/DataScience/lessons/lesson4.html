@@ -1,0 +1,95 @@
+<html><head><title>Lesson 4 == Data Science Database ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../DataScience-learning.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 4 -- Data Science Database -//</h1><pre>
+	
+# 1. Bảng Cơ Sở Dữ Liệu Là Gì? (Database Table)
+
+	Định nghĩa chính: Một database table là bảng chứa dữ liệu có cấu trúc (structured data). Bài minh họa bằng bảng dữ liệu sức khỏe từ đồng hồ thể thao, đại diện cho các buổi tập điển hình với thông tin như thời gian, nhịp tim, calo đốt, giờ làm việc và giờ ngủ.
+
+	## Giải thích chi tiết và chuyên sâu:
+		Database table là nền tảng của hệ quản trị cơ sở dữ liệu (DBMS) như SQL (MySQL, PostgreSQL) hoặc NoSQL (MongoDB), nơi dữ liệu được lưu trữ theo định dạng tabular (bảng). Mỗi bảng có schema (cấu trúc) định nghĩa các cột và loại dữ liệu (ví dụ: integer cho Duration, float cho Average_Pulse nếu có thập phân).
+		
+	Dữ liệu mẫu trong bài: Bảng có 10 hàng dữ liệu (không tính header), với các giá trị như:	
+		
+		Hàng đầu: Duration=30, Average_Pulse=80, Max_Pulse=120, Calorie_Burnage=240, Hours_Work=10, Hours_Sleep=7.
+		
+		Đây là dữ liệu giả định từ các buổi tập, cho thấy mối liên hệ giữa hoạt động thể chất và sức khỏe (ví dụ: Thời gian tập dài hơn thường đi kèm nhịp tim cao hơn và calo đốt nhiều hơn).
+
+	## Minh họa chuyên sâu:
+		Để phân tích sâu, chúng ta có thể tính toán thống kê cơ bản từ bảng này (sử dụng Pandas trong Python – thư viện phổ biến cho Data Science). Dựa trên tính toán:
+
+		### Trung bình (mean) cho từng cột
+
+			- Duration: 52.5 phút (trung bình buổi tập khoảng 52 phút).
+			- Average_Pulse: 102.5 bpm (nhịp tim trung bình).
+			- Max_Pulse: 137 bpm.
+			- Calorie_Burnage: 285 calo.
+			- Hours_Work: 6.6 giờ.
+			- Hours_Sleep: 7.5 giờ.
+
+		### Mô tả thống kê (describe): 
+			Bao gồm count (số quan sát: 10), std (độ lệch chuẩn: ví dụ Duration std=16.2, cho thấy sự biến thiên thời gian tập), min/max (tối thiểu/tối đa: Average_Pulse từ 80 đến 125), và quartiles (25%, 50%, 75% – ví dụ 50% median của Hours_Work là 8 giờ).
+
+			Những con số này giúp chuyên gia phát hiện patterns ban đầu: Ví dụ, calo đốt trung bình 285, nhưng max 330 – có thể do buổi tập dài hơn.
+
+
+			Ví dụ minh họa cụ thể: Trong thực tế, một app như Fitbit lưu trữ dữ liệu tương tự trong database table. Data Scientist truy vấn SQL như SELECT AVG(Calorie_Burnage) FROM health_data WHERE Duration > 60 để tính calo trung bình cho buổi tập dài (kết quả: khoảng 306.67 calo từ dữ liệu này).
+
+			Kết nối với bài trước: Đây là ví dụ về structured data (từ bài "What is Data?") – dữ liệu được tổ chức thành bảng, dễ dàng đọc bằng pd.read_csv() như trong bài đầu tiên.
+
+
+
+# 2. Cấu Trúc Của Bảng Cơ Sở Dữ Liệu (Database Table Structure)
+
+	Định nghĩa chính: Bảng gồm columns (cột – vertical) và rows (hàng – horizontal). Bài minh họa bảng với labels (header row) và dữ liệu.
+
+	Giải thích chi tiết và chuyên sâu:	
+
+		Rows (hàng): Mỗi row đại diện cho một bản ghi (record) hoặc observation – một đơn vị dữ liệu độc lập. Trong bảng, có 11 rows, nhưng row đầu là header (tên cột), nên chỉ 10 observations thực tế. Mỗi row là "ngang" (horizontal), chứa giá trị cho tất cả variables của một buổi tập.
+
+		Columns (cột): Mỗi column đại diện cho một variable – một thuộc tính có thể đo lường. Bảng có 6 columns, nghĩa là 6 variables.
+
+		Minh họa toán học: Trong Data Science, bảng này là một ma trận (matrix) với kích thước 10x6 (rows x columns, không tính header). Chúng ta có thể sử dụng ma trận tương quan (correlation matrix) để đo lường mối quan hệ giữa columns (sử dụng Pearson correlation, giá trị từ -1 đến 1):	
+
+	Từ tính toán trên dữ liệu:
+	
+	,Duration,Average_Pulse,Max_Pulse,Calorie_Burnage,Hours_Work,Hours_Sleep
+Duration,1.00,0.97,0.95,0.97,-0.43,0.88
+Average_Pulse,0.97,1.00,0.97,1.00,-0.42,0.87
+Max_Pulse,0.95,0.97,1.00,0.97,-0.56,0.84
+Calorie_Burnage,0.97,1.00,0.97,1.00,-0.42,0.87
+Hours_Work,-0.43,-0.42,-0.56,-0.42,1.00,-0.17
+Hours_Sleep,0.88,0.87,0.84,0.87,-0.17,1.00
+	
+	Phân tích: Tương quan cao giữa Average_Pulse và Calorie_Burnage (1.00 – hoàn hảo dương, nghĩa là nhịp tim tăng thì calo tăng). Tương quan âm giữa Hours_Work và Max_Pulse (-0.56 – giờ làm nhiều có thể làm nhịp tim max thấp hơn, có lẽ do mệt mỏi). Điều này phù hợp với hồi quy tuyến tính từ bài đầu (x=Average_Pulse, y=Calorie_Burnage).
+	
+
+	Ví dụ minh họa cụ thể: Trong một database thực, row 5 (Duration=45, Average_Pulse=100, ...) có thể đại diện cho buổi tập nghỉ việc (Hours_Work=0). Chuyên gia dùng SQL để lọc rows: SELECT * FROM table WHERE Hours_Work = 0 – trả về rows 5 và 9, để phân tích tác động của nghỉ ngơi.
+
+
+	Lưu ý chuyên sâu: Trong big data, bảng có thể có hàng triệu rows – dùng công cụ như Apache Spark để xử lý. Luôn kiểm tra data types (ví dụ: Duration là integer, nhưng nếu có thập phân thì float) để tránh lỗi phân tích.
+
+
+
+
+# 3. Biến Số (Variables)
+
+	Định nghĩa chính: 
+		Variable là thứ có thể đo lường hoặc đếm (measured or counted), như số, ký tự, thời gian. Mỗi column là một variable. Bảng có 6 variables, mỗi với 10 observations (rows dữ liệu).
+
+	## Giải thích chi tiết và chuyên sâu:
+		## Loại variables: 
+			Quantitative (số lượng): Như Duration (continuous – có thể thập phân), Average_Pulse (discrete – thường integer).
+			
+			Qualitative (chất lượng): Nếu có cột như "Workout_Type" (cardio/running), đó là categorical.
+
+			Trong bảng: Tất cả là quantitative, dễ áp dụng thống kê. Có 10 observations per variable vì header không tính là dữ liệu.
+
+			Để chuyên sâu, trong machine learning, variables này có thể là features (đầu vào) cho mô hình dự đoán, ví dụ dự đoán Calorie_Burnage từ các variables khác bằng linear regression (như bài đầu: r=1.0 giữa Average_Pulse và Calorie_Burnage, chứng tỏ tương quan tuyến tính mạnh)
+
+		## Ví dụ minh họa cụ thể:
+			Variable "Hours_Sleep" có observations từ 7-8. Chuyên gia có thể kiểm tra hypothesis: "Ngủ nhiều hơn có tăng calo đốt không?" – Tương quan 0.87 với Calorie_Burnage cho thấy có, nhưng cần kiểm định thống kê (p-value từ linregress như bài đầu).
+
+		Lỗi thường gặp: Bài lưu ý "11 rows nhưng chỉ 10 observations" – header không phải dữ liệu. Trong Python, dùng header=0 khi đọc CSV để bỏ qua.
+
+
+
+</pre><a id='backBottom' href='../DataScience-learning.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

@@ -1,0 +1,155 @@
+<html><head><title>Lesson 19 == TypeScript 5 Updates ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../type-script-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 19 -- TypeScript 5 Updates -//</h1><pre>	
+# 1. TypeScript 5 Updates là gì? 
+	TypeScript 5 (bao gồm các phiên bản như 5.0, 5.1, 5.2, v.v.) giới thiệu nhiều cải tiến và tính năng mới, giúp tăng năng suất, cải thiện hiệu suất biên dịch, và hỗ trợ tốt hơn cho các dự án JavaScript/TypeScript hiện đại. Bài viết từ W3Schools tập trung vào các cập nhật nổi bật, bao gồm Decorators, const Type Parameters, Named and Anonymous Tuple Elements, và các cải tiến khác trong hệ thống kiểu.
+	
+	
+# 2. Tại sao TypeScript 5 quan trọng?
+
+	- Cải tiến lập trình hướng đối tượng: Các tính năng như Decorators hỗ trợ mạnh mẽ cho lập trình hướng đối tượng và các framework như NestJS.
+	- Tăng tính chính xác kiểu: Các cập nhật như const type parameters giúp TypeScript suy ra kiểu chính xác hơn, giảm lỗi khi làm việc với dữ liệu động.
+	- Hỗ trợ JavaScript hiện đại: TypeScript 5 tích hợp tốt hơn với các tính năng ES Modules và các thư viện JavaScript mới.
+	- Tối ưu hóa hiệu suất: Cải thiện tốc độ biên dịch và giảm kích thước mã.
+
+# 3. Các tính năng chính trong TypeScript 5
+
+	## a. Decorators 
+		Decorators là gì?
+			
+			- Decorators là một tính năng thử nghiệm (experimental) trong JavaScript (Stage 3 đề xuất) và được TypeScript hỗ trợ đầy đủ từ phiên bản 5.0. Chúng là các hàm đặc biệt được gắn vào class, method, property, hoặc parameter để thêm hoặc sửa đổi hành vi.
+			
+			- Decorators thường được dùng trong các framework như Angular, NestJS để thêm metadata hoặc logic (ví dụ: logging, validation).
+
+
+		Cú pháp và ví dụ: 
+function Log(target: any, propertyKey: string) {
+  console.log(`Method ${propertyKey} was called`);
+}
+
+class Person {
+  @Log
+  greet() {
+    return "Hello!";
+  }
+}
+
+const person = new Person();
+person.greet(); // Output: Method greet was called			
+
+
+		@Log là một decorator, được gọi khi phương thức greet được thực thi.
+		Để bật decorators, bạn cần cấu hình trong tsconfig.json:
+
+{
+  "compilerOptions": {
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
+  }
+}
+
+
+		##  Ứng dụng thực tế: 
+			
+			Trong NestJS, decorators như @Get, @Post được dùng để định nghĩa API endpoints:
+
+import { Controller, Get } from '@nestjs/common';
+
+@Controller('users')
+class UserController {
+  @Get()
+  getUsers() {
+    return [{ id: 1, name: 'Alice' }];
+  }
+}
+
+		- Decorators giúp giảm mã boilerplate và tăng tính rõ ràng.
+		- Hiểu sâu:
+		- Decorators là metadata, không thay đổi trực tiếp mã runtime mà thêm thông tin cho framework hoặc công cụ xử lý.
+		- TypeScript 5 cải tiến cú pháp decorator, hỗ trợ tốt hơn các decorator hiện đại (Stage 3), khác với phiên bản cũ (legacy decorators).
+
+
+
+
+
+# b. const Type Parameters
+
+	Const Type Parameters là gì?
+		Cho phép TypeScript suy ra kiểu của một generic parameter là một literal type thay vì kiểu tổng quát (như string hoặc number). Điều này giúp giữ nguyên giá trị cụ thể trong kiểu.
+
+function getValue<const T>(value: T): T {
+  return value;
+}
+
+const result = getValue(['Alice', 'Bob']);
+// TypeScript suy ra result là: ["Alice", "Bob"] (literal array), không phải string[]
+
+
+	Nếu không có const, TypeScript suy ra T là string[], mất thông tin về các giá trị cụ thể.
+	
+	Ứng dụng thực tế
+		Dùng khi bạn muốn giữ nguyên giá trị literal trong các hàm generic, ví dụ khi làm việc với configuration objects hoặc tuple:
+
+function setConfig<const T>(config: T): T {
+  return config;
+}
+
+const config = setConfig({ mode: 'dark', theme: 'blue' });
+// config có kiểu: { mode: "dark"; theme: "blue" }
+
+
+	## Hiểu sâu 
+		const type parameters giúp TypeScript suy ra kiểu chính xác hơn, đặc biệt trong các thư viện như Redux Toolkit hoặc khi làm việc với dữ liệu tĩnh.
+		
+		Nó tương tự as const assertion nhưng được áp dụng ở cấp generic, giảm nhu cầu dùng as const trực tiếp.
+
+# c. Named and Anonymous Tuple Elements
+
+	Named Tuple Elements là gì?
+		- TypeScript 5 cho phép đặt tên cho các phần tử trong tuple để tăng tính rõ ràng, trong khi vẫn hỗ trợ các phần tử không tên (anonymous).
+		- Điều này cải thiện khả năng đọc và bảo trì mã khi làm việc với tuple.
+		
+type UserTuple = [name: string, age: number];
+
+const user: UserTuple = ['Alice', 25];
+console.log(user[0]); // Alice (kiểu string)
+console.log(user.name); // Lỗi: name không tồn tại (tên chỉ dùng cho type, không phải runtime)
+	
+
+	### So sánh với anonymous tuple: 
+
+type AnonymousTuple = [string, number];
+const user: AnonymousTuple = ['Alice', 25]; // Tương tự, nhưng không có tên
+
+
+
+	## Ứng dụng thực tế
+		Named tuples hữu ích khi định nghĩa cấu trúc dữ liệu phức tạp, như kết quả từ hàm hoặc API:
+	
+function getUserInfo(): [name: string, age: number, isActive: boolean] {
+  return ['Alice', 25, true];
+}
+
+const [name, age, isActive] = getUserInfo();
+// TypeScript biết name là string, age là number, isActive là boolean	
+	
+	
+		Hiểu sâu:
+			- Tên trong named tuple chỉ tồn tại trong hệ thống kiểu, không ảnh hưởng đến runtime.
+			- Named tuples cải thiện gợi ý mã (IntelliSense) trong IDE, giúp lập trình viên hiểu rõ ý nghĩa của mỗi phần tử.	
+	
+	
+	
+# d. Các cải tiến khác (không được đề cập chi tiết trong bài nhưng phổ biến trong TypeScript 5) 
+
+	Improved Performance: TypeScript 5 tối ưu hóa trình biên dịch, giảm thời gian biên dịch cho dự án lớn.
+	
+	Better ESM Support: Hỗ trợ tốt hơn cho ES Modules, giúp tích hợp với các công cụ như Vite, esbuild.
+	
+	New Utility Types: TypeScript 5 bổ sung hoặc cải tiến các Utility Types như OmitThisParameter hoặc hỗ trợ tốt hơn cho Awaited<T>.	
+	
+	
+	
+
+	
+	
+	
+</pre><a id='backBottom' href='../type-script-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

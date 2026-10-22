@@ -1,0 +1,325 @@
+<html><head><title>Lesson 36 == Composition API(Vue3) và Options API ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../vue-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 36 -- Composition API(Vue3) và Options API -//</h1><pre>
+# 1. Options API là gì? 
+	Options API là cách truyền thống để định nghĩa logic của một component trong Vue.js, được sử dụng rộng rãi trong Vue 2 và vẫn được hỗ trợ trong Vue 3. Nó tổ chức mã dựa trên các tùy chọn (options) như data, methods, computed, watch, và các lifecycle hooks (created, mounted, v.v.).
+
+
+	## Đặc điểm của Options API
+	
+	- Mã được tổ chức theo các tùy chọn cố định, mỗi tùy chọn chịu trách nhiệm cho một loại logic.
+	- Dễ hiểu với người mới vì cấu trúc rõ ràng, giống như một "form" với các trường cố định.
+	- Tất cả các tùy chọn được định nghĩa trong một object được export.	
+	
+
+
+	## Ví dụ Options API 
+	
+<template>
+  <div>
+    <p>Count: {{ count }}</p>
+    <button @click="increment">Increment</button>
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      count: 0
+    };
+  },
+  methods: {
+    increment() {
+      this.count++;
+    }
+  },
+  computed: {
+    doubleCount() {
+      return this.count * 2;
+    }
+  },
+  watch: {
+    count(newValue) {
+      console.log(`Count changed to: ${newValue}`);
+    }
+  },
+  mounted() {
+    console.log('Component mounted');
+  }
+};
+</script>
+
+
+	## Cách hoạt động 
+		- data: Khai báo dữ liệu reactive (như count).
+		- methods: Định nghĩa các hàm (như increment).
+		- computed: Tính toán giá trị dựa trên dữ liệu (như doubleCount).
+		- watch: Theo dõi thay đổi của dữ liệu (như count).
+		- mounted: Lifecycle hook chạy khi component được gắn vào DOM.
+		- Tất cả được truy cập qua this trong component.	
+
+
+
+	## Ưu điểm 
+		- Dễ học: Cấu trúc cố định, phù hợp cho người mới.
+		- Tổ chức rõ ràng: Mỗi loại logic có chỗ riêng (data, methods, v.v.).
+		- Tốt cho component nhỏ: Mã ngắn gọn, dễ quản lý.
+
+
+	## Nhược điểm 
+		
+		- Khó tái sử dụng: Logic liên quan đến một tính năng (như đếm số) bị phân tán qua nhiều tùy chọn (data, methods, computed).
+		- Component lớn phức tạp: Khi component có nhiều tính năng, mã trở nên khó đọc vì các phần logic không liên quan bị trộn lẫn.
+		- Hạn chế trong TypeScript: Khó khai báo kiểu dữ liệu cho this.
+
+# 2. Composition API là gì?
+	Composition API là cách tiếp cận mới được giới thiệu trong Vue 3, cho phép tổ chức mã theo tính năng thay vì theo tùy chọn. Nó sử dụng hàm setup() hoặc <script setup> để định nghĩa logic, với các hàm reactive (ref, reactive), lifecycle hooks (onMounted, onUnmounted), và các công cụ khác từ Vue.
+	
+	##  Đặc điểm của Composition API
+		- Mã được tổ chức theo tính năng (feature-based), gom nhóm logic liên quan vào một chỗ.
+		- Linh hoạt hơn, không bị ràng buộc bởi cấu trúc cố định.
+		- Hỗ trợ tốt hơn cho TypeScript và tái sử dụng logic qua composables.
+	
+
+	## Ví dụ Composition API 
+	
+<template>
+  <div>
+    <p>Count: {{ count }}</p>
+    <button @click="increment">Increment</button>
+  </div>
+</template>
+
+<script>
+import { ref, computed, watch, onMounted } from 'vue';
+
+export default {
+  setup() {
+    // Dữ liệu reactive
+    const count = ref(0);
+
+    // Methods
+    const increment = () => {
+      count.value++;
+    };
+
+    // Computed property
+    const doubleCount = computed(() => count.value * 2);
+
+    // Watcher
+    watch(count, (newValue) => {
+      console.log(`Count changed to: ${newValue}`);
+    });
+
+    // Lifecycle hook
+    onMounted(() => {
+      console.log('Component mounted');
+    });
+
+    // Trả về các biến/hàm cho template
+    return {
+      count,
+      increment,
+      doubleCount
+    };
+  }
+};
+</script>	
+
+
+
+	## Cách hoạt động 
+		- ref: Tạo biến reactive (như count), truy cập giá trị qua .value.
+		- computed: Tạo giá trị tính toán (như doubleCount).
+		- watch: Theo dõi thay đổi của biến reactive.
+		- onMounted: Lifecycle hook tương ứng với mounted.
+		- setup(): Hàm chính nơi định nghĩa logic, trả về object chứa các biến/hàm để dùng trong template.
+		- Không dùng this: Mọi thứ được khai báo rõ ràng, không phụ thuộc vào context this.
+
+
+
+	## Ví dụ với <script setup> (Vue 3.2+) 
+<template>
+  <div>
+    <p>Count: {{ count }}</p>
+    <button @click="increment">Increment</button>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed, watch, onMounted } from 'vue';
+
+// Dữ liệu reactive
+const count = ref(0);
+
+// Methods
+const increment = () => {
+  count.value++;
+};
+
+// Computed property
+const doubleCount = computed(() => count.value * 2);
+
+// Watcher
+watch(count, (newValue) => {
+  console.log(`Count changed to: ${newValue}`);
+});
+
+// Lifecycle hook
+onMounted(() => {
+  console.log('Component mounted');
+});
+</script>	
+
+	<script setup>: Cú pháp ngắn gọn, không cần setup() hay return. Tất cả biến/hàm trong <script setup> tự động có sẵn cho template.
+	
+	##  Ưu điểm 
+	
+		Tổ chức theo tính năng: Gom nhóm logic liên quan (như đếm số: count, increment, doubleCount, watch) vào một chỗ, dễ đọc hơn trong component lớn.
+	
+		Tái sử dụng logic: Dễ tách logic thành composables (hàm tái sử dụng). Ví dụ:
+
+// useCounter.js
+import { ref, computed } from 'vue';
+
+export function useCounter() {
+  const count = ref(0);
+  const increment = () => count.value++;
+  const doubleCount = computed(() => count.value * 2);
+
+  return { count, increment, doubleCount };
+}
+
+
+	## Sử dụng trong component: 
+<script setup>
+import { useCounter } from './useCounter';
+
+const { count, increment, doubleCount } = useCounter();
+</script>
+
+
+	Hỗ trợ TypeScript: Khai báo kiểu rõ ràng, không phụ thuộc vào this.
+	Linh hoạt: Không bị giới hạn bởi cấu trúc cố định, dễ tích hợp với các thư viện bên thứ ba.
+
+
+
+
+	## Nhược điểm 
+		Khó hơn cho người mới: Cần hiểu khái niệm reactive (ref, reactive) và quản lý thủ công hơn.
+		Mã dài hơn với component nhỏ: Cần viết nhiều code hơn so với Options API cho các component đơn giản.
+		
+# 3. Phân biệt Composition API và Options API		
+		
+Tiêu chí			
+Cấu trúc mã			
+Cách truy cập		
+Reactivity			
+Tái sử dụng logic	
+TypeScript			
+Lifecycle Hooks		
+Phù hợp				
+Cú pháp ngắn gọn	
+
+			Options API																	
+Tổ chức theo tùy chọn (data, methods, computed, v.v.).						
+Sử dụng this để truy cập data, methods, computed.							
+Dữ liệu trong data tự động reactive, không cần quản lý.						
+Khó tách logic, thường dùng mixins (dễ gây xung đột).						
+Hỗ trợ kém vì this khó khai báo kiểu.										
+created, mounted, updated, v.v.												
+Component nhỏ, dự án đơn giản, người mới học Vue.							
+Ngắn gọn hơn cho component nhỏ, nhưng lặp lại nhiều trong component lớn.	
+
+
+		
+		Composition API
+Tổ chức theo tính năng, gom nhóm logic liên quan trong setup() hoặc <script setup>.
+Không dùng this, truy cập trực tiếp biến/hàm, giá trị ref qua .value.
+Cần dùng ref hoặc reactive để tạo dữ liệu reactive, quản lý thủ công.
+Dễ tách logic thành composables, tái sử dụng sạch sẽ.
+Hỗ trợ tốt, kiểu dữ liệu rõ ràng.
+onCreated, onMounted, onUpdated, v.v., trong setup().
+Component lớn, dự án phức tạp, cần tái sử dụng logic hoặc dùng TypeScript.
+Dài hơn cho component nhỏ, nhưng có <script setup> để đơn giản hóa.		
+
+
+# 4. Khi nào dùng cái nào?
+
+	## Options API 
+		- Phù hợp cho người mới học Vue, vì cú pháp giống JavaScript truyền thống và dễ hiểu.
+		- Tốt cho component nhỏ hoặc dự án đơn giản, nơi không cần tổ chức logic phức tạp.
+		- Dự án hiện tại dùng Vue 2 hoặc cần duy trì mã cũ.
+
+
+	## Composition API
+		- Phù hợp cho component lớn hoặc dự án phức tạp, cần tổ chức mã theo tính năng.
+		- Khi muốn tái sử dụng logic qua composables (như useCounter, useFetch).
+		- Dự án sử dụng TypeScript hoặc cần tích hợp với các thư viện hiện đại.
+		- Khi muốn tận dụng các tính năng mới của Vue 3 (như <script setup>).
+	
+	
+	
+## 	Options API 
+<template>
+  <div>
+    <p>Count: {{ count }}</p>
+    <p>Double: {{ doubleCount }}</p>
+    <button @click="increment">Increment</button>
+    <button @click="decrement">Decrement</button>
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      count: 0
+    };
+  },
+  computed: {
+    doubleCount() {
+      return this.count * 2;
+    }
+  },
+  methods: {
+    increment() {
+      this.count++;
+    },
+    decrement() {
+      this.count--;
+    }
+  }
+};
+</script>
+
+
+
+
+
+## Composition API
+	
+<template>
+  <div>
+    <p>Count: {{ count }}</p>
+    <p>Double: {{ doubleCount }}</p>
+    <button @click="increment">Increment</button>
+    <button @click="decrement">Decrement</button>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed } from 'vue';
+
+// Gom nhóm logic đếm số
+const count = ref(0);
+const doubleCount = computed(() => count.value * 2);
+const increment = () => count.value++;
+const decrement = () => count.value--;
+</script>	
+	
+	Logic "đếm số" được gom nhóm trong một chỗ, dễ đọc và tái sử dụng (có thể tách thành useCounter).	
+	
+	
+	
+	
+</pre><a id='backBottom' href='../vue-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

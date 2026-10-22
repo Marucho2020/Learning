@@ -1,0 +1,167 @@
+<html><head><title>Lesson 108 == Double Linked List ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 108 -- Double Linked List -//</h1><pre>
+# Khái niệm 
+	Là một cấu trúc dữ liệu tuyến tính, gồm các node, mỗi node chứa: 
+		1. Giá trị (data), 
+		2. Con trỏ đến node trước (prev), 
+		3. Con trỏ đến node sau (next). 
+		
+		NULL <- [1] <-> [2] <-> [3] <-> [4] -> NULL
+
+
+# 🧠 II. Cấu trúc bên trong node 
+	
+class Node {
+    int data;
+    Node prev;
+    Node next;
+
+    Node(int data) {
+        this.data = data;
+    }
+}
+
+		Mỗi node đều có 2 chiều: đi tới (next) và quay lại (prev) → hỗ trợ truy cập 2 chiều và xoá/chèn linh hoạt hơn so với Singly Linked List.
+
+
+
+# 🧰 III. Các thao tác cơ bản 
+
+Operation		 	| Mục đích 				| Phức tạp 						| Tư duy
+insertHead()	 	| Chèn đầu 				| O(1)							| Gắn prev/next, cập nhật head
+insertTail() 	 	| Chèn cuối 			| O(1) (tail), O(n) or not 		| Truy cập tail, cập nhật con trỏ
+deleteNode(Node n)  | Xóa node cụ thể 		| O(1) 							| Cập nhật n.prev.next và n.next.prev
+traverseForward()	| Duyệt xuôi 			| O(n) 							| Đi từ head → next
+traverseBackward()  | Duyệt ngược 			| O(n) 							| Đi từ tail → prev
+
+
+
+# 🧠 IV. Ưu điểm thực sự của Doubly Linked List 
+
+Ưu điểm 									| Vì sao quan trọng trong hệ thống lớn
+Truy cập 2 chiều 							| Quản lý undo/redo, back/forward (browser)
+Xóa/chèn O(1) nếu có con trỏ 				| Scheduler, task queue với loại bỏ linh hoạt
+Không cần duyệt toàn bộ để xóa phần tử 		| Tốt hơn ArrayList trong các thao tác insert/delete giữa danh sách
+Có thể cắt nối / merge danh sách dễ dàng 	| Dùng trong cấu trúc LRU Cache, Media playlist, Job Queue
+
+
+
+# ⚖️ V. So sánh với các cấu trúc khác 
+	
+
+Cấu trúc 		| Truy cập ngẫu nhiên	 | Thêm/Xoá đầu/cuối 		| Truy cập 2 chiều
+ArrayList 			| ✅ (O(1))   		 | ❌ (chậm ở đầu) 				| ❌
+Singly Linked List  | ❌ (chậm)   		 | ✅ (đầu nhanh) 				| ❌
+Doubly Linked List  | ❌ 			 	 | ✅ 							| ✅
+
+
+
+# 🛠️ VI. Ứng dụng thực tế ở cấp độ kiến trúc 
+	
+
+	## LRU Cache
+	
+		Khi cần xóa phần tử ít dùng nhất, ta dùng DLL + HashMap.
+		DLL giữ thứ tự truy cập, HashMap giúp truy cập node O(1).
+		
+		LinkedHashMap<K, V> // Java đã cài đặt sẵn bằng DLL
+
+	## Undo/Redo Stack 
+	
+		Undo: đi về phía prev
+		Redo: đi về phía next
+
+
+	##  Web Browser History 
+		Dữ liệu cần di chuyển qua lại (Back/Forward). 
+		
+	##  Media Playlist 
+		Dễ dàng điều hướng và xoá bài giữa danh sách. 
+		
+		
+	##  Job Dispatcher / Task Queue 
+		Duy trì một danh sách có thể thêm, xóa ở cả hai đầu → Double-ended Queue (Deque). 
+		
+		
+# 	🧪 VII. Cài đặt custom Doubly Linked List (senior-friendly) 
+	
+class DoublyLinkedList {
+    private Node head;
+    private Node tail;
+
+    public void insertAtFront(int data) {
+        Node newNode = new Node(data);
+        newNode.next = head;
+        if (head != null)
+            head.prev = newNode;
+        else
+            tail = newNode; // danh sách rỗng
+        head = newNode;
+    }
+
+    public void delete(Node node) {
+        if (node == null) return;
+
+        if (node.prev != null)
+            node.prev.next = node.next;
+        else
+            head = node.next;
+
+        if (node.next != null)
+            node.next.prev = node.prev;
+        else
+            tail = node.prev;
+    }
+
+    public void traverseForward() {
+        Node curr = head;
+        while (curr != null) {
+            System.out.print(curr.data + " ");
+            curr = curr.next;
+        }
+        System.out.println();
+    }
+
+    public void traverseBackward() {
+        Node curr = tail;
+        while (curr != null) {
+            System.out.print(curr.data + " ");
+            curr = curr.prev;
+        }
+        System.out.println();
+    }
+}
+
+
+
+
+
+# 	🧠 VIII. Khi nào KHÔNG dùng Doubly Linked List? 
+
+Tình huống 									| Lý do
+Cần truy cập ngẫu nhiên 					| Array/ArrayList tốt hơn
+Bộ nhớ giới hạn 							| DLL dùng gấp đôi bộ nhớ mỗi node
+Không cần thao tác chèn/xoá giữa danh sách  | Không cần thiết dùng DLL	
+	
+	
+	
+# 	📚 IX. Các khái niệm liên quan bạn nên nắm (để chuyên sâu):
+
+Chủ đề											 | Mô tả
+LinkedHashMap 					| Cấu trúc bên trong là DLL để giữ thứ tự
+Deque 							| Double Ended Queue có thể dùng DLL
+Cursor-based LinkedList			| Trong C hoặc hệ thống nơi không dùng con trỏ thật
+Lock-free Linked List			| Dùng CAS, atomic operation cho concurrent
+Persistent List					| Danh sách bất biến (immutable) trong functional programming
+
+# 🎯 Tóm lại
+	Doubly Linked List là cấu trúc cực kỳ quan trọng nếu bạn làm các hệ thống cần quản lý dữ liệu theo thứ tự thay đổi, cần thêm/xoá nhanh mà không cần giữ kích thước cố định như array.
+	
+		Đơn giản nhưng hiệu quả.
+		Cơ sở của nhiều cấu trúc: Deque, LRU Cache, History Stack.
+		Là một kỹ năng "bắt buộc phải thành thạo" nếu bạn làm việc gần hệ thống (System Engineer, Java Backend).
+	
+	
+	
+	
+	
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

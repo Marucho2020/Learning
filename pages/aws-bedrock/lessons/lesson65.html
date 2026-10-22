@@ -1,0 +1,653 @@
+<!DOCTYPE html><html lang='vi'><head><meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0'>
+<title>Lesson 66 -- AIP-C01--= Strands Agents & AgentCore -//</title>
+<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css'>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js'></script>
+<script id='MathJax-script' async src='https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'></script>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; margin: 0; padding: 20px; transition: 0.3s; }
+.dark-mode { background-color: #121212; color: #e0e0e0; }
+.light-mode { background-color: #ffffff; color: #333333; }
+.container { max-width: 950px; margin: auto; }
+h1 { text-align: center; color: #3498db; margin: 20px 0; font-size: 26px; }
+.nav-bar { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 20px 0; }
+.nav-btn { text-decoration: none; padding: 10px 18px; background: #3498db; color: white; border-radius: 6px; font-weight: bold; font-size: 15px; display: inline-block; transition: 0.2s; }
+.nav-btn:hover { background: #2980b9; }
+.nav-btn.home-nav { background: #6c757d; }
+.nav-btn.home-nav:hover { background: #5a6268; }
+.nav-btn.disabled { background: #aaa; cursor: not-allowed; opacity: 0.5; }
+.done-btn { display: block; margin: 15px auto; padding: 10px 24px; border: 2px solid #2ecc71; background: transparent; color: #2ecc71; border-radius: 25px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+.done-btn.completed { background: #2ecc71; color: white; }
+.content-box { position: relative; margin: 20px 0; }
+pre { padding: 20px; border-radius: 8px; white-space: pre-wrap; word-break: break-word; overflow-x: auto; font-family: 'Consolas', 'Courier New', monospace; font-size: 15px; }
+.dark-mode pre { background: #1a1a1a; color: #f8f8f2; border: 1px solid #333; }
+.light-mode pre { background: #f8f9fa; color: #212529; border: 1px solid #e9ecef; }
+.copy-btn { position: absolute; top: 12px; right: 12px; padding: 6px 12px; font-size: 12px; background: #555; color: white; border: none; border-radius: 4px; cursor: pointer; opacity: 0.8; }
+.copy-btn:hover { opacity: 1; background: #2ecc71; }
+.theme-toggle-btn { display: block; margin: 20px auto; padding: 8px 16px; background: transparent; border: 1px solid #888; color: inherit; border-radius: 5px; cursor: pointer; }
+</style></head><body onload='initLesson()'>
+<div class='container'>
+<div class='nav-bar'><a class='nav-btn' href='lesson64.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../aws-bedrock-agent-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson66.html'>Bài sau ➡️</a></div><h1>Lesson 66 -- AIP-C01--= Strands Agents & AgentCore -//</h1>
+<button id='doneButton' class='done-btn' onclick='toggleDone()'>Mark as Done ⚪</button>
+<div class='content-box'>
+<button class='copy-btn' onclick='copyContent()'>📋 Copy nội dung</button>
+<pre><code id='lessonCode'>
+
+	Strands Agents = framework để xây dựng logic của agent.
+	Amazon Bedrock AgentCore = managed infrastructure/runtime để chạy, bảo mật, kết nối và vận hành agent.
+
+	Đừng hiểu AgentCore là một agent framework thay thế Strands. Hai thằng nằm ở hai tầng khác nhau.
+
+
+
+# 1. Bản chất
+
+
+                    USER / APPLICATION
+                           │
+                           ▼
+                ┌─────────────────────┐
+                │   AgentCore Runtime │
+                │                     │
+                │  identity           │
+                │  auth               │
+                │  scaling            │
+                │  isolation          │
+                │  observability      │
+                └──────────┬──────────┘
+                           │
+                           ▼
+                ┌─────────────────────┐
+                │   Strands Agent     │
+                │                     │
+                │  ┌───────────────┐  │
+                │  │ Agent Loop    │  │
+                │  │               │  │
+                │  │ reason        │  │
+                │  │ plan          │  │
+                │  │ tool call     │  │
+                │  │ observe       │  │
+                │  │ repeat        │  │
+                │  └───────────────┘  │
+                └──────────┬──────────┘
+                           │
+             ┌─────────────┼──────────────┐
+             ▼             ▼              ▼
+          Bedrock        Tools           MCP
+          Models        Lambda/API      Servers
+             │             │              │
+             ▼             ▼              ▼
+          Claude       DynamoDB       External API
+          Nova         Aurora         SaaS
+          etc.
+
+
+	trands quyết định agent làm gì.
+	AgentCore quyết định agent được chạy như thế nào trong production.
+	Đây là distinction cực kỳ quan trọng cho AIP-C01.
+
+
+
+
+
+# 2. Strands Agents là gì?
+
+	Strands là agent development framework của AWS.
+	Nó cung cấp abstraction để bạn viết:
+
+	Agent
+	 ├── Model
+	 ├── System prompt
+	 ├── Tools
+	 ├── Agent loop
+	 └── State/context
+
+	Thay vì tự viết toàn bộ:
+
+
+while not finished:
+
+    response = call_llm()
+
+    if response.requests_tool:
+        result = execute_tool()
+
+        append_to_context(result)
+
+    else:
+        return response
+
+
+	framework xử lý agent loop cho bạn.
+
+	Về bản chất:
+
+		User
+		  │
+		  ▼
+		Agent
+		  │
+		  ├── LLM reasoning
+		  │
+		  ├── Tool selection
+		  │
+		  ├── Tool execution
+		  │
+		  ├── Observation
+		  │
+		  └── Continue / Finish
+
+	Đây chính là phần cognitive/orchestration layer.
+
+
+
+
+
+# 3. Strands không phải AgentCore
+	Đây là trap rất dễ dính.
+
+| Thành phần              | Vai trò                        |
+| ----------------------- | ------------------------------ |
+| Strands Agents          | Agent framework                |
+| LangGraph               | Agent orchestration framework  |
+| LangChain               | LLM/application framework      |
+| CrewAI                  | Multi-agent framework          |
+| AutoGen                 | Agent framework                |
+| AgentCore Runtime       | Managed runtime/infrastructure |
+| AgentCore Gateway       | Tool connectivity              |
+| AgentCore Memory        | Agent memory                   |
+| AgentCore Identity      | Identity/credentials           |
+| AgentCore Observability | Observability                  |
+| AgentCore Policy        | Agent/tool policy              |
+
+
+
+	Nói cách khác:
+
+
+              APPLICATION / AGENT LOGIC
+                       │
+       ┌───────────────┼────────────────┐
+       │               │                │
+    Strands        LangGraph        Custom code
+       │               │                │
+       └───────────────┼────────────────┘
+                       │
+                       ▼
+             ┌──────────────────┐
+             │ AgentCore Runtime│
+             └──────────────────┘
+
+
+
+	AgentCore được thiết kế để framework-agnostic.
+	Đây chính là ý của:
+	framework agnostic
+	Nó có nghĩa là AgentCore không yêu cầu bạn phải dùng Strands.
+
+	Bạn có thể có:
+		Strands
+		LangGraph
+		CrewAI
+		custom Python agent
+		custom TypeScript agent
+		...
+			│
+			▼
+	   AgentCore Runtime
+
+
+
+
+
+
+# 4. Tại sao AWS lại tách như vậy?
+
+
+	Đây mới là phần đáng học.
+
+	AWS không muốn bạn phải lựa chọn:
+		"Muốn dùng AWS AgentCore thì phải dùng framework X."
+		Bởi vì ecosystem agent thay đổi cực nhanh.
+
+	Hôm nay:
+		Strands
+
+	Ngày mai:
+		LangGraph
+
+	Ngày kia:
+		Custom orchestration
+
+	Nếu infrastructure phụ thuộc chặt vào framework thì AWS tự khóa mình.
+
+	Do đó AWS tách:
+		Agent intelligence
+			   ≠
+		Agent infrastructure
+
+	Đây là architecture decision rất hợp lý.
+
+
+
+
+
+# 5. Ví dụ production
+
+	Giả sử bạn xây agent quản lý vận hành cho doanh nghiệp.
+
+
+User:
+
+"Tình trạng server production hôm nay thế nào?"
+
+Strands agent có thể quyết định:
+
+	User question
+		 │
+		 ▼
+	Strands Agent
+		 │
+		 ├── call CloudWatch tool
+		 │
+		 ├── call database tool
+		 │
+		 ├── call incident-management tool
+		 │
+		 └── reason
+			   │
+			   ▼
+			Answer
+
+Nhưng Strands không nên tự chịu trách nhiệm cho toàn bộ production infrastructure.
+
+
+	AgentCore Runtime đảm nhiệm:
+
+                AgentCore Runtime
+                       │
+       ┌───────────────┼────────────────┐
+       │               │                │
+    Runtime         Identity        Observability
+       │
+    Scaling
+       │
+    Security
+       │
+    Network
+       │
+    Session
+
+
+
+# 6. AgentCore Runtime chạy Strands như thế nào?
+
+                    API request
+                        │
+                        ▼
+              AgentCore Runtime
+                        │
+                        ▼
+                 Strands Agent
+                        │
+              ┌─────────┴─────────┐
+              ▼                   ▼
+             LLM                Tools
+              │                   │
+           Bedrock             Gateway
+                                  │
+                         ┌────────┼────────┐
+                         ▼        ▼        ▼
+                       Lambda   API      MCP
+
+
+
+	AgentCore Runtime cung cấp môi trường để agent process chạy.
+
+	Runtime hiện hỗ trợ nhiều protocol, đáng chú ý:
+		HTTP
+		MCP
+		A2A
+		AG-UI
+
+	Điểm này rất quan trọng khi thiết kế hệ thống.
+
+
+
+
+# 7. Strands + AgentCore + Gateway
+
+Một architecture production rất tự nhiên là:
+
+                        User
+                          │
+                          ▼
+                 AgentCore Runtime
+                          │
+                          ▼
+                   Strands Agent
+                          │
+              ┌───────────┼───────────┐
+              │           │           │
+              ▼           ▼           ▼
+           Bedrock     AgentCore   AgentCore
+            Model       Gateway      Memory
+                          │
+              ┌───────────┼───────────┐
+              ▼           ▼           ▼
+           Lambda       REST API      MCP
+
+
+
+Ví dụ tool:
+	get_employee_status()
+	get_project_status()
+	create_ticket()
+	query_database()
+	send_notification()
+
+	Agent không nhất thiết phải biết implementation phía dưới.
+
+	Nó chỉ nhìn thấy:
+
+	Tool:
+		get_project_status(project_id)
+
+	Gateway có thể đứng giữa agent và tool ecosystem.
+
+
+
+
+# 8. Một điểm cực kỳ quan trọng: Tool ≠ Agent
+
+
+	Các tool có thể được implement bằng:
+		Lambda
+		API Gateway
+		MCP server
+		AWS service
+		external SaaS
+		database
+
+	AgentCore Gateway giúp biến nhiều backend capability thành những tool mà agent có thể sử dụng.
+
+
+
+
+# 9. Còn Memory?
+
+	Đây là chỗ architecture bắt đầu giống production system thật.
+	AgentCore Runtime không có nghĩa là toàn bộ state tự động nằm trong process memory.
+
+
+Ví dụ:
+
+Session A
+    │
+    ▼
+Strands Agent
+    │
+    ├── reasoning
+    ├── temporary context
+    └── tool calls
+
+Khi instance chết:
+
+         X
+    process memory
+
+không nên được coi là persistent state.
+
+
+	Nếu cần persistence:
+
+	Strands Agent
+		  │
+		  ▼
+	AgentCore Memory
+		  │
+		  ├── short-term
+		  └── long-term
+
+	Hoặc application-specific state:
+		Aurora
+		DynamoDB
+		S3
+		OpenSearch
+
+	Tùy loại dữ liệu.
+
+
+
+# 11. Multi-Agent với Strands + AgentCore
+
+                    Supervisor
+                 Strands Agent
+                       │
+          ┌────────────┼────────────┐
+          ▼            ▼            ▼
+       Agent A       Agent B      Agent C
+       Research      Finance      Operations
+          │            │            │
+          ▼            ▼            ▼
+     AgentCore     AgentCore    AgentCore
+      Runtime       Runtime      Runtime
+
+
+Hoặc:
+	Supervisor
+	   │
+	   ├── A2A ──► Agent A
+	   │
+	   ├── A2A ──► Agent B
+	   │
+	   └── A2A ──► Agent C
+
+AgentCore Runtime hỗ trợ A2A protocol cho mô hình agent-to-agent.
+
+
+Đây khác hoàn toàn:
+	Agent → Lambda
+	vì Lambda chỉ là tool/backend capability.
+
+Còn:
+	Agent A → Agent B
+	là agent collaboration.
+
+
+# 12. Strands Agent Loop
+	Nếu phải nhớ một thứ về Strands cho AIP-C01, hãy nhớ bản chất này:
+
+             ┌───────────────┐
+             │     User      │
+             └───────┬───────┘
+                     ▼
+             ┌───────────────┐
+             │     Agent     │
+             └───────┬───────┘
+                     ▼
+              ┌────────────┐
+              │    Model   │
+              └─────┬──────┘
+                    │
+            decide next action
+                    │
+          ┌─────────┴─────────┐
+          │                   │
+       final answer         tool call
+                              │
+                              ▼
+                            Tool
+                              │
+                              ▼
+                         observation
+                              │
+                              └──────► Model
+
+	Đó mới là agent loop.
+Không phải cứ:
+	LLM + prompt
+	là agent.
+
+
+
+# 13. Trade-off
+
+| Tiêu chí             | Strands               | AgentCore              |
+| -------------------- | --------------------- | ---------------------- |
+| Agent reasoning      | ✅                     | ❌                      |
+| Agent loop           | ✅                     | ❌                      |
+| Tool orchestration   | ✅                     | hỗ trợ infrastructure  |
+| Model integration    | ✅                     | infrastructure         |
+| Runtime              | ❌                     | ✅                      |
+| Scaling              | ❌                     | ✅                      |
+| Identity             | ❌                     | ✅                      |
+| Gateway              | ❌                     | ✅                      |
+| Memory service       | ❌                     | ✅                      |
+| Observability        | framework-level       | managed infrastructure |
+| Policy               | application/framework | AgentCore Policy       |
+| Multi-agent protocol | logic                 | Runtime A2A support    |
+| Framework dependency | là framework          | framework-agnostic     |
+	
+	
+	
+# 	16. Production Knowledge — cách tôi sẽ thiết kế
+	
+	
+                 ┌───────────────────────┐
+                 │       Frontend        │
+                 └───────────┬───────────┘
+                             │
+                             ▼
+                 ┌───────────────────────┐
+                 │    API / Identity     │
+                 └───────────┬───────────┘
+                             │
+                             ▼
+                 ┌───────────────────────┐
+                 │  AgentCore Runtime    │
+                 │                       │
+                 │   Strands Agent       │
+                 └───────────┬───────────┘
+                             │
+             ┌───────────────┼────────────────┐
+             ▼               ▼                ▼
+          Bedrock         Gateway           Memory
+             │               │
+             │       ┌───────┼─────────┐
+             │       ▼       ▼         ▼
+             │    Lambda   API       MCP
+             │
+             ▼
+          FM/LLM	
+	
+	
+	
+Và phía backend:
+
+                  Domain Services
+                       │
+             ┌─────────┼─────────┐
+             ▼         ▼         ▼
+           Aurora   DynamoDB     S3	
+	
+	
+Không cho agent tự ý trở thành database/business-logic layer.
+
+Agent nên quyết định:
+	"Tôi cần làm gì tiếp theo?"
+
+Backend quyết định:
+	"Hành động này có hợp lệ và transaction có được phép commit không?"
+	Hai trách nhiệm này phải tách.	
+	
+	
+Học sâu hơn:
+
+	Strands
+		=
+	HOW THE AGENT THINKS AND ACTS
+
+	AgentCore
+		=
+	WHERE/HOW THE AGENT RUNS AND OPERATES
+	
+
+Hay theo architecture:
+
+┌────────────────────────────────────┐
+│        Agent Intelligence          │
+│                                    │
+│  Strands / LangGraph / Custom      │
+│                                    │
+│  reasoning                         │
+│  planning                          │
+│  tool selection                    │
+│  orchestration                     │
+└──────────────────┬─────────────────┘
+                   │
+                   ▼
+┌────────────────────────────────────┐
+│       Agent Infrastructure         │
+│                                    │
+│  AgentCore Runtime                 │
+│  Gateway                           │
+│  Identity                          │
+│  Memory                            │
+│  Policy                            │
+│  Observability                     │
+│  Registry                          │
+│  Evaluations                       │
+└──────────────────┬─────────────────┘
+                   │
+                   ▼
+┌────────────────────────────────────┐
+│       Enterprise Infrastructure    │
+│                                    │
+│  Lambda / API / DB / S3 / SaaS     │
+└────────────────────────────────────┘	
+	
+	
+</code></pre>
+</div>
+<div class='nav-bar'><a class='nav-btn' href='lesson64.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../aws-bedrock-agent-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson66.html'>Bài sau ➡️</a></div><button class='theme-toggle-btn' onclick='toggleTheme()'>🌓 Đổi Giao Diện</button>
+</div>
+<script>
+const lessonKey = 'aws-bedrock-agent-learning-list_lesson65.html';
+function toggleTheme() {
+   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';
+   document.body.className = mode;
+   localStorage.setItem('theme', mode);
+}
+function toggleDone() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   if (isDone) {
+       localStorage.removeItem(lessonKey);
+   } else {
+       localStorage.setItem(lessonKey, 'done');
+   }
+   renderDoneStatus();
+}
+function renderDoneStatus() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   let btn = document.getElementById('doneButton');
+   if (isDone) {
+       btn.className = 'done-btn completed';
+       btn.innerText = 'Đã Hoàn Thành ✅';
+   } else {
+       btn.className = 'done-btn';
+       btn.innerText = 'Đánh dấu đã học ⚪';
+   }
+}
+function copyContent() {
+   let text = document.getElementById('lessonCode').innerText;
+   navigator.clipboard.writeText(text).then(function() {
+       alert('✅ Đã sao chép nội dung bài học!');
+   });
+}
+function initLesson() {
+   document.body.className = localStorage.getItem('theme') || 'dark-mode';
+   renderDoneStatus();
+   if (window.Prism) Prism.highlightAll();
+}
+</script></body></html>

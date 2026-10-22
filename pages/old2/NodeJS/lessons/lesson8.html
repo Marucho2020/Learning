@@ -1,0 +1,198 @@
+<html><head><title>Lesson 8 == Event Loop ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../NodeJS-learning.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 8 -- Event Loop -//</h1><pre>
+# Tổng Quan Phần "Node.js Event Loop"				
+				
+	Mục tiêu: Hiểu event loop – cơ chế giúp Node.js non-blocking và hiệu quả, bao gồm			
+				
+		- Event Loop là gì? Thành phần quản lý các tác vụ bất đồng bộ, cho phép xử lý nhiều kết nối đồng thời.
+		- Cách hoạt động: Các giai đoạn (phases) của event loop và thứ tự ưu tiên.
+		- Ví dụ thực tế: Minh họa thứ tự thực thi của synchronous code, microtasks, timers, và các callback khác.
+		- Tại sao quan trọng? Giải thích lý do Node.js phù hợp cho real-time apps, APIs, và streaming.
+		- Tóm tắt: Tổng kết lợi ích của mô hình non-blocking.				
+				
+				
+	Tại sao quan trọng? Event loop là nền tảng của hiệu suất Node.js. Hiểu nó giúp bạn:			
+				
+		Viết code bất đồng bộ hiệu quả, tránh chặn luồng chính.
+		Debug các vấn đề liên quan đến thứ tự thực thi.
+		Tối ưu ứng dụng để xử lý nhiều kết nối (như server API hoặc chat app).				
+
+
+	Cách chạy ví dụ:
+
+		- Tạo file .js (ví dụ: eventloop.js) và chạy bằng node eventloop.js.
+		- Dùng terminal hoặc VS Code để kiểm tra output.
+		- Không cần file phụ trợ (như myfile.txt) vì các ví dụ đều dùng timers và Promises.
+
+
+# 1. What is the Event Loop?
+
+	Event loop là cơ chế giúp Node.js non-blocking và hiệu quả.
+	
+	Nó giao các tác vụ cho hệ thống (qua Libuv) và xử lý kết quả qua callbacks, cho phép quản lý hàng nghìn kết nối đồng thời trên một luồng duy nhất.
+
+	## Giải thích chi tiết:
+
+		Event Loop là gì? Event loop là một vòng lặp vô hạn (infinite loop) trong Node.js, liên tục kiểm tra và xử lý các sự kiện (events) từ Event Queue và Callback Queue. Nó được triển khai bởi Libuv, không phải V8.
+		
+		Non-blocking: Thay vì chờ một tác vụ I/O (như đọc file, request HTTP) hoàn tất, event loop giao việc cho hệ thống và tiếp tục xử lý tác vụ khác. Khi I/O xong, callback được đưa vào queue để xử lý.
+		
+		Single-threaded: Event loop chạy trên luồng chính (main thread), nhưng vẫn xử lý nhiều kết nối nhờ giao các tác vụ nặng (như I/O) cho Thread Pool của Libuv.
+		
+		Ví dụ thực tế: Một server Node.js có thể xử lý 10,000 request HTTP cùng lúc vì event loop không đợi từng request hoàn tất mà xếp chúng vào queue và xử lý dần.
+		
+		Ngữ cảnh: Event loop là lý do Node.js phù hợp cho các ứng dụng như chat (WebSocket), streaming video, hoặc API REST.
+		
+	## 	Hình dung đơn giản:
+		
+			- Server nhận request → Đưa vào Event Queue.
+			- Event Loop lấy request → Giao tác vụ nặng (như đọc file) cho Thread Pool.
+			- Thread Pool hoàn tất → Đưa callback vào Callback Queue.
+			- Event Loop chạy callback → Gửi response cho client.		
+		
+		
+		
+# 	2. How the Event Loop Works	
+		
+	## 	0. Thực thi code đồng bộ (synchronous code).
+		
+			Xử lý microtasks (process.nextTick, Promises).
+			Thực thi timers (setTimeout, setInterval).
+			Chạy I/O callbacks (file, network).
+			Xử lý setImmediate callbacks.
+			Xử lý close events (socket.on('close')).		
+		
+		
+				- Bước 0 - Synchronous Code: Code không bất đồng bộ (như console.log) chạy ngay lập tức trong main thread.
+				- Bước 1 - Microtasks: Bao gồm process.nextTick (ưu tiên cao nhất) và Promise callbacks (.then, .catch). Chúng chạy ngay sau synchronous code và trước các giai đoạn khác.
+				- Bước 2 - Timers: Xử lý các callback của setTimeout và setInterval khi thời gian chờ hết.
+				- Bước 3 - I/O Callbacks: Xử lý các callback từ I/O hoàn tất (như fs.readFile, HTTP response).
+				- Bước 4 - Poll Phase: Kiểm tra I/O mới và chạy callback nếu có.
+				- Bước 5 - Check Phase: Chạy các callback của setImmediate.
+				- Bước 6 - Close Phase: Xử lý cleanup (như socket đóng).		
+		
+			Lưu ý: Sau mỗi giai đoạn, event loop kiểm tra microtasks queue (process.nextTick, Promises) trước khi sang giai đoạn tiếp theo.
+		
+console.log('First');
+setTimeout(() => console.log('Third'), 0);
+Promise.resolve().then(() => console.log('Second'));
+console.log('Fourth');		
+		
+First
+Fourth
+Second
+Third	
+		
+		
+		
+	Synchronous code: console.log('First') và console.log('Fourth') chạy ngay, in First và Fourth.
+	Microtasks: Promise.resolve().then(...) được xếp vào microtask queue, chạy ngay sau synchronous code, in Second.
+	Timers: setTimeout(..., 0) xếp vào timer queue, chạy sau microtasks, in Third.
+	Tại sao setTimeout chạy sau dù delay là 0? Vì setTimeout thuộc Timer phase, có ưu tiên thấp hơn microtasks.		
+		
+
+
+# 3. Event Loop Phases
+	Tài liệu liệt kê các giai đoạn:
+
+	## 0. Timers: setTimeout, setInterval.
+
+		- I/O Callbacks: Callback từ I/O (file, network).
+		- Poll: Kiểm tra I/O mới.
+		- Check: setImmediate.
+		- Close: Cleanup callbacks (socket.on('close')).
+
+	Microtasks: process.nextTick và Promises chạy giữa các giai đoạn.
+
+
+console.log('1. Start');
+
+// Next tick queue
+process.nextTick(() => console.log('2. Next tick'));
+
+// Microtask queue (Promise)
+Promise.resolve().then(() => console.log('3. Promise'));
+
+// Timer phase
+setTimeout(() => console.log('4. Timeout'), 0);
+
+// Check phase
+setImmediate(() => console.log('5. Immediate'));
+
+console.log('6. End');
+
+1. Start
+6. End
+2. Next tick
+3. Promise
+4. Timeout
+5. Immediate
+
+
+	## Giải thích chi tiết:
+
+		Synchronous code: 1. Start và 6. End chạy ngay.
+		Microtasks
+			process.nextTick có ưu tiên cao nhất, in 2. Next tick.
+			Promise .then chạy tiếp, in 3. Promise.
+		Timer phase: setTimeout(..., 0) chạy, in 4. Timeout.	
+		Check phase: setImmediate chạy, in 5. Immediate.	
+			
+			process.nextTick luôn chạy trước tất cả (ngay cả Promises).
+			Microtasks (Promises) chạy trước các giai đoạn event loop.
+			Timer phase chạy trước Check phase.			
+			
+			
+			
+	## 	Ngữ cảnh thực tế:
+			
+		- Trong server API, HTTP requests được xếp vào Poll phase.
+		- Trong chat app, WebSocket events cũng vào Poll phase.
+		- setImmediate hữu ích khi bạn muốn chạy code sau I/O nhưng trước timers tiếp theo.			
+		
+		
+		
+# 4. Why is the Event Loop Important?		
+		
+	Event loop cho phép Node.js xử lý hàng nghìn kết nối đồng thời với một luồng duy nhất, phù hợp cho:	
+		
+		- Real-time applications: Chat, notifications, collaboration tools.
+		- APIs và microservices: REST, GraphQL.
+		- Data streaming: Video, file transfer.
+		- Chat applications: WebSocket-based apps.		
+		
+		
+	Giải thích chi tiết:	
+		
+		Hàng nghìn kết nối: Event loop không chờ I/O (như đọc file, query database), nên server có thể xử lý nhiều request cùng lúc. Ví dụ, một server Express.js có thể phục vụ 10,000 client mà chỉ dùng ~100MB RAM.
+		
+		
+			Real-time: WebSocket (như Socket.IO) tận dụng Poll phase để xử lý message liên tục.
+			APIs: REST/GraphQL API dùng event loop để trả response nhanh, ngay cả khi query database.
+			Streaming: Event loop xử lý từng chunk dữ liệu (như video streaming) mà không chặn.	
+		
+		Ví dụ thực tế:
+		
+			Chat app: Client gửi tin nhắn → Event Queue → Event Loop xử lý → Gửi qua WebSocket.
+			API: Client gọi /users → Event Loop query database (I/O) → Trả JSON response.		
+		
+		
+		
+# 5. Summary
+		
+			- Node.js dùng event loop để xử lý tác vụ bất đồng bộ.
+			- Các loại callback có ưu tiên khác nhau (microtasks > timers > I/O > setImmediate > close).
+			- Microtasks (process.nextTick, Promises) chạy trước mỗi giai đoạn.
+			- Mô hình non-blocking cho phép xử lý cao độ đồng thời.		
+			
+			
+			Non-blocking: Event loop đảm bảo main thread không bị chặn, ngay cả khi có tác vụ nặng (I/O được giao cho Thread Pool).
+			Ưu tiên: Hiểu thứ tự ưu tiên giúp bạn dự đoán thứ tự thực thi code, tránh lỗi logic.
+			Hiệu suất: Mô hình này làm Node.js lý tưởng cho ứng dụng I/O-heavy, nhưng cần cẩn thận với CPU-heavy tasks (dùng Worker Threads nếu cần).		
+		
+		
+		
+		
+https://www.w3schools.com/nodejs/nodejs_async.asp
+
+
+</pre><a id='backBottom' href='../NodeJS-learning.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

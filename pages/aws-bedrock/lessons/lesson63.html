@@ -1,3 +1,1110 @@
-<html><head><title>Lesson 64 == NEXT LEVEL ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 64 -- NEXT LEVEL -//</h1><pre>MCP Server chuyên sâu 10 bài 
+<!DOCTYPE html><html lang='vi'><head><meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0'>
+<title>Lesson 64 -- AIP-C01  --=Agent Runtime Architecture -//</title>
+<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css'>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js'></script>
+<script id='MathJax-script' async src='https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'></script>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; margin: 0; padding: 20px; transition: 0.3s; }
+.dark-mode { background-color: #121212; color: #e0e0e0; }
+.light-mode { background-color: #ffffff; color: #333333; }
+.container { max-width: 950px; margin: auto; }
+h1 { text-align: center; color: #3498db; margin: 20px 0; font-size: 26px; }
+.nav-bar { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 20px 0; }
+.nav-btn { text-decoration: none; padding: 10px 18px; background: #3498db; color: white; border-radius: 6px; font-weight: bold; font-size: 15px; display: inline-block; transition: 0.2s; }
+.nav-btn:hover { background: #2980b9; }
+.nav-btn.home-nav { background: #6c757d; }
+.nav-btn.home-nav:hover { background: #5a6268; }
+.nav-btn.disabled { background: #aaa; cursor: not-allowed; opacity: 0.5; }
+.done-btn { display: block; margin: 15px auto; padding: 10px 24px; border: 2px solid #2ecc71; background: transparent; color: #2ecc71; border-radius: 25px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+.done-btn.completed { background: #2ecc71; color: white; }
+.content-box { position: relative; margin: 20px 0; }
+pre { padding: 20px; border-radius: 8px; white-space: pre-wrap; word-break: break-word; overflow-x: auto; font-family: 'Consolas', 'Courier New', monospace; font-size: 15px; }
+.dark-mode pre { background: #1a1a1a; color: #f8f8f2; border: 1px solid #333; }
+.light-mode pre { background: #f8f9fa; color: #212529; border: 1px solid #e9ecef; }
+.copy-btn { position: absolute; top: 12px; right: 12px; padding: 6px 12px; font-size: 12px; background: #555; color: white; border: none; border-radius: 4px; cursor: pointer; opacity: 0.8; }
+.copy-btn:hover { opacity: 1; background: #2ecc71; }
+.theme-toggle-btn { display: block; margin: 20px auto; padding: 8px 16px; background: transparent; border: 1px solid #888; color: inherit; border-radius: 5px; cursor: pointer; }
+</style></head><body onload='initLesson()'>
+<div class='container'>
+<div class='nav-bar'><a class='nav-btn' href='lesson62.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../aws-bedrock-agent-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson64.html'>Bài sau ➡️</a></div><h1>Lesson 64 -- AIP-C01  --=Agent Runtime Architecture -//</h1>
+<button id='doneButton' class='done-btn' onclick='toggleDone()'>Mark as Done ⚪</button>
+<div class='content-box'>
+<button class='copy-btn' onclick='copyContent()'>📋 Copy nội dung</button>
+<pre><code id='lessonCode'>			
+# 1. Bản chất: Agent thực sự là gì?	
+			
+	Nói thẳng:
+		Agent không phải là một model. Agent là một runtime system sử dụng model để quyết định và thực hiện hành động qua nhiều bước.			
+				
+	LLM chỉ đóng vai trò reasoning/decision engine.			
+				
+				
+	User
+	  ↓
+	Agent Runtime
+	  │
+	  ├── State / Session
+	  ├── Memory
+	  ├── Identity
+	  ├── Policy / Guardrails
+	  ├── LLM
+	  │     ↓
+	  │   Decision
+	  │
+	  ├── Tool
+	  │     ↓
+	  │   Result
+	  │
+	  ├── Observation
+	  │     ↓
+	  │   LLM
+	  │
+	  └── Repeat
+			↓
+		 Final Response			
+				
+				
+	Điểm quan trọng nhất là:
+		Agent có một control loop.			
+				
+				
+# 	2. Agent Runtime giải quyết vấn đề gì?			
+			
+	Giả sử user nói:
+		「先月の売上レポートを確認して、問題があれば担当者にSlackで通知してください。」		
+			
+					
+		Agent cần làm:
+			hiểu yêu cầu
+			xác định tháng trước
+			tìm report
+			đọc dữ liệu
+			phân tích
+			xác định có vấn đề hay không
+			tìm người phụ trách
+			gửi notification
+			kiểm tra action thành công
+			trả kết quả			
+						
+	LLM có thể quyết định:
+		I need:
+		1. get_sales_report()
+		2. analyze_sales()
+		3. get_owner()
+		4. send_slack()
 
-</pre><a id='backBottom' href='../aws-bedrock-agent-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
+	Nhưng LLM không nên trực tiếp sở hữu toàn bộ execution environment.			
+				
+	Runtime phải quản lý:
+		Session
+		State
+		Tool invocation
+		Authentication
+		Authorization
+		Retries
+		Timeouts
+		Errors
+		Memory
+		Observability
+		Policy
+		Human approval
+		Termination
+
+	Đây mới là lý do Agent Runtime tồn tại.	
+
+
+
+# 3. Kiến trúc tổng quát
+
+Một Agent Runtime production có thể nhìn như sau:
+
+                    ┌──────────────────────┐
+                    │        User          │
+                    └──────────┬───────────┘
+                               │
+                               ▼
+                    ┌──────────────────────┐
+                    │    Agent Runtime     │
+                    │                      │
+                    │  Session / State     │
+                    │  Identity            │
+                    │  Policy              │
+                    │  Memory              │
+                    │  Orchestration       │
+                    │  Observability       │
+                    └──────────┬───────────┘
+                               │
+                     ┌─────────▼─────────┐
+                     │       LLM         │
+                     │ reasoning engine  │
+                     └─────────┬─────────┘
+                               │
+                       tool decision
+                               │
+             ┌─────────────────┼─────────────────┐
+             ▼                 ▼                 ▼
+        Knowledge         API / Lambda       External SaaS
+          Base             Database          Slack / GitHub
+             │                 │                 │
+             └─────────────────┼─────────────────┘
+                               │
+                               ▼
+                          Tool Result
+                               │
+                               ▼
+                         Agent Runtime
+                               │
+                               ▼
+                            LLM
+                               │
+                          ...
+
+
+# 4. Thành phần quan trọng nhất: Agent Loop
+Đây là thứ bạn cần hiểu ở mức implementation, không chỉ học thuộc.
+
+state = initialize_session()
+
+while not state.is_complete:
+
+    observation = collect_observation(state)
+
+    decision = llm.decide(
+        observation=observation,
+        tools=available_tools,
+        policies=policies
+    )
+
+    if decision.requires_tool:
+
+        authorize(decision.tool)
+
+        result = execute_tool(
+            decision.tool,
+            decision.arguments
+        )
+
+        state = update_state(
+            state,
+            result
+        )
+
+    elif decision.requires_human:
+
+        request_human_approval()
+
+    else:
+
+        return decision.final_response
+
+
+
+
+	Đây là abstraction rất quan trọng.
+
+	Agent runtime không đơn giản là:
+		llm.invoke()
+
+		LLM
+		 ↓
+		Decision
+		 ↓
+		Tool execution
+		 ↓
+		Observation
+		 ↓
+		State update
+		 ↓
+		LLM
+		 ↓
+		Decision
+		 ↓
+		...
+
+
+# 5. Vì sao phải có State?
+
+	Đây là điểm dễ bị hiểu sai.
+	LLM bản thân nó không phải application state manager.
+	Ví dụ agent đang thực hiện:
+
+		
+	Sau bước 1:
+
+	projects = [
+		P001,
+		P002,
+		P003
+	]
+
+	Sau bước 2:
+
+	P001 → OK
+	P002 → DELAYED
+	P003 → OK
+
+	Sau bước 3:
+
+	owner(P002) = Tanaka
+
+	Sau bước 4:
+
+	notification_sent = true
+
+	Runtime cần duy trì state:
+
+	{
+	  "task": "...",
+	  "projects": ["P001", "P002", "P003"],
+	  "delayed": ["P002"],
+	  "owner": "Tanaka",
+	  "notification_sent": true
+	}
+
+	Nếu không có state management, agent rất dễ:
+		mất context
+		thực hiện lại action
+		gửi notification hai lần
+		quên tool result
+		không resume được sau failure
+
+
+
+
+# 6. Session State ≠ Memory
+
+
+| Khái niệm          | Mục đích                                      |
+| ------------------ | --------------------------------------------- |
+| Session state      | trạng thái của task/session hiện tại          |
+| Short-term context | thông tin cần cho reasoning hiện tại          |
+| Memory             | thông tin được lưu để sử dụng trong tương lai |
+| Knowledge Base     | knowledge bên ngoài để retrieval              |
+| Database           | system-of-record                              |
+
+
+Ví dụ:
+
+	Session State
+		current_task = "Analyze report"
+		step = 3
+		tool_result = {...}
+
+	Trong khi Memory:
+		User prefers Japanese responses.
+		User's department = Engineering.
+
+	Knowledge Base:
+		Company policies
+		Technical documents
+		Manuals
+
+	Database:
+		Employee ID
+		Project status
+		Sales transactions
+
+	Không được gom tất cả thành “memory”.
+
+
+
+# 7. Agent Runtime + Identity
+
+	Production Agent bắt buộc phải trả lời câu hỏi:
+	Agent đang hành động với quyền của ai?
+
+
+	Ví dụ:
+		User A
+		   ↓
+		Agent
+		   ↓
+		Query Salesforce
+		   ↓
+		What permissions?
+
+	Không thể để agent có:
+		AdministratorAccess
+		chỉ vì implementation đơn giản.
+
+	Runtime phải kết hợp:
+
+		User identity
+			  ↓
+		Authentication
+			  ↓
+		Authorization
+			  ↓
+		Tool access
+
+	Ví dụ:
+
+		Employee
+		  ↓
+		Agent
+		  ↓
+		Salesforce
+		  ↓
+		Only user's permitted accounts
+
+	Đây là một trong những điểm quan trọng khi học AgentCore Identity.
+
+
+
+# 8. Agent Runtime + Policy
+
+
+	LLM có thể quyết định:
+		“Delete this production database.”
+
+	Nhưng:
+		LLM decision ≠ authorization
+
+	Runtime phải có policy layer:
+
+		LLM
+		 ↓
+		"delete_database"
+		 ↓
+		Policy
+		 ↓
+		DENY
+
+	Hoặc:
+
+		LLM
+		 ↓
+		"send_payment"
+		 ↓
+		Policy
+		 ↓
+		Human approval required
+		 ↓
+		Approved
+		 ↓
+		Execute
+
+	Đây là nguyên tắc production cực kỳ quan trọng:
+		Never let model output directly become an unrestricted system action.
+
+
+
+
+# 9. Tool Execution
+
+	Agent cần tool để tác động ra thế giới bên ngoài.
+
+	Ví dụ:
+
+		LLM quyết định:
+
+		{
+		  "tool": "get_customer",
+		  "arguments": {
+			"customer_id": "C001"
+		  }
+		}
+
+	Runtime chịu trách nhiệm:
+
+		validate arguments
+				↓
+		authorize
+				↓
+		execute
+				↓
+		timeout
+				↓
+		retry if appropriate
+				↓
+		capture result
+				↓
+		return observation
+
+	LLM không nên trực tiếp thực thi tool.
+
+
+# 10. Tool failure
+
+
+Đây là nơi Agent khác chatbot rất rõ.
+
+Tool có thể:
+
+timeout
+	401
+	403
+	404
+	429
+	500
+	network error
+	invalid response
+	partial result
+
+Agent runtime cần xử lý.
+
+Ví dụ:
+
+	LLM
+	 ↓
+	call API
+	 ↓
+	HTTP 500
+	 ↓
+	Runtime
+	 ↓
+	retry
+	 ↓
+	success
+	 ↓
+	LLM
+
+Hoặc:
+
+	HTTP 403
+	 ↓
+	Do NOT retry blindly
+	 ↓
+	return authorization failure
+	 ↓
+	LLM decides alternative
+
+
+	Exam trap
+
+		Retry tất cả lỗi là sai.
+
+		Retry phù hợp hơn với lỗi transient:
+			timeout
+				429
+				temporary 5xx
+
+		Không nên retry mù quáng:
+			401
+			403
+			invalid request
+			business validation error
+
+
+# 11. Termination Condition
+
+
+Agent loop phải có điểm dừng.
+
+Nếu không:
+	LLM
+	 ↓
+	tool
+	 ↓
+	LLM
+	 ↓
+	tool
+	 ↓
+	LLM
+	 ↓
+	...
+	=&gt; runaway agent.
+
+Production runtime cần:
+
+	max steps
+	max execution time
+	max token budget
+	max cost
+	termination condition
+
+Ví dụ:
+	MAX_STEPS = 20
+
+	for step in range(MAX_STEPS):
+		...
+
+Hoặc:
+
+	budget exceeded
+		  ↓
+	terminate
+
+Đây là vấn đề:
+	reliability + cost control + security
+	chứ không chỉ là performance.
+
+
+
+# 12. Agent Runtime và Observability
+
+Agent khó debug hơn API truyền thống.
+
+	API:
+
+		request
+		 ↓
+		service
+		 ↓
+		response
+
+	Agent:
+
+		request
+		 ↓
+		LLM
+		 ↓
+		tool A
+		 ↓
+		LLM
+		 ↓
+		tool B
+		 ↓
+		LLM
+		 ↓
+		KB
+		 ↓
+		LLM
+		 ↓
+		tool C
+		 ↓
+		response
+
+	Bạn cần trace toàn bộ execution.
+
+
+# 13. Mapping sang AWS hiện đại
+
+rong AWS hiện tại, khi nói về agent runtime architecture, AgentCore là kiến trúc chính cần nghĩ tới, thay vì lấy Bedrock Agents Classic làm mental model trung tâm.
+
+| Agent capability       | AWS                                                     |
+| ---------------------- | ------------------------------------------------------- |
+| Agent runtime          | Amazon Bedrock AgentCore Runtime                        |
+| Identity               | AgentCore Identity                                      |
+| External systems/tools | AgentCore Gateway / tools                               |
+| Memory                 | AgentCore Memory                                        |
+| Browser interaction    | AgentCore Browser                                       |
+| Code execution         | AgentCore Code Interpreter                              |
+| Observability          | AgentCore Observability                                 |
+| Policy/security        | AgentCore policy/security capabilities                  |
+| Human approval         | application/orchestration + approval workflow           |
+| Multi-agent            | AgentCore + application orchestration                   |
+| Model                  | Amazon Bedrock / other supported model providers        |
+| RAG                    | Bedrock Knowledge Bases / application-managed retrieval |
+| Workflow orchestration | Step Functions / application orchestration              |
+
+
+Điểm cần nhớ:
+	AgentCore Runtime không phải LLM.
+	Nó là execution environment/runtime layer cho agent.
+
+
+# 14. AgentCore Runtime vs Lambda
+
+	Hai thứ này rất dễ nhầm.
+
+	Lambda
+		event
+		 ↓
+		function
+		 ↓
+		result
+
+	Lambda thích hợp cho:
+
+		deterministic execution
+		stateless function
+		event processing
+		API backend
+		
+	Agent Runtime
+		goal
+		 ↓
+		reason
+		 ↓
+		decision
+		 ↓
+		tool
+		 ↓
+		observation
+		 ↓
+		reason
+		 ↓
+		...
+
+	Agent runtime phù hợp với:
+
+		non-deterministic reasoning
+		multi-step execution
+		tool use
+		state
+		agent session
+		model interaction
+
+	Nhưng Agent vẫn có thể sử dụng Lambda
+
+	Ví dụ:
+
+		AgentCore Runtime
+			   ↓
+			  Tool
+			   ↓
+			 Lambda
+			   ↓
+			DynamoDB
+
+		Đây là kiến trúc rất thực tế.
+
+
+
+
+
+# 15. Agent Runtime vs Step Functions
+
+	Đây cũng là một câu hỏi Professional-level.
+		Step Functions
+		Workflow thường được xác định trước:
+		A
+		 ↓
+		B
+		 ↓
+		C
+		 ↓
+		D
+
+	Có thể có:
+		Choice
+		Retry
+		Catch
+		Parallel
+		Map
+		Timeout
+		Nó phù hợp với deterministic orchestration.
+
+
+
+	Agent
+
+		LLM quyết định:
+			A?
+			B?
+			Search first?
+			Ask user?
+			Call API?
+			Try another tool?
+
+		Đây là dynamic orchestration.
+
+
+
+
+
+|                     | Step Functions            | Agent Runtime   |
+| ------------------- | ------------------------- | --------------- |
+| Control flow        | predefined                | model-driven    |
+| Determinism         | cao                       | thấp hơn        |
+| Reasoning           | không phải mục tiêu chính | core capability |
+| Tool selection      | workflow designer         | agent/model     |
+| Auditability        | rất tốt                   | phức tạp hơn    |
+| Cost predictability | cao                       | thấp hơn        |
+| Flexibility         | thấp hơn                  | cao             |
+| Best use            | business workflow         | adaptive task   |
+
+
+Kiến trúc production thường không phải chọn một trong hai.
+
+	Có thể:
+		Agent
+		 ↓
+		Step Functions
+		 ↓
+		Deterministic business process
+
+	Ví dụ:
+		Agent
+		 ↓
+		"Customer wants refund"
+		 ↓
+		Step Functions
+		 ↓
+		validate order
+		 ↓
+		check eligibility
+		 ↓
+		issue refund
+		 ↓
+		send confirmation
+
+	Agent quyết định nên làm gì.
+	Step Functions đảm bảo quy trình phải được thực hiện như thế nào.
+	Đây là một design pattern rất mạnh.
+
+				
+				
+
+# 	16. Agent Runtime vs RAG			
+				
+				
+gent có thể sử dụng RAG như một tool.
+
+Ví dụ:
+	Agent
+	 ├── search_company_policy()
+	 ├── query_employee_db()
+	 ├── create_ticket()
+	 └── send_email()
+
+Trong đó:
+	search_company_policy()
+		   ↓
+	Knowledge Base / Vector Search
+
+Do đó:
+	RAG là một capability. Agent là một control system sử dụng nhiều capabilities.				
+				
+				
+				
+				
+# 	17. Một architecture production hoàn chỉnh			
+	Ví dụ hệ thống quản lý tiến độ dự án:			
+				
+				
+LINE / Web / Slack
+        │
+        ▼
+   API Gateway
+        │
+        ▼
+ ┌─────────────────────┐
+ │ AgentCore Runtime   │
+ │                     │
+ │ Session             │
+ │ State               │
+ │ Identity            │
+ │ Policy              │
+ │ Memory              │
+ │ Agent Loop          │
+ └─────────┬───────────┘
+           │
+           ▼
+          LLM
+           │
+     ┌─────┼─────────┐
+     │     │         │
+     ▼     ▼         ▼
+    RAG   API       DB
+     │     │         │
+     ▼     ▼         ▼
+   KB    Lambda   Aurora
+                 PostgreSQL				
+				
+				
+Agent nhận:
+
+「今週遅延しているプロジェクトを確認して、原因をまとめてください。」
+
+Agent có thể:
+	1. Query project DB
+	2. Find delayed projects
+	3. Retrieve relevant project reports
+	4. Analyze causes
+	5. Generate summary
+
+Nếu user tiếp:
+	「特に問題が大きい2件について担当者に連絡して。」
+
+Agent có thể tiếp tục session/state:
+	previous context
+		  ↓
+	identify 2 projects
+		  ↓
+	find owners
+		  ↓
+	send notification				
+					
+		
+
+
+
+# 18. Cost / Latency trade-off
+
+Agent có một vấn đề rất lớn:
+
+	Một request có thể tạo ra nhiều model calls.
+
+	Chatbot:
+		1 request
+		→ 1 LLM call
+
+	Agent:
+		1 request
+		→ LLM
+		→ tool
+		→ LLM
+		→ tool
+		→ LLM
+		→ tool
+		→ LLM
+
+	Nếu mỗi loop mất:
+		2 sec
+
+	và có 8 bước:
+		≈ 16 sec
+
+	chưa kể:
+		network latency
+		tool latency
+		retrieval
+		model queueing
+
+	Cost cũng tăng:
+		N × model invocation
+		+
+		tool execution
+		+
+		retrieval
+		+
+		memory
+		+
+		observability
+
+	Vì vậy production agent phải tối ưu:
+		number of steps
+		model selection
+		context size
+		tool latency
+		parallel tool calls
+		caching
+		early termination
+
+
+
+
+# 19. Khi nào KHÔNG nên dùng Agent?
+
+	Đây là tư duy Senior.
+
+	Nếu workflow hoàn toàn xác định:
+
+		Receive invoice
+		 ↓
+		OCR
+		 ↓
+		validate
+		 ↓
+		save DB
+		 ↓
+		send email
+
+	Không cần agent.
+
+	Dùng:
+
+		Step Functions
+		+
+		Lambda
+		+
+		Textract
+
+	sẽ:
+		rẻ hơn
+		predictable hơn
+		dễ test
+		dễ audit
+		deterministic hơn
+
+	Agent nên xuất hiện khi có:
+		uncertainty
+		ambiguous goals
+		dynamic tool selection
+		reasoning
+		adaptive execution
+
+	Không phải cứ có LLM là phải Agent.
+
+
+Agent
+Agent runtime
+Tool use
+Planning
+Reasoning
+State
+Session
+Memory
+Identity
+Authorization
+Policy
+Observability
+Human-in-the-loop
+Multi-agent
+Orchestration
+
+
+	Đặc biệt:
+
+		Model = reasoning capability.
+		Runtime = execution/control environment.
+
+
+# 21. Production Knowledge
+
+Trong production, Agent Runtime phải giải quyết thêm:
+	Security
+	Identity
+	Authorization
+	Isolation
+	Retries
+	Timeouts
+	Idempotency
+	Rate limiting
+	Budget control
+	Tracing
+	Evaluation
+	Human approval
+	Failure recovery
+	Prompt injection
+	Tool poisoning
+	Data exfiltration
+
+Một agent “chạy được” chưa phải production agent.
+
+Production agent phải:
+	controlled
+	observable
+	recoverable
+	auditable
+	secure
+	cost-bounded
+
+
+
+# Công thức đọc đề:
+
+	Dynamic decision
+		   ↓
+	Agent
+
+	Stateful
+		   ↓
+	Session / Memory
+
+	External action
+		   ↓
+	Tools / Gateway
+
+	User-specific access
+		   ↓
+	Identity / Authorization
+
+	Dangerous action
+		   ↓
+	Policy / Human approval
+
+	Deterministic workflow
+		   ↓
+	Step Functions
+
+	Traceability
+		   ↓
+	Observability
+
+	Failure recovery
+		   ↓
+	Retry / timeout / idempotency
+
+
+
+
+# 27. Mental Model cần ghi nhớ
+
+
+                  USER GOAL
+                     │
+                     ▼
+              ┌──────────────┐
+              │ AGENT RUNTIME│
+              │              │
+              │ State        │
+              │ Identity     │
+              │ Policy       │
+              │ Memory       │
+              │ Loop         │
+              │ Observability│
+              └──────┬───────┘
+                     │
+                     ▼
+                    LLM
+                     │
+                "What next?"
+                     │
+          ┌──────────┼──────────┐
+          ▼          ▼          ▼
+        RAG         API        Tool
+          │          │          │
+          └──────────┼──────────┘
+                     │
+                  Result
+                     │
+                     ▼
+                   LLM
+                     │
+                "What next?"
+                     │
+                    ...
+                     │
+                     ▼
+               FINAL ANSWER
+
+	LLM quyết định.
+	Runtime kiểm soát.
+	Tools hành động.
+	State ghi nhớ.
+	Identity xác định “ai”.
+	Policy quyết định “được phép gì”.
+	Observability cho biết “đã xảy ra gì”.
+
+Đó mới là bản chất của Agent Runtime Architecture.
+
+
+
+
+</code></pre>
+</div>
+<div class='nav-bar'><a class='nav-btn' href='lesson62.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../aws-bedrock-agent-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson64.html'>Bài sau ➡️</a></div><button class='theme-toggle-btn' onclick='toggleTheme()'>🌓 Đổi Giao Diện</button>
+</div>
+<script>
+const lessonKey = 'aws-bedrock-agent-learning-list_lesson63.html';
+function toggleTheme() {
+   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';
+   document.body.className = mode;
+   localStorage.setItem('theme', mode);
+}
+function toggleDone() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   if (isDone) {
+       localStorage.removeItem(lessonKey);
+   } else {
+       localStorage.setItem(lessonKey, 'done');
+   }
+   renderDoneStatus();
+}
+function renderDoneStatus() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   let btn = document.getElementById('doneButton');
+   if (isDone) {
+       btn.className = 'done-btn completed';
+       btn.innerText = 'Đã Hoàn Thành ✅';
+   } else {
+       btn.className = 'done-btn';
+       btn.innerText = 'Đánh dấu đã học ⚪';
+   }
+}
+function copyContent() {
+   let text = document.getElementById('lessonCode').innerText;
+   navigator.clipboard.writeText(text).then(function() {
+       alert('✅ Đã sao chép nội dung bài học!');
+   });
+}
+function initLesson() {
+   document.body.className = localStorage.getItem('theme') || 'dark-mode';
+   renderDoneStatus();
+   if (window.Prism) Prism.highlightAll();
+}
+</script></body></html>

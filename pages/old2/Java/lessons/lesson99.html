@@ -1,0 +1,102 @@
+<html><head><title>Lesson 99 == CD Tool (Continuous Deployment / Delivery) ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 99 -- CD Tool (Continuous Deployment / Delivery) -//</h1><pre>
+# Khái niệm 
+	Là công cụ triển khai tự động ứng dụng từ image (hoặc build artifact) sang môi trường thực tế (dev, staging, production...).
+
+
+# 🎯 MỤC TIÊU CỦA CD TOOL 
+
+	Mục tiêu									Ý nghĩa thực tế
+	Triển khai nhanh, chính xác				Mỗi lần build → deploy tự động, không thao tác tay
+	Rollback nhanh							Nếu deploy lỗi → quay lại bản cũ tự động
+	Tách biệt môi trường					Dev, staging, prod deploy khác nhau → kiểm soát rủi ro
+	Audit & trace							Biết ai deploy, deploy cái gì, khi nào
+	Blue/Green, Canary...					Hỗ trợ rollout thông minh → giảm rủi ro khi release
+
+
+
+# 🛠️ CD TOOLS PHỔ BIẾN 
+	
+Tool								Mô tả và khi nào dùng
+GitHub Actions					Dùng cho dự án nhỏ/trung, tích hợp CI/CD vào 1 nơi
+GitLab CI/CD					Full pipeline CI/CD. Dễ dùng nếu bạn đang dùng GitLab
+ArgoCD							Best choice cho GitOps với Kubernetes
+FluxCD							Cạnh tranh với ArgoCD, nhẹ hơn, GitOps-native
+Jenkins + plugin				Truyền thống, tùy biến cực mạnh, nhưng cồng kềnh
+Spinnaker						Cho enterprise scale, hỗ trợ multi-cloud, Blue/Green mạnh mẽ
+Tekton							Cloud-native pipeline engine, Kubernetes-based (nhưng phức tạp)
+
+
+# 🔄 MẪU CD FLOW CHUẨN 
+	
+Giả sử bạn dùng GitHub + Docker + EKS (Kubernetes AWS) 
+
+
+Dev push → GitHub Action build Docker image
+          → Push lên GitHub Container Registry
+          → Trigger ArgoCD sync → pull image mới → update deployment YAML
+          → K8s rollout → done.
+
+
+# 🔥 VÍ DỤ ARGOCD – TRIỂN KHAI CHUẨN GITOPS 
+
+	## 	Vì sao nên dùng ArgoCD?
+			GitOps-based: trạng thái hệ thống được version-control bằng Git
+			Auto sync trạng thái từ Git → cluster
+			Hiển thị trạng thái toàn bộ K8s system
+			Rollback 1-click nếu lỗi
+
+
+
+	## 🔧 Flow hoạt động ArgoCD: 
+				Bạn push file deployment.yaml lên Git repo (trỏ tới image mới)
+				ArgoCD phát hiện repo thay đổi
+				ArgoCD sync trạng
+				thái mới vào K8s cluster
+				App được deploy/update tự động
+
+
+
+	## 🧠 GitOps là gì? 
+		Git = single source of truth
+		Kubernetes trạng thái = Git repo định nghĩa
+
+
+
+
+# ✅ SO SÁNH NHANH CD TOOLS
+
+Tool					Khi nào dùng									Điểm mạnh chính
+GitHub CD				Dự án nhỏ, không cần hạ tầng phức tạp			Tích hợp CI/CD dễ, free cho OSS
+ArgoCD					K8s project production							GitOps, rollback, UI đẹp
+Jenkins CD				Dự án customize nặng							Plugin mạnh, tự làm tất cả
+Spinnaker				Enterprise-scale, đa môi trường					Blue/Green, multi-cloud, policy
+GitLab CD				Full DevOps team dùng GitLab					Tích hợp Git, CI/CD, registry
+
+
+
+
+# ☁️ CD TOOL + REGISTRY (LIÊN KẾT) 
+	
+	Bạn push image từ CI → registry:
+		ghcr.io/org/app:tag
+		ECR.amazonaws.com/org/app:tag
+		nexus.company.local/app:tag
+	
+	CD Tool sẽ:
+		Pull image đó từ registry
+		Deploy sang môi trường (k8s, ECS, server...)
+
+
+
+
+# 📦 VỀ REGISTRY 
+	
+
+	Tên	Mô												 tả ngắn
+GitHub Container Registry (GHCR)			Dễ dùng, public/private, tích hợp GitHub Actions
+ECR (Elastic Container Registry)			Registry mạnh mẽ cho AWS stack (ECS, EKS)
+Nexus										Self-hosted, lưu được cả image lẫn Maven/npm packages
+
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

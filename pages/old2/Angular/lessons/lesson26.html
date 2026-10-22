@@ -1,0 +1,70 @@
+<html><head><title>Lesson 26 == ng-cloak ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../angular-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 26 -- ng-cloak -//</h1><pre># Khái niệm 
+
+	dùng để tránh hiện tượng nháy nội dung chưa biên dịch (template flickering) khi AngularJS chưa kịp xử lý.
+	##🧨 Vấn đề: "Template flicker"
+		Khi AngularJS chưa được tải hoặc chưa xử lý xong, các biểu thức như:
+		
+		{{ someData }}
+		...sẽ bị hiển thị thô lên màn hình, gây nháy (flicker), đặc biệt là trên các kết nối chậm. 
+
+# ✅ Giải pháp: ng-cloak
+	ng-cloak là một directive giúp ẩn nội dung HTML có chứa AngularJS expression cho đến khi AngularJS xử lý xong.
+	
+	🧾 Cách dùng:
+	
+
+<div ng-app="" ng-cloak>
+  {{ someData }}
+</div>
+	Khi Angular khởi động xong, nó sẽ tự động xóa thuộc tính ng-cloak, và phần tử sẽ hiển thị như bình thường.
+
+
+
+# 🛠 Yêu cầu kèm theo CSS 
+	AngularJS chỉ xóa ng-cloak khỏi DOM, bạn phải tự thêm CSS để ẩn nó cho đến lúc xử lý xong.
+	
+<style>
+  [ng-cloak] {
+    display: none !important;
+  }
+</style>
+
+
+# 📌 Tóm tắt
+
+| Tính năng                  | Giải thích                                                 |
+| -------------------------- | ---------------------------------------------------------- |
+| `ng-cloak` dùng để làm gì? | Ẩn biểu thức AngularJS trước khi render xong               |
+| Cách hoạt động             | AngularJS xóa thuộc tính `ng-cloak` sau khi biên dịch xong |
+| Cần gì thêm?               | CSS `display: none` cho `[ng-cloak]` để ẩn ban đầu         |
+| Có thể dùng ở đâu?         | Bất kỳ phần tử nào có `{{ }}` hoặc directive AngularJS     |
+
+# 🎯 Khi nào nên dùng? 
+
+	Khi app AngularJS load chậm
+	Khi server render trả về HTML thô chứa {{ }} (ví dụ khi render từ backend)
+	Khi muốn giao diện trông "sạch sẽ" ngay từ đầu, không nhấp nháy
+
+# 🔥 Ví dụ đầy đủ
+
+<!DOCTYPE html>
+<html ng-app="">
+<head>
+  <style>
+    [ng-cloak] {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+
+<div ng-cloak>
+  {{ "Xin chào, AngularJS!" }}
+</div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+
+</body>
+</html>
+
+</pre><a id='backBottom' href='../angular-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

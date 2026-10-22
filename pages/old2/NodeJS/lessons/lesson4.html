@@ -1,0 +1,165 @@
+<html><head><title>Lesson 4 == NodeJS vs Browser ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../NodeJS-learning.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 4 -- NodeJS vs Browser -//</h1><pre>
+# Tổng Quan Phần "Node.js vs Browser" 
+
+	## Mục tiêu: 
+		So sánh môi trường chạy JavaScript của Node.js và browser, tập trung vào:
+
+			- APIs: Các API có sẵn trong mỗi môi trường (file system, DOM, networking, v.v.).
+			- Global Objects: global (Node.js) vs window/self (browser).
+			- Modules: CommonJS (require) vs ES Modules (import/export).
+			- Security: Node.js có quyền truy cập hệ thống, browser bị giới hạn trong sandbox.
+			- Event Loop: Cả hai đều dùng, nhưng Node.js có thêm API đặc thù.
+			- Environment Variables: Node.js hỗ trợ, browser không.
+			- Package Management: Node.js dùng npm/yarn, browser dùng CDN/bundler.
+
+
+		Tại sao quan trọng? Hiểu sự khác biệt giúp bạn chọn đúng môi trường khi phát triển (ví dụ: dùng Node.js cho server API, browser cho giao diện người dùng). Nó cũng giải thích tại sao một số code không chạy được ở cả hai nơi.
+
+		## Cách chạy code ví dụ:
+		
+		Node.js: Tạo file .js, chạy bằng node filename.js.
+		Browser: Mở Console (F12 trên Chrome/Firefox) hoặc tạo file HTML với thẻ <script>.
+
+
+# 1. Key Differences (Sự Khác Biệt Chính)
+
+	## APIs
+		-Node.js: Cung cấp API server-side như fs (file system), http/https (networking), os (hệ điều hành). Những API này không có trong browser vì browser không cần (hoặc không được phép) truy cập file hoặc mạng cấp thấp.
+		
+		-Browser: Cung cấp API client-side như document (DOM), fetch (HTTP request), canvas (vẽ đồ họa). Những API này vô nghĩa trong Node.js vì không có giao diện người dùng.
+		
+		Ví dụ thực tế: Trong Node.js, bạn có thể đọc file từ ổ cứng; trong browser, bạn chỉ có thể tương tác với HTML elements.
+
+
+	## Global Objects:
+
+		- Node.js: Dùng global để lưu biến toàn cục. Đây là đối tượng gốc của môi trường Node.js.
+		- Browser: Dùng window (hoặc self trong Web Workers) để truy cập biến toàn cục và API trình duyệt.
+		
+		Lưu ý: globalThis (ES2020) là cách chuẩn để truy cập global object ở cả hai môi trường.
+
+
+	## Modules
+
+		- Node.js: Hỗ trợ CommonJS (require/module.exports) và ES Modules (import/export). CommonJS là chuẩn cũ, vẫn phổ biến trong Node.js.
+		
+		- Browser: Chủ yếu dùng ES Modules hoặc thẻ <script> trực tiếp. Không hỗ trợ require trừ khi dùng bundler như Webpack.
+		
+		 Ví dụ: Trong Node.js, bạn require('fs'); trong browser, bạn <script src="lib.js">.	
+
+	## Security
+
+		- Node.js: Có toàn quyền truy cập hệ thống (file, network, process), nên cần cẩn thận khi chạy code từ nguồn không tin cậy.
+		
+		- Browser: Chạy trong sandbox, hạn chế truy cập file hoặc mạng ngoài HTTP/HTTPS, bảo vệ người dùng.
+		
+		 Ví dụ: Node.js có thể xóa file hệ thống; browser không thể.
+
+
+
+	## Event Loop:
+
+		- Cả hai đều dùng event loop để xử lý bất đồng bộ (như setTimeout), nhưng Node.js có thêm API như process.nextTick hoặc setImmediate để điều khiển chi tiết hơn.
+		
+		- Ngữ cảnh: Node.js tối ưu cho I/O-heavy (như server xử lý nhiều request), browser tối ưu cho UI rendering.
+
+
+
+	## Environment Variables:
+	
+		- Node.js: Truy cập qua process.env (ví dụ: process.env.PORT để lấy port server).
+		
+		- Browser: Không hỗ trợ trực tiếp, nhưng có thể dùng thông qua server-side rendering hoặc bundler.
+		
+		Ví dụ: Trong Node.js, bạn đặt PORT=3000 trong .env để config server.	
+
+	## Package Management
+
+		- Node.js: Dùng npm/yarn để cài thư viện (ví dụ: npm install express).
+		
+		- Browser: Dùng CDN (như jsDelivr) hoặc bundler (Webpack, Vite) để tải thư viện.
+		
+		Ví dụ: Trong Node.js, bạn cài lodash bằng npm install lodash; trong browser, bạn dùng <script src="https://cdn.jsdelivr.net/npm/lodash">.
+		
+
+# 2. Examples (Ví Dụ Minh Họa)
+
+	Tài liệu cung cấp các ví dụ để minh họa sự khác biệt. Tôi sẽ phân tích từng ví dụ và bổ sung ngữ cảnh.
+
+	##  2.1. Global Objects
+
+		// Node.js
+		global.mylet = 42;
+		console.log(global.mylet); // 42
+		
+		// Browser
+		window.mylet = 42;
+		console.log(window.mylet); // 42
+
+	## Giải thích chi tiết:
+
+		- Node.js: global là đối tượng toàn cục, tương tự window trong browser. Gán global.mylet = 42 tạo biến toàn cục, có thể truy cập ở mọi nơi trong chương trình Node.js. Tuy nhiên, dùng global không được khuyến khích vì dễ gây xung đột.
+		- Browser: window.mylet = 42 tạo biến toàn cục trong trình duyệt. Bạn có thể truy cập bằng mylet (ngầm hiểu là window.mylet) hoặc window.mylet rõ ràng.
+		- Thực tế: Tránh lạm dụng global objects. Trong Node.js, dùng modules để tổ chức code; trong browser, dùng let/const trong scope cụ thể.
+		- Thử nghiệm: Trong Node.js, chạy node -e "global.x = 10; console.log(global.x)". Trong browser Console, thử window.x = 10; console.log(x).
+
+
+
+	## 2.2. File Access
+
+// Node.js
+const fs = require('fs');
+fs.readFile('myfile.txt', 'utf8', (err, data) => {
+  if (err) throw err;
+  console.log(data);
+});
+
+// Browser
+// Not allowed for security reasons
+
+
+		- Node.js: Module fs (file system) cho phép đọc/ghi file. Code trên đọc file myfile.txt bất đồng bộ, in nội dung nếu thành công hoặc ném lỗi nếu thất bại.
+		- Browser: Không có API đọc file trực tiếp từ hệ thống vì sandbox security. Browser chỉ cho phép đọc file qua <input type="file"> do người dùng chọn.
+		- Ngữ cảnh: Trong Node.js, bạn dùng fs để đọc config hoặc log. Trong browser, bạn cần server cung cấp file qua HTTP.
+		- Thực hành: Tạo file myfile.txt với nội dung "Hello!", chạy code Node.js trên. Trong browser, thử fetch('myfile.txt') nếu file được host trên server.
+
+
+
+	## 2.3. HTTP Requests
+
+// Node.js
+const https = require('https');
+https.get('https://example.com', res => {
+  let data = '';
+  res.on('data', chunk => data += chunk);
+  res.on('end', () => console.log(data));
+});
+
+// Browser
+fetch('https://example.com')
+  .then(response => response.text())
+  .then(console.log);
+
+
+		Node.js: Dùng module https để gửi request GET. Dữ liệu trả về được xử lý qua event-driven (res.on('data') thu thập từng mảnh, res.on('end') xử lý khi hoàn tất). Đây là cách low-level, thường được thay bằng thư viện như axios.
+		Browser: API fetch (ES6+) là cách hiện đại, trả về Promise, dễ dùng hơn. Code trên lấy nội dung HTML từ example.com và in ra.
+		So sánh: fetch có trong Node.js từ phiên bản 18.x (experimental trước đó), nhưng https vẫn là cách truyền thống trong Node.js. Browser không có https vì không cần kiểm soát thấp mức socket.
+		Thực hành: Trong Node.js, chạy code trên, xem HTML của example.com. Trong browser Console, thử fetch('https://example.com').then(res => res.text()).then(console.log).
+
+
+	# 2.4. Modules
+// Node.js (CommonJS)
+const fs = require('fs');
+
+// Node.js & Browser (ES Modules)
+// import fs from 'fs'; // Node.js only, not browser
+// import _ from 'https://cdn.jsdelivr.net/npm/lodash-es/lodash.js'; // Browser
+
+		- Node.js (CommonJS): require('fs') tải module built-in fs. CommonJS là chuẩn mặc định trong Node.js (trước khi ES Modules phổ biến).
+		- ES Modules: Cả Node.js (từ 12.x) và browser hỗ trợ import/export. Trong Node.js, cần file .mjs hoặc "type": "module" trong package.json. Browser tải ES Modules qua CDN hoặc bundler.
+		- Khác biệt: Browser không có fs vì không truy cập file. Node.js không có CDN trực tiếp, nhưng có thể dùng fetch để tải script.
+		- Thực hành: Trong Node.js, thử const os = require('os'); console.log(os.platform()). Trong browser, thêm <script type="module" src="https://cdn.jsdelivr.net/npm/lodash-es/lodash.js"></script> vào HTML và thử import _ from 'lodash-es' trong Console.
+
+
+
+</pre><a id='backBottom' href='../NodeJS-learning.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

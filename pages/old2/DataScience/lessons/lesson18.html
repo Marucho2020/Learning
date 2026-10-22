@@ -1,0 +1,161 @@
+<html><head><title>Lesson 18 == Correlation vs. Causality ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../DataScience-learning.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 18 -- Correlation vs. Causality -//</h1><pre>		
+# 	1. Khái niệm Tương quan và Nhân quả	
+		
+	## Tương quan (Correlation):	
+		
+		Đo lường mức độ và hướng của mối quan hệ tuyến tính giữa hai biến số, thông qua hệ số tương quan Pearson (r), có giá trị từ -1 đến 1.
+		$   r = 1   $: Mối quan hệ tuyến tính dương hoàn hảo.
+		$   r = 0   $: Không có mối quan hệ tuyến tính.
+		$   r = -1   $: Mối quan hệ tuyến tính âm hoàn hảo.
+		Tương quan chỉ mô tả mối quan hệ số học, không nói lên nguyên nhân hay kết quả.		
+		
+		
+		
+	## 	Nhân quả (Causality)
+		
+		Là kết luận rằng một biến (x) trực tiếp gây ra sự thay đổi ở biến khác (y).
+		Để chứng minh nhân quả, cần các nghiên cứu sâu hơn (ví dụ: thí nghiệm kiểm soát ngẫu nhiên - RCT) chứ không chỉ dựa vào tương quan.		
+		
+		
+	Thông điệp chính: Tương quan không ngụ ý nhân quả. Một hệ số tương quan cao (gần 1 hoặc -1) không có nghĩa là một biến gây ra sự thay đổi ở biến kia, và tương quan thấp (gần 0) không có nghĩa là không có mối quan hệ nhân quả.	
+		
+		
+	Ví dụ bãi biển: Doanh số bán kem (Ice_Cream_Sale) và tai nạn đuối nước (Drowning_Accident) tăng đồng thời vào mùa hè, với $ r = 1 $. Tuy nhiên, bán kem không gây ra tai nạn đuối nước. Cả hai có thể bị ảnh hưởng bởi một yếu tố khác (như thời tiết mùa hè).	
+		
+	Câu hỏi về Average_Pulse và Calorie_Burnage: Trong bài học trước, full_health_data cho thấy tương quan thấp ($ r = 0.02 $) giữa Average_Pulse và Calorie_Burnage. Điều này không có nghĩa là Average_Pulse không ảnh hưởng đến Calorie_Burnage, vì có thể có mối quan hệ phi tuyến hoặc yếu tố khác can thiệp.	
+		
+		
+		
+# 	2. Dữ liệu Ví dụ (Beach Example)	
+		
+		
+Ice_Cream_Sale,Drowning_Accident
+20,20
+40,40
+60,60
+80,80
+100,100
+120,120
+140,140
+160,160
+180,180
+200,200
+
+
+	Quan sát: Dữ liệu này cho thấy mối quan hệ tuyến tính hoàn hảo ($ r = 1 $), vì Ice_Cream_Sale và Drowning_Accident có giá trị giống nhau.
+
+
+
+# 3. Tính Hệ số Tương quan Thủ Công
+
+	Để hiểu rõ, tôi sẽ tính hệ số tương quan Pearson cho dữ liệu ví dụ bãi biển.
+
+$r = \frac{\sum (x_i - \bar{x})(y_i - \bar{y})}{\sqrt{\sum (x_i - \bar{x})^2 \sum (y_i - \bar{y})^2}}$		
+		
+		
+	Bước 1: Tính Trung bình	
+	Bước 2: Tính Khoảng cách và Tích	
+		
+Ice_Cream_Sale (xi x_i xi​),Drowning_Accident (yi y_i yi​),xi−xˉ x_i - \bar{x} xi​−xˉ,yi−yˉ y_i - \bar{y} yi​−yˉ​,(xi−xˉ)(yi−yˉ) (x_i - \bar{x})(y_i - \bar{y}) (xi​−xˉ)(yi​−yˉ​)
+20,20,-90,-90,8100
+40,40,-70,-70,4900
+60,60,-50,-50,2500
+80,80,-30,-30,900
+100,100,-10,-10,100
+120,120,10,10,100
+140,140,30,30,900
+160,160,50,50,2500
+180,180,70,70,4900
+200,200,90,90,8100
+
+	Tổng: $ \sum (x_i - \bar{x})(y_i - \bar{y}) = 8100 + 4900 + 2500 + 900 + 100 + 100 + 900 + 2500 + 4900 + 8100 = 33000 $
+
+	Bước 3: Tính Phương sai
+	Bước 4: Tính $ r $
+	Kết quả: $ r = 1 $, xác nhận mối quan hệ tuyến tính dương hoàn hảo.
+
+
+
+# 4. Minh Họa Với Python (Sử Dụng Pandas và Matplotlib)
+
+	Bài học sử dụng scatter plot và hàm corr() để minh họa.
+	
+	Code Python	
+
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Dữ liệu giả lập
+Drowning = pd.DataFrame({
+    "Drowning_Accident": [20, 40, 60, 80, 100, 120, 140, 160, 180, 200],
+    "Ice_Cream_Sale": [20, 40, 60, 80, 100, 120, 140, 160, 180, 200]
+})
+
+# Vẽ scatter plot
+Drowning.plot(x="Ice_Cream_Sale", y="Drowning_Accident", kind="scatter")
+plt.title("Scatter Plot: Ice Cream Sales vs. Drowning Accidents")
+plt.show()
+
+# Tính hệ số tương quan
+correlation_beach = Drowning.corr()
+print(correlation_beach)
+
+Scatter plot: Các điểm nằm trên đường thẳng $ y = x $, xác nhận $ r = 1 $.
+Ma trận tương quan: $ r = 1 $ giữa Ice_Cream_Sale và Drowning_Accident.
+
+
+# 5. Tạo Biểu Đồ Scatter Plot để Minh Họa
+
+Các điểm nằm trên đường thẳng $ y = x $, cho thấy mối quan hệ tuyến tính hoàn hảo ($ r = 1 $).
+Tuy nhiên, đây là dữ liệu giả lập để minh họa, không phản ánh thực tế rằng Ice_Cream_Sale không gây ra Drowning_Accident.
+
+
+
+
+
+# 6. Giải thích Ví dụ Bãi Biển và Câu hỏi về Average_Pulse vs. Calorie_Burnage
+	## Ví dụ Bãi Biển:
+		Tình huống: Doanh số bán kem và tai nạn đuối nước đều tăng vào mùa hè, với $ r = 1 $.
+		
+		Tại sao không phải nhân quả?
+
+			- Cả hai biến có thể bị ảnh hưởng bởi một biến thứ ba (confounding variable), như thời tiết mùa hè hoặc lượng người đến bãi biển.
+			- Các yếu tố thực sự gây ra tai nạn đuối nước bao gồm: kỹ năng bơi kém, sóng lớn, chuột rút, thiếu giám sát, sử dụng rượu bia, v.v.
+
+		Kết luận: Tương quan cao ($ r = 1 $) không có nghĩa là bán kem gây ra tai nạn đuối nước. Cần phân tích thêm để xác định nguyên nhân thực sự.
+
+
+	## Kết luận: Câu hỏi: Average_Pulse và Calorie_Burnage ($ r = 0.02 $):
+
+		Trong bài học về ma trận tương quan, full_health_data cho thấy tương quan rất thấp giữa Average_Pulse và Calorie_Burnage.
+
+		Tại sao không kết luận Average_Pulse không ảnh hưởng đến Calorie_Burnage?:
+			- Mối quan hệ là phi tuyến (non-linear, ví dụ: calo đốt cháy tăng đến một mức rồi bão hòa dù nhịp tim tăng).
+			- Có biến can thiệp (như Duration hoặc cường độ tập luyện) làm mờ mối quan hệ.
+			- Dữ liệu có outliers hoặc nhiễu làm giảm $ r $.
+
+		Để kiểm tra nhân quả, cần thí nghiệm kiểm soát (ví dụ: đo Calorie_Burnage với Average_Pulse cố định và các yếu tố khác không đổi).
+
+
+	Kết luận: Tương quan thấp không phủ nhận mối quan hệ nhân quả. Cần phân tích sâu hơn (scatter plot, kiểm tra phi tuyến, hoặc mô hình hồi quy).
+
+
+# 7. Ứng dụng Thực tế và Lưu ý Chuyên gia
+
+	Ứng dụng:
+
+		- Phân tích dữ liệu khám phá (EDA): Tương quan giúp xác định các biến tiềm năng cho mô hình dự đoán, nhưng phải kiểm tra nhân quả trước khi đưa ra kết luận.
+		- Machine Learning: Loại bỏ các biến có tương quan cao để tránh đa cộng tuyến, nhưng cẩn thận không bỏ qua các biến quan trọng chỉ vì tương quan thấp.
+		- Khoa học và Y học: Tương quan có thể gợi ý các giả thuyết (như nhịp tim và calo), nhưng cần thí nghiệm để xác nhận nhân quả.
+		- Tài chính: Tương quan giữa các tài sản giúp tối ưu hóa danh mục đầu tư, nhưng nhân quả (như tác động của lãi suất) cần phân tích sâu hơn.
+
+	Lưu ý:
+	
+		- Confounding Variables: Luôn kiểm tra các biến thứ ba có thể giải thích mối quan hệ. Ví dụ: Trong dữ liệu sức khỏe, Duration có thể là biến can thiệp giữa Average_Pulse và Calorie_Burnage.
+		- Non-linear Relationships: Nếu $ r \approx 0 $, thử Spearman hoặc Kendall correlation để kiểm tra mối quan hệ phi tuyến.
+		- Kích thước mẫu: Tương quan trên mẫu nhỏ (như 10 quan sát) có thể không đáng tin cậy. full_health_data lớn hơn sẽ cho kết quả ổn định hơn.
+		- Kiểm định ý nghĩa thống kê: Dùng scipy.stats.pearsonr() để tính p-value, kiểm tra liệu $ r $ có ý nghĩa thống kê không.
+
+
+
+</pre><a id='backBottom' href='../DataScience-learning.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

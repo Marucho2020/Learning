@@ -1,4 +1,37 @@
-<html><head><title>Lesson 198 == Function Composition & Currying ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 198 -- Function Composition & Currying -//</h1><pre>
+<!DOCTYPE html><html lang='vi'><head><meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0'>
+<title>Lesson 198 -- Function Composition & Currying -//</title>
+<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css'>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js'></script>
+<script id='MathJax-script' async src='https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'></script>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; margin: 0; padding: 20px; transition: 0.3s; }
+.dark-mode { background-color: #121212; color: #e0e0e0; }
+.light-mode { background-color: #ffffff; color: #333333; }
+.container { max-width: 950px; margin: auto; }
+h1 { text-align: center; color: #3498db; margin: 20px 0; font-size: 26px; }
+.nav-bar { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 20px 0; }
+.nav-btn { text-decoration: none; padding: 10px 18px; background: #3498db; color: white; border-radius: 6px; font-weight: bold; font-size: 15px; display: inline-block; transition: 0.2s; }
+.nav-btn:hover { background: #2980b9; }
+.nav-btn.home-nav { background: #6c757d; }
+.nav-btn.home-nav:hover { background: #5a6268; }
+.nav-btn.disabled { background: #aaa; cursor: not-allowed; opacity: 0.5; }
+.done-btn { display: block; margin: 15px auto; padding: 10px 24px; border: 2px solid #2ecc71; background: transparent; color: #2ecc71; border-radius: 25px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+.done-btn.completed { background: #2ecc71; color: white; }
+.content-box { position: relative; margin: 20px 0; }
+pre { padding: 20px; border-radius: 8px; white-space: pre-wrap; word-break: break-word; overflow-x: auto; font-family: 'Consolas', 'Courier New', monospace; font-size: 15px; }
+.dark-mode pre { background: #1a1a1a; color: #f8f8f2; border: 1px solid #333; }
+.light-mode pre { background: #f8f9fa; color: #212529; border: 1px solid #e9ecef; }
+.copy-btn { position: absolute; top: 12px; right: 12px; padding: 6px 12px; font-size: 12px; background: #555; color: white; border: none; border-radius: 4px; cursor: pointer; opacity: 0.8; }
+.copy-btn:hover { opacity: 1; background: #2ecc71; }
+.theme-toggle-btn { display: block; margin: 20px auto; padding: 8px 16px; background: transparent; border: 1px solid #888; color: inherit; border-radius: 5px; cursor: pointer; }
+</style></head><body onload='initLesson()'>
+<div class='container'>
+<div class='nav-bar'><a class='nav-btn' href='lesson197.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../java-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson199.html'>Bài sau ➡️</a></div><h1>Lesson 198 -- Function Composition & Currying -//</h1>
+<button id='doneButton' class='done-btn' onclick='toggleDone()'>Mark as Done ⚪</button>
+<div class='content-box'>
+<button class='copy-btn' onclick='copyContent()'>📋 Copy nội dung</button>
+<pre><code id='lessonCode'>
 # 🧩 1. Function Composition — “Ghép hàm như pipeline”
 
 	Function composition = kết hợp nhiều hàm nhỏ (pure functions) thành một hàm lớn, nơi output của hàm trước là input của hàm sau.
@@ -9,22 +42,22 @@
 
 	## 🔹 Hai hướng ghép trong Java: 
 
-		Function<Employee, String> getName = Employee::getName;
-		Function<String, String> toEmailFormat = name -> name.toLowerCase() + "@company.com";
+		Function&lt;Employee, String&gt; getName = Employee::getName;
+		Function&lt;String, String&gt; toEmailFormat = name -&gt; name.toLowerCase() + "@company.com";
 
 	👉 andThen – chạy f rồi g:
 	
-		Function<Employee, String> emailFn = getName.andThen(toEmailFormat);
+		Function&lt;Employee, String&gt; emailFn = getName.andThen(toEmailFormat);
 
 		andThen: f(x) → g(f(x))
 		Thứ tự chạy: getName → toEmailFormat.
 
 	👉 compose – chạy g rồi f:
 
-		Function<String, Integer> parseInt = Integer::parseInt;
-		Function<Integer, Boolean> isEven = n -> n % 2 == 0;
+		Function&lt;String, Integer&gt; parseInt = Integer::parseInt;
+		Function&lt;Integer, Boolean&gt; isEven = n -&gt; n % 2 == 0;
 		
-		Function<String, Boolean> checkEven = isEven.compose(parseInt);
+		Function&lt;String, Boolean&gt; checkEven = isEven.compose(parseInt);
 
 
 	## 🔹 Enterprise hình dung:
@@ -34,7 +67,7 @@
 
 
 	ta dùng composition:
-		Function<Employee, String> emailFn = getName.andThen(toEmailFormat);
+		Function&lt;Employee, String&gt; emailFn = getName.andThen(toEmailFormat);
 
 	→ Ta đóng gói cả logic pipeline vào một function tái sử dụng được.
 	Có thể inject, chain, hoặc test riêng từng bước.
@@ -49,16 +82,16 @@
 
 | Step                   | Mục tiêu                | Kiểu function |
 | ---------------------- | ----------------------- | ------------- |
-| validate input         | Predicate<Employee>     | boolean       |
-| transform data         | Function<Employee, DTO> | object        |
-| compute business value | Function<DTO, Report>   | object        |
-| output                 | Consumer<Report>        | void          |
+| validate input         | Predicate&lt;Employee&gt;     | boolean       |
+| transform data         | Function&lt;Employee, DTO&gt; | object        |
+| compute business value | Function&lt;DTO, Report&gt;   | object        |
+| output                 | Consumer&lt;Report&gt;        | void          |
 
 
 	Rồi ghép lại:
 		→ Mỗi khối pure, testable, reusable.
 
-Function<Employee, Report> pipeline =
+Function&lt;Employee, Report&gt; pipeline =
     validate
       .andThen(transform)
       .andThen(compute);
@@ -71,30 +104,30 @@ Function<Employee, Report> pipeline =
 	Currying = biến hàm nhiều tham số thành chuỗi các hàm nhận 1 tham số và trả về 1 hàm mới.
 
 	## Ví dụ: 
-		BiFunction<Integer, Integer, Integer> add = (a, b) -> a + b;
+		BiFunction&lt;Integer, Integer, Integer&gt; add = (a, b) -&gt; a + b;
 
 	Currying thủ công:	
 	
-Function<Integer, Function<Integer, Integer>> curriedAdd =
-    a -> (b -> a + b);
+Function&lt;Integer, Function&lt;Integer, Integer&gt;&gt; curriedAdd =
+    a -&gt; (b -&gt; a + b);
 
 
 	Sử dụng:
 
-		Function<Integer, Integer> add5 = curriedAdd.apply(5);
+		Function&lt;Integer, Integer&gt; add5 = curriedAdd.apply(5);
 		int result = add5.apply(3); // = 8
 	→ Ta “ghim” trước một phần tham số để tạo function mới — gọi là partial application.
 
 
 	## 💡 Enterprise ý nghĩa: 
 
-Function<String, Function<Employee, Boolean>> buildValidator =
-    field -> (emp -> validateField(emp, field));
+Function&lt;String, Function&lt;Employee, Boolean&gt;&gt; buildValidator =
+    field -&gt; (emp -&gt; validateField(emp, field));
 
 
 
 
-# 🏢 4. Enterprise Example: Validation & Transformation Pipeline
+# 🏢 4. Enterprise Example: Validation &amp; Transformation Pipeline
 
 	Check employee valid
 	Transform thành DTO
@@ -102,11 +135,11 @@ Function<String, Function<Employee, Boolean>> buildValidator =
 
 	## Functional style:
 
-Predicate<Employee> isActive = Employee::isActive;
-Function<Employee, DTO> toDTO = emp -> new DTO(emp.getId(), emp.getName());
-Function<DTO, String> toEmail = dto -> dto.name().toLowerCase() + "@corp.com";
+Predicate&lt;Employee&gt; isActive = Employee::isActive;
+Function&lt;Employee, DTO&gt; toDTO = emp -&gt; new DTO(emp.getId(), emp.getName());
+Function&lt;DTO, String&gt; toEmail = dto -&gt; dto.name().toLowerCase() + "@corp.com";
 
-Function<Employee, String> pipeline =
+Function&lt;Employee, String&gt; pipeline =
     toDTO.compose(isActiveFilter(isActive)).andThen(toEmail);
 
 
@@ -118,10 +151,10 @@ Function<Employee, String> pipeline =
 
 	→ Functional style cho phép tạo logic động, thay đổi runtime mà không viết if/else spaghetti.
 
-Function<String, Function<Employee, Boolean>> hasField =
-    field -> emp -> !getField(emp, field).isEmpty();
+Function&lt;String, Function&lt;Employee, Boolean&gt;&gt; hasField =
+    field -&gt; emp -&gt; !getField(emp, field).isEmpty();
 
-Predicate<Employee> hasEmail = hasField.apply("email");
+Predicate&lt;Employee&gt; hasEmail = hasField.apply("email");
 
 
 
@@ -169,4 +202,46 @@ Predicate<Employee> hasEmail = hasField.apply("email");
 
 
 
-</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
+</code></pre>
+</div>
+<div class='nav-bar'><a class='nav-btn' href='lesson197.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../java-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson199.html'>Bài sau ➡️</a></div><button class='theme-toggle-btn' onclick='toggleTheme()'>🌓 Đổi Giao Diện</button>
+</div>
+<script>
+const lessonKey = 'java-learning-list_lesson198.html';
+function toggleTheme() {
+   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';
+   document.body.className = mode;
+   localStorage.setItem('theme', mode);
+}
+function toggleDone() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   if (isDone) {
+       localStorage.removeItem(lessonKey);
+   } else {
+       localStorage.setItem(lessonKey, 'done');
+   }
+   renderDoneStatus();
+}
+function renderDoneStatus() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   let btn = document.getElementById('doneButton');
+   if (isDone) {
+       btn.className = 'done-btn completed';
+       btn.innerText = 'Đã Hoàn Thành ✅';
+   } else {
+       btn.className = 'done-btn';
+       btn.innerText = 'Đánh dấu đã học ⚪';
+   }
+}
+function copyContent() {
+   let text = document.getElementById('lessonCode').innerText;
+   navigator.clipboard.writeText(text).then(function() {
+       alert('✅ Đã sao chép nội dung bài học!');
+   });
+}
+function initLesson() {
+   document.body.className = localStorage.getItem('theme') || 'dark-mode';
+   renderDoneStatus();
+   if (window.Prism) Prism.highlightAll();
+}
+</script></body></html>

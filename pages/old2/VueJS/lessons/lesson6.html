@@ -1,0 +1,90 @@
+<html><head><title>Lesson 6 == v-if ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../vue-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 6 -- v-if -//</h1><pre># Giải thích  
+	v-if là một directive trong Vue.js dùng để hiển thị có điều kiện một phần tử HTML hoặc component.
+	Cách hoạt động: Nếu điều kiện trong v-if là true, phần tử được hiển thị; nếu là false, phần tử bị xóa khỏi DOM (không chỉ ẩn như CSS display: none).
+	Cú pháp: v-if="biểu-thức"
+	Các directive liên quan
+		v-else: Hiển thị phần tử khi điều kiện v-if là false
+		v-else-if: Kiểm tra các điều kiện bổ sung nếu v-if không thỏa mãn.
+		
+		
+# 	Ví dụ cơ bản: 
+	
+<div id="app">
+  <p v-if="show">This text is visible!</p>
+  <button @click="show = !show">Toggle</button>
+</div>
+
+<script>
+const app = Vue.createApp({
+  data() {
+    return {
+      show: true
+    }
+  }
+})
+app.mount('#app')
+</script>	
+
+
+# 2. Các directive liên quan: v-else và v-else-if 
+	## v-else 
+	Chức năng: Hiển thị một phần tử khi điều kiện của v-if (hoặc v-else-if) trước nó là false
+	Yêu cầu: Phải đặt ngay sau v-if hoặc v-else-if, không được có phần tử xen giữa. 
+	
+<div id="app">
+  <p v-if="show">This is shown!</p>
+  <p v-else>This is hidden!</p>
+  <button @click="show = !show">Toggle</button>
+</div>
+
+<script>
+const app = Vue.createApp({
+  data() {
+    return {
+      show: true
+    }
+  }
+})
+app.mount('#app')
+</script>
+
+
+
+	## v-else-if 
+<div id="app">
+  <p v-if="number === 1">Number is 1</p>
+  <p v-else-if="number === 2">Number is 2</p>
+  <p v-else>Number is neither 1 nor 2</p>
+  <button @click="changeNumber">Change Number</button>
+</div>
+
+<script>
+const app = Vue.createApp({
+  data() {
+    return {
+      number: 1
+    }
+  },
+  methods: {
+    changeNumber() {
+      this.number = (this.number % 3) + 1; // Chuyển giữa 1, 2, 3
+    }
+  }
+})
+app.mount('#app')
+</script>		
+
+
+# 3. So sánh v-if với v-show 
+v-if:
+Xóa hoặc thêm phần tử vào DOM dựa trên điều kiện.
+Tốn tài nguyên hơn khi chuyển đổi (vì phải tạo/xóa DOM).
+Phù hợp khi phần tử ít thay đổi trạng thái hiển thị.
+
+v-show:
+Chỉ ẩn/hiện phần tử bằng CSS (display: none hoặc display: block).
+Hiệu suất tốt hơn khi chuyển đổi thường xuyên, vì không xóa DOM.
+Phù hợp khi phần tử thay đổi hiển thị nhiều lần.
+
+
+</pre><a id='backBottom' href='../vue-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

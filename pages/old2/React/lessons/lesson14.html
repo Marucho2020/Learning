@@ -1,0 +1,251 @@
+<html><head><title>Lesson 14 == React Transitions ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../react-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 14 -- React Transitions -//</h1><pre>
+# 1. Tổng quan về React Transitions
+
+	React Transitions là cách sử dụng các hiệu ứng chuyển đổi (như mờ dần, trượt, phóng to/thu nhỏ) khi một thành phần xuất hiện (mount), biến mất (unmount), hoặc thay đổi trạng thái trong giao diện người dùng. Điều này giúp giao diện trở nên mượt mà và trực quan hơn, cải thiện trải nghiệm người dùng.
+
+	Thư viện React Transition Group cung cấp các công cụ để quản lý các giai đoạn chuyển đổi này, đặc biệt là các thành phần <Transition> và <CSSTransition>. Chúng cho phép bạn thêm các hiệu ứng CSS hoặc JavaScript vào các giai đoạn của quá trình chuyển đổi (như khi một thành phần "vào" hoặc "ra" khỏi DOM)
+
+
+# 2. Cài đặt React Transition Group
+	Để sử dụng React Transitions, bạn cần cài đặt thư viện React Transition Group. Bạn có thể làm điều này bằng lệnh sau trong dự án React của mình:
+	
+npm install react-transition-group
+
+	Sau khi cài đặt, bạn có thể import các thành phần như <Transition> hoặc <CSSTransition> vào dự án của mình.
+
+
+# 3. Các thành phần chính trong React Transition Group
+	React Transition Group cung cấp hai thành phần chính mà bài học trên W3Schools đề cập:
+	
+	## 1. <Transition> 
+		Thành phần cơ bản để quản lý trạng thái chuyển đổi. Nó không tự động áp dụng CSS mà chỉ cung cấp các trạng thái (state) để bạn có thể tự định nghĩa logic chuyển đổi.
+
+	## 2. <CSSTransition> 
+		Thành phần nâng cao hơn, được sử dụng phổ biến để áp dụng các hiệu ứng chuyển đổi bằng CSS. Đây là thành phần chính được sử dụng trong bài học của W3Schools.
+
+
+# 4. Sử dụng <CSSTransition> 
+	<CSSTransition> là công cụ mạnh mẽ để tạo hiệu ứng chuyển đổi dựa trên CSS. Nó hoạt động bằng cách thêm các lớp CSS (class) vào thành phần trong các giai đoạn khác nhau của chuyển đổi. Các giai đoạn này bao gồm:
+	
+		- appear: Khi thành phần lần đầu tiên xuất hiện (mount).
+		- enter: Khi thành phần được thêm vào DOM.
+		- exit: Khi thành phần bị xóa khỏi DOM.
+
+	Mỗi giai đoạn sẽ có hai trạng thái con:
+	
+		-active: Khi hiệu ứng đang hoạt động.
+		-done: Khi hiệu ứng hoàn tất.	
+
+	Ví dụ, nếu bạn đặt classNames="my-transition", các lớp CSS được thêm vào sẽ là:
+
+		my-transition-enter
+		my-transition-enter-active
+		my-transition-enter-done
+		my-transition-exit
+		my-transition-exit-active
+		my-transition-exit-done
+		
+
+
+
+# 5. Ví dụ cụ thể 
+
+	
+import React, { useState } from 'react';
+import { CSSTransition } from 'react-transition-group';
+import './style.css';
+
+function App() {
+  const [showMessage, setShowMessage] = useState(false);
+
+  return (
+    <div>
+      <button onClick={() => setShowMessage(!showMessage)}>
+        Toggle Message
+      </button>
+      <CSSTransition
+        in={showMessage}
+        timeout={300}
+        classNames="fade"
+        unmountOnExit
+      >
+        <div>
+          <p>Hello, this is a message!</p>
+        </div>
+      </CSSTransition>
+    </div>
+  );
+}
+
+export default App;
+
+
+>> CSS tương ứng (style.css): 
+
+.fade-enter {
+  opacity: 0;
+}
+.fade-enter-active {
+  opacity: 1;
+  transition: opacity 300ms;
+}
+.fade-exit {
+  opacity: 1;
+}
+.fade-exit-active {
+  opacity: 0;
+  transition: opacity 300ms;
+}
+
+	## State showMessage:
+
+		- useState(false) tạo một biến trạng thái showMessage để kiểm soát việc hiển thị hoặc ẩn một thành phần.
+		- Khi người dùng nhấn nút "Toggle Message", showMessage sẽ chuyển đổi giữa true và false, kích hoạt hiệu ứng chuyển đổi.
+	
+
+	## <CSSTransition>
+		
+		### Prop in 
+			
+			- Giá trị in={showMessage} quyết định liệu thành phần bên trong <CSSTransition> có được hiển thị hay không.
+			- Nếu showMessage là true, thành phần sẽ "enter" (xuất hiện). Nếu false, thành phần sẽ "exit" (biến mất).
+
+
+		### Prop timeout: 
+			- timeout={300} chỉ định thời gian (tính bằng mili-giây) của hiệu ứng chuyển đổi. Ở đây, hiệu ứng kéo dài 300ms.
+
+
+		### Prop classNames 
+			- classNames="fade" định nghĩa tiền tố của các lớp CSS được áp dụng trong các giai đoạn chuyển đổi (fade-enter, fade-enter-active, v.v.).
+			
+		### Prop unmountOnExit 
+			Khi showMessage là false, thành phần bên trong <CSSTransition> sẽ bị xóa hoàn toàn khỏi DOM sau khi hiệu ứng "exit" hoàn tất. Điều này giúp tiết kiệm tài nguyên.	
+
+
+	## CSS
+	
+		.fade-enter: Đặt trạng thái ban đầu khi thành phần bắt đầu xuất hiện (opacity: 0, tức là hoàn toàn trong suốt).
+		.fade-enter-active: Xác định trạng thái trong quá trình chuyển đổi (opacity: 1, chuyển đổi trong 300ms).
+		.fade-exit: Đặt trạng thái ban đầu khi thành phần bắt đầu biến mất (opacity: 1, vẫn hiển thị đầy đủ).
+		.fade-exit-active: Xác định trạng thái trong quá trình biến mất (opacity: 0, chuyển đổi trong 300ms).	
+	
+	
+	
+	## Kết quả 
+		Khi bạn nhấn nút "Toggle Message":
+		
+			- Nếu showMessage chuyển từ false sang true, đoạn <p>Hello, this is a message!</p> sẽ xuất hiện với hiệu ứng mờ dần từ trong suốt (opacity: 0) sang rõ ràng (opacity: 1).
+			- Nếu showMessage chuyển từ true sang false, đoạn văn sẽ mờ dần từ rõ ràng (opacity: 1) sang trong suốt (opacity: 0) và sau đó bị xóa khỏi DOM.	
+
+# 6. Hiểu sâu hơn về cách hoạt động
+
+
+	## Khi thành phần "enter" (xuất hiện) 
+		
+		- Ngay khi in={true}, lớp .fade-enter được thêm vào thành phần.
+		- Sau một khoảng thời gian rất ngắn (gần như ngay lập tức), lớp .fade-enter-active được thêm vào để bắt đầu hiệu ứng (ví dụ: chuyển đổi opacity từ 0 sang 1).
+		- Sau khi hết thời gian timeout (300ms), lớp .fade-enter-done được thêm vào, đánh dấu hiệu ứng hoàn tất.
+
+
+	## Khi thành phần "exit" (biến mất):
+	
+		- Khi in={false}, lớp .fade-exit được thêm vào.
+		- Sau đó, lớp .fade-exit-active được thêm để thực hiện hiệu ứng biến mất (opacity từ 1 về 0).
+		- Khi hết thời gian timeout, thành phần được xóa khỏi DOM (nếu unmountOnExit được bật).	
+	
+	
+	## 	Tùy chỉnh thêm:
+	
+		- Bạn có thể thêm các hiệu ứng khác ngoài opacity, như transform (di chuyển, xoay, phóng to/thu nhỏ), width, height, v.v.
+		- Bạn có thể sử dụng các sự kiện như onEnter, onEntering, onEntered, onExit, onExiting, onExited để chạy mã JavaScript trong các giai đoạn chuyển đổi.	
+	
+	
+	
+# 	7. Ví dụ mở rộng: Hiệu ứng trượt (slide)
+	
+import React, { useState } from 'react';
+import { CSSTransition } from 'react-transition-group';
+import './style.css';
+
+function App() {
+  const [showMessage, setShowMessage] = useState(false);
+
+  return (
+    <div>
+      <button onClick={() => setShowMessage(!showMessage)}>
+        Toggle Message
+      </button>
+      <CSSTransition
+        in={showMessage}
+        timeout={500}
+        classNames="slide"
+        unmountOnExit
+      >
+        <div className="message-box">
+          <p>Hello, this is a sliding message!</p>
+        </div>
+      </CSSTransition>
+    </div>
+  );
+}
+
+export default App;	
+	
+	
+>> css 
+.message-box {
+  background-color: lightblue;
+  padding: 10px;
+  border-radius: 5px;
+}
+
+.slide-enter {
+  transform: translateX(-100%);
+}
+.slide-enter-active {
+  transform: translateX(0);
+  transition: transform 500ms ease-in-out;
+}
+.slide-exit {
+  transform: translateX(0);
+}
+.slide-exit-active {
+  transform: translateX(-100%);
+  transition: transform 500ms ease-in-out;
+}
+	
+
+# 8. Một số lưu ý quan trọng
+
+	## Thời gian timeout: 
+		Giá trị timeout trong <CSSTransition> phải khớp với thời gian của transition trong CSS. Nếu không, hiệu ứng có thể bị gián đoạn hoặc không hoạt động đúng.
+	
+	## Prop unmountOnExit 
+		Nếu không sử dụng unmountOnExit, thành phần sẽ chỉ ẩn đi (với display: none hoặc opacity: 0) nhưng vẫn tồn tại trong DOM. Điều này có thể gây ra vấn đề về hiệu suất nếu bạn có nhiều thành phần.
+	
+	## Sử dụng classNames
+		Giá trị của classNames (lưu ý là classNames, không phải className) là một chuỗi tiền tố, không phải tên lớp đầy đủ. Các lớp như -enter, -enter-active, v.v. sẽ được thêm tự động.
+	
+	## Hiệu ứng phức tạp hơn
+	
+		- Bạn có thể kết hợp nhiều thuộc tính CSS (như opacity, transform, scale) để tạo hiệu ứng phức tạp.
+		- Sử dụng các thư viện như Animate.css để có sẵn các hiệu ứng đẹp mà không cần viết CSS từ đầu.		
+	
+	
+	## Hiệu suất 
+		Sử dụng các thuộc tính CSS như transform và opacity thay vì width, height, hoặc margin để có hiệu ứng mượt mà hơn, vì chúng được tối ưu hóa cho GPU.
+	
+	
+	
+# 9. Ứng dụng thực tế 	
+	
+	React Transitions thường được sử dụng trong các trường hợp như:
+
+		- Hiển thị/ẩn modal hoặc popup: Tạo hiệu ứng mờ dần hoặc trượt khi mở/đóng modal.
+		- Danh sách động: Thêm/xóa các mục trong danh sách với hiệu ứng mượt mà.
+		- Chuyển đổi trang: Tạo hiệu ứng chuyển đổi giữa các trang trong ứng dụng SPA (Single Page Application).
+
+	Ví dụ, trong một ứng dụng todo-list, bạn có thể dùng <CSSTransition> để làm cho các mục todo xuất hiện hoặc biến mất với hiệu ứng trượt hoặc mờ dần khi được thêm hoặc xóa.	
+	
+	
+</pre><a id='backBottom' href='../react-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

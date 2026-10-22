@@ -1,0 +1,121 @@
+<html><head><title>Lesson 14 == vue computed properties ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../vue-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 14 -- vue computed properties -//</h1><pre>
+# Khái niệm 
+	Computed Properties là các hàm được định nghĩa trong đối tượng computed, trả về giá trị tính toán dựa trên dữ liệu reactive trong data hoặc các computed properties khác.
+	
+	Mục đích: Tính toán dữ liệu một cách hiệu quả, tự động cập nhật khi dữ liệu gốc thay đổi, và được lưu cache để tối ưu hiệu suất.
+	
+	Cú pháp: Định nghĩa trong computed: {} như một hàm, nhưng sử dụng như thuộc tính trong template.
+
+
+# Ví dụ cơ bản:
+
+<div id="app">
+  <input v-model="message">
+  <p>Uppercase: {{ upperCaseMessage }}</p>
+</div>
+
+<script>
+const app = Vue.createApp({
+  data() {
+    return {
+      message: ''
+    }
+  },
+  computed: {
+    upperCaseMessage() {
+      return this.message.toUpperCase();
+    }
+  }
+})
+app.mount('#app')
+</script>
+
+	-> Giải thích 
+	
+	upperCaseMessage: Một computed property, trả về message ở dạng chữ hoa.
+	Khi message thay đổi (qua v-model), upperCaseMessage tự động cập nhật.
+	Vue lưu cache kết quả, chỉ tính lại khi message thay đổi.	
+
+
+# 2. Đặc điểm của Computed Properties
+
+	## a. Reactive và Cache 
+	
+		Computed properties tự động theo dõi các thuộc tính reactive (data, props) mà chúng phụ thuộc.
+		Kết quả được lưu cache, chỉ tính lại khi dữ liệu gốc thay đổi (khác với methods, chạy lại mỗi khi gọi).
+
+	## b. So với Methods 
+		Computed: Dùng cho giá trị tính toán, tự động cập nhật, có cache.
+		Methods: Dùng cho logic xử lý sự kiện, chạy lại mỗi lần gọi. Ví dụ so sánh:
+
+
+
+<div id="app">
+  <p>Computed: {{ fullName }}</p>
+  <p>Method: {{ getFullName() }}</p>
+</div>
+
+<script>
+const app = Vue.createApp({
+  data() {
+    return {
+      firstName: 'John',
+      lastName: 'Doe'
+    }
+  },
+  computed: {
+    fullName() {
+      return this.firstName + ' ' + this.lastName;
+    }
+  },
+  methods: {
+    getFullName() {
+      return this.firstName + ' ' + this.lastName;
+    }
+  }
+})
+app.mount('#app')
+</script>
+
+
+	fullName (computed) chỉ tính lại khi firstName hoặc lastName thay đổi.
+	getFullName() (method) chạy lại mỗi khi template render.
+
+	##c. Getter và Setter
+		Computed properties thường chỉ có getter (trả về giá trị), nhưng có thể định nghĩa setter để cập nhật dữ liệu. Ví dụ:
+
+<div id="app">
+  <input v-model="fullName">
+  <p>First: {{ firstName }}</p>
+  <p>Last: {{ lastName }}</p>
+</div>
+
+<script>
+const app = Vue.createApp({
+  data() {
+    return {
+      firstName: 'John',
+      lastName: 'Doe'
+    }
+  },
+  computed: {
+    fullName: {
+      get() {
+        return this.firstName + ' ' + this.lastName;
+      },
+      set(newValue) {
+        const names = newValue.split(' ');
+        this.firstName = names[0];
+        this.lastName = names[1] || '';
+      }
+    }
+  }
+})
+app.mount('#app')
+</script>
+
+		get: Trả về tên đầy đủ.
+		set: Cập nhật firstName và lastName khi fullName thay đổi qua v-model.
+
+
+</pre><a id='backBottom' href='../vue-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

@@ -1,0 +1,269 @@
+<html><head><title>Lesson 45 == Composition API ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../vue-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 45 -- Composition API -//</h1><pre># Khái niệm 
+		
+	Composition API là một cách tiếp cận mới trong Vue 3 để định nghĩa logic của component, thay vì tổ chức mã theo các tùy chọn cố định như Options API (data, methods, computed, v.v.). Nó cho phép bạn:'
+	
+		-Gom nhóm logic theo tính năng: Thay vì phân tán logic qua các tùy chọn, bạn có thể tổ chức mã theo chức năng (như quản lý form, fetch API).
+		-Tái sử dụng logic: Dễ dàng tách logic thành composables (hàm tái sử dụng).
+		-Hỗ trợ TypeScript: Khai báo kiểu rõ ràng hơn, không phụ thuộc vào this.
+	
+	Options API vẫn được hỗ trợ: Composition API không thay thế Options API mà là một lựa chọn bổ sung.	
+		
+		
+# 2. Cấu trúc cơ bản của Composition API 		
+		
+		
+	Composition API chủ yếu được sử dụng trong hàm setup() (hoặc cú pháp <script setup> trong Vue 3.2+). Nó cung cấp các API như ref, reactive, computed, watch, và các lifecycle hooks để quản lý trạng thái và logic.	
+		
+		
+	## 	a. Hàm setup() 
+		Là điểm khởi đầu của Composition API, nơi bạn định nghĩa tất cả logic của component. 
+		
+		Cú pháp: 
+export default {
+  setup() {
+    // Định nghĩa trạng thái, hàm, v.v.
+    return {
+      // Trả về các biến/hàm cho template
+    };
+  }
+};			
+		
+		
+		### Cách hoạt động 
+			- Không dùng this (như Options API).
+			- Trả về một object chứa các biến/hàm để sử dụng trong template.
+		
+		
+	## 	b. Cú pháp <script setup>
+		
+		Là cách viết ngắn gọn hơn, không cần setup() hay return. Tất cả biến/hàm trong <script setup> tự động có sẵn cho template.
+		
+		
+<script setup>
+import { ref } from 'vue';
+
+const count = ref(0);
+const increment = () => count.value++;
+</script>
+
+	
+# 3. Các API chính trong Composition API
+
+	## a. ref
+		Tạo một biến reactive (giá trị đơn, như số, chuỗi).
+
+		Cú pháp : 
+import { ref } from 'vue';
+const count = ref(0);
+
+
+		Cách dùng: 
+			
+			- Truy cập giá trị: count.value (trong JavaScript).
+			- Trong template: {{ count }} (Vue tự động unwrap .value).
+
+
+		Ví dụ : 
+		
+<template>
+  <div>
+    <p>Count: {{ count }}</p>
+    <button @click="increment">Increment</button>
+  </div>
+</template>
+
+<script setup>
+import { ref } from 'vue';
+
+const count = ref(0);
+const increment = () => count.value++;
+</script>
+
+
+
+
+	## b. reactive 
+		Tạo một object reactive (cho các object phức tạp).
+		
+		Cú pháp: 
+import { reactive } from 'vue';
+const state = reactive({ count: 0, name: 'John' });
+
+
+		Cách dùng:
+			- Truy cập: state.count, state.name (không cần .value).
+			- Thay đổi: state.count++ (tự động reactive).
+
+
+
+		Ví dụ:
+<template>
+  <div>
+    <p>Name: {{ state.name }}</p>
+    <input v-model="state.name" />
+  </div>
+</template>
+
+<script setup>
+import { reactive } from 'vue';
+
+const state = reactive({ name: 'John' });
+</script>		 
+
+	Lưu ý: reactive không hoạt động tốt với giá trị nguyên thủy (số, chuỗi); dùng ref cho các trường hợp này.
+
+
+
+	## c. computed 
+		Tạo một computed property (giá trị tính toán dựa trên dữ liệu reactive). 
+		
+		Cú pháp : 
+			
+		import { computed } from 'vue';
+		const double = computed(() => count.value * 2);
+
+		Ví dụ:
+
+<template>
+  <div>
+    <p>Count: {{ count }}</p>
+    <p>Double: {{ double }}</p>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed } from 'vue';
+
+const count = ref(0);
+const double = computed(() => count.value * 2);
+</script>
+
+	## d. watch
+		Theo dõi sự thay đổi của dữ liệu reactive và thực hiện hành động.
+		
+		Cú pháp
+import { watch } from 'vue';
+watch(count, (newValue, oldValue) => {
+  console.log(`Count changed from ${oldValue} to ${newValue}`);
+});
+
+
+		Ví dụ: 
+<script setup>
+import { ref, watch } from 'vue';
+
+const count = ref(0);
+watch(count, (newValue) => {
+  console.log(`Count is now: ${newValue}`);
+});
+
+const increment = () => count.value++;
+</script>
+
+
+
+	## e. Lifecycle Hooks 
+	
+		Các hàm lifecycle như onMounted, onUnmounted thay thế cho mounted, beforeMount, beforeUpdate, updated, v.v. trong Options API.
+			
+			
+		Cú pháp: 
+import { onMounted } from 'vue';
+onMounted(() => {
+  console.log('Component mounted');
+});			
+			
+		Ví dụ: 
+		
+<script setup>
+import { onMounted } from 'vue';
+
+onMounted(() => {
+  console.log('Component is mounted!');
+});
+</script>			
+			
+			
+			
+			
+# 	4. Ví dụ hoàn chỉnh từ W3Schools		
+			
+Dưới đây là một ví dụ minh họa cách sử dụng Composition API để xây dựng một component đơn giản:			
+			
+Ví dụ: Counter
+			
+<template>
+  <div>
+    <p>Count: {{ count }}</p>
+    <p>Double: {{ double }}</p>
+    <button @click="increment">Increment</button>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed, onMounted } from 'vue';
+
+const count = ref(0);
+const double = computed(() => count.value * 2);
+
+const increment = () => count.value++;
+
+onMounted(() => {
+  console.log('Counter component mounted');
+});
+</script>			
+			
+		Giải thích:
+		 - count: Biến reactive (dùng ref).
+		 - double: Giá trị tính toán (dùng computed).
+		 - increment: Hàm xử lý sự kiện.
+		 - onMounted: Lifecycle hook chạy khi component được gắn vào DOM.
+		
+Khác biệt:
+Composition API gom nhóm logic (count, double, increment) trong một chỗ, dễ đọc hơn khi component phức tạp.
+Options API phân tán logic qua các tùy chọn (data, computed, methods		
+		
+		
+		
+# 	5. Composables trong Composition API	
+		
+	Composable: Một hàm sử dụng Composition API để đóng gói logic, trả về các biến/hàm reactive.
+
+	Ví dụ Composable 
+	
+// useCounter.js
+import { ref, computed } from 'vue';
+
+export function useCounter() {
+  const count = ref(0);
+  const increment = () => count.value++;
+  const double = computed(() => count.value * 2);
+
+  return { count, increment, double };
+}	
+		
+		
+	Sử dụng trong component:	
+		
+<template>
+  <div>
+    <p>Count: {{ count }}</p>
+    <p>Double: {{ double }}</p>
+    <button @click="increment">Increment</button>
+  </div>
+</template>
+
+<script setup>
+import { useCounter } from './useCounter';
+
+const { count, increment, double } = useCounter();
+</script>		
+		
+		
+	Lợi ích:
+Tái sử dụng logic giữa các component.
+Thay thế mixins (trong Options API) với cách tiếp cận rõ ràng hơn.	
+		
+		
+		
+</pre><a id='backBottom' href='../vue-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

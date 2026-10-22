@@ -1,0 +1,303 @@
+<html><head><title>Lesson 35 == useReduce ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../react-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 35 -- useReduce -//</h1><pre>
+# Giới Thiệu Về Hook useReducer Trong React (Mức Độ Senior)
+
+	useReducer là một hook mạnh mẽ trong React, được giới thiệu từ phiên bản 16.8, cho phép quản lý trạng thái phức tạp một cách có cấu trúc, tương tự như Redux nhưng ở cấp độ component. Không giống useState chỉ phù hợp cho trạng thái đơn giản, useReducer lý tưởng khi trạng thái phụ thuộc vào logic phức tạp, nhiều actions, hoặc khi bạn cần tách biệt logic cập nhật trạng thái khỏi component UI. Ở mức độ senior, chúng ta cần hiểu sâu về cơ chế reducer pattern (inspired by Redux), cách tối ưu hóa performance, tích hợp với các hook khác (như useContext, useEffect), xử lý async actions, và tránh các pitfalls như stale closures hoặc over-fetching.
+
+
+# 1. Cơ Chế Hoạt Động Nội Bộ Của useReducer 
+
+	Định nghĩa cơ bản: useReducer(reducer, initialArg, init?) nhận reducer function (pure function nhận state hiện tại và action, trả về state mới), initialArg (giá trị ban đầu hoặc argument cho init), và optional init function (để lazy init state). Hook trả về [state, dispatch], nơi dispatch là function gửi action đến reducer.
+
+
+	Reducer Pattern: Reducer phải là pure (không side effects, không mutate state trực tiếp), luôn trả về state mới (immutable update). React so sánh state mới với cũ (shallow compare) để quyết định re-render. Nếu state là object/array, dùng spread operator hoặc libraries như Immer để immutable updates.
+
+
+	## So sánh với useState:
+		useState: Phù hợp trạng thái đơn giản, setter mutate trực tiếp. Dễ gây code lộn xộn nếu nhiều updaters.
+
+		useReducer: Tập trung logic vào reducer, dễ test/debug, scale tốt cho complex state (như forms với validation, multi-step wizards). Tuy nhiên, verbose hơn cho state đơn giản.
+
+	Lifecycle và Performance: State persist qua renders, dispatch stable (không thay đổi). React batch updates từ dispatch để tối ưu. Ở senior level: Dùng với React.memo hoặc useMemo để tránh re-renders không cần; reducer nên hiệu quả (O(n) hoặc tốt hơn).
+
+
+	## Pitfalls chuyên sâu 
+
+		- Mutable state: Không mutate state trực tiếp trong reducer (gây bugs khó debug).
+		- Async trong reducer: Reducer phải sync; xử lý async qua useEffect + dispatch.
+		- Stale closures: Nếu capture state trong callback, có thể đọc giá trị cũ; luôn dùng dispatch để update.
+		- Over-dispatch: Tránh dispatch liên tục gây re-renders; batch actions nếu có thể.
+		- Memory: Với state lớn, dùng reducer để quản lý, nhưng theo dõi allocations.
+
+
+# Ví dụ cơ bản Quản lý score của players.
+
+
+import { useReducer } from 'react';
+
+const initialScore = [
+  { id: 1, score: 0, name: "John" },
+  { id: 2, score: 0, name: "Sally" },
+];
+
+const reducer = (state, action) => {
+  switch (action.type) {
+    case "INCREASE":
+      return state.map(player => 
+        player.id === action.id ? { ...player, score: player.score + 1 } : player
+      );
+    case "RESET":
+      return initialScore; // Reset toàn bộ
+    default:
+      return state;
+  }
+};
+
+function ScoreTracker() {
+  const [score, dispatch] = useReducer(reducer, initialScore);
+
+  return (
+    <>
+      {score.map(player => (
+        <div key={player.id}>
+          <button onClick={() => dispatch({ type: "INCREASE", id: player.id })}>
+            Tăng {player.name}
+          </button>
+          <span>{player.score}</span>
+        </div>
+      ))}
+      <button onClick={() => dispatch({ type: "RESET" })}>Reset</button>
+    </>
+  );
+}
+
+
+# 2. Syntax Chi Tiết Và Lazy Initialization
+
+	Syntax đầy đủ: const [state, dispatch] = useReducer(reducer, initialArg, init);
+
+		- reducer: (state, action) => newState
+		- initialArg: Giá trị ban đầu hoặc arg cho init.
+		- init: Optional function nhận initialArg, trả về initialState. Dùng để lazy compute (ví dụ: parse localStorage) chỉ khi mount.	
+
+	Lợi ích init: Tránh compute nặng mỗi render; chỉ chạy lần đầu.
+
+	Ví dụ với Lazy Init: Load initial state từ localStorage.
+
+
+import { useReducer } from 'react';
+
+const reducer = (state, action) => {
+  switch (action.type) {
+    case "TOGGLE":
+      return { ...state, active: !state.active };
+    default:
+      return state;
+  }
+};
+
+const init = (initialActive) => {
+  const saved = localStorage.getItem('active');
+  return { active: saved ? JSON.parse(saved) : initialActive };
+};
+
+function ToggleButton() {
+  const [state, dispatch] = useReducer(reducer, false, init); // false là initialArg
+
+  const handleToggle = () => {
+    dispatch({ type: "TOGGLE" });
+    localStorage.setItem('active', JSON.stringify(!state.active));
+  };
+
+  return <button onClick={handleToggle}>{state.active ? 'On' : 'Off'}</button>;
+}
+
+	Giải thích: Init chạy chỉ lần đầu, load từ storage. Reducer update state, side effect trong handler.
+
+
+# 3. Use Case Nâng Cao: Quản Lý Trạng Thái Phức Tạp (Forms Với Validation)
+
+	## Ví dụ: Form Login Với Validation: 
+	
+import { useReducer } from 'react';
+
+const initialState = { username: '', password: '', errors: {} };
+
+const reducer = (state, action) => {
+  switch (action.type) {
+    case "UPDATE_FIELD":
+      return { ...state, [action.field]: action.value, errors: { ...state.errors, [action.field]: '' } };
+    case "VALIDATE":
+      const errors = {};
+      if (!state.username) errors.username = 'Username required';
+      if (state.password.length < 6) errors.password = 'Password too short';
+      return { ...state, errors };
+    case "SUBMIT":
+      // Giả lập submit success
+      return initialState;
+    default:
+      return state;
+  }
+};
+
+function LoginForm() {
+  const [state, dispatch] = useReducer(reducer, initialState);
+
+  const handleChange = (e) => {
+    dispatch({ type: "UPDATE_FIELD", field: e.target.name, value: e.target.value });
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    dispatch({ type: "VALIDATE" });
+    if (Object.keys(state.errors).length === 0) {
+      dispatch({ type: "SUBMIT" });
+      alert('Login success!');
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input name="username" value={state.username} onChange={handleChange} />
+      {state.errors.username && <p>{state.errors.username}</p>}
+      <input name="password" type="password" value={state.password} onChange={handleChange} />
+      {state.errors.password && <p>{state.errors.password}</p>}
+      <button type="submit">Login</button>
+    </form>
+  );
+}	
+	
+	
+	
+	
+	
+# 4. Use Case Nâng Cao: Xử Lý Async Actions (API Calls)	
+	
+	Reducer sync, nên dùng useEffect cho async, dispatch kết quả.	
+	
+	import { useReducer, useEffect } from 'react';
+
+const initialState = { data: [], loading: false, error: null };
+
+const reducer = (state, action) => {
+  switch (action.type) {
+    case "FETCH_START":
+      return { ...state, loading: true, error: null };
+    case "FETCH_SUCCESS":
+      return { ...state, loading: false, data: action.payload };
+    case "FETCH_ERROR":
+      return { ...state, loading: false, error: action.error };
+    default:
+      return state;
+  }
+};
+
+function DataFetcher() {
+  const [state, dispatch] = useReducer(reducer, initialState);
+
+  useEffect(() => {
+    dispatch({ type: "FETCH_START" });
+    fetch('https://jsonplaceholder.typicode.com/posts')
+      .then(res => res.json())
+      .then(data => dispatch({ type: "FETCH_SUCCESS", payload: data.slice(0, 5) }))
+      .catch(err => dispatch({ type: "FETCH_ERROR", error: err.message }));
+  }, []); // Chỉ fetch lần đầu
+
+  if (state.loading) return <p>Loading...</p>;
+  if (state.error) return <p>Error: {state.error}</p>;
+
+  return (
+    <ul>
+      {state.data.map(post => <li key={post.id}>{post.title}</li>)}
+    </ul>
+  );
+}
+	
+	
+	
+# 5. Use Case Nâng Cao: Tích Hợp Với useContext (Global State)	
+	Dùng cho app-wide state như Redux lite.	
+	
+		Giải thích: Context cung cấp state/dispatch cho subtree. Lý tưởng cho medium apps, tránh prop drilling
+	
+import { createContext, useContext, useReducer } from 'react';
+
+const CounterContext = createContext();
+
+const reducer = (state, action) => {
+  switch (action.type) {
+    case "INCREMENT": return { count: state.count + 1 };
+    case "DECREMENT": return { count: state.count - 1 };
+    default: return state;
+  }
+};
+
+function CounterProvider({ children }) {
+  const [state, dispatch] = useReducer(reducer, { count: 0 });
+  return (
+    <CounterContext.Provider value={{ state, dispatch }}>
+      {children}
+    </CounterContext.Provider>
+  );
+}
+
+function CounterDisplay() {
+  const { state } = useContext(CounterContext);
+  return <h1>Count: {state.count}</h1>;
+}
+
+function CounterButtons() {
+  const { dispatch } = useContext(CounterContext);
+  return (
+    <>
+      <button onClick={() => dispatch({ type: "INCREMENT" })}>+</button>
+      <button onClick={() => dispatch({ type: "DECREMENT" })}>-</button>
+    </>
+  );
+}
+
+// Usage in App:
+function App() {
+  return (
+    <CounterProvider>
+      <CounterDisplay />
+      <CounterButtons />
+    </CounterProvider>
+  );
+}	
+	
+# 6. Use Case Nâng Cao: Custom Hooks Với useReducer
+	Ví dụ: useCounter Custom Hook:
+
+import { useReducer } from 'react';
+
+function useCounter(initialCount = 0) {
+  const reducer = (state, action) => {
+    switch (action.type) {
+      case "INCREMENT": return { count: state.count + (action.payload || 1) };
+      case "DECREMENT": return { count: state.count - (action.payload || 1) };
+      case "RESET": return { count: initialCount };
+      default: return state;
+    }
+  };
+
+  const [state, dispatch] = useReducer(reducer, { count: initialCount });
+
+  return [state.count, dispatch];
+}
+
+function Counter() {
+  const [count, dispatch] = useCounter(5);
+
+  return (
+    <>
+      <h1>{count}</h1>
+      <button onClick={() => dispatch({ type: "INCREMENT", payload: 2 })}>+2</button>
+      <button onClick={() => dispatch({ type: "DECREMENT" })}>-1</button>
+      <button onClick={() => dispatch({ type: "RESET" })}>Reset</button>
+    </>
+  );
+}
+
+
+
+</pre><a id='backBottom' href='../react-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

@@ -1,0 +1,139 @@
+<html><head><title>Lesson 203 == Functional State & Event Sourcing ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 203 -- Functional State & Event Sourcing -//</h1><pre>
+# 🧠 1. Tư duy Functional về State
+
+	Trong lập trình hướng đối tượng (OOP), state thường là thuộc tính của object, ví dụ:
+
+class Account {
+    BigDecimal balance;
+
+    void deposit(BigDecimal amount) {
+        this.balance = this.balance.add(amount);
+    }
+}
+
+	→ Ở đây, state bị thay đổi trực tiếp (mutable).
+	Điều này dễ hiểu, nhưng cũng dễ gây bug, race condition, rollback khó, audit khó.
+
+	Functional approach không cho phép mutate state, mà tạo state mới dựa trên event.
+
+	Ví dụ functional:
+
+		record Account(BigDecimal balance) {}
+		
+		record Deposit(BigDecimal amount) {}
+		
+		Function<Account, Function<Deposit, Account>> applyDeposit =
+				acc -> dep -> new Account(acc.balance().add(dep.amount()));
+		
+		
+		→ Mỗi event (Deposit) tạo ra một bản state mới, không đụng đến state cũ.
+
+
+
+# ⚙️ 2. Event Sourcing — Functionalized State Management
+
+	## 2.1 Nguyên tắc cốt lõi:
+		“State hiện tại chỉ là kết quả của tất cả event đã xảy ra trước đó.”
+
+	Tức là thay vì lưu state cuối cùng, ta lưu danh sách event bất biến:
+		AccountCreated(100)
+		Deposit(50)
+		Withdraw(20)
+
+	Từ đó, ta có thể tái tạo state bằng pure function:
+
+Account initial = new Account(BigDecimal.ZERO);
+List<Event> events = List.of(new Deposit(100), new Withdraw(40));
+
+Account finalState = events.stream()
+    .reduce(initial, (state, event) -> applyEvent(state, event), (a, b) -> b);
+
+
+	## Mỗi applyEvent là pure function:
+
+Account applyEvent(Account state, Event event) {
+    if (event instanceof Deposit d) return new Account(state.balance().add(d.amount()));
+    if (event instanceof Withdraw w) return new Account(state.balance().subtract(w.amount()));
+    return state;
+}
+
+	→ Kết quả giống hệt database snapshot, nhưng không cần mutate bất cứ thứ gì.
+
+
+# 🏢 3. Enterprise Application — CQRS & Ledger
+
+	Trong enterprise, mô hình này là nền tảng của các hệ thống tài chính, audit, blockchain, và reactive domain.
+
+
+	## 🔹 CQRS (Command Query Responsibility Segregation)
+		“Command” (ghi) xử lý event và lưu vào event store (append-only).
+		
+		“Query” (đọc) tạo view model (snapshot) từ event history.
+
+	## Functional style rất hợp với CQRS vì:
+		
+			Mỗi command → một pure function state + command → event.
+			Mỗi event → một pure function state + event → newState.
+
+
+	## Ví dụ domain banking:
+
+Event handleCommand(AccountState state, Command cmd) {
+    if (cmd instanceof DepositCommand dc)
+        return new DepositedEvent(dc.amount());
+    if (cmd instanceof WithdrawCommand wc && state.balance().compareTo(wc.amount()) >= 0)
+        return new WithdrawnEvent(wc.amount());
+    throw new IllegalStateException("Insufficient funds");
+}
+
+
+	→ Pure, deterministic, dễ test và dễ song song hóa.
+
+
+
+# 🧩 4. Ưu điểm của Functional State
+
+
+| Vấn đề                | OOP Layered Approach   | Functional Event Sourcing      |
+| --------------------- | ---------------------- | ------------------------------ |
+| **Concurrency**       | Khó, vì mutate state   | Dễ, vì append-only             |
+| **Auditability**      | Cần log thủ công       | Log có sẵn qua events          |
+| **Rollback / Replay** | Phức tạp               | Chỉ cần bỏ event hoặc replay   |
+| **Testing**           | Mock DB, khó unit test | Pure function → dễ test        |
+| **Performance**       | Phụ thuộc DB state     | Có thể stream events song song |
+
+
+
+
+# 🧠 5. Ứng dụng trong các ngôn ngữ khác
+
+| Ngôn ngữ          | Cách triển khai Functional State                      |
+| ----------------- | ----------------------------------------------------- |
+| **Scala / Akka**  | `PersistentActor` + `EventSourcedBehavior`            |
+| **Haskell**       | Monad State, Event sourcing bằng pure folds           |
+| **Clojure**       | Atom + transaction log bất biến                       |
+| **Java (Spring)** | `EventStore` + `FunctionalReducer` (hoặc Vavr Either) |
+| **Elixir**        | Process state được phục hồi từ event log              |
+
+
+
+# 🏦 6. Trong Java Security & Compliance
+	Functional state là nền tảng cho:
+		Audit Trail (ghi lại mọi hành động user → pure event log)
+		Access Log Immutability (dễ xác minh không bị chỉnh sửa)
+		Data Provenance (nguồn gốc dữ liệu minh bạch)
+		Reproducible Security Simulation (có thể replay toàn bộ event để kiểm chứng policy)
+
+
+# ✅ Tóm tắt
+
+| Concept                      | Ý nghĩa                                   |
+| ---------------------------- | ----------------------------------------- |
+| **State = Function(events)** | Không lưu biến, mà tính toán từ event     |
+| **Pure Transition Function** | `(state, event) → newState`               |
+| **Append-only Log**          | Không xóa, chỉ thêm → reliability cao     |
+| **Replayability**            | Có thể rebuild bất kỳ state trong quá khứ |
+| **Functional**               | Dễ test, dễ scale, dễ parallel            |
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

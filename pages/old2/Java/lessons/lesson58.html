@@ -1,0 +1,162 @@
+<html><head><title>Lesson 58 == Remote Interface ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 58 -- Remote Interface -//</h1><pre>
+# Khái niệm 
+	Remote Interface là một interface dặc biệt trong Java được sử dụng để tạo các ứng dụng phân tán(Distributed Applications ) bằng Java RMI (Remote Method Invocation)
+	
+	## 🔹 Mục đích 
+		Giúp gọi các phương thức từ xa giữa các máy khác nhau trong mạng như thể chúng là local method 
+		
+	## 🔹 Đặc điểm quan trọng 
+		Là một interface bình thường , nhưng phải kế thừa từ java.rmi.Remote 
+		
+		Các phương thức trong Remote Interface phải khai báo ném ra ngoại lệ "RemoteException" để xử lý lỗi khi gọi từ xa  
+		
+		
+# Ví dụ khi tạo Remote Interface  
+
+	## Bước 1 Tạo một Remote Interface 
+		import java.rmi.Remote;
+		import java.rmi.RemoteException;
+		
+		// Remote Interface phải kế thừa từ java.rmi.Remote
+		public interface MyRemote extends Remote {
+			String sayHello() throws RemoteException;
+		}
+		
+		### 📌 Lưu ý quan trọng 
+			MyRemote là một Remote Interface, nên phải kế thừa Remote 
+			Tất cả phương thức phải khai báo throws RemoteException 
+			
+			
+	## Bước 2 Implement Remote Interface trong Remote Object  
+		
+		import java.rmi.server.UnicastRemoteObject;
+		import java.rmi.RemoteException;
+		
+		// Cần kế thừa từ UnicastRemoteObject để có thể gọi từ xa
+		public class MyRemoteImpl extends UnicastRemoteObject implements MyRemote {
+			
+			public MyRemoteImpl() throws RemoteException {
+				super(); // Gọi constructor của UnicastRemoteObject
+			}
+		
+			@Override
+			public String sayHello() throws RemoteException {
+				return "Hello from Remote Server!";
+			}
+		}
+	
+
+		### 📌 Lưu ý 
+			Class MyRemoteImpl phải kế thừa từ UnicastRemoteObject để có thể gọi từ xa 
+			Constructor phải gọi super() để đăng ký RemoteObject  
+			
+			
+		
+	## Bước 3 : Tạo Server để đăng ký Remote Object  
+	
+		import java.rmi.registry.LocateRegistry;
+		import java.rmi.registry.Registry;
+		
+		public class MyRemoteServer {
+			public static void main(String[] args) {
+				try {
+					MyRemoteImpl remoteObject = new MyRemoteImpl();
+					
+					// Đăng ký Remote Object với RMI Registry
+					Registry registry = LocateRegistry.createRegistry(1099);
+					registry.rebind("RemoteHello", remoteObject);
+					
+					System.out.println("Remote Server is running...");
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		
+		### 📌Lưu ý  
+			- Tạo một RMI Registry (một dịch vụ để quản lý các Remote Object )
+
+
+				import java.rmi.registry.LocateRegistry;
+				import java.rmi.registry.Registry;
+				
+				public class MyRemoteClient {
+					public static void main(String[] args) {
+						try {
+							// Kết nối tới RMI Registry
+							Registry registry = LocateRegistry.getRegistry("localhost", 1099);
+				
+							// Tìm kiếm Remote Object theo tên
+							MyRemote remoteObject = (MyRemote) registry.lookup("RemoteHello");
+				
+							// Gọi phương thức từ xa
+							String response = remoteObject.sayHello();
+							System.out.println("Response from server: " + response);
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					}
+				}
+
+
+				### 📌 Lưu ý  
+				registry.lookup("RemoteHello") tìm Remote Object đã đăng ký trên RMI Registry.
+				sayHello() được gọi từ xa trên máy chủ.
+
+# 🎯 Tóm tắt quá trình gọi Remote Method 
+		1 Server tạo Remote Object (MyRemoteImpl)
+		2 Server đăng ký Remote Object vào RMI Registry
+		3 Client kết nối với RMI Registry
+		4 Client tìm Remote Object theo tên (lookup())
+		5 Client gọi phương thức từ xa	
+
+
+
+
+# 📌 Câu hỏi thường gặp trong Java Gold về Remote Interface 
+
+1/ 
+ Remote Interface có thể có các phương thức không ném RemoteException không?
+❌ Không. Tất cả các phương thức trong Remote Interface bắt buộc phải khai báo throws RemoteException.
+
+2/ 
+❓ Remote Object có thể gửi object tùy chỉnh không?
+✅ Có, nhưng object đó phải implements Serializable để có thể truyền qua mạng.
+
+
+			import java.io.Serializable;
+			
+			public class MyData implements Serializable {
+				private static final long serialVersionUID = 1L;
+				private String message;
+			
+				public MyData(String message) {
+					this.message = message;
+				}
+			
+				public String getMessage() {
+					return message;
+				}
+			}
+
+		// 📌 Khi dùng object này trong Remote Method, Java sẽ tự động serialize nó để truyền qua mạng.
+
+
+3/ 
+❓ Khác biệt giữa Remote và Serializable? 
+		Remote											Serializable
+	Cho phép gọi từ xa							Cho phép truyền object qua mạng
+	Interface rỗng (marker interface)			Cần có serialVersionUID
+	Yêu cầu RemoteException						Không yêu cầu RemoteException
+
+
+
+📌 Kết luận
+✅ Remote Interface là một phần quan trọng của Java RMI, giúp gọi phương thức từ xa như gọi method local.
+✅ Cần kế thừa Remote và bắt buộc throws RemoteException trong tất cả các method.
+✅ UnicastRemoteObject giúp triển khai Remote Object và đăng ký với RMI Registry.
+✅ Dùng RMI Registry (LocateRegistry) để đăng ký và tìm kiếm Remote Object.
+✅ Câu hỏi về Remote Interface và RMI thường xuất hiện trong Java Gold, cần hiểu rõ cách hoạt động.
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

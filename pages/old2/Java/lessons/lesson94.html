@@ -1,0 +1,188 @@
+<html><head><title>Lesson 94 == Code Quality ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 94 -- Code Quality -//</h1><pre>
+# Khái niệm 
+	Code quality không chỉ để cho đẹp mà để phát hiện lỗi sớm, tránh bug production, và giảm technical debt . Một CI pipeline Không có quality gate thì chỉ là "build script "
+	
+	
+	
+# Thành phần Code Quality cần có trong CI 
+	
+
+Thành phần									Công cụ phổ biến								Mục tiêu
+Static code analysis				SonarQube, PMD, Checkstyle					Phân tích lỗi logic, bad practices, security smell
+Linter								ESLint (JS/TS), Checkstyle (Java)			Format, naming convention, style guide
+Test coverage						JaCoCo (Java), Istanbul (JS)				Kiểm tra % code được test
+Security scan (SAST)				SonarQube, CodeQL, Semgrep					Phát hiện lỗ hổng bảo mật
+Dependency vulnerability scan		OWASP Dependency Check, Snyk				Kiểm tra thư viện có lỗ hổng
+Secret detection					TruffleHog, GitLeaks						Kiểm tra mã chứa credentials/ngẫu nhiên để tránh rò rỉ
+
+
+
+# Ví dụ CI : Java Spring + Github Action +  SonarQube 
+
+				name: CI Pipeline
+				
+				on: [push, pull_request]
+				
+				jobs:
+				build-test-analyze:
+					runs-on: ubuntu-latest
+				
+					steps:
+					- name: Checkout source
+						uses: actions/checkout@v3
+				
+					- name: Set up JDK 17
+						uses: actions/setup-java@v3
+						with:
+						java-version: '17'
+						distribution: 'temurin'
+				
+					- name: Cache Maven packages
+						uses: actions/cache@v3
+						with:
+						path: ~/.m2
+						key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+						restore-keys: |
+							${{ runner.os }}-maven-
+				
+					- name: Run unit tests with coverage
+						run: mvn clean verify
+				
+					- name: SonarQube scan
+						env:
+						SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+						run: mvn sonar:sonar -Dsonar.projectKey=myproject \
+											-Dsonar.host.url=https://sonarcloud.io \
+											-Dsonar.login=$SONAR_TOKEN
+				
+
+
+
+
+# Đặt Code Quality Gate để chặn Merge 
+
+Bạn cần enfoce quy tắc  
+	PR không đạt coverage tối thiểu(ví dụ < 90%) -> không cho merge 
+	PR có blocker issues từ SonarQube -> reject 
+	
+	GitHub Actions có thể tích hợp với SonarCloud, GitHub PR sẽ hiện đỏ nếu không qua. 
+
+
+
+# Code quality không có ý nghĩa nếu : 
+	- Không gắn vào Pull Request 
+	- Không buộc pass trước khi merge 
+	- Không ai đọc hoặc hành động theo report 
+	Nên xây cả dashboard code quality cho team hoặc gửi report hàng tuần qua Slack/Email.
+	
+
+# Bảo mật & Quét thư viện  
+
+
+Loại kiểm tra		Công cụ										Ghi chú
+Dependency check	OWASP Dependency Check					Có plugin Maven
+Secret detection	GitLeaks, TruffleHog					Dùng GitHub hook để chặn commit chứa API Key
+Container scan		Trivy, Clair							Quét image Docker
+
+
+
+# Ví dụ CI pipeline hoàn chỉnh Java Spring Boot dùng GitHub Actions, bao gồm: 
+
+		- Build & test
+		- SonarQube static analysis
+		- Test coverage
+		- Secret scan
+		- Dependency vulnerability scan
+
+
+	## Yêu cầu 
+		### 1. SonarQube (Self-host hoặc SonarCloud) 
+			Nếu self-host SonarQube: cần địa chỉ http://your-sonarqube-host + SONAR_TOKEN trong GitHub Secrets.
+			Nếu dùng SonarCloud (public project, miễn phí): tạo tài khoản tại sonarcloud.io 
+			
+		### 2. GitHub Secrets 
+			Tạo các secrets trong GitHub repo:
+		
+			Tên secret					Ý nghĩa
+			SONAR_TOKEN				Token từ SonarQube hoặc SonarCloud
+			GITHUB_TOKEN			Tự động có sẵn, không cần tạo
+
+
+	## ✅ PIPELINE FULL CI – ci.yml 
+		
+				name: Full CI Pipeline
+				
+				on: [push, pull_request]
+				
+				jobs:
+				ci:
+					name: Build & Test & Quality
+					runs-on: ubuntu-latest
+				
+					steps:
+					- name: Checkout code
+						uses: actions/checkout@v3
+				
+					- name: Set up JDK 17
+						uses: actions/setup-java@v3
+						with:
+						java-version: '17'
+						distribution: 'temurin'
+				
+					- name: Cache Maven packages
+						uses: actions/cache@v3
+						with:
+						path: ~/.m2
+						key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+						restore-keys: |
+							${{ runner.os }}-maven-
+				
+					- name: Run tests & coverage
+						run: mvn clean verify
+				
+					- name: Run SonarQube analysis
+						env:
+						SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+						run: |
+						mvn sonar:sonar \
+							-Dsonar.projectKey=my_project \
+							-Dsonar.host.url=https://sonarcloud.io \
+							-Dsonar.login=${{ secrets.SONAR_TOKEN }}
+				
+					- name: Secret scanning (GitLeaks)
+						uses: gitleaks/gitleaks-action@v2
+						with:
+						config-path: .gitleaks.toml
+				
+					- name: Dependency check (OWASP)
+						uses: dependency-check/Dependency-Check_Action@main
+						with:
+						project: 'spring-boot-app'
+						path: '.'
+						format: 'HTML'
+						output-directory: 'reports'
+				
+					- name: Upload dependency report
+						uses: actions/upload-artifact@v3
+						with:
+						name: dependency-report
+						path: reports
+
+	## Ghi chú 
+			Bạn bắt buộc phải dùng coverage plugin như JaCoCo nếu muốn SonarQube report coverage.
+			Cần file sonar-project.properties nếu không dùng Maven plugin.
+			Đặt quality gate trong SonarCloud/SonarQube để chặn merge nếu có lỗi.
+			
+			
+	## 	THÊM BẢO MẬT 
+	
+		Quét image Docker dùng Aqua Security Trivy.
+		Check dependency bản quyền với FOSSA, nếu làm sản phẩm thương mại.
+			
+			
+		⏭️ BƯỚC TIẾP THEO
+		Bạn có muốn tôi viết luôn pom.xml để tích hợp với SonarQube + JaCoCo + OWASP Dependency Plugin không? Hoặc tạo cả pipeline deploy staging/prod sau CI?	
+			
+			
+			
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

@@ -1,0 +1,93 @@
+<html><head><title>Lesson 97 == Build tool( BuildKit / Kaniko / Jib) ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 97 -- Build tool( BuildKit / Kaniko / Jib) -//</h1><pre> # Khái niệm 
+ 🐳 BuildKit / Kaniko / Jib — Giải pháp build container image 
+	
+	## ❓Vì sao không dùng docker build nữa?
+
+		docker build mặc định:
+		Chậm, không cache tốt
+		Không chạy được trong môi trường non-root (CI/CD)
+		Phải cài Docker Daemon (gây rắc rối trong GitHub Actions, GitLab CI...)
+		==> Sinh ra các công cụ build hiện đại hơn:
+
+
+# 🔧 1. BuildKit (cho Docker) 
+
+	BuildKit là engine build mới của Docker. Tích hợp sâu trong Docker từ v19+.
+		Build nhanh hơn, hỗ trợ layer caching thông minh
+		Cho phép remote cache + export cache
+		Hỗ trợ --secret, --ssh, mount=type=cache	
+	
+		
+		Cách dùng: 
+			DOCKER_BUILDKIT=1 docker build \
+			--build-arg BUILDKIT_INLINE_CACHE=1 \
+			-t myapp:latest .
+	
+		Trong GitHub Actions:
+		
+		- name: Enable Docker BuildKit
+	
+	run: echo '{"features":{"buildkit": true}}' | sudo tee /etc/docker/daemon.json
+	
+	
+
+# 🔧 2. Kaniko (Google) 
+
+	Kaniko = Docker build không cần Docker daemon.
+	
+	Thường dùng khi bạn chạy CI trong môi trường như Kubernetes hoặc GitLab CI runner.
+		- Build image trong container
+		- Không cần quyền root
+		- Phù hợp với Kubernetes CI pipeline
+	Trong GitLab CI:
+
+		kaniko-build:
+		image: gcr.io/kaniko-project/executor:latest
+		script:
+			- /kaniko/executor --context $CI_PROJECT_DIR --dockerfile Dockerfile --destination $CI_REGISTRY_IMAGE:latest
+
+
+
+# 🔧 3. Jib (cho Java) 
+	Jib = Build Docker image cho Java mà KHÔNG cần Dockerfile. 
+	
+	Google tạo Jib cho Maven/Gradle. Nó tự phân tích các dependency và tạo multi-layer image hiệu quả.
+
+
+
+	## Cài Jib cho Maven: 
+		<plugin>
+		<groupId>com.google.cloud.tools</groupId>
+		<artifactId>jib-maven-plugin</artifactId>
+		<version>3.4.0</version>
+		</plugin>
+
+	
+	## Build: 
+		mvn compile jib:dockerBuild
+
+
+	## Push image: 
+		mvn compile jib:build \
+		-Dimage=ghcr.io/myorg/myapp
+
+
+
+
+
+
+# ✅ Khi nào dùng cái nào? 
+	
+Tool			Môi trường phù hợp									Ưu điểm nổi bật
+BuildKit	Local dev, Docker-based CI						Hiệu năng cao, tích hợp tốt
+Kaniko		CI/CD trong Kubernetes, GitLab CI				Không cần Docker daemon
+Jib			Dự án Java, Spring Boot							Không cần Dockerfile, build cực nhanh
+
+
+
+
+
+
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

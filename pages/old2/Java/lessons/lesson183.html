@@ -1,0 +1,152 @@
+<html><head><title>Lesson 183 == Functional Interfaces cơ bản ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 183 -- Functional Interfaces cơ bản -//</h1><pre>
+# 1. Functional Interfaces là gì?
+
+	Functional Interface (関数型インターフェース, kansū-gata intāfēsu) = interface chỉ có một abstract method duy nhất (SAM: Single Abstract Method).
+	
+	Annotation @FunctionalInterface được dùng để compiler check.
+	
+	Các lambda (ラムダ式) và method reference (メソッド参照) đều dựa trên functional interface.
+	
+
+	## Ví dụ:
+
+@FunctionalInterface
+interface Greeting {
+    void sayHello(String name);
+}
+
+Greeting g = (n) -> System.out.println("Hello " + n);
+g.sayHello("Bảo");
+
+
+
+# 2. Nhóm Functional Interfaces trong java.util.function
+	Java chuẩn hóa một nhóm "đặc sản" functional interface trong package java.util.function. Các loại chính:
+
+
+| Interface             | Ký hiệu input/output     | Mục đích                                       | Ví dụ                                                |
+| --------------------- | ------------------------ | ---------------------------------------------- | ---------------------------------------------------- |
+| **Function\<T,R>**    | `T → R`                  | Chuyển đổi từ input sang output                | `Function<Employee,String> f = e -> e.getEmail();`   |
+| **Consumer<T>**       | `T → void` (side-effect) | Nhận input và *làm gì đó*, không trả output    | `Consumer<Employee> c = e -> saveToDB(e);`           |
+| **Supplier<T>**       | `() → T` (lazy)          | Không nhận input, *cung cấp* output            | `Supplier<UUID> s = () -> UUID.randomUUID();`        |
+| **Predicate<T>**      | `T → boolean`            | Kiểm tra điều kiện, lọc dữ liệu                | `Predicate<Employee> p = e -> e.getSalary() > 5000;` |
+| **UnaryOperator<T>**  | `T → T`                  | Nhận 1 input, trả về cùng kiểu                 | `UnaryOperator<String> u = s -> s.toUpperCase();`    |
+| **BinaryOperator<T>** | `(T,T) → T`              | Nhận 2 input cùng kiểu, trả 1 output cùng kiểu | `BinaryOperator<Integer> b = (a,b2) -> a+b2;`        |
+
+
+
+# 3. Lambda vs Method Reference
+
+	Lambda: ngắn gọn, inline logic.
+	Method reference (メソッド参照): tái sử dụng method có sẵn.
+
+	## Ví dụ với Function<Employee, String>: 
+		
+// Lambda
+Function<Employee, String> f1 = e -> e.getEmail();
+
+// Method reference
+Function<Employee, String> f2 = Employee::getEmail;
+
+
+
+
+# 4. Phân biệt input → output, side-effect, lazy
+
+
+	Input → Output (chuyển đổi thuần túy, pure function):
+		Function, UnaryOperator, BinaryOperator.
+	
+	Side-effect (副作用, fukusayō):
+		Consumer → tác động ra ngoài (ghi log, lưu DB).
+	
+	Lazy / Supplier:
+		Supplier → chỉ cung cấp khi được gọi .get(), không cần input.
+
+
+
+# 5. Enterprise Example 
+	Ví dụ: xử lý Employee trong môi trường enterprise (ứng dụng quản lý nhân sự).
+
+import java.util.*;
+import java.util.function.*;
+
+class Employee {
+    String name;
+    String email;
+    double salary;
+
+    Employee(String name, String email, double salary) {
+        this.name = name; this.email = email; this.salary = salary;
+    }
+
+    String getEmail() { return email; }
+    double getSalary() { return salary; }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        List<Employee> employees = Arrays.asList(
+            new Employee("A", "a@corp.jp", 4000),
+            new Employee("B", "b@corp.jp", 7000)
+        );
+
+        // Predicate: lọc theo business rule
+        Predicate<Employee> highSalary = e -> e.getSalary() > 5000;
+        employees.stream()
+                 .filter(highSalary)
+                 .forEach(e -> System.out.println("High-salary: " + e.name));
+
+        // Function: trích xuất email
+        Function<Employee, String> getEmail = Employee::getEmail;
+        employees.stream()
+                 .map(getEmail)
+                 .forEach(System.out::println);
+
+        // Consumer: log nhân viên
+        Consumer<Employee> logEmployee = e -> System.out.println("Logging: " + e.name);
+        employees.forEach(logEmployee);
+
+        // Supplier: cung cấp ID mới
+        Supplier<UUID> idSupplier = UUID::randomUUID;
+        System.out.println("New ID: " + idSupplier.get());
+    }
+}
+
+
+
+# 6. Level Senior – Liên hệ thi cử & thực tế
+
+	## Trong Java Silver, đề sẽ hỏi bạn phân biệt Function vs Consumer vs Predicate → nhớ chữ ký method:
+		apply, accept, get, test, andThen, compose.
+
+
+	## Trong Java Gold, sẽ đi xa hơn:  
+
+		Combinator pattern: predicate1.and(predicate2).or(...).
+		
+		Chaining function: f1.andThen(f2) vs f1.compose(f2).
+		
+		Stream API + Lambda: Kết hợp functional interface vào pipeline.
+		
+		Method reference thay vì lambda để code sạch hơn.
+		
+		
+	## 	Trong Enterprise thực tế: 	
+		
+		Predicate = business rules engine.
+		
+		Function = DTO mapping (entity → DTO).
+		
+		Consumer = side-effect như audit log.
+		
+		Supplier = factory pattern, lazy init.
+		
+		Unary/BinaryOperator = transformation/aggregation logic.		
+		
+		
+		
+
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

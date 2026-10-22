@@ -1,0 +1,198 @@
+<html><head><title>Lesson 5 == v-bind ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../vue-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 5 -- v-bind -//</h1><pre># Khái niệm 
+	v-bind trong Vue.js, một công cụ quan trọng để liên kết dữ liệu động với các thuộc tính HTML hoặc component props. 
+	v-bind là một directive trong Vue.js dùng để liên kết dữ liệu (data) với 
+		Các thuộc tính HTML (như src, href, class, style).
+		Các props của component.
+	Mục đích: Cho phép các thuộc tính HTML thay đổi động dựa trên dữ liệu trong Vue instance hoặc component, thay vì sử dụng giá trị tĩnh.
+	Cú pháp: v-bind:thuộc-tính="biểu-thức".	
+	Viết tắt: :thuộc-tính (bỏ phần v-bind).
+
+
+	
+# Ví dụ cơ bản: 
+<div id="app">
+  <img v-bind:src="imageUrl" alt="Dynamic Image">
+</div>
+
+<script>
+const app = Vue.createApp({
+  data() {
+    return {
+      imageUrl: 'https://example.com/image.jpg'
+    }
+  }
+})
+app.mount('#app')
+</script>	
+
+
+	## Giải thích : 
+		v-bind:src="imageUrl" liên kết thuộc tính src của thẻ <img> với biến imageUrl trong data. 
+		Khi imageUrl thay đổi, Vue tự động cập nhật thuộc tính src của hình ảnh. 
+		Viết tắt: <img :src="imageUrl">. 
+		
+# 	2. Cách hoạt động của v-bind 
+	Reactivity: v-bind hoạt động dựa trên hệ thống reactive của Vue. Khi giá trị của biến trong data() (như imageUrl) thay đổi, Vue tự động cập nhật DOM để phản ánh giá trị mới.
+
+	Tính linh hoạt: v-bind có thể dùng với bất kỳ thuộc tính HTML nào (id, class, style, title, v.v.) hoặc props của component.
+	Biểu thức JavaScript: Giá trị của v-bind có thể là một biểu thức JavaScript, không chỉ là một biến đơn giản.
+	
+
+
+	## Ví dụ với biểu thức: 
+<div id="app">
+  <a :href="baseUrl + '/page'">Go to Page</a>
+</div>
+
+<script>
+const app = Vue.createApp({
+  data() {
+    return {
+      baseUrl: 'https://example.com'
+    }
+  }
+})
+app.mount('#app')
+</script>
+
+	:href="baseUrl + '/page'" sử dụng biểu thức JavaScript để nối chuỗi baseUrl với /page.
+	
+	
+# 	3. Các trường hợp sử dụng phổ biến của v-bind 
+	
+	## a. Liên kết với thuộc tính HTML 
+<div id="app">
+  <img :src="imageUrl" :title="imageTitle">
+</div>
+
+<script>
+const app = Vue.createApp({
+  data() {
+    return {
+      imageUrl: 'https://example.com/image.jpg',
+      imageTitle: 'My Dynamic Image'
+    }
+  }
+})
+app.mount('#app')
+</script>
+
+	:src và :title liên kết với imageUrl và imageTitle trong data.
+
+
+	## b. Liên kết với class
+		v-bind có thể dùng để thêm hoặc xóa các lớp CSS động.
+		Có hai cú pháp chính: 
+			Dùng đối tượng (object): { className: condition }. 
+			Dùng mảng (array): [class1, class2, ...]. 
+			
+			
+
+<div id="app">
+  <div :class="{ active: isActive }">Dynamic Class</div>
+  <button @click="isActive = !isActive">Toggle Class</button>
+</div>
+
+<script>
+const app = Vue.createApp({
+  data() {
+    return {
+      isActive: false
+    }
+  }
+})
+app.mount('#app')
+</script>
+
+<style>
+.active {
+  background-color: lightgreen;
+}
+</style>
+
+	## Giải thích:
+		:class="{ active: isActive }" áp dụng lớp CSS active khi isActive là true. 
+		Khi nhấn nút, isActive thay đổi, và lớp active được thêm/xóa khỏi <div>.
+
+
+	## Ví dụ với mảng: 
+<div id="app">
+  <div :class="[isActive ? 'active' : '', 'static-class']">Dynamic Class</div>
+</div>
+
+<script>
+const app = Vue.createApp({
+  data() {
+    return {
+      isActive: true
+    }
+  }
+})
+app.mount('#app')
+</script>
+
+<style>
+.active {
+  background-color: lightgreen;
+}
+.static-class {
+  border: 1px solid black;
+}
+</style>
+
+	:class="[isActive ? 'active' : '', 'static-class']" áp dụng lớp active nếu isActive là true, và luôn áp dụng static-class.
+	
+
+# Liên kết với style 
+	v-bind cũng có thể dùng để gán kiểu CSS động. 
+	Có hai cách 
+		Đối tượng: { property: value }. 
+		Mảng: Gộp nhiều đối tượng style. 
+		
+Ví dụ với đối tượng (tương tự code bạn cung cấp trước):		
+<div id="app" :style="{ backgroundColor: bgColor }">
+  <button @click="changeColor">Change Color</button>
+</div>
+
+<script>
+const app = Vue.createApp({
+  data() {
+    return {
+      bgColor: 'lightblue'
+    }
+  },
+  methods: {
+    changeColor() {
+      this.bgColor = this.bgColor === 'lightblue' ? 'lightgreen' : 'lightblue';
+    }
+  }
+})
+app.mount('#app')
+</script>		
+
+
+
+	# Giải thích 
+	:style="{ backgroundColor: bgColor }" liên kết thuộc tính CSS backgroundColor với bgColor trong data. 
+	Khi nhấn nút, changeColor thay đổi bgColor, và Vue cập nhật màu nền của <div>. 
+	
+		### Ví dụ với mảng: 
+<div id="app" :style="[styleObj1, styleObj2]">
+  Styled Div
+</div>
+
+<script>
+const app = Vue.createApp({
+  data() {
+    return {
+      styleObj1: { backgroundColor: 'lightblue' },
+      styleObj2: { fontSize: '20px' }
+    }
+  }
+})
+app.mount('#app')
+</script>	
+
+:style="[styleObj1, styleObj2]" gộp các kiểu từ styleObj1 và styleObj2.
+
+</pre><a id='backBottom' href='../vue-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

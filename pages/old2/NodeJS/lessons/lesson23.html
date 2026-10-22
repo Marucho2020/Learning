@@ -1,0 +1,132 @@
+<html><head><title>Lesson 23 == path ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../NodeJS-learning.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 23 -- path -//</h1><pre>	
+# 	1. What is the Path Module?
+
+	Định nghĩa: Built-in module cung cấp tools để manipulate paths: normalize, join, extract components. Giúp code cross-platform mà không lo separator khác nhau.
+
+
+	## Key Benefits (mở rộng):
+	
+		Cross-platform: Tự động handle \ vs /.
+		Normalization: Xử lý redundant slashes, .., . (e.g., /foo/../bar → /bar).
+		Extraction: Lấy basename, extname, dirname dễ dàng.
+		Resolution: Chuyển relative thành absolute paths.
+		Security: Giúp tránh path traversal attacks (../..) khi validate user input.	
+			
+		Sâu sắc: Trong real apps (e.g., Express file serving), Path ngăn chặn vulnerabilities như CVE-2023-XYZ (path injection). Năm 2025, với containerized apps (Docker), cross-platform càng critical vì dev trên macOS, deploy trên Linux.
+	
+	
+#	2. Using the Path Module
+	
+	Import (no install needed):
+	
+const path = require('path');  // CommonJS
+// Destructure: const { join, resolve } = require('path');
+
+// ESM (package.json: "type": "module")
+import path from 'path';
+// Hoặc import { join, resolve } from 'path';	
+	
+	Best Practice: Import specific methods cho tree-shaking (giảm bundle size trong bundlers như Webpack). Node 22+ khuyến khích ESM cho modern code.
+	
+	
+# 	3. Path Module Methods
+	basename(): Lấy phần cuối path (filename).
+
+const path = require('path');
+console.log(path.basename('/users/docs/file.txt'));  // 'file.txt'
+console.log(path.basename('/users/docs/file.txt', '.txt'));  // 'file' (bỏ ext)
+
+	Sâu: Giống Unix basename, nhưng cross-platform. Dùng cho logging filenames.
+
+
+	## dirname(): Lấy directory part.
+console.log(path.dirname('/users/docs/file.txt'));  // '/users/docs'
+
+
+
+	## extname(): Lấy extension (từ last .). 
+	
+console.log(path.extname('file.txt'));  // '.txt'
+console.log(path.extname('index.coffee.md'));  // '.md' (last ext)
+console.log(path.extname('.hidden'));  // '' (dotfile)	
+	
+	Mẹo: Kết hợp với basename để parse full filename.
+
+
+	## join(): Join segments với separator đúng OS, normalize.
+
+console.log(path.join('/users', 'docs', 'file.txt'));  // '/users/docs/file.txt'
+console.log(path.join('/users', '../system', './logs', 'file.txt'));  // '/system/logs/file.txt' (handle .. và .)
+console.log(path.join('users', '//docs', 'file.txt'));  // 'users/docs/file.txt' (normalize slashes)
+
+	Chuyên gia: Ưu tiên join() thay + '/' để tránh Windows errors. Useful cho dynamic paths (e.g., user uploads).
+	
+	## resolve(): Resolve thành absolute path, từ right-to-left.
+
+console.log(path.resolve('file.txt'));  // Absolute từ cwd
+console.log(path.resolve('/first', '/second', 'third'));  // '/second/third'
+console.log(path.resolve(__dirname, 'config/app.json'));  // Module-relative
+
+
+
+	## normalize(): Normalize path (xóa redundant, resolve ..).
+		console.log(path.normalize('/foo/bar//baz/asdf/quux/..'));  // '/foo/bar/baz/asdf'
+
+
+
+	## isAbsolute(): Check absolute path.
+console.log(path.isAbsolute('/foo/bar'));  // true
+console.log(path.isAbsolute('foo/bar'));  // false	
+	
+	
+	## relative(): Tính relative path từ from đến to.
+	
+console.log(path.relative('/data/orandea/test/aaa', '/data/orandea/impl/bbb'));  // '../../impl/bbb'	
+	
+	## parse() / format(): Parse path thành object, và ngược lại.
+	
+const parsed = path.parse('/home/user/dir/file.txt');
+// { root: '/', dir: '/home/user/dir', base: 'file.txt', ext: '.txt', name: 'file' }
+console.log(path.format(parsed));  // '/home/user/dir/file.txt'	
+	
+	Useful: Cho manipulate components (e.g., đổi ext: parsed.ext = '.json'; path.format(parsed)).
+
+	sep / delimiter: Platform-specific separator (/ or ) và delimiter (: cho PATH env).
+	
+	
+	
+# 	4. __dirname and __filename
+
+	## CommonJS:
+console.log(__dirname);  // Dir của module
+console.log(__filename);  // Full path của module
+const configPath = path.join(__dirname, 'config/app.json');	
+	
+	
+	## ESM (Node 14+):
+	
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);	
+	
+	
+	Cập nhật 2025: Node 22+ có import.meta.dirname và import.meta.filename experimental – theo dõi docs để update.
+	Best Practices: Dùng để build relative paths (e.g., static files trong Express). Tránh hardcode absolute paths.
+	
+	
+	
+# 5. Advanced Path Handling Patterns	
+	
+	Path Utilities (class như ví dụ): Temp dir, user home, ensure dir, safe path (tránh traversal), unique filename.	
+	
+// Ví dụ safeJoin để prevent traversal
+function safeJoin(base, ...paths) {
+  const target = path.join(base, ...paths);
+  if (!path.normalize(target).startsWith(path.resolve(base))) throw Error('Traversal detected');
+  return target;
+}	
+	
+	
+	
+</pre><a id='backBottom' href='../NodeJS-learning.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

@@ -1,0 +1,82 @@
+<html><head><title>Lesson 5 == model ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../angular-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 5 -- model -//</h1><pre>
+# Khái niệm  
+	ng-model dùng để ràng buộc dữ liệu (data binding) giữa view (giao diện) và controller (logic).
+	
+	Cụ thể là two-way binding:
+
+	Khi người dùng thay đổi dữ liệu trong UI (ví dụ gõ vào input), giá trị trong controller cũng thay đổi.
+	Ngược lại, nếu bạn thay đổi biến trong controller, thì UI cũng cập nhật
+
+
+# 🧪 Ví dụ đơn giản: 
+>> html	
+<div ng-app="myApp" ng-controller="myCtrl">
+  <input ng-model="name">
+  <h1>Hello {{ name }}</h1>
+</div>
+
+>> js
+angular.module('myApp', []).controller('myCtrl', function($scope) {
+  $scope.name = "Bảo";
+});
+
+	Khi trang load: input hiển thị "Bảo", và dưới hiện "Hello Bảo"
+	Nếu bạn sửa input thành "Trang", thì UI tự động đổi thành "Hello Trang"
+
+→ Hai chiều: UI ↔️ Model (scope)
+	
+
+
+# ⚠ Lưu ý quan trọng 
+
+
+	1. ng-model chỉ hoạt động được nếu scope/component có biến đó.
+	2. Tốt nhất bạn nên dùng cú pháp controller as, ví dụ:
+	
+	>> html 
+		<input ng-model="$ctrl.name">
+		<p>Hello {{ $ctrl.name }}</p>
+
+
+	>> controller 
+	.controller('MyController', function() {
+		var $ctrl = this;
+		$ctrl.name = "Bảo";
+	});
+
+
+
+# 🧠 Dùng ng-model với các input khác 
+
+	Ngoài input[type="text"], bạn có thể dùng ng-model với:
+
+		
+
+| Loại     | Ví dụ                                                 |
+| -------- | ----------------------------------------------------- |
+| Checkbox | `<input type="checkbox" ng-model="isChecked">`        |
+| Radio    | `<input type="radio" ng-model="gender" value="male">` |
+| Select   | `<select ng-model="selected">...</select>`            |
+| Textarea | `<textarea ng-model="message">`                       |
+
+
+
+
+# 🧨 Cạm bẫy phổ biến 
+	Nếu bạn dùng ng-model="flag" nhưng flag là chuỗi "false", thì nó vẫn là truthy trong điều kiện.
+	Binding trực tiếp vào biến "logic xử lý" (ví dụ $ctrl.searchKeyword) mà không qua biến tạm thì sẽ gây sai logic nếu user gõ quá nhanh hoặc chưa nhấn nút.
+	
+	
+# 	✅ Tổng kết lời khuyên: 
+
+| Nên                                                                                   | Không nên                                                           |
+| ------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| Dùng `ng-model` để nhận input từ user                                                 | Dùng `ng-model` để thay đổi biến logic xử lý trực tiếp              |
+| Dùng biến tạm (`inputValue`) rồi cập nhật vào biến chính (`searchKeyword`) khi submit | Gắn `ng-model` vào biến logic rồi check bằng `ng-if` sẽ dẫn đến bug |
+| Dùng cú pháp `controller as $ctrl` để tránh xung đột scope                            | Dùng `$scope` lung tung không kiểm soát                             |
+
+
+
+
+
+</pre><a id='backBottom' href='../angular-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

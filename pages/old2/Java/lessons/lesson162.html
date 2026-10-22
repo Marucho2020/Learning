@@ -1,0 +1,102 @@
+<html><head><title>Lesson 162 == Thread Basics ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 162 -- Thread Basics -//</h1><pre>
+# 🔹 Mục tiêu
+	Hiểu cách tạo luồng, điều phối luồng, và quản lý luồng hiệu quả trong Java, tránh rơi vào bẫy tạo luồng bằng tay như junior-level.
+
+
+# 🔧 1. Thread vs Runnable – sự khác biệt bản chất
+
+	## Thread: 
+		- Là class thực thi luồng.
+		- Có thể override run(), nhưng đã bị xem là low-level, ít kiểm soát hơn Executor.
+	
+Thread t = new Thread(() -> System.out.println("Hello from Thread!"));
+t.start();
+
+
+	## Runnable:
+		- Là Functional Interface, không trả về gì (void run()).
+		- Dùng để tách logic khỏi quản lý luồng, giúp dùng với Executor dễ hơn.
+
+	⛔ Tránh kế thừa trực tiếp Thread, vì giới hạn kế thừa đơn.
+
+
+
+
+# 🔄 2. Callable & Future – xử lý kết quả bất đồng bộ
+
+	## Callable<T>: 
+	
+		- Functional interface như Runnable, nhưng trả về kết quả (T call() throws Exception).
+		- Dùng cho tác vụ cần kết quả.
+
+	## Future<T>:
+		- Đại diện cho kết quả tương lai của 1 tác vụ Callable.
+		- Có thể get() để chờ kết quả, hoặc cancel() để dừng.
+
+Callable<String> task = () -> "Result";
+ExecutorService executor = Executors.newSingleThreadExecutor();
+Future<String> future = executor.submit(task);
+String result = future.get(); // Blocking
+
+
+
+# ⚙️ 3. Executors – quản lý thread chuyên nghiệp
+
+	##  Tại sao dùng Executor? 
+
+		- Thread pooling: tái sử dụng luồng -> tiết kiệm CPU.
+		- Quản lý lifecycle: shutdown, submit, monitor, scaling.
+		- Tách biệt logic công việc khỏi logic quản lý tài nguyên
+
+ExecutorService executor = Executors.newFixedThreadPool(5);
+executor.submit(() -> doWork());
+executor.shutdown();
+
+
+
+# 🧠 4. ThreadFactory – kiểm soát chi tiết việc tạo luồng
+
+
+	## Giúp bạn:
+
+		- Đặt tên luồng dễ debug.
+		- Set daemon flag, priority...
+		- Tích hợp tốt với frameworks.
+
+ThreadFactory namedFactory = r -> {
+    Thread t = new Thread(r);
+    t.setName("MyApp-Worker");
+    return t;
+};
+ExecutorService executor = Executors.newFixedThreadPool(2, namedFactory);
+
+
+
+# 💥 5. ThreadPoolExecutor – cấu hình chuyên sâu
+
+	Khi bạn cần:
+
+		- Kiểm soát hàng đợi.
+		- Set core/max pool size.
+		- Tự xử lý khi queue đầy (RejectedExecutionHandler).
+
+ThreadPoolExecutor executor = new ThreadPoolExecutor(
+    2, 4,
+    60, TimeUnit.SECONDS,
+    new LinkedBlockingQueue<>(100),
+    new CustomThreadFactory(),
+    new ThreadPoolExecutor.AbortPolicy()
+);
+
+
+
+
+# 🛠 Senior Tips
+
+	- ✅ Đừng dùng new Thread(...) trừ khi bạn đang học/làm demo.
+	- ✅ Luôn dùng Executors, nhưng khi vào production thì nên tự tạo ThreadPoolExecutor thay vì Executors.newFixedThreadPool vì nó ẩn quá nhiều.
+
+
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

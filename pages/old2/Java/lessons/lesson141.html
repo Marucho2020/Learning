@@ -1,0 +1,143 @@
+<html><head><title>Lesson 141 == Cluster → Distributed System ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 141 -- Cluster → Distributed System -//</h1><pre># Khái niệm 
+	Cluster là một tập hợp các node (server/máy tính) hoạt động như một hệ thống thống nhất.
+		-Các node giao tiếp qua mạng
+		-Thường dùng để xử lý workload quá lớn cho một máy duy nhất
+		-Cần phối hợp giữa các node để duy trì tính toàn vẹn, hiệu năng, và dự phòng
+
+	
+		Ví dụ:
+		
+			- Cluster Elasticsearch: nhiều node lưu trữ và tìm kiếm dữ liệu
+			- Cluster Hadoop/Spark: chia nhỏ job để xử lý phân tán
+			- Kubernetes Cluster: điều phối container trên nhiều node
+		
+		
+# 	🔧 II. Từ Cluster → Distributed System 
+		Khi cluster được thiết kế để giải quyết các vấn đề về phân tán, nó trở thành một hệ thống phân tán (distributed system). 
+
+	## Các mục tiêu của Distributed System: 
+| Mục tiêu                       | Mô tả                                    |
+| ------------------------------ | ---------------------------------------- |
+| **Scalability**                | Tăng số node để tăng năng lực            |
+| **Fault Tolerance**            | Node chết không làm hệ thống chết        |
+| **High Availability (HA)**     | Luôn sẵn sàng, không downtime            |
+| **Data Consistency**           | Dữ liệu phải đúng dù xử lý từ nhiều node |
+| **Concurrency & Partitioning** | Chia khối lượng, xử lý song song         |
+
+
+
+
+# 🧠 III. Các vấn đề cốt lõi của hệ thống phân tán 
+
+	## 1. CAP Theorem 
+		Bạn không thể có tất cả 3:
+			Consistency, Availability, Partition tolerance – bạn chỉ chọn được 2.
+	
+	
+| Combination                            | Ví dụ                              |
+| -------------------------------------- | ---------------------------------- |
+| CP (strong consistency)                | HBase, MongoDB (with replica sync) |
+| AP (available, not strict consistency) | Cassandra, DynamoDB                |
+| CA (chỉ nếu không có partition)        | RDBMS truyền thống (trên một node) |
+	
+	
+	## 2. Consensus Problem 
+		
+		Khi có nhiều node, làm sao đồng thuận về trạng thái hoặc quyết định
+		Dùng các thuật toán:
+			- Paxos (khó hiểu, ít dùng trực tiếp)
+			- Raft (dễ hơn, dùng trong etcd, Consul)
+			- ZAB (ZooKeeper Atomic Broadcast – trong Zookeeper)	
+	
+	
+	## 	3. Leader Election
+		- Một số hệ thống cần 1 node "leader" để điều phối (ví dụ: Kafka controller, Zookeeper master)
+		- Phải có cơ chế bầu lại leader khi node chết
+	
+	
+	
+	## 4. Partitioning (Sharding)
+	
+		- Chia dữ liệu ra các node
+		- Có thể chia theo key hash, range, geolocation
+	
+	
+	
+	## 5. Replication
+	
+		Duplicated dữ liệu ở nhiều node → tăng HA và read throughput
+		Cơ chế replication:
+			-Master-Slave
+			-Multi-Leader
+			-Leaderless (quorum-based)
+# 🔄 IV. Mô hình phổ biến trong Distributed Cluster	
+	
+| Kiểu hệ thống     | Cơ chế phân tán                                 |
+| ----------------- | ----------------------------------------------- |
+| **Elasticsearch** | Shard + Replica + Coordination node             |
+| **Kafka**         | Partition + Broker + Zookeeper/Quorum           |
+| **Hadoop/Spark**  | Master → Worker → Task Executor                 |
+| **Cassandra**     | Ring-based, peer-to-peer, eventually consistent |
+| **Kubernetes**    | Control plane (etcd, scheduler) + worker node   |
+
+	
+# 🧠 V. Design Challenge cấp độ senior 	
+	
+	
+🔥 1. Node Down – Không ảnh hưởng
+	- Detect node chết (heartbeat, gossip)
+	- Tự động reassign task / migrate data
+	- Leader Election (Raft)
+	
+🔥 2. Data Inconsistency – Phải chọn
+
+	-Strong consistency: mọi write đều đi qua 1 node duy nhất → chậm hơn
+	-Eventual consistency: chấp nhận delay nhưng throughput cao hơn
+
+🔥 3. Network Partition – không ai biết ai sống/chết
+	- Dùng quorum: majority vote (n/2 + 1) → đảm bảo tiến trình không bị split-brain
+
+
+🔥 4. Distributed Locking 
+
+	- Không có synchronized ở nhiều máy
+	- Dùng Zookeeper, etcd, hoặc Redlock trên Redis
+
+# 📦 VI. Pattern & Tools thực tế
+| Pattern / Tool                         | Mục đích                                    |
+| -------------------------------------- | ------------------------------------------- |
+| **Service Discovery (Consul, etcd)**   | Biết node nào đang sống                     |
+| **Distributed Lock (Zookeeper, etcd)** | Tránh race ở nhiều node                     |
+| **Task Queue (Kafka, RabbitMQ)**       | Stream/Queue giữa service                   |
+| **Replication & Sharding**             | Scale data horizontally                     |
+| **Gossip Protocol**                    | Gửi thông tin giữa node mà không cần master |
+| **Circuit Breaker**                    | Cắt kết nối khi service hỏng                |
+| **Bulkhead**                           | Cô lập failure không lan rộng               |
+| **Sidecar Pattern (K8s)**              | Đặt các agent logic cạnh service            |
+
+
+# 🚀 VII. Case Study: Kafka Cluster
+
+
+		Mô hình:
+			- Broker (node): lưu trữ dữ liệu phân mảnh (partition)
+			- Topic: chia thành nhiều partition
+			- Partition: mỗi partition có leader và replica
+			- Zookeeper/quorum: quản lý metadata (kafka 3.0+ dùng Raft)
+		Properties:
+			- High throughput: ghi và đọc song song từ nhiều partition
+			- Fault-tolerant: có replica
+			- Consumer group: chia tải consume
+
+# ✅ Tổng kết
+| Khía cạnh                | Mô tả                                                                                   |
+| ------------------------ | --------------------------------------------------------------------------------------- |
+| **Cluster**              | Tập hợp các node hoạt động cùng nhau                                                    |
+| **Distributed System**   | Cluster có khả năng tự phối hợp, chia tải, đảm bảo consistency và availability          |
+| **Vấn đề chính**         | CAP, consensus, leader election, sharding, replication                                  |
+| **Yêu cầu kỹ sư senior** | Thiết kế hệ thống biết fail như thế nào, fallback ra sao, scale theo chiều ngang ra sao |
+
+
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

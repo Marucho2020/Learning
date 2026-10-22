@@ -1,4 +1,37 @@
-<html><head><title>Lesson 34 == Use Ref ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../react-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 34 -- Use Ref -//</h1><pre>
+<!DOCTYPE html><html lang='vi'><head><meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0'>
+<title>Lesson 34 -- Use Ref -//</title>
+<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css'>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js'></script>
+<script id='MathJax-script' async src='https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'></script>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; margin: 0; padding: 20px; transition: 0.3s; }
+.dark-mode { background-color: #121212; color: #e0e0e0; }
+.light-mode { background-color: #ffffff; color: #333333; }
+.container { max-width: 950px; margin: auto; }
+h1 { text-align: center; color: #3498db; margin: 20px 0; font-size: 26px; }
+.nav-bar { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 20px 0; }
+.nav-btn { text-decoration: none; padding: 10px 18px; background: #3498db; color: white; border-radius: 6px; font-weight: bold; font-size: 15px; display: inline-block; transition: 0.2s; }
+.nav-btn:hover { background: #2980b9; }
+.nav-btn.home-nav { background: #6c757d; }
+.nav-btn.home-nav:hover { background: #5a6268; }
+.nav-btn.disabled { background: #aaa; cursor: not-allowed; opacity: 0.5; }
+.done-btn { display: block; margin: 15px auto; padding: 10px 24px; border: 2px solid #2ecc71; background: transparent; color: #2ecc71; border-radius: 25px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+.done-btn.completed { background: #2ecc71; color: white; }
+.content-box { position: relative; margin: 20px 0; }
+pre { padding: 20px; border-radius: 8px; white-space: pre-wrap; word-break: break-word; overflow-x: auto; font-family: 'Consolas', 'Courier New', monospace; font-size: 15px; }
+.dark-mode pre { background: #1a1a1a; color: #f8f8f2; border: 1px solid #333; }
+.light-mode pre { background: #f8f9fa; color: #212529; border: 1px solid #e9ecef; }
+.copy-btn { position: absolute; top: 12px; right: 12px; padding: 6px 12px; font-size: 12px; background: #555; color: white; border: none; border-radius: 4px; cursor: pointer; opacity: 0.8; }
+.copy-btn:hover { opacity: 1; background: #2ecc71; }
+.theme-toggle-btn { display: block; margin: 20px auto; padding: 8px 16px; background: transparent; border: 1px solid #888; color: inherit; border-radius: 5px; cursor: pointer; }
+</style></head><body onload='initLesson()'>
+<div class='container'>
+<div class='nav-bar'><a class='nav-btn' href='lesson33.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../react-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson35.html'>Bài sau ➡️</a></div><h1>Lesson 34 -- Use Ref -//</h1>
+<button id='doneButton' class='done-btn' onclick='toggleDone()'>Mark as Done ⚪</button>
+<div class='content-box'>
+<button class='copy-btn' onclick='copyContent()'>📋 Copy nội dung</button>
+<pre><code id='lessonCode'>
 # Khái niệm 
 	useRef là một trong những hook mạnh mẽ nhất trong React, được giới thiệu từ phiên bản 16.8, cho phép bạn lưu trữ các giá trị mutable (có thể thay đổi) mà không gây ra việc re-render component. Không giống như useState hay useReducer, useRef không kích hoạt cập nhật UI khi giá trị thay đổi, làm cho nó lý tưởng cho các tình huống cần duy trì trạng thái "ẩn" hoặc truy cập trực tiếp vào DOM. Ở mức độ senior, chúng ta cần hiểu sâu về cơ chế hoạt động nội bộ của nó, các ứng dụng nâng cao, và cách tích hợp với các hook khác để tối ưu hóa hiệu suất, tránh memory leak, và xử lý các vấn đề phức tạp như stale closures.
 
@@ -28,20 +61,20 @@ function RenderCounter() {
   const [inputValue, setInputValue] = useState('');
   const renderCount = useRef(0); // Khởi tạo ref với giá trị 0
 
-  useEffect(() => {
+  useEffect(() =&gt; {
     renderCount.current += 1; // Cập nhật ref mà không re-render
     console.log(`Render lần thứ: ${renderCount.current}`);
   }); // Không dependency, chạy sau mỗi render
 
   return (
-    <>
-      <input
+    &lt;&gt;
+      &lt;input
         type="text"
         value={inputValue}
-        onChange={(e) => setInputValue(e.target.value)}
-      />
-      <h1>Số lần render: {renderCount.current}</h1> // Đọc trực tiếp từ ref.current
-    </>
+        onChange={(e) =&gt; setInputValue(e.target.value)}
+      /&gt;
+      &lt;h1&gt;Số lần render: {renderCount.current}&lt;/h1&gt; // Đọc trực tiếp từ ref.current
+    &lt;/&gt;
   );
 }	
 	
@@ -65,19 +98,19 @@ import { useRef } from 'react';
 function FocusInput() {
   const inputRef = useRef(null); // Khởi tạo ref cho DOM element
 
-  const handleFocus = () => {
+  const handleFocus = () =&gt; {
     inputRef.current.focus(); // Truy cập DOM method
-    if (inputRef.current.value.length < 5) {
+    if (inputRef.current.value.length &lt; 5) {
       inputRef.current.style.border = '2px solid red'; // Manipulate style
       console.warn('Giá trị quá ngắn!');
     }
   };
 
   return (
-    <>
-      <input type="text" ref={inputRef} /> // Attach ref vào element
-      <button onClick={handleFocus}>Focus và Validate</button>
-    </>
+    &lt;&gt;
+      &lt;input type="text" ref={inputRef} /&gt; // Attach ref vào element
+      &lt;button onClick={handleFocus}&gt;Focus và Validate&lt;/button&gt;
+    &lt;/&gt;
   );
 }
 
@@ -91,23 +124,23 @@ function ChatBox() {
   const [messages, setMessages] = useState([]);
   const chatRef = useRef(null);
 
-  const addMessage = () => {
-    setMessages((prev) => [...prev, `Tin nhắn mới ${prev.length + 1}`]);
+  const addMessage = () =&gt; {
+    setMessages((prev) =&gt; [...prev, `Tin nhắn mới ${prev.length + 1}`]);
   };
 
-  useEffect(() => {
+  useEffect(() =&gt; {
     if (chatRef.current) {
       chatRef.current.scrollTop = chatRef.current.scrollHeight; // Scroll to bottom
     }
   }, [messages]); // Dependency trên messages để chạy khi có tin mới
 
   return (
-    <div>
-      <div ref={chatRef} style={{ height: '200px', overflowY: 'scroll' }}>
-        {messages.map((msg, idx) => <p key={idx}>{msg}</p>)}
-      </div>
-      <button onClick={addMessage}>Gửi tin nhắn</button>
-    </div>
+    &lt;div&gt;
+      &lt;div ref={chatRef} style={{ height: '200px', overflowY: 'scroll' }}&gt;
+        {messages.map((msg, idx) =&gt; &lt;p key={idx}&gt;{msg}&lt;/p&gt;)}
+      &lt;/div&gt;
+      &lt;button onClick={addMessage}&gt;Gửi tin nhắn&lt;/button&gt;
+    &lt;/div&gt;
   );
 }
 
@@ -124,21 +157,21 @@ function TrackPrevious() {
   const [value, setValue] = useState('');
   const prevValueRef = useRef('');
 
-  useEffect(() => {
+  useEffect(() =&gt; {
     prevValueRef.current = value; // Cập nhật sau khi value thay đổi
   }, [value]); // Dependency trên value
 
-  const handleChange = (e) => {
+  const handleChange = (e) =&gt; {
     setValue(e.target.value);
     console.log(`Thay đổi từ "${prevValueRef.current}" sang "${e.target.value}"`);
   };
 
   return (
-    <>
-      <input type="text" value={value} onChange={handleChange} />
-      <h2>Giá trị hiện tại: {value}</h2>
-      <h2>Giá trị trước: {prevValueRef.current}</h2>
-    </>
+    &lt;&gt;
+      &lt;input type="text" value={value} onChange={handleChange} /&gt;
+      &lt;h2&gt;Giá trị hiện tại: {value}&lt;/h2&gt;
+      &lt;h2&gt;Giá trị trước: {prevValueRef.current}&lt;/h2&gt;
+    &lt;/&gt;
   );
 }
 
@@ -158,16 +191,16 @@ function Timer() {
   const intervalRef = useRef(null);
   const countRef = useRef(0);
 
-  useEffect(() => {
-    intervalRef.current = setInterval(() => {
+  useEffect(() =&gt; {
+    intervalRef.current = setInterval(() =&gt; {
       countRef.current += 1;
       console.log(`Đếm: ${countRef.current}`); // Không re-render
     }, 1000);
 
-    return () => clearInterval(intervalRef.current); // Cleanup
+    return () =&gt; clearInterval(intervalRef.current); // Cleanup
   }, []); // Chỉ mount lần đầu
 
-  return <h1>Timer chạy ngầm (kiểm tra console)</h1>;
+  return &lt;h1&gt;Timer chạy ngầm (kiểm tra console)&lt;/h1&gt;;
 }
 
 
@@ -180,24 +213,24 @@ function DebouncedSearch() {
   const [query, setQuery] = useState('');
   const timeoutRef = useRef(null);
 
-  const handleChange = (e) => {
+  const handleChange = (e) =&gt; {
     const value = e.target.value;
     if (timeoutRef.current) clearTimeout(timeoutRef.current); // Clear timeout cũ
-    timeoutRef.current = setTimeout(() => {
+    timeoutRef.current = setTimeout(() =&gt; {
       setQuery(value); // Chỉ update sau 500ms
       console.log(`Tìm kiếm: ${value}`);
     }, 500);
   };
 
-  useEffect(() => {
-    return () => clearTimeout(timeoutRef.current); // Cleanup on unmount
+  useEffect(() =&gt; {
+    return () =&gt; clearTimeout(timeoutRef.current); // Cleanup on unmount
   }, []);
 
   return (
-    <>
-      <input type="text" onChange={handleChange} placeholder="Tìm kiếm..." />
-      <h2>Kết quả: {query}</h2>
-    </>
+    &lt;&gt;
+      &lt;input type="text" onChange={handleChange} placeholder="Tìm kiếm..." /&gt;
+      &lt;h2&gt;Kết quả: {query}&lt;/h2&gt;
+    &lt;/&gt;
   );
 }
 
@@ -208,20 +241,20 @@ function DebouncedSearch() {
 	## Forward Refs: Cho phép parent component ref child DOM. 
 import { forwardRef, useRef } from 'react';
 
-const ChildInput = forwardRef((props, ref) => (
-  <input ref={ref} type="text" {...props} />
+const ChildInput = forwardRef((props, ref) =&gt; (
+  &lt;input ref={ref} type="text" {...props} /&gt;
 ));
 
 function Parent() {
   const childRef = useRef(null);
 
-  const focusChild = () => childRef.current.focus();
+  const focusChild = () =&gt; childRef.current.focus();
 
   return (
-    <>
-      <ChildInput ref={childRef} />
-      <button onClick={focusChild}>Focus Child</button>
-    </>
+    &lt;&gt;
+      &lt;ChildInput ref={childRef} /&gt;
+      &lt;button onClick={focusChild}&gt;Focus Child&lt;/button&gt;
+    &lt;/&gt;
   );
 }	
 	
@@ -234,20 +267,20 @@ import { useRef, useEffect } from 'react';
 function useInterval(callback, delay) {
   const savedCallback = useRef(callback); // Lưu callback để tránh stale
 
-  useEffect(() => {
+  useEffect(() =&gt; {
     savedCallback.current = callback; // Update callback mới nhất
   }, [callback]);
 
-  useEffect(() => {
-    const id = setInterval(() => savedCallback.current(), delay);
-    return () => clearInterval(id);
+  useEffect(() =&gt; {
+    const id = setInterval(() =&gt; savedCallback.current(), delay);
+    return () =&gt; clearInterval(id);
   }, [delay]);
 }
 
 // Sử dụng:
 function Counter() {
-  useInterval(() => console.log('Tick'), 1000);
-  return <h1>Interval custom hook</h1>;
+  useInterval(() =&gt; console.log('Tick'), 1000);
+  return &lt;h1&gt;Interval custom hook&lt;/h1&gt;;
 }
 
 
@@ -262,4 +295,46 @@ function Counter() {
 
 
 
-</pre><a id='backBottom' href='../react-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
+</code></pre>
+</div>
+<div class='nav-bar'><a class='nav-btn' href='lesson33.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../react-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson35.html'>Bài sau ➡️</a></div><button class='theme-toggle-btn' onclick='toggleTheme()'>🌓 Đổi Giao Diện</button>
+</div>
+<script>
+const lessonKey = 'react-learning-list_lesson34.html';
+function toggleTheme() {
+   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';
+   document.body.className = mode;
+   localStorage.setItem('theme', mode);
+}
+function toggleDone() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   if (isDone) {
+       localStorage.removeItem(lessonKey);
+   } else {
+       localStorage.setItem(lessonKey, 'done');
+   }
+   renderDoneStatus();
+}
+function renderDoneStatus() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   let btn = document.getElementById('doneButton');
+   if (isDone) {
+       btn.className = 'done-btn completed';
+       btn.innerText = 'Đã Hoàn Thành ✅';
+   } else {
+       btn.className = 'done-btn';
+       btn.innerText = 'Đánh dấu đã học ⚪';
+   }
+}
+function copyContent() {
+   let text = document.getElementById('lessonCode').innerText;
+   navigator.clipboard.writeText(text).then(function() {
+       alert('✅ Đã sao chép nội dung bài học!');
+   });
+}
+function initLesson() {
+   document.body.className = localStorage.getItem('theme') || 'dark-mode';
+   renderDoneStatus();
+   if (window.Prism) Prism.highlightAll();
+}
+</script></body></html>

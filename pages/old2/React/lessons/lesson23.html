@@ -1,0 +1,228 @@
+<html><head><title>Lesson 23 == CSS Styling ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../react-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 23 -- CSS Styling -//</h1><pre>
+# 1.Inline Styling: Styling Trực Tiếp Trong JSX
+
+	Inline styling là cách đơn giản nhất, áp dụng style qua attribute style với giá trị là JavaScript object. Điều này tận dụng sức mạnh declarative của React: Style là data, có thể dynamic dựa trên props/state.
+
+	## Cách Hoạt Động Cốt Lõi: 
+		Style phải là object JS, wrapped trong {} (vì JSX parse expressions).
+		Properties dùng camelCase (không hyphen như CSS thuần), ví dụ: backgroundColor thay vì background-color.
+		Giá trị có thể là string, number (React tự add 'px' cho units nếu cần, trừ 'unitless' như lineHeight).
+		
+		
+	## 	Ví Dụ Cơ Bản 
+const Header = () => {
+  return (
+    <>
+      <h1 style={{ color: "red" }}>Hello Style!</h1>
+      <p>Add a little style!</p>
+    </>
+  );
+};		
+		
+		Phân Tích: Ở đây, {{ color: "red" }} là object inline. React convert thành style="color: red;" trong DOM. Lưu ý double curly braces: Outer cho JSX expression, inner cho object.	
+		
+		
+		
+	## 	Ví Dụ Với CamelCase Và Dynamic Styles: 
+		
+const Button = ({ isActive }) => {
+  const buttonStyle = {
+    backgroundColor: isActive ? "green" : "gray", // Dynamic dựa trên prop
+    padding: "10px 20px", // Units tự động
+    borderRadius: 5, // Unitless, nhưng React add 'px'
+    fontFamily: "Arial, sans-serif"
+  };
+
+  return <button style={buttonStyle}>Click Me</button>;
+};
+
+// Usage: <Button isActive={true} />		
+		
+		
+		
+	Phân Tích Sâu: Dynamic styles lý tưởng cho conditional rendering (e.g., theme switching). Tuy nhiên, inline không hỗ trợ pseudo-classes (:hover) hay media queries trực tiếp – cần CSS-in-JS libraries như Emotion để extend. Performance: Inline tạo style attribute per element, tăng DOM size nếu overuse (tránh cho large lists; dùng className + CSS thay thế).	
+		
+		
+		
+# 	Ví Dụ Tạo Object Riêng 
+		
+const Header = () => {
+  const myStyle = {
+    color: "white",
+    backgroundColor: "DodgerBlue",
+    padding: "10px",
+    fontFamily: "Sans-Serif"
+  };
+  return (
+    <>
+      <h1 style={myStyle}>Hello Style!</h1>
+      <p>Add a little style!</p>
+    </>
+  );
+};		
+		
+		
+	Phân Tích: Tách object giúp reusable (e.g., share giữa components). Chuyên gia: Kết hợp với hooks như useMemo để memoize styles, tránh re-create object mỗi render: const myStyle = useMemo(() => ({ ... }), [deps]);. Ưu: No external files, easy debug. Nhược: Không cacheable như CSS files, thiếu auto-prefixing (e.g., -webkit- cho browsers cũ).	
+		
+		
+		
+		
+	
+	## Best Practices Chuyên Gia: 
+
+	- Chỉ dùng cho small, dynamic styles (e.g., user avatars với random colors).
+	- Kết hợp với props: style={{ ...defaultStyle, ...customStyle }} để override.
+	- Accessibility: Luôn thêm aria attributes nếu style ảnh hưởng semantics (e.g., hidden elements).
+	- Limitations: Không hỗ trợ keyframes animations inline; dùng CSS cho complex animations.
+
+
+# 2. CSS Stylesheets: Styling Qua Files Riêng 
+	Đây là cách truyền thống, import CSS file như module. React (với bundlers như webpack/Create React App) treat .css files as global styles, nhưng scoped per import (không leak ra ngoài app).
+
+	##Cách Hoạt Động: 
+		
+		- Tạo file .css với selectors (class, id, tag).
+		- Import: import './MyStylesheet.css'; – Bundler inject <style> tag hoặc external link.
+		- Áp dụng qua className (không class, vì JSX reserve class cho JS).
+
+	## Ví Dụ Cơ Bản (Từ Bài Viết): 
+		Nội dung file MyStylesheet.css:
+
+body {
+  background-color: #282c34;
+  color: white;
+  padding: 40px;
+  font-family: Sans-Serif;
+  text-align: center;
+}
+
+import { createRoot } from 'react-dom/client';
+import './MyStylesheet.css';
+
+const Header = () => {
+  return (
+    <>
+      <h1>Hello Style!</h1>
+      <p>Add a little style!.</p>
+    </>
+  );
+};
+
+createRoot(document.getElementById('root')).render(<Header />);
+	
+	Phân Tích: Styles apply globally trong app, nhưng chỉ load khi import. Trong SSR (Server-Side Rendering) như Next.js, CSS extract thành files riêng để cach
+
+	
+
+# Ví Dụ Nâng Cao Với Classes Và Media Queries:
+
+	## File App.css: 
+		
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.title {
+  color: blue;
+  font-size: 2rem;
+}
+
+@media (max-width: 600px) {
+  .title {
+    font-size: 1.5rem;
+    color: red; /* Responsive change */
+  }
+}
+
+	## Component: 
+	
+import './App.css';
+
+const App = () => {
+  return (
+    <div className="container">
+      <h1 className="title">Responsive Title</h1>
+    </div>
+  );
+};
+
+	Phân Tích Sâu: Hỗ trợ full CSS features (pseudo, animations, variables). Tuy nhiên, global scope dễ gây conflicts (e.g., hai components dùng cùng class .button). Chuyên gia: Sử dụng BEM (Block Element Modifier) naming convention để avoid: .header__title--active. Performance: Bundlers minify và tree-shake unused styles.
+
+
+
+
+# 3. CSS Modules: Scoped Styling Cho Components
+
+
+	CSS Modules nâng cấp CSS Stylesheets bằng cách scope styles locally – classes được hash (e.g., .bigred thành .bigred_abc123) để tránh conflicts. Lý tưởng cho component-based architecture.
+
+	## Cách Hoạt Động: 
+
+		- File extension: .module.css.
+		- Import: import styles from './my-style.module.css'; – styles là object với hashed keys.
+		- Áp dụng: className={styles.bigred}.
+
+	File my-style.module.css:
+
+.bigred {
+  color: Tomato;
+  padding: 40px;
+  font-family: Sans-Serif;
+  text-align: center;
+}
+
+	## Component:
+
+import { createRoot } from 'react-dom/client';
+import styles from './my-style.module.css';
+
+const Car = () => {
+  return <h1 className={styles.bigred}>Hello Car!</h1>;
+};
+
+createRoot(document.getElementById('root')).render(<Car />);
+
+	Phân Tích: Styles chỉ apply cho component import, an toàn cho libraries/micro-frontends. Bundlers như webpack enable qua css-loader.
+
+
+	## Ví Dụ Nâng Cao Với Compositions Và Globals:
+	
+	File Button.module.css:
+.base {
+  padding: 10px;
+  border: none;
+}
+
+.primary {
+  composes: base; /* Kế thừa từ class khác */
+  background-color: blue;
+  color: white;
+}
+
+:global(.external-class) {
+  font-weight: bold; /* Global nếu cần */
+}	
+	
+	Component:
+	
+	import styles from './Button.module.css';
+
+const Button = ({ variant }) => {
+  const className = variant === 'primary' ? styles.primary : styles.base;
+  return <button className={className}>Click</button>;
+};
+	
+	Phân Tích Sâu: composes cho inheritance, :global cho exceptions (e.g., third-party libs). Dynamic: Kết hợp với clsx library để conditional classes: className={clsx(styles.base, isActive && styles.active)}. Performance: Tree-shaking tốt hơn global CSS, chỉ bundle used classes.
+	
+	
+	## Best Practices Chuyên Gia: 
+	
+		- Dùng cho large apps để encapsulation.
+		- Kết hợp với TypeScript: Styles object có types (qua typings-for-css-modules-loader).
+		- Nhược: Không hỗ trợ runtime changes dễ dàng; cho dynamic, chuyển sang CSS-in-JS như styled-components.
+		- Tương Lai: Với React Server Components, CSS Modules tích hợp seamless cho streaming styles.	
+	
+</pre><a id='backBottom' href='../react-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

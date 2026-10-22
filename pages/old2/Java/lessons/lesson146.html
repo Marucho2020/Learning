@@ -1,0 +1,68 @@
+<html><head><title>Lesson 146 == Java interface ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 146 -- Java interface -//</h1><pre>
+# 🎯 1. Tại sao phải tạo lambda cho method trong interface? 
+
+	Vì trong Java, interface không thể tự khởi tạo (vì nó không có implementation). Khi bạn viết:
+	InterDemo i = x -> { return; };
+
+	Bạn đang cung cấp implementation cho method msg(String msg) thông qua lambda. Đây là cách Java cho phép bạn khởi tạo một đối tượng interface, chỉ khi interface đó có đúng 1 method abstract → gọi là Functional Interface.
+
+# 🧠 2. Functional Interface là gì?
+
+	Functional Interface là interface có chỉ một phương thức trừu tượng (abstract). Ví dụ:
+
+interface InterDemo {
+    void msg(String msg);
+}
+	Chỉ có 1 method: void msg(String) → hợp lệ → có thể dùng lambda.
+
+
+# 🧬 3. Vậy tại sao phải gán lambda?
+
+	Vì bản chất Java không khởi tạo interface như class. Bạn phải đưa ra cách hiện thực (implementation) cho method msg(String msg).
+	Lambda expression chính là:
+		Một cách rút gọn để cung cấp implementation cho một functional interface 
+
+	
+	Khi bạn viết: 
+		InterDemo i = x -> { return; }; 
+		
+	Java ngầm hiểu bạn đang làm: 
+		InterDemo i = new InterDemo() {
+			@Override
+			public void msg(String x) {
+				return;
+			}
+		};
+		
+
+	## ❓Vậy nếu KHÔNG gán lambda thì sao? 
+		InterDemo i; // Khai báo interface
+		i.msg("abc"); // ❌ Compilation error! Vì i = null, không có implementation
+
+		Nếu bạn không gán implementation (lambda hoặc class implements), bạn đang gọi một method chưa có thân hàm, và Java không thể thực thi nó. Kết quả: compiler lỗi.
+
+# ✅ Tổng kết'
+
+| Câu hỏi                                             | Giải thích                                                                                                      |
+| --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Tại sao phải gán lambda cho interface khi khởi tạo? | Vì interface không có sẵn implementation — bạn phải cung cấp logic thực thi                                     |
+| Tại sao lambda hoạt động được?                      | Vì bạn dùng functional interface (1 method abstract) nên Java cho phép dùng lambda như cách rút gọn để override |
+| Nếu không dùng lambda thì sao?                      | Bạn phải dùng class hoặc anonymous inner class để implement interface đó                                        |
+
+
+
+# 📌 Code đúng (có nội dung xử lý):
+
+interface InterDemo {
+    void msg(String msg);
+}
+
+public class Test {
+    public static void main(String[] args) {
+        InterDemo i = x -> System.out.println("Received: " + x);
+        i.msg("Test Msg"); // ✅ Kết quả: Received: Test Msg
+    }
+}
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

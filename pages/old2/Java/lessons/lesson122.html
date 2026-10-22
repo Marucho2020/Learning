@@ -1,0 +1,114 @@
+<html><head><title>Lesson 122 == Functional Red-Black Tree ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 122 -- Functional Red-Black Tree -//</h1><pre># Khái niệm 
+	Muốn phân tích Functional Red-Black Tree (FRBT) ở trình độ senior, ta phải hiểu nó là sự kết hợp giữa:
+	Red-Black Tree (RBT) — cây nhị phân cân bằng theo quy tắc màu sắc,
+	và Functional programming — dữ liệu bất biến (immutable), không sửa đổi trực tiếp cấu trúc gốc mà tạo ra bản sao mới theo nguyên tắc “persistent data structure”.
+
+# 1. Bản chất Functional Red-Black Tree là gì?
+	Functional Red-Black Tree là phiên bản bất biến (immutable) của Red-Black Tree truyền thống, được thiết kế theo phong cách functional để:
+
+		- Không thay đổi cây ban đầu (không dùng các thao tác mutate),
+		- Mỗi thao tác insert, delete trả về cây mới,
+		- Các phần không thay đổi được tái sử dụng (structural sharing),
+		- Hỗ trợ persistent data structure: giữ lại được mọi phiên bản lịch sử của cây.
+
+
+# 2. Tại sao phải dùng Functional Red-Black Tree? 
+	## 2.1 Immutable & thread-safe 
+	
+		- Trong môi trường functional hoặc đa luồng, việc mutate dữ liệu gây ra race condition hoặc bugs khó debug.
+		- Immutable giúp dễ reasoning, debugging, và concurrency không cần lock phức tạp.
+
+	## 2.2 Persistent data structure (versioning)
+		Mỗi insert/delete trả về cây mới, ta có thể giữ lại phiên bản cũ dùng cho undo/redo hoặc snapshots. 
+		
+	## 2.3 Hiệu quả bộ nhớ
+	
+		Không sao chép toàn bộ cây, chỉ thay đổi phần node cần update,
+		Các node không đổi sẽ được tái sử dụng, tránh duplicate memory.
+
+
+# 3. Cấu trúc dữ liệu và thao tác trong FRBT 
+
+	## 3.1 Node trong FRBT 
+		Node bất biến: final fields (key, value, color, left, right),
+		Không có setter, mọi thay đổi tạo node mới.
+		
+class Node<K, V> {
+    final K key;
+    final V value;
+    final Color color; // RED or BLACK
+    final Node<K, V> left, right;
+
+    Node(K key, V value, Color color, Node<K, V> left, Node<K, V> right) {
+        this.key = key;
+        this.value = value;
+        this.color = color;
+        this.left = left;
+        this.right = right;
+    }
+}
+		
+
+
+	## 3.2 Insert/Delete 
+	
+		- Cấu trúc tự động tái tạo cây mới qua các thao tác đệ quy,
+		- Áp dụng quy tắc cân bằng của Red-Black Tree (rotate, recolor),
+		- Sau khi thao tác xong, trả về node mới (được cân bằng),
+		- Các phần cây không thay đổi được giữ nguyên.
+
+
+
+	## 3.3 Structural sharing (chia sẻ cấu trúc)
+
+
+	Ví dụ:
+		Cây ban đầu:
+		       20(B)
+			  /     \
+		  10(R)   30(B)
+	
+
+	Khi insert 25, ta tạo mới các node trên đường đi:
+	
+       20'(B)
+      /       \
+   10(R)     30'(B)
+               /
+            25(R)
+
+
+	Các node 10(R) không đổi, tái sử dụng,
+	Node 20 và 30 bị tạo mới, giữ immutable.
+
+
+
+# 4. Ưu điểm Functional Red-Black Tree 
+| Ưu điểm                                  | Giải thích                                                  |
+| ---------------------------------------- | ----------------------------------------------------------- |
+| Immutable                                | An toàn khi đa luồng, dễ reasoning                          |
+| Persistent                               | Giữ lại các phiên bản trước dễ dàng                         |
+| Hiệu quả bộ nhớ                          | Structural sharing tránh copy toàn bộ cây                   |
+| Tính toán không gây side-effect          | Phù hợp functional programming paradigm (Haskell, Scala...) |
+| Thích hợp hệ thống versioning, undo/redo | Dễ dàng lưu lại trạng thái cây trước và sau thao tác        |
+
+
+
+# 5. Nhược điểm và thách thức
+
+	Tốc độ insert/delete chậm hơn Red-Black Tree mutable do tạo node mới,
+	Bộ nhớ tiêu thụ có thể tăng nếu không tối ưu structural sharing tốt,
+	Triển khai phức tạp hơn do đòi hỏi tái cấu trúc node bất biến,
+	Debug khó khăn hơn do nhiều phiên bản cây tồn tại.
+
+
+# 6. Ứng dụng thực tế
+
+	Các thư viện functional data structures: Clojure Persistent TreeMap, Scala's immutable.TreeMap đều dùng FRBT hoặc tương tự,
+	Hệ thống undo/redo trong editor,
+	Version control systems, compiler symbol tables immutable,
+	Multithreaded systems không lock nhưng cần thao tác dữ liệu an toàn
+
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

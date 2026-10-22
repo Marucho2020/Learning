@@ -1,0 +1,115 @@
+<html><head><title>Lesson 9 == QKD- Quantum Key Distribution ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../quantum-computing-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 9 -- QKD- Quantum Key Distribution -//</h1><pre>
+# Khái niệm 
+	Phân phối khóa lượng tử (QKD) là một phương pháp sử dụng cơ học lượng tử để tạo và chia sẻ khóa mật mã an toàn giữa 2 bên (thường gọi là Alice và Bob), mà không thể bị nghe lén (eavesdropped) bởi kẻ tấn công (Eve)
+	
+	## Ứng dụng quan trọng 
+		- Bảo mật truyền thống tuyệt đối (giả sử kênh lượng tử không bị xâm phạm )
+		- Không thể bị tấn công bằng máy tính lượng tử (khác với mã hóa RSA hoặc ECC có thể bị phá vỡ bởi thuật toán Shor)
+		
+# Nguyên lý cơ bản của QKD 	
+	QKD dựa vào hai nguyên lý chính của cơ học lượng tử 
+		
+		## 1. Nguyên lý Heisenberg
+			- Không thể đo một hạt lượng tử(ví dụ photon ) mà không làm thay đổi trạng thái của nó 
+			- Nếu Eve cố gắng nghe lén. Alice và Bob sẽ phát hiện ra sự thay đổi 
+			
+		## Định lý không nhân bản (No-Cloning Theoremn )
+			- Không thể tạo ra bản sao chính xác của một trạng thái lượng tử chưa biết 
+			- Điều này ngăn chặn Eve sao chép dữ liệu mà không bị phát hiện  
+		
+		-> Điều này giúp QKD đảm bảo rằng nếu có ai nghe lén, Alce và Bob sẽ biết ngay lập tức 
+		
+# Giao thức BB84 - Giao thức QKD phổ biến nhất 
+
+	Giao thức BB84 (do Bennet & Brassard phát minh năm 1984) là một trong những phương pháp QKD phổ biến nhất 
+	Mục tiêu : Alice gửi một chuỗi bit ngẫu nhiên cho Bob bằng photon, và hai bên xác nhận xem có ai nghe lén hay không 
+	
+	## Quá trình chi tiết 
+		### 1. Alice chuẩn bị và gửi các photon theo các cơ sở ngẫu nhiên 	
+			- Alice chọn chuỗi bit ngẫu nhiên(0 hoặc 1 )
+			- Một bot được mã hóa dưới dạng hạt photon theo một trong hai cơ sở trực giao 
+			
+			#### Cơ sở chuẩn  (|, -):  
+				0 → | 
+				1 → – 
+			
+			####  Cơ sở chéo (/ , ):
+				0 → / 
+				1 → \ 
+				
+				
+			Alice gửi các photon này đến Bob qua kênh lượng tử 
+			
+		### 2. Bob đo photon theo cơ sở ngẫu nhiên 
+			- Bob cũng chọn cơ sở đo ngẫu nhiên để đo mỗi photon nhận được 
+			- Nếu Bob chọn cùng cơ sở mà Alice đã dùng, anh ta sẽ đo được bit chính xác 
+			- Nếu chọn khác cơ sở, kết quả sẽ là ngẫu nhiên 
+		
+		### 3. Alice và Bob công khai cơ sở đo 
+			- Sau khi nhận xong, Bob thông báo cơ sở đo của mình qua kênh công khai (vd internet )
+			- Alice cũng công khai cơ sở mà cô đã dùng để gửi từng photon 
+			
+		### 4. Lọc ra chuỗi khóa chung 
+			- Alice và Bob giữ lại những bit được do bằng cùng cơ sở và bỏ đi phần còn lại 
+			- Chuỗi còn lại được gọi là Khóa lượng tử thô(Raw Key )
+
+		### 5. Phát hiện kẻ nghe lén (Eve)
+			- Alice và Bob kiểm tra một phần khóa bằng cách so sánh công khai một số bit ngẫu nhiên 
+			- Nếu có sai lệch đáng kể ->> Có thể có nghe lén -> hủy bỏ khóa 
+			- Nếu sai lệch thấp -> tiếp tục sử dụng khóa 
+			
+		📌 Kết quả:  Eve không thể sao chép khóa mà không làm thay đổi photon, do đó Alice và Bob luôn biết có kẻ nghe lén  
+
+# 🏆 Lợi ích của QKD so với mã hóa truyền thống
+
+🔐 Mã hóa truyền thống											🛡️ QKD
+Dựa vào độ khó tính toán (RSA, ECC)						Dựa vào nguyên lý vật lý lượng tử
+Có thể bị phá bởi máy tính lượng tử						Không thể bị phá bởi máy tính lượng tử
+Nguy cơ lỗ hổng phần mềm								Không thể bị tấn công bằng cách sao chép khóa
+Dữ liệu có thể bị lưu trữ để giải mã sau này			Khóa bị đánh cắp sẽ không thể sử dụng
+
+
+# Hạn chế và thách thức của QKD 
+	
+Dù lý thuyết rất mạnh, nhưng QKD vẫn có những hạn chế thực tế:
+
+	## 🚧 Khoảng cách giới hạn: 
+		 - Hiện tại, QKD chỉ hoạt động trong khoảng cách vài trăm km, vì photon có thể bị mất trong sợi quang. 
+		 - Cần trạm lặp lượng tử (Quantum Repeater) để mở rộng khoảng cách, nhưng công nghệ này chưa hoàn thiện. 
+		 
+	## 🚧 Yêu cầu phần cứng đặc biệt: 
+		 - Cần các thiết bị như máy phát photon đơn, máy đo photon, rất đắt đỏ và khó triển khai đại trà. 
+		
+	## 	🚧 Không phải mã hóa dữ liệu, chỉ phân phối khóa: 
+		- QKD không mã hóa dữ liệu, chỉ giúp chia sẻ khóa an toàn hơn. 
+
+	## 🚧 Nguy cơ từ phần cứng không hoàn hảo: 
+		- Các hệ thống QKD thực tế có thể có lỗi phần cứng, làm lộ thông tin mà không phải lỗi của cơ học lượng tử.
+		
+# 🚀 Ứng dụng thực tế 
+	
+📡 Ngân hàng và tài chính:
+
+	Ngân hàng trung ương Trung Quốc đã triển khai QKD để bảo vệ giao dịch.
+
+🛰️ Vệ tinh lượng tử:
+	Trung Quốc đã phóng vệ tinh Micius để truyền khóa lượng tử giữa các thành phố cách nhau 1.200 km. 
+	
+🔬 Bảo vệ cơ sở hạ tầng quan trọng: 
+	Chính phủ nhiều nước đang thử nghiệm QKD để bảo vệ cơ sở hạ tầng viễn thông và quân sự. 
+
+📌 Tuy còn xa để phổ biến rộng rãi, nhưng QKD là bước đi quan trọng để bảo mật trong kỷ nguyên máy tính lượng tử.
+
+# 	🤯 Tương lai của QKD 
+
+	🔮 QKD + Mạng lượng tử
+		Nếu có thể kết nối nhiều thiết bị QKD với nhau, sẽ hình thành mạng lượng tử bảo mật toàn cầu.
+
+	🔮 Quantum Internet
+		Mục tiêu cuối cùng là xây dựng Internet lượng tử, nơi toàn bộ dữ liệu sẽ được bảo mật bằng các nguyên lý lượng tử.
+	
+	🔮 Tích hợp với AI & Blockchain 
+		QKD có thể giúp tăng cường bảo mật cho AI và Blockchain khi máy tính lượng tử trở nên phổ biến. 
+
+
+</pre><a id='backBottom' href='../quantum-computing-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

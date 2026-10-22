@@ -1,0 +1,240 @@
+<html><head><title>Lesson 8 == DS Analyze Data ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../DataScience-learning.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 8 -- DS Analyze Data -//</h1><pre>
+# 1. Trích Xuất và Đọc Dữ Liệu Với Pandas (Extract and Read Data With Pandas)
+
+	Định nghĩa chính: Trước khi phân tích, dữ liệu phải được trích xuất (imported). Bài sử dụng hàm read_csv() của Pandas để đọc file CSV chứa dữ liệu sức khỏe.
+
+import pandas as pd
+health_data = pd.read_csv("data.csv", header=0, sep=",")
+print(health_data)
+
+	Đọc CSV: pd.read_csv("data.csv", header=0, sep=",") – Đọc file CSV vào DataFrame:
+
+	header=0: Dòng đầu tiên (row 0) là tên cột (như Duration, Average_Pulse, v.v.).
+	sep=",": Dấu phẩy là separator trong file CSV (comma-separated values
+
+	In DataFrame: print(health_data) hiển thị toàn bộ bảng. health_data.head() chỉ hiển thị 5 hàng đầu tiên, hữu ích với dataset lớn để tiết kiệm thời gian và bộ nhớ.
+	
+	Minh họa với dữ liệu sức khỏe: Giả sử data.csv chứa bảng từ bài trước (10 hàng, 6 cột), nhưng có lỗi (dirty data):
+
+	Phân tích: Dòng 9 có lỗi: Average_Pulse=9000 (không hợp lý), Max_Pulse="AF" (chuỗi, không phải số), và Hours_Work thiếu giá trị (blank).
+
+	Output của head()
+	
+   Duration  Average_Pulse Max_Pulse  Calorie_Burnage  Hours_Work  Hours_Sleep
+0       30           80       120             240        10.0            7
+1       30           85       120             250        10.0            7
+2       45           90       130             260         8.0            7
+3       45           95       130             270         8.0            7
+4       45          100       140             280         0.0            7
+		
+		
+	Ứng dụng thực tế: Trong phân tích bán lẻ, read_csv() đọc dữ liệu giao dịch từ file CSV. head() giúp xem nhanh mẫu dữ liệu trước khi xử lý.
+	Lời khuyên chuyên gia: Luôn kiểm tra file CSV trước khi đọc (dùng text editor để xem separator và header). Dùng head() hoặc tail() để khám phá dữ liệu ban đầu.
+	
+	
+# 	2. Làm Sạch Dữ Liệu (Data Cleaning)
+	
+	Định nghĩa chính: Dữ liệu "bẩn" (dirty data) chứa giá trị sai hoặc thiếu (như Average_Pulse=9000, Max_Pulse="AF", blank cells). Cần làm sạch để phân tích chính xác.
+	
+	## Vấn đề được nêu 
+	
+		- Blank cells (giá trị thiếu).
+		- Average_Pulse=9000 không hợp lý (quá cao cho nhịp tim).
+		- 9000 có dấu cách ("9 000"), bị coi là non-numeric.
+		- Max_Pulse="AF" không phải số, vô nghĩa.	
+	
+	
+	## Giải thích chi tiết và chuyên sâu: 
+	
+		- Dirty data: Phổ biến trong thực tế (ví dụ: lỗi nhập liệu, cảm biến hỏng). Bài giả định các lỗi tập trung ở dòng có giá trị thiếu, giúp đơn giản hóa việc làm sạch.
+		- Blank cells thành NaN: Pandas tự động chuyển các ô trống thành NaN (Not a Number), một giá trị đặc biệt trong Python để chỉ dữ liệu thiếu.	
+	
+		## Mã làm sạch: 
+			health_data.dropna(axis=0, inplace=True)
+			print(health_data)
+	
+		Chức năng: dropna(axis=0, inplace=True) xóa tất cả hàng (rows) chứa NaN. axis=0 nghĩa là xóa hàng (khác với axis=1 – xóa cột). inplace=True sửa trực tiếp DataFrame (không tạo bản sao).
+	
+		Kết quả: Dòng 9 (với Average_Pulse=9000, Max_Pulse="AF", Hours_Work=NaN) bị xóa, vì nó chứa NaN (Hours_Work trống). DataFrame còn lại 9 hàng, sạch sẽ
+		
+		
+	## 	Minh họa chuyên sâu: Tái tạo dữ liệu bẩn và làm sạch:
+		
+		
+import pandas as pd
+data = {
+    'Duration': [30, 30, 45, 45, 45, 60, 60, 60, 75, 75],
+    'Average_Pulse': [80, 85, 90, 95, 100, 105, 110, 115, '9000', 125],
+    'Max_Pulse': [120, 120, 130, 130, 140, 140, 145, 145, 'AF', 150],
+    'Calorie_Burnage': [240, 250, 260, 270, 280, 290, 300, 310, 320, 330],
+    'Hours_Work': [10, 10, 8, 8, 0, 7, 7, 8, None, 8],
+    'Hours_Sleep': [7, 7, 7, 7, 7, 8, 8, 8, 8, 8]
+}
+health_data = pd.DataFrame(data)
+print("Before cleaning:")
+print(health_data)
+health_data.dropna(axis=0, inplace=True)
+print("\nAfter cleaning:")
+print(health_data)		
+		
+		
+	import pandas as pd
+data = {
+    'Duration': [30, 30, 45, 45, 45, 60, 60, 60, 75, 75],
+    'Average_Pulse': [80, 85, 90, 95, 100, 105, 110, 115, '9000', 125],
+    'Max_Pulse': [120, 120, 130, 130, 140, 140, 145, 145, 'AF', 150],
+    'Calorie_Burnage': [240, 250, 260, 270, 280, 290, 300, 310, 320, 330],
+    'Hours_Work': [10, 10, 8, 8, 0, 7, 7, 8, None, 8],
+    'Hours_Sleep': [7, 7, 7, 7, 7, 8, 8, 8, 8, 8]
+}
+health_data = pd.DataFrame(data)
+print("Before cleaning:")
+print(health_data)
+health_data.dropna(axis=0, inplace=True)
+print("\nAfter cleaning:")
+print(health_data)	
+		
+		
+		
+	Ứng dụng thực tế: Trong phân tích khách hàng, xóa hàng thiếu thông tin (như email trống) để đảm bảo mô hình dự đoán chính xác.
+	
+	Lời khuyên chuyên gia: dropna() là cách đơn giản, nhưng với dataset lớn, cân nhắc thay thế NaN bằng giá trị hợp lý (ví dụ: mean của cột) thay vì xóa, để tránh mất dữ liệu. Dùng health_data.isna().sum() để kiểm tra số NaN trước.
+
+
+
+# 3. Phân Loại Dữ Liệu (Data Categories)
+
+	## Định nghĩa chính: Dữ liệu chia thành hai loại chính: 
+		Quantitative (Số lượng):
+
+			Discrete: Số nguyên (ví dụ: số học sinh, số bàn thắng).
+			Continuous: Số thập phân với độ chính xác vô hạn (ví dụ: cân nặng, nhiệt độ).
+
+		Qualitative (Chất lượng):
+
+			Nominal: Không có thứ tự (ví dụ: giới tính, màu tóc).
+			Ordinal: Có thứ tự (ví dụ: điểm A/B/C, thu nhập thấp/trung/cao).
+
+
+	## Giải thích chi tiết và chuyên sâu
+		Tầm quan trọng: Hiểu loại dữ liệu giúp chọn phương pháp phân tích đúng. Ví dụ: Quantitative (như Average_Pulse) phù hợp với hồi quy tuyến tính (bài đầu tiên); Qualitative (như Workout_Type: cardio/strength) cần phân tích khác (như chi-squared test).
+
+		Dữ liệu sức khỏe: Tất cả cột (Duration, Average_Pulse, v.v.) là quantitative, chủ yếu discrete (vì là số nguyên). Nếu có cột như “Workout_Type” (cardio/yoga), đó sẽ là nominal.
+
+
+		Minh họa chuyên sâu: Nếu thêm cột ordinal:
+
+health_data['Workout_Rating'] = ['Low', 'Low', 'Medium', 'Medium', 'Medium', 'High', 'High', 'High', 'High', 'High']
+print(health_data['Workout_Rating'].value_counts())
+
+
+
+High      5
+Medium    3
+Low       2
+Name: Workout_Rating, dtype: int64
+
+		Ứng dụng thực tế: Trong marketing, phân tích quantitative (doanh thu) bằng mean; qualitative (loại khách hàng: new/returning) bằng frequency tables.
+		
+		Lời khuyên chuyên gia: Luôn xác định loại dữ liệu trước khi phân tích. Quantitative dùng thống kê mô tả (mean, std); qualitative dùng visualization (bar plot).
+
+
+# 4. Kiểu Dữ Liệu (Data Types)
+
+	Định nghĩa chính: Dùng info() để kiểm tra kiểu dữ liệu (data types). Dữ liệu sức khỏe có float64 và object (do lỗi như “AF”). Cần chuyển object sang float64 để phân tích.
+
+	## Mã ví dụ từ bài: 
+		
+print(health_data.info())
+health_data["Average_Pulse"] = health_data['Average_Pulse'].astype(float)
+health_data["Max_Pulse"] = health_data['Max_Pulse'].astype(float)
+print(health_data.info())
+
+
+	## Giải thích chi tiết và chuyên sâu:
+		Hàm info(): Hiển thị kiểu dữ liệu và số giá trị không thiếu (non-null count)
+	
+<class 'pandas.core.frame.DataFrame'>
+RangeIndex: 9 entries, 0 to 8
+Data columns (total 6 columns):
+ #   Column           Non-Null Count  Dtype
+---  ------           --------------  -----
+ 0   Duration         9 non-null      int64
+ 1   Average_Pulse    9 non-null      object
+ 2   Max_Pulse        9 non-null      object
+ 3   Calorie_Burnage  9 non-null      int64
+ 4   Hours_Work       9 non-null      float64
+ 5   Hours_Sleep      9 non-null      int64
+dtypes: int64(3), float64(1), object(2)	
+	
+	Phân tích: Average_Pulse và Max_Pulse là object do “9000” và “AF” (chuỗi). object không thể dùng để tính toán.
+	
+	Chuyển kiểu dữ liệu: astype(float) chuyển cột thành float64. Tuy nhiên, dòng 8 (với “9000” và “AF”) sẽ gây lỗi khi chuyển, nên dropna() trước đó đã xóa dòng này.
+	
+	Minh họa chuyên sâu: Nếu muốn giữ dòng 8, cần xử lý trước:
+	
+# Thay "9000" và "AF" bằng NaN, rồi xóa hoặc thay bằng mean
+health_data['Average_Pulse'] = pd.to_numeric(health_data['Average_Pulse'], errors='coerce')
+health_data['Max_Pulse'] = pd.to_numeric(health_data['Max_Pulse'], errors='coerce')
+health_data.fillna({'Average_Pulse': health_data['Average_Pulse'].mean(), 'Max_Pulse': health_data['Max_Pulse'].mean()}, inplace=True)
+print(health_data.info())	
+	
+	Phân tích: pd.to_numeric(errors='coerce') chuyển chuỗi không hợp lệ (“AF”) thành NaN. fillna() thay NaN bằng mean của cột, giữ dữ liệu.
+	
+	Ứng dụng thực tế: Trong tài chính, chuyển cột doanh thu dạng chuỗi (“$1000”) sang số bằng pd.to_numeric() để tính tổng.
+	
+	Lời khuyên chuyên gia: Luôn dùng info() đầu tiên để kiểm tra kiểu dữ liệu. Xử lý object trước khi phân tích (chuyển sang số hoặc mã hóa categorical data).
+	
+	
+	
+	
+# 5. Phân Tích Dữ Liệu (Analyze the Data)	
+
+	Định nghĩa chính: Sau khi làm sạch, dùng describe() để tóm tắt thống kê: count, mean, std, min, max, percentiles (25%, 50%, 75%).
+
+	print(health_data.describe())
+
+
+	## Giải thích chi tiết
+		Hàm describe(): Cung cấp thống kê mô tả (descriptive statistics) cho các cột số:
+
+		Count: Số quan sát (9 sau khi xóa dòng 8).
+		Mean: Trung bình (ví dụ: Calorie_Burnage=285).
+		Std: Độ lệch chuẩn (đo độ phân tán, ví dụ: Calorie_Burnage std=30.28).
+		Min/Max: Giá trị nhỏ nhất/lớn nhất (đã học ở bài trước: min(), max()).
+		Percentiles: 25% (Q1), 50% (median), 75% (Q3) – cho biết phân bố dữ liệu
+
+	Output (từ bài)
+       Duration  Average_Pulse  Max_Pulse  Calorie_Burnage  Hours_Work  Hours_Sleep
+count    10.0         10.0      10.0           10.0        10.0        10.0
+mean     51.0        102.5     137.0          285.0         6.6         7.5
+std      10.49        15.4      11.35          30.28       3.63        0.53
+min      30.0         80.0     120.0          240.0         0.0         7.0
+25%      45.0        91.25     130.0          262.5         7.0         7.0
+50%      52.5        102.5     140.0          285.0         8.0         7.5
+75%      60.0       113.75     145.0          307.5         8.0         8.0
+max      60.0        125.0     150.0          330.0        10.0         8.0
+
+	Phân tích: Sau làm sạch, Duration max=60 (dòng Duration=75 bị xóa). Std của Average_Pulse=15.4 cho thấy nhịp tim dao động vừa phải. Median (50%) của Calorie_Burnage=285, bằng mean, cho thấy dữ liệu khá đối xứng.
+
+	Minh họa chuyên sâu: Tính tương quan để tìm patterns:
+	print(health_data.corr())
+
+        Duration  Average_Pulse  Max_Pulse  Calorie_Burnage  Hours_Work  Hours_Sleep
+Duration         1.00        0.97       0.95         0.97         -0.43        0.88
+Average_Pulse    0.97        1.00       0.97         1.00         -0.42        0.87
+Calorie_Burnage  0.97        1.00       0.97         1.00         -0.42        0.87
+
+
+Ứng dụng thực tế: describe() giúp Data Scientist đánh giá nhanh phân bố dữ liệu. Trong y tế, dùng để kiểm tra xem nhịp tim trung bình có bất thường không (so với chuẩn 60-100 bpm).
+Lời khuyên chuyên gia: Kết hợp describe() với visualization (Matplotlib/Seaborn) để hiểu rõ hơn. Ví dụ, vẽ histogram:
+
+import matplotlib.pyplot as plt
+health_data['Calorie_Burnage'].hist()
+plt.show()
+
+
+
+
+
+</pre><a id='backBottom' href='../DataScience-learning.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

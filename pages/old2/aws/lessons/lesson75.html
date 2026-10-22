@@ -1,0 +1,258 @@
+<html><head><title>Lesson 75 == Cloud Practitioner =cost explorer ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 75 -- Cloud Practitioner =cost explorer -//</h1><pre>
+# 1. Cost Explorer là gì?
+	AWS Cost Explorer là dịch vụ dùng để phân tích, trực quan hóa và dự đoán chi phí AWS.
+
+	Nói đơn giản:
+
+	Billing cho bạn biết đã tốn bao nhiêu tiền.
+
+	Còn Cost Explorer trả lời:
+		Tiền đang đi đâu?
+		Dịch vụ nào tốn nhất?
+		EC2 nào đắt nhất?
+		Region nào tiêu nhiều nhất?
+		Team nào đang dùng nhiều nhất?
+		Tháng sau sẽ khoảng bao nhiêu tiền?
+
+	Cost Explorer không phải công cụ tối ưu chi phí, mà là công cụ phân tích chi phí.
+	Đây là điểm AWS rất thích hỏi.
+
+
+
+2. Bản chất bên trong
+	AWS lưu toàn bộ usage của account.
+
+
+
+	EC2
+		500 giờ
+	S3
+		20TB
+	Lambda
+		10 triệu request
+	RDS
+		200 giờ
+
+	Billing sẽ cộng lại thành
+		$350
+
+
+		Nhưng Cost Explorer sẽ lấy toàn bộ dữ liệu Billing rồi cho phép:
+			Filter
+			Group
+			Chart
+			Forecast
+
+		Giống như Excel Pivot Table dành cho Billing.
+
+
+
+# 3. Cost Explorer dùng để làm gì?
+
+	Ví dụ công ty có:
+
+		100 EC2
+		20 RDS
+		500 S3 Bucket
+		10 team
+
+
+
+	CEO hỏi
+		Team AI tháng này dùng bao nhiêu tiền?
+
+
+
+	Cost Explorer
+		Group By = Tag
+		Tag = Team
+
+		↓
+		AI
+		$1200
+
+		Backend
+		$300
+		
+		Mobile
+		$80
+
+
+
+
+
+# 4. Forecast (Dự đoán chi phí)
+	Đây là tính năng rất hay xuất hiện trong đề thi.
+
+
+
+		Ví dụ
+
+		Ngày
+			15/30
+
+		Đã dùng
+			$500
+
+		Cost Explorer sẽ dự đoán
+		Cuối tháng
+			≈ $1000
+
+		AWS dùng Machine Learning trên lịch sử usage.
+		Không phải dự đoán chính xác tuyệt đối.
+
+
+
+
+# 5. Group By
+
+	Đây là phần quan trọng.
+	Có thể Group theo
+
+| Group By       | Ý nghĩa                         |
+| -------------- | ------------------------------- |
+| Service        | EC2, S3, Lambda...              |
+| Region         | Tokyo, Ohio...                  |
+| Linked Account | Trong AWS Organizations         |
+| Tag            | Project, Team, CostCenter       |
+| Usage Type     | Data Transfer, Compute Hours... |
+| Instance Type  | t3.micro, m7i.large...          |
+
+
+
+	Ví dụ
+
+	Group By
+	↓
+	Tag
+	↓
+	Project
+	sẽ ra
+	Project A
+	$300
+	Project B
+	$900
+
+
+
+# 6. Filter
+
+Có thể lọc
+
+Region
+Service
+Account
+Tag
+Purchase Option
+Availability Zone
+
+
+
+# 7. Cost Explorer không làm được gì?
+
+
+	Đây là bẫy.
+
+	Nó KHÔNG
+		resize EC2
+		stop EC2
+		delete S3
+		tạo Budget
+		gửi cảnh báo
+		tự optimize
+
+	Nó chỉ
+	Hiển thị và phân tích.
+
+
+# 8. Mapping với các dịch vụ AWS
+
+| Dịch vụ                   | Vai trò                             |
+| ------------------------- | ----------------------------------- |
+| Cost Explorer             | Phân tích chi phí                   |
+| AWS Budgets               | Cảnh báo khi vượt ngân sách         |
+| Cost & Usage Report (CUR) | Xuất dữ liệu chi tiết (CSV/Parquet) |
+| Billing Dashboard         | Xem tổng tiền                       |
+| Trusted Advisor           | Đề xuất tiết kiệm chi phí           |
+| Compute Optimizer         | Đề xuất resize EC2, EBS, Lambda     |
+| AWS Organizations         | Xem chi phí nhiều account           |
+
+
+
+# 9. So sánh Cost Explorer vs Budgets vs CUR
+
+| Dịch vụ           | Mục đích                      |
+| ----------------- | ----------------------------- |
+| Billing           | Tổng tiền                     |
+| Cost Explorer     | Phân tích                     |
+| Budgets           | Cảnh báo                      |
+| CUR               | Dữ liệu chi tiết              |
+| Compute Optimizer | Khuyến nghị tối ưu tài nguyên |
+| Trusted Advisor   | Khuyến nghị tối ưu tổng thể   |
+
+
+
+		Billing
+			↓
+		"Tôi đã tiêu bao nhiêu?"
+
+		Cost Explorer
+			↓
+		"Tôi tiêu vào đâu?"
+
+		Budget
+			↓
+		"Tôi sắp vượt ngân sách."
+
+		CUR
+			↓
+		"Tôi muốn toàn bộ dữ liệu thô."
+
+		Compute Optimizer
+			↓
+		"Resize cái EC2 này."
+
+		Trusted Advisor
+			↓
+		"Đây là các cơ hội tiết kiệm."
+
+
+# 11. Các từ khóa thường gặp trong đề thi
+Nếu thấy các từ sau, hãy nghĩ ngay đến Cost Explorer:
+
+Analyze cost
+Visualize spending
+Cost trends
+Historical cost
+Forecast future cost
+Group by service
+Group by tag
+Monthly spending
+Daily spending
+Cost breakdown
+Compare costs
+Filter by region/account/tag
+
+
+# 12. Các bẫy (Trap)
+
+| Đề bài                         | Đáp án đúng       | Bẫy thường gặp     |
+| ------------------------------ | ----------------- | ------------------ |
+| Phân tích chi phí              | Cost Explorer     | Chọn Budgets       |
+| Cảnh báo vượt ngân sách        | AWS Budgets       | Chọn Cost Explorer |
+| Xuất dữ liệu chi tiết          | CUR               | Chọn Cost Explorer |
+| Khuyến nghị resize EC2         | Compute Optimizer | Chọn Cost Explorer |
+| Khuyến nghị tiết kiệm tổng thể | Trusted Advisor   | Chọn Cost Explorer |
+| Xem tổng hóa đơn               | Billing Dashboard | Chọn Cost Explorer |
+
+# 13. Trade-off
+
+| Cost Explorer mạnh ở                             | Hạn chế                                         |
+| ------------------------------------------------ | ----------------------------------------------- |
+| Phân tích chi phí trực quan                      | Không tự tối ưu tài nguyên                      |
+| Forecast chi phí                                 | Chỉ là dự đoán, không chính xác tuyệt đối       |
+| Group theo nhiều chiều (Service, Tag, Region...) | Không thay đổi cấu hình AWS                     |
+| So sánh xu hướng theo thời gian                  | Không gửi cảnh báo (việc này thuộc AWS Budgets) |
+
+
+</pre><a id='backBottom' href='../aws-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

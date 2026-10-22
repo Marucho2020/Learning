@@ -1,0 +1,222 @@
+<html><head><title>Lesson 28 == Vue Slot ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../vue-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 28 -- Vue Slot -//</h1><pre># Mục đích 
+	Slots là một cơ chế trong Vue.js cho phép component con định nghĩa một "chỗ trống" (placeholder) mà component cha có thể điền nội dung (HTML, text, hoặc thậm chí các component khác).
+	
+	## 	Lợi ích 
+		Tăng tính tái sử dụng: Component con có thể được tùy chỉnh nội dung mà không cần sửa đổi logic.
+		Linh hoạt: Component cha quyết định nội dung hoặc giao diện của slot.
+		Đóng gói tốt hơn: Component con vẫn giữ logic riêng, chỉ để component cha cung cấp nội dung hiển thị.
+		
+# 2. Cách hoạt động
+	Trong component con, bạn sử dụng thẻ <slot></slot> để tạo một vị trí mà nội dung từ component cha sẽ được chèn vào.
+	Trong component cha, bạn cung cấp nội dung bên trong thẻ mở và đóng của component con, và nội dung này sẽ thay thế <slot>.
+	
+	
+# 3. Ví dụ cơ bản: Default Slot 
+	
+	## Component Con 
+	
+<script>
+Vue.component('my-card', {
+  template: `
+    <div class="card">
+      <h2>Card Title</h2>
+      <slot></slot> <!-- Nội dung từ cha sẽ được chèn vào đây -->
+    </div>
+  `
+});
+</script>
+	Thẻ <slot> là chỗ trống để component cha chèn nội dung.
+	
+	
+	## Component Cha 
+<div id="app">
+  <my-card>
+    <p>This is the card content!</p> <!-- Nội dung này sẽ thay thế <slot> -->
+  </my-card>
+</div>
+
+<script>
+new Vue({
+  el: '#app'
+});
+</script>
+
+	## Kết quả HTML 
+<div class="card">
+  <h2>Card Title</h2>
+  <p>This is the card content!</p>
+</div>
+
+
+	Nội dung <p>This is the card content!</p> từ component cha được chèn vào vị trí <slot> trong component con.
+
+
+
+# 4. Default Content cho Slot
+
+	Bạn có thể cung cấp nội dung mặc định trong <slot> để hiển thị nếu component cha không truyền nội dung.
+	
+	## Ví dụ:
+	
+<script>
+Vue.component('my-card', {
+  template: `
+    <div class="card">
+      <h2>Card Title</h2>
+      <slot>Default content here</slot>
+    </div>
+  `
+});
+</script>
+		
+	Nếu component cha dùng <my-card></my-card> (không truyền nội dung), kết quả sẽ là:
+<div class="card">
+  <h2>Card Title</h2>
+  Default content here
+</div>
+
+
+## 5. Named Slots
+	## Khi component con có nhiều slot, bạn có thể dùng named slots để chỉ định nội dung từ component cha sẽ chèn vào slot nào.
+	
+	## Sử dụng thuộc tính name trong <slot> và chỉ thị v-slot (hoặc # trong Vue 3) trong component cha. 
+	
+
+
+	## Component Con 
+<script>
+Vue.component('my-layout', {
+  template: `
+    <div class="layout">
+      <header>
+        <slot name="header"></slot>
+      </header>
+      <main>
+        <slot name="main"></slot>
+      </main>
+      <footer>
+        <slot name="footer"></slot>
+      </footer>
+    </div>
+  `
+});
+</script>
+
+
+	## Component Cha 
+<div id="app">
+  <my-layout>
+    <template v-slot:header>
+      <h1>Header Content</h1>
+    </template>
+    <template v-slot:main>
+      <p>Main Content</p>
+    </template>
+    <template v-slot:footer>
+      <p>Footer Content</p>
+    </template>
+  </my-layout>
+</div>		
+	
+	## 	Lưu ý: Trong Vue 3, bạn có thể viết ngắn gọn hơn với #: 
+<template #header>
+  <h1>Header Content</h1>
+</template>	
+	
+	
+	
+	## 	Kết quả HTML 
+<div class="layout">
+  <header>
+    <h1>Header Content</h1>
+  </header>
+  <main>
+    <p>Main Content</p>
+  </main>
+  <footer>
+    <p>Footer Content</p>
+  </footer>
+</div>	
+	
+	
+	
+	
+# 	6. Scoped Slots 
+	Scoped slots cho phép component con truyền dữ liệu lên component cha để component cha sử dụng khi định nghĩa nội dung slot.
+	Sử dụng v-bind trong <slot> để truyền dữ liệu và v-slot để nhận dữ liệu trong component cha.
+
+	## 	Component Con
+		
+<script>
+Vue.component('my-list', {
+  data() {
+    return {
+      items: ['Item 1', 'Item 2', 'Item 3']
+    };
+  },
+  template: `
+    <ul>
+      <li v-for="item in items">
+        <slot :item="item"></slot> <!-- Truyền dữ liệu 'item' lên cha -->
+      </li>
+    </ul>
+  `
+});
+</script>	
+	
+	
+	## Component Cha 
+<div id="app">
+  <my-list>
+    <template v-slot="{ item }">
+      <span>{{ item.toUpperCase() }}</span> <!-- Nhận 'item' và tùy chỉnh -->
+    </template>
+  </my-list>
+</div>
+
+
+
+	## 	Giải thích: 
+		Component con truyền item qua <slot :item="item">.
+		Component cha nhận item bằng v-slot="{ item }". 
+		Nội dung <span>{{ item.toUpperCase() }}</span> thay thế <slot> cho mỗi item.
+		
+	
+	
+	## Kết quả HTML 
+<ul>
+  <li><span>ITEM 1</span></li>
+  <li><span>ITEM 2</span></li>
+  <li><span>ITEM 3</span></li>
+</ul>	
+	
+
+
+# 7. Lưu ý quan trọng 
+	
+	- Default Slot: Nếu không có name, slot được coi là slot mặc định. Nội dung không nằm trong v-slot:name sẽ được chèn vào slot mặc định. 
+	
+	- Named Slots: Dùng để tổ chức nội dung phức tạp, như layout với header, main, footer.
+	- Scoped Slots: Dùng khi component cha cần truy cập dữ liệu từ component con để tùy chỉnh cách hiển thị. 
+	
+	- Vue 2 vs Vue 3 
+		- Vue 2 dùng slot và slot-scope cho scoped slots. 
+		- Vue 3 dùng v-slot thống nhất, cú pháp ngắn gọn hơn (#name 
+		
+	Hiệu suất: Slots không ảnh hưởng nhiều đến hiệu suất, nhưng scoped slots phức tạp có thể cần tối ưu trong ứng dụng lớn.
+	
+# 	8. Ứng dụng thực tế 
+	- Tạo các layout component (như card, modal, sidebar) với nội dung tùy chỉnh.
+	- Xây dựng danh sách động (như bảng, menu) với scoped slots để component cha quyết định cách hiển thị mỗi mục.
+	- Tăng tính tái sử dụng cho các component giao diện trong ứng dụng lớn. 
+	
+	
+# 9. Tóm tắt 
+	
+	Slots cho phép component cha chèn nội dung vào component con thông qua <slot>.
+	Default Slot: Chèn nội dung đơn giản, có thể có nội dung mặc định.
+	Named Slots: Tổ chức nhiều vị trí nội dung với name và v-slot:name.
+	Scoped Slots: Truyền dữ liệu từ con lên cha để tùy chỉnh nội dung slot.
+	Giúp component linh hoạt, tái sử dụng và dễ bảo trì.
+
+</pre><a id='backBottom' href='../vue-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

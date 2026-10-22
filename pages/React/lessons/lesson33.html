@@ -1,4 +1,37 @@
-<html><head><title>Lesson 33 == useContext ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../react-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 33 -- useContext -//</h1><pre>
+<!DOCTYPE html><html lang='vi'><head><meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0'>
+<title>Lesson 33 -- useContext -//</title>
+<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css'>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js'></script>
+<script id='MathJax-script' async src='https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'></script>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; margin: 0; padding: 20px; transition: 0.3s; }
+.dark-mode { background-color: #121212; color: #e0e0e0; }
+.light-mode { background-color: #ffffff; color: #333333; }
+.container { max-width: 950px; margin: auto; }
+h1 { text-align: center; color: #3498db; margin: 20px 0; font-size: 26px; }
+.nav-bar { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 20px 0; }
+.nav-btn { text-decoration: none; padding: 10px 18px; background: #3498db; color: white; border-radius: 6px; font-weight: bold; font-size: 15px; display: inline-block; transition: 0.2s; }
+.nav-btn:hover { background: #2980b9; }
+.nav-btn.home-nav { background: #6c757d; }
+.nav-btn.home-nav:hover { background: #5a6268; }
+.nav-btn.disabled { background: #aaa; cursor: not-allowed; opacity: 0.5; }
+.done-btn { display: block; margin: 15px auto; padding: 10px 24px; border: 2px solid #2ecc71; background: transparent; color: #2ecc71; border-radius: 25px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+.done-btn.completed { background: #2ecc71; color: white; }
+.content-box { position: relative; margin: 20px 0; }
+pre { padding: 20px; border-radius: 8px; white-space: pre-wrap; word-break: break-word; overflow-x: auto; font-family: 'Consolas', 'Courier New', monospace; font-size: 15px; }
+.dark-mode pre { background: #1a1a1a; color: #f8f8f2; border: 1px solid #333; }
+.light-mode pre { background: #f8f9fa; color: #212529; border: 1px solid #e9ecef; }
+.copy-btn { position: absolute; top: 12px; right: 12px; padding: 6px 12px; font-size: 12px; background: #555; color: white; border: none; border-radius: 4px; cursor: pointer; opacity: 0.8; }
+.copy-btn:hover { opacity: 1; background: #2ecc71; }
+.theme-toggle-btn { display: block; margin: 20px auto; padding: 8px 16px; background: transparent; border: 1px solid #888; color: inherit; border-radius: 5px; cursor: pointer; }
+</style></head><body onload='initLesson()'>
+<div class='container'>
+<div class='nav-bar'><a class='nav-btn' href='lesson32.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../react-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson34.html'>Bài sau ➡️</a></div><h1>Lesson 33 -- useContext -//</h1>
+<button id='doneButton' class='done-btn' onclick='toggleDone()'>Mark as Done ⚪</button>
+<div class='content-box'>
+<button class='copy-btn' onclick='copyContent()'>📋 Copy nội dung</button>
+<pre><code id='lessonCode'>
 #  Khái niệm 
 
 	Context quản lý state toàn cục, cho phép component con access state mà không truyền props qua từng lớp. Useful khi state shared giữa nhiều branches trong component tree.
@@ -22,33 +55,33 @@ function Component1() {
   const [user, setUser] = useState("Linus");  // State ở parent
 
   return (
-    <>
-      <h1>{`Hello ${user}!`}</h1>
-      <Component2 user={user} />  // Truyền prop
-    </>
+    &lt;&gt;
+      &lt;h1&gt;{`Hello ${user}!`}&lt;/h1&gt;
+      &lt;Component2 user={user} /&gt;  // Truyền prop
+    &lt;/&gt;
   );
 }
 
 function Component2({ user }) {  // Intermediate không cần user
   return (
-    <>
-      <h1>Component 2</h1>
-      <Component3 user={user} />  // Tiếp tục truyền
-    </>
+    &lt;&gt;
+      &lt;h1&gt;Component 2&lt;/h1&gt;
+      &lt;Component3 user={user} /&gt;  // Tiếp tục truyền
+    &lt;/&gt;
   );
 }
 
 function Component3({ user }) {  // Consumer cần user
   return (
-    <>
-      <h1>Component 3</h1>
-      <h2>{`Hello ${user} again!`}</h2>  // Sử dụng
-    </>
+    &lt;&gt;
+      &lt;h1&gt;Component 3&lt;/h1&gt;
+      &lt;h2&gt;{`Hello ${user} again!`}&lt;/h2&gt;  // Sử dụng
+    &lt;/&gt;
   );
 }
 
 createRoot(document.getElementById('root')).render(
-  <Component1 />
+  &lt;Component1 /&gt;
 );
 
 	useState("Linus"): State ở Component1.
@@ -56,7 +89,7 @@ createRoot(document.getElementById('root')).render(
 	Vấn đề: Nếu thêm layers, props chain dài; thay đổi type → update tất cả intermediates.
 
 
-	Insight chuyên gia: Prop drilling OK cho 2-3 levels, nhưng >5 levels → refactor sang Context. Trong large apps, drilling gây tight coupling; Context loose coupling hơn. Debug: Sử dụng React DevTools để trace props flow.
+	Insight chuyên gia: Prop drilling OK cho 2-3 levels, nhưng &gt;5 levels → refactor sang Context. Trong large apps, drilling gây tight coupling; Context loose coupling hơn. Debug: Sử dụng React DevTools để trace props flow.
 
 
 # 3. The Solution: Create Context
@@ -71,27 +104,27 @@ createRoot(document.getElementById('root')).render(
 	createContext(): Trả về object với Provider và Consumer. Default value (nếu không Provider) có thể truyền: createContext(defaultValue).
 	Tên convention: PascalCase + "Context".
 	
-Insight chuyên gia: Default value useful cho testing hoặc optional Contexts. Trong TypeScript, khai báo types: createContext<UserType | undefined>(undefined) để type-safe. Best practice: Export Context từ file riêng (ví dụ: contexts/UserContext.js) để reuse.
+Insight chuyên gia: Default value useful cho testing hoặc optional Contexts. Trong TypeScript, khai báo types: createContext&lt;UserType | undefined&gt;(undefined) để type-safe. Best practice: Export Context từ file riêng (ví dụ: contexts/UserContext.js) để reuse.
 
 
 # 4. Context Provider 	
 	
-	Wrap components cần access với <Context.Provider value={...}>, cung cấp value (có thể state, functions, objects).	
+	Wrap components cần access với &lt;Context.Provider value={...}&gt;, cung cấp value (có thể state, functions, objects).	
 	
 function Component1() {
   const [user, setUser] = useState("Linus");  // State
 
   return (
-    <UserContext.Provider value={user}>  // Provide value
-      <h1>{`Hello ${user}!`}</h1>
-      <Component2 />  // Không cần truyền prop
-    </UserContext.Provider>
+    &lt;UserContext.Provider value={user}&gt;  // Provide value
+      &lt;h1&gt;{`Hello ${user}!`}&lt;/h1&gt;
+      &lt;Component2 /&gt;  // Không cần truyền prop
+    &lt;/UserContext.Provider&gt;
   );
 }
 value={user}: Value có thể dynamic (state, computed). Update value → re-render consumers.
 Wrap chỉ tree cần (không toàn app để tránh unnecessary re-renders).
 	
-	Insight chuyên gia: Value là object để pass multiple items: value={{ user, setUser }} (cho update từ con). Nhưng nếu value thay đổi thường, memoize với useMemo để stable reference: const value = useMemo(() => ({ user, setUser }), [user]). Performance: Provider ở root (như _app.js trong Next.js) cho global access.
+	Insight chuyên gia: Value là object để pass multiple items: value={{ user, setUser }} (cho update từ con). Nhưng nếu value thay đổi thường, memoize với useMemo để stable reference: const value = useMemo(() =&gt; ({ user, setUser }), [user]). Performance: Provider ở root (như _app.js trong Next.js) cho global access.
 
 
 
@@ -105,10 +138,10 @@ function Component3() {
   const user = useContext(UserContext);  // Access value
 
   return (
-    <>
-      <h1>Component 3</h1>
-      <h2>{`Hello ${user} again!`}</h2>
-    </>
+    &lt;&gt;
+      &lt;h1&gt;Component 3&lt;/h1&gt;
+      &lt;h2&gt;{`Hello ${user} again!`}&lt;/h2&gt;
+    &lt;/&gt;
   );
 }
 
@@ -116,7 +149,7 @@ function Component3() {
 	useContext(UserContext): Trả về current value từ Provider gần nhất (hoặc default nếu không).
 	Useful trong deep components mà không drilling.
 
-	Insight chuyên gia: useContext là Hook, tuân thủ rules (top level, functional components). Nếu Context undefined, error – dùng optional chaining hoặc check. Trong class components, dùng <Context.Consumer>. Best practice: Tạo custom Hook để encapsulate: function useUser() { return useContext(UserContext); } – dễ test, reuse.
+	Insight chuyên gia: useContext là Hook, tuân thủ rules (top level, functional components). Nếu Context undefined, error – dùng optional chaining hoặc check. Trong class components, dùng &lt;Context.Consumer&gt;. Best practice: Tạo custom Hook để encapsulate: function useUser() { return useContext(UserContext); } – dễ test, reuse.
 
 
 
@@ -134,19 +167,19 @@ function Component1() {
   const [user, setUser] = useState("Linus");
 
   return (
-    <UserContext.Provider value={user}>  // Provide
-      <h1>{`Hello ${user}!`}</h1>
-      <Component2 />
-    </UserContext.Provider>
+    &lt;UserContext.Provider value={user}&gt;  // Provide
+      &lt;h1&gt;{`Hello ${user}!`}&lt;/h1&gt;
+      &lt;Component2 /&gt;
+    &lt;/UserContext.Provider&gt;
   );
 }
 
 function Component2() {
   return (
-    <>
-      <h1>Component 2</h1>
-      <Component3 />
-    </>
+    &lt;&gt;
+      &lt;h1&gt;Component 2&lt;/h1&gt;
+      &lt;Component3 /&gt;
+    &lt;/&gt;
   );
 }
 
@@ -154,15 +187,15 @@ function Component3() {
   const user = useContext(UserContext);  // Consume
 
   return (
-    <>
-      <h1>Component 3</h1>
-      <h2>{`Hello ${user} again!`}</h2>
-    </>
+    &lt;&gt;
+      &lt;h1&gt;Component 3&lt;/h1&gt;
+      &lt;h2&gt;{`Hello ${user} again!`}&lt;/h2&gt;
+    &lt;/&gt;
   );
 }
 
 createRoot(document.getElementById('root')).render(
-  <Component1 />
+  &lt;Component1 /&gt;
 );
 
 
@@ -173,8 +206,50 @@ createRoot(document.getElementById('root')).render(
 	## Insight chuyên gia: Để update từ con, pass setter trong value: value={{ user, setUser }}. Ví dụ mở rộng với reducer:
 
 	const [state, dispatch] = useReducer(reducer, initialState);
-	<UserContext.Provider value={{ state, dispatch }}>
+	&lt;UserContext.Provider value={{ state, dispatch }}&gt;
 
 
 
-</pre><a id='backBottom' href='../react-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
+</code></pre>
+</div>
+<div class='nav-bar'><a class='nav-btn' href='lesson32.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../react-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson34.html'>Bài sau ➡️</a></div><button class='theme-toggle-btn' onclick='toggleTheme()'>🌓 Đổi Giao Diện</button>
+</div>
+<script>
+const lessonKey = 'react-learning-list_lesson33.html';
+function toggleTheme() {
+   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';
+   document.body.className = mode;
+   localStorage.setItem('theme', mode);
+}
+function toggleDone() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   if (isDone) {
+       localStorage.removeItem(lessonKey);
+   } else {
+       localStorage.setItem(lessonKey, 'done');
+   }
+   renderDoneStatus();
+}
+function renderDoneStatus() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   let btn = document.getElementById('doneButton');
+   if (isDone) {
+       btn.className = 'done-btn completed';
+       btn.innerText = 'Đã Hoàn Thành ✅';
+   } else {
+       btn.className = 'done-btn';
+       btn.innerText = 'Đánh dấu đã học ⚪';
+   }
+}
+function copyContent() {
+   let text = document.getElementById('lessonCode').innerText;
+   navigator.clipboard.writeText(text).then(function() {
+       alert('✅ Đã sao chép nội dung bài học!');
+   });
+}
+function initLesson() {
+   document.body.className = localStorage.getItem('theme') || 'dark-mode';
+   renderDoneStatus();
+   if (window.Prism) Prism.highlightAll();
+}
+</script></body></html>

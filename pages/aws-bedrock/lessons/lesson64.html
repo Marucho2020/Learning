@@ -1,17 +1,804 @@
-<html><head><title>Lesson 65 == NEXT LEVEL ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../aws-bedrock-agent-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 65 -- NEXT LEVEL -//</h1><pre>
+<!DOCTYPE html><html lang='vi'><head><meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0'>
+<title>Lesson 65 -- AIP-C01  --=Amazon Bedrock AgentCore Runtime -//</title>
+<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css'>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js'></script>
+<script id='MathJax-script' async src='https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'></script>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; margin: 0; padding: 20px; transition: 0.3s; }
+.dark-mode { background-color: #121212; color: #e0e0e0; }
+.light-mode { background-color: #ffffff; color: #333333; }
+.container { max-width: 950px; margin: auto; }
+h1 { text-align: center; color: #3498db; margin: 20px 0; font-size: 26px; }
+.nav-bar { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 20px 0; }
+.nav-btn { text-decoration: none; padding: 10px 18px; background: #3498db; color: white; border-radius: 6px; font-weight: bold; font-size: 15px; display: inline-block; transition: 0.2s; }
+.nav-btn:hover { background: #2980b9; }
+.nav-btn.home-nav { background: #6c757d; }
+.nav-btn.home-nav:hover { background: #5a6268; }
+.nav-btn.disabled { background: #aaa; cursor: not-allowed; opacity: 0.5; }
+.done-btn { display: block; margin: 15px auto; padding: 10px 24px; border: 2px solid #2ecc71; background: transparent; color: #2ecc71; border-radius: 25px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+.done-btn.completed { background: #2ecc71; color: white; }
+.content-box { position: relative; margin: 20px 0; }
+pre { padding: 20px; border-radius: 8px; white-space: pre-wrap; word-break: break-word; overflow-x: auto; font-family: 'Consolas', 'Courier New', monospace; font-size: 15px; }
+.dark-mode pre { background: #1a1a1a; color: #f8f8f2; border: 1px solid #333; }
+.light-mode pre { background: #f8f9fa; color: #212529; border: 1px solid #e9ecef; }
+.copy-btn { position: absolute; top: 12px; right: 12px; padding: 6px 12px; font-size: 12px; background: #555; color: white; border: none; border-radius: 4px; cursor: pointer; opacity: 0.8; }
+.copy-btn:hover { opacity: 1; background: #2ecc71; }
+.theme-toggle-btn { display: block; margin: 20px auto; padding: 8px 16px; background: transparent; border: 1px solid #888; color: inherit; border-radius: 5px; cursor: pointer; }
+</style></head><body onload='initLesson()'>
+<div class='container'>
+<div class='nav-bar'><a class='nav-btn' href='lesson63.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../aws-bedrock-agent-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson65.html'>Bài sau ➡️</a></div><h1>Lesson 65 -- AIP-C01  --=Amazon Bedrock AgentCore Runtime -//</h1>
+<button id='doneButton' class='done-btn' onclick='toggleDone()'>Mark as Done ⚪</button>
+<div class='content-box'>
+<button class='copy-btn' onclick='copyContent()'>📋 Copy nội dung</button>
+<pre><code id='lessonCode'>
+	Đây là một trong những thành phần quan trọng nhất để hiểu AgentCore ở mức production. Điểm cần sửa trong cách tư duy là:
+
+	AgentCore Runtime không phải là “Agent”. Nó là execution/hosting environment để chạy Agent.
+
+	AWS mô tả Runtime là môi trường hosting được quản lý, purpose-built cho agent/tool, framework-agnostic và model-agnostic. Nó có thể chạy agent viết bằng LangGraph, CrewAI, Strands hoặc custom code, và agent có thể sử dụng model ngoài Bedrock.
+
+
+
+# 1. Bản chất
+
+                ┌─────────────────────────────┐
+User ──────────►│ Application / API / LINE    │
+                └──────────────┬──────────────┘
+                               │
+                               ▼
+                    ┌────────────────────┐
+                    │ AgentCore Runtime  │
+                    │                    │
+                    │  Agent code        │
+                    │  Agent loop        │
+                    │  Framework         │
+                    └───────┬────────────┘
+                            │
+              ┌─────────────┼─────────────┐
+              ▼             ▼             ▼
+           LLM          Tools/API      Memory
+
+
+
+	Runtime = nơi Agent được thực thi.
+
+	Còn:
+		Agent = logic reasoning + planning + tool use.
+		Model = bộ não suy luận.
+		Runtime = execution environment.
+		Gateway = lớp expose/discover tools.
+		Identity = agent được phép hành động với danh tính nào.
+		Memory = trạng thái/context dài hạn.
+		Observability = nhìn được agent đang làm gì.
+
+	AWS thiết kế AgentCore thành các capability có thể dùng cùng nhau hoặc độc lập.
+
+
+
+# 2. Vì sao Runtime tồn tại?
+	Nếu tự triển khai Agent bằng ECS/EKS/Lambda, bạn phải tự giải quyết:
+
+
+		Container
+		   ↓
+		Compute
+		   ↓
+		Session management
+		   ↓
+		Scaling
+		   ↓
+		Isolation
+		   ↓
+		Authentication
+		   ↓
+		Long-running execution
+		   ↓
+		Streaming
+		   ↓
+		Logging / tracing
+		   ↓
+		Deployment / versioning
+
+
+
+	Đây chính là phần agent infrastructure.
+	AgentCore Runtime gom phần infrastructure đó thành một managed execution layer.
+	AWS nhấn mạnh Runtime xử lý scaling, session management, security isolation và infrastructure management.
+
+	Tư duy senior:
+
+	Đừng hỏi:
+		"AgentCore Runtime có chạy được LangGraph không?"
+
+	Câu hỏi đúng là:
+		"Tôi muốn chạy arbitrary agent code trong một execution environment có session isolation, scaling, long-running execution và agent-aware observability; tôi có muốn tự xây infrastructure đó không?"
+
+	Nếu không → Runtime có giá trị.
+
+
+
+# 3. Runtime khác Lambda ở đâu? 
+
+|                     | Lambda                       | AgentCore Runtime            |
+| ------------------- | ---------------------------- | ---------------------------- |
+| Mục đích chính      | Function execution           | Agent/tool hosting           |
+| Execution           | Function                     | Stateful agent session       |
+| Agent loop          | Bạn tự xây                   | Agent code/framework của bạn |
+| Session             | Không phải abstraction chính | Core concept                 |
+| Long-running        | Giới hạn Lambda              | MicroVM tới 8h               |
+| Streaming           | Có cơ chế riêng              | HTTP/WebSocket               |
+| Agent isolation     | Execution environment        | Session-isolated microVM     |
+| Framework           | Không quan trọng             | Framework-agnostic           |
+| MCP/A2A             | Tự triển khai                | Native protocol support      |
+| Agent observability | Tự build nhiều phần          | Agent-aware tracing          |
+
+
+	Runtime hiện hỗ trợ HTTP, MCP, A2A và AG-UI service contracts.
+	Điểm quan trọng: Runtime không biến Lambda thành agent.
+	Nó cung cấp hosting substrate phù hợp với lifecycle của agent.
+
+
+
+# 4. Session là khái niệm cực kỳ quan trọng
+
+
+User A
+   │
+   └── session-A
+          │
+          └── Agent Runtime
+                 ├── reasoning
+                 ├── tool calls
+                 └── filesystem/state
+
+
+User B
+   │
+   └── session-B
+          │
+          └── Agent Runtime
+                 ├── reasoning
+                 ├── tool calls
+                 └── filesystem/state
+
+
+	Với microVM, mỗi user session chạy trong một microVM riêng với CPU, memory và filesystem isolation. Khi session kết thúc, microVM bị terminate và memory được sanitised.
+
+	Đây là một điểm rất quan trọng về multi-tenant security.
+
+
+		Không nên tư duy:
+
+		100 users
+		   ↓
+		1 process
+		   ↓
+		100 conversation variables
+
+
+	mà Runtime cung cấp abstraction:
+
+	100 users
+	   ↓
+	100 isolated sessions
+
+
+
+# 5. AgentCore Runtime không phải chỉ dành cho Agent
+
+
+	AWS cho phép Runtime host:
+		Agent
+		Tool
+		MCP server
+		A2A agent
+
+	Documentation gọi rõ là agents or tools.
+
+
+	AgentCore Runtime
+		   │
+		   ├── CustomerSupportAgent
+		   │
+		   ├── FinancialAnalysisAgent
+		   │
+		   ├── MCP Tool Server
+		   │
+		   └── Internal Data Agent
+
+	Điều này rất quan trọng trong kiến trúc multi-agent.
 
 
 
 
-Sâu hơn về single design pattern và tạo 5 bài học để học sâu về nó kèm thực hành trên aws instance 
+# 6. Framework-agnostic là điểm chiến lược
+
+Agent của bạn có thể viết bằng:
+	LangGraph
+	Strands
+	CrewAI
+	Custom Python
+	...
+
+	Runtime không ép bạn sử dụng một agent framework duy nhất.
+
+Đây chính là điểm AWS đang cố giải quyết:
+	AWS không cần thắng LangGraph ở tầng orchestration.
+
+
+Thay vào đó:
+             AgentCore
+                 │
+       ┌─────────┼─────────┐
+       ▼         ▼         ▼
+   LangGraph   Strands   CrewAI
+       │         │         │
+       └─────────┼─────────┘
+                 ▼
+          AgentCore Runtime
+                 │
+        AWS managed execution
+
+			
+	Nói cách khác:
+		AWS đang cố trở thành infrastructure/control plane cho agent, thay vì bắt developer phải viết agent theo AWS framework.
+
+		Đây là lý do AgentCore có giá trị chiến lược.					
+						
+						
+						
+					
+# 	7. Model-agnostic				
+	Runtime cũng không ép model phải là Amazon Bedrock.				
+					
+						
+	Có thể sử dụng:
+		Amazon Bedrock models
+		Anthropic
+		Google Gemini
+		OpenAI
+		...					
+							
+	AWS documentation explicitly mô tả Runtime là model-flexible.						
+					
+						
+	Vì vậy:
+		AgentCore Runtime
+			   │
+			   ├── Claude
+			   ├── Nova
+			   ├── Gemini
+			   ├── GPT
+			   └── custom model
+
+	Điều này rất khác tư duy:
+		"AgentCore = Bedrock Agents mới."
+		Không chính xác.
+		AgentCore là agent infrastructure platform nằm trên/bao quanh model layer.
+						
+						
+						
+					
+# 	8. Compute model — cực kỳ quan trọng cho Production				
+	Hiện tại Runtime có hai compute types:				
+					
+					
+	① microVM
+
+	Phù hợp:
+		API-driven agent
+		session ngắn hơn
+		scale dynamically
+		serverless
+		lightweight workloads
+
+	Session tối đa hiện tại: 8 giờ.					
+						
+					
+					
+	② Instances				
+							
+		Agent chạy trên AWS-managed EC2 infrastructure trong AWS account của bạn.
+
+		Phù hợp:
+			persistent workloads
+			long-running session
+			GPU
+			multi-agent collaboration
+			workload cần persistent compute
+
+		Session tối đa: 14 ngày.					
+							
+| Requirement                    |                     microVM |            Instances |
+| ------------------------------ | --------------------------: | -------------------: |
+| Serverless                     |                           ✅ |                    ❌ |
+| Scale on demand                |                           ✅ |                    ✅ |
+| Lightweight API agent          |                           ⭐ |                      |
+| Persistent compute             |                             |                    ⭐ |
+| GPU                            |                           ❌ |                    ✅ |
+| Multi-agent trên cùng instance |                           ❌ |                    ✅ |
+| Session max                    |                          8h |              14 ngày |
+| EC2 pricing mechanisms         |                           ❌ |                    ✅ |
+| Operational burden             |                        thấp |              cao hơn |
+| Production default             | thường là lựa chọn đầu tiên | khi workload yêu cầu |
+					
+	AWS cũng nói rõ: workload API-driven nhẹ, hoàn thành nhanh thường phù hợp microVM; workload dài, stateful, GPU hoặc collaboration phù hợp Instances.				
+					
+					
+					
+					
+# 	9. Runtime V2 — kiến thức AWS hiện hành			
+	
+	Đây là phần Current AWS, rất đáng biết dù cần phân biệt với core exam knowledge.				
+					
+	Runtime hiện có platform version V1 và V2.
+
+	V2 sử dụng snapshot-based startup:					
+						
+	Traditional:
+
+		Start container
+			  ↓
+		Load image
+			  ↓
+		Install/init
+			  ↓
+		Initialize agent
+			  ↓
+		Ready					
+								
+						
+	V2:
+
+		Prepare environment
+			   ↓
+		Initialize
+			   ↓
+		Create snapshot
+			   ↓
+		Future session
+			   ↓
+		Restore snapshot
+			   ↓
+		Ready					
+					
+					
+	Mục tiêu là làm cold-start nhanh và ổn định hơn, đặc biệt với image lớn hoặc bursty workloads. V2 hiện hỗ trợ cả Asia Pacific (Tokyo)				
+					
+	Đây là kiến thức production đáng biết:
+	Đừng mặc định V1 là kiến trúc mới nhất chỉ vì documentation/example cũ vẫn dùng V1.				
+					
+					
+				
+				
+# 10. Versioning — điểm rất quan trọng cho Production				
+				
+	AgentCore Runtime có immutable versions.	
+	
+		Runtime
+		│
+		├── Version 1
+		│
+		├── Version 2
+		│
+		├── Version 3
+		│
+		└── Version 4				
+						
+	Mỗi configuration update tạo version mới.
+	Sau đó endpoint trỏ đến version:			
+				
+                    ┌── Version 1
+                    │
+Runtime ────────────┼── Version 2
+                    │
+                    └── Version 3
+                           ▲
+                           │
+                      PROD endpoint				
+				
+				
+	Điều này cho phép:
+		DEV
+		 ↓
+		STAGING
+		 ↓
+		PROD
+
+	mà không nhất thiết phải thay đổi runtime artifact đang chạy production ngay lập tức.
+	AWS documentation xác nhận versions immutable và endpoints có thể reference specific versions.				
+					
+					
+				
+				
+				
+# 11. Một kiến trúc production điển hình				
+				
+			Ví dụ hệ thống LINE bot mà bạn đang hướng tới:
+			
+LINE
+ │
+ ▼
+API Gateway
+ │
+ ▼
+Lambda
+ │
+ ▼
+AgentCore Runtime
+ │
+ ├──────────────► LLM
+ │                 │
+ │                 └── Bedrock / external model
+ │
+ ├──────────────► AgentCore Gateway
+ │                    │
+ │                    ├── CRM API
+ │                    ├── ERP
+ │                    ├── Slack
+ │                    └── internal tools
+ │
+ ├──────────────► AgentCore Memory
+ │
+ ├──────────────► Knowledge Base / RAG
+ │
+ ├──────────────► AgentCore Identity
+ │
+ └──────────────► AgentCore Observability				
+				
+				
+				
+	Đây mới là cách nên tư duy:
+		Runtime không phải toàn bộ AgentCore.
+		Nó là execution core.			
+				
+				
+				
+				
+# 	12. Agent loop thực sự nằm ở đâu?			
+				
+				
+while not done:
+
+    context = build_context()
+
+    decision = llm(context)
+
+    if decision.requires_tool:
+        result = execute_tool(decision.tool)
+        context.append(result)
+
+    else:
+        return decision.answer				
+				
+				
+	Đây là agent loop.
+		Runtime không phải bản thân loop.
+		Runtime cung cấp nơi để loop đó chạy:			
+				
+		Agent loop
+			│
+			▼
+		AgentCore Runtime
+			│
+			├── session
+			├── isolation
+			├── networking
+			├── lifecycle
+			├── scaling
+			├── authentication
+			├── streaming
+			└── observability				
+						
+	Đây là distinction rất quan trọng khi học AgentCore.			
+	
+
+# 13. Runtime + MCP + A2A
+	Runtime hiện hỗ trợ:
+
+
+	## MCP
+		Agent
+		  │
+		  └── MCP
+			   │
+			   ├── Tool A
+			   ├── Tool B
+			   └── Tool C
 
 
 
-ABAC
-SNS
-SQS
-thiết kế Idempotent 冪等性
+	## A2A
+
+		Agent A
+		   │
+		   │ A2A
+		   ▼
+		Agent B
+		   │
+		   │ A2A
+		   ▼
+		Agent C
 
 
-3 Layer hay layer gì đó , khái niệm về thiết kế layer trong lập trình, cần học sâu về nó  
-</pre><a id='backBottom' href='../aws-bedrock-agent-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
+	AWS Runtime service contract hiện hỗ trợ HTTP, MCP, A2A và AG-UI.
+
+	Do đó Runtime không chỉ là:
+		"server chạy Python."
+		Nó đang trở thành execution substrate cho hệ sinh thái agent protocols.
+
+		
+				
+				
+				
+# 	14. Security			
+					
+					
+	Một điểm rất đáng chú ý:
+		Runtime có session isolation.
+
+	Nhưng đừng nhầm:
+
+		Runtime isolation
+			   ≠
+		Authorization
+
+	Ví dụ:
+
+		User A
+		   ↓
+		Agent Runtime
+		   ↓
+		Tool: DELETE_CUSTOMER
+
+	Runtime isolation không tự quyết định:
+		User A có được phép delete customer hay không?
+
+	Cái này liên quan tới:
+
+		Identity
+		IAM
+		Authorization
+		Policy
+		Tool permissions
+		Application-level authorization
+
+	Vì vậy production architecture phải có nhiều lớp:
+
+		Authentication
+			  ↓
+		Identity
+			  ↓
+		Authorization
+			  ↓
+		Agent policy
+			  ↓
+		Tool permission
+			  ↓
+		Execution isolation
+
+	Đây là tư duy security đúng.				
+					
+					
+					
+				
+# 	15. Trap cực lớn: "AgentCore Runtime = Bedrock Agent"		
+				
+				
+					
+	❌ Sai.
+
+	Bedrock Agents Classic:
+
+		AWS-managed Agent abstraction
+				+
+		AWS-defined orchestration
+				+
+		Action Groups
+				+
+		Knowledge Bases
+
+	AgentCore:
+
+		YOUR AGENT
+			+
+		YOUR FRAMEWORK
+			+
+		YOUR MODEL
+			+
+		AgentCore infrastructure
+
+	Đây là khác biệt kiến trúc rất lớn.				
+					
+					
+				
+# 16. Exam Knowledge vs Production Knowledge 
+
+	🟢 AIP-C01 / Exam Knowledge
+
+	Cần nắm:
+		AgentCore Runtime là managed hosting environment cho agents/tools.
+		Framework agnostic.
+		Model flexibility.
+		Session isolation.
+		Long-running agent execution.
+		Scaling.
+		MCP/A2A.
+		Authentication/security.
+		Agent-specific observability.
+		Runtime integration với các AgentCore services.
+		Khi nào chọn Runtime thay vì tự quản lý infrastructure.
+		🔵 Production Knowledge
+
+	Cần hiểu sâu thêm:
+		microVM vs Instances
+		8h vs 14-day sessions
+		GPU workloads
+		persistent filesystem
+		endpoint/version strategy
+		V1 vs V2
+		snapshot-based startup
+		WebSocket streaming
+		session lifecycle
+		deployment strategy
+		multi-agent topology
+		identity boundaries
+		observability/tracing
+
+	V2 và Instances là những phần AWS hiện hành mà bạn nên biết, nhưng không nên biến mọi chi tiết implementation mới thành "kiến thức chắc chắn sẽ thi".
+
+
+
+
+
+#  17. Keywords trong đề thi
+
+	Nếu scenario có:
+		framework-agnostic
+		→ AgentCore Runtime.
+
+	run LangGraph/CrewAI/Strands/custom agent
+		→ Runtime.
+		
+	don't want to manage infrastructure
+		→ Runtime.
+
+	secure isolated sessions
+		→ Runtime microVM.
+
+	long-running agent
+		→ xem execution duration và compute type.
+
+	GPU
+		→ Instances.
+
+	multiple agents sharing same compute
+		→ Instances.
+
+	MCP server hosting
+		→ Runtime.
+
+	agent-to-agent communication
+		→ A2A + Runtime.
+
+	streaming / interactive
+		→ HTTP/WebSocket support.
+
+	different versions / controlled rollout
+		→ Runtime versions + endpoints.
+
+
+
+# 20. Mental model cần nhớ
+
+                 AGENTCORE
+                     │
+       ┌─────────────┼──────────────┐
+       │             │              │
+    Runtime        Gateway        Memory
+       │             │              │
+   "RUN IT"       "TOOLS"       "REMEMBER"
+       │
+       ▼
+ ┌───────────────┐
+ │ Agent code    │
+ │               │
+ │ LangGraph     │
+ │ Strands       │
+ │ CrewAI        │
+ │ Custom        │
+ └───────┬───────┘
+         │
+    Agent Loop
+         │
+    ┌────┴─────┐
+    ▼          ▼
+   LLM        Tools
+
+
+	Runtime = RUN IT.
+		Đừng học nó như một "Bedrock Agents version 2".
+
+	Học nó như:
+		AWS-managed execution substrate cho arbitrary AI agents và tools.
+
+	Đó mới là bản chất.
+
+					
+framework agnostic : framework bất khả tri : 	Không phụ thuộc vào một framework cụ thể.		
+				
+				
+Nếu xây production multi-agent system trên AWS:				
+				
+                     User
+                       │
+                       ▼
+                 API / App
+                       │
+                       ▼
+                AgentCore Runtime
+                       │
+          ┌────────────┼────────────┐
+          ▼            ▼            ▼
+      Agent A       Agent B       Agent C
+          │            │            │
+          └────────────┼────────────┘
+                       │
+                 AgentCore Gateway
+                       │
+          ┌────────────┼─────────────┐
+          ▼            ▼             ▼
+       Domain API   MCP Tools     Workflow
+          │            │             │
+          └────────────┼─────────────┘
+                       ▼
+                Business DB
+                 Aurora etc.				
+				
+				
+				
+	
+</code></pre>
+</div>
+<div class='nav-bar'><a class='nav-btn' href='lesson63.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../aws-bedrock-agent-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson65.html'>Bài sau ➡️</a></div><button class='theme-toggle-btn' onclick='toggleTheme()'>🌓 Đổi Giao Diện</button>
+</div>
+<script>
+const lessonKey = 'aws-bedrock-agent-learning-list_lesson64.html';
+function toggleTheme() {
+   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';
+   document.body.className = mode;
+   localStorage.setItem('theme', mode);
+}
+function toggleDone() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   if (isDone) {
+       localStorage.removeItem(lessonKey);
+   } else {
+       localStorage.setItem(lessonKey, 'done');
+   }
+   renderDoneStatus();
+}
+function renderDoneStatus() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   let btn = document.getElementById('doneButton');
+   if (isDone) {
+       btn.className = 'done-btn completed';
+       btn.innerText = 'Đã Hoàn Thành ✅';
+   } else {
+       btn.className = 'done-btn';
+       btn.innerText = 'Đánh dấu đã học ⚪';
+   }
+}
+function copyContent() {
+   let text = document.getElementById('lessonCode').innerText;
+   navigator.clipboard.writeText(text).then(function() {
+       alert('✅ Đã sao chép nội dung bài học!');
+   });
+}
+function initLesson() {
+   document.body.className = localStorage.getItem('theme') || 'dark-mode';
+   renderDoneStatus();
+   if (window.Prism) Prism.highlightAll();
+}
+</script></body></html>

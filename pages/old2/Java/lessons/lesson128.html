@@ -1,0 +1,119 @@
+<html><head><title>Lesson 128 == Segment Tree 2D ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 128 -- Segment Tree 2D -//</h1><pre># Khái niệm 
+	 là một cấu trúc dữ liệu mở rộng từ Segment Tree 1D để xử lý các truy vấn và cập nhật trên ma trận (2 chiều).
+
+
+# ⚙️ Tổng quan 
+	Segment Tree 2D hỗ trợ các truy vấn như:
+		Query tổng, max, min trên hình chữ nhật con [(x1, y1), (x2, y2)]
+		Update giá trị tại một điểm (x, y) hoặc trên hình chữ nhật con
+
+# 🧠 Ý tưởng chính 
+	Xây dựng Segment Tree theo từng chiều: 
+		Coi hàng là một chiều (X-axis), cột là một chiều (Y-axis).
+		Với mỗi node trong cây X, bạn xây cây Y tương ứng. 
+		
+	👉 Cấu trúc cây là cây trong cây (nested segment tree).
+	
+
+# 📦 Cấu trúc dữ liệu 
+	Giả sử ma trận A có kích thước N x M, ta xây cây như sau: 
+	
+	// segTree[x][y] = giá trị (tổng / min / max ...) tại node (x, y)
+	long[][] segTree;
+	Mỗi node theo X (hàng) sẽ chứa một cây con theo Y (cột).
+
+
+# 🔧 Build Tree
+	Pseudocode (tổng quát):
+	
+// Gọi buildX(1, 0, N-1)
+void buildX(int vx, int lx, int rx) {
+    if (lx == rx) {
+        buildY(vx, lx, rx, 1, 0, M-1); // Chỉ cần lấy dữ liệu từ dòng lx
+    } else {
+        int mx = (lx + rx) / 2;
+        buildX(2*vx, lx, mx);
+        buildX(2*vx+1, mx+1, rx);
+        buildY(vx, lx, rx, 1, 0, M-1); // Sau khi con X được build, mới build cây Y
+    }
+}
+
+// Gọi buildY(vx, lx, rx, vy, ly, ry)
+void buildY(int vx, int lx, int rx, int vy, int ly, int ry) {
+    if (ly == ry) {
+        if (lx == rx) {
+            segTree[vx][vy] = A[lx][ly];
+        } else {
+            segTree[vx][vy] = segTree[2*vx][vy] + segTree[2*vx+1][vy];
+        }
+    } else {
+        int my = (ly + ry) / 2;
+        buildY(vx, lx, rx, 2*vy, ly, my);
+        buildY(vx, lx, rx, 2*vy+1, my+1, ry);
+        segTree[vx][vy] = segTree[vx][2*vy] + segTree[vx][2*vy+1];
+    }
+}
+	
+	
+	Cấu trúc này tạo nên một cây 2D, trong đó:
+
+		Mỗi node vx quản lý đoạn dòng [lx, rx]
+		Mỗi cây con vy tại node vx quản lý đoạn cột [ly, ry]
+	
+# 📥 Update	
+	Để cập nhật điểm (x, y):
+		void updateX(int vx, int lx, int rx, int x, int y, long newVal) {
+    if (lx == rx) {
+        updateY(vx, lx, rx, 1, 0, M-1, x, y, newVal);
+    } else {
+        int mx = (lx + rx) / 2;
+        if (x <= mx) updateX(2*vx, lx, mx, x, y, newVal);
+        else updateX(2*vx+1, mx+1, rx, x, y, newVal);
+        updateY(vx, lx, rx, 1, 0, M-1, x, y, newVal);
+    }
+}
+Hàm updateY cập nhật lại cây Y tương ứng tại mỗi cấp của X.
+
+
+	
+#	🔍 Query 
+	Truy vấn tổng/min/max trên hình chữ nhật:
+	
+long queryX(int vx, int lx, int rx, int x1, int x2, int y1, int y2) {
+    if (rx < x1 || lx > x2) return 0; // Không giao
+    if (x1 <= lx && rx <= x2) return queryY(vx, 1, 0, M-1, y1, y2);
+    int mx = (lx + rx) / 2;
+    return queryX(2*vx, lx, mx, x1, x2, y1, y2) +
+           queryX(2*vx+1, mx+1, rx, x1, x2, y1, y2);
+}
+	
+	Hàm queryY giống hệt query trong Segment Tree 1D.
+	
+# 📈 Độ phức tạp	
+	Xây dựng: O(N × M × logN × logM)
+	Truy vấn / cập nhật: O(logN × logM)
+	Tối ưu hơn nhiều so với brute-force (O(N×M)) và hiệu quả hơn Sparse Table trong bài toán có cập nhật.
+	
+# ⚔️ So sánh và hạn chế	
+| Cấu trúc         | Update   | Query    | Hỗ trợ lazy?               |
+| ---------------- | -------- | -------- | -------------------------- |
+| Brute-force      | O(1)     | O(NM)    | Không                      |
+| 2D Prefix Sum    | O(1)     | O(1)     | Không hỗ trợ update        |
+| Segment Tree 2D  | O(log²N) | O(log²N) | Có (cần mở rộng)           |
+| BIT 2D (Fenwick) | O(log²N) | O(log²N) | Không tốt với range-update |
+
+# 	🧠 Nhận xét chuyên sâu (tầm senior)
+
+	Cây Segment 2D có thể mở rộng lên 3D, nhưng phức tạp tăng cấp số mũ.
+	Để dùng lazy propagation, bạn cần build thêm lazyY trong mỗi node X – không dễ maintain, rất prone to bug.
+	Trong nhiều trường hợp, Wavelet Tree, Persistent Segment Tree hoặc Sqrt Decomposition có thể thay thế nếu bạn chỉ cần query k-th, hoặc cập nhật theo vùng nhỏ.
+	Tuy nhiên, Segment Tree 2D là nền tảng bắt buộc nếu bạn làm về image processing, computational geometry, game engine backend hoặc xử lý grid phức tạp.	
+	
+	
+#🛠 Khi nào nên dùng?
+	
+	Có nhiều truy vấn hoặc cập nhật trong ma trận
+	Cần hiệu năng cao (ví dụ 10⁵ truy vấn, mỗi query trên lưới 1000×1000)
+	Không dùng được prefix sum vì có cập nhật
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

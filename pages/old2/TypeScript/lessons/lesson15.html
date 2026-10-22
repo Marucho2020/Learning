@@ -1,0 +1,204 @@
+<html><head><title>Lesson 15 == Utility Types ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../type-script-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 15 -- Utility Types -//</h1><pre>
+# 1. Utility Types là gì?
+	Utility Types là các kiểu tiện ích được TypeScript cung cấp sẵn để giúp bạn thao tác và biến đổi các kiểu dữ liệu (types) một cách dễ dàng, tiết kiệm thời gian và tăng tính tái sử dụng. Chúng giống như các "hàm" cho kiểu dữ liệu, giúp bạn tạo ra các kiểu mới từ kiểu hiện có mà không cần viết lại từ đầu.
+	
+	Ví dụ: Bạn có một kiểu Person và muốn tạo một kiểu mới chỉ chứa một số thuộc tính của nó. Utility Types như Pick hoặc Omit sẽ giúp bạn làm điều đó.
+
+
+# 2. Tại sao cần Utility Types?
+
+	- Tái sử dụng và biến đổi kiểu: Thay vì định nghĩa lại các kiểu phức tạp, Utility Types cho phép bạn tái sử dụng hoặc điều chỉnh kiểu hiện có.
+	- Giảm mã lặp: Giúp viết mã ngắn gọn, dễ bảo trì.
+	- An toàn kiểu: Đảm bảo các thao tác trên kiểu dữ liệu vẫn tuân theo hệ thống kiểu tĩnh của TypeScript.
+
+
+
+
+# 3. Các Utility Types phổ biến
+
+
+	## a. Partial<T> 
+		Chức năng: Biến tất cả thuộc tính của kiểu T thành tùy chọn (optional).
+		
+		Ví dụ:
+		
+interface Person {
+  name: string;
+  age: number;
+}
+
+type PartialPerson = Partial<Person>;
+// Tương đương với: { name?: string; age?: number }
+
+let person: PartialPerson = { name: "Alice" }; // OK, không cần age		
+
+	Ứng dụng: Dùng khi bạn chỉ cần cung cấp một phần thông tin của đối tượng, như trong form cập nhật dữ liệu.
+
+
+
+	## b. Required<T> 
+		Chức năng: Biến tất cả thuộc tính của kiểu T thành bắt buộc (required), kể cả những thuộc tính vốn là tùy chọn.
+		
+interface Person {
+  name?: string;
+  age?: number;
+}
+
+type RequiredPerson = Required<Person>;
+// Tương đương với: { name: string; age: number }
+
+let person: RequiredPerson = { name: "Alice" }; // Lỗi: Thiếu age
+let person2: RequiredPerson = { name: "Alice", age: 25 }; // OK		
+
+
+	Ứng dụng: Đảm bảo tất cả thuộc tính phải được cung cấp, ví dụ khi lưu dữ liệu vào cơ sở dữ liệu.
+
+
+
+	## c. Readonly<T> 
+		Chức năng: Biến tất cả thuộc tính của kiểu T thành chỉ đọc (readonly), không thể thay đổi sau khi khởi tạo. 
+		
+		
+interface Person {
+  name: string;
+  age: number;
+}
+
+type ReadonlyPerson = Readonly<Person>;
+
+let person: ReadonlyPerson = { name: "Alice", age: 25 };
+person.age = 30; // Lỗi: Cannot assign to 'age' because it is a read-only property
+
+
+
+	Ứng dụng: Dùng để bảo vệ dữ liệu không bị thay đổi, ví dụ khi truyền dữ liệu chỉ để hiển thị.
+
+
+
+
+	## d. Pick<T, K> 
+		Chức năng: Tạo một kiểu mới từ T, chỉ lấy các thuộc tính được chỉ định trong K (một tập hợp các khóa).	
+
+interface Person {
+  name: string;
+  age: number;
+  address: string;
+}
+
+type PersonNameAndAge = Pick<Person, "name" | "age">;
+// Tương đương với: { name: string; age: number }
+
+let person: PersonNameAndAge = { name: "Alice", age: 25 }; // OK
+let person2: PersonNameAndAge = { name: "Bob", address: "123 St" }; // Lỗi: address không được chọn
+
+
+	Ứng dụng: Dùng khi chỉ cần một phần của interface, ví dụ để hiển thị một phần thông tin người dùng.
+
+
+	## e. Omit<T, K>
+		Chức năng: Tạo một kiểu mới từ T, loại bỏ các thuộc tính được chỉ định trong K.
+	
+interface Person {
+  name: string;
+  age: number;
+  address: string;
+}
+
+type PersonWithoutAddress = Omit<Person, "address">;
+// Tương đương với: { name: string; age: number }
+
+let person: PersonWithoutAddress = { name: "Alice", age: 25 }; // OK
+let person2: PersonWithoutAddress = { name: "Bob", age: 25, address: "123 St" }; // Lỗi: address bị loại bỏ
+
+	Ứng dụng: Dùng khi muốn bỏ bớt các thuộc tính không cần thiết, ví dụ khi gửi dữ liệu lên API mà không cần toàn bộ thông tin.
+
+
+	## f. Record<K, T>
+		Chức năng: Tạo một kiểu với các khóa thuộc kiểu K (thường là string hoặc union type) và giá trị thuộc kiểu T.
+
+type PersonRoles = "admin" | "user" | "guest";
+type RoleDetails = { name: string; permissions: string[] };
+
+type RoleMap = Record<PersonRoles, RoleDetails>;
+
+let roles: RoleMap = {
+  admin: { name: "Admin", permissions: ["read", "write"] },
+  user: { name: "User", permissions: ["read"] },
+  guest: { name: "Guest", permissions: [] },
+};
+
+		Ứng dụng: Dùng để tạo các đối tượng kiểu từ điển (dictionary) hoặc ánh xạ (mapping), ví dụ ánh xạ vai trò người dùng với thông tin chi tiết.
+
+
+# 4. Hiểu sâu hơn về Utility Types
+	
+		-Để hiểu sâu về Utility Types, hãy nghĩ chúng như các công cụ tiện ích giúp bạn thao tác với kiểu dữ liệu giống như cách bạn thao tác với dữ liệu thông thường:
+	
+		-Tính mô-đun: Utility Types giống như các hàm có sẵn, giúp bạn xây dựng các kiểu phức tạp từ kiểu đơn giản mà không cần viết lại.
+	
+		-So sánh với lập trình thông thường: Nếu trong JavaScript bạn dùng các hàm như map, filter để biến đổi dữ liệu, thì trong TypeScript, Utility Types như Pick, Omit biến đổi kiểu dữ liệu.
+	
+		-Ứng dụng thực tế:
+	
+		-Trong các dự án lớn, Utility Types giúp định nghĩa kiểu chính xác cho API, form, hoặc state trong React.
+	
+		-Ví dụ: Khi làm việc với API trả về dữ liệu người dùng, bạn có thể dùng Pick để chỉ lấy các trường cần thiết hoặc Partial để xử lý dữ liệu cập nhật.
+	
+		-Kết hợp nhiều Utility Types:
+
+interface User {
+  id: number;
+  name: string;
+  email: string;
+  age?: number;
+}
+
+// Tạo kiểu chỉ có id và name, nhưng cả hai đều tùy chọn
+type PartialUserInfo = Partial<Pick<User, "id" | "name">>;
+// Tương đương với: { id?: number; name?: string }
+
+
+# 5. Cảnh báo khi sử dụng Utility Types
+	 - Hiểu rõ mục đích: Mỗi Utility Type có mục đích cụ thể. Dùng sai (ví dụ, dùng Partial khi cần Required) có thể làm mất an toàn kiểu.
+	 
+	 - Không lạm dụng: Quá nhiều Utility Types lồng nhau có thể làm mã khó đọc. Hãy ưu tiên đặt tên kiểu rõ ràng:
+	 
+	 - Kiểm tra runtime: Utility Types chỉ hoạt động trong lúc biên dịch. Dữ liệu thực tế từ API hoặc người dùng cần được kiểm tra để khớp với kiểu.
+	
+
+# 6. Mẹo sử dụng Utility Types hiệu quả
+
+	## Kết hợp với interface: Dùng Utility Types để mở rộng hoặc thu hẹp interface mà không cần viết lại.
+
+
+
+interface User {
+  id: number;
+  name: string;
+  email: string;
+}
+		## Dùng trong React: Utility Types rất hữu ích khi định nghĩa props hoặc state:
+
+function UserProfile({ user }: { user: Pick<User, "name" | "email"> }) {
+  return <div>{user.name} - {user.email}</div>;
+}
+
+
+		## Tái sử dụng kiểu: Đặt tên cho các kiểu được tạo từ Utility Types để dùng lại ở nhiều nơi:
+		type UserWithoutSensitiveData = Omit<User, "email">;
+
+
+
+		## Kết hợp với keyof: Sử dụng keyof để làm việc với các khóa động: 
+function getProperty<T, K extends keyof T>(obj: T, key: K): T[K] {
+  return obj[key];
+}	
+
+# . Kết luận
+	- Utility Types là công cụ mạnh mẽ trong TypeScript để thao tác và biến đổi kiểu dữ liệu một cách linh hoạt và an toàn.
+	- Các loại phổ biến như Partial, Required, Readonly, Pick, Omit, và Record giúp bạn xử lý các tình huống thường gặp trong lập trình, từ form, API đến state management.
+	- Hiểu và sử dụng đúng Utility Types giúp mã TypeScript ngắn gọn, dễ bảo trì và tận dụng tối đa hệ thống kiểu tĩnh.
+	
+
+
+</pre><a id='backBottom' href='../type-script-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

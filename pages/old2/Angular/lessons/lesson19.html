@@ -1,0 +1,77 @@
+<html><head><title>Lesson 19 == AngularJS API ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../angular-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 19 -- AngularJS API -//</h1><pre># Khái niệm  
+	
+	AngularJS cung cấp một số API (Application Programming Interface) – tức là các phương thức và đối tượng có sẵn giúp bạn thao tác, xử lý dữ liệu và điều khiển luồng logic trong Angular dễ dàng hơn.
+
+
+# ⚙️ Một số API phổ biến: 
+	## 1. $http – Gửi HTTP request (AJAX)
+		Dùng để gửi request tới backend (GET, POST, PUT, DELETE...) 
+		
+		$http.get("data.txt").then(function(response) {
+			$scope.content = response.data;
+		});
+
+
+	| Method         | Ý nghĩa                  |
+	| -------------- | ------------------------ |
+	| `$http.get()`  | Lấy dữ liệu              |
+	| `$http.post()` | Gửi dữ liệu              |
+	| `.then()`      | Callback khi có response |
+
+
+
+
+	## 	 2. $timeout – Delay một đoạn code (như setTimeout trong JS)
+
+		$timeout(function() {
+			$scope.message = "3 giây sau mới hiện!";
+		}, 3000);
+		Tương đương setTimeout() nhưng được tích hợp với Angular để trigger $digest cycle (cập nhật view).
+
+
+	## 3. $interval – Lặp định kỳ (như setInterval)
+
+			$interval(function() {
+				$scope.time = new Date().toLocaleTimeString();
+			}, 1000);
+			Dùng để tạo đồng hồ, cập nhật realtime,…
+
+
+	## 4. $location – Lấy & điều hướng URL 
+		$location.path('/home');
+		
+		.path() để lấy hoặc chuyển path.
+		Dùng để redirect trang trong SPA (Single Page Application). 
+
+
+	## $watch() – Theo dõi sự thay đổi của biến 
+	
+		$scope.$watch('userInput', function(newVal, oldVal) {
+			console.log('Giá trị mới:', newVal);
+		});
+		
+		Nếu userInput thay đổi, callback sẽ được gọi tự động.
+
+
+	## 6. $apply() – ép Angular kiểm tra lại view (ít khi dùng) 
+		$scope.$apply(function(){
+			$scope.value = "Thay đổi từ bên ngoài Angular";
+		});
+	
+
+# 🔍 So sánh với JavaScript truyền thống:
+| Mục tiêu      | JS truyền thống              | AngularJS API |
+| ------------- | ---------------------------- | ------------- |
+| Gửi GET       | `fetch()` / `XMLHttpRequest` | `$http.get()` |
+| Delay         | `setTimeout()`               | `$timeout()`  |
+| Đồng hồ       | `setInterval()`              | `$interval()` |
+| Theo dõi biến | Tự xử lý                     | `$watch()`    |
+
+
+# 🧠 Kết luận 
+	AngularJS API giúp code gọn hơn, dễ duy trì hơn, tích hợp sẵn với hệ thống binding của framework.
+	Cần hiểu rõ các khái niệm như $http, $timeout, $watch, $scope... để viết Angular hiệu quả.
+
+
+
+</pre><a id='backBottom' href='../angular-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

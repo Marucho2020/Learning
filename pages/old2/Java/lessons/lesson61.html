@@ -1,0 +1,203 @@
+<html><head><title>Lesson 61 == Marshalling & Unmarshalling ============================= (marshal : sắp xếp thành hàng ) ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 61 -- Marshalling & Unmarshalling ----------= (marshal : sắp xếp thành hàng ) -//</h1><pre>
+# Khái niệm  	
+	Marshalling và Unmarshalling là hai quá trình quan trọng trong Java RMI, giúp truyền đối tượng từ Client đến server và ngược lại 
+		Marshalling : Chuyển đổi Object thành byte-stream để gửi qua mạng. 
+		Unmarshalling : Chuyển đổi byte-stream thành Object trên máy nhận . 
+		
+# 📌 Các Java RMI sử dụng Marshalling và Unmarshalling  
+	
+	## Java RMI sử dụng Stub (Client Proxy) & Skeleton (Server Proxy) để thực hiện Marshalling & Unmarshalling: 
+		Stub (Client Proxy): Đóng vai trò như một proxy trên Client, giúp gửi dữ liệu đến Server.
+		
+		Skeleton (Server Proxy): Trên Server, nhận dữ liệu, giải mã và gọi phương thức thực tế. (Java 5 trở đi không còn Skeleton, thay vào đó dùng RemoteObject trực tiếp).
+	
+	
+	## Các thành phần quan trọng 
+		Thành phần									Vai trò
+		ObjectOutputStream					Marshalling (Chuyển Object thành byte-stream).
+		ObjectInputStream					Unmarshalling (Giải byte-stream thành Object).
+		Remote Interface					Định nghĩa API từ xa.
+		Stub								Proxy giúp gửi yêu cầu từ Client đến Server.
+		Skeleton (trước Java 5)				Nhận yêu cầu trên Server.
+		RMIRegistry							Đăng ký và tìm kiếm Object từ xa.
+	
+# 	📌 Ví dụ cơ bản : Marshalling & Unmarshalling trong Java RMI 
+
+	## Bước 1 : Tạo Remote Interface
+		
+		import java.rmi.Remote;
+		import java.rmi.RemoteException;
+		
+		// Remote Interface
+		public interface AIService extends Remote {
+			String analyzeText(String text) throws RemoteException;
+		}
+
+		### 📌 Giải thích:
+			✅ extends Remote → Đánh dấu Interface là một dịch vụ từ xa.
+			✅ throws RemoteException → Bắt buộc để xử lý lỗi mạng.
+
+
+
+	
+	
+	## Bước 2: Implement Remote Object (Server)
+	
+			import java.rmi.server.UnicastRemoteObject;
+			import java.rmi.RemoteException;
+			
+			public class AIServiceImpl extends UnicastRemoteObject implements AIService {
+				protected AIServiceImpl() throws RemoteException {
+					super();
+				}
+			
+				@Override
+				public String analyzeText(String text) {
+					return "AI Analysis Result for: " + text.toUpperCase();
+				}
+			}
+	
+		
+	
+			### 📌 Marshalling & Unmarshalling xảy ra ở đây:
+			✅ Khi Client gọi analyzeText(), dữ liệu được marshal thành byte-stream.
+			✅ Trên Server, dữ liệu unmarshal về Object, xử lý xong trả kết quả về.	
+	
+	
+	
+	
+	## Bước 3 : Đăng ký Object với RMI Registry 
+	
+				import java.rmi.registry.LocateRegistry;
+				import java.rmi.registry.Registry;
+				
+				public class Server {
+					public static void main(String[] args) {
+						try {
+							AIService service = new AIServiceImpl();
+							Registry registry = LocateRegistry.createRegistry(1099);
+							registry.rebind("AIService", service);
+				
+							System.out.println("Server is running...");
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					}
+				}
+
+		### 📌 Giải thích:
+			✅ LocateRegistry.createRegistry(1099) → Mở cổng để Client kết nối.
+			✅ registry.rebind("AIService", service) → Đăng ký dịch vụ AIService.
+
+
+	
+	
+	## Bước 4: Gọi Remote Object từ Client 
+		import java.rmi.registry.LocateRegistry;
+		import java.rmi.registry.Registry;
+		
+		public class Client {
+			public static void main(String[] args) {
+				try {
+					Registry registry = LocateRegistry.getRegistry("localhost", 1099);
+					AIService service = (AIService) registry.lookup("AIService");
+		
+					String result = service.analyzeText("hello world");
+					System.out.println("Server Response: " + result);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}
+
+		### 📌 Marshalling & Unmarshalling trong Client:
+			✅ Client gửi analyzeText("hello world") → Marshalling thành byte-stream.
+			✅ Server nhận byte-stream, Unmarshalling → Chuyển thành Object và xử lý.
+			✅ Kết quả được gửi về Client qua quá trình Marshalling/Unmarshalling ngược lại.
+	
+	
+	
+	
+	
+# 	📌 Ví dụ Nâng Cao: Truyền Object Qua RMI (Custom Object) 
+
+		Ngoài kiểu dữ liệu cơ bản, ta có thể gửi Object tự định nghĩa qua RMI.
+		!!! Bất kỳ trường hợp nào cũng thế, khi xử lý chuyển object thành stream thì phải implement Serializable 
+		
+		
+	
+		## Bước 1: Định nghĩa Object truyền qua mạng 
+		
+				import java.io.Serializable;
+			
+				public class AIModel implements Serializable {
+					private static final long serialVersionUID = 1L;
+					private String name;
+					private double accuracy;
+				
+					public AIModel(String name, double accuracy) {
+						this.name = name;
+						this.accuracy = accuracy;
+					}
+				
+					@Override
+					public String toString() {
+						return "AIModel{name='" + name + "', accuracy=" + accuracy + "}";
+					}
+				}
+					
+	
+	
+			## 📌 Lưu ý:
+				✅ implements Serializable → Bắt buộc để Marshalling/Unmarshalling Object.
+				✅ serialVersionUID → Đảm bảo tương thích giữa các phiên bản class.
+	
+	
+	
+		## Bước 2: Truyền Object qua RMI 
+			
+		📌Cập nhật Remote Interface
+	
+			public interface AIService extends Remote {
+				AIModel getModelInfo() throws RemoteException;
+			}
+
+	
+		📌Cập nhật Server 
+		
+			public class AIServiceImpl extends UnicastRemoteObject implements AIService {
+				protected AIServiceImpl() throws RemoteException {
+					super();
+				}
+			
+				@Override
+				public AIModel getModelInfo() {
+					return new AIModel("GPT-4", 99.5);
+				}
+			}
+
+	
+	
+		📌 Client Nhận Object 
+			public class Client {
+				public static void main(String[] args) {
+					try {
+						Registry registry = LocateRegistry.getRegistry("localhost", 1099);
+						AIService service = (AIService) registry.lookup("AIService");
+			
+						AIModel model = service.getModelInfo();
+						System.out.println("Received Model: " + model);
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+			}
+
+		
+		
+		###📌 Quá trình Marshalling & Unmarshalling:
+			✅ Object AIModel được serialize (Marshalling) trên Server.
+			✅ Client nhận dữ liệu, Unmarshalling thành Object AIModel.
+				
+	
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

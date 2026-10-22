@@ -1,0 +1,199 @@
+<html><head><title>Lesson 16 == Keyof ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../type-script-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 16 -- Keyof -//</h1><pre>
+# 1. keyof Operator là gì?
+
+	keyof là một toán tử trong TypeScript dùng để lấy tất cả các khóa (keys) của một kiểu (type) dưới dạng một union type (tập hợp các giá trị literal). Nó rất hữu ích khi bạn muốn làm việc với các thuộc tính của một đối tượng một cách an toàn về kiểu.
+
+Ví dụ:
+
+interface Person {
+  name: string;
+  age: number;
+  address: string;
+}
+
+type PersonKeys = keyof Person;
+// Tương đương với: "name" | "age" | "address"
+
+
+	keyof Person trả về một union type chứa các tên thuộc tính của Person: "name" | "age" | "address".
+
+# 2. Tại sao cần keyof?
+
+	- An toàn kiểu: keyof giúp bạn truy cập các thuộc tính của một đối tượng mà không cần dùng chuỗi cứng (hard-coded strings), tránh lỗi gõ sai tên thuộc tính.
+	- Tính linh hoạt: Cho phép viết mã tổng quát, làm việc với các thuộc tính động (dynamic properties) của một kiểu.
+	- Tái sử dụng: Kết hợp với generics và các Utility Types, keyof giúp tạo các hàm hoặc kiểu tái sử dụng được cho nhiều đối tượng.
+
+
+	## Ví dụ không dùng keyof (dễ sai): 
+	
+function getProperty(obj: Person, key: string) {
+  return obj[key]; // Lỗi: TypeScript không biết key có hợp lệ không
+}
+
+	## Dùng keyof (an toàn hơn):
+
+function getProperty(obj: Person, key: keyof Person) {
+  return obj[key]; // OK, key chỉ có thể là "name", "age", hoặc "address"
+}
+
+
+# 	3. Cách sử dụng keyof
+
+	## a. Lấy khóa của một Interface/Type
+	
+interface Person {
+  name: string;
+  age: number;
+}
+
+type PersonKeys = keyof Person;
+// PersonKeys = "name" | "age"
+
+let key: PersonKeys = "name"; // OK
+key = "email"; // Lỗi: Type '"email"' is not assignable to type '"name" | "age"'
+	
+	
+	keyof liệt kê tất cả các khóa của Person thành một union type.
+	
+
+	## b. Kết hợp với hàm
+		Dùng keyof để đảm bảo tham số key chỉ nhận các giá trị hợp lệ:
+
+function getProperty<T, K extends keyof T>(obj: T, key: K): T[K] {
+  return obj[key];
+}
+
+const person: Person = { name: "Alice", age: 25 };
+console.log(getProperty(person, "name")); // Output: Alice
+console.log(getProperty(person, "age")); // Output: 25
+console.log(getProperty(person, "email")); // Lỗi: Argument of type '"email"' is not assignable to parameter of type '"name" | "age"'
+
+
+
+		T là kiểu của đối tượng, K extends keyof T đảm bảo key chỉ là các thuộc tính của T.
+		T[K] là kiểu của giá trị tại khóa key.
+
+
+
+	## c. Kết hợp với Union Types
+		Khi làm việc với union types, keyof trả về các khóa chung của tất cả các kiểu trong union:
+	
+interface Person {
+  name: string;
+  age: number;
+}
+
+interface Employee {
+  name: string;
+  id: number;
+}
+
+type UnionKeys = keyof (Person | Employee);
+// UnionKeys = "name" (vì "name" là thuộc tính chung duy nhất)	
+	
+	
+	## 	d. Kết hợp với Utility Types
+		keyof thường được dùng với các Utility Types như Pick, Omit, hoặc Record:
+	
+interface Person {
+  name: string;
+  age: number;
+  address: string;
+}
+
+type PersonSubset = Pick<Person, keyof Person>;
+// Tương đương với Person: { name: string; age: number; address: string }	
+	
+	
+interface Person {
+  name: string;
+  age: number;
+  address: string;
+}
+
+type PersonSubset = Pick<Person, keyof Person>;
+// Tương đương với Person: { name: string; age: number; address: string }	
+	
+
+
+# 4. Hiểu sâu hơn về keyof
+
+	Để hiểu sâu về keyof, hãy nghĩ nó như một cách "truy vấn metadata" của một kiểu:
+
+		- Vai trò của keyof: Nó cung cấp một danh sách các khóa (ở dạng literal types) mà TypeScript có thể dùng để kiểm tra tính hợp lệ khi truy cập thuộc tính.
+		- So sánh với JavaScript: Trong JavaScript, bạn có thể dùng Object.keys(obj) để lấy danh sách khóa, nhưng nó trả về string[] và không an toàn về kiểu. keyof trong TypeScript trả về một union type chính xác, đảm bảo an toàn kiểu.
+
+
+// JavaScript
+const keys = Object.keys({ name: "Alice", age: 25 }); // string[]
+
+// TypeScript với keyof
+type Keys = keyof { name: string; age: number }; // "name" | "age"
+
+# Ứng dụng thực tế:
+
+	## Xử lý đối tượng động: Khi làm việc với API hoặc dữ liệu động, keyof giúp bạn truy cập thuộc tính an toàn.
+	## React props: Dùng keyof để giới hạn các props được truyền vào component
+
+
+interface Props {
+  color: string;
+  size: number;
+}
+
+function setStyle<K extends keyof Props>(style: Props, key: K, value: Props[K]) {
+  style[key] = value;
+}
+
+
+
+
+	## Kết hợp với Generics: keyof trở nên mạnh mẽ hơn khi dùng với generics, cho phép viết các hàm tổng quát:
+
+function updateProperty<T>(obj: T, key: keyof T, value: T[keyof T]) {
+  obj[key] = value;
+}
+
+
+# 5. Cảnh báo khi sử dụng keyof
+
+	Khóa không tồn tại: Nếu bạn cố truy cập một khóa không có trong kiểu, TypeScript sẽ báo lỗi ngay trong lúc biên dịch, giúp tránh lỗi runtime.
+	
+	Union types hạn chế: Với union types, keyof chỉ trả về các khóa chung, có thể không đủ cho các trường hợp phức tạp.
+	
+type A = { name: string; age: number };
+type B = { name: string; id: number };
+type Keys = keyof (A | B); // Chỉ là "name"	
+	
+	
+	Runtime limitation: keyof chỉ hoạt động trong lúc biên dịch. Nếu bạn cần danh sách khóa khi chạy, phải dùng Object.keys().
+	
+	
+# 6. Mẹo sử dụng keyof hiệu quả
+
+	- Kết hợp với extends: Dùng K extends keyof T để giới hạn key trong các hàm generic.
+	- Dùng với mapped types: Tạo các kiểu động dựa trên khóa: 
+
+type OptionalPerson = { [K in keyof Person]?: Person[K] };
+// Tương đương với Partial<Person>
+
+	- Kiểm tra kiểu động: Kết hợp keyof với type guard để xử lý dữ liệu không chắc chắn: 
+function isKey<T>(obj: T, key: string): key is keyof T {
+  return key in obj;
+}	
+	
+	- Tái sử dụng trong API: Khi làm việc với dữ liệu API, dùng keyof để đảm bảo bạn chỉ truy cập các trường hợp lệ.
+	
+	
+# 7. Kết luận
+
+
+	- keyof là một toán tử mạnh mẽ trong TypeScript, cho phép lấy các khóa của một kiểu dưới dạng union type, giúp truy cập thuộc tính an toàn và linh hoạt.
+	- Nó đặc biệt hữu ích khi kết hợp với generics và Utility Types, giúp viết mã tổng quát và tái sử dụng.
+	- keyof là công cụ cốt lõi để làm việc với các thuộc tính động, đặc biệt trong các dự án lớn như React, API, hoặc hệ thống phức tạp.
+
+
+	https://www.w3schools.com/typescript/typescript_null.php
+
+
+</pre><a id='backBottom' href='../type-script-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

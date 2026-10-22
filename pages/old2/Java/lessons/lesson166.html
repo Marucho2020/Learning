@@ -1,0 +1,125 @@
+<html><head><title>Lesson 166 == Atomic Operations ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 166 -- Atomic Operations -//</h1><pre>
+# 1. Vấn đề đặt ra 
+
+	- synchronized và Lock → an toàn nhưng có blocking (thread có thể bị treo).
+	- Với các thao tác nhỏ (counter, flag, reference) thì dùng lock là quá nặng.
+	- Java cung cấp atomic classes (AtomicInteger, AtomicLong, AtomicReference, …) để thực hiện update lock-free.	
+
+# 2. Cơ chế nền: CAS (Compare-And-Swap) 
+	
+	## CAS là 1 lệnh CPU (hardware instruction): 
+	
+		- So sánh giá trị hiện tại với giá trị mong đợi.
+		- Nếu bằng nhau → ghi giá trị mới.
+		- Nếu không → thất bại, thread phải retry.
+
+	## Trong Java, CAS được implement thông qua Unsafe API hoặc từ Java 9 là VarHandle. 
+	
+
+	## Ví dụ CAS logic: 
+do {
+    oldValue = value.get();
+    newValue = oldValue + 1;
+} while (!value.compareAndSet(oldValue, newValue));
+	
+
+	- compareAndSet(expected, update) → atomic.
+	- Không cần lock, chỉ một lệnh CPU → rất nhanh.
+
+
+# 3. Các class chính trong java.util.concurrent.atomic
+
+	- AtomicInteger / AtomicLong → đếm, tăng giảm, addAndGet, getAndIncrement, ...
+	- AtomicBoolean → flag an toàn giữa threads.
+	- AtomicReference<T> → cập nhật object reference atomically.
+	- AtomicStampedReference → giải quyết ABA problem (thêm “stamp” version).
+	- AtomicMarkableReference → giống Stamped nhưng chỉ có mark true/false.
+
+
+# 4. ABA Problem 
+
+	## CAS có một điểm yếu: 
+		
+		- Thread T1 đọc giá trị A.
+		- Thread T2 đổi A → B → A.
+		- T1 CAS(A → C) thành công vì thấy vẫn là A, nhưng dữ liệu đã thay đổi trong quá trình.
+
+
+	## Giải pháp: 
+		
+		- AtomicStampedReference: gắn thêm version (stamp).
+		- Khi update, CAS check cả giá trị lẫn stamp → nếu bị đổi qua lại thì phát hiện.
+		- Pattern này rất quan trọng trong lock-free data structures (stack, queue).
+
+
+# 5. VarHandle (Java 9+)
+
+	Thay thế cho Unsafe và là chuẩn mới cho atomic + memory fence.
+	Cho phép atomic ops, volatile read/write, CAS, fence, v.v.
+
+	## Ví dụ: 
+		
+class Example {
+    volatile int x;
+    private static final VarHandle X_HANDLE;
+    static {
+        try {
+            X_HANDLE = MethodHandles.lookup()
+               .findVarHandle(Example.class, "x", int.class);
+        } catch (Exception e) {
+            throw new Error(e);
+        }
+    }
+}
+
+	- X_HANDLE.compareAndSet(obj, expected, newValue)
+	- X_HANDLE.getAndAdd(obj, 1)
+	- Đây là hướng đi mới, thay thế cho AtomicInteger ở mức framework.
+
+
+# 6. Hiệu năng & tối ưu
+
+	## CAS nhanh hơn lock, nhưng không phải luôn “miễn phí”: 
+		
+		- Spinning: nếu nhiều thread tranh chấp cùng một biến, CAS thất bại liên tục → tốn CPU.
+		- False Sharing: nhiều atomic biến trên cùng 1 cache line → invalidation liên tục → slowdown.
+
+
+	## Giải pháp 
+		- Padding (@Contended) để tránh false sharing.
+		- Dùng LongAdder thay cho AtomicLong trong trường hợp nhiều thread update cùng lúc (LongAdder giảm contention bằng cách sharding thành nhiều cell).
+
+
+# 7. Khi nào dùng Atomic? 
+	
+
+	- ✅ Biến nhỏ, update đơn giản (counter, flag, reference swap).
+	- ✅ Lock-free algorithms (concurrent queue, stack).
+	- ❌ Khi cần thao tác phức tạp, liên quan đến nhiều biến (dùng lock dễ hơn).
+	- ❌ Khi contention quá cao → CAS thất bại nhiều, đôi khi ReentrantLock lại nhanh hơn.
+
+
+
+
+# 8. So sánh với synchronized / Lock
+
+| Tính năng     | `synchronized` | `ReentrantLock` | `Atomic* / CAS`        |
+| ------------- | -------------- | --------------- | ---------------------- |
+| Blocking      | Có             | Có              | Không                  |
+| Reentrant     | ✔              | ✔               | ✖                      |
+| Visibility    | ✔              | ✔               | ✔ (volatile semantics) |
+| Atomic update | ✔              | ✔               | ✔                      |
+| Fairness      | Có thể         | Có thể          | Không                  |
+| Phức tạp      | Thấp           | Trung bình      | Cao (phải code đúng)   |
+
+
+
+# 9. Tư duy Senior 
+
+	- Atomic* là xương sống của lock-free programming.
+	- Biết CAS và ABA problem là chìa khóa để đọc hiểu code trong thư viện như ConcurrentLinkedQueue.
+	- Java ngày càng hướng tới VarHandle để unify atomic + volatile + fences.
+	- Đừng lạm dụng: đôi khi AtomicInteger trong hot loop với nhiều thread còn chậm hơn LongAdder.
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

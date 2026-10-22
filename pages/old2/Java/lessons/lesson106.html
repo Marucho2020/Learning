@@ -1,0 +1,119 @@
+<html><head><title>Lesson 106 == Circular Linked List(CLL) ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 106 -- Circular Linked List(CLL) -//</h1><pre>
+# Khái niệm 
+	Circular LinkedList  là danh sách liên kết node cuối trỏ ngược lại node đầu , tạo thành vòng trong kín 
+	Có hai loại 
+		
+		## 1. Singly Circular Linked List 
+			- Mỗi node có 1 next 
+			- tail.next -> head 
+			
+		## Doubly Circular Linked List 
+			- Mỗi node có cả next và prev 
+			- tail.next = head , head.prev = tail 
+			
+
+# Cấu trúc của Circular  Linked List 
+	
+	## ⚙️ Java Implementation (Singly) 
+
+		class Node {
+			int data;
+			Node next;
+			
+			Node(int data) {
+				this.data = data;
+				this.next = null;
+			}
+		}
+		
+		class CircularLinkedList {
+			Node head = null;
+			Node tail = null;
+		
+			void add(int data) {
+				Node newNode = new Node(data);
+				if (head == null) {
+					head = newNode;
+					tail = newNode;
+					newNode.next = head; // vòng
+				} else {
+					tail.next = newNode;
+					tail = newNode;
+					tail.next = head; // giữ vòng
+				}
+			}
+		}
+
+	
+
+# 🧠 III. Lợi ích – Tại sao dùng Circular Linked List? 
+	
+
+Vấn đề									 | Circular Linked List giải quyết tốt
+Quay vòng (circular scheduling) 			| Ví dụ: CPU Round-Robin Scheduler, Carousel UI
+Không có điểm kết thúc cố định 				| Duyệt vòng mãi mãi (ví dụ game loop)
+Bài toán nhảy vòng 							| Josephus problem, vòng tròn loại người
+Load balancer vòng 							| Chia task theo vòng node
+Cache ring buffer 							| Dễ implement buffer giới hạn có wrap-around
+
+
+
+# 📊 IV. So sánh với Linked List thường 
+	
+Tính năng 					 | Linked List 						| Circular Linked List
+Node cuối					 | null 							| Trỏ về node đầu
+Duyệt đến cuối				 | Có kết thúc 						| Không kết thúc
+Duyệt vòng					 | Phức tạp hơn 					| Tự nhiên hơn
+Xoay vòng danh sách 		 | Phải xử lý lại 					| Có sẵn theo cấu trúc
+Thêm vào cuối 				 | O(n) hoặc O(1) (nếu có tail) 	| O(1)
+Dễ nhầm vòng vô hạn 		 | Không 							| Có – cần cảnh giác
+
+
+
+# 🚀 V. Ứng dụng thực tế
+
+Tình huống							 | Mô tả
+Scheduler 							| CPU scheduler Round Robin: mỗi process là 1 node
+Josephus Problem 					| Mô phỏng bài toán loại người theo chu kỳ
+Music Playlist Loop 				| Mỗi bài hát là 1 node, lặp vô hạn
+UI Carousel 					 	| Slide lặp vô hạn
+Circular Buffer 					| Dùng trong producer-consumer
+Distributed Ring Topology 			| P2P hoặc blockchain node mạng vòng
+
+
+
+# 🧠 VI. Những thứ cần "cảnh giác" khi dùng Circular Linked List 
+	
+Rủi ro 									 | Giải pháp
+Loop vô hạn khi duyệt					 | Luôn check curr != head thay vì != null
+Xóa node phải đặc biệt cẩn thận			 | Vì có thể phá vòng
+Gỡ node cuối/head						 | Phải rewire kỹ
+Multi-thread							 | Phải lock hoặc đồng bộ
+GC & Memory Leak						 | Dễ bị giữ tham chiếu mãi mãi
+
+
+# 📌 VII. Demo vòng duyệt vô hạn (điều khiển bằng vòng lặp) 
+
+	Node current = head;
+	do {
+		System.out.println(current.data);
+		current = current.next;
+	} while(current != head);
+	
+	🔥 Không có null, không bao giờ kết thúc nếu không có điều kiện dừng rõ ràng!
+
+
+
+
+# 🧠 VIII. Những kiến thức liên quan cần học 
+
+	Mục 										| Lý do
+	Doubly Linked List 						| Để xử lý backward và delete hiệu quả
+	Queue và Deque 							| Để hiểu cấu trúc lặp vòng kiểu thực tế
+	Memory & Pointer 						| Quan trọng nếu bạn làm C/C++ hoặc low-level Java
+	Circular Buffer / Ring Buffer			| Áp dụng nhiều trong I/O, log
+	Thread-safe List 						| Circular list trong đa luồng rất nguy hiểm nếu không đồng bộ
+	Data Structure Patterns					| Hiểu khi nào dùng Circular List vs Tree/Array/Deque
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

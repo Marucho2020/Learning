@@ -1,0 +1,359 @@
+<html><head><title>Lesson 34 == Vue refs ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../vue-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 34 -- Vue refs -//</h1><pre># Khái niệm 
+	Refs là một cách để truy cập trực tiếp vào:
+	
+		Phần tử DOM (như <input>, <div>) trong template.
+		Instance của component (để gọi methods hoặc truy cập data).
+
+	Thay vì sử dụng các phương thức DOM truyền thống như document.getElementById, refs cung cấp một cách an toàn và tích hợp với hệ thống reactive của Vue.
+	
+	Refs thường được dùng khi bạn cần thực hiện các thao tác trực tiếp trên DOM (như focus input, lấy giá trị, hoặc đo kích thước) hoặc tương tác với component con.
+
+
+
+# 2. Cách sử dụng Refs 
+	## Để sử dụng refs, bạn:
+		1. Gắn thuộc tính ref="tenRef" vào phần tử hoặc component trong template.
+		2. Truy cập ref qua this.$refs.tenRef (Vue 2) hoặc ref() (Vue 3 Composition API) trong mã JavaScript.
+		
+	## 	Cú pháp cơ bản 
+<template>
+  <input ref="myInput" type="text" />
+  <button @click="focusInput">Focus Input</button>
+</template>
+
+
+# 3. Ví dụ: Truy cập phần tử DOM 
+	Vue 2 (Options API) 
+	
+<template>
+  <div>
+    <input ref="myInput" type="text" placeholder="Enter text" />
+    <button @click="focusInput">Focus Input</button>
+  </div>
+</template>
+
+<script>
+export default {
+  methods: {
+    focusInput() {
+      this.$refs.myInput.focus(); // Truy cập DOM và gọi method focus()
+    }
+  }
+};
+</script>		
+
+
+
+	## Vue 3 (Composition API) 
+	
+<template>
+  <div>
+    <input ref="myInput" type="text" placeholder="Enter text" />
+    <button @click="focusInput">Focus Input</button>
+  </div>
+</template>
+
+<script>
+import { ref } from 'vue';
+
+export default {
+  setup() {
+    const myInput = ref(null); // Khai báo ref với giá trị ban đầu là null
+
+    const focusInput = () => {
+      myInput.value.focus(); // Truy cập DOM qua .value
+    };
+
+    return {
+      myInput,
+      focusInput
+    };
+  }
+};
+</script>
+
+
+	## Giải thích 
+		ref="myInput": Gắn một tham chiếu tên myInput vào thẻ <input>.
+		Vue 2: Truy cập phần tử DOM qua this.$refs.myInput.
+		Vue 3: Sử dụng ref() để tạo biến myInput, và truy cập DOM qua myInput.value.
+		Kết quả: Khi nhấn nút, ô input sẽ được focus.
+		Vue 3 dựa vào tên biến (giá trị của thuộc tính ref trong template) để xác định phần tử nào được gán cho biến ref nào.
+
+		
+	
+# 4. Ví dụ: Truy cập Component Instance 
+	Refs cũng có thể được dùng để truy cập instance của component con, cho phép gọi methods hoặc truy cập data.
+	
+	
+	## Component con (ChildComponent.vue) 
+<template>
+  <div>
+    <p>{{ message }}</p>
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      message: 'Hello from Child'
+    };
+  },
+  methods: {
+    updateMessage(newMessage) {
+      this.message = newMessage;
+    }
+  }
+};
+</script>	
+
+
+
+	## Component cha Vue 2
+		###  (Options API)   
+		
+<template>
+  <div>
+    <child-component ref="child"></child-component>
+    <button @click="changeChildMessage">Change Child Message</button>
+  </div>
+</template>
+
+<script>
+import ChildComponent from './ChildComponent.vue';
+
+export default {
+  components: { ChildComponent },
+  methods: {
+    changeChildMessage() {
+      this.$refs.child.updateMessage('Updated from Parent!'); // Gọi method của component con
+    }
+  }
+};
+</script>	
+	
+	
+		###  Vue 3 
+<template>
+  <div>
+    <child-component ref="child"></child-component>
+    <button @click="changeChildMessage">Change Child Message</button>
+  </div>
+</template>
+
+<script>
+import { ref } from 'vue';
+import ChildComponent from './ChildComponent.vue';
+
+export default {
+  components: { ChildComponent },
+  setup() {
+    const child = ref(null); // Ref cho component con
+
+    const changeChildMessage = () => {
+      child.value.updateMessage('Updated from Parent!'); // Gọi method của component con
+    };
+
+    return {
+      child,
+      changeChildMessage
+    };
+  }
+};
+</script>	
+	
+	
+	## Giải thích
+		ref="child": Gắn tham chiếu child vào <child-component>.
+		Truy cập instance:
+		Vue 2: this.$refs.child trả về instance của component con.
+		Vue 3: child.value trả về instance của component con.
+		Gọi method: Sử dụng updateMessage để thay đổi message trong component con.
+		Kết quả: Nhấn nút sẽ đổi nội dung <p> trong component con thành "Updated from Parent!".
+	
+	
+
+# 5. Refs với v-for 
+	Khi sử dụng ref trong v-for, this.$refs.tenRef (Vue 2) hoặc ref (Vue 3) sẽ trả về một mảng chứa các phần tử DOM hoặc instance component tương ứng.
+	
+<template>
+  <div>
+    <input v-for="item in items" :key="item" ref="inputs" type="text" />
+    <button @click="focusFirstInput">Focus First Input</button>
+  </div>
+</template>
+
+<script>
+import { ref } from 'vue';
+
+export default {
+  setup() {
+    const items = [1, 2, 3];
+    const inputs = ref([]); // Mảng refs
+
+    const focusFirstInput = () => {
+      inputs.value[0].focus(); // Focus input đầu tiên
+    };
+
+    return {
+      items,
+      inputs,
+      focusFirstInput
+    };
+  }
+};
+</script>	
+
+	## Giải thích 
+		ref="inputs" trong v-for tạo một mảng refs (inputs.value là một mảng các <input>).
+		inputs.value[0].focus(): Focus vào phần tử <input> đầu tiên trong mảng.
+
+
+
+
+# 6. Lưu ý quan trọng
+
+	## Tránh lạm dụng Refs 
+		Refs nên được dùng khi không thể giải quyết bằng reactive data hoặc props/events. Ví dụ, chỉ dùng refs để focus input, đo kích thước DOM, hoặc gọi method đặc biệt của component con.
+		
+		Lạm dụng refs có thể làm mã khó bảo trì và phá vỡ tính reactive của Vue.
+
+	## Vue 2 vs Vue 3: 
+	
+		Vue 2: Sử dụng this.$refs trực tiếp.
+		Vue 3: Sử dụng ref() từ Composition API, truy cập qua .value.
+
+
+
+	## Refs trong v-if 
+		Nếu phần tử/component có v-if, ref sẽ là null khi phần tử không được render. Luôn kiểm tra trước khi sử dụng:
+if (this.$refs.myInput) {
+  this.$refs.myInput.focus();
+}
+
+
+
+	## Refs và Scoped Slots: 
+		Refs không liên quan trực tiếp đến scoped slots, nhưng bạn có thể dùng refs để truy cập phần tử trong nội dung slot nếu cần.
+
+
+
+	## Hiệu suất: 
+		Refs không ảnh hưởng nhiều đến hiệu suất, nhưng cần đảm bảo sử dụng đúng ngữ cảnh. 
+		
+		
+
+# 7. Ứng dụng thực tế
+	Focus input: Tự động focus vào ô input khi mở form hoặc modal.
+	Đo kích thước DOM: Lấy chiều cao/rộng của một phần tử để điều chỉnh giao diện.
+	Tương tác với component con: Gọi methods của component con để thực hiện hành động đặc biệt.
+	Tích hợp thư viện bên thứ ba: Sử dụng refs để gắn thư viện JavaScript (như Chart.js) vào một phần tử DOM.
+
+
+# Cách Vue 3 phân biệt các ref 
+	Vue 3 sử dụng thuộc tính ref trong template để liên kết trực tiếp với các phần tử DOM hoặc component, và tên biến trong setup() chính là yếu tố quyết định để ánh xạ.
+
+	## Liên kết giữa ref trong template và biến trong setup() 
+	
+		Khi bạn gắn ref="tenRef" vào một phần tử trong template (như <input ref="myInput">), Vue sẽ liên kết phần tử đó với biến ref có cùng tên (myInput) được khai báo trong setup().
+		
+		Tên của biến ref trong setup() (như const myInput = ref(null)) phải khớp với giá trị của thuộc tính ref trong template.
+
+	## Dựa vào tên biến: 
+		Vue 3 dựa vào tên biến (giá trị của thuộc tính ref trong template) để xác định phần tử nào được gán cho biến ref nào.
+		
+		Vue không sử dụng selector (như CSS selector) mà sử dụng ánh xạ trực tiếp giữa ref="tenRef" trong template và biến tenRef trong setup().
+
+
+
+	## Trường hợp nhiều ref: 
+		Nếu template có nhiều ref, mỗi ref sẽ được liên kết với một biến riêng biệt trong setup(). Vue đảm bảo rằng mỗi biến ref chỉ trỏ đến phần tử hoặc component tương ứng với tên của nó.
+		
+		
+<template>
+  <div>
+    <input ref="firstInput" type="text" placeholder="First input" />
+    <input ref="secondInput" type="text" placeholder="Second input" />
+    <button ref="myButton" @click="focusInputs">Focus Inputs</button>
+  </div>
+</template>
+
+<script>
+import { ref } from 'vue';
+
+export default {
+  setup() {
+    // Khai báo nhiều ref, mỗi ref tương ứng với một phần tử
+    const firstInput = ref(null); // Liên kết với ref="firstInput"
+    const secondInput = ref(null); // Liên kết với ref="secondInput"
+    const myButton = ref(null); // Liên kết với ref="myButton"
+
+    const focusInputs = () => {
+      if (firstInput.value) {
+        firstInput.value.focus(); // Focus vào input đầu tiên
+      }
+      // Có thể truy cập secondInput hoặc myButton
+      console.log(secondInput.value); // In ra <input> thứ hai
+      console.log(myButton.value); // In ra <button>
+    };
+
+    return {
+      firstInput,
+      secondInput,
+      myButton,
+      focusInputs
+    };
+  }
+};
+</script>	
+
+
+
+	## Giải thích 
+		ref="firstInput" trong template liên kết với const firstInput = ref(null) trong setup().
+		ref="secondInput" liên kết với const secondInput = ref(null).
+		ref="myButton" liên kết với const myButton = ref(null).
+
+	## Vue phân biệt: 
+		Vue sử dụng tên của thuộc tính ref trong template để khớp với tên biến trong setup(). Do đó, firstInput.value trỏ đến <input> đầu tiên, secondInput.value trỏ đến <input> thứ hai, và myButton.value trỏ đến <button>.
+		
+		
+	## Trường hợp đặc biệt 
+		### Nhiều ref trong v-for	
+				Nếu bạn dùng ref trong v-for, ref sẽ là một mảng chứa các phần tử DOM hoặc component tương ứng.
+<template>
+  <div>
+    <input v-for="item in items" :key="item" ref="inputs" type="text" />
+    <button @click="focusFirstInput">Focus First Input</button>
+  </div>
+</template>
+
+<script>
+import { ref } from 'vue';
+
+export default {
+  setup() {
+    const items = [1, 2, 3];
+    const inputs = ref([]); // Mảng refs
+
+    const focusFirstInput = () => {
+      if (inputs.value[0]) {
+        inputs.value[0].focus(); // Focus input đầu tiên
+      }
+    };
+
+    return {
+      items,
+      inputs,
+      focusFirstInput
+    };
+  }
+};
+</script>	
+
+		Giải thích: ref="inputs" trong v-for tạo một mảng inputs.value, chứa tất cả các <input> trong vòng lặp. Vue tự động ánh xạ các phần tử theo thứ tự xuất hiện.
+
+
+
+</pre><a id='backBottom' href='../vue-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

@@ -1,0 +1,190 @@
+<html><head><title>Lesson 18 == Forms Multiple Inputs ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../react-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 18 -- Forms Multiple Inputs -//</h1><pre># 1. Quản lý nhiều input trong React	
+	
+	Khi xử lý nhiều trường nhập liệu (input fields), bạn có thể:
+		- Sử dụng nhiều useState cho từng trường (ít phổ biến, khó quản lý).
+		- Sử dụng một useState với một object để lưu tất cả giá trị (phổ biến, gọn gàng).	
+	Bài học sử dụng cách thứ hai, lưu các giá trị input trong một object thông qua state.
+	
+# ví dụ 
+import { useState } from 'react';
+import { createRoot } from 'react-dom/client';
+
+function MyForm() {
+  const [inputs, setInputs] = useState({});
+
+  const handleChange = (e) => {
+    const name = e.target.name;
+    const value = e.target.value;
+    setInputs(values => ({...values, [name]: value}));
+  };
+
+  return (
+    <form>
+      <label>First name:
+        <input 
+          type="text" 
+          name="firstname" 
+          value={inputs.firstname || ''} 
+          onChange={handleChange}
+        />
+      </label>
+      <label>Last name:
+        <input 
+          type="text" 
+          name="lastname" 
+          value={inputs.lastname || ''} 
+          onChange={handleChange}
+        />
+      </label>
+      <p>Current values: {inputs.firstname || ''} {inputs.lastname || ''}</p>
+    </form>
+  );
+}
+
+createRoot(document.getElementById('root')).render(<MyForm />);
+
+
+	## Giải thích 
+
+	State inputs: 
+		- useState({}) tạo state là một object rỗng để lưu giá trị các input.
+		- Mỗi trường input được đại diện bởi một cặp key-value trong object (ví dụ: { firstname: "John", lastname: "Doe" }).
+
+	Hàm handleChange : 
+		- Lấy name (tên input) và value (giá trị nhập) từ e.target.
+		- Cập nhật state bằng spread operator (...values) và bracket notation ([name]: value) để thay đổi giá trị tương ứng.	
+
+
+	JSX : 
+		
+		- Mỗi <input> có thuộc tính name (để xác định trường) và value={inputs.firstname || ''} (liên kết với state, dùng || '' để tránh lỗi undefined).
+		- onChange={handleChange} cập nhật state khi người dùng nhập.
+
+	Hiển thị giá trị:
+		<p>Current values: {inputs.firstname || ''} {inputs.lastname || ''}</p> hiển thị giá trị hiện tại của các trường.
+
+	
+	
+# 3. Khởi tạo giá trị ban đầu
+
+	Để thêm giá trị ban đầu, khởi tạo state với object chứa các key-value:
+	Các trường input sẽ hiển thị giá trị mặc định (John, Doe) khi tải trang.
+
+const [inputs, setInputs] = useState({
+  firstname: 'John',
+  lastname: 'Doe'
+});
+
+
+
+# 4. Kết hợp với Submit Forms
+
+const handleSubmit = (e) => {
+  e.preventDefault();
+  alert(`Submitted: ${inputs.firstname || ''} ${inputs.lastname || ''}`);
+};
+
+return (
+  <form onSubmit={handleSubmit}>
+    <input type="text" name="firstname" value={inputs.firstname || ''} onChange={handleChange} />
+    <input type="text" name="lastname" value={inputs.lastname || ''} onChange={handleChange} />
+    <input type="submit" value="Submit" />
+  </form>
+);
+
+
+
+# Kết hợp với Textarea và Select:
+	Quản lý <input>, <textarea>, và <select> trong cùng một state
+
+
+const [inputs, setInputs] = useState({
+  firstname: '',
+  comment: '',
+  car: 'Volvo'
+});
+
+const handleChange = (e) => {
+  setInputs({ ...inputs, [e.target.name]: e.target.value });
+};
+
+return (
+  <form onSubmit={handleSubmit}>
+    <input type="text" name="firstname" value={inputs.firstname} onChange={handleChange} />
+    <textarea name="comment" value={inputs.comment} onChange={handleChange} />
+    <select name="car" value={inputs.car} onChange={handleChange}>
+      <option value="Ford">Ford</option>
+      <option value="Volvo">Volvo</option>
+      <option value="Fiat">Fiat</option>
+    </select>
+    <input type="submit" value="Submit" />
+  </form>
+);
+
+
+
+# 	Kết hợp với React Transitions:
+
+import { CSSTransition } from 'react-transition-group';
+import './style.css';
+
+function MyForm() {
+  const [inputs, setInputs] = useState({});
+  const [submitted, setSubmitted] = useState(false);
+
+  const handleChange = (e) => {
+    setInputs({ ...inputs, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setSubmitted(true);
+    setTimeout(() => setSubmitted(false), 2000);
+  };
+
+  return (
+    <div>
+      <form onSubmit={handleSubmit}>
+        <input type="text" name="firstname" value={inputs.firstname || ''} onChange={handleChange} />
+        <input type="text" name="lastname" value={inputs.lastname || ''} onChange={handleChange} />
+        <input type="submit" value="Submit" />
+      </form>
+      <CSSTransition in={submitted} timeout={300} classNames="fade" unmountOnExit>
+        <p className="success">Submitted: {inputs.firstname || ''} {inputs.lastname || ''}</p>
+      </CSSTransition>
+    </div>
+  );
+}
+
+
+.success { background-color: lightgreen; padding: 10px; border-radius: 5px; }
+.fade-enter { opacity: 0; }
+.fade-enter-active { opacity: 1; transition: opacity 300ms; }
+.fade-exit { opacity: 1; }
+.fade-exit-active { opacity: 0; transition: opacity 300ms; }
+
+
+
+
+
+# 5. Lưu ý quan trọng
+
+	## Thuộc tính name: 
+		Mỗi input cần một name duy nhất để xác định trường trong state object.
+
+
+	## Tránh lỗi undefined: 
+		Sử dụng || '' (ví dụ: inputs.firstname || '') để xử lý trường hợp state chưa có giá trị.
+	
+	
+	## Hiệu suất: 
+		Dùng một state object để quản lý nhiều input, thay vì nhiều useState, để code gọn gàng và dễ bảo trì.
+	
+	
+	
+	
+	
+https://www.w3schools.com/react/react_forms_checkbox.asp	
+	
+	
+</pre><a id='backBottom' href='../react-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

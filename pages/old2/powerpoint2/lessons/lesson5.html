@@ -1,0 +1,211 @@
+<html><head><title>Lesson 4 == =====標準化と可視化と一元化　 ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../powerpoint-learning-2-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 4 -- ----=標準化と可視化と一元化　 -//</h1><pre>
+# ■ 標準化 (Standardization)
+
+	Không phải “làm cho giống nhau”.
+	Giảm entropy của hệ thống bằng cách ép mọi thứ về một tập luật hữu hạn
+
+		Entropy cao → mỗi team làm 1 kiểu → không predict được
+		標準化 → giới hạn cách làm → system trở nên predictable
+
+
+	Trong hệ thống:
+		- API: format response giống nhau
+		- Incident: flow xử lý giống nhau
+		- Code: naming, structure giống nhau
+
+	👉 Nếu không có:
+		→ mỗi request là 1 case đặc biệt
+		→ scaling = chết chắc
+
+
+
+# ■ 可視化 (Visualization / Observability-lite) 
+
+	Không phải “hiển thị dashboard cho đẹp”.
+	
+	##👉 Bản chất:
+		Biến trạng thái nội bộ (invisible) thành observable
+
+
+	##Hệ thống nào cũng có 2 layer:
+
+			- Reality (đang chạy thật)
+			- Perception (con người thấy gì)
+		可視化 = kéo reality lên perception
+
+	## Ví dụ:
+
+			- Log, metrics, dashboard
+			- Ticket status
+			- SLA progress
+
+		👉 Nếu không có:
+		→ system có thể đang chết mà bạn không biết
+		→ hoặc tệ hơn: tưởng đang ổn nhưng thực ra đang cháy
+
+
+
+# ■ 一元化 (Centralization)
+
+	Không phải “gom về 1 chỗ cho tiện”.
+
+
+	👉 Bản chất:
+		Loại bỏ duplicated source of truth
+
+	System chỉ nên có:
+		ONE source of truth cho mỗi loại dữ liệu / trạng thái
+
+	Ví dụ:
+
+		User info → chỉ 1 DB authoritative
+		Incident → chỉ 1 system (ServiceNow), không phải email + excel + slack
+
+	👉 Nếu không có:
+		→ conflict dữ liệu
+		→ mỗi người tin 1 version
+		→ chaos
+
+
+
+
+# 2. 3 cái này liên kết với nhau như thế nào?
+
+	Nói thẳng:
+		👉 Đây là 3 tầng của việc kiểm soát hệ thống
+
+		標準化 → 一元化 → 可視化
+
+
+	## Step 1: 標準化 trước
+
+	Nếu chưa standardize:
+
+		Mỗi team log kiểu khác nhau
+		Mỗi system API khác nhau
+
+		→ Bạn có centralize cũng vô nghĩa
+		→ vì dữ liệu rác
+
+
+
+
+	## Step 2: 一元化
+		Sau khi đã standard:
+
+		Gom dữ liệu về 1 nơi
+		Single source of truth
+
+		→ bắt đầu có control	
+			
+	
+	## Step 3: 可視化 	
+		Sau khi đã có data sạch + tập trung:
+		→ mới visualize được	
+	
+	
+	
+	👉 Ngược lại (rất nhiều công ty làm sai): 
+		Dashboard trước → rồi mới nghĩ đến standard
+	→ Kết quả:
+		Dashboard đẹp
+		Nhưng số liệu sai
+		→ tự lừa mình
+	
+	
+# 	3. Nhìn dưới góc độ system design (level senior)
+	Bạn đang build system hay build chaos?
+	
+	System tốt có 3 đặc điểm:
+	
+| Concept | Vai trò          |
+| ------- | ---------------- |
+| 標準化     | Giảm biến thể    |
+| 一元化     | Giảm duplication |
+| 可視化     | Tăng nhận thức   |
+
+
+	👉 3 cái này map thẳng vào:
+
+		Scalability
+		Maintainability
+		Observability
+
+
+# 4. Ví dụ thực chiến (ServiceNow) 
+
+	## Trước khi làm
+
+		Incident qua email
+		Mỗi team reply kiểu riêng
+		Không có format
+		Không có tracking
+
+	👉 Trạng thái:
+
+		標準化 ❌
+		一元化 ❌
+		可視化 ❌
+		→ pure chaos
+
+
+
+	## Sau khi triển khai ServiceNow
+
+	標準化
+		- Incident form cố định
+		- Workflow cố định
+		- SLA rule cố định
+
+
+	一元化
+		- Tất cả incident nằm trong ServiceNow
+		- Không còn email là source chính
+
+
+	可視化
+		- Dashboard SLA
+		- Ticket status
+		- Bottleneck detection
+
+	👉 Kết quả:
+		Manager nhìn 1 màn hình → hiểu toàn hệ thống
+
+
+
+
+
+# 6. Sai lầm phổ biến (đập thẳng)
+
+	❌ Sai 1: tưởng standardization = rigid
+
+	→ không, nó là:
+		Controlled flexibility (Kiểm soát tính linh hoạt)
+	
+
+
+	❌ Sai 2: centralize mọi thứ
+		→ over-centralization = bottleneck
+		→ đúng phải là:
+			logical centralization (source of truth), không phải physical
+			(Tập trung logic , không phải vật lý)
+
+
+	❌ Sai 3: dashboard = observability
+
+		→ dashboard chỉ là surface
+
+			→ không có:
+				log
+				trace
+				metric
+			→ thì chỉ là “ảo giác kiểm soát”
+
+# 
+
+	Không có 標準化 → không scale được
+	Không có 一元化 → không tin được data
+	Không có 可視化 → không control được system
+
+
+</pre><a id='backBottom' href='../powerpoint-learning-2-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

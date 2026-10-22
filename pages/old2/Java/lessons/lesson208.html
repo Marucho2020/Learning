@@ -1,0 +1,184 @@
+<html><head><title>Lesson 208 == Functional Retry, Timeout, và Circuit Breaker Core ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 208 -- Functional Retry, Timeout, và Circuit Breaker Core -//</h1><pre>
+# 🧩 Tổng quan: Resilience Functional là gì?
+
+
+	Resilience trong hệ thống không chỉ là chống lỗi, mà là khả năng duy trì logic nhất quán khi lỗi xảy ra — không mất dữ liệu, không crash, không làm user thấy “bị lỗi”.
+
+	Trong functional style, resilience được viết bằng Higher-Order Functions (HOF) — tức là hàm nhận hàm, trả hàm.
+
+
+
+# ⚙️ 1️⃣ Retry — Functional Recursive Retry
+
+	✅ Ý tưởng
+		Thay vì try-catch + vòng for, ta tạo một function bọc quanh logic gốc, có thể retry n lần nếu lỗi.
+		
+import java.util.function.Supplier;
+
+public static <T> T withRetry(Supplier<T> fn, int retries) {
+    try {
+        return fn.get();
+    } catch (Exception e) {
+        if (retries > 0) {
+            System.out.println("Retrying... attempts left: " + retries);
+            return withRetry(fn, retries - 1);
+        }
+        throw e; // hết retries → ném lỗi ra
+    }
+}
+
+
+	##🔍 Giải thích:  
+
+		Supplier<T> đại diện cho logic “có thể thất bại”.
+		
+		Function withRetry là Higher-Order Function — nó không biết logic bên trong là gì (API call, DB query, hay gửi mail), chỉ xử lý cách retry.
+		
+		Không dùng vòng lặp hay state ngoài → pure recursion.
+		
+		Functional → có thể compose với withTimeout hay withCircuitBreaker.
+
+
+	## 🏢 Enterprise: 
+
+		Supplier<Response> callApi = () -> httpClient.post("/payment", payload);
+		Response res = withRetry(callApi, 3);
+
+	→ Retry 3 lần nếu HTTP call lỗi.
+	Không cần @Retryable, không phụ thuộc framework.
+
+
+
+# ⚙️ 2️⃣ Timeout — CompletableFuture Timeout Wrapper
+
+	# ✅ Ý tưởng:
+		Nếu một function mất quá lâu, ta cần giới hạn thời gian thực thi — tránh block thread hoặc treo pipeline.
+
+import java.util.concurrent.*;
+
+public static <T> T withTimeout(Supplier<T> fn, Duration timeout) {
+    ExecutorService executor = Executors.newSingleThreadExecutor();
+    Future<T> future = executor.submit(fn::get);
+    try {
+        return future.get(timeout.toMillis(), TimeUnit.MILLISECONDS);
+    } catch (TimeoutException e) {
+        throw new RuntimeException("Operation timed out", e);
+    } catch (Exception e) {
+        throw new RuntimeException(e);
+    } finally {
+        executor.shutdown();
+    }
+}
+
+
+
+	CompletableFuture hoặc ExecutorService cho phép giới hạn thời gian.
+	Không block main thread.
+	Functional vì: withTimeout chỉ bọc function, không can thiệp logic bên trong.
+	Dễ compose:
+		withRetry(() -> withTimeout(apiCall, Duration.ofSeconds(2)), 3);
+	→ Retry tối đa 3 lần, mỗi lần timeout 2 giây.
+
+
+
+# ⚙️ 3️⃣ Circuit Breaker — Functional State Control
+
+	✅ Ý tưởng
+		Khi service downstream lỗi quá nhiều → “ngắt mạch” tạm thời (open state), để không làm hệ thống sập dây chuyền.
+
+import java.util.concurrent.atomic.AtomicReference;
+import java.time.Instant;
+
+enum State { CLOSED, OPEN, HALF_OPEN }
+
+class CircuitBreaker {
+    private final AtomicReference<State> state = new AtomicReference<>(State.CLOSED);
+    private final int failureThreshold;
+    private final Duration openDuration;
+    private Instant lastFailureTime = Instant.MIN;
+
+    CircuitBreaker(int failureThreshold, Duration openDuration) {
+        this.failureThreshold = failureThreshold;
+        this.openDuration = openDuration;
+    }
+
+    public <T> T call(Supplier<T> fn) {
+        if (state.get() == State.OPEN && Instant.now().isBefore(lastFailureTime.plus(openDuration))) {
+            throw new RuntimeException("Circuit is open");
+        }
+
+        try {
+            T result = fn.get();
+            state.set(State.CLOSED); // success → reset
+            return result;
+        } catch (Exception e) {
+            lastFailureTime = Instant.now();
+            state.set(State.OPEN);
+            throw new RuntimeException("Circuit opened", e);
+        }
+    }
+}
+
+	
+	AtomicReference<State> đảm bảo thread-safe mà vẫn functional immutable style (copy-on-update).
+	Không thay đổi fn bên trong, chỉ bao quanh nó.
+	Có thể kết hợp withRetry và withTimeout:
+
+CircuitBreaker breaker = new CircuitBreaker(3, Duration.ofSeconds(10));
+Response res = breaker.call(() -> withRetry(() -> withTimeout(apiCall, Duration.ofSeconds(2)), 2));
+
+
+# 🔗 Tổng hợp: Composable Resilience Pipeline
+
+Supplier<Response> resilientCall =
+    () -> withRetry(
+            () -> withTimeout(
+                    () -> breaker.call(apiCall),
+                    Duration.ofSeconds(2)),
+            3);
+
+Response res = resilientCall.get();
+
+
+	Code pure functional — không phụ thuộc Spring hay annotation.
+	Dễ test, dễ log, dễ compose.
+	Giữ logic rõ ràng: Retry → Timeout → Breaker → API call.
+
+
+
+
+
+# 🏭 Ứng dụng Enterprise thực tế:
+
+| Tình huống                     | Giải pháp Functional   |
+| ------------------------------ | ---------------------- |
+| Gọi Payment API có thể lỗi tạm | `withRetry()`          |
+| Email server chậm phản hồi     | `withTimeout()`        |
+| External API sập               | `withCircuitBreaker()` |
+| Hệ thống messaging             | Compose cả 3 function  |
+
+
+
+	## Khi triển khai, có thể dùng functional DSL:
+	
+ResiliencePolicy policy = ResiliencePolicy
+    .retry(3)
+    .timeout(Duration.ofSeconds(2))
+    .circuitBreaker(5, Duration.ofSeconds(10));
+
+policy.apply(apiCall);
+
+
+
+
+#🧠 Tư duy functional senior cần nhớ: 
+
+	Resilience = composition of behaviors, không phải “annotation magic”.
+	Functional resilience dễ kiểm thử hơn vì mọi thứ là function → test độc lập.
+	Bạn có thể implement lại 90% tính năng của Resilience4j chỉ bằng vài trăm dòng functional code.
+
+
+
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

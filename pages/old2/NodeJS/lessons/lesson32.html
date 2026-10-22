@@ -1,0 +1,172 @@
+<html><head><title>Lesson 32 == assert ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../NodeJS-learning.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 32 -- assert -//</h1><pre>
+# Assert Module là gì? Dùng để làm gì?
+
+	assert = “khẳng định”, “đảm bảo điều này phải đúng”
+	
+	const assert = require('assert'); // hoặc require('node:assert')
+
+	## 
+	Mục đích duy nhất:
+
+		Bắt lỗi ngay trong lúc phát triển khi một điều gì đó không đúng như kỳ vọng.
+		→ Nếu điều kiện sai → ném lỗi và dừng chương trình ngay lập tức.
+
+
+	##Dùng khi nào? 
+
+		Viết unit test (cùng Jest, Mocha)
+		Kiểm tra tham số đầu vào của hàm
+		Debug logic phức tạp
+		Đảm bảo contract giữa các module
+
+
+
+# TẤT CẢ CÁC HÀM QUAN TRỌNG NHẤT
+
+	assert(value) hoặc assert.ok(value) : value phải truthy
+		assert(user);
+	
+	
+	assert.strictEqual(a, b) 	: a === b (cùng giá trị + kiểu)
+		"assert.strictEqual(status, 200)"
+	
+	
+	
+	"assert.deepStrictEqual(a, b)" : So sánh sâu object/array
+			"assert.deepStrictEqual(arr1, arr2)"
+			
+			
+	assert.throws(fn) :fn phải ném lỗi
+		assert.throws(() => divide(10,0))"
+		
+assert.fail(message),Chủ động báo lỗi,assert.fail('Không được vào đây!')
+
+
+
+# Ví dụ
+const assert = require('assert');
+
+// 1. Cơ bản
+assert(1 + 1 === 2);        // OK
+// assert(1 + 1 === 3);     // AssertionError
+
+// 2. strictEqual (so sánh cả kiểu)
+assert.strictEqual('5', 5); // AssertionError
+assert.strictEqual(5, 5);   // OK
+
+// 3. deepStrictEqual (so sánh object)
+const obj1 = { name: 'Grok', age: 1 };
+const obj2 = { name: 'Grok', age: 1 };
+assert.deepStrictEqual(obj1, obj2); // OK
+
+// 4. Kiểm tra hàm ném lỗi
+function divide(a, b) {
+  if (b === 0) throw new Error('Chia cho 0!');
+  return a / b;
+}
+
+assert.throws(
+  () => divide(10, 0),
+  /Chia cho 0!/    // regex kiểm tra message
+);
+
+
+# SO SÁNH CÁC LOẠI
+
+Hàm,So sánh kiểu dữ liệu?,So sánh sâu object?,Dùng khi nào?
+assert(a == b),Không,Không,Cực ít dùng
+"assert.strictEqual(a, b)",Có (===),Không,"So sánh số, string, null"
+"assert.deepStrictEqual(a, b)",Có,Có,"Object, array – DÙNG NHIỀU NHẤT"
+
+
+
+# Node.js 18+ có assert mới siêu ngon (nên dùng)
+
+import assert from 'node:assert';
+
+// Dùng với async/await
+await assert.rejects(
+  async () => { throw new Error('Lỗi rồi'); },
+  /Lỗi rồi/
+);
+
+// Match lỗi chính xác
+assert.match('abc123', /^[a-z]+\d+$/);
+assert.doesNotMatch('abc', /^\d+$/);
+
+
+
+# ỨNG DỤNG THỰC TẾ KHI ĐI LÀM
+
+	## 1. Kiểm tra tham số đầu vào (defensive programming)
+function sendMoney(toUserId, amount) {
+  assert.strictEqual(typeof toUserId, 'string', 'toUserId phải là string');
+  assert(amount > 0, 'Số tiền phải > 0');
+  assert(amount <= 1000000, 'Không chuyển quá 1 triệu/lần');
+
+  // ... logic chuyển tiền
+}
+
+
+
+
+	##2. Viết test nhanh không cần Jest
+
+// test-user.js
+const assert = require('assert');
+const { getUser, createUser } = require('./user');
+
+const user = getUser(123);
+assert(user.name === 'Grok');
+assert(user.age > 0);
+
+console.log('Tất cả test passed!');
+
+
+
+
+	## 3. Debug logic phức tạp
+
+function processPayment(order) {
+  // ... 100 dòng code phức tạp
+
+  // Đảm bảo tổng tiền luôn đúng
+  assert.strictEqual(
+    order.total,
+    order.items.reduce((sum, item) => sum + item.price * item.qty, 0)
+  );
+
+  // Nếu chạy đến đây mà lỗi → biết ngay bug ở đâu
+}
+
+
+
+# Assert vs if + throw – Nên dùng cái nào?
+
+
+Trường hợp,Dùng assert,Dùng if + throw
+Lỗi lập trình (developer sai),Dùng assert,Không
+Lỗi người dùng (input sai),Không,Dùng throw
+Trong production,assert bị tắt (NODE_ENV=production),Luôn chạy
+
+
+→ assert chỉ để bắt lỗi trong lúc code, không dùng để validate user input!
+
+
+
+
+# TÓM TẮT SIÊU NHANH – CHEAT SHEET
+
+
+
+Bạn muốn kiểm tra gì?,Dùng lệnh nào?
+Giá trị phải truthy,assert(value)
+Hai giá trị giống nhau (cùng kiểu),"assert.strictEqual(a, b)"
+Hai object/array giống nhau,"assert.deepStrictEqual(a, b)"
+Hàm phải ném lỗi,assert.throws(fn)
+Async function phải reject,await assert.rejects(fn)
+Chủ động báo lỗi,assert.fail('Lỗi rồi')
+
+
+
+</pre><a id='backBottom' href='../NodeJS-learning.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

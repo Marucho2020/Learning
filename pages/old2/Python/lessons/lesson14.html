@@ -1,0 +1,190 @@
+<html><head><title>Lesson 13 == Xử lý file FILE ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../python-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 13 -- Xử lý file FILE -//</h1><pre>
+- Text file 
+- Binary file	
+
+
+	1. Mở file 		
+		- open(file,mode='r',buffering=-1, encoding=None, errors=None, newline=None,closefd=True, opener=None)
+					* Hàm này trả về một file có kiểu dữ liệu là iterable 
+					file_obj = open('Dict.py' , mode='r', encoding='cp1258')
+					
+				+ file : tên tệp muốn mở ("example.txt" hoặc r"C:\folder\example.txt".) absolute path or relative
+				
+				+ mode  : chế độ mở tệp 
+									r  : mở tệp để đọc(mặc định) . Tệp không tồn tại sẽ báo lỗi 
+									r+ : mở tệp để đọc và ghi 
+									w  : mở tệp để ghi, nếu tệp đã tồn tại sẽ bị ghi đè, nếu không tạo tệp mới
+									w+ : mở để ghi và đọc, 
+									x  : tạo một tệp mới và mở để ghi. Nếu tệp ĐÃ TỒN TẠI sẽ báo LỖI 
+									a  : mở tệp để ghi thêm vào cuối tệp. Nếu tệp không tồn tại sẽ tự đc tạo
+									a+ : mở tệp để ghi và đọc 
+									b  : mở tệp ở chế độ nhị phân(binary). Thường được kết hợp với các chế độ khác như 'rb'(đọc nhị phân) hay 'wb'(ghi nhị phân )
+									t  : Mở tệp chế độ văn bản (text) -> Đây là chế độ mặc định 
+									+  : mở tệp để đọc và ghi, ví dụ 'r+' , 'w+' , 'a+'
+									
+				+ buffering : Điều khiển việc đệm dữ liệu (default = -1 )
+									0 :	Không đệm dữ liệu(dùng cho chế độ nhị phân ) 
+									1 : Đệm dòng(chỉ đệm cho chế độ văn bản)
+								    >1:	Số lớn hơn 1 , Độ lớn của bộ đệm tính theo byte 
+								   -1 : Đặt giá trị đệm theo mặc định hệ thống 
+								   
+								   
+				+ encoding	: (Mặc định là None) : Chỉ định bảng mã ký tự khi mở tệp ở chế độ văn bản(text mode) , ví dụ 'utf-8' , 'ascii' , 'utf16'
+
+
+				+ errors 	: (Mặc định là None) : Chỉ định Quy cách xử lý khi xảy ra lỗi mã hóa, giải mã 
+									
+									'strict'    			: Báo lỗi nếu có lỗi mã hóa 
+									'ignore'    			: Bỏ qua lỗi 
+									'replace'   			: thay thế các ký tự không hợp lệ bằng ký tự thay thế(? hoặc tương đương )
+									'backslashreplace'    	: thay ký tự lỗi bằng chuỗi thoát(\uXXXX) 
+					
+				
+				+ newline	:(Mặc định là None) Quy cách xử lý các ký tự xuống dòng (\n,\r , \r\n)
+									None 						: Xử lý xuống dòng theo mặc định của hệ điều hành
+									'' 							: Bỏ qua hoàn toàn việc chuyển đổi dòng mới 
+									'\n','\r' , '\r\n' 			: Chỉ định một kiểu xuống dòng cụ thể  
+									
+									
+				+ closefd	: (Mặc định là True)	
+				
+									True 		      : Khi đóng đối tượng tệp , Mô tả file(description fd) sẽ được đóng 
+									
+ 									False             : Ngược lại, Mô tả file sẽ không bị đóng khi tệp đóng 
+									* Nếu file là đường dẫn, closefd BẮT BUỘC phải là True
+									
+									
+									
+				+ opener 	: (Mặc định là None)	: một callable cho phép tùy chỉnh cách mở tệp. Nó nhận hai đối số(đường dẫn tệp và các cờ như trong os.open ) và trả về một file description. Điều này rất hữu ích khi bạn cần kiểm soát cách tệp được mở ở mức thấp 					
+									
+									
+									
+									
+	2. Đóng file 
+			- Sử dụng sau khi đã thao tác xong, để đóng luồng xử lý file (Quan trọng )
+				
+				<File>.close()   // file_obj.close()
+									
+									
+	3. 	Đọc file 		 
+			+  <File>.read(pos)		
+			
+										// Nếu pos bị bỏ trống hoặc là số âm -> Sẽ đọc hết nội dung và ĐƯA CON TRỎ ĐẾN CUỐI FILE 	
+										// pos >= 0  thì sẽ đọc đến char = n truyền vào , pos = n 
+										// Nếu không đọc được gì, phương thức sẽ trả về một chuỗi có độ dài bằng 0
+								
+											print(file_obj.read(-1))	
+								
+
+	4. Đọc file theo MỘT  dòng  			 			
+			+ <File>.readline(pos)		
+											// Nếu pos bỏ trống hoặc là số âm  -> Sẽ đọc hết DÒNG đến khi gặp ký tự xuống dòng và đặt con trỏ tại vị trí đó 
+											// Pos truyền vào sẽ là số lượng KÝ TỰ  cần đọc 
+											// Nếu không đọc được gì, phương thức sẽ trả về một chuỗi có độ dài bằng 0
+											
+	
+
+	5. Đọc file theo NHIỀU dòng 				
+			+ <File>.readlines(hint)	
+											// Nếu hint = -1 , số âm , hoặc không truyền vào thì sẽ ĐỌC TOÀN BỘ NỘI DUNG TỆP 
+											
+											// nếu hint >= 0 thì sẽ cố gắng sao chép các dòng sao cho tổng số byte các dòng được xấp xỉ giá trị của hint . Tuy nhiên, nó sẽ trả về danh sách các dòng đã hoàn chỉnh(nếu một dòng có độ dài lớn hơn hint , nó sẽ được đọc đầy đủ )
+											// Điều này giúp tối ưu hóa bộ nhớ khi không cần thiết phải đọc toàn bộ tệp một lần.
+											
+											// xuống dòng sẽ được chuyển thành ký tự \n 
+											
+											// Nếu hint nhỏ hơn tổng số byte của các dòng trong tệp:
+											Phương thức sẽ cố gắng đọc các dòng sao cho tổng số byte đọc được xấp xỉ với giá trị hint. Tuy nhiên, nó không dừng giữa một dòng. Nếu số byte của một dòng vượt quá hint, phương thức vẫn đọc trọn vẹn dòng đó.
+											
+											
+											// Nếu các dòng tiếp theo có tổng số byte vượt quá hint:
+											Phương thức sẽ dừng lại ngay sau khi đọc đủ các dòng mà tổng số byte gần bằng hoặc vượt qua hint. Tuy nhiên, như đã nói ở trên, nó sẽ đọc đầy đủ các dòng, ngay cả khi điều này khiến số byte vượt quá hint.
+									e.g		
+									with open('example.txt', 'r') as f:
+										lines = f.readlines(100)  # Đọc các dòng cho đến khi tổng số byte là khoảng 100
+
+		
+		
+		6. Đọc file bằng constructor nhận iterable 
+							   
+					// File Object cũng là một kiểu iterable -> ta có thể sử dụng constructor list 
+					// Các constructor này cũng sẽ đưa con trỏ file xuống cuối file.
+								e.g
+								file_obj = open('Dict.py' , mode='r+', encoding='utf-8')
+
+								# Lấy ra nội dung file dạng List , với mỗi phần tử là một dòng  
+								list_content = list(file_obj)
+								print(list_content)
+								file_obj.close()
+								
+								
+								# Lấy ra nội dung file dạng Tuple, với mỗi phần tử là một dòng 
+								file_obj = open('Dict.py' , mode='r+', encoding='utf-8')
+								list_content = tuple(file_obj)
+								print(list_content)
+								
+								# Có thể sử dụng nó như 1 iterable ở các kiểu dữ liệu khác ....
+
+
+
+		7. Ghi file 			<File>.write(text)	
+									// Trả về số ký tự mà chúng ta ghi vào file 
+									// File phải được mở bằng chế độ write mới viết được   
+									// Mỗi lần sử dụng write , con trỏ sẽ được đặt ngay sau ký tự cuối cùng đc ghi
+									// MẶC ĐỊNH GHI VÀO ĐẦU FILE nếu k sử dụng mode a 
+									
+									
+									file_obj = open('Dict.py' , mode='a+', encoding='utf-8')    // Đặt con trỏ vào cuối File 
+									file_obj.write('--SIGN--')  // MODE a  -> Ghi vào cuối file 
+									
+									
+									
+									
+		8. Kiểm soát con trỏ  
+			// Phương thức seek	
+				<File>.seek(offset, whence=0)		// Phương thức giúp ta di chuyển con trỏ từ vị trí 	đầu file qua offset ký tự, Và parameter offset phải là một số tự nhiên 
+														// Nhờ đó ta có thể ghi nội dung bất cứ đâu trong file 
+														
+														// Từ đó ta có thể đọc lại file sau khi đưa con trỏ xuống cuối file 
+														
+								
+													// offset : Số byte mà muốn di chuyển con trỏ từ bị trí được chỉ định bởi whence 
+														+ offset >= 0   // di chuyển con trỏ về phía trước 
+														+ offset < 0  	// di chuyển con trỏ lùi về phía sau 
+														
+													// whence : Vị trí bắt đầu để di chuyển con trỏ( 0 đầu tệp , 1 vị trí hiện tại, 2 cuối tệp) , giá trị MẶC ĐỊNH = 0 -> tức là 0 là vị trí đầu tệp 
+														+ 0  // mặc định, vị trí đầu tệp 
+														+ 1  // bắt đầu từ vị trí hiện tại của con trỏ 
+														+ 2  // băt đầu từ vị trí cuối tệp 
+													
+									e.g 					
+								with open('example.txt', 'r') as f:					
+									f.seek(6)  # whence=0 mặc định		Con trỏ dừng tại Position thứ 6 trong file 
+									print(f.read())  # In ra từ vị trí thứ 6 	đến hết file 
+									
+											
+									with open('Dict.py', 'rb') as f:    // Phải là đọc nhị phân  thì mới sử dụng whence theo byte đc 
+										f.seek(-10, 2)  # Di chuyển về 10 byte từ cuối tệp		
+										print(f.read())  # In ra từ vị trí này
+								
+								
+								
+		//Câu lệnh with  
+		
+				with expression [as variable]:
+						with-block    
+													// Đoạn xử lý cần dữ liệu từ with phải thụt dòng ko thì lỗi 
+													// Câu lệnh này liên quan đến phương thức __enter__ và __exit__ của đối tượng 
+													
+													// Khi sử dụng open file với with , khi thoát khỏi with FILE SẼ ĐƯỢC ĐÓNG 
+										
+										# Có thể kết hợp sử dụng :=
+										with (file_obj := open('Dict.py', 'r')) : 		// As khi nào nhiều hoặc rối quá thì dùng 
+											data= file_obj.read()						# sau dòng này sẽ đóng file 
+
+										print(data)			
+
+
+
+	
+</pre><a id='backBottom' href='../python-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

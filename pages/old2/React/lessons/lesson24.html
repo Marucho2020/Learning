@@ -1,0 +1,181 @@
+<html><head><title>Lesson 24 == CSS Module ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../react-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 24 -- CSS Module -//</h1><pre>
+
+# 	1. What are CSS Modules? (Cơ Bản Và Lợi Ích Sâu Sắc)
+	CSS Modules là CSS files với class names scoped locally, tránh global pollution. Không phải React core, mà hỗ trợ qua bundlers (webpack từ react-scripts@2.0.0+, Vite, Parcel). File phải có extension .module.css (hoặc .module.scss cho Sass).
+	
+	## Lợi Ích Cốt Lõi (Expert View) 
+		Scoped Styles: Class names hashed, tránh conflicts (e.g., hai components dùng .button không clash). Lý tưởng cho teams lớn hoặc libraries reusable.
+		
+		Modularity: Styles bundled với component, dễ maintain (di chuyển file không break styles).
+		
+		Performance: Build-time processing, không runtime overhead như CSS-in-JS (e.g., styled-components phải generate styles tại client).
+	
+		Debugging: Hashed names unique, dễ trace qua DevTools (React Profiler show component-specific styles).
+	
+		Integration: Seamless với TypeScript (typed styles via typings-for-css-modules), và frameworks như Next.js (tích hợp RSC).
+	
+	
+	## Nhược Điểm: 
+		Không dynamic như CSS-in-JS (khó conditional styles based on props mà không dùng class toggling). Giải pháp: Kết hợp với libraries như clsx cho conditional classes. 
+	
+	
+# 2. Creating a CSS Module (Tạo File Và Cấu Trúc) 	
+	
+	## Bắt đầu bằng file .module.css với selectors thông thường.
+		Ví Dụ Cơ Bản (Từ Bài Viết): Button.module.css
+	
+.mybutton {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}	
+	
+	## Ví Dụ Nâng Cao 
+		Variables Và Media Queries: Thêm CSS modern features (variables, nesting).
+	
+.mybutton {
+  --primary-color: #007bff; /* CSS Variable cho theming */
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  background-color: var(--primary-color);
+  color: white;
+
+  &:hover { /* Nesting (yêu cầu PostCSS hoặc Sass) */
+    background-color: darken(var(--primary-color), 10%);
+  }
+
+  @media (max-width: 600px) {
+    padding: 8px 16px; /* Responsive */
+  }
+}	
+	Phân Tích: Sử dụng CSS vars cho theming global (qua :root hoặc context). Với Sass (.module.scss), thêm mixins/functions cho reusable logic. Bundlers như Vite tự handle import.
+	
+	
+
+# 3. Using a CSS Module (Import Và Áp Dụng)
+
+	Import như JS module: import styles from './Button.module.css';, sau đó dùng className={styles.mybutton}.
+
+import styles from './Button.module.css';
+
+function App() {
+  return (
+    <div>
+      <button className={styles.mybutton}>My Button</button>
+    </div>
+  );
+}
+
+	Phân Tích: Bundler hash thành e.g., class="_mybutton_q1obu_1". DOM final: <button class="_mybutton_q1obu_1">...</button>.
+
+
+
+	## Ví Dụ Nâng Cao Với Dynamic Classes Và Props 
+
+import styles from './Button.module.css';
+import clsx from 'clsx'; // Library cho conditional classes
+
+function Button({ variant = 'primary', disabled }) {
+  return (
+    <button
+      className={clsx(styles.button, {
+        [styles.primary]: variant === 'primary',
+        [styles.secondary]: variant === 'secondary',
+        [styles.disabled]: disabled,
+      })}
+    >
+      Click Me
+    </button>
+  );
+}
+
+	Phân Tích Sâu: Clsx giúp conditional mà không string concat thủ công (tránh errors). Với TypeScript: const styles: { [key: string]: string } = ... để type-safe. Performance: Tránh re-concat strings mỗi render bằng useMemo nếu complex.
+
+
+
+
+# 4. Multiple Classes (Kết Hợp Nhiều Classes)
+
+	Ví Dụ Từ Bài Viết: Thêm .primary, .secondary trong CSS, áp dụng ${styles.mybutton} ${styles.primary}.
+
+	Ví Dụ Nâng Cao Với External Classes:Giả sử có global CSS (từ third-party), kết hợp:
+
+import styles from './Button.module.css';
+
+function Button() {
+  return <button className={`${styles.mybutton} global-external-class`}>...</button>;
+}
+
+	Phân Tích: Global classes không hashed, nhưng local vẫn scoped. Chuyên gia: Tránh overuse multiple classes; ưu tiên composes cho inheritance (xem phần sau) để giảm specificity wars.
+
+
+
+# 5. Composing Classes (Kế Thừa Styles Với composes)
+
+	composes cho phép class kế thừa styles từ class khác, giảm duplication.
+	Ví Dụ Từ Bài Viết: .primary { composes: mybutton; ... } 
+	– Giờ chỉ cần className={styles.primary}.
+
+	Ví Dụ Nâng Cao Với Multiple Composes Và External Files:
+	Giả sử hai files: base.module.css và variants.module.css.
+		base.module.css:
+
+.base {
+  padding: 10px;
+  border-radius: 4px;
+}
+
+
+variants.module.css:
+.primary {
+  composes: base from './base.module.css'; /* Composes từ file khác */
+  composes: hover-effect; /* Local composes */
+  background-color: blue;
+}
+
+.hover-effect {
+  &:hover {
+    opacity: 0.9;
+  }
+}
+
+	Phân Tích Sâu: Composes là build-time, không runtime cost. Hỗ trợ multi-inheritance (composes: class1 class2;). Lý tưởng cho design systems (e.g., base button styles, variants cho themes). Limitations: Không composes global classes trực tiếp; dùng :global nếu cần
+
+
+
+
+# 6. Global Classes (Làm Classes Global Với :global)
+
+	:global(.class) làm class không hashed, available everywhere.
+	Ví Dụ Từ Bài Viết: :global(.myheader) { ... } – Dùng className="myheader".
+	Ví Dụ Nâng Cao Với Selective Globals:
+
+:global {
+  .myheader { /* Global block */
+    font-size: 50px;
+  }
+}
+
+.local-paragraph { /* Scoped */
+  color: purple;
+}
+
+	Phân Tích: Dùng cho reset styles, third-party overrides, hoặc utilities (e.g., .visually-hidden). Chuyên gia: Giới hạn globals để tránh defeats purpose của Modules; chỉ dùng cho necessities như body resets.
+
+
+# 7. Combine Global and Local Classes (Kết Hợp Trong Cùng File)
+
+	Ví Dụ Từ Bài Viết: :global(.myheader) { ... } và .myparagraph { ... }.
+
+	Ví Dụ Nâng Cao Trong Next.js Với RSC:
+	Trong Server Component (Next.js 15+):
+
+
+	Phân Tích: Trong RSC, styles vẫn client-side (hoặc SSR), nhưng Modules giúp giảm bundle size bằng tree-shaking unused classes. Chuyên gia: Kết hợp với CSS layers (@layer) cho priority control.
+
+
+
+</pre><a id='backBottom' href='../react-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

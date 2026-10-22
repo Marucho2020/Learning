@@ -1,0 +1,178 @@
+<html><head><title>Lesson 33 == Vue http ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../vue-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 33 -- Vue http -//</h1><pre># Khái niệm  
+	Vue.js không có thư viện HTTP tích hợp, nhưng bạn có thể sử dụng các thư viện bên thứ ba như Axios hoặc trình duyệt Fetch API để gửi yêu cầu HTTP (GET, POST, PUT, DELETE, v.v.) đến server hoặc API.
+	Trong bài, W3Schools sử dụng Axios vì nó dễ dùng, hỗ trợ nhiều tính năng, và tương thích với cả trình duyệt và Node.js.
+	
+	
+# 2. Cài đặt Axios 
+	Để sử dụng Axios, bạn cần cài đặt nó vào dự án Vue.js:
+	## CDN (cho các dự án đơn giản)
+	<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+	## NPM (cho các dự án lớn, dùng Vue CLI hoặc Vite)
+		npm install axios
+		
+		// Sau đó, import Axios trong component:
+		import axios from 'axios';
+
+
+# 3. Cách sử dụng Axios trong Vue 
+	Axios cho phép gửi các yêu cầu HTTP và xử lý phản hồi (response) hoặc lỗi (error). 
+	
+	Các phương thức phổ biến:
+		- axios.get(url): Lấy dữ liệu từ server.
+		- axios.post(url, data): Gửi dữ liệu lên server.
+		- axios.put(url, data): Cập nhật dữ liệu trên server.
+		- axios.delete(url): Xóa dữ liệu trên server.
+
+
+	## Cú pháp cơ bản
+	
+axios.get('https://api.example.com/data')
+  .then(response => {
+    // Xử lý dữ liệu trả về
+    console.log(response.data);
+  })
+  .catch(error => {
+    // Xử lý lỗi
+    console.error(error);
+  });
+
+
+
+# 4. Ví dụ: Lấy dữ liệu với GET 
+	Giả sử bạn muốn lấy danh sách người dùng từ một API. 
+		
+	## Component Vue 
+<template>
+  <div>
+    <h2>Users</h2>
+    <button @click="fetchUsers">Fetch Users</button>
+    <ul>
+      <li v-for="user in users" :key="user.id">{{ user.name }}</li>
+    </ul>
+  </div>
+</template>
+
+<script>
+import axios from 'axios';
+
+export default {
+  data() {
+    return {
+      users: []
+    };
+  },
+  methods: {
+    async fetchUsers() {
+      try {
+        const response = await axios.get('https://jsonplaceholder.typicode.com/users');
+        this.users = response.data; // Gán dữ liệu vào users
+      } catch (error) {
+        console.error('Error fetching users:', error);
+      }
+    }
+  }
+};
+</script>	
+
+
+
+	## Giải thích 
+		- API: Sử dụng API giả từ jsonplaceholder.typicode.com.
+		- Sự kiện: Nút <button> gọi phương thức fetchUsers khi được nhấn.
+		- Axios GET: Gửi yêu cầu GET đến API, nhận phản hồi chứa danh sách người dùng.
+		- Dữ liệu: response.data chứa mảng người dùng, được gán vào users để render danh sách.
+		- Xử lý lỗi: Sử dụng try/catch để bắt lỗi nếu yêu cầu thất bại.
+		- Kết quả: Danh sách tên người dùng được hiển thị trong <ul>.		
+
+
+# 5. Ví dụ: Gửi dữ liệu với POST 
+	Giả sử bạn muốn gửi một bài đăng mới lên server.
+
+<template>
+  <div>
+    <h2>Create Post</h2>
+    <input v-model="post.title" placeholder="Title" />
+    <textarea v-model="post.body" placeholder="Body"></textarea>
+    <button @click="createPost">Submit</button>
+    <p v-if="responseMessage">{{ responseMessage }}</p>
+  </div>
+</template>
+
+<script>
+import axios from 'axios';
+
+export default {
+  data() {
+    return {
+      post: {
+        title: '',
+        body: ''
+      },
+      responseMessage: ''
+    };
+  },
+  methods: {
+    async createPost() {
+      try {
+        const response = await axios.post('https://jsonplaceholder.typicode.com/posts', this.post);
+        this.responseMessage = `Post created with ID: ${response.data.id}`;
+        this.post.title = ''; // Reset form
+        this.post.body = '';
+      } catch (error) {
+        this.responseMessage = 'Error creating post: ' + error.message;
+      }
+    }
+  }
+};
+</script>
+
+
+
+
+
+	## Giải thích 
+		Form: Người dùng nhập title và body vào input và textarea.
+		Axios POST: Gửi dữ liệu post lên API bằng axios.post.
+		Phản hồi: API trả về bài đăng mới với ID, được hiển thị trong responseMessage.
+		Xử lý lỗi: Hiển thị thông báo lỗi nếu yêu cầu thất bại.
+		Kết quả: Người dùng thấy thông báo thành công và form được reset.		
+
+
+# 6. Sử dụng với Lifecycle Hooks 
+	Thường thì bạn muốn gọi API ngay khi component được tạo (ví dụ, lấy dữ liệu lúc tải trang). Sử dụng lifecycle hook như created hoặc mounted:
+	
+	
+	
+# 7. Lưu ý quan trọng 
+	## Axios vs Fetch 
+		Axios: Dễ dùng, tự động parse JSON, hỗ trợ cancel request, và có interceptor. 
+		Fetch API: Tích hợp sẵn trong trình duyệt, nhưng yêu cầu xử lý JSON thủ công và ít tính năng hơn.
+		
+	## 	Cấu hình Axios: 
+		Bạn có thể cấu hình base URL hoặc headers mặc định: 
+axios.defaults.baseURL = 'https://api.example.com';
+axios.defaults.headers.common['Authorization'] = 'Bearer token';			
+
+	##  Xử lý lỗi: 
+		Luôn dùng try/catch hoặc .catch để xử lý lỗi mạng, API thất bại, hoặc timeout. 
+		
+	## Async/Await 
+		Sử dụng async/await để viết mã rõ ràng hơn so với .then/.catch.
+		
+	## CORS 
+		Nếu gọi API từ domain khác, server phải hỗ trợ CORS, hoặc bạn cần proxy trong môi trường dev.
+	
+	## Vue 2 vs Vue 3: 
+		Cách dùng Axios giống nhau ở cả Vue 2 và Vue 3.
+		Vue 2 từng có plugin vue-resource (bây giờ không còn được duy trì), nên Axios là lựa chọn phổ biến.
+
+
+
+# 8. Ứng dụng thực tế 
+	Danh sách dữ liệu: Lấy danh sách sản phẩm, bài viết, hoặc người dùng từ API.
+	Form: Gửi dữ liệu form (như đăng ký, đăng nhập) lên server.
+	Cập nhật giao diện: Tự động cập nhật giao diện khi nhận dữ liệu mới từ API.
+	Tích hợp API bên thứ ba: Gọi API thời tiết, thanh toán, hoặc mạng xã hội.
+
+</pre><a id='backBottom' href='../vue-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

@@ -1,0 +1,77 @@
+<html><head><title>Lesson 7 == Controller ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../angular-js-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 7 -- Controller -//</h1><pre># Khái niệm 
+	Controller là logic xử lý dữ liệu nằm phía sau giao diện (view). Nó định nghĩa các biến, hàm, xử lý luồng, rồi được liên kết với HTML qua ng-controller.
+
+
+# 	📦 Cách tạo Controller 
+	
+>> js 	
+angular.module('myApp', []).controller('myCtrl', function($scope) {
+  $scope.name = "Bảo";
+});
+	
+	
+>> html 
+<div ng-app="myApp" ng-controller="myCtrl">
+  <h1>{{ name }}</h1>
+</div>
+	
+	
+	angular.module('myApp', []): tạo một app Angular tên là myApp.
+	.controller('myCtrl', function($scope) {...}): định nghĩa controller myCtrl, sử dụng $scope để chia sẻ dữ liệu giữa controller và view.
+	
+	
+# 	🧠 $scope là gì? 
+
+	$scope là cầu nối giữa controller và view:
+	Controller gán dữ liệu vào $scope.
+	View đọc dữ liệu qua {{ }} hoặc directive (ng-model, ng-bind...).
+	
+	
+# 🧨 Tại sao controller as được ưa chuộng hơn $scope? 
+
+		Thay vì dùng $scope, AngularJS cho phép dùng controller as để gán controller vào một biến, ví dụ $ctrl.
+	
+	
+>> js 	
+angular.module('myApp', []).controller('myCtrl', function() {
+  this.name = "Bảo";
+});
+	
+	
+>> html 
+<div ng-app="myApp" ng-controller="myCtrl as $ctrl">
+  <h1>{{ $ctrl.name }}</h1>
+</div>
+	
+	## Ưu điểm của controller as: 
+		Tránh nhầm lẫn phạm vi (scope).
+		Code rõ ràng, dễ refactor.
+		Hướng tới tư duy component-based.
+	
+	
+	
+	
+# 	✅ Tóm tắt so sánh
+	
+| Cách dùng       | Ưu điểm                   | Nhược điểm                            |
+| --------------- | ------------------------- | ------------------------------------- |
+| `$scope`        | Truy cập dễ, truyền thống | Dễ nhầm, khó test, phạm vi chồng chéo |
+| `controller as` | Rõ ràng, sạch sẽ          | Cần quen cú pháp `this`               |
+	
+	
+
+
+# 🧨 Cạm bẫy
+	Nếu dùng $scope, và không cẩn thận với nested scope (lồng ng-controller), biến có thể bị override hoặc không phản ánh đúng.
+	Khi dùng controller as, bạn không thể gán biến trực tiếp kiểu ng-model="name" mà phải dùng ng-model="$ctrl.name".
+
+
+# 💡 Kết luận
+	
+	Controller định nghĩa logic cho view.
+	Dữ liệu được binding qua $scope hoặc controller as.
+	Nếu bạn đang xây hệ thống mới hoặc muốn maintain lâu dài → dùng controller as là hướng tốt hơn.
+
+
+
+</pre><a id='backBottom' href='../angular-js-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

@@ -1,0 +1,57 @@
+<html><head><title>Lesson 32 == quantum teleportation với post-selection ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../quantum-computing-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 32 -- quantum teleportation với post-selection -//</h1><pre># 🧠 Mục tiêu: Quantum Teleportation 
+	Ta có 3 qubit:
+| Qubit | Vai trò                  |       |
+| ----- | ------------------------ | ----- |
+| q0    | Qubit cần teleport (\`   | ψ⟩\`) |
+| q1    | Entangled với q2 (Alice) |       |
+| q2    | Người nhận (Bob)         |       |
+
+Ta sẽ:
+	Tạo entanglement giữa q1 và q2
+	Alice thực hiện thao tác Bell measurement trên q0 và q1
+	Bob điều chỉnh q2 dựa trên kết quả của Alice (nếu không post-select)
+	Với post-selection, ta chỉ chọn các trường hợp Alice đo được 00, khi đó Bob không cần làm gì.
+
+
+
+	quantum_teleportation_with_post_selection
+
+# ✅ Ý nghĩa:
+
+	Chỉ những lần Alice đo được 00, qubit q2 (Bob) đã mang trạng thái gốc |ψ⟩ mà không cần sửa gì cả.
+	Post-selection ở đây giúp loại bỏ bước classical communication & correction, vì ta biết q2 đã đúng trạng thái cần teleport.
+
+
+# ⚠️ Cẩn thận khi không dùng Post-selection 
+	
+Nếu không post-select, ta phải thêm:
+
+qc.x(2).c_if(c0, 1)
+qc.z(2).c_if(c1, 1)
+	Dựa trên kết quả đo để Bob áp dụng Pauli-X hoặc Z sửa lại trạng thái.
+
+# 📌 Visualize state sau teleport (nếu cần)
+
+# Mô phỏng trạng thái sau khi teleport (chỉ 3 qubit, không đo)
+qc2 = QuantumCircuit(3)
+qc2.h(0)
+qc2.h(1)
+qc2.cx(1,2)
+qc2.cx(0,1)
+qc2.h(0)
+
+# Đo = collapse, nên ta xem statevector trước đo
+state = Statevector.from_instruction(qc2)
+plot_bloch_multivector(state)
+
+
+# 🧩 Tóm tắt 
+	| Phần                      | Có Post-selection        | Không có Post-selection   |
+| ------------------------- | ------------------------ | ------------------------- |
+| Đơn giản hóa xử lý        | ✅                        | ❌ (phải sửa lỗi bằng X/Z) |
+| Dùng được với simulator   | ✅                        | ✅                         |
+| Dễ triển khai thực nghiệm | ❌ (khó giữ lại run đúng) | ✅                         |
+
+
+
+</pre><a id='backBottom' href='../quantum-computing-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

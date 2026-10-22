@@ -1,0 +1,197 @@
+<html><head><title>Lesson 25 == CSS in JS ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../react-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 25 -- CSS in JS -//</h1><pre>
+# Khái niệm 
+	CSS-in-JS là cách viết CSS như code JS, thường qua thư viện như styled-components. Nó cho phép:
+
+
+	
+	- Viết CSS bằng JS: Bạn có thể sử dụng biến JS, hàm, hoặc logic để tạo styles động.
+	
+	- Component-scoped styles: Styles chỉ áp dụng cho component cụ thể, tránh ảnh hưởng toàn cục (global pollution).
+	
+	- Dynamic styles với props: Styles thay đổi dựa trên props truyền vào component, làm cho UI linh hoạt hơn (ví dụ: button primary màu xanh, secondary màu xám).
+	
+	- Tránh xung đột class name: Không cần lo class name trùng nhau giữa các component.
+	
+	## Ưu Nhược Điểm 
+
+	- Nhược: Runtime overhead (tăng JS bundle 5-20KB), potential CSS bloat nếu không purge. Giải pháp: Chuyển sang zero-runtime như Vanilla Extract (compile CSS thành static files tại build).
+	
+	- So Sánh: Khác CSS Modules (build-time, no dynamics native), Inline (no full CSS features như :hover).
+
+
+	Trong React, CSS truyền thống có thể dẫn đến vấn đề khi scale dự án (ví dụ: nhiều developer, nhiều component). CSS-in-JS giải quyết bằng cách generate class name unique (duy nhất) tự động, sử dụng hashing. Thư viện như styled-components, Emotion, hoặc Stitches đều hỗ trợ, nhưng styled-components phổ biến vì cú pháp gần với CSS vanilla (thuần). Tuy nhiên, nhược điểm là bundle size lớn hơn (vì styles được nhúng vào JS), và có thể ảnh hưởng performance nếu không optimize. Trong thực tế, kết hợp với SSR (Server-Side Rendering) như Next.js sẽ tối ưu hơn.
+	
+	Trang web nhấn mạnh rằng CSS-in-JS không phải core React, mà cần install thư viện. Ví dụ sử dụng styled-components với công cụ build như Vite hoặc Create React App.
+
+# 2. Getting Started: Bắt đầu với CSS-in-JS
+
+	npm install styled-components
+
+
+	## Ví dụ 
+		
+import styled from 'styled-components';  // Import thư viện
+
+// Tạo một styled component: MyHeader là thẻ <h1> với styles riêng
+const MyHeader = styled.h1`
+  padding: 10px 20px;  // Padding xung quanh
+  background-color: #007bff;  // Màu nền xanh (Bootstrap primary)
+  color: white;  // Màu chữ trắng
+`;
+
+function App() {
+  return (
+    <>
+      <MyHeader>Welcome!</MyHeader>  // Sử dụng như component React thông thường
+    </>
+  );
+}
+	
+	- import styled from 'styled-components';: Import object styled để tạo component.
+	
+	- styled.h1: Tạo component từ thẻ HTML cơ bản (h1, div, button, v.v.). Bạn có thể dùng styled.div, styled.button, hoặc thậm chí styled từ component React khác.
+	
+	- Template literals (``): Bên trong là CSS thuần, với syntax giống hệt CSS file. Không cần !important hay vendor prefix (thư viện tự handle).
+	
+	- Trong App(): Sử dụng <MyHeader> như component bình thường, nhưng nó tự động áp styles.
+
+
+	Đây là cách đơn giản để bắt đầu, nhưng trong dự án thực, hãy cấu trúc folder tốt: ví dụ, tạo file styles.js riêng để export styled components. Lợi ích: Styles được bundle vào JS, load nhanh hơn (no separate CSS request). Nếu bạn inspect element trong browser, sẽ thấy class name như sc-bSOFjJ – đây là scoped class tự generate. Best practice: Sử dụng theme provider từ styled-components để quản lý colors, fonts toàn app (ví dụ: ThemeProvider).
+
+
+
+	## Nếu muốn thêm hover effect:
+	 
+const MyHeader = styled.h1`
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: white;
+  &:hover {  // Pseudo-class trong CSS-in-JS
+    background-color: #0056b3;  // Màu tối hơn khi hover
+  }
+`;
+
+
+
+# 3. Props in Styled Components: Styles động với Props
+
+	Styles có thể thay đổi dựa trên props truyền vào. Ví dụ: Button với màu khác nhau dựa trên btntype.
+
+import styled from 'styled-components';
+
+const Button = styled.button`
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  background-color: ${props => props.btntype === 'primary' ? '#007bff' : '#6c757d'};  // Logic JS để chọn màu
+  color: white;
+  cursor: pointer;
+`;
+
+function App() {
+  return (
+    <div>
+      <Button btntype="primary">Primary Button</Button>  // Truyền prop btntype
+      <br />
+      <br />
+      <Button>Secondary Button</Button>  // Không truyền -> default xám
+    </div>
+  );
+}
+
+
+${props => ...}: Đây là interpolation trong template literals, cho phép chèn JS expression. props là object chứa tất cả props của component.
+Logic ternary (? :): Kiểm tra btntype để chọn màu. Bạn có thể dùng if-else phức tạp hơn hoặc hàm riêng.
+Trong JSX: Truyền prop như attribute thông thường.
+
+Đây là sức mạnh lớn của CSS-in-JS: Kết hợp state/props React với styles. Trong app thực tế, dùng cho theming (dark/light mode) hoặc responsive (dựa trên screen size). Nhược điểm: Nếu logic phức tạp, có thể làm code khó đọc – giải pháp: Tách hàm style riêng (ví dụ: background-color: ${getBgColor}; với function getBgColor(props) { ... }). So với CSS variables (CSS custom properties), CSS-in-JS mạnh hơn vì full JS power, nhưng CSS vars nhẹ hơn về performance.
+
+
+
+	## Thêm prop cho disabled state: 
+
+const Button = styled.button`
+  ...
+  background-color: ${props => props.disabled ? '#ccc' : (props.btntype === 'primary' ? '#007bff' : '#6c757d')};
+  cursor: ${props => props.disabled ? 'not-allowed' : 'pointer'};
+`;
+<Button disabled>Disabled</Button>
+
+
+
+# 4. Extending Styles: Mở rộng Styles
+	Bạn có thể extend (kế thừa) một styled component để tạo biến thể, chia sẻ styles chung.
+
+import styled from 'styled-components';
+
+const Button = styled.button`  // Base component
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+`;
+
+const PrimaryButton = styled(Button)`  // Extend từ Button
+  background-color: #007bff;
+`;
+
+const SuccessButton = styled(Button)`  // Extend khác
+  background-color: #28a745;
+`;
+
+function App() {
+  return (
+    <div>
+      <PrimaryButton>Primary</PrimaryButton>
+      <SuccessButton>Success</SuccessButton>
+    </div>
+  );
+}
+
+	Đây giống như inheritance trong OOP, giúp DRY (Don't Repeat Yourself). Trong lớn dự án, dùng cho design system (như Material UI). Best practice: Extend từ base để tạo variants (primary, secondary, danger). Nếu extend nhiều lớp, có thể dẫn đến specificity issues – giải pháp: Giữ hierarchy shallow (ít lớp).
+
+
+
+
+# 5. Component-Scoped Styles: Styles giới hạn trong Component
+
+	Styles chỉ áp dụng trong component, tương tự CSS Modules. Thư viện generate class name unique (ví dụ: bSOFjJ, pkxvl), nằm trong <style> tag trong head. Khi view source, bạn thấy styles scoped, không ảnh hưởng component khác.
+
+	Điều này giải quyết vấn đề lớn của CSS global: No cascading unintended. Trong dev tools, bạn thấy class như .sc-bSOFjJ { ... }. Useful cho micro-frontends hoặc libraries. Tuy nhiên, nếu cần override, dùng attrs hoặc theme.
+
+
+# 6. Global Styles: Styles toàn cục
+	Dùng createGlobalStyle để tạo styles áp dụng toàn app (ví dụ: reset CSS, fonts).
+
+import { createGlobalStyle } from 'styled-components';  // Import hàm đặc biệt
+
+const GlobalStyle = createGlobalStyle`
+  body {  // Styles toàn cục
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+  }
+  * {
+    box-sizing: border-box;  // Reset box model
+  }
+`;
+
+// Trong App root:
+function App() {
+  return (
+    <>
+      <GlobalStyle />  // Render như component
+      {/* Các component khác */}
+    </>
+  );
+}
+
+	createGlobalStyle: Tạo component inject styles toàn cục vào <style> tag.
+	Sử dụng ở root để áp dụng everywhere.
+
+	Sử dụng tiết kiệm, chỉ cho resets hoặc themes. Trong Next.js, đặt trong _app.js. Tránh lạm dụng để giữ scoped principle.s
+
+
+
+</pre><a id='backBottom' href='../react-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

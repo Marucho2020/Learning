@@ -1,0 +1,102 @@
+<html><head><title>Lesson 167 == Thread-safe Collections & ConcurrentMap ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 167 -- Thread-safe Collections & ConcurrentMap -//</h1><pre>
+
+# 1. Vấn đề cơ bản
+	Collection mặc định (ArrayList, HashMap) → không thread-safe.
+	Dùng nhiều thread đọc/ghi → race condition, corruption, hoặc deadlock nếu wrap bằng synchronized.
+	
+	Java cung cấp:
+		Legacy: Hashtable, Vector, Collections.synchronizedMap/List → safe nhưng toàn bộ lock, chậm khi nhiều thread.
+		Modern: java.util.concurrent.* → fine-grained lock / lock-free, performance cao.
+
+
+
+# 2. ConcurrentHashMap
+
+	## Nguyên lý 
+		Không lock toàn bộ map mà lock theo bucket / segment (Java 8+ dùng CAS + bin lock + treeify):
+		
+		Đọc gần như không block (volatile read).
+		Viết:
+			- CAS nếu bucket rỗng.
+			- Nếu collision → lock bin/linked list/tree, tránh lock global.
+
+		Thread-safe nhưng performance cực tốt cho nhiều reader, ít writer → read-heavy workload.
+		Iterators: weakly consistent, không throw ConcurrentModificationException.
+
+
+	## Ví dụ nâng cao
+ConcurrentHashMap<String, Integer> map = new ConcurrentHashMap<>();
+map.compute("key", (k, v) -> (v == null) ? 1 : v + 1); // atomic update
+
+		- compute() đảm bảo atomic per-key, tránh race mà không cần external lock.
+		- Không dùng Hashtable nữa → quá nặng, lock toàn bộ map.
+
+# 3. CopyOnWriteArrayList
+
+	## Dùng khi read-heavy, write-hiếm: 
+		Mỗi write → copy toàn bộ array → expensive.
+		Read → không cần lock, iterator an toàn.		
+
+	## Ví dụ phù hợp:
+		Listener list, config snapshot, subscriber.
+	
+CopyOnWriteArrayList<String> list = new CopyOnWriteArrayList<>();
+list.add("A"); // copy underlying array
+for (String s : list) { ... } // safe read, no lock
+	
+		Tip senior: nếu update nhiều → tránh CopyOnWriteArrayList vì overhead, dùng Collections.synchronizedList hoặc custom lock.
+	
+	
+	
+# 4. BlockingQueue	
+	Thread-safe queue, blocking on empty/full, dùng cho producer-consumer.	
+	Các implement nổi bật:	
+		ArrayBlockingQueue → bounded, fair option.
+		LinkedBlockingQueue → unbounded hoặc bounded, performance tốt khi nhiều producer/consumer.
+		PriorityBlockingQueue → queue theo priority.		
+	
+	Quan trọng: tự đồng bộ + không cần external lock, iterator là weakly consistent.
+	
+	
+# 5. SynchronizedMap / SynchronizedList 
+
+	Collections.synchronizedMap(new HashMap()) → toàn bộ access được lock.
+	Iteration vẫn cần external lock:
+
+Map<K,V> syncMap = Collections.synchronizedMap(new HashMap<>());
+synchronized(syncMap) {
+    for (Map.Entry<K,V> e : syncMap.entrySet()) { ... }
+}
+
+	Nhược điểm:
+		- Lock toàn bộ map → performance kém.
+		- Không phân đoạn fine-grained.
+
+
+# 6. Best Practices / Senior Tips 
+
+	- Dùng ConcurrentHashMap cho map đa thread, tận dụng computeIfAbsent, merge, putIfAbsent.
+	- CopyOnWriteArrayList → read-heavy, write-hiếm.
+	- Avoid legacy synchronized collections (Hashtable, Vector, SynchronizedMap) → performance kém.
+	- Atomic updates per key → tránh external locks.
+	- Beware weakly consistent iterators:
+	- Iteration không throw CME nhưng không nhất thiết snapshot toàn bộ map tại 1 thời điểm.
+	- BlockingQueue → producer-consumer pattern, không dùng wait/notify thủ công nữa.
+
+
+# 7. Kết hợp senior-level
+
+	## Hiểu performance trade-off: 
+		- ConcurrentHashMap → high throughput, low latency.
+		- SynchronizedMap → dễ code, nhưng bottleneck.
+		- CopyOnWriteArrayList → read-mostly → lock-free reads.
+
+	Biết pattern atomic per-key + compute → tránh race condition, deadlock, lock contention.
+
+	Luôn nghĩ iteration weakly consistent, thread có thể đọc giá trị “cũ” hoặc “mới” trong quá trình duyệt.
+	
+	
+	
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

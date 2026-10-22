@@ -1,0 +1,172 @@
+<html><head><title>Lesson 31 == useState ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../react-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 31 -- useState -//</h1><pre>
+
+# 1. Import useState
+	Để dùng useState, import từ 'react' (named export, nên dùng destructuring).
+		
+	import { useState } from "react";  // Import Hook
+
+	{ useState }: Destructuring để lấy trực tiếp, tránh React.useState. ES6 destructuring giúp code sạch. Nếu dùng TypeScript, không cần thêm types (React types built-in).
+
+
+	Insight chuyên gia: Luôn import ở top file. Trong bundlers như Vite/CRA, tree-shaking loại bỏ unused imports. Lỗi phổ biến: Quên import dẫn đến "useState is not defined". Best practice: Sử dụng ESLint rule react-hooks/rules-of-hooks để enforce Hooks rules.
+
+	useState là entry point cho state management, nhưng trong app lớn, kết hợp với useReducer cho state phức tạp hoặc Redux/Zustand cho global state. React batch updates setters để optimize performance (từ v16), async nature giúp tránh race conditions. Nhược điểm: Overuse có thể gây re-renders thừa; best practice: Giữ state minimal, local, và dùng React.memo cho components con. Trong React 18+, useState hỗ trợ Concurrent Rendering, cho phép interrupt updates. Nếu state phụ thuộc props, dùng derived state hoặc useMemo.
+
+
+# 2. Initialize useState 
+	
+	Gọi useState ở top level functional component để khởi tạo state. Nhận initial value, trả về [current state, setter function].
+
+import { useState } from "react";
+
+function FavoriteColor() {
+  const [color, setColor] = useState("red");  // Khởi tạo
+}
+
+
+	- useState("red"): Initial value ("red") chỉ gọi lần đầu (mount). Trả về array để destructuring: [state, setState].
+	- color: Current value (read-only).
+	- setColor: Setter để update (async, batchable).
+	- Tên variable linh hoạt (ví dụ: [count, setCount]), nhưng convention: set + state name.
+
+	Insight chuyên gia: Initial value có thể là function cho lazy init (expensive computations): useState(() => fetchInitial()) – chỉ chạy lần đầu. Trong SSR (Next.js), initial value phải serializable. Best practice: Khởi tạo state ở top level, không conditional (vi phạm Hooks rules).
+
+
+
+# 3. Read State
+
+	Sử dụng state variable trực tiếp trong JSX để render.
+
+import { useState } from 'react';
+import { createRoot } from 'react-dom/client';
+
+function FavoriteColor() {
+  const [color, setColor] = useState("red");  // State
+
+  return <h1>My favorite color is {color}!</h1>;  // Read state
+}
+
+createRoot(document.getElementById('root')).render(
+  <FavoriteColor />
+);
+
+
+	- {color}: Interpolation state vào JSX. Re-render khi state thay đổi.
+	- Render: Mount vào DOM với createRoot (React 18+).
+
+	State là local, reactive – thay đổi trigger reconcile. Nếu state lớn, dùng useMemo để memoize derived values (ví dụ: const upperColor = useMemo(() => color.toUpperCase(), [color])). Debug: Xem state trong React DevTools
+
+
+
+# 4. Update State
+
+	Sử dụng setter để update, không mutate trực tiếp (ví dụ: không color = "blue"). Setter trigger re-render.
+
+
+import { useState } from 'react';
+import { createRoot } from 'react-dom/client';
+
+function FavoriteColor() {
+  const [color, setColor] = useState("red");
+
+  return (
+    <>
+      <h1>My favorite color is {color}!</h1>
+      <button type="button" onClick={() => setColor("blue")}>Blue</button>  // Update
+    </>
+  );
+}
+
+createRoot(document.getElementById('root')).render(
+  <FavoriteColor />
+);
+
+
+	onClick={() => setColor("blue")}: Arrow function gọi setter với value mới.
+	Setter async: Không thấy thay đổi ngay (dùng callback nếu cần immediate read).
+
+	Insight chuyên gia: Không mutate state trực tiếp để tránh side effects (React shallow compares). Functional updates cho phụ thuộc state cũ: setColor(prev => prev + "ish"). Batch: Nhiều setters cùng event loop chỉ re-render once. Lỗi: Infinite loops nếu setter trong render (di chuyển vào event handlers hoặc useEffect).
+
+
+# 5. What Can State Hold?
+
+	useState hỗ trợ bất kỳ type: strings, numbers, booleans, arrays, objects, hoặc kết hợp. Có thể nhiều Hooks riêng lẻ hoặc một object.
+
+import { useState } from 'react';
+import { createRoot } from 'react-dom/client';
+
+function MyCar() {
+  const [brand, setBrand] = useState("Ford");
+  const [model, setModel] = useState("Mustang");
+  const [year, setYear] = useState("1964");
+  const [color, setColor] = useState("red");
+
+  return (
+    <>
+      <h1>My {brand}</h1>
+      <p>It is a {color} {model} from {year}.</p>
+    </>
+  );
+}
+
+createRoot(document.getElementById('root')).render(
+  <MyCar />
+);
+
+
+	## (single object):
+
+import { useState } from 'react';
+import { createRoot } from 'react-dom/client';
+
+function MyCar() {
+  const [car, setCar] = useState({
+    brand: "Ford",
+    model: "Mustang",
+    year: "1964",
+    color: "red"
+  });
+
+  return (
+    <>
+      <h1>My {car.brand}</h1>
+      <p>It is a {car.color} {car.model} from {car.year}.</p>
+    </>
+  );
+}
+
+createRoot(document.getElementById('root')).render(
+  <MyCar />
+);
+
+
+	Multiple Hooks: Separate concerns, dễ manage.
+	Single object: Group related data, nhưng cần cẩn thận khi update (xem phần sa
+
+
+# 6. Updating Objects and Arrays in State
+
+	Update overwrite toàn state, nên dùng spread (...) để copy và chỉ thay đổi phần cần.
+
+const updateColor = () => {
+  setCar(previousState => {  // Functional update
+    return { ...previousState, color: "blue" };  // Spread + override
+  });
+};
+
+setCar(previousState => ...): Callback nhận prev state (an toàn cho async).
+{ ...previousState, color: "blue" }: Shallow copy, override color. Giữ brand/model/year.
+
+
+	Insight chuyên gia: Đối với arrays: setList(prev => [...prev, newItem]) hoặc prev.filter(...). Deep updates: Dùng nested spread { ...prev, nested: { ...prev.nested, key: value } }. Nếu mutate (push trực tiếp), React không detect, dẫn đến stale UI. Best practice: Dùng useImmer cho mutable-like syntax. Performance: Nếu object lớn, xem xét normalize state (flat structures).
+
+
+
+	## Ví dụ mở rộng:
+	
+const [list, setList] = useState([1, 2, 3]);
+const addItem = () => setList(prev => [...prev, 4]);  // [1,2,3,4]
+const removeLast = () => setList(prev => prev.slice(0, -1));  // Không mutate
+	
+	
+</pre><a id='backBottom' href='../react-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

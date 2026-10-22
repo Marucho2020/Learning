@@ -1,0 +1,128 @@
+<html><head><title>Lesson 12 == TypeScript Casting ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../type-script-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 12 -- TypeScript Casting -//</h1><pre># 1. TypeScript Casting là gì?
+	TypeScript Casting (ép kiểu) là cách để nói với TypeScript rằng một giá trị có một kiểu dữ liệu cụ thể, ngay cả khi TypeScript không tự động suy ra được điều đó. Điều này rất hữu ích khi bạn biết rõ kiểu dữ liệu của một biến, nhưng TypeScript không thể xác định chính xác do cách mã được viết.
+
+	TypeScript là một ngôn ngữ mạnh về kiểu (strongly-typed), nên việc ép kiểu giúp bạn kiểm soát chặt chẽ kiểu dữ liệu, tránh lỗi khi chạy chương trình.
+
+# 2. Tại sao cần Casting?
+
+	TypeScript kiểm tra kiểu dữ liệu trong quá trình biên dịch để đảm bảo an toàn. Tuy nhiên, trong một số trường hợp, bạn có thể cần "can thiệp" vào hệ thống kiểu của TypeScript, ví dụ:
+	
+		- Làm việc với DOM (Document Object Model), khi TypeScript không chắc chắn về kiểu của một phần tử HTML.
+		- Khi làm việc với dữ liệu từ API bên ngoài, nơi kiểu dữ liệu không được xác định rõ ràng.
+		- Khi bạn muốn sử dụng một kiểu cụ thể để truy cập các thuộc tính hoặc phương thức của nó.	
+	
+	Casting giúp bạn "bảo đảm" với TypeScript rằng một giá trị thuộc kiểu bạn chỉ định, từ đó mở rộng khả năng sử dụng mã.
+
+# 3. Hai cách Casting chính trong TypeScript	
+	TypeScript cung cấp hai cú pháp để ép kiểu: as và góc nhọn <>. Cả hai đều phổ biến, nhưng cú pháp as được ưa chuộng hơn vì nó rõ ràng và hoạt động tốt trong các file JSX/TSX.
+	
+	## a. Cú pháp as 
+let value: any = "Hello, TypeScript!";
+let length = (value as string).length;
+console.log(length); // Output: 17	
+
+	Ở đây, value có kiểu any, nhưng bạn biết chắc nó là một chuỗi (string). Bạn dùng as string để ép kiểu, cho phép truy cập thuộc tính .length của chuỗi.
+
+
+	##  b. Cú pháp góc nhọn < > 
+let value: any = "Hello, TypeScript!";
+let length = (<string>value).length;
+console.log(length); // Output: 17
+
+	Tương tự như as, nhưng cú pháp này không được khuyến khích trong các dự án sử dụng JSX (React) vì nó dễ gây nhầm lẫn với cú pháp JSX.
+
+
+
+# 4. Trường hợp sử dụng phổ biến
+
+	## a. Làm việc với DOM 
+		Khi truy cập phần tử HTML, TypeScript thường không biết chính xác kiểu của phần tử đó. Ví dụ:
+let inputElement = document.getElementById("myInput");		
+		
+		TypeScript suy ra inputElement có kiểu HTMLElement | null, nhưng không biết cụ thể nó là HTMLInputElement. Bạn cần ép kiểu:
+
+let inputElement = document.getElementById("myInput") as HTMLInputElement;
+console.log(inputElement.value); // Truy cập thuộc tính .value của input
+
+		Nếu không ép kiểu, TypeScript sẽ báo lỗi vì HTMLElement không có thuộc tính .value.
+
+
+
+		### Lưu ý: Bạn cần chắc chắn rằng phần tử tồn tại (không phải null). Có thể dùng kiểm tra điều kiện: 
+	
+let inputElement = document.getElementById("myInput");
+if (inputElement) {
+  let value = (inputElement as HTMLInputElement).value;
+  console.log(value);
+}
+	
+	
+	##	b. Ép kiểu với any hoặc unknown
+		Kiểu any cho phép bạn bỏ qua kiểm tra kiểu, nhưng đôi khi bạn muốn giới hạn lại kiểu cụ thể:
+	
+let someValue: any = "123";
+let num = (someValue as number); // Sai, vì "123" không phải số	
+	
+		Với kiểu unknown, bạn cần kiểm tra kiểu trước khi ép:
+		
+let someValue: unknown = "123";
+if (typeof someValue === "string") {
+  let str = someValue as string;
+  console.log(str.length); // Output: 3
+}	
+		
+	
+
+# 5. Cảnh báo khi sử dụng Casting
+	Casting không thay đổi giá trị thực tế: Ép kiểu chỉ nói với TypeScript về kiểu dữ liệu, không chuyển đổi giá trị (ví dụ, "123" không trở thành 123).
+	
+	Nguy cơ lỗi runtime: Nếu bạn ép kiểu sai (ví dụ, ép một chuỗi thành số), mã có thể chạy lỗi khi thực thi.
+	
+let value: any = "Hello";
+let num = value as number; // Không báo lỗi biên dịch, nhưng sai tại runtime
+console.log(num.toFixed(2)); // Lỗi: num.toFixed is not a function
+
+	Tránh lạm dụng any: Dùng any và ép kiểu quá nhiều làm mất đi lợi ích của TypeScript. Hãy sử dụng các kiểu cụ thể hoặc unknown khi có thể.
+
+
+
+# 6. Cách hiểu sâu hơn 
+	Để thực sự hiểu sâu về TypeScript Casting, hãy nghĩ về nó như một cách giao tiếp với trình biên dịch TypeScript:
+	
+	 - Hệ thống kiểu của TypeScript: TypeScript cố gắng suy ra kiểu dữ liệu dựa trên mã bạn viết. Nhưng đôi khi, nó không đủ thông minh để hiểu bối cảnh (như DOM hoặc dữ liệu từ API).
+	
+	 - Casting như một lời hứa: Khi bạn ép kiểu, bạn đang nói với TypeScript: "Tôi biết rõ giá trị này thuộc kiểu gì, hãy tin tôi." Điều này đòi hỏi bạn phải cẩn thận để tránh lỗi runtime.
+	
+	 - So sánh với JavaScript: Trong JavaScript thuần, bạn không cần ép kiểu vì nó là ngôn ngữ yếu kiểu (weakly-typed). TypeScript thêm lớp kiểm tra kiểu, và casting là cách để bạn "nới lỏng" kiểm tra này khi cần.	
+
+
+# 7. Mẹo để sử dụng Casting hiệu quả
+	
+	- Dùng as thay vì < >: Cú pháp as rõ ràng hơn và tương thích với JSX.
+	
+	- Kiểm tra trước khi ép kiểu: Đặc biệt với null, undefined, hoặc kiểu unknown, hãy dùng if hoặc toán tử typeof để đảm bảo an toàn.
+	
+	- Ưu tiên kiểu cụ thể: Thay vì dùng any, hãy cố gắng định nghĩa kiểu cụ thể (như string, number, hoặc giao diện tùy chỉnh).
+	
+	- Dùng Type Guard: Thay vì ép kiểu trực tiếp, bạn có thể dùng Type Guard để kiểm tra kiểu một cách an toàn:
+
+function isString(value: unknown): value is string {
+  return typeof value === "string";
+}
+
+let someValue: unknown = "Hello";
+if (isString(someValue)) {
+  console.log(someValue.length); // TypeScript biết someValue là string
+}
+
+
+# 8. Kết luận
+
+	- TypeScript Casting là công cụ mạnh mẽ để làm việc với các tình huống mà TypeScript không thể suy ra kiểu chính xác.
+	- Hai cú pháp chính là as và < >, với as được khuyến khích hơn.
+	- Casting thường dùng khi làm việc với DOM, API, hoặc kiểu any/unknown.
+	- Hãy cẩn thận khi ép kiểu để tránh lỗi runtime, và ưu tiên các kỹ thuật an toàn như Type Guard.
+
+
+
+</pre><a id='backBottom' href='../type-script-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

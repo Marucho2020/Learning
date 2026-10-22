@@ -1,0 +1,140 @@
+<html><head><title>Lesson 18 == Dependencies ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../NodeJS-learning.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 18 -- Dependencies -//</h1><pre>	
+	
+# 	1. Dependency Management Là Gì? (What is Dependency Management?)
+	
+		Định nghĩa cơ bản: Đây là quá trình theo dõi, cài đặt, cập nhật, và xóa các packages bên ngoài mà ứng dụng của bạn phụ thuộc. Nó đảm bảo dự án ổn định, an toàn, và dễ bảo trì theo thời gian. NPM là package manager mặc định, nhưng Yarn (từ Facebook) và pnpm (nhanh hơn, tiết kiệm đĩa) là lựa chọn thay thế.
+	
+	Các thành phần chính
+		package.json: File khai báo dependencies (như manifest của dự án).
+		
+		Lock files (package-lock.json hoặc yarn.lock): Khóa phiên bản chính xác để tránh thay đổi bất ngờ.
+		
+		Commands: Như npm install, update, remove.
+	
+		Security tools: Như npm audit để phát hiện lỗ hổng.
+	
+		Sâu sắc hơn: Trong thực tế, dependency management không chỉ là cài đặt mà còn là quản lý "dependency hell" – tình trạng xung đột phiên bản giữa các packages. Ví dụ, nếu package A yêu cầu lodash 4.x nhưng package B yêu 3.x, có thể gây crash. Lock files giải quyết bằng cách ghi chính xác tree dependencies. Trong dự án lớn (như microservices), bạn có thể dùng monorepo tools như Lerna hoặc Nx để quản lý dependencies chung. Rủi ro: Dependencies cũ có thể có CVE (Common Vulnerabilities and Exposures), dẫn đến hack (ví dụ: sự cố Log4j năm 2021, tương tự có thể xảy ra với Node.js packages).
+	
+	
+	
+# 2. Hiểu Về Semantic Versioning (Understanding Semantic Versioning)
+
+	Cơ bản: Packages theo SemVer: MAJOR.MINOR.PATCH (ví dụ: 2.8.1).	
+	
+		MAJOR: Thay đổi lớn, phá vỡ backward compatibility (cần refactor code).
+		MINOR: Thêm tính năng mới, vẫn tương thích cũ.
+		PATCH: Sửa bug, không ảnh hưởng lớn.
+	
+	
+	Ký tự đặc biệt trong package.json (bảng từ bài):
+	
+Symbol,Example,Meaning
+^,^2.8.1,"Bất kỳ 2.x.x (MAJOR cố định, từ 2.8.1 trở lên)"
+~,~2.8.1,"Bất kỳ 2.8.x (MAJOR.MINOR cố định, từ 2.8.1 trở lên)"
+*,*,Bất kỳ phiên bản (không khuyến khích cho production)
+>=,>=2.8.1,Từ 2.8.1 trở lên
+none,2.8.1,Chính xác 2.8.1	
+	
+	// Ví dụ trong package.json: 
+{
+  "dependencies": {
+    "express": "^4.18.2",  // An toàn cho updates nhỏ
+    "lodash": "~4.17.21",  // Giới hạn updates patch
+    "moment": "2.29.4",    // Khóa chính xác
+    "axios": ">=1.2.0",    // Cho phép updates lớn
+    "debug": "4.x"         // Bất kỳ 4.x
+  }
+}	
+	
+	Chuyên gia sâu: SemVer giúp dự đoán rủi ro khi update. Tuy nhiên, không phải package nào cũng tuân thủ nghiêm ngặt (ví dụ: một số MAJOR changes lén lút trong MINOR). Trong production, dùng ^ cho dependencies ổn định, nhưng khóa exact cho critical ones. Công cụ như Dependabot (từ GitHub) tự động check và PR updates. Lưu ý: Với Node.js 18+, một số packages cũ có thể không tương thích do ESM (ES Modules) defaults.	
+	
+	
+	
+# 	3. Cài Đặt Dependencies (Installing Dependencies)
+	
+	Các cách cơ bản:
+	
+	
+		npm install: Cài tất cả từ package.json.
+		npm install express: Cài latest và thêm vào dependencies.
+		npm install express@4.17.1: Cài phiên bản cụ thể.
+		npm install express --no-save: Cài mà không lưu vào file.
+		npm install -g nodemon: Cài global (cho tools như CLI).
+
+	Mẹo chuyên sâu: Global installs hữu ích cho dev tools, nhưng tránh cho dependencies app để giữ tính portable. Trong container (Docker), luôn cài local để tránh xung đột. Nếu dự án lớn, dùng npm ci thay npm install để install chính xác từ lock file (nhanh hơn, an toàn cho CI/CD).
+
+
+# 4. Các Loại Dependencies (Types of Dependencies)
+	
+	- Regular (dependencies): Cần cho runtime, ví dụ: npm install express (lưu vào "dependencies").
+	
+	- Development (devDependencies): Chỉ cho dev/test, ví dụ: npm install jest --save-dev (lưu vào "devDependencies").
+	
+	- Peer Dependencies: Không cài tự động, chỉ chỉ định compatibility (ví dụ: plugin yêu cầu React cụ thể).
+	
+	- Optional Dependencies: Không bắt buộc, ví dụ: npm install sharp --save-optional cho image processing (nếu không có, app vẫn chạy).
+	
+	- Sâu sắc: Trong bundling (Webpack/Parcel), devDeps không đi vào production bundle, tiết kiệm kích thước. PeerDeps phổ biến trong libraries (như React plugins). Best practice: Giữ dependencies tối thiểu để giảm attack surface.
+
+
+# 5. Lock Files (Package Lock Files)
+
+	package-lock.json (NPM): Tự generate, ghi exact versions và tree dependencies.
+	Ví dụ snippet:
+	
+	yarn.lock (Yarn): Tương tự nhưng format khác, hiệu quả hơn cho large projects	
+	
+	Chuyên gia: Luôn commit lock file vào Git để team có cùng môi trường. Nếu không, có thể gặp "works on my machine" syndrome. Trong 2025, với NPM 9+, lockfileVersion cao hơn hỗ trợ better integrity checks.
+
+
+# 6. Cập Nhật Dependencies (Updating Dependencies)
+
+	- npm outdated: Check outdated.
+	- npm update express: Update cụ thể.
+	- npm update: Update tất cả.
+	- npm install -g npm@latest: Update NPM.
+	- Sử dụng npm-check-updates (ncu): Check và update package.json.
+	- Sâu: Update thường xuyên nhưng test kỹ (unit tests, integration). Tools như Renovate hoặc Snyk tự động hóa. Rủi ro: Breaking changes trong MAJOR updates.
+
+
+# 7. Bảo Mật Và Auditing (Security and Auditing)
+
+	npm audit: Scan vulnerabilities.
+	npm audit fix: Fix tự động.
+	npm audit fix --force: Force fix (cẩn thận, có thể break).
+
+	Chuyên sâu: NPM tích hợp với GitHub Security Alerts. Trong 2025, với supply chain attacks tăng (như SolarWinds), dùng npm audit --production để focus production deps. Alternatives: Snyk hoặc Dependabot cho scan sâu hơn.
+	
+	
+# 8. Best Practices	
+	
+	
+	- Pin exact versions cho production.
+	- Update định kỳ.
+	- Audit thường xuyên.
+	- Commit lock file.
+	- Minimize deps.
+	- Scoped packages (@org/package) cho internal.
+	- Document: Thêm comments trong package.json về lý do dùng package.
+	- Mở rộng: Sử dụng npm shrinkwrap cho legacy. Trong enterprise, enforce policies với .npmrc hoặc private registries (Verdaccio).	
+	
+	
+# 9. Troubleshooting Common Issues	
+	
+	- npm cache clean --force: Clear cache.
+	- Xóa node_modules và reinstall.
+	- npm ls: Check tree.
+	- npm rebuild: Fix broken.
+	- Sâu: Nếu EPERM errors (permissions), dùng NVM để manage Node versions. Với Windows, dùng WSL cho consistency.	
+	
+	
+	
+	
+# 10. Tóm Tắt Và Lời Khuyên (Summary)	
+	
+	Quản lý dependencies là chìa khóa cho dự án Node.js bền vững. Bằng cách nắm SemVer, lock files, và security, bạn tránh được nhiều vấn đề. Trong thực tế, kết hợp với CI/CD (GitHub Actions) để tự động test updates.	
+	
+
+	
+	
+</pre><a id='backBottom' href='../NodeJS-learning.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

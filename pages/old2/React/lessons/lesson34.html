@@ -1,0 +1,265 @@
+<html><head><title>Lesson 34 == Use Ref ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../react-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 34 -- Use Ref -//</h1><pre>
+# Khái niệm 
+	useRef là một trong những hook mạnh mẽ nhất trong React, được giới thiệu từ phiên bản 16.8, cho phép bạn lưu trữ các giá trị mutable (có thể thay đổi) mà không gây ra việc re-render component. Không giống như useState hay useReducer, useRef không kích hoạt cập nhật UI khi giá trị thay đổi, làm cho nó lý tưởng cho các tình huống cần duy trì trạng thái "ẩn" hoặc truy cập trực tiếp vào DOM. Ở mức độ senior, chúng ta cần hiểu sâu về cơ chế hoạt động nội bộ của nó, các ứng dụng nâng cao, và cách tích hợp với các hook khác để tối ưu hóa hiệu suất, tránh memory leak, và xử lý các vấn đề phức tạp như stale closures.
+
+	Định nghĩa cơ bản: useRef(initialValue) trả về một object mutable có thuộc tính current. Giá trị initialValue chỉ được gán lần đầu tiên khi component mount, và sau đó bạn có thể đọc/ghi trực tiếp vào current mà không gây re-render.
+
+	## So sánh với useState 
+		useState lưu trữ trạng thái và gây re-render khi setter được gọi, phù hợp cho dữ liệu hiển thị trên UI.
+	
+		useRef không gây re-render, nên dùng cho dữ liệu "phụ" như counter render, DOM refs, hoặc lưu giá trị tạm thời. Nếu dùng useState cho counter render, bạn sẽ gặp infinite loop vì mỗi update lại gây render mới.
+
+	## Mutable vs Immutable:
+		Ref object là mutable, nghĩa là bạn có thể thay đổi ref.current mà React không theo dõi thay đổi này trong dependency array của useEffect. Điều này giúp tránh re-run effect không cần thiết, nhưng cũng có thể dẫn đến stale values nếu không cẩn thận (ví dụ: closure capture giá trị cũ).
+	
+		Lifecycle: Ref tồn tại suốt lifecycle của component, chỉ bị destroy khi unmount. Không giống variables thông thường bị reset mỗi render.
+	
+	
+		Stale closures: Nếu bạn capture ref trong callback, giá trị có thể cũ nếu không đọc trực tiếp từ ref.current.
+		Memory leak: Nếu lưu instance lớn (như WebSocket) vào ref mà không cleanup, có thể leak memory.
+		Không nên lạm dụng: Chỉ dùng khi cần mutable mà không re-render; nếu cần re-render, dùng useState.
+	
+	
+# 	Ví dụ cơ bản 
+	
+import { useState, useRef, useEffect } from 'react';
+
+function RenderCounter() {
+  const [inputValue, setInputValue] = useState('');
+  const renderCount = useRef(0); // Khởi tạo ref với giá trị 0
+
+  useEffect(() => {
+    renderCount.current += 1; // Cập nhật ref mà không re-render
+    console.log(`Render lần thứ: ${renderCount.current}`);
+  }); // Không dependency, chạy sau mỗi render
+
+  return (
+    <>
+      <input
+        type="text"
+        value={inputValue}
+        onChange={(e) => setInputValue(e.target.value)}
+      />
+      <h1>Số lần render: {renderCount.current}</h1> // Đọc trực tiếp từ ref.current
+    </>
+  );
+}	
+	
+	Giải thích chi tiết: useEffect chạy sau mỗi render (post-render phase), cập nhật ref mà không trigger render mới. Nếu dùng useState, setter sẽ gây render loop.	
+	
+	
+
+# 2. Use Case Nâng Cao: Truy Cập Và Thao Tác DOM Trực Tiếp 
+
+	useRef thường dùng để tạo ref cho DOM elements qua thuộc tính ref trong JSX. Điều này thay thế cho createRef trong class components, và mạnh hơn vì ref tồn tại suốt lifecycle.
+
+	Chuyên sâu: Trong React, DOM manipulation nên hạn chế (declarative paradigm), nhưng useRef cần thiết cho imperative code như focus, scroll, measure dimensions (ví dụ: dùng getBoundingClientRect()). Kết hợp với useEffect để chạy sau khi DOM ready.
+
+	Forward Refs: Để forward ref từ parent sang child component, dùng React.forwardRef. Điều này hữu ích trong HOCs hoặc libraries như Material-UI
+
+
+# Ví dụ 1 (từ W3Schools, mở rộng với focus và validation): 
+
+import { useRef } from 'react';
+
+function FocusInput() {
+  const inputRef = useRef(null); // Khởi tạo ref cho DOM element
+
+  const handleFocus = () => {
+    inputRef.current.focus(); // Truy cập DOM method
+    if (inputRef.current.value.length < 5) {
+      inputRef.current.style.border = '2px solid red'; // Manipulate style
+      console.warn('Giá trị quá ngắn!');
+    }
+  };
+
+  return (
+    <>
+      <input type="text" ref={inputRef} /> // Attach ref vào element
+      <button onClick={handleFocus}>Focus và Validate</button>
+    </>
+  );
+}
+
+
+
+# Ví dụ 2 (Nâng cao: Scroll to bottom trong chat app):
+
+import { useState, useRef, useEffect } from 'react';
+
+function ChatBox() {
+  const [messages, setMessages] = useState([]);
+  const chatRef = useRef(null);
+
+  const addMessage = () => {
+    setMessages((prev) => [...prev, `Tin nhắn mới ${prev.length + 1}`]);
+  };
+
+  useEffect(() => {
+    if (chatRef.current) {
+      chatRef.current.scrollTop = chatRef.current.scrollHeight; // Scroll to bottom
+    }
+  }, [messages]); // Dependency trên messages để chạy khi có tin mới
+
+  return (
+    <div>
+      <div ref={chatRef} style={{ height: '200px', overflowY: 'scroll' }}>
+        {messages.map((msg, idx) => <p key={idx}>{msg}</p>)}
+      </div>
+      <button onClick={addMessage}>Gửi tin nhắn</button>
+    </div>
+  );
+}
+
+	Giải thích: Ref dùng để measure và manipulate DOM sau update. Tránh dùng document.querySelector vì không React-way.
+
+
+# 3. Use Case Nâng Cao: Lưu Trữ Giá Trị Trước Đó (Previous State)
+
+	useRef có thể lưu previous values để so sánh, hữu ích trong animation, undo/redo, hoặc logging changes.
+
+import { useState, useRef, useEffect } from 'react';
+
+function TrackPrevious() {
+  const [value, setValue] = useState('');
+  const prevValueRef = useRef('');
+
+  useEffect(() => {
+    prevValueRef.current = value; // Cập nhật sau khi value thay đổi
+  }, [value]); // Dependency trên value
+
+  const handleChange = (e) => {
+    setValue(e.target.value);
+    console.log(`Thay đổi từ "${prevValueRef.current}" sang "${e.target.value}"`);
+  };
+
+  return (
+    <>
+      <input type="text" value={value} onChange={handleChange} />
+      <h2>Giá trị hiện tại: {value}</h2>
+      <h2>Giá trị trước: {prevValueRef.current}</h2>
+    </>
+  );
+}
+
+
+
+# 4. Use Case Nâng Cao: Lưu Trữ Mutable Values Không Re-Render (Timers, Instances)
+
+	Chuyên sâu: Dùng cho intervals, timeouts, WebSockets, hoặc instances (như new Map()). Cleanup trong useEffect return để tránh leak.
+	
+	Performance: Giảm re-renders không cần thiết, cải thiện FPS trong apps phức tạp
+
+
+	## Ví dụ 1: Interval Timer Không Re-Render: 
+import { useRef, useEffect } from 'react';
+
+function Timer() {
+  const intervalRef = useRef(null);
+  const countRef = useRef(0);
+
+  useEffect(() => {
+    intervalRef.current = setInterval(() => {
+      countRef.current += 1;
+      console.log(`Đếm: ${countRef.current}`); // Không re-render
+    }, 1000);
+
+    return () => clearInterval(intervalRef.current); // Cleanup
+  }, []); // Chỉ mount lần đầu
+
+  return <h1>Timer chạy ngầm (kiểm tra console)</h1>;
+}
+
+
+
+	## Ví dụ 2: Debounce Input Với Ref (Nâng cao cho search optimization):
+
+import { useState, useRef, useEffect } from 'react';
+
+function DebouncedSearch() {
+  const [query, setQuery] = useState('');
+  const timeoutRef = useRef(null);
+
+  const handleChange = (e) => {
+    const value = e.target.value;
+    if (timeoutRef.current) clearTimeout(timeoutRef.current); // Clear timeout cũ
+    timeoutRef.current = setTimeout(() => {
+      setQuery(value); // Chỉ update sau 500ms
+      console.log(`Tìm kiếm: ${value}`);
+    }, 500);
+  };
+
+  useEffect(() => {
+    return () => clearTimeout(timeoutRef.current); // Cleanup on unmount
+  }, []);
+
+  return (
+    <>
+      <input type="text" onChange={handleChange} placeholder="Tìm kiếm..." />
+      <h2>Kết quả: {query}</h2>
+    </>
+  );
+}
+
+
+# 5. Use Case Nâng Cao: Forward Refs Và Custom Hooks
+
+
+	## Forward Refs: Cho phép parent component ref child DOM. 
+import { forwardRef, useRef } from 'react';
+
+const ChildInput = forwardRef((props, ref) => (
+  <input ref={ref} type="text" {...props} />
+));
+
+function Parent() {
+  const childRef = useRef(null);
+
+  const focusChild = () => childRef.current.focus();
+
+  return (
+    <>
+      <ChildInput ref={childRef} />
+      <button onClick={focusChild}>Focus Child</button>
+    </>
+  );
+}	
+	
+	Giải thích: forwardRef expose ref ra ngoài, hữu ích cho reusable components.
+
+	## Custom Hook Với useRef: Tạo useInterval để encapsulate logic.
+
+import { useRef, useEffect } from 'react';
+
+function useInterval(callback, delay) {
+  const savedCallback = useRef(callback); // Lưu callback để tránh stale
+
+  useEffect(() => {
+    savedCallback.current = callback; // Update callback mới nhất
+  }, [callback]);
+
+  useEffect(() => {
+    const id = setInterval(() => savedCallback.current(), delay);
+    return () => clearInterval(id);
+  }, [delay]);
+}
+
+// Sử dụng:
+function Counter() {
+  useInterval(() => console.log('Tick'), 1000);
+  return <h1>Interval custom hook</h1>;
+}
+
+
+
+# Kết Luận Và Best Practices (Mức Chuyên Gia)
+
+	- Khi dùng useRef: Cho DOM refs, mutable non-UI data, previous states, instances cần persist.
+	- Tránh: Dùng cho state cần re-render; thay vào đó dùng useState.
+	- Tích hợp: Thường kết hợp useEffect cho side effects.
+	- Debug: Sử dụng React DevTools để inspect refs.
+	- Performance tip: Trong large apps, useRef giảm re-renders, nhưng theo dõi memory usage.
+
+
+
+</pre><a id='backBottom' href='../react-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

@@ -1,0 +1,106 @@
+<html><head><title>Lesson 17 == NodeJs Script ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../NodeJS-learning.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 17 -- NodeJs Script -//</h1><pre>
+
+# 1. NPM Scripts Là Gì? (What are NPM Scripts?)
+
+	NPM Scripts là một tính năng của NPM (Node Package Manager), công cụ quản lý package mặc định của Node.js. Chúng không phải là "script" theo nghĩa viết code riêng lẻ, mà là các lệnh (commands) bạn định nghĩa trong file package.json để chạy các tác vụ tự động. Hãy tưởng tượng chúng như "phím tắt" để thực hiện các công việc lặp lại, thay vì gõ lệnh dài dòng mỗi lần.
+
+	Định nghĩa cơ bản: NPM Scripts là các lệnh tùy chỉnh mà bạn định nghĩa trong phần "scripts" của file package.json. Chúng cho phép bạn tự động hóa các nhiệm vụ phổ biến như chạy ứng dụng, kiểm tra code, build dự án, hoặc dọn dẹp file. Thay vì gõ lệnh thủ công trên terminal (như node index.js), bạn chỉ cần chạy npm run <tên-script> – đơn giản và nhất quán cho cả team.
+
+
+	## Lợi ích sâu sắc
+		
+			- Tự động hóa: Giúp tránh lỗi con người, đặc biệt trong môi trường phát triển lớn.
+		
+			- Cross-platform: Lệnh chạy giống nhau trên Windows, macOS, Linux (NPM xử lý sự khác biệt về shell).
+		
+			- Tích hợp công cụ: Dễ kết hợp với các tool bên thứ ba như Nodemon (tự động reload code), Webpack (bundle JS), ESLint (kiểm tra code style), hoặc Jest (testing).
+		
+			- Quản lý lifecycle: NPM có cơ chế "pre" và "post" hooks để chạy script trước/sau một script chính, giúp xây dựng quy trình phức tạp (ví dụ: kiểm tra code trước khi deploy).
+		
+			- So sánh với công cụ khác: Không như Makefile (trong C/C++) hay Rake (Ruby), NPM Scripts tận dụng shell commands trực tiếp, nên đơn giản hơn nhưng vẫn mạnh mẽ. Nếu dự án phức tạp, bạn có thể kết hợp với tools như Gulp hoặc Grunt, nhưng NPM Scripts thường đủ dùng và nhẹ hơn.
+
+
+		Ví dụ thực tế: Trong một dự án web API với Node.js, bạn có thể dùng script để start server, run tests, và deploy lên Heroku – tất cả chỉ với vài lệnh npm.
+
+
+# 2. Cách Định Nghĩa Scripts Trong package.json (Defining Scripts in package.json)
+
+
+{
+  "scripts": {
+    "start": "node index.js",  // Chạy file index.js bằng Node.js
+    "test": "echo \"Running tests...\" && exit 0",  // In ra thông báo và kết thúc thành công
+    "dev": "nodemon index.js"  // Sử dụng Nodemon để theo dõi thay đổi và reload
+  }
+}
+
+
+	## Giải thích chi tiết:
+
+		- "start": Script đặc biệt để chạy ứng dụng chính.
+		- "test": Script đặc biệt cho testing, thường dùng với framework như Mocha hoặc Jest.
+		- "dev": Tùy chỉnh, dùng Nodemon (cần install trước: npm install --save-dev nodemon).
+		- Lệnh có thể kết hợp nhiều phần bằng && (chạy nối tiếp nếu thành công) hoặc & (chạy song song). Ví dụ: "build": "rm -rf dist && webpack" – xóa thư mục dist trước khi build.
+	
+
+	## Mẹo chuyên gia:
+
+
+		- Environment variables: Bạn có thể truyền biến môi trường vào script, ví dụ: "start": "NODE_ENV=production node index.js".
+		- Pre và Post hooks: NPM tự động hỗ trợ. Nếu bạn có script "test", thì "pretest" sẽ chạy trước, "posttest" chạy sau. Ví dụ:
+
+
+		- Điều này hữu ích cho quy trình CI/CD (Continuous Integration/Deployment), như kiểm tra code trước khi test.
+		- Script dài phức tạp: Nếu lệnh quá dài, hãy tách ra file shell riêng (ví dụ: build.sh) và gọi "build": "./build.sh".
+		- Lỗi phổ biến: Đảm bảo install dependencies trước (ví dụ: Nodemon phải là devDependency). Nếu script fail, NPM sẽ exit với code 1.
+
+
+# 3. Cách Chạy NPM Scripts (Running NPM Scripts)
+
+	Cú pháp cơ bản: npm run <tên-script>. Ví dụ: npm run dev.
+
+	## Script đặc biệt (không cần "run"):
+
+		- npm start: Chạy "start".
+		- npm test: Chạy "test".
+		- npm install: Tự động chạy "preinstall" và "postinstall" nếu có.
+		- npm publish: Chạy "prepublish", "publish", "postpublish".
+
+	Tùy chọn nâng cao:
+	
+		- Truyền arguments: npm run build -- --mode=production (hai dấu -- để truyền args cho script).
+		- Chạy song song: Sử dụng công cụ như npm-run-all (install riêng): "all": "npm-run-all --parallel lint test".
+		- Debug: Chạy với --inspect để debug Node.js, ví dụ: "dev": "node --inspect index.js".	
+		Trong VS Code: Tích hợp với tasks.json để chạy script bằng phím tắt.
+	
+		Sâu sắc hơn: Khi chạy, NPM sử dụng shell của hệ thống (cmd.exe trên Windows, bash trên Unix). Nếu có vấn đề cross-platform, dùng cross-env để set variables (ví dụ: cross-env NODE_ENV=dev node index.js).
+	
+	
+# 	4. Các Ứng Dụng Phổ Biến Của NPM Scripts (Common Uses for NPM Scripts)
+	
+	
+		-	Start app: "start": "node server.js" – Chạy server production.
+		-	Development mode: "dev": "nodemon server.js" – Tự reload khi code thay đổi.
+		-	Testing: "test": "jest --coverage" – Chạy test và generate report.
+		-	Build/Bundle: "build": "webpack --config webpack.config.js" – Bundle code cho deployment.
+		-	Lint/Format: "lint": "eslint ." hoặc "format": "prettier --write .".
+		-	Clean up: "clean": "rm -rf dist" – Xóa file tạm.
+		-	Deploy: "deploy": "npm run build && git push heroku main" – Build rồi deploy.	
+	
+	
+	## Ứng dụng chuyên sâu: 
+	
+		- Microservices: Trong dự án lớn, dùng script để start nhiều service: "start-all": "npm run start-api & npm run start-worker".
+		- Performance: Kết hợp với pm2 (process manager): "prod": "pm2 start ecosystem.config.js".
+		- Security: "audit": "npm audit" – Kiểm tra vulnerabilities trong dependencies.
+		- Real-world example: Trong dự án Express.js, script có thể là: "start": "node dist/server.js", "build": "tsc", "dev": "concurrently \"tsc -w\" \"nodemon dist/server.js\"" (dùng concurrently để chạy nhiều lệnh song song).
+	
+	
+# 5. Tóm Tắt Và Lời Khuyên Chuyên Gia (Summary)	
+	
+	NPM Scripts là công cụ mạnh mẽ để tự động hóa workflow trong Node.js, giúp dự án của bạn chuyên nghiệp hơn. Chúng đơn giản để bắt đầu nhưng có thể mở rộng cho các quy trình phức tạp như CI/CD (ví dụ: tích hợp với GitHub Actions). Từ bài W3Schools, bạn thấy chúng cơ bản, nhưng sâu hơn, chúng là nền tảng cho best practices: giữ code clean, testable, và deployable.
+	
+	
+	
+
+</pre><a id='backBottom' href='../NodeJS-learning.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

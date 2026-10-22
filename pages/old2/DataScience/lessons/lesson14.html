@@ -1,0 +1,131 @@
+<html><head><title>Lesson 14 == Độ lệch chuẩn (Standard Deviation) và Hệ số biến thiên (Coefficient of Variation) ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../DataScience-learning.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 14 -- Độ lệch chuẩn (Standard Deviation) và Hệ số biến thiên (Coefficient of Variation) -//</h1><pre>
+
+# 1. Độ lệch chuẩn (Standard Deviation) là gì?
+
+	Định nghĩa: Độ lệch chuẩn (σ) đo lường mức độ phân tán của các giá trị trong tập dữ liệu so với giá trị trung bình (mean). Nó cho biết dữ liệu dao động nhiều hay ít quanh giá trị trung bình.
+
+	Độ lệch chuẩn thấp: Các giá trị gần với trung bình, dữ liệu ít biến động.
+	Độ lệch chuẩn cao: Các giá trị phân tán rộng, dữ liệu biến động lớn.
+
+	Ý nghĩa: Trong phân tích dữ liệu, độ lệch chuẩn giúp đánh giá mức độ không chắc chắn (uncertainty). Ví dụ, nếu bạn dự đoán doanh thu dựa trên dữ liệu lịch sử, độ lệch chuẩn cao cho thấy doanh thu dao động mạnh, làm giảm độ tin cậy của dự đoán.
+
+	Ký hiệu: Thường được biểu diễn bằng σ (sigma) trong thống kê dân số hoặc s trong mẫu.
+
+
+	Ví dụ từ bài học:
+
+		Với tập dữ liệu full_health_data (bao gồm các cột Duration, Average_Pulse, Max_Pulse, Calorie_Burnage, Hours_Work, Hours_Sleep), bài học sử dụng NumPy để tính độ lệch chuẩn:
+
+import numpy as np
+std = np.std(full_health_data)
+print(std)
+
+	Kết quả sẽ cho độ lệch chuẩn của từng cột, nhưng W3Schools không hiển thị số cụ thể vì dữ liệu lớn. Tuy nhiên, họ lưu ý rằng Duration, Calorie_Burnage, Hours_Work có độ lệch chuẩn cao hơn so với Max_Pulse, Average_Pulse, Hours_Sleep
+
+
+
+
+# 2. Hệ số biến thiên (Coefficient of Variation)
+	Định nghĩa: Hệ số biến thiên (CV) là tỷ lệ giữa độ lệch chuẩn và trung bình:
+
+
+		$CV = \frac{\text{Standard Deviation}}{\text{Mean}}$
+
+		CV thường được biểu diễn dưới dạng phần trăm (%).
+
+	Ý nghĩa: CV chuẩn hóa độ lệch chuẩn, cho phép so sánh mức độ phân tán giữa các biến có đơn vị hoặc thang đo khác nhau. CV cao hơn nghĩa là biến đó có độ biến động tương đối lớn hơn.
+
+	Ứng dụng: CV hữu ích khi so sánh dữ liệu từ các tập dữ liệu khác nhau, ví dụ, so sánh độ phân tán của nhịp tim (bpm) với lượng calo đốt (kcal).
+
+import numpy as np
+cv = np.std(full_health_data) / np.mean(full_health_data)
+print(cv)
+
+
+	Kết quả cho thấy Duration, Calorie_Burnage, Hours_Work có CV cao hơn, nghĩa là các biến này biến động tương đối lớn so với trung bình của chúng, trong khi Max_Pulse, Average_Pulse, Hours_Sleep ổn định hơn.
+
+
+# 3. Dữ liệu mẫu và Tính toán thủ công
+
+	Để minh họa cụ thể, tôi sẽ sử dụng dữ liệu mẫu từ bài trước (10 hàng, đại diện cho full_health_data):
+
+
+Duration,Average_Pulse,Max_Pulse,Calorie_Burnage,Hours_Work,Hours_Sleep
+30,80,120,240,10,7
+30,85,120,250,10,7
+45,90,130,260,8,7
+45,95,130,270,8,7
+45,100,140,280,0,7
+60,105,140,290,7,8
+60,110,145,300,7,8
+60,115,145,310,8,8
+75,120,150,320,0,8
+75,125,150,330,8,8
+
+	Tính độ lệch chuẩn thủ công cho Max_Pulse
+
+	Công thức độ lệch chuẩn (cho dân số, vì NumPy dùng ddof=0 mặc định):
+
+	$$\sigma = \sqrt{\frac{\sum (x_i - \mu)^2}{n}}$$
+
+	$x_i$: Giá trị từng phần tử.
+	$\mu$: Giá trị trung bình.
+	$n$: Số lượng phần tử.
+
+	Bước 1: Tính trung bình ($\mu$) của Max_Pulse
+		Max_Pulse: 120, 120, 130, 130, 140, 140, 145, 145, 150, 150. 
+
+	137.
+
+	Bước 2: Tính tổng bình phương khoảng cách đến trung bình
+	$289 + 289 + 49 + 49 + 9 + 9 + 64 + 64 + 169 + 169 = 1057$	
+		
+	
+	Bước 3: Tính độ lệch chuẩn
+		 10.28.
+	
+	
+	Bước 4: Tính hệ số biến thiên (CV)	
+		 0.075 (hay 7.5%).
+	
+	
+	Tính độ lệch chuẩn và CV cho Duration (để so sánh)
+
+		Duration: 30, 30, 45, 45, 45, 60, 60, 60, 75, 75.
+		Trung bình:52.5
+		Tổng bình phương khoảng cách:506.25 (Tương tự cho các giá trị khác, tính nhanh: $506.25 \times 2 + 56.25 \times 3 + 56.25 \times 3 + 506.25 \times 2 = 2250$).
+		$\sigma = \sqrt{\frac{2250}{10}} = \sqrt{225} = 15$		
+		$CV = \frac{15}{52.5} \approx 0.286$ (hay 28.6%).
+
+	Kết luận từ tính toán:
+		- Max_Pulse: Độ lệch chuẩn ~10.28, CV ~7.5% → Phân tán thấp, nhịp tim tối đa khá ổn định.
+		- Duration: Độ lệch chuẩn ~15, CV ~28.6% → Phân tán cao, thời gian tập luyện biến động nhiều.
+		- Điều này phù hợp với nhận xét trong bài: Duration có độ lệch chuẩn và CV cao hơn Max_Pulse.
+
+
+# 4. Minh họa bằng Python
+
+import numpy as np
+
+# Dữ liệu mẫu
+data = {
+    'Duration': [30, 30, 45, 45, 45, 60, 60, 60, 75, 75],
+    'Max_Pulse': [120, 120, 130, 130, 140, 140, 145, 145, 150, 150]
+}
+
+# Tính độ lệch chuẩn
+std_duration = np.std(data['Duration'], ddof=0)  # ddof=0 cho dân số
+std_max_pulse = np.std(data['Max_Pulse'], ddof=0)
+print("Std Duration:", std_duration)  # ~15.0
+print("Std Max_Pulse:", std_max_pulse)  # ~10.28
+
+# Tính hệ số biến thiên
+cv_duration = std_duration / np.mean(data['Duration'])
+cv_max_pulse = std_max_pulse / np.mean(data['Max_Pulse'])
+print("CV Duration:", cv_duration)  # ~0.286
+print("CV Max_Pulse:", cv_max_pulse)  # ~0.075
+
+
+
+
+</pre><a id='backBottom' href='../DataScience-learning.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

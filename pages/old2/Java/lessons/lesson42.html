@@ -1,0 +1,140 @@
+<html><head><title>Lesson 42 == SynchronousQueue ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 42 -- SynchronousQueue -//</h1><pre># Khái niệm  
+	SynchonousQueue là một loại BlockingQueue đặc biệt trong Java không có bộ nhớ đệm. Nó hoạt động như một điểm trao đổi(rendezvous point) giữa một luồng sản xuất(producer) và một luồng tiêu thụ(consumer)
+	
+	## Đặc điểm chính của SynchronousQueue 
+		- Không lưu trữ phần tử- Mỗi lần put() cần có take() ngay lập tức để hoàn thành giao dịch 
+		- Cần có sự ghép cặp(pairing)  -  một luồng đưa vào(put()) phải đợi một luồng lấy ra(take()) và ngược lại 
+		- Hoạt động theo mô hình trao đổi trực tiếp(hand-off) 
+		- Có hai chế độ hoạt động
+			+> FIFO (chế độ mặc định) : dùng một hàng đợi để chờ ghép cặp 
+			+> LIFO (fairness = false) : Dùng một stack để chờ ghép cặp 
+		- Thường được dùng trong lập trình đa luồng để tối ưu hiệu suất và giảm độ trễ 
+		- Tức là trung gian chỉ cầm một phần tử tại một thời điểm, không có buffer -> không có phần tử nào được lưu trữ 
+	
+# Constructor của SynchronoursQueue 
+		
+	## Có hai cách khởi tạo SynchronoursQueue : 
+	
+		//Tạo một SynchonousQueue với chế độ FIFO(mặc định)
+		SynchonousQueue<E> queue = new SynchronoursQueue<>(); 
+		
+		// Tạo một SynchonousQueue với tùy chọn fairness
+		SynchonousQueue<E> queue = new SynchonousQueue<>(true)  	// FIFO(fair)
+		SynchonousQueue<E> queue  = new SynchonousQueue<>(false)	// LIFO (unfair)
+
+
+		- true (Fair Mode - Công bằng) : FIFO -  các luồng chờ theo thứ tự đến trước phục vụ trước 
+		- false (Unfair Mode -  Không công bằng ): LIFO - Luồng nào đến sau có thể được phụ vụ trước 
+		
+# Cách hoạt động của SynchonousQueue 
+	
+	## Cơ chế Hand-off(chuyển giao trực tiếp)
+		- Khi một luồng Producer gọi put(E e), nó sẽ bị chặn cho đến khi một luồng Consumer gọi take() 
+		- Khi một luồng Consumer gọi take() , nó sẽ bị chặn cho đến khi có một phần tử được put(). 
+		
+	## Ví dụ trực quan 
+		Thời điểm			Luồng				Hành động				Trạng thái Queue
+		T0					Producer			put("A")				Chờ Consumer
+		T1					Consumer			take()					Ghép cặp hoàn tất ✅
+		T2					Producer			put("B")				Chờ Consumer
+		T3					Consumer			take()					Ghép cặp hoàn tất ✅
+
+
+
+# Các phương thức quan trọng của SynchronousQueue 
+	
+	Phương thức											Mô tả																						Chặn không?
+	put(E e)											Thêm phần tử vào queue, chờ đến khi có consumer lấy ra										✅ Có
+	offer(E e)											Thêm phần tử vào queue, trả về false nếu không có consumer sẵn sàng							❌ Không
+	offer(E e, long timeout,TimeUnit unit)				Thêm phần tử vào queue trong thời gian giới hạn, trả về false nếu timeout					⏳ Có
+	take()												Lấy phần tử từ queue, chờ nếu chưa có producer đặt vào										✅ Có
+	poll()												Lấy phần tử từ queue, trả về null nếu không có phần tử nào									❌ Không
+	poll(long timeout, TimeUnit unit)					Lấy phần tử từ queue, chờ trong khoảng thời gian timeout trước khi trả về null				⏳ Có
+	isEmpty()											Luôn trả về true vì queue không có buffer													✅ Đúng
+	size()												Luôn trả về 0 vì queue không lưu phần tử													✅ Đúng
+	
+
+
+# 5 Ví dụ sử dụng SynchonousQueue trong đa luồng 
+
+	# Ví dụ 1 : Producer-Consumer đơn giản 
+			import java.util.concurrent.SynchronousQueue;
+		
+			public class SynchronousQueueExample {
+				public static void main(String[] args) {
+					SynchronousQueue<String> queue = new SynchronousQueue<>();
+			
+					// Producer Thread
+					Thread producer = new Thread(() -> {
+						try {
+							System.out.println("Producer: Đang đặt phần tử vào queue...");
+							queue.put("Data 1"); // Chờ cho đến khi consumer lấy dữ liệu
+							System.out.println("Producer: Đã đặt phần tử thành công!");
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+					});
+			
+					// Consumer Thread
+					Thread consumer = new Thread(() -> {
+						try {
+							Thread.sleep(2000); // Giả lập thời gian xử lý
+							System.out.println("Consumer: Đang lấy dữ liệu...");
+							String data = queue.take();
+							System.out.println("Consumer: Nhận được " + data);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+					});
+			
+					producer.start();
+					consumer.start();
+				}
+			}
+			
+			Kết quả (có độ trễ 2 giây trước khi producer tiếp tục):
+			
+			Producer: Đang đặt phần tử vào queue...
+			(Đợi 2 giây...)
+			Consumer: Đang lấy dữ liệu...
+			Consumer: Nhận được Data 1
+			Producer: Đã đặt phần tử thành công!
+
+
+# Ứng dụng  
+	
+		✅ Giao tiếp giữa các luồng mà không cần bộ nhớ đệm
+			Một thread sản xuất dữ liệu, thread khác tiêu thụ ngay lập tức.
+			Thích hợp cho các hệ thống xử lý real-time yêu cầu không có độ trễ lưu trữ.
+		
+		✅ Thread Pool trong Executors.newCachedThreadPool()
+			CachedThreadPool trong Java dùng SynchronousQueue để chuyển giao nhiệm vụ giữa các worker thread một cách hiệu quả.
+			ExecutorService executor = Executors.newCachedThreadPool();
+		
+		
+		✅ Hệ thống thông điệp không bộ nhớ đệm (Zero-buffer messaging)
+			Dùng trong hệ thống điều phối công việc, nơi producer chỉ gửi công việc khi có worker sẵn sàng.
+			
+		✅ Pipeline xử lý dữ liệu tức thì
+			Dùng để truyền dữ liệu giữa các bước xử lý mà không lưu trữ trung gian.
+	
+	
+# So sánh SynchronoursQueue với các Blocking Queue 
+		Queue							Đặc điểm
+		ArrayBlockingQueue				Có kích thước cố định, chặn khi đầy hoặc rỗng
+		LinkedBlockingQueue				Hàng đợi không giới hạn hoặc có thể giới hạn kích thước
+		PriorityBlockingQueue			Hàng đợi ưu tiên, không hỗ trợ blocking khi lấy phần tử
+		SynchronousQueue				Không lưu trữ phần tử, cần put() và take() đồng thời
+		DelayQueue						Chỉ cho phép lấy phần tử sau khi hết thời gian trễ
+
+
+# Các Lưu ý khi thi Java Certification
+
+		Không có buffer → size() luôn là 0, isEmpty() luôn true
+		put() và take() chặn luồng → cần thread khác xử lý song song
+		offer() và poll() không chặn → Trả về false hoặc null ngay nếu không có phần tử
+		Dùng trong Executors.newCachedThreadPool()
+		🚀 Tóm lại: SynchronousQueue cực kỳ quan trọng trong lập trình đa luồng! Nếu bạn muốn hiểu sâu về hệ thống xử lý concurrency, hãy thực hành nhiều bài tập với nó! 🔥
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

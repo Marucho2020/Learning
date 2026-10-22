@@ -1,0 +1,143 @@
+<html><head><title>Lesson 169 == Fork/Join Framework & Parallel Streams ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 169 -- Fork/Join Framework & Parallel Streams -//</h1><pre>
+#  1. Fork/Join Framework – Concept 
+
+	Fork/Join = divide and conquer cho multi-threading.
+	Ý tưởng:
+		- Chia task lớn thành các sub-task nhỏ (fork).
+		- Chạy sub-task song song.
+		- Kết hợp kết quả (join).
+
+	Thread pool đặc biệt: ForkJoinPool: 
+		Sử dụng work-stealing algorithm:
+			- Mỗi worker thread có deque.
+			- Nếu hết task, steal task từ thread khác → tận dụng CPU.	
+
+	Phù hợp với CPU-bound tasks, recursive computation, thao tác dữ liệu lớn.
+
+
+# 2. RecursiveTask & RecursiveAction 
+
+| Class              | Mục đích                         |
+| ------------------ | -------------------------------- |
+| `Rec Task<V>` | Task có trả về giá trị           |
+| `RecursiveAction`  | Task không trả về giá trị (void) |
+
+	## 🔹 Ví dụ tính tổng mảng lớn: 
+
+class SumTask extends RecursiveTask<Long> {
+    private final int[] arr;
+    private final int start, end;
+    private static final int THRESHOLD = 1000;
+
+    SumTask(int[] arr, int start, int end) {
+        this.arr = arr; this.start = start; this.end = end;
+    }
+
+    @Override
+    protected Long compute() {
+        if (end - start <= THRESHOLD) {
+            long sum = 0;
+            for (int i = start; i < end; i++) sum += arr[i];
+            return sum;
+        } else {
+            int mid = (start + end) / 2;
+            SumTask left = new SumTask(arr, start, mid);
+            SumTask right = new SumTask(arr, mid, end);
+            left.fork(); // fork left
+            long rightResult = right.compute(); // compute right trực tiếp
+            long leftResult = left.join(); // join left
+            return leftResult + rightResult;
+        }
+    }
+}
+
+	Tip senior: fork + compute → tránh deadlock, tận dụng work-stealing.
+
+
+# 3. ForkJoinPool – Common Pool vs Custom Pool
+
+	ForkJoinPool.commonPool():
+		Shared pool cho parallelStream() mặc định.
+		Size = số CPU cores.
+		Tự động work-stealing.
+
+	Có thể tạo custom pool:
+		ForkJoinPool pool = new ForkJoinPool(8); // max 8 threads
+		pool.submit(() -> data.parallelStream().forEach(...)).get();
+
+ForkJoinPool pool = new ForkJoinPool(8); // max 8 threads
+pool.submit(() -> data.parallelStream().forEach(...)).get();
+
+	Tuning: THRESHOLD quá nhỏ → overhead fork/join nhiều → chậm hơn sequential; quá lớn → ít parallelism → không tận dụng CPU.
+
+
+# 4. Parallel Streams – Sử dụng Fork/Join
+
+	Stream.parallel() = abstraction trên ForkJoinPool.
+	spliterator chia dữ liệu thành chunk → worker threads xử lý.
+		long sum = Arrays.stream(arr).parallel().sum();
+
+	Điều quan trọng:
+		Dữ liệu nên splittable efficiently → Array, ArrayList tốt; LinkedList không tốt.
+		Tránh side-effect mutable state → không thread-safe
+
+
+
+# Work-Stealing Insight (Senior-level)
+
+	Thread worker:
+		Push tasks vào deque của riêng mình.
+		Nếu empty, steal từ tail của deque khác.
+
+	Lợi ích:
+		CPU utilization cao.
+		Không cần lock toàn cục.
+
+	Nhược điểm:
+		Nếu tasks không cân bằng → một thread có thể idle, cần dynamic threshold hoặc splitting logic tốt.
+
+
+# 6. Performance Tuning
+
+	Task size (threshold):
+		Too small → overhead fork/join nhiều.
+		Too large → ít parallelism.
+
+	Data structure:
+		Prefer Array, ArrayList → O(1) random access → spliterator chia tốt.
+		Avoid LinkedList, Stream.generate (infinite) → khó chia.		
+
+	Avoid blocking inside Fork/Join:
+		Thread-blocking → deadlock (common pool), nếu cần → custom pool.
+		
+	Use work-stealing-aware design:	
+		Compute-heavy tasks benefit → CPU-bound tasks.
+		IO-bound → ForkJoin không tối ưu, dùng cached thread pool.
+
+		
+		
+# 7. Tóm tắt		
+		
+	| Feature          | Fork/Join                | Parallel Stream                   |
+| ---------------- | ------------------------ | --------------------------------- |
+| Thread pool      | ForkJoinPool             | ForkJoinPool.commonPool           |
+| Task granularity | Explicit (RecursiveTask) | Implicit (spliterator)            |
+| Work-stealing    | ✔                        | ✔                                 |
+| Suitable         | CPU-bound, recursive     | CPU-bound, splittable collections |
+| Caveats          | Blocking → deadlock      | Side-effect state, LinkedList     |
+| Tuning           | Threshold, custom pool   | Chunk size, avoid side-effects    |
+	
+
+# 8. Senior-level mindset
+
+	Fork/Join = power tool: fine-grained CPU-bound parallelism.
+	
+	ParallelStream = high-level abstraction: nhanh, dễ dùng, nhưng phải hiểu splitting + thread-safety.
+	
+	Hiểu task decomposition, threshold, work-stealing, common pool contention → tránh performance trap.
+	
+	Khi design hệ thống: CPU-bound → Fork/Join, IO-bound → thread pool bình thường hoặc reactive.
+
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

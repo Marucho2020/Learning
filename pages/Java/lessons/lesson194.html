@@ -1,11 +1,44 @@
-<html><head><title>Lesson 194 == Functional design patterns & best practices ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 194 -- Functional design patterns & best practices -//</h1><pre>
+<!DOCTYPE html><html lang='vi'><head><meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0'>
+<title>Lesson 194 -- Functional design patterns & best practices -//</title>
+<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css'>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js'></script>
+<script id='MathJax-script' async src='https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'></script>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; margin: 0; padding: 20px; transition: 0.3s; }
+.dark-mode { background-color: #121212; color: #e0e0e0; }
+.light-mode { background-color: #ffffff; color: #333333; }
+.container { max-width: 950px; margin: auto; }
+h1 { text-align: center; color: #3498db; margin: 20px 0; font-size: 26px; }
+.nav-bar { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 20px 0; }
+.nav-btn { text-decoration: none; padding: 10px 18px; background: #3498db; color: white; border-radius: 6px; font-weight: bold; font-size: 15px; display: inline-block; transition: 0.2s; }
+.nav-btn:hover { background: #2980b9; }
+.nav-btn.home-nav { background: #6c757d; }
+.nav-btn.home-nav:hover { background: #5a6268; }
+.nav-btn.disabled { background: #aaa; cursor: not-allowed; opacity: 0.5; }
+.done-btn { display: block; margin: 15px auto; padding: 10px 24px; border: 2px solid #2ecc71; background: transparent; color: #2ecc71; border-radius: 25px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+.done-btn.completed { background: #2ecc71; color: white; }
+.content-box { position: relative; margin: 20px 0; }
+pre { padding: 20px; border-radius: 8px; white-space: pre-wrap; word-break: break-word; overflow-x: auto; font-family: 'Consolas', 'Courier New', monospace; font-size: 15px; }
+.dark-mode pre { background: #1a1a1a; color: #f8f8f2; border: 1px solid #333; }
+.light-mode pre { background: #f8f9fa; color: #212529; border: 1px solid #e9ecef; }
+.copy-btn { position: absolute; top: 12px; right: 12px; padding: 6px 12px; font-size: 12px; background: #555; color: white; border: none; border-radius: 4px; cursor: pointer; opacity: 0.8; }
+.copy-btn:hover { opacity: 1; background: #2ecc71; }
+.theme-toggle-btn { display: block; margin: 20px auto; padding: 8px 16px; background: transparent; border: 1px solid #888; color: inherit; border-radius: 5px; cursor: pointer; }
+</style></head><body onload='initLesson()'>
+<div class='container'>
+<div class='nav-bar'><a class='nav-btn' href='lesson193.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../java-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson195.html'>Bài sau ➡️</a></div><h1>Lesson 194 -- Functional design patterns & best practices -//</h1>
+<button id='doneButton' class='done-btn' onclick='toggleDone()'>Mark as Done ⚪</button>
+<div class='content-box'>
+<button class='copy-btn' onclick='copyContent()'>📋 Copy nội dung</button>
+<pre><code id='lessonCode'>
 # 1. Functional mindset trong enterprise
 
 	Functional design không đơn giản là “dùng lambda cho gọn code”, mà là:
 
 		- Chia nhỏ function: mỗi function làm một việc duy nhất (Single Responsibility).
 		- Compose: ghép lại thành pipeline, dễ test, dễ thay đổi rule.
-		- Immutability & no side-effects: pipeline thread-safe, dễ parallelize, không lo race condition.
+		- Immutability &amp; no side-effects: pipeline thread-safe, dễ parallelize, không lo race condition.
 		- Declarative style: code mô tả cái gì cần làm, không phải làm thế nào.
 
 	👉 Đây chính là "functional design pattern" — thay vì design OOP bằng class hierarchy, ta design bằng function composition.
@@ -24,10 +57,10 @@
 
 	Ví dụ validate → transform → aggregate:
 
-List<Employee> employees = ...;
+List&lt;Employee&gt; employees = ...;
 
 String report = employees.stream()
-    .filter(e -> e.getSalary() > 1000)                  // validate rule
+    .filter(e -&gt; e.getSalary() &gt; 1000)                  // validate rule
     .map(Employee::getEmail)                            // transform
     .collect(Collectors.joining(", "));                 // aggregate
 
@@ -41,11 +74,11 @@ System.out.println("Report: " + report);
 
 	Trong OOP, ta hay extend class để thêm behavior. Functional approach: compose function.
 
-		Function<Employee, String> normalizeEmail =
-			e -> e.getEmail().toLowerCase();
+		Function&lt;Employee, String&gt; normalizeEmail =
+			e -&gt; e.getEmail().toLowerCase();
 		
-		Function<Employee, String> format =
-			normalizeEmail.andThen(email -> "Mail: " + email);
+		Function&lt;Employee, String&gt; format =
+			normalizeEmail.andThen(email -&gt; "Mail: " + email);
 		
 	Không cần subclass EmployeeFormatter → chỉ cần compose function.
 
@@ -54,14 +87,14 @@ System.out.println("Report: " + report);
 # (c) Predicate logic composition
 
 	Thay vì viết:
-		if (age > 18 && status.equals("ACTIVE") && email != null) { ... }
+		if (age &gt; 18 &amp;&amp; status.equals("ACTIVE") &amp;&amp; email != null) { ... }
 
 	Ta viết:
 
-		Predicate<Employee> valid = 
-			e -> e.getAge() > 18;
-		valid = valid.and(e -> "ACTIVE".equals(e.getStatus()))
-					.and(e -> e.getEmail() != null);
+		Predicate&lt;Employee&gt; valid = 
+			e -&gt; e.getAge() &gt; 18;
+		valid = valid.and(e -&gt; "ACTIVE".equals(e.getStatus()))
+					.and(e -&gt; e.getEmail() != null);
 		
 
 	Ưu điểm: 
@@ -79,8 +112,8 @@ System.out.println("Report: " + report);
 			Custom wrapper: try-catch lambda.
 
 
-Function<String, Optional<Integer>> safeParse =
-    s -> {
+Function&lt;String, Optional&lt;Integer&gt;&gt; safeParse =
+    s -&gt; {
         try { return Optional.of(Integer.parseInt(s)); }
         catch (NumberFormatException e) { return Optional.empty(); }
     };
@@ -89,15 +122,15 @@ Function<String, Optional<Integer>> safeParse =
 
 # 3. Enterprise example – Report pipeline
 
-Predicate<Employee> isValid =
-    e -> e.getSalary() > 1000 &&
-         "ACTIVE".equals(e.getStatus()) &&
+Predicate&lt;Employee&gt; isValid =
+    e -&gt; e.getSalary() &gt; 1000 &amp;&amp;
+         "ACTIVE".equals(e.getStatus()) &amp;&amp;
          e.getEmail() != null;
 
-Function<Employee, String> toEmail = 
+Function&lt;Employee, String&gt; toEmail = 
     Employee::getEmail;
 
-Function<String, String> toLower = 
+Function&lt;String, String&gt; toLower = 
     String::toLowerCase;
 
 String report = employees.stream()
@@ -129,4 +162,46 @@ Pipeline này có thể extend rất dễ:
 	
 	
 	
-</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
+</code></pre>
+</div>
+<div class='nav-bar'><a class='nav-btn' href='lesson193.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../java-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson195.html'>Bài sau ➡️</a></div><button class='theme-toggle-btn' onclick='toggleTheme()'>🌓 Đổi Giao Diện</button>
+</div>
+<script>
+const lessonKey = 'java-learning-list_lesson194.html';
+function toggleTheme() {
+   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';
+   document.body.className = mode;
+   localStorage.setItem('theme', mode);
+}
+function toggleDone() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   if (isDone) {
+       localStorage.removeItem(lessonKey);
+   } else {
+       localStorage.setItem(lessonKey, 'done');
+   }
+   renderDoneStatus();
+}
+function renderDoneStatus() {
+   let isDone = localStorage.getItem(lessonKey) === 'done';
+   let btn = document.getElementById('doneButton');
+   if (isDone) {
+       btn.className = 'done-btn completed';
+       btn.innerText = 'Đã Hoàn Thành ✅';
+   } else {
+       btn.className = 'done-btn';
+       btn.innerText = 'Đánh dấu đã học ⚪';
+   }
+}
+function copyContent() {
+   let text = document.getElementById('lessonCode').innerText;
+   navigator.clipboard.writeText(text).then(function() {
+       alert('✅ Đã sao chép nội dung bài học!');
+   });
+}
+function initLesson() {
+   document.body.className = localStorage.getItem('theme') || 'dark-mode';
+   renderDoneStatus();
+   if (window.Prism) Prism.highlightAll();
+}
+</script></body></html>

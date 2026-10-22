@@ -1,0 +1,399 @@
+<html><head><title>Lesson 14 == ====検証結果, 制約 ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../powerpoint-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 14 -- ----検証結果, 制約 -//</h1><pre>	検証結果（result）
+	制約（limitation）
+	
+	
+# 	1. 検証結果 (result） 
+	
+	Ý nghĩa (trong IT project)
+
+		Không phải “kết quả chung chung”
+		→ Là output có căn cứ từ test / PoC / kiểm chứng kỹ thuật	
+			
+		👉 Nhật họ đọc cái này để quyết định:
+			- Có deploy không
+			- Có scale không
+			- Có risk không		
+		
+	
+	Ví dụ thực tế (ServiceNow)
+	
+		- Kiểm chứng workflow approval khi concurrent request
+		- Test performance khi 1000 request/phút
+		- Kiểm tra integration với external API	
+			
+	Đoạn tài liệu (report style)		
+	
+		本検証では、ServiceNowの承認ワークフローに対して同時リクエストを送信し、
+		処理性能および競合発生有無を確認した。
+		その結果、同時100件までは遅延なく処理可能であることを確認したが、
+		200件を超えた場合、一部の承認処理において最大5秒の遅延が発生した。	
+					
+		👉 Điểm mấu chốt:
+			Có điều kiện (100件, 200件)
+			Có số liệu (5秒)
+			Có kết luận rõ	
+				
+	
+	
+	##Slide (PowerPoint) 
+
+		
+		
+		- ServiceNow承認WFの同時実行検証を実施
+		- 100件までは遅延無しで処理可能
+		- 200件以上で最大5秒の遅延発生
+		- 高負荷時のパフォーマンス劣化を確認
+	
+	## Title chuẩn Nhật 	
+
+	👉 承認ワークフローの同時実行に関する検証結果	
+	
+	
+	##	NG vs OK
+	
+		❌ NG (junior)
+			検証の結果、問題は特にありませんでした。
+	
+		👉 Sai ở:
+			Không số liệu
+			Không điều kiện
+			Không ai tin
+	
+	
+		✅ OK (senior)	
+			同時100件までの処理において性能劣化が確認されなかったが、200件以上では最大5秒の遅延が発生した。
+	
+
+
+
+# 2. 制約（limitation） 
+
+	Ý nghĩa (trong IT project)
+		Không phải “hạn chế chung chung”
+		→ Là điều kiện hệ thống KHÔNG thể vượt qua
+
+	👉 Đây là thứ:
+		Dev phải biết để design
+		PM phải biết để tránh overpromise
+
+
+
+	## Ví dụ thực tế (ServiceNow / SaaS) 
+
+		- API rate limit (1000 req/min)
+		- Không xử lý real-time
+		- Không hỗ trợ transaction multi-record
+			
+			
+		本システムでは、ServiceNowの標準APIを利用して外部連携を行うため、
+		API呼び出し回数は1分あたり最大1000回の制限がある。
+		そのため、大量データの一括処理においては、バッチ分割またはキューイング処理の導入が必要となる。			
+					
+				
+			👉 Điểm mấu chốt:
+				Nêu rõ constraint
+				Nêu impact
+				Nêu hướng xử lý			
+						
+			
+	## Slide (PowerPoint)		
+			
+			- ServiceNow標準APIにより外部連携を実施
+			- API呼び出しは最大1000回/分の制限あり
+			- 大量処理時は制限超過リスクあり
+			- バッチ分割またはキュー処理が必要			
+						
+			
+	## Title chuẩn Nhật 		
+			👉 外部連携におけるAPI利用制約について
+			
+			
+			
+	## NG vs OK 
+	
+		❌ NG (junior)		
+			
+		APIに制限があります。		
+			👉 Vô dụng. Không ai dùng được.
+			
+			
+		✅ OK (senior)	
+			API呼び出しは1分あたり最大1000回に制限されているため、大量データ処理時にはバッチ分割が必要となる。
+			
+			
+# Tổng kết (đừng hiểu sai) 			
+			
+	検証結果 = “Sự thật đã test → dùng để quyết định”
+	制約 = “Giới hạn hệ thống → bắt buộc phải sống chung”			
+				
+	👉 Sai lầm phổ biến của dev:
+		Viết 検証結果 như cảm nhận
+		Viết 制約 mà không gắn với impact
+
+	👉 Level senior:
+		Luôn có số liệu + điều kiện + hậu quả + hướng xử lý
+					
+			
+Nếu muốn lên level nữa:
+https://chatgpt.com/g/g-p-69ca16640e24819184be0b039f98e49b-hoc-powerpoint/c/69dc426a-36c0-83e8-b182-97a014b58656
+Tôi sẽ cho bạn bài tập kiểu reviewer Nhật chấm thẳng tay (rất khó, gần giống thực tế genba).			
+
+
+------------------ Bài tập --------------------
+
+	## Context (giống genba thật)
+
+	Bạn đang làm dự án ServiceNow導入 cho một công ty.
+			- Có chức năng: 承認ワークフロー（approval workflow）
+			- Có integration với hệ thống ngoài qua API
+			- Bạn đã làm:
+				- 負荷テスト (load test)
+				- API連携テスト
+
+
+
+	## Yêu cầu 
+
+		👉 Viết 1 đoạn tài liệu (10–15 dòng) bao gồm:
+
+		1. 検証結果
+			Kết quả load test workflow
+			Có:
+			Số lượng request (ví dụ: 100件, 500件…)
+			Có hoặc không có delay
+			Có hoặc không có lỗi
+			
+		2. 制約
+			API external có giới hạn (tự giả định số)
+			Phải:
+			Nêu rõ limit
+			Nêu impact
+			Nêu hướng xử lý (quan trọng)
+
+		■検証結果(result)
+
+			##  Đoạn văn  
+
+			本検証では、ServiceNowの標準承認ワークフローに対して同時実行負荷テストを実施し、
+			処理性能および競合発生有無を確認した。
+			その結果、1分あたり300件までの同時実行においては遅延およびエラーは発生しなかったが、
+			400件以上では最大30秒の遅延および一部処理エラーが発生することを確認した。
+		
+		
+	
+			##  PowerPoint 
+				- ServiceNowの標準承認フローにより同時に実行検証を実施
+				- 300件/分までは遅延無で処理可能
+				- 400件/分以上は30秒の遅延および処理エラー発生
+				- 高負荷時のパフォーマンス劣化を確認
+
+
+		■制約
+		
+			##  Đoạn văn  
+			本システムではServiceNow標準のAPIを利用して外部連携を行うため、
+			API呼び出し回数は1分あたり最大1000回の制限がある。
+			そのため、大量データの一括処理においてはバッチ分割およびキューイングの導入が必要となる。
+			
+			
+			本システムでは、ServiceNowの標準APIを用いた外部連携を行うため、
+			API呼び出し回数は1分あたり最大1000回に制限されている。
+			そのため、大量データを一括処理した場合、API制限超過によりリクエストエラーが発生するリスクがある。
+			この対策として、バッチ分割およびキューイング処理の導入が必要となる。
+			
+			
+			
+			##  PowerPoint 
+			- ServiceNowの標準APIにより外部連携を実施する
+			- API呼び出しは最大1000回/分の制限があり
+			- 最大処理時は制限超過のリスクあり
+			-　標準APIおよび承認ワークフローはキューイングを利用する必要
+			
+			
+			
+			
+			
+
+
+		⚠️ Rule (rất quan trọng)
+
+			Nếu vi phạm → tôi chấm fail thẳng:
+
+		❌ Không được viết mơ hồ kiểu:
+			「問題なし」
+			「遅延が発生した可能性がある」
+		❌ Không được thiếu:
+			Số liệu
+			Điều kiện
+		❌ Không được tách rời:
+			制約 mà không có impact → FAIL
+
+
+
+	## 🎯 Level tôi expect (rất cao) 
+	
+		Bạn phải viết kiểu này:
+			Có logic:
+				なぜ → 何が起きた → だからどうする
+	
+			Có mindset:
+				Dev đọc hiểu được
+				PM đọc quyết định được	
+		
+	🚨 Cách tôi chấm
+
+		Tôi sẽ chấm theo 4 tiêu chí:
+			Độ cụ thể (số liệu, điều kiện)
+			Logic (có flow hay không)
+			Độ “Japanese IT style”
+			Tư duy senior (có impact + solution không)	
+			
+		
+#🎯 Câu hỏi của bạn
+	
+	Tại sao 承認 (workflow) ở 検証結果
+		còn API lại ở 制約?
+	👉 Vì bản chất 2 thứ này KHÁC NHAU:
+		
+	## 1. 承認ワークフロー → 検証結果 
+	
+		👉 Đây là thứ bạn CHỦ ĐỘNG test
+			Bạn tạo load
+			Bạn đo performance
+			Bạn quan sát behavior
+
+		=> Nó tạo ra fact (sự thật đo được)	
+			➡️ Vì vậy nó thuộc:
+			👉 検証結果 (result)
+				
+	
+	## 2. API制限 → 制約 
+	
+		👉 Đây là thứ bạn KHÔNG thể thay đổi
+			ServiceNow quy định sẵn
+			Bạn không control được
+			Không cần test cũng biết (doc đã ghi)
+
+		=> Nó là hard limit của system
+
+		➡️ Vì vậy nó thuộc:
+		👉 制約 (limitation)
+
+
+
+	## ⚠️ Nếu bạn viết ngược lại thì sao? 
+
+		❌ Sai tư duy phổ biến
+			Viết API limit vào 検証結果
+			→ reviewer sẽ nghĩ:
+			👉 “Ơ cái này doc có rồi, test làm gì?”
+			
+		Viết workflow vào 制約
+			→ reviewer sẽ nghĩ:
+			👉 “Ơ cái này là behavior, sao lại gọi là limitation?”
+
+
+
+
+	## 💥 Insight quan trọng 
+
+		👉 Phân biệt bằng câu hỏi:
+			“Cái này mình test ra hay bị ép phải chấp nhận?”
+
+| Loại    | Bản chất           | Thuộc |
+| ------- | ------------------ | ----- |
+| Test ra | Có thể thay đổi    | 検証結果  |
+| Bị ép   | Không thể thay đổi | 制約    |
+
+
+
+-------------------- Bài 2 --------------- 
+
+	🔥 Bài tập: 検証結果 vs 制約 mâu thuẫn
+	Context
+
+		Bạn đang làm ServiceNow integration:
+			External API có制約:
+				最大1000回/分
+		Bạn đã làm load test (検証)
+		
+		
+	💥 Sự thật (cố tình mâu thuẫn)
+	
+		検証結果 (fact bạn đo được)
+			800 req/phút → OK
+			1000 req/phút → vẫn OK (không lỗi, không delay)
+			1200 req/phút → bắt đầu có lỗi (429)
+		
+		制約 (doc / vendor nói)
+			API limit: 1000 req/phút
+		
+		
+	🎯 Vấn đề
+
+		👉 Theo test:
+			1000 vẫn OK
+			
+		👉 Nhưng theo spec:
+			1000 là limit (vượt là chết)
+
+		👉 Mâu thuẫn:
+			Tin test?
+			Hay tin spec?
+			
+	📝 Yêu cầu bài làm
+		Viết 1 đoạn tài liệu (10–15 dòng) bao gồm:
+
+	1. 検証結果
+		Ghi rõ:
+		800 / 1000 / 1200
+		Behavior từng mức
+		
+	2. 制約
+		Ghi rõ:
+		Limit là 1000 (theo spec)
+		
+		Nhưng:
+			Phải chỉ ra mâu thuẫn với test
+	3. 判断 / 方針 (QUAN TRỌNG NHẤT)
+		👉 Đây là phần phân biệt senior vs junior
+
+	Bạn phải trả lời:
+		Có dùng 1000 không?
+		Hay phải safe hơn?
+		Có cần buffer không?
+
+	
+	
+
+	本システムでは、ServiceNow標準APIを用いた外部連携において、API呼び出し性能に関する負荷検証を実施した。
+	検証の結果、800リクエスト/分および1000リクエスト/分においては遅延およびエラーは発生しなかったが、
+	1200リクエスト/分ではHTTP 429エラーが発生することを確認した。
+
+	一方で、ServiceNowの仕様上、API呼び出しは最大1000リクエスト/分に制限されており、
+	検証結果と仕様上の制約に乖離が存在する。
+	このため、仕様上の制約を優先しつつ、突発的な負荷増加による制限超過リスクを回避するため、20%のバッファを考慮する。
+	その結果、運用上のAPI呼び出し上限は800リクエスト/分とし、
+	これを超過しないようバッチ分割およびキューイング制御を実施する方針とする。
+
+
+
+	検証結果
+		- ServiceNow標準APIを用いた外部連携において負荷検証を実施
+		- 800リクエスト/分および1000リクエスト/分では遅延およびエラーは発生しなかった
+		- 1200リクエスト/分ではHTTP 429エラーが発生した
+		- ※API上限1000リクエスト/分は仕様値であり、検証結果には含めない
+
+	制約
+		- ServiceNow仕様により、API呼び出しは最大1000リクエスト/分に制限されている
+		- 検証結果と仕様上限に乖離があり、上限付近での運用は制限超過リスクがある
+	方針
+		- 仕様上の上限（1000リクエスト/分）を遵守する
+		- 突発的な負荷増加による制限超過を防ぐため、20%のバッファを確保する
+		- 運用上のAPI呼び出し上限は800リクエスト/分とする
+		- 上限超過を防止するため、バッチ分割およびキューイング制御を実施する
+
+
+
+
+</pre><a id='backBottom' href='../powerpoint-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

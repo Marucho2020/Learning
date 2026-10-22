@@ -1,0 +1,175 @@
+<html><head><title>Lesson 212 == Functional Orchestration (Saga Pattern) ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 212 -- Functional Orchestration (Saga Pattern) -//</h1><pre>
+# 🧠 1. Vấn đề gốc của hệ thống phân tán
+	Trong hệ thống microservices:
+	
+		Mỗi service (Order, Payment, Shipping, Notification) đều độc lập — không có “transaction toàn cục”.
+
+	Nếu bạn gọi tuần tự:
+createOrder();
+chargePayment();
+shipItem();
+notifyCustomer();
+
+	→ Nếu bước 3 fail, bạn không thể rollback 1 & 2 dễ dàng.
+
+	## Giải pháp OOP truyền thống:
+		Dùng transaction manager, saga orchestrator, hoặc choreography bằng message broker.
+		
+		Nhưng: phức tạp, nhiều framework, coupling cao.
+
+
+
+	## Giải pháp functional:
+
+		Model mọi step như pure function.
+		Thay rollback = compensate, và compose chúng như pipeline.
+		
+
+# ⚙️ 2. Functional Saga Core Concept
+
+	## a. Function kiểu Saga Step
+		Mỗi bước là một function:
+		Function<Input, Either<Error, Output>>
+	
+	Nếu thành công → trả Right(Output)
+	Nếu thất bại → trả Left(Error)
+
+	Đây chính là kiểu dữ liệu “sống còn” của functional error handling.
+
+
+# b. Higher-Order Function compensate(fn, rollbackFn)
+
+	Ta gói mỗi bước bằng một compensation function (rollback function).
+		
+<T, R> SagaStep<T, R> compensate(
+        Function<T, Either<Error, R>> action,
+        Consumer<R> rollbackFn
+) {
+    return new SagaStep<>(action, rollbackFn);
+}
+
+
+# c. Compose pipeline Saga
+	Giờ ta có thể compose các step:
+	
+	
+SagaStep<OrderRequest, Order> createOrder = compensate(
+    req -> Right(orderRepo.create(req)),
+    order -> orderRepo.delete(order.getId())
+);
+
+SagaStep<Order, Payment> chargePayment = compensate(
+    order -> paymentService.charge(order),
+    payment -> paymentService.refund(payment)
+);
+
+SagaStep<Payment, Shipment> shipItem = compensate(
+    payment -> shippingService.ship(payment),
+    shipment -> shippingService.cancel(shipment)
+);
+	
+	
+	
+	
+# 	d. Orchestration Function
+	
+	Giờ ta viết orchestrator thuần functional:	
+	
+<T> Either<Error, T> runSaga(List<SagaStep<?, ?>> steps) {
+    List<Object> completed = new ArrayList<>();
+    for (SagaStep step : steps) {
+        var result = step.action.apply(completed.isEmpty() ? null : completed.getLast());
+        if (result.isLeft()) {
+            // rollback in reverse
+            Collections.reverse(completed);
+            completed.forEach(prev -> step.rollbackFn.accept(prev));
+            return Left(result.getLeft());
+        }
+        completed.add(result.get());
+    }
+    return Right((T) completed.getLast());
+}
+	
+	
+	→ Không annotation, không AOP, thuần hàm + thuần logic.
+	Không có side effect ngoài những gì ta kiểm soát rõ ràng.
+	
+	
+# 🧩 3. So sánh với OOP Saga Framework
+
+| Khía cạnh    | OOP Saga (Spring State Machine, Camunda, Axon...) | Functional Saga                 |
+| ------------ | ------------------------------------------------- | ------------------------------- |
+| Orchestrator | Stateful class / XML config                       | Pure function                   |
+| Compensation | Config file hoặc annotation                       | Inline function                 |
+| Testing      | Mock service, test integration                    | Unit test từng function dễ dàng |
+| Debug        | Workflow trace                                    | Stream log + function chain     |
+| Dependency   | Framework heavy                                   | Zero dependency                 |
+
+
+# 🚀 4. Ví dụ thực tế: Order → Payment → Shipping → Notification
+
+
+var saga = SagaBuilder.start(createOrder)
+    .then(chargePayment)
+    .then(shipItem)
+    .then(notifyCustomer);
+
+	var result = saga.run(orderRequest);
+
+
+if (result.isLeft()) {
+    log.error("Saga failed: " + result.getLeft());
+}
+
+	## Nếu bất kỳ bước nào fail:
+
+		- Tự động rollback theo chuỗi đã khai báo.
+		- Không cần try/catch hay transaction manager.
+		- Mọi rollback đều là pure function, testable, composable.
+
+
+
+# 🧮 5. Functional Advantage
+
+| Ưu điểm           | Giải thích                                                                       |
+| ----------------- | -------------------------------------------------------------------------------- |
+| ✅ Declarative     | Ta “mô tả” workflow, không “chỉ huy” từng step                                   |
+| ✅ Deterministic   | Dễ test, dễ mô phỏng                                                             |
+| ✅ Immutable State | Saga log có thể lưu snapshot state → replay được                                 |
+| ✅ Resilient       | Dễ kết hợp với retry, timeout, fallback (bài trước)                              |
+| ✅ Parallelizable  | Có thể chạy saga branches song song (chẳng hạn `notifyManager` & `updateLedger`) |
+
+
+
+# ⚙️ 6. Enterprise Use Case
+
+	## 💳 Payment Pipeline
+		Nếu thanh toán fail → rollback đơn hàng, hủy shipment.
+		Nếu shipment fail → refund payment.
+
+
+	## 🧾 Ledger System
+		Mỗi bước của event ledger là append-only function, rollback chỉ thêm event “reversal”, không xóa dữ liệu.
+	
+	## 🚚 Supply Chain
+		Các service phân tán (Inventory, Shipping, Invoice) phối hợp qua functional saga → rollback logic nằm ở từng step.
+
+
+# 🧠 7. Mở rộng nâng cao
+
+
+Khi đã hiểu pattern này, bạn có thể:
+
+	Dùng Reactive Saga với Flux hoặc Flow.Publisher (non-blocking orchestration).
+	Dùng Functional DSL để mô tả pipeline từ file YAML:
+
+
+# 🔮 8. Tổng kết triết lý
+
+Functional Saga không cố tái tạo transaction toàn cục,
+mà biến chuỗi hành động bất đồng bộ thành một pipeline có thể rollback tự nhiên —
+vừa pure functional, vừa resilient, vừa declarative
+
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

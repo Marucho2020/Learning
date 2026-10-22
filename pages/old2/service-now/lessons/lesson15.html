@@ -1,0 +1,94 @@
+<html><head><title>Lesson 15 == Task table ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../service-now-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 15 -- Task table -//</h1><pre>	generic work
+	
+	
+# 	Câu hỏi quyết định: có extend task không? 
+	
+1. Có người được assign xử lý không?
+2. Có trạng thái lifecycle không? New → In Progress → Closed?
+3. Có deadline / SLA không?
+4. Có cần comment, work notes, activity log không?
+5. Có cần approval không?
+6. Có cần queue/list cho agent xử lý không?
+7. Có cần report chung với các loại task khác không?
+	
+		
+	Nếu đa số là có → nghiêng mạnh về extend task.
+
+	Nếu đa số là không → đừng extend task.	
+	
+	
+	
+	# Ví dụ quản lý việc test thiết bị 
+		Infinity HHD Testing Task
+		- tester
+		- device
+		- test result
+		- due date
+		- state
+		- assignment group
+		- comments	
+		
+		Cái này nên cân nhắc extend task.
+		Vì bản chất nó là một công việc.	
+		
+		
+		
+		
+# Rule senior 		
+		
+			
+	Nếu là “work item” chung → xét extend task.
+	Nếu là “sự cố service” → incident.
+	Nếu là “điều tra root cause” → problem.
+	Nếu là “thay đổi hệ thống có risk” → change.
+	Nếu là “yêu cầu từ user” → request/catalog.
+	Nếu là “tài sản / thiết bị / cấu hình” → asset hoặc CMDB, không phải task.
+	Nếu là dữ liệu master/reference → custom/core reference table, không phải task.	
+			
+			
+		
+# 8. Mô hình đúng cho case thiết bị test 		
+		
+		
+u_hhd_device
+- serial_number
+- model
+- location
+- assigned_user
+- device_status
+
+u_hhd_test_task extends task
+- device → reference u_hhd_device
+- test_plan
+- test_result
+- defect_found		
+		
+		
+	Tức là:
+		Thiết bị ≠ công việc test thiết bị
+
+		Đây là phân biệt rất quan trọng.
+
+		Junior hay nhét tất cả vào một bảng.
+		Senior tách entity và process.	
+		
+		
+		
+# 9. Kết luận thẳng 		
+		
+		
+			
+	Đúng, sau này khi thêm loại công việc mới, phải nghĩ đầu tiên: có extend được task không?
+		Nhưng không phải vì task là “bảng tốt nhất”.
+		Mà vì task là abstraction chuẩn cho work management trong ServiceNow.
+
+	Công thức nhớ:
+		Entity/data object → custom table / asset / CMDB
+		Work/process item → consider extending task
+		Specific ITSM process → incident / problem / change / request
+
+	Sai ở bước này thì sau đó business rule, report, ACL, SLA, flow đều méo theo.		
+			
+			
+		
+</pre><a id='backBottom' href='../service-now-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

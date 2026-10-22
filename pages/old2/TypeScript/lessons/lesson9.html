@@ -1,0 +1,157 @@
+<html><head><title>Lesson 9 == Aliases and Interface ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../type-script-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 9 -- Aliases and Interface -//</h1><pre># 1. Type Aliases và Interfaces là gì?
+		
+	- Type Alias: Sử dụng từ khóa type để đặt tên cho một kiểu dữ liệu, thường dùng để định nghĩa cấu trúc đối tượng, kiểu đơn giản, hoặc kiểu kết hợp (union types).
+	
+	- Interface: Sử dụng từ khóa interface để định nghĩa cấu trúc đối tượng, thường dùng cho các đối tượng phức tạp và hỗ trợ mở rộng (extending).
+
+	Cả hai đều giúp code rõ ràng, dễ tái sử dụng và đảm bảo an toàn kiểu dữ liệu.
+	
+	
+	
+# 	2. Type Alias 
+
+	Cú pháp:
+		type TênKiểu = { thuộc_tính: kiểu };
+	
+	
+	Ví dụ:
+		type Person = {
+		name: string;
+		age: number;
+		};
+		let john: Person = { name: "John", age: 25 };	
+	
+	
+	Đặc điểm : 
+		Linh hoạt: Có thể định nghĩa cho các kiểu nguyên thủy, union types, hoặc kiểu phức tạp. 
+		
+		Ví dụ với union types : 
+			
+			type ID = string | number;
+			let userId: ID = 123; // OK
+			userId = "abc123"; // OK		
+	
+# 3. Interface	
+	
+	Cú pháp: 
+interface TênInterface {
+  thuộc_tính: kiểu;
+}
+		
+		
+	Ví dụ : 
+interface Person {
+  name: string;
+  age: number;
+}
+let jane: Person = { name: "Jane", age: 30 };		
+		
+		
+	Đặc điểm : 
+		Thường dùng cho đối tượng.
+		Hỗ trợ extending (kế thừa) và declaration merging.
+		
+		
+		
+# 	4. So sánh Type Alias và Interface 
+
+Tính năng					Type Alias							Interface
+Cú pháp					type Person = {...}					interface Person {...}
+Kiểu hỗ trợ				Nguyên thủy, union, tuple, v.v.		Chủ yếu cho đối tượng
+Mở rộng					Dùng & (intersection)					Dùng extends
+Declaration Merging		Không hỗ trợ						Hỗ trợ (gộp nhiều khai báo)
+
+
+
+# Ví dụ mở rộng:
+	
+	## Type Alias (Intersection): 
+	
+type Person = { name: string };
+type Employee = Person & { employeeId: number };
+let emp: Employee = { name: "John", employeeId: 123 };
+		
+	## Interface (Extending):
+	
+interface Person {
+  name: string;
+}
+interface Employee extends Person {
+  employeeId: number;
+}
+let emp: Employee = { name: "John", employeeId: 123 };	
+	
+	
+	
+	
+	## Declaration Merging (Chỉ Interface)	
+	
+interface User {
+  name: string;
+}
+interface User {
+  age: number;
+}
+let user: User = { name: "John", age: 25 }; // OK	
+	
+
+
+# 5. Sử dụng trong thực tế
+
+	## Trong hàm: 
+interface Point {
+  x: number;
+  y: number;
+}
+function printPoint(point: Point): string {
+  return `(${point.x}, ${point.y})`;
+}
+console.log(printPoint({ x: 10, y: 20 })); // (10, 20)
+
+
+	## Optional Properties:
+type Car = {
+  brand: string;
+  model?: string;
+};
+let myCar: Car = { brand: "Toyota" }; // OK, model là tùy chọn
+
+
+# 6. Ví dụ tổng hợp	
+	
+	// Type Alias
+type User = {
+  name: string;
+  age: number;
+};
+let user1: User = { name: "Alice", age: 30 };
+
+// Interface
+interface Employee {
+  name: string;
+  employeeId: number;
+}
+let emp1: Employee = { name: "Bob", employeeId: 101 };
+
+// Extending Interface
+interface Manager extends Employee {
+  department: string;
+}
+let manager: Manager = { name: "Charlie",  employeeId: 102, department: "IT" };
+
+// Intersection Type
+type Admin = User & { role: string };
+let admin: Admin = { name: "Dave", age: 40, role: "Admin" };
+
+
+
+# 7. Lưu ý thực tế
+
+	Chọn Type hay Interface?:
+		- Dùng Type Alias cho kiểu linh hoạt (union types, primitive, tuple) hoặc khi không cần kế thừa.
+		- Dùng Interface cho đối tượng phức tạp, cần kế thừa hoặc declaration merging.
+	Declaration Merging: Rất hữu ích khi làm việc với thư viện bên ngoài (như thêm thuộc tính vào interface của thư viện).
+	Tái sử dụng: Cả hai đều giúp code dễ bảo trì, nhưng Interface thường được ưu tiên trong các dự án lớn vì tính kế thừa.
+	
+
+</pre><a id='backBottom' href='../type-script-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

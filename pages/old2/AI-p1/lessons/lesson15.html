@@ -1,0 +1,166 @@
+<html><head><title>Lesson 15 == Recurrent Neural Network (RNN)	: Ứng dụng và cách hoạt động. ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../AI-learning-list-pharse1.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 15 -- Recurrent Neural Network (RNN)	: Ứng dụng và cách hoạt động. -//</h1><pre>
+
+# Khái niệm 
+	Recurrent Neural Networks(RNN) là một loại mạng nơ-ron đặc biệt được thiết kế để xử lý dữ liệu tuần tự. Khác với các mạng nơ-ron thông thường, RNN có khả năng ghi nhớ thông tin từ các bước trước đó nhờ cơ chế phản hồi (recurrent), cho phép mô hình có thể tận dụng ngữ cảnh của dữ liệu trước để dự đoán hoặc suy luận dữ liệu hiện tại. Điều này làm cho RNN đặc biệt hiệu quả trong việc phân tích dữ liệu chuỗi thời gian, xử lý ngôn ngữ tự nhiên, dịch máy, và nhận diện giọng nói, nơi mà thông tin từ quá khứ là rất quan trọng để hiểu chính xác hiện tại. 
+
+# Cách hoạt động của Recurrent Neural Network(RNN)	
+	
+https://aicandy.vn/wp-content/uploads/2024/09/aicandy_RNN.png
+
+	
+	## Hidden State 
+		Điểm khác biệt lớn nhất của RNN so với các mạng nơ-ron truyền thống là khả năng lưu trữ và cập nhật thông tin qua các bước của chuỗi thời gian. Tại mỗi bước thời gian(timestep), RNN duy trì một biến gọi là trạng thái ẩn (h_t), biểu diễn bộ nhớ của mô hình về các thông tin đã nhận được từ những bước trước đó. Trạng thái ẩn này được cập nhật tại mỗi bước thời gian dựa trên đầu vào và hiện tại và trạng thái ẩn từ bước trước đó. 
+		Công thức tính toán trạng thái ẩn tại mỗi bước thời gian có thể được biểu diễn như sau 
+			h_t = f(W_{xh}x_t + W_{hh}h_{t-1} + b_h)
+			
+		Trong đó : 
+			h_t : Trạng thái ẩn tại thời điểm t 
+			x_t : Đầu vào tại thời điểm t 
+			W_{xh} : Ma trận trọng số kết nối đầu vào với trạng thái ẩn. 
+			W_{hh} : Ma trận trọng số kết nối trạng thái ẩn trước đó với trạng thái ẩn hiện tại 
+			b_h	   : tham số bias cho trạng thái ẩn 
+			f 	: Hàm kích hoạt (thường là hàm tanh hoặc ReLU )
+			
+	## Output  
+		RNN có thể tạo đầu ra tại mỗi bước thời gian, thường được tính toán dựa trên trạng thái ẩn tại thời điểm đó. Đầu ra y_t tại thời điểm t được tính bằng công thức : 
+				y_t = W_{hy}h_t + b_y
+
+		Trong đó : 
+			y_t : Đầu ra tại thời điểm t 
+			W_{hy}	: Ma trận trọng số kết nối trạng thái ẩn với đầu ra 
+			b_y		: Tham số bias cho đầu ra 
+			
+	## Backpropagation 
+		Backpropagation là thuật toán lan truyền ngược trong các mạng nơ-ron thông thường. Ở mỗi lớp của mạng nơ-ron, giá trị đầu ra được tính toán dựa trên đầu vào các trọng số tương ứng. Sau đó , để tối ưu hóa mô hình, ta cần tính toán gradient của hàm mất mát \mathcal{L} theo các trọng số này , giúp ta điều chỉnh các trọng số sao cho mô hình có thể đưa ra dự đoán chính xác hơn 
+		
+		Công thức tổng quát của lan truyền ngược là : 
+			\frac{\partial \mathcal{L}}{\partial W} = \frac{\partial \mathcal{L}}{\partial y} \cdot \frac{\partial y}{\partial W}
+			
+		Trong đó : 
+			\frac{\partial \mathcal{L}}{\partial W}		: là gradient của hàm mất mát theo trọng số W 
+			\frac{\partial \mathcal{L}}{\partial y}		: là gradient của hàm mất mát theo đầu ra y 
+			\frac{\partial y}{\partial W}				: là gradient của đầu ra theo trọng số W 
+			
+			Quá trình này được áp dụng cho tất cả các trọng số trong mạng và được thực hiện từ đầu ra trở ngược lại đầu vào, từng lớp một. Khi đã tính được gradient các trọng số sẽ được cập nhật bằng cách sử dụng một phương pháp tối ưu hóa như gradient descent 
+
+	##	Backpropagation Through Time (BPTT) 
+			
+		Trong các mạng RNN, dữ liệu được xử lý tuần tự qua nhiều bước thời gian. Điều này có nghĩa là trạng thái ẩn tại thời điểm t phụ thuộc vào cả đầu vào tại thời điểm đó và trạng thái ẩn từ bước trước đó. Do đó, khi tính toán gradient, ta không chỉ lan truyền ngược qua các lớp như trong mạng nơ-ron truyền thống mà còn phải lan truyền qua các bước thời gian trước đó. Đây là lý do thuật toán BPTT được ra đời. 
+			https://aicandy.vn/wp-content/uploads/2024/09/aicandy_RNN_backpropagation.jpg
+		
+		Trong BPTT, mạng RNN được mở rộng qua thời gian, mỗi bước thời gian của RNN được coi như một lớp riêng biệt. Khi lan truyền ngược, gradient không chỉ được lan truyền qua các trọng số của các lớp trong mạng, mà còn phải lan truyền ngược qua các bước thời gian để tính toán ảnh hưởng của các trạng thái ẩn trước đó đến lỗi hiện tại 
+		
+		### Công thức tổng quát của BPTT là : 
+		
+			\frac{\partial \mathcal{L}}{\partial W} = \sum_{t=1}^{T} \frac{\partial \mathcal{L}_t}{\partial y_t} \cdot \frac{\partial y_t}{\partial h_t} \cdot \frac{\partial h_t}{\partial h_{t-1}} \cdot \frac{\partial h_{t-1}}{\partial W}
+
+		Trong đó : 
+			\frac{\partial \mathcal{L}_t}{\partial y_t}  : là gradient của hàm mất mát tại bước thời gian t theo đầu ra yt 
+			\frac{\partial y_t}{\partial h_t}			 : là gradient của đầu ra tại thời điểm t theo trạng thái ẩn ht 
+			\frac{\partial h_t}{\partial h_{t-1}}		 : là gradient của trạng thái ẩn hiện tại theo trạng thái ẩn trước đó 
+			\frac{\partial h_{t-1}}{\partial W}			 : là gradient của trạng thái ẩn trước theo trọng số W 
+			
+			
+	## Triển khai RNN bằng PyTorch 
+			Dưới đây là cách triển khai một mạng RNN đơn giản bằng PyTorch. Mạng sẽ dự đoán số tiếp theo của chuỗi [1, 2, 3, 4].
+			RNNByPytorch.py
+		Giải thích:	
+
+	Mạng có 3 thành phần chính: RNN, Linear (fully connected layer), và phương thức forward. Hàm init_hidden dùng để khởi tạo hidden state với tất cả các giá trị là 0. Hàm create_data để tạo ra một chuỗi số lượng đơn giản để sử dụng cho việc huấn luyện. Quá trình huấn luyện mô hình bằng cách tối ưu hóa thông qua Adam và hàm mất mát là MSELoss (mean squared error loss). Sau khi huấn luyện, mô hình có thể dự đoán số tiếp của chuỗi [1, 2, 3, 4].
+	
+# Các loại RNN phổ biến 
+	
+	Mạng RNN được thiết kế để xử lý các chuỗi dữ liệu, như văn bản, âm thanh, hoặc chuỗi thời gian. Các loại RNN phổ biến bao gồm RNN truyền thống, LSTM và GRU.
+
+	## RNN truyền thống	
+		RNN truyền thống là loại đơn giản nhất của mạng hồi quy. Ở đây, mỗi nơ-ron không chỉ nhận dữ liệu đầu vào mà còn nhận trạng thái ẩn từ bước trước đó, tạo thành một chuỗi hồi quy qua thời gian.
+		
+		Công thức cập nhật trạng thái ẩn của RNN truyền thống là: 
+			h_t = \tanh(W_h h_{t-1} + W_x x_t + b_h) 
+			
+		Trong đó: 
+			h_t: trạng thái ẩn tại thời điểm t 
+			x_t: đầu vào tại thời điểm t 
+			W_h, W_x: ma trận trọng số 
+			b_h: vector bias
+			tanh: hàm kích hoạt tanh 
+			
+			Tuy nhiên, RNN truyền thống gặp phải vấn đề “biến mất hoặc bùng nổ gradient” khi xử lý các chuỗi dài.
+				
+	## 	LSTM (Long Short-Term Memory) 
+		LSTM là một biến thể của RNN được thiết kế để khắc phục vấn đề biến mất gradient. Nó sử dụng các cổng để kiểm soát luồng thông tin, bao gồm cổng quên, cổng đầu vào và cổng đầu ra, cho phép nó lưu giữ hoặc quên thông tin tùy thuộc vào tầm quan trọng của chúng.
+		
+			https://aicandy.vn/wp-content/uploads/2024/09/aicandy_LSTM_arch.jpg 
+			
+		Công thức cập nhật của LSTM: 
+				
+				f_t = \sigma(W_f x_t + U_f h_{t-1} + b_f) 
+				i_t = \sigma(W_i x_t + U_i h_{t-1} + b_i) 
+				\tilde{c}_t = \tanh(W_c x_t + U_c h_{t-1} + b_c) 
+				c_t = f_t \odot c_{t-1} + i_t \odot \tilde{c}_t
+				o_t = \sigma(W_o x_t + U_o h_{t-1} + b_o)
+				h_t = o_t \odot \tanh(c_t) 
+			Trong đó:
+				f_t: cổng quên 
+				i_t: cổng đầu vào 
+				o_t: cổng đầu ra 
+				c_t: trạng thái tế bào 
+				odot: phép nhân từng phần tử 
+				
+	## 	GRU (Gated Recurrent Unit)
+		
+			https://aicandy.vn/wp-content/uploads/2024/09/aicandy_GRU.png   
+			
+		Công thức cập nhật của GRU: 
+				z_t = \sigma(W_z x_t + U_z h_{t-1} + b_z)
+				r_t = \sigma(W_r x_t + U_r h_{t-1} + b_r) 
+				\tilde{h}_t = \tanh(W_h x_t + r_t \odot U_h h_{t-1}) 
+				h_t = (1 – z_t) \odot h_{t-1} + z_t \odot \tilde{h}_t 
+				
+# 4. Ứng dụng thực tế 
+	
+	RNN(Recurernt Neural Networks), LSTM (Long Short-Term Memory), và GRU(Gated Recurrent Unit) đều là các loại mạng nơ-ron hồi quy, được sử dụng chủ yếu trong các bài toán liên quan đến dữ liệu tuần tự và thời gian. Chúng đã và đang mang lại những kết quả xuất sắc trong nhiều lĩnh vực khác nhau. Dưới đây là một số ứng dụng thực tế tiêu biểu của chúng : 
+		
+		## Xử lý ngôn ngữ tự nhiên (Natural Language Processing - NLP)
+			
+			### Dịch máy  (Machine Translation)	
+				Các mô hình RNN, đặc biệt là LSTM và GRU , được sử dụng rộng rãi trong việc dịch văn bản từ ngôn ngữ này sang ngôn ngữ khác. Chúng có khả năng ghi nhớ thông tin từ các từ trước đó để dự đoán các từ tiếp theo, giúp dịch máy trở nên mượt mà hơn. Ví dụ, mô hình seq2seq sử dụng LSTM cho việc dịch ngôn ngữ. 
+				
+			### Tóm tắt văn bản(Text Summarization)
+				Mô hình LSTM, và GRU có thể được sử dụng để tóm tắt các đoạn văn bản dài thành các câu ngăn hơn mà vẫn giữ được ý chính. 
+				
+			### Phân tích cảm xúc (Sentiment Analysis)
+				RNN và các biến thể của nó giúp phân tích cảm xúc từ các câu văn bản như đánh giá sản phẩm, bài viết trên mạng xã hội 
+				
+			### Nhận diện giọng nói(Speech Recognition)
+				Các mạng LSTM và GRU có khả năng xử lý các chuỗi âm thanh dài, giúp phân tích và chuyển đổi âm thanh thành văn bản trong các hệ thống như Siri, Google Assitant 
+		
+		## Dự đoán chuỗi thời gian 
+			### Dự báo tài chính 
+				Trong lĩnh vực tài chính, LSTM và GRU thường được sử dụng để dự đoán các chỉ số chứng khoán, tỷ giá hối đoái và các biến động tài chính dựa trên dữ liệu quá khứ. Chúng có khả năng xử lý dữ liệu có tính tuần tự và thời gian dài, giúp cải thiện độ chính xác trong dự báo. 
+				
+			### Dự báo thời tiết 
+				Các mô hình RNN cũng được sử dụng để dự báo các hiện tượng thời tiết, phân tích dữ liệu thời gian dài để dự đoán các thay đổi trong khí hậu 
+				
+		## Xử lý tín hiệu âm thanh và video 
+			### Nhận diện giọng nói và tổng hợp giọng nói 
+				LSTM và GRU thường được sử dụng trong các hệ thống nhận diện giọng nói và tổng hợp giọng nói như GoogleSpeech, Amazon Alexa. Chúng giúp phân tích và chuyển đổi các chuỗi âm thanh thành dữ liệu văn bản, hoặc ngược lại. 
+				
+			### Nhận dạng đối tượng trong video (Video Classification )
+				Các mô hình RNN có thể xử lý các khung hình của video để phân loại và nhận diện các đối tượng hoặc hành động xuất hiện trong video 
+			
+		## Chăm sóc sức khỏe
+			### Dự đoán tình trạng bệnh nhân 
+				Các mô hình RNN có thể phân tích dữ liệu chuỗi thời gian về sức khỏe của bệnh nhân, như nhịp tim, huyết áp, để dự đoán các biến chứng hoặc sự chuyển biến của bệnh. 
+				
+			### Phân tích tín hiệu y sinh (Biomedical Signal Processing)
+				RNN, LSTM và GRU có khả năng xử lý các tín hiệu sinh học như điện tâm đồ(ECG) và điện não đồ(EEG) để chuẩn đoán các bệnh liên quan đến tim mạch và thần kinh. 
+				
+
+# Kết luận 
+	Recurrent Neural Networks(RNN) là một trong những phương pháp mạnh mẽ và phổ biến trong việc xử lý các loại dữ liệu tuần tự như chuỗi thời gian, văn bản, và tín hiệu âm thanh. Với khả năng duy trì trạng thái và ghi nhớ các thông tin trước đó trong chuỗi dữ liệu, RNN đã mở ra nhiều ứng dụng trong các lĩnh vực như xử lý ngôn ngữ tự nhiên (NLP), nhận dạng giọng nói, dự báo chuỗi thời gian, và nhiều lĩnh vực khác. 
+	
+	RNN cùng với LSTM và GRU vẫn là những lựa chọn quan trọng và hiệu quả cho nhiều bài toán liên quan đến dữ liệu tuần tự. Những mô hình này tiếp tục đóng vai trò then chốt trong nhiều nghiên cứu và ứng dụng thực tiễn của trí tuệ nhân tạo, từ việc cải thiện các hệ thống gợi ý, dịch máy, cho đến chăm sóc sức khỏe và sáng tạo nội dung. Trong tương lai, RNN và các biến thể của nó có thể sẽ được kết hợp với các mô hình khác để tạo ra những hệ thống thông minh, mạnh mẽ hơn. 
+
+
+</pre><a id='backBottom' href='../AI-learning-list-pharse1.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

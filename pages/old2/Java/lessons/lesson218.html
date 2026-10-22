@@ -1,0 +1,220 @@
+<html><head><title>Lesson 218 == Bài 22 — Functional Resilience Testing & Chaos Engineering ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 218 -- Bài 22 — Functional Resilience Testing & Chaos Engineering -//</h1><pre>
+	Mục tiêu: Test & phá các policy (retry, timeout, circuit breaker…) dưới dạng pipeline thuần hàm để đảm bảo hệ thống không bị “drift resilience” theo thời gian.
+
+
+
+# 1. VẤN ĐỀ — “KHÔNG TEST RESILIENCE LÀ KHÔNG CÓ RESILIENCE” 
+
+	Resilience không phải thứ bạn kích hoạt bằng @Retryable rồi cầu nguyện.
+
+	Vấn đề thực tế:
+
+		Retry storm → gây sập hệ thống thay vì bảo vệ
+		Circuit breaker fail-open hoặc fail-close
+		Timeout sai → nghẽn thread pool
+		Chaos input → pipeline ứng xử không ổn định
+		Config GitOps thay đổi → regression không phát hiện
+		
+	Cách tiếp cận functional giúp test dễ hơn gấp 10 lần, vì tất cả resilience chỉ là hàm bọc hàm → không có hidden state, không có AOP magic.
+
+
+# 2. TEST MÔ PHỎNG LATENCY & FAILURE
+
+	## Ta cần một function giả gây lỗi:
+
+Supplier<String> unstableFn = new Supplier<>() {
+    int calls = 0;
+
+    @Override
+    public String get() {
+        calls++;
+        if (calls <= 2) throw new RuntimeException("fail");
+        return "OK";
+    }
+};
+
+	## Apply retry policy:
+
+var fn = Policy.retry(3).apply(unstableFn);
+
+assertEquals("OK", fn.get());
+
+
+
+# 3. CHAOS TEST: MÔ PHỎNG “RETRY STORM”
+Senior phải biết mô phỏng tình huống xấu nhất:
+khi API downstream chết → retry x n request → cluster choke → tự sát tập thể.
+
+
+	## Ví dụ tạo chaos function:
+	
+Supplier<String> chaosFn = () -> {
+    try { Thread.sleep(500); } catch (InterruptedException ignored) {}
+    throw new RuntimeException("Chaos fail");
+};
+	
+	
+	
+	## Run nhiều task song song: 	
+	
+var retry = Policy.retry(5);
+var safe = retry.apply(chaosFn);
+
+IntStream.range(0, 100)
+         .parallel()
+         .forEach(i -> {
+             assertThrows(RuntimeException.class, safe::get);
+         });
+	
+	
+	
+	Bạn đo được: 
+	
+		total attempts
+		latency spike
+		thread starvation	
+	
+	→ Đây là cách kiểm tra retry storm trước khi service thực sự bị phá.
+
+
+
+
+# 4. TEST TIMEOUT CHUẨN — KHÔNG RÊU, KHÔNG RANDOM
+	Functional timeout policy cho phép test đơn giản:
+
+var timeout = Policy.timeout(Duration.ofMillis(100));
+
+var slow = timeout.apply(() -> {
+    Thread.sleep(300);
+    return "Done";
+});
+
+assertThrows(TimeoutException.class, slow::get);
+
+	- Không có randomness.
+	- Không event-driven race condition.
+	- Không cần Spring TestContainer hoặc mock server.
+	Pure function → pure result.
+
+
+# 5. TEST CIRCUIT BREAKER — XÁC ĐỊNH TRẠNG THÁI
+
+	Do circuit breaker của bạn có state nhỏ (AtomicReference), bạn test trait rõ ràng:
+
+var cb = Policy.circuitBreaker(3);
+
+Supplier<String> fail = () -> { throw new RuntimeException(); };
+
+var wrapped = cb.apply(fail);
+
+assertThrows(RuntimeException.class, wrapped::get);
+assertThrows(RuntimeException.class, wrapped::get);
+assertThrows(RuntimeException.class, wrapped::get);
+
+// Lần thứ 4 → đã Open
+assertThrows(RuntimeException.class, wrapped::get);
+
+assertEquals(State.OPEN, cb.state().get());
+
+	Nhìn thẳng vào sự thật:
+		Nếu CB không chuyển trạng thái đúng → bạn đang dùng CB giả.
+
+
+
+# 6. PROPERTY-BASED TESTING CHO RESILIENCE
+	Đây là level cao — kiểm thử dựa trên tính chất thay vì input cố định.
+
+	Ví dụ tính chất của retry:
+
+		Với mọi dãy failure < retry.count
+		→ function cuối cùng phải thành công
+		
+		Với mọi dãy failure > retry.count
+		→ function phải fail
+
+	Dùng jqwik hoặc QuickTheories:
+
+@Property
+void retryPropertyTest(@ForAll("failureCount") int fails) {
+    var retry = Policy.retry(3);
+
+    Supplier<String> fn = failingSupplier(fails);
+
+    var wrapped = retry.apply(fn);
+
+    if (fails <= 3) {
+        assertEquals("OK", wrapped.get());
+    } else {
+        assertThrows(RuntimeException.class, wrapped::get);
+    }
+}
+
+
+Bạn không test 5 case.
+Bạn test hàng nghìn biến thể tự động.
+Đây là resilience đúng nghĩa khoa học.
+
+# 7. CHAOS ENGINEERING — PIPELINE LEVEL (KHÔNG HACK NHƯ LINUX KILL -9)
+
+	Chaos ở functional pipeline nhẹ nhàng nhưng cực chính xác:
+
+	Inject latency
+	Inject random fault
+	Inject burst traffic
+	Inject time skew
+	Inject random state corruption (cho CB)
+
+	## Ví dụ inject random failure:
+
+Supplier<String> chaos = () -> {
+    if (ThreadLocalRandom.current().nextInt(10) < 3)
+        throw new RuntimeException("random chaos");
+    return "OK";
+};
+
+
+	## Apply toàn pipeline:
+var p = compose(
+        Policy.retry(5),
+        Policy.timeout(Duration.ofMillis(200)),
+        Policy.circuitBreaker(4)
+);
+
+var fn = p.apply(chaos);
+
+for (int i = 0; i < 100; i++) {
+    try { fn.get(); } catch (Exception ignored) {}
+}
+
+		CB mở đúng lúc
+		Retry không vượt ngưỡng
+		Timeout không ăn vào CPU
+		Pipeline ổn định theo lý thuyết
+
+	Senior phải nhìn vào log để xác nhận resilience không drift khi chạy chaos.
+
+
+# 8. ENTERPRISE: RESILIENCE REGRESSION-PROOF
+
+Thực tế đau nhất là:
+	config GitOps thay đổi → resilience pipeline âm thầm vỡ → production mới phát hiện.
+
+
+	1) Test suite chạy khi CI pull policy.json
+	2) Chaos suite chạy mỗi tuần tự động
+	3) Property-based test chạy mỗi lần update policy parser
+	4) Chaos in staging để verify pipeline không bị bug do merge code
+
+	Kết quả:
+		Resilience pipeline bất biến, có bằng chứng test, không drift theo thời gian.
+
+
+
+
+
+Functional resilience dễ test, dễ phá, và dễ chứng minh an toàn hơn bất kỳ framework annotation/AOP nào — vì mọi thứ chỉ là hàm, không có “ma thuật
+
+
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>

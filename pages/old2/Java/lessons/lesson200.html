@@ -1,0 +1,180 @@
+<html><head><title>Lesson 200 == Function Lifting & Error Handling ==========//</title><style>body { font-family: Arial, sans-serif; transition: background 0.3s, color 0.3s; }.dark-mode { background-color: #121212; color: #e0e0e0; }.light-mode { background-color: #ffffff; color: #333333; }h1 { text-align: center; color: #73d9f5; }pre { padding: 15px; border-radius: 5px;       white-space: pre-wrap; word-wrap: break-word;       overflow-x: auto; max-width: 100%;       transition: background 0.3s, color 0.3s; }.dark-mode pre { background: #1e1e1e; color: #e0e0e0; }.light-mode pre { background: #f5f5f5; color: #333333; }#backTop, #backBottom {    font-size: 2em; padding: 20px 40px;    background: #bb86fc; color: white; text-decoration: none;    border-radius: 10px; display: inline-block; text-align: center; }#backTop:hover, #backBottom:hover { background: #9b67e2; }button { font-size: 1.5em; padding: 15px 30px;    background: #03dac6; color: #121212; border: none;    cursor: pointer; border-radius: 5px; display: block; margin: 10px auto; }button:hover { background: #02b8a3; }.dark-mode a { color: #03dac6; } .light-mode a { color: #007bff; }</style></head><body onload='applyTheme(); checkPageHeight()'><div class='container'><a id='backTop' href='../java-learning-list.html'>🔙 Quay lại danh sách</a><br><h1>Lesson 200 -- Function Lifting & Error Handling -//</h1><pre>
+# 🎯 Mục tiêu
+	Trong lập trình hướng hàm (Functional Programming – FP), ta không ném exception.
+Vì exception là side effect — nó phá vỡ purity (hàm không còn deterministic nữa).
+
+	→ Thay vào đó, ta “bọc” kết quả có thể lỗi trong một container an toàn như:
+
+
+		Optional<T> → khi kết quả có thể null
+		
+		Try<T> → khi kết quả có thể throw exception
+		
+		Either<L, R> → khi có kết quả hoặc lỗi tùy ý kiểu
+		
+	Và khi function nhận/trả container này, ta gọi là Function Lifting.
+
+
+
+# 🧠 1. Function Lifting là gì
+
+	## Giả sử bạn có hàm thuần:
+
+String parseToUpper(String s) {
+    return s.toUpperCase();
+}
+
+	Nếu s có thể null, ta không muốn throw NullPointerException.
+	→ Ta “lift” nó thành một function nhận Optional và trả Optional.
+
+Function<Optional<String>, Optional<String>> lifted =
+    opt -> opt.map(String::toUpperCase);
+
+
+
+lifted.apply(Optional.of("bao")); // => Optional["BAO"]
+lifted.apply(Optional.empty());   // => Optional.empty
+
+
+	📌 Lifting = biến function T→R thành Optional<T>→Optional<R>.
+
+
+
+# ⚙️ 2. Handling Error an toàn
+
+	## Truyền thống (imperative):
+
+try {
+    String s = riskyOperation();
+    return s.toUpperCase();
+} catch (Exception e) {
+    return "ERROR";
+}
+
+	## Functional (với Try monad – Vavr):
+		→ Không có try/catch, không có state, mọi thứ chỉ là transform data through safe containers.
+
+
+
+# 🧩 3. Dùng Either cho validation
+
+	Trong nghiệp vụ enterprise, ta thường cần phân biệt giữa:
+
+
+		Thành công (Right)
+		Lỗi hoặc thông báo cụ thể (Left)
+		
+Either<String, User> validate(User u) {
+    return u.email().contains("@")
+        ? Either.right(u)
+        : Either.left("Invalid email");
+}
+
+	Ghép pipeline:	
+		Nếu validate trả lỗi → toàn pipeline dừng, không cần if/else.
+
+
+
+
+# 🧮 4. Enterprise Use Cases
+
+
+| Use case                         | Ứng dụng lifting/error handling                                    |
+| -------------------------------- | ------------------------------------------------------------------ |
+| **Validation Pipeline**          | Mỗi bước validate trả `Either<Error, Data>`                        |
+| **IO-safe transformation**       | Đọc file, parse JSON, gọi API — tất cả dùng `Try`                  |
+| **Message Processing**           | Bọc từng bước trong `Try`, log lỗi nhưng không crash toàn pipeline |
+| **Stream pipeline với Optional** | Tránh null trong dữ liệu, chỉ process cái nào có giá trị           |
+
+
+
+# 🔧 5. Ví dụ thực tế: Validation Pipeline
+
+
+Function<User, Either<String, User>> validateEmail =
+    u -> u.email().contains("@")
+        ? Either.right(u)
+        : Either.left("Invalid email");
+
+Function<User, Either<String, User>> validateAge =
+    u -> u.age() > 18
+        ? Either.right(u)
+        : Either.left("Underage");
+
+Function<User, Either<String, UserDTO>> toDTO =
+    u -> Either.right(new UserDTO(u.name(), u.email()));
+
+Either<String, UserDTO> result =
+    validateEmail.apply(user)
+                 .flatMap(validateAge)
+                 .flatMap(toDTO);
+
+result.peek(dto -> System.out.println("OK: " + dto))
+      .peekLeft(err -> System.err.println("Error: " + err));
+
+
+
+	## 🧩 Điểm hay:
+		flatMap tự skip bước sau nếu gặp lỗi.
+		Không if, không try/catch, không null.
+
+
+
+# 🧠 6. Khi không có Vavr
+	Ta có thể tự viết Try đơn giản:
+
+class Try<T> {
+    private final T value;
+    private final Exception exception;
+
+    private Try(T value, Exception exception) {
+        this.value = value;
+        this.exception = exception;
+    }
+
+    static <T> Try<T> of(Callable<T> f) {
+        try { return new Try<>(f.call(), null); }
+        catch (Exception e) { return new Try<>(null, e); }
+    }
+
+    <R> Try<R> map(Function<T, R> f) {
+        if (exception != null) return new Try<>(null, exception);
+        try { return new Try<>(f.apply(value), null); }
+        catch (Exception e) { return new Try<>(null, e); }
+    }
+
+    T getOrElse(T fallback) {
+        return exception == null ? value : fallback;
+    }
+}
+
+
+	## Dùng:
+
+Try.of(() -> riskyOperation())
+   .map(String::toUpperCase)
+   .getOrElse("DEFAULT");
+
+
+# 🧭 7. Tư duy then chốt
+
+
+	- Không ném exception, mà chuyển lỗi thành dữ liệu.
+	- → “Errors are just another kind of data.”
+	- Dòng xử lý là pipeline, không bị ngắt bởi throw.
+	- Mỗi function đều pure, dễ test và dễ compose.
+	- Khi tất cả function đã “lifted”, bạn có thể ghép pipeline phức tạp mà vẫn an toàn tuyệt đối.
+
+
+# 🔍 8. Tổng kết nhanh
+
+| Khái niệm            | Mô tả                                             |
+| -------------------- | ------------------------------------------------- |
+| **Lifting**          | Biến `T→R` thành `Optional<T>→Optional<R>`        |
+| **Optional**         | Cho giá trị có thể trống                          |
+| **Try**              | Cho kết quả có thể exception                      |
+| **Either**           | Cho kết quả có thể “Right (ok)” hoặc “Left (lỗi)” |
+| **Ứng dụng thực tế** | Validation, I/O, API, ETL, pipeline an toàn       |
+
+
+</pre><a id='backBottom' href='../java-learning-list.html' style='display:none;'>🔙 Quay lại danh sách</a><br><button onclick='toggleTheme()'>🌙 Chuyển giao diện</button></div><script>function toggleTheme() {   let mode = document.body.classList.contains('dark-mode') ? 'light-mode' : 'dark-mode';   document.body.className = mode; localStorage.setItem('theme', mode);   syncTheme();}function applyTheme() {   let savedTheme = localStorage.getItem('theme') || 'dark-mode';   document.body.className = savedTheme;   syncTheme();}function syncTheme() {   let preElement = document.querySelector('pre');   if (document.body.classList.contains('dark-mode')) { preElement.style.background = '#1e1e1e'; preElement.style.color = '#e0e0e0'; }   else { preElement.style.background = '#f5f5f5'; preElement.style.color = '#333333'; }}function checkPageHeight() {   let contentHeight = document.body.scrollHeight;   let windowHeight = window.innerHeight;   if (contentHeight > windowHeight * 1.2) {       document.getElementById('backBottom').style.display = 'block';   } else {       document.getElementById('backBottom').style.display = 'none';   }}</script></body></html>
