@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang='vi'><head><meta charset='UTF-8'>
 <meta name='viewport' content='width=device-width, initial-scale=1.0'>
-<title>Lesson 74 -- Lộ trình -//</title>
+<title>Lesson 74 -- AIP-C01  --= Session / State Management -//</title>
 <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css'>
 <script src='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js'></script>
 <script id='MathJax-script' async src='https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'></script>
@@ -27,11 +27,335 @@ pre { padding: 20px; border-radius: 8px; white-space: pre-wrap; word-break: brea
 .theme-toggle-btn { display: block; margin: 20px auto; padding: 8px 16px; background: transparent; border: 1px solid #888; color: inherit; border-radius: 5px; cursor: pointer; }
 </style></head><body onload='initLesson()'>
 <div class='container'>
-<div class='nav-bar'><a class='nav-btn' href='lesson72.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../aws-bedrock-agent-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson74.html'>Bài sau ➡️</a></div><h1>Lesson 74 -- Lộ trình -//</h1>
+<div class='nav-bar'><a class='nav-btn' href='lesson72.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../aws-bedrock-agent-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson74.html'>Bài sau ➡️</a></div><h1>Lesson 74 -- AIP-C01  --= Session / State Management -//</h1>
 <button id='doneButton' class='done-btn' onclick='toggleDone()'>Mark as Done ⚪</button>
 <div class='content-box'>
 <button class='copy-btn' onclick='copyContent()'>📋 Copy nội dung</button>
-<pre><code id='lessonCode'># Lộ trình 100 ngày học AIP-C01 — Trọng tâm: Kiến trúc AI hiện đại &amp; Agentic AI
+<pre><code id='lessonCode'>
+	Bài này rất quan trọng khi thiết kế multi-agent production và cũng là nền tảng để hiểu sâu Amazon Bedrock AgentCore Runtime, Memory, Identity và cơ chế orchestration.
+
+	Có một nguyên tắc cần nắm ngay từ đầu:
+
+	Session là phạm vi của một cuộc làm việc. State là dữ liệu mô tả cuộc làm việc đang ở trạng thái nào. Memory là thông tin được giữ lại để sử dụng trong tương lai. Ba khái niệm liên quan chặt chẽ nhưng không thể thay thế cho nhau.
+
+
+# 1. Bản chất: Session, State và Memory khác nhau ở đâu?
+
+	Hãy tưởng tượng bạn đang xây dựng một LINE Bot giúp nhân viên Nhật Bản hỏi đáp về báo cáo vận hành, tiến độ dự án và công việc chưa hoàn thành.
+
+
+	Session — Phiên làm việc
+		Bot đang trao đổi với nhân viên về báo cáo dự án A. Session giúp hệ thống xác định những lượt trao đổi nào thuộc cùng một ngữ cảnh làm việc.
+		Ví dụ: session_id = session-123
+
+	State — Trạng thái hiện tại
+		Bot đã xác định dự án A, đang chờ người dùng xác nhận tháng báo cáo, và chưa gọi công cụ lấy dữ liệu.
+		Ví dụ: current_project = A, report_month = null, status = awaiting_confirmation
+
+	Memory — Thông tin được ghi nhớ
+		Hệ thống có thể lưu rằng nhân viên thường yêu cầu báo cáo theo định dạng tiếng Nhật, hoặc ghi nhớ các thông tin công việc được phép lưu để sử dụng trong những phiên sau.
+		Ví dụ: preferred_report_format = Japanese_summary
+
+
+	Ví dụ thực tế
+	Nhân viên hỏi:
+	- 09:00: “Cho tôi xem tiến độ dự án A.”
+	- 09:01: “Còn những công việc nào bị trễ?”
+	- 09:02: “Xuất thành báo cáo tiếng Nhật.”
+	Nếu mỗi câu được xử lý như một yêu cầu độc lập, hệ thống có thể không biết “báo cáo” đang nói đến dự án A. Session và state cho phép giữ ngữ cảnh đó xuyên suốt nhiều lượt hội thoại.
+
+	Tuy nhiên, nếu nhân viên quay lại vào ngày hôm sau và bắt đầu một phiên mới, hệ thống có thể cần truy xuất memory hoặc dữ liệu dự án từ database. Không nên mặc định toàn bộ state của phiên cũ vẫn còn trong RAM của agent.
+
+
+
+# 2. Session và State không phải một thứ 
+	Đây là điểm dễ gây lỗi kiến trúc nhất.
+
+| Khái niệm            | Trả lời câu hỏi                                         | Ví dụ                          |
+| -------------------- | ------------------------------------------------------- | ------------------------------ |
+| Session              | Đây là phiên làm việc nào?                              | `session-123`                  |
+| State                | Phiên này đang ở bước nào, có dữ liệu gì?               | Đang chờ xác nhận tháng        |
+| Conversation history | Người dùng và agent đã trao đổi những gì?               | Các tin nhắn trước đó          |
+| Memory               | Thông tin nào cần giữ lại qua thời gian hoặc các phiên? | Sở thích định dạng báo cáo     |
+| Identity             | Ai đang gọi hệ thống, với quyền gì?                     | Nhân viên A, quyền đọc dự án A |
+
+
+# 3. State thực sự được lưu ở đâu?
+
+	Một lỗi tư duy phổ biến là cho rằng cứ chạy agent trong AgentCore Runtime thì mọi state sẽ tự động được lưu bền vững và có thể khôi phục sau khi process khởi động lại.
+
+	Không. Phải phân biệt state trong bộ nhớ tiến trình với state được lưu trữ bền vững.
+
+
+
+	## 3.1. Ephemeral state — State tạm thời
+
+		state = {
+			"project_id": "A",
+			"report_month": "2026-10",
+			"current_step": "fetch_tasks"
+		}
+
+		Nếu state chỉ tồn tại trong biến Python của một process, nó có thể mất khi:
+		- Process bị restart.
+		- Container hoặc execution environment bị thay thế.
+		- Request tiếp theo được xử lý bởi một process khác.
+		- Agent phải tiếp tục sau một khoảng thời gian dài.
+		Lưu ý: container không nhất thiết bị thay thế sau mỗi request. Vấn đề là bạn không nên dựa vào vòng đời của process để bảo đảm tính bền vững của dữ liệu.
+
+
+	## 3.2. Durable state — State bền vững 
+	
+	Nếu agent đang thực hiện một workflow kéo dài 30 phút, bạn có thể lưu checkpoint vào DynamoDB:
+
+		{
+		  "session_id": "session-123",
+		  "workflow_id": "workflow-456",
+		  "current_step": "fetch_tasks",
+		  "project_id": "A",
+		  "report_month": "2026-10",
+		  "status": "RUNNING",
+		  "version": 7
+		}
+
+		Khi agent tiếp tục chạy, backend đọc checkpoint và khôi phục workflow từ bước thích hợp.
+		Trong production, nên bổ sung các trường như updated_at, version, owner_id, expires_at nếu phù hợp với yêu cầu vận hành và bảo mật.
+		Nhưng hãy phân biệt: lưu checkpoint không đồng nghĩa với việc có thể khôi phục chính xác toàn bộ trạng thái nội bộ của một LLM call hoặc của một process đang chạy. Bạn cần thiết kế cách khôi phục ở mức workflow và xác định công việc nào đã hoàn tất.
+
+
+
+
+	## 3.3. Chọn nơi lưu theo loại dữ liệu 
+
+| Loại dữ liệu                  | Lựa chọn phù hợp                   | Lý do                                                |
+| ----------------------------- | ---------------------------------- | ---------------------------------------------------- |
+| Biến tạm trong một lượt xử lý | RAM / process                      | Nhanh, không cần tồn tại lâu                         |
+| Workflow state, checkpoint    | DynamoDB hoặc Aurora               | Cần lưu bền vững, khôi phục và truy vấn              |
+| Lịch sử hội thoại tùy chỉnh   | DynamoDB, S3 hoặc database phù hợp | Cần kiểm soát retention, truy xuất và quyền truy cập |
+| Long-term agent memory        | AgentCore Memory                   | Có cơ chế quản lý và truy xuất memory chuyên biệt    |
+| Dữ liệu nghiệp vụ chính thức  | Database hoặc hệ thống nguồn       | Phải bảo đảm tính đúng đắn của dữ liệu nghiệp vụ     |
+
+
+	Không nên dùng AgentCore Memory làm database giao dịch. Memory có thể giúp agent nhớ rằng một công việc từng bị trễ, nhưng trạng thái chính thức của công việc phải được xác minh từ hệ thống quản lý công việc.
+
+
+# 4. Session Management với Amazon Bedrock AgentCore Runtime
+
+
+	## 4.1. Runtime session dùng để làm gì?
+
+		AgentCore Runtime cung cấp môi trường thực thi agent và hỗ trợ quản lý ngữ cảnh theo session thông qua cơ chế session của Runtime.
+
+		Ở mức kiến trúc, ứng dụng gọi agent cần xác định session tương ứng để các request thuộc cùng một phiên được liên kết đúng cách. Khi một phiên mới được tạo, ứng dụng cần xử lý session ID theo giao thức và yêu cầu của Runtime.
+
+
+
+	Ví dụ logic ở tầng ứng dụng:
+
+
+def handle_message(user_id, session_id, message):
+    authorize_user(user_id, session_id)
+
+    context = load_workflow_state(session_id)
+
+    result = invoke_agent(
+        session_id=session_id,
+        message=message,
+        context=context
+    )
+
+    save_workflow_state(session_id, result.state)
+
+    return result.response
+
+	Đây là pseudo-code minh họa kiến trúc, không phải lời khẳng định rằng SDK AgentCore có chính xác interface trên. Khi triển khai thật, cần dùng API, header, định dạng request và giới hạn session hiện hành của Runtime.
+
+
+	Điều quan trọng là phân chia trách nhiệm:
+	- Runtime: môi trường thực thi agent, xử lý request và session theo cơ chế được hỗ trợ.
+	- Application backend: xác định người dùng được phép truy cập session nào, quản lý business state và vòng đời ứng dụng.
+	- Persistent storage: bảo đảm dữ liệu quan trọng tồn tại qua restart hoặc failure.
+	- AgentCore Memory: hỗ trợ lưu và truy xuất memory theo cấu hình của ứng dụng.
+
+
+
+# 4.2. Không được đánh đồng ba cơ chế
+
+| Cơ chế              | Giải quyết vấn đề gì?                  | Không tự bảo đảm điều gì?                              |
+| ------------------- | -------------------------------------- | ------------------------------------------------------ |
+| Runtime session     | Liên kết request với session của agent | Không thay thế database nghiệp vụ                      |
+| AgentCore Memory    | Ghi nhớ và truy xuất thông tin phù hợp | Không thay thế workflow checkpoint hoặc transaction    |
+| DynamoDB checkpoint | Khôi phục trạng thái nghiệp vụ đã lưu  | Không tự khôi phục toàn bộ trạng thái nội bộ của agent |
+
+	Đây là một phân biệt có giá trị cả trong kỳ thi lẫn trong thiết kế production.
+	
+	
+	
+	
+	
+# 	5. Multi-agent: Session và State được quản lý thế nào?
+	
+	
+	Giả sử bạn thiết kế hệ thống có ba agent:
+		- Coordinator Agent: nhận yêu cầu và phân chia công việc.
+		- Report Agent: truy xuất dữ liệu, tổng hợp báo cáo.
+		- Validation Agent: kiểm tra tính đầy đủ và hợp lệ của báo cáo.
+				
+			
+	Người dùng có một session, nhưng hệ thống có thể có nhiều agent execution, nhiều workflow và nhiều lần gọi too
+	
+	
+	
+	
+	## 5.1. Một session có đồng nghĩa một agent không?
+	
+	Không.
+	Có ít nhất ba mô hình triển khai:
+		Mô hình A — Một agent, một session người dùng
+		Phù hợp với chatbot hỏi đáp thông thường. Một agent xử lý nhiều lượt hội thoại trong cùng phiên.
+
+	Mô hình B — Một coordinator, nhiều worker
+		Coordinator quản lý workflow và giao nhiệm vụ cho các worker. Mỗi worker có execution context riêng; coordinator lưu trạng thái tổng hợp của workflow.	
+		
+	Không nên mặc định rằng các agent sẽ chia sẻ cùng RAM hoặc cùng Python object chỉ vì chúng thuộc cùng một workflow.	
+		
+	
+	
+	## 5.2. Shared database không tự giải quyết concurrency
+	
+	Đây là chỗ bạn cần tư duy như một backend engineer.
+
+	Giả sử Report Agent và Validation Agent cùng cập nhật một bản ghi báo cáo. Nếu hai agent đọc cùng phiên bản dữ liệu rồi ghi đè lẫn nhau, dữ liệu có thể bị mất cập nhật.
+		
+		
+	Các biện pháp tùy tình huống:
+	- Optimistic locking bằng version number hoặc conditional writes.
+	- Transaction khi nhiều cập nhật phải thành công cùng nhau.
+	- Idempotency key để tránh xử lý lặp.
+	- Lease hoặc distributed lock khi thực sự cần điều phối quyền thực hiện một công việc.
+	- State machine với các trạng thái hợp lệ và điều kiện chuyển trạng thái rõ ràng.
+	Không phải cứ có nhiều agent là cần distributed lock. Conditional writes hoặc thiết kế idempotent thường đơn giản hơn và đủ dùng. Lock cũng tạo thêm vấn đề timeout, lease expiration và deadlock nếu triển khai không đúng.
+		
+
+
+
+
+# 6. Những vấn đề production thường bị bỏ qua
+
+
+
+	## 6.1. Session isolation — Cách ly session
+		Hai người dùng không được dùng chung state chỉ vì họ hỏi về cùng một dự án.
+		
+		Thiết kế an toàn hơn là dùng khóa có phạm vi thích hợp, chẳng hạn:
+			tenant_id + user_id + session_id
+
+
+
+	## 6.2. TTL và session expiration
+		Không nên lưu mọi session vĩnh viễn.
+
+		Có thể phân biệt:
+		- Session hoạt động.
+		- Session hết hạn nhưng còn dữ liệu cần phục hồi.
+		- Session đã đóng.
+		- Workflow chưa hoàn thành và cần tiếp tục.
+		- Dữ liệu đã hết thời hạn lưu giữ.
+		DynamoDB TTL có thể hỗ trợ dọn dữ liệu hết hạn, nhưng việc xóa thường không diễn ra chính xác ngay tại thời điểm hết hạn. Vì vậy, ứng dụng không được dựa vào TTL như một cơ chế kiểm soát quyền truy cập hoặc bảo đảm xóa tức thời.
+
+
+
+	## 6.3. Retry và idempotency
+
+		Giả sử agent gọi API tạo báo cáo, nhưng request timeout trước khi nhận được response.
+		Agent không biết thao tác đã thành công hay chưa. Nếu gọi lại mà không có cơ chế idempotency, hệ thống có thể tạo hai báo cáo.
+			Thiết kế đúng cần cân nhắc:
+			1. Tạo một operation ID ổn định cho thao tác nghiệp vụ.
+			2. Ghi nhận trạng thái xử lý.
+			3. Dùng idempotency key hoặc unique constraint ở backend.
+			4. Sau timeout, kiểm tra kết quả trước khi quyết định thực hiện lại.
+			Session ID không phải idempotency key. Một session có thể chứa nhiều thao tác độc lập.
+
+
+
+	## 6.4. Human-in-the-loop 
+		Nếu agent tạo yêu cầu hoàn tiền hoặc thay đổi dữ liệu quan trọng, workflow có thể chuyển sang trạng thái chờ phê duyệt:
+	
+		State phải được lưu bền vững vì người phê duyệt có thể phản hồi sau nhiều giờ. Khi tiếp tục, hệ thống cần xác minh quyết định phê duyệt, danh tính người phê duyệt và trạng thái hiện tại, thay vì tin vào nội dung hội thoại đơn thuần.	
+			
+			RUNNING
+			   ↓
+			AWAITING_APPROVAL
+			   ↓
+			APPROVED → EXECUTING → COMPLETED
+			   ↓
+			REJECTED
+	
+	
+	
+	
+	
+# 	7. Mapping với các dịch vụ AWS
+	
+	
+| Thành phần                       | Vai trò chính                                                            |
+| -------------------------------- | ------------------------------------------------------------------------ |
+| Amazon Bedrock AgentCore Runtime | Môi trường thực thi agent và cơ chế session của Runtime                  |
+| Amazon Bedrock AgentCore Memory  | Quản lý, lưu và truy xuất agent memory                                   |
+| Amazon DynamoDB                  | Session metadata, checkpoint, workflow state, conditional writes         |
+| Amazon Aurora PostgreSQL         | Dữ liệu quan hệ, transaction và truy vấn SQL                             |
+| AWS Step Functions               | Orchestration workflow, retry, timeout, branching và trạng thái thực thi |
+| Amazon SQS                       | Hàng đợi công việc bất đồng bộ, tách producer và consumer                |
+| AWS Lambda                       | Thực thi tác vụ backend ngắn hạn hoặc xử lý event                        |
+| Amazon API Gateway               | Điểm vào API, tích hợp xác thực và kiểm soát request theo cấu hình       |
+	
+	
+	Chọn Step Functions hay tự quản lý state bằng DynamoDB?	
+	
+	Không có đáp án luôn đúng.
+	- Chọn Step Functions khi workflow có nhiều bước, retry, timeout, branching, callback hoặc cần quan sát trạng thái thực thi một cách rõ ràng.
+	- Chọn DynamoDB và application orchestration khi state machine đơn giản, cần logic tùy chỉnh cao hoặc muốn kiểm soát cách điều phối trong ứng dụng.
+	- Có thể kết hợp cả hai: Step Functions điều phối các bước nghiệp vụ, còn DynamoDB lưu dữ liệu nghiệp vụ và trạng thái cần truy vấn độc lập.
+	Không nên dùng DynamoDB để tự viết lại toàn bộ orchestration engine nếu Step Functions đã đáp ứng yêu cầu. Ngược lại, cũng không nên đưa mọi thao tác nhỏ vào Step Functions khi chi phí, độ trễ và độ phức tạp không đáng có.	
+
+
+
+
+
+
+# 8. Exam Knowledge — Từ khóa thường gặp trong AIP-C01
+
+
+Khi đọc scenario, hãy xác định requirement thực sự trước khi chọn dịch vụ.
+
+| Từ khóa trong đề                            | Hướng suy luận                                                 |
+| ------------------------------------------- | -------------------------------------------------------------- |
+| Resume after interruption / process restart | Cần durable state hoặc checkpoint                              |
+| Multiple concurrent sessions                | Cần session isolation và concurrency control                   |
+| Long-running workflow                       | Xem xét durable orchestration, timeout và recovery             |
+| Remember information across conversations   | Xem xét AgentCore Memory hoặc kho lưu trữ phù hợp              |
+| Shared state across agents                  | Cần một cơ chế chia sẻ dữ liệu bền vững hoặc giao tiếp rõ ràng |
+| Avoid duplicate actions                     | Idempotency và kiểm tra trạng thái nghiệp vụ                   |
+| Retry failed steps                          | Retry policy, idempotency và checkpoint                        |
+| Human approval after several hours          | Lưu trạng thái chờ phê duyệt bền vững                          |
+| Tenant isolation                            | Authorization và phân vùng dữ liệu                             |
+| Reduce operational overhead                 | Ưu tiên dịch vụ quản lý phù hợp thay vì tự xây mọi cơ chế      |
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 </code></pre>
 </div>
