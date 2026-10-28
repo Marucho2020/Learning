@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang='vi'><head><meta charset='UTF-8'>
 <meta name='viewport' content='width=device-width, initial-scale=1.0'>
-<title>Lesson 75 -- Lộ trình -//</title>
+<title>Lesson 75 -- AIP-C01  --=Agent Planning — task decomposition -//</title>
 <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css'>
 <script src='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js'></script>
 <script id='MathJax-script' async src='https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'></script>
@@ -27,11 +27,305 @@ pre { padding: 20px; border-radius: 8px; white-space: pre-wrap; word-break: brea
 .theme-toggle-btn { display: block; margin: 20px auto; padding: 8px 16px; background: transparent; border: 1px solid #888; color: inherit; border-radius: 5px; cursor: pointer; }
 </style></head><body onload='initLesson()'>
 <div class='container'>
-<div class='nav-bar'><a class='nav-btn' href='lesson73.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../aws-bedrock-agent-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson75.html'>Bài sau ➡️</a></div><h1>Lesson 75 -- Lộ trình -//</h1>
+<div class='nav-bar'><a class='nav-btn' href='lesson73.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../aws-bedrock-agent-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson75.html'>Bài sau ➡️</a></div><h1>Lesson 75 -- AIP-C01  --=Agent Planning — task decomposition -//</h1>
 <button id='doneButton' class='done-btn' onclick='toggleDone()'>Mark as Done ⚪</button>
 <div class='content-box'>
 <button class='copy-btn' onclick='copyContent()'>📋 Copy nội dung</button>
-<pre><code id='lessonCode'># Lộ trình 100 ngày học AIP-C01 — Trọng tâm: Kiến trúc AI hiện đại &amp; Agentic AI
+<pre><code id='lessonCode'>
+
+Phân rã nhiệm vụ trong Agentic AI | AWS AIP-C01
+	Bản chất cần nắm: Agent Planning không đơn thuần là chia một câu hỏi thành nhiều câu hỏi nhỏ. Nó là quá trình biến một mục tiêu chưa có lời giải trực tiếp thành một chuỗi hành động có thứ tự, có điều kiện, có khả năng sử dụng công cụ, kiểm tra kết quả và lập kế hoạch lại khi thất bại.
+
+
+	Trong hệ thống production, đây là điểm phân biệt giữa một chatbot chỉ trả lời và một AI agent thực sự thực hiện công việc.
+
+
+
+
+
+# 1. Bản chất: Planning thực sự giải quyết vấn đề gì?
+
+
+	Hãy tưởng tượng bạn yêu cầu một agent:
+	Kiểm tra các dự án đang chậm tiến độ, xác định nguyên nhân, đề xuất phương án khắc phục và gửi báo cáo cho quản lý.
+
+	Nếu agent cố giải quyết tất cả trong một lần gọi LLM, nó phải đồng thời hiểu dữ liệu, tìm nguyên nhân, tính toán, đánh giá phương án và quyết định hành động. Điều này làm tăng nguy cơ bỏ sót bước, bịa thông tin hoặc thực hiện sai thứ tự.
+
+
+	Planning giải quyết vấn đề bằng cách tạo ra một kế hoạch hành động có cấu trúc.
+	Một kế hoạch tốt cần trả lời được sáu câu hỏi:
+
+| Câu hỏi                 | Ý nghĩa                               |
+| ----------------------- | ------------------------------------- |
+| Goal là gì?             | Kết quả cuối cùng cần đạt             |
+| Subtasks là gì?         | Cần thực hiện những việc nào          |
+| Dependencies là gì?     | Việc nào phải chờ việc nào            |
+| Tools là gì?            | Cần API, database hay công cụ nào     |
+| Success criteria là gì? | Dựa vào đâu biết mỗi bước thành công  |
+| Recovery là gì?         | Nếu một bước thất bại thì làm gì tiếp |
+
+	Điểm quan trọng: kế hoạch không phải sự thật tuyệt đối. Nó là giả thuyết về cách đạt mục tiêu dựa trên thông tin hiện có. Agent phải đối chiếu kết quả thực tế với kế hoạch và điều chỉnh khi cần.
+
+					(phân rã)
+# 2. Phân biệt Task Decomposition, Planning và Orchestration
+
+	Ba khái niệm này liên quan chặt chẽ nhưng không đồng nghĩa.
+
+	1. Task Decomposition — Phân rã nhiệm vụ
+		Chia mục tiêu lớn thành các nhiệm vụ nhỏ có thể thực hiện hoặc kiểm tra riêng biệt.
+		Ví dụ: kiểm tra dữ liệu → tính KPI → phân tích nguyên nhân → tạo báo cáo.
+
+
+	2. Planning — Lập kế hoạch
+		Xác định thứ tự, dependency, điều kiện thực hiện, công cụ, tiêu chí hoàn thành và phương án dự phòng.
+		Ví dụ: không thể phân tích nguyên nhân nếu chưa lấy được dữ liệu và xác nhận dữ liệu hợp lệ.
+
+
+	3. Orchestration — Điều phối thực thi
+		Thực sự chạy các bước, quản lý trạng thái, xử lý lỗi, retry, timeout và chuyển kết quả giữa các bước.
+		Ví dụ: gọi API, chờ Lambda trả kết quả, retry khi lỗi tạm thời và dừng nếu dữ liệu không đạt điều kiện.
+
+
+
+	Cách nhớ ngắn gọn:
+	- Decomposition: Cần làm những việc gì?
+	- Planning: Làm theo cách nào, thứ tự nào?
+	- Orchestration: Ai thực hiện và kiểm soát việc thực thi như thế nào?
+	Một agent có thể lập kế hoạch rất tốt nhưng hệ thống orchestration vẫn kém nếu không quản lý được timeout, retry hoặc trạng thái sau khi tiến trình bị gián đoạn.
+
+
+
+
+# 3. Các kiểu phân rã nhiệm vụ
+
+	## 3.1. Sequential decomposition — Phân rã tuần tự
+		Các task phụ thuộc kết quả của nhau.
+		
+				Lấy dữ liệu
+					↓
+				Xác thực dữ liệu
+					↓
+				Tính KPI
+					↓
+				Tạo báo cáo
+
+
+		Khi nào dùng?
+		- Task sau cần output của task trước.
+		- Cần đảm bảo thứ tự nghiệp vụ.
+		- Có các checkpoint bắt buộc trước khi tiếp tục.
+		AWS mapping: AWS Step Functions với các state Task, Choice, Retry và Catch; Lambda để thực hiện các thao tác nghiệp vụ; Strands Agents nếu cần LLM lựa chọn hành động linh hoạt.
+
+
+
+
+
+
+	## 3.2. Parallel decomposition — Phân rã song song
+		Các task độc lập có thể chạy đồng thời.
+
+
+	Nếu ba task mất lần lượt 4, 3 và 5 giây, chạy tuần tự mất khoảng 12 giây; chạy song song lý tưởng mất khoảng 5 giây, chưa tính overhead điều phối.
+	Tuy nhiên, chạy song song chỉ đúng khi:
+		1. Các task thực sự độc lập.
+		2. Không có xung đột khi ghi dữ liệu.
+		3. Kết quả có thể được tổng hợp nhất quán.
+		4. Giới hạn concurrency, API quota và chi phí vẫn được kiểm soát.
+		
+	AWS mapping: Parallel hoặc Map state trong Step Functions, kết hợp Lambda hay các dịch vụ xử lý phù hợp.
+
+
+
+
+	##  3.3. Hierarchical decomposition — Phân rã phân cấp
+
+		Một mục tiêu lớn được chia thành các nhóm nhiệm vụ; mỗi nhóm lại được phân rã tiếp.
+
+		Ví dụ:
+		- Agent điều phối: đánh giá toàn bộ tình hình vận hành.
+		  - Agent phân tích tiến độ: kiểm tra deadline và milestone.
+		  - Agent phân tích chi phí: đối chiếu ngân sách và thực tế.
+		  - Agent phân tích rủi ro: tìm các vấn đề có khả năng ảnh hưởng đến deadline.
+		- Agent điều phối xác minh bằng chứng và tạo báo cáo cuối cùng.
+		Đây là cách tiếp cận hữu ích cho các bài toán lớn, nhưng không phải cứ nhiều agent là tốt hơn. Mỗi agent bổ sung thêm latency, chi phí inference, giao tiếp, kiểm tra kết quả và bề mặt rủi ro bảo mật.
+
+		AWS mapping: Strands Agents để xây dựng logic agent và delegation; Amazon Bedrock AgentCore Runtime để vận hành agent; AgentCore Gateway để tích hợp các công cụ/API phù hợp. Step Functions có thể kiểm soát các bước nghiệp vụ quan trọng.
+
+
+
+# 4. Planning trong production: Agent loop hoạt động thế nào?
+	Một agent có khả năng lập kế hoạch thường vận hành theo vòng lặp:
+
+
+	1. Observe
+		Nhận yêu cầu, trạng thái và kết quả hiện có
+
+	2. Plan
+		Chọn task tiếp theo và xác định điều kiện cần
+
+	3. Act
+		Gọi tool, API hoặc agent chuyên biệt
+
+	4. Evaluate
+		Kiểm tra kết quả có đáp ứng điều kiện không
+		Nếu chưa đạt: sửa kế hoạch hoặc thử phương án khác
+
+	5. Stop hoặc Re-plan
+		Hoàn thành, hỏi người dùng, hoặc dừng an toàn
+
+
+	Điểm khác biệt giữa agent production và demo là vòng lặp phải có giới hạn và điều kiện dừng xác định.
+	Không nên cho phép LLM tự gọi tool vô hạn chỉ vì prompt yêu cầu “tiếp tục cho đến khi hoàn thành”.
+
+	Ví dụ, cần giới hạn:
+		- Số bước agent được thực hiện.
+		- Thời gian thực thi tối đa.
+		- Token và chi phí cho mỗi request.
+		- Số lần retry.
+		- Các tool được phép gọi.
+		- Các hành động cần phê duyệt.
+		- Điều kiện thành công và thất bại cuối cùng.
+		Các giới hạn này phải được thực thi bởi code và hạ tầng đáng tin cậy, không chỉ dựa vào lời nhắc trong prompt.
+
+
+
+# 5. AWS architecture: Chọn agent tự lập kế hoạch hay workflow xác định trước? 
+
+
+	Đây là phần quan trọng nhất ở cấp Professional.
+	Không phải mọi công việc đều nên giao cho LLM tự quyết định toàn bộ thứ tự thực thi.
+
+	Exam Knowledge — Domain 2, Task 2.1: Implement agentic AI solutions and tool integrations. AWS đề cập rõ việc giải quyết vấn đề theo các bước có cấu trúc, stopping conditions, timeout, IAM boundaries và circuit breakers.
+
+
+	## Pattern A — Autonomous planning 
+		Dùng khi cách giải quyết chưa biết trước và cần thích nghi theo kết quả.
+		User request → Strands Agent → LLM quyết định task tiếp theo → Tool → Quan sát kết quả → Lập kế hoạch lại
+
+		Ưu điểm: Linh hoạt, thích nghi tốt với vấn đề chưa xác định.
+		Nhược điểm: Khó dự đoán chính xác số bước, latency, chi phí và kết quả; cần kiểm soát tool và vòng lặp.
+
+
+
+	## Pattern B — Deterministic workflow
+		Dùng khi trình tự nghiệp vụ đã biết và phải tuân thủ chính xác.
+		Step Functions → Validate → Execute → Check result → Retry / Catch / Approval → Complete
+		
+
+		Ưu điểm: Có thể kiểm soát trạng thái, thứ tự, timeout, retry và nhánh lỗi rõ ràng.
+		Nhược điểm: Không tự khám phá được hướng xử lý mới nếu workflow không có nhánh tương ứng.
+
+
+
+	## Pattern C — Hybrid orchestration
+		Thường phù hợp nhất với production enterprise
+	
+			Step Functions kiểm soát quy trình
+			↓
+			Agent lập kế hoạch trong phạm vi được cấp
+			↓
+			Tool thực hiện thao tác có xác thực
+			↓
+			Workflow kiểm tra điều kiện, phê duyệt và kết quả
+
+	Ví dụ: Agent điều tra sự cố và đề xuất cách khắc phục; Step Functions kiểm soát bước triển khai, phê duyệt của con người và xác minh sau triển khai.
+		
+	
+	
+	Quy tắc lựa chọn:
+		- Không biết trước cách giải quyết: ưu tiên agent planning.
+		- Biết rõ trình tự và yêu cầu tuân thủ: ưu tiên workflow xác định trước.
+		- Cần cả khả năng suy luận lẫn kiểm soát nghiệp vụ: dùng kiến trúc hybrid.
+			
+		Không nên dùng LLM để quyết định những điều kiện hoàn toàn xác định được bằng code, chẳng hạn hạn mức hoàn tiền, quyền truy cập hoặc trạng thái giao dịch.	
+			
+	
+	
+# 	6. Production design: Task decomposition phải có hợp đồng đầu vào và đầu ra
+	Một lỗi thiết kế phổ biến là để agent chia task bằng ngôn ngữ tự nhiên nhưng không xác định rõ kết quả cần trả về.
+	
+	Ví dụ, task:
+		Phân tích các dự án chậm tiến độ.
+
+	quá mơ hồ để hệ thống kiểm tra tự động.
+
+	Một task tốt hơn cần có:
+		- task_id: định danh duy nhất.
+		- objective: mục tiêu cụ thể.
+		- input: dữ liệu cần thiết.
+		- tool: công cụ được phép sử dụng.
+		- dependencies: các task phải hoàn thành trước.
+		- success_criteria: điều kiện hoàn thành.
+		- timeout và retry_policy: giới hạn thực thi.
+		- output_schema: cấu trúc kết quả mong đợi.
+			
+			
+	Ví dụ về hợp đồng dữ liệu:		
+			
+{
+  "task_id": "analyze_schedule_variance",
+  "objective": "Identify overdue project milestones",
+  "dependencies": ["fetch_project_data"],
+  "tool": "project_metrics_api",
+  "success_criteria": [
+    "All required project records are present",
+    "Overdue milestones include supporting evidence"
+  ],
+  "output_schema": {
+    "project_id": "string",
+    "overdue_milestones": "array",
+    "evidence": "array"
+  }
+}
+
+
+	Đây là ví dụ minh họa về thiết kế schema, không phải schema bắt buộc của AWS.
+	
+	Tại sao điều này quan trọng?
+		LLM có thể tạo ra một câu trả lời trông rất thuyết phục nhưng bỏ sót dữ liệu. Nếu hệ thống chỉ kiểm tra câu trả lời có tồn tại hay không, nó có thể coi một kết quả thiếu bằng chứng là thành công.
+		Ngược lại, nếu đầu ra được kiểm tra theo schema, dữ liệu bắt buộc và điều kiện nghiệp vụ, hệ thống có thể phát hiện lỗi trước khi chuyển sang task tiếp theo.
+
+	Lưu ý: schema validation chỉ chứng minh dữ liệu đúng cấu trúc. Nó không tự chứng minh nội dung là đúng sự thật.
+
+
+# 7. Những lỗi planning nguy hiểm nhất
+
+
+| Lỗi                     | Nguyên nhân                                   | Biện pháp                                                         |
+| ----------------------- | --------------------------------------------- | ----------------------------------------------------------------- |
+| Infinite loop           | Agent liên tục thử lại                        | Giới hạn bước, deadline, ngân sách                                |
+| Dependency sai          | Task chạy trước khi đủ dữ liệu                | Dependency graph, kiểm tra trạng thái                             |
+| Hallucinated completion | Agent tự tuyên bố đã hoàn thành               | Xác minh bằng kết quả tool và hệ thống đích                       |
+| Duplicate side effect   | Retry khiến gửi email hoặc thanh toán hai lần | Idempotency key, kiểm tra trạng thái giao dịch                    |
+| Parallel write conflict | Nhiều task sửa cùng một bản ghi               | Transaction, optimistic locking hoặc phân chia phạm vi ghi        |
+| Tool overreach          | Agent gọi API vượt quyền cần thiết            | IAM least privilege, authorization và policy enforcement          |
+| Cascading failure       | Một task lỗi kéo theo nhiều task lỗi          | Timeout, circuit breaker, retry có giới hạn, graceful degradation |
+
+	Điểm senior-level: Retry không đồng nghĩa với an toàn. Nếu một API đã thực hiện giao dịch nhưng response bị timeout, agent không thể kết luận giao dịch thất bại rồi gọi lại một cách mù quáng. Hệ thống cần xác minh trạng thái giao dịch hoặc sử dụng cơ chế idempotency phù hợp.
+
+
+
+
+# 8. Mapping với AWS services
+
+
+| Thành phần                    | Vai trò trong planning architecture                                             |
+| ----------------------------- | ------------------------------------------------------------------------------- |
+| Amazon Bedrock                | Cung cấp foundation model cho việc phân tích yêu cầu, tạo kế hoạch và chọn tool |
+| Strands Agents                | Xây dựng agent loop, tool use và logic điều phối ở tầng ứng dụng                |
+| AgentCore Runtime             | Vận hành agent trong môi trường runtime được quản lý                            |
+| AgentCore Gateway             | Cung cấp đường tích hợp tới các tool/API được cấu hình                          |
+| AgentCore Identity            | Hỗ trợ quản lý danh tính và thông tin xác thực phục vụ tích hợp                 |
+| AWS Step Functions            | Quản lý workflow, trạng thái, thứ tự, retry, catch và human approval            |
+| AWS Lambda                    | Thực hiện tác vụ nghiệp vụ, validation và adapter tới hệ thống bên ngoài        |
+| Amazon CloudWatch / AWS X-Ray | Theo dõi log, metrics và trace để điều tra lỗi xuyên các thành phần             |
+
+
+
+	
+	
+
+
 
 </code></pre>
 </div>
