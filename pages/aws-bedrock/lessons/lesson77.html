@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang='vi'><head><meta charset='UTF-8'>
 <meta name='viewport' content='width=device-width, initial-scale=1.0'>
-<title>Lesson 78 -- AIP-C01  --= -//</title>
+<title>Lesson 78 -- AIP-C01  --=Agent Loop — stopping condition / timeout / circuit breaker -//</title>
 <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css'>
 <script src='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js'></script>
 <script id='MathJax-script' async src='https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'></script>
@@ -27,191 +27,825 @@ pre { padding: 20px; border-radius: 8px; white-space: pre-wrap; word-break: brea
 .theme-toggle-btn { display: block; margin: 20px auto; padding: 8px 16px; background: transparent; border: 1px solid #888; color: inherit; border-radius: 5px; cursor: pointer; }
 </style></head><body onload='initLesson()'>
 <div class='container'>
-<div class='nav-bar'><a class='nav-btn' href='lesson76.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../aws-bedrock-agent-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson78.html'>Bài sau ➡️</a></div><h1>Lesson 78 -- AIP-C01  --= -//</h1>
+<div class='nav-bar'><a class='nav-btn' href='lesson76.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../aws-bedrock-agent-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson78.html'>Bài sau ➡️</a></div><h1>Lesson 78 -- AIP-C01  --=Agent Loop — stopping condition / timeout / circuit breaker -//</h1>
 <button id='doneButton' class='done-btn' onclick='toggleDone()'>Mark as Done ⚪</button>
 <div class='content-box'>
 <button class='copy-btn' onclick='copyContent()'>📋 Copy nội dung</button>
 <pre><code id='lessonCode'>
-## — DANH SÁCH 100 TỪ KHÓA (theo thứ tự học, 1 từ khóa/ngày)
 
-### Tuần 1-2: Nền tảng kiến trúc Foundation Model (Ngày 1-14)
-1. Foundation Model (FM) là gì / bản chất
-2. Model Provider vs Model Consumer (kiến trúc AWS)
-3. Amazon Bedrock — kiến trúc tổng thể
-4. Bedrock Model Catalog (Claude, Llama, Titan, Nova...)
-5. On-Demand vs Provisioned Throughput (Bedrock)
-6. Model Invocation API (Converse API vs InvokeModel)
-8. Model Latency vs Throughput trade-off
-9. Streaming Response (token streaming)
-10. Multi-modal Foundation Model (text, image, video)
-11. Model Selection Criteria (cost, latency, accuracy)
-12. Bedrock Marketplace vs Bedrock Base Models
-13. Custom Model Import (Bedrock)
-14. So sánh Bedrock vs SageMaker JumpStart
+# Agent Loop — Stopping Condition / Timeout / Circuit Breaker
 
-### Tuần 3-4: Prompt Engineering &amp; Model Customization (Ngày 15-28)
-15. Prompt Engineering — bản chất
-16. Zero-shot / Few-shot / Chain-of-Thought Prompting
-17. System Prompt vs User Prompt (kiến trúc)
-18. Prompt Template &amp; Prompt Management (Bedrock Prompt Management)
-19. Temperature, Top-P, Top-K (inference parameters)
-20. Prompt Injection — khái niệm &amp; phòng chống
-21. Fine-tuning là gì, khi nào cần
-22. RAG vs Fine-tuning vs Prompt Engineering (so sánh trade-off)
-23. Continued Pre-training (Bedrock Custom Models)
-24. LoRA / PEFT (Parameter-Efficient Fine-Tuning)
-25. Distillation (Model Distillation trên Bedrock)
-26. Domain Adaptation
-27. Evaluation Dataset cho fine-tuning
-28. Model Versioning &amp; Rollback strategy
+Đây là một chủ đề cực kỳ quan trọng khi thiết kế Agent production. Một Agent có thể reasoning rất tốt, sử dụng tool rất giỏi, nhưng nếu không biết khi nào phải dừng, khi nào phải từ bỏ và khi nào phải ngắt hệ thống, thì nó không phải một hệ thống production đáng tin cậy.
 
-### Tuần 5-7: RAG &amp; Data Architecture (Ngày 29-49)
-29. RAG (Retrieval Augmented Generation) — kiến trúc tổng thể
-30. Embedding là gì, Embedding Model
-31. Vector Database — bản chất
-32. Cosine Similarity vs Euclidean Distance
-33. Amazon OpenSearch Serverless (vector engine)
-34. Aurora PostgreSQL với pgvector
-35. Amazon Bedrock Knowledge Bases — kiến trúc
-36. Chunking Strategy (fixed-size, semantic, hierarchical)
-37. SQL vs NoSQL trong bối cảnh GenAI/RAG
-38. Metadata Filtering trong Vector Search
-39. Hybrid Search (keyword + semantic)
-40. Re-ranking trong RAG pipeline
-41. Data Ingestion Pipeline cho Knowledge Base
-42. S3 làm nguồn dữ liệu cho RAG
-43. Document Parsing (Textract + GenAI)
-44. Data Freshness / Sync Strategy cho Knowledge Base
-45. Retrieval Failure — nguyên nhân &amp; debug
-46. Hallucination — bản chất &amp; cách giảm thiểu
-47. Grounding (grounding response vào retrieved data)
-48. Citation / Source Attribution trong RAG response
-49. Multi-Knowledge-Base Architecture
+Hãy nhớ một nguyên tắc:
 
-### Tuần 8-11: Agentic AI Architecture (trọng tâm chính) (Ngày 50-77)
-NgàyBài mới                                                      
----:-----------------------------------------------------------  
-50 : Agent là gì trong GenAI — Agent Loop                        
-51 : Agent Runtime Architecture — bản chất của một Agent         
-52 : **Amazon Bedrock AgentCore Runtime**                        
-53 : Strands Agents + AgentCore          
-54 : Tool Use / Function Calling      
-                         
-55 : **MCP — Model Context Protocol**                            
-56 : MCP Server vs MCP Client           
-56    Transport：stdioとStreamable HTTP       
-57 : **AgentCore Gateway**      
-58 : AgentCore Gateway + MCP + enterprise API    
-59 : **AgentCore Identity**                                      
-60 : Agent Memory — short-term vs long-term                      
-61 : **AgentCore Memory**   
-62 : Session / State Management    
-63 : Agent Planning — task decomposition     
-64 : ReAct / Reasoning + Acting  
-                                
-65 : Step Functions cho Agent orchestration                      
-66 : Agent Loop — stopping condition / timeout / circuit breaker 
-67 : Human-in-the-loop                                           
-68 : Multi-Agent Architecture                                    
-69 : Supervisor / Sub-agent / Specialist                         
-70 : **A2A — Agent-to-Agent protocol**                           
-71 : Agent Handoff                                               
-72 : AgentCore Browser                                           
-73 : AgentCore Code Interpreter                                  
-74 : AgentCore Policy / authorization boundary                   
-75 : Agent Observability                                         
-76 : AgentCore Observability + CloudWatch                        
-77 : **Agent Architecture tổng hợp**                             
+&gt; Agent quyết định phải làm gì. Runtime kiểm soát Agent được phép chạy bao lâu. Circuit Breaker bảo vệ hệ thống khi dependency gặp sự cố.
+
+Ba cơ chế này giải quyết ba vấn đề khác nhau. Không được đánh đồng chúng.
+
+# PHẦN I — GIẢI THÍCH TIẾNG VIỆT
+
+## 1. Bản chất: Tại sao Agent cần cơ chế dừng?
+
+Một Agent thông thường có vòng lặp:
+
+1\. Observe
+
+Nhận yêu cầu, kết quả tool và trạng thái hiện tại
+
+2\. Reason / Plan
+
+LLM suy luận và quyết định bước tiếp theo
+
+3\. Act
+
+Gọi tool, API, database hoặc sub-agent
+
+4\. Evaluate
+
+Kiểm tra kết quả và điều kiện hoàn thành
+
+Continue hoặc Stop?
+
+Nếu chưa hoàn thành → quay lại Observe
+
+Nếu hoàn thành hoặc bị chặn → kết thúc
+
+Vấn đề là LLM không tự nhiên biết lúc nào nên dừng một cách đáng tin cậy.
+
+Ví dụ:
+
+Người dùng yêu cầu:
+
+&gt; Tìm nguyên nhân tại sao EC2 không kết nối được RDS và sửa lỗi.
+
+Agent có thể:
+
+1. Kiểm tra EC2.
+2. Kiểm tra Security Group.
+3. Kiểm tra RDS.
+4. Phát hiện Security Group sai.
+5. Thử sửa.
+6. Thử kết nối lại.
+7. Vẫn lỗi.
+8. Kiểm tra Network ACL.
+9. Tiếp tục thử một phương án khác.
+10. Quay lại kiểm tra Security Group.
+
+Nếu không có stopping condition, Agent có thể chạy mãi.
+
+Đặc biệt, mỗi vòng lặp có thể phát sinh:
+
+- Chi phí LLM inference.
+- Chi phí tool invocation.
+- Chi phí compute.
+- Tải lên database và API.
+- Rủi ro thực hiện hành động sai nhiều lần.
+
+Production principle: Không bao giờ giao quyền kiểm soát vòng đời Agent hoàn toàn cho LLM.
+
+## 2. Ba khái niệm phải phân biệt
+
+A. Stopping Condition
+
+Agent decision
+
+Câu hỏi: Agent đã hoàn thành công việc chưa?
+
+Ví dụ:
+
+- Đã tìm được nguyên nhân và xác nhận lỗi được sửa.
+- Đã đạt confidence hoặc quality threshold.
+- Không còn bước nào có ích để thực hiện.
+- Không thể tiếp tục vì thiếu thông tin hoặc quyền truy cập.
+
+B. Timeout
+
+Execution control
+
+Câu hỏi: Agent còn được phép chạy bao lâu?
+
+Ví dụ:
+
+- Một tool phải trả kết quả trong 10 giây.
+- Một Agent request tối đa 120 giây.
+- Một workflow tối đa 30 phút.
+
+C. Circuit Breaker
+
+Dependency protection
+
+Câu hỏi: Nếu hệ thống phía sau liên tục lỗi thì có nên tiếp tục gọi nó không?
+
+Ví dụ:
+
+- RDS đang quá tải.
+- Payment API đang lỗi.
+- External API liên tục timeout.
+
+Circuit Breaker ngăn Agent tiếp tục gọi một dependency đang gặp sự cố.
+
+Một cách liên tưởng để nhớ lâu:
+
+Hãy tưởng tượng Agent là một nhân viên kỹ thuật sửa chữa nhà máy.
+
+| Khái niệm          | Liên tưởng                                                      |
+| ------------------ | --------------------------------------------------------------- |
+| Stopping Condition | Công việc đã hoàn thành hay chưa?                               |
+| Timeout            | Hết giờ làm việc thì phải dừng                                  |
+| Circuit Breaker    | Máy móc có dấu hiệu chập điện thì ngắt nguồn để bảo vệ hệ thống |
+
+Ba thứ không thay thế được nhau.
+
+Ví dụ Agent vẫn chưa hoàn thành công việc (Stopping Condition chưa đạt), nhưng đã hết thời gian (Timeout). Agent phải dừng dù công việc chưa xong.
+
+Ngược lại, Agent vẫn còn thời gian, nhưng API liên tục lỗi. Circuit Breaker phải ngắt API đó.
+
+## 3. Stopping Condition — khi nào Agent phải dừng?
+
+Đây là logic quan trọng nhất ở tầng Agent.
+
+### 3.1. Các điều kiện dừng phổ biến
+
+| Condition            | Ý nghĩa                  | Ví dụ                            |
+| -------------------- | ------------------------ | -------------------------------- |
+| Task completed       | Hoàn thành nhiệm vụ      | Đã tạo báo cáo                   |
+| Goal achieved        | Đạt mục tiêu             | Đã sửa lỗi và xác minh           |
+| Max iterations       | Đạt số vòng lặp tối đa   | Tối đa 10 vòng                   |
+| No progress          | Không có tiến triển      | 3 lần liên tiếp cùng kết quả     |
+| Confidence threshold | Đạt ngưỡng confidence    | Confidence &gt;= 0.9                |
+| Human intervention   | Cần con người quyết định | Cần phê duyệt giao dịch          |
+| Budget exhausted     | Hết ngân sách            | Đã dùng hết token budget         |
+| Safety violation     | Vi phạm policy           | Không được phép truy cập dữ liệu |
+
+Lưu ý quan trọng: Confidence cao không đồng nghĩa với câu trả lời đúng.
+
+Không nên chỉ sử dụng `confidence &gt;= 0.9` để quyết định Agent đã hoàn thành.
+
+Ví dụ, Agent có thể rất tự tin rằng nó đã sửa lỗi EC2 nhưng thực tế chưa xác minh kết nối đến RDS.
+
+Production best practice: Dùng điều kiện hoàn thành dựa trên kết quả có thể kiểm chứng, thay vì chỉ dựa vào lời khẳng định của LLM.
+
+### 3.2. Max Iterations — giới hạn số vòng lặp
+
+Ví dụ:
+
+```
+MAX_ITERATIONS = 10for iteration in range(MAX_ITERATIONS):    observation = observe()    decision = agent_reason(observation)    if decision.is_complete:        return decision.answer    result = execute_tool(decision.tool)    if not result.success:        handle_error(result)return "Maximum iterations reached"
+```
+
+Ý tưởng:
+
+- Agent được phép suy nghĩ và hành động tối đa 10 vòng.
+- Nếu hoàn thành ở vòng 4 → kết thúc ngay.
+- Nếu đến vòng 10 vẫn chưa hoàn thành → kết thúc với trạng thái giới hạn.
+
+Nhưng có một điểm cần hiểu sâu:
+
+Max iterations không phải timeout.
+
+Một vòng có thể mất 100 ms hoặc 5 phút.
+
+Nếu một vòng gọi API mất 5 phút, 10 vòng có thể mất gần 50 phút.
+
+Vì vậy, cần cả hai:
+
+- Max iterations.
+- Wall-clock deadline.
+
+### 3.3. No Progress Detection — phát hiện Agent bị mắc kẹt
+
+Đây là vấn đề rất thực tế trong production.
+
+Ví dụ:
+
+```
+Iteration 1:
+Agent → Call API A
+Result → 403 Forbidden
+
+Iteration 2:
+Agent → Call API A
+Result → 403 Forbidden
+
+Iteration 3:
+Agent → Call API A
+Result → 403 Forbidden
+
+Iteration 4:
+Agent → Call API A
+Result → 403 Forbidden
+```
+
+Agent đang lặp lại cùng một hành động nhưng không tạo ra tiến triển.
+
+Một thiết kế tốt cần phát hiện:
+
+- Cùng tool.
+- Cùng input hoặc payload tương đương.
+- Cùng error.
+- Không có thay đổi về state.
+
+Có thể sử dụng:
+
+- Giới hạn số lần lặp cùng một lỗi.
+- Hash của tool và normalized input.
+- Theo dõi trạng thái trước/sau mỗi action.
+- Phân loại lỗi để quyết định retry hay terminate.
+
+Không nên coi mọi lần gọi tool giống nhau là lặp vô ích. Một số thao tác polling có thể cần lặp lại vì trạng thái bên ngoài thay đổi theo thời gian.
+
+## 4. Timeout — giới hạn thời gian thực thi
+
+Timeout có nhiều tầng. Đây là điểm rất dễ bị nhầm trong đề Professional.
+
+### 4.1. Các tầng timeout
+
+Client timeout
+
+Người dùng chờ tối đa bao lâu?
+
+API / Gateway timeout
+
+Request được phép tồn tại bao lâu?
+
+Agent execution deadline
+
+Agent được phép thực hiện bao lâu?
+
+Tool timeout
+
+Mỗi tool được phép chạy bao lâu?
+
+Dependency timeout
+
+API / DB phía sau phản hồi trong bao lâu?
+
+Ví dụ production:
+
+| Layer                    | Timeout                |
+| ------------------------ | ---------------------- |
+| Client                   | 60 giây                |
+| API Gateway              | Theo giới hạn tích hợp |
+| Agent execution deadline | 50 giây                |
+| Tool timeout             | 10 giây                |
+| External API             | 5 giây                 |
+
+Các giá trị này chỉ là ví dụ thiết kế, không phải AWS service quota.
+
+Nguyên tắc:
+
+Timeout của tầng ngoài phải lớn hơn timeout của tầng trong, có đủ thời gian xử lý và trả lỗi.
+
+Ví dụ:
+
+- External API timeout: 5 giây.
+- Tool timeout: 10 giây.
+- Agent deadline: 50 giây.
+- Client timeout: 60 giây.
+
+Như vậy Agent còn thời gian để xử lý lỗi và trả response.
+
+Nếu Client timeout trước nhưng Agent vẫn chạy phía sau, bạn có thể phải trả tiền cho một tác vụ mà người dùng đã ngừng chờ.
+
+Đó là một dạng orphaned execution.
+
+### 4.2. Deadline propagation — truyền deadline xuyên suốt hệ thống
+
+Đây là kiến thức production rất quan trọng.
+
+Không nên để mỗi service tự tạo timeout độc lập mà không biết request ban đầu còn bao nhiêu thời gian.
+
+Ví dụ:
+
+Request bắt đầu lúc 10:00:00.
+
+Deadline là 10:00:50.
+
+Sau khi Agent đã chạy 35 giây, nó gọi tool.
+
+Tool không được phép sử dụng thêm 10 giây nếu deadline chỉ còn 15 giây? Thực tế nó có thể, nhưng phải nằm trong ngân sách còn lại.
+
+Công thức:
+
+\\[ T\_{\text{remaining}} = T\_{\text{deadline}} - T\_{\text{now}} \\]
+
+Và:
+
+\\[ T\_{\text{tool}} = \min(T\_{\text{configured}},T\_{\text{remaining}}) \\]
+
+Ví dụ:
+
+- Tool timeout cấu hình: 10 giây.
+- Thời gian còn lại: 4 giây.
+- Timeout thực tế cho tool: 4 giây.
+
+Nhờ đó, toàn bộ Agent execution tuân thủ một deadline thống nhất.
+
+### 4.3. Timeout không đồng nghĩa với cancellation
+
+Đây là một trap cực kỳ quan trọng.
+
+Giả sử:
+
+Agent gọi Payment API để thanh toán 100.000 JPY.
+
+Sau 5 giây, Agent timeout.
+
+Điều đó không chứng minh rằng Payment API chưa thực hiện giao dịch.
+
+Có thể:
+
+1. Payment API đã nhận request.
+2. Đã trừ tiền.
+3. Response bị mất trên đường truyền.
+4. Agent tưởng rằng giao dịch thất bại.
+
+Nếu Agent tự động retry, khách hàng có thể bị trừ tiền hai lần.
+
+Do đó cần:
+
+- Idempotency key.
+- Transaction status query.
+- Cancellation API nếu hệ thống hỗ trợ.
+- Reconciliation khi không xác định được kết quả.
+
+Timeout chỉ nói rằng caller không nhận được kết quả đúng hạn. Nó không nói rằng side effect chưa xảy ra.
+
+Đây là một trong những khác biệt quan trọng giữa thiết kế Agent demo và thiết kế Agent production.
+
+## 5. Circuit Breaker — cơ chế bảo vệ dependency
+
+Đây là pattern rất quan trọng trong microservices và distributed systems.
+
+### 5.1. Bản chất
+
+Giả sử Agent có quyền gọi ba hệ thống:
+
+- Customer API.
+- Payment API.
+- Inventory API.
+
+Payment API đang gặp sự cố.
+
+Nếu Agent cứ tiếp tục gọi Payment API, mỗi lần sẽ:
+
+- Chờ timeout.
+- Retry.
+- Tiêu tốn tài nguyên.
+- Làm tăng tải lên hệ thống đang lỗi.
+- Có thể gây cascading failure.
+
+Circuit Breaker giải quyết bằng cách tạm thời chặn những request tiếp theo đến dependency đó.
+
+### 5.2. Ba trạng thái của Circuit Breaker
+
+CLOSED
+
+Hoạt động bình thường
+
+Request được phép đi qua dependency.
+
+Theo dõi số lượng lỗi và tỷ lệ lỗi.
+
+Failure threshold vượt ngưỡng
+
+OPEN
+
+Ngắt kết nối logic
+
+Không gửi request mới đến dependency.
+
+Trả lỗi nhanh (fail fast).
+
+Hết thời gian cooldown
+
+HALF-OPEN
+
+Thử nghiệm phục hồi
+
+Cho phép một số request kiểm tra.
+
+Thành công → CLOSED. Thất bại → OPEN.
+
+Ví dụ:
+
+Payment API có quy tắc:
+
+- 10 request gần nhất.
+- Nếu có ít nhất 7 request lỗi → OPEN.
+- Mở trong 30 giây.
+- Sau 30 giây → HALF-OPEN.
+- Cho phép 1 request thử nghiệm.
+
+Kết quả:
+
+- Thành công → CLOSED.
+- Thất bại → OPEN thêm một khoảng thời gian.
+
+Các con số trên là cấu hình ví dụ, không phải giá trị mặc định AWS.
+
+### 5.3. Tại sao cần HALF-OPEN?
+
+Nếu Circuit Breaker chỉ có CLOSED và OPEN:
+
+- OPEN: hệ thống không cho request đi qua.
+- Khi hết cooldown: chuyển thẳng CLOSED.
+
+Giả sử Payment API vẫn chưa phục hồi.
+
+Hàng nghìn request đồng loạt đổ vào Payment API ngay lập tức.
+
+Hệ thống lại quá tải.
+
+HALF-OPEN giải quyết bằng cách chỉ cho phép một lượng nhỏ request thử nghiệm.
+
+Nó giống như bật lại cầu dao nhưng thử với tải nhỏ trước khi khôi phục toàn bộ hệ thống.
+
+### 5.4. Circuit Breaker khác Retry như thế nào?
+
+| Tiêu chí  | Retry                            | Circuit Breaker                             |
+| --------- | -------------------------------- | ------------------------------------------- |
+| Mục tiêu  | Xử lý lỗi tạm thời               | Bảo vệ dependency đang lỗi                  |
+| Khi lỗi   | Thử lại                          | Có thể chặn request                         |
+| Phạm vi   | Một operation                    | Nhiều request đến dependency                |
+| Thời gian | Backoff giữa các lần thử         | Cooldown khi OPEN                           |
+| Phục hồi  | Thử lại operation                | HALF-OPEN kiểm tra service                  |
+| Rủi ro    | Làm tăng tải khi retry quá nhiều | Có thể chặn nhầm nếu threshold không hợp lý |
+
+Câu cần nhớ:
+
+&gt; Retry giúp một request có cơ hội thành công. Circuit Breaker giúp hệ thống không tự phá hủy mình khi dependency đang thất bại.
+
+Hai cơ chế thường được sử dụng cùng nhau.
+
+Nhưng không được retry vô hạn bên trong một Circuit Breaker đang OPEN.
+
+## 6. Mapping với AWS services
+
+Đây là phần cần nắm để thi AIP-C01 và thiết kế production.
+
+| Yêu cầu                     | AWS service / thành phần                  | Vai trò                                  |
+| --------------------------- | ----------------------------------------- | ---------------------------------------- |
+| Agent loop                  | Strands Agents                            | Reasoning, planning, tool execution      |
+| Agent execution environment | AgentCore Runtime                         | Chạy Agent trong môi trường được quản lý |
+| Session lifecycle           | AgentCore Runtime Lifecycle Configuration | Idle timeout, max lifetime               |
+| Agent state/memory          | AgentCore Memory                          | Lưu trữ và truy xuất memory              |
+| Orchestration có kiểm soát  | AWS Step Functions                        | Điều phối các bước và trạng thái         |
+| Retry / backoff             | Step Functions Retry                      | Xử lý lỗi tạm thời                       |
+| Error handling              | Step Functions Catch                      | Phân nhánh khi lỗi                       |
+| Circuit state               | DynamoDB / ElastiCache                    | Lưu trạng thái OPEN/CLOSED               |
+| Monitoring                  | CloudWatch / AgentCore Observability      | Theo dõi lỗi, latency và execution       |
+| Distributed tracing         | AWS X-Ray / OpenTelemetry                 | Theo dõi đường đi request                |
+
+### 6.1. Một điểm rất dễ nhầm về AgentCore Runtime
+
+AgentCore Runtime không phải một bộ đếm giới hạn số vòng lặp reasoning của Agent.
+
+Nó quản lý môi trường thực thi và vòng đời session.
+
+Theo tài liệu AWS hiện hành tại thời điểm 01/11/2026:
+
+| AgentCore Runtime setting     | Giá trị        |
+| ----------------------------- | -------------- |
+| Synchronous request timeout   | Tối đa 15 phút |
+| Streaming connection          | Tối đa 60 phút |
+| Asynchronous job              | Tối đa 8 giờ   |
+| Idle session timeout mặc định | 15 phút        |
+| Max lifetime mặc định         | 8 giờ          |
+
+Lưu ý:
+
+- `idleRuntimeSessionTimeout`: thời gian session không hoạt động.
+- `maxLifetime`: giới hạn vòng đời instance.
+- Hai giá trị này không phải Agent reasoning timeout.
+- Khi compute instance bị terminate, session có thể được provision lại khi tiếp tục sử dụng.
+- Giới hạn lifecycle còn phụ thuộc compute type.
+
+[image](https://www.google.com/s2/favicons?domain=https://docs.aws.amazon.com\&amp;sz=32)
+
+Amazon Bedrock AgentCore+2
+
+Đặc biệt, cần phân biệt:
+
+| Loại giới hạn           | Kiểm soát cái gì?                 |
+| ----------------------- | --------------------------------- |
+| Agent max iterations    | Số vòng reasoning                 |
+| Agent deadline          | Thời gian thực thi task           |
+| Tool timeout            | Thời gian chờ một tool            |
+| Runtime request timeout | Thời gian xử lý invocation        |
+| Runtime idle timeout    | Thời gian session không hoạt động |
+| Runtime max lifetime    | Vòng đời compute instance         |
+
+Đừng bao giờ trả lời rằng cấu hình `maxLifetime = 8 hours` có nghĩa Agent được phép reasoning liên tục 8 giờ.
+
+Đó là hai vấn đề hoàn toàn khác nhau.
+
+### 6.2. Step Functions có thể thực hiện Circuit Breaker không?
+
+Có.
+
+AWS Prescriptive Guidance có hướng dẫn triển khai Circuit Breaker sử dụng:
+
+- Step Functions Express Workflows.
+- DynamoDB để lưu trạng thái circuit.
+- Retry với exponential backoff.
+- TTL để quản lý thời gian hết hạn trạng thái OPEN.
+
+[image](https://www.google.com/s2/favicons?domain=https://docs.aws.amazon.com\&amp;sz=32)
+
+AWS Prescriptive Guidance
+
+Kiến trúc:
+
+Agent / Application
+
+Circuit Breaker Controller
+
+DynamoDB — Circuit State
+
+CLOSED / OPEN / HALF-OPEN
+
+OPEN
+
+Reject request
+
+CLOSED / HALF-OPEN
+
+Call dependency
+
+External API / Database
+
+Trong thực tế, khi có concurrency cao, phải xử lý atomic state transition, race condition và giới hạn số probe ở HALF-OPEN. Không thể chỉ đọc DynamoDB rồi ghi lại một giá trị theo kiểu thông thường mà cho rằng circuit breaker đã an toàn.
+
+## 7. Production Architecture — kết hợp cả ba cơ chế
+
+Hãy xây dựng một Agent xử lý yêu cầu hỗ trợ khách hàng.
+
+Yêu cầu:
+
+&gt; Khách hàng yêu cầu kiểm tra đơn hàng, xác định lý do giao hàng chậm và nếu đủ điều kiện thì thực hiện hoàn tiền.
+
+Agent cần:
+
+1. Tra cứu đơn hàng.
+2. Kiểm tra trạng thái vận chuyển.
+3. Kiểm tra chính sách hoàn tiền.
+4. Nếu đủ điều kiện, gọi Payment API.
+5. Xác minh kết quả.
+6. Trả lời khách hàng.
+
+Thiết kế:
+
+User Request
+
+AgentCore Runtime + Strands Agent
+
+Deadline: 50 giây
+
+Max iterations: 10
+
+Agent Loop
+
+1
+
+Observe order information
+
+2
+
+Reason about delivery delay
+
+3
+
+Check refund eligibility
+
+4
+
+Request human approval if required
+
+Payment Tool + Circuit Breaker
+
+Retry transient failures
+
+Reject calls when circuit is OPEN
+
+Verify refund transaction
+
+Idempotency key + transaction status
+
+Return final result
+
+### Điều gì xảy ra trong từng trường hợp?
+
+| Tình huống                                        | Cơ chế xử lý                                     |
+| ------------------------------------------------- | ------------------------------------------------ |
+| Đã hoàn tiền thành công                           | Stopping condition                               |
+| Đã đạt 10 iterations                              | Max iterations                                   |
+| Đã hết 50 giây                                    | Agent deadline                                   |
+| Payment API lỗi một lần                           | Retry                                            |
+| Payment API lỗi liên tục                          | Circuit Breaker OPEN                             |
+| Agent không biết có hoàn tiền thành công hay chưa | Query transaction status                         |
+| Refund cần phê duyệt                              | Human-in-the-loop                                |
+| Không còn đủ thời gian                            | Stop, checkpoint nếu cần, trả trạng thái phù hợp |
+
+### Một quyết định kiến trúc quan trọng
+
+Không nên để Agent tự quyết định retry Payment API vô hạn.
+
+Cũng không nên để Agent tự suy đoán rằng payment thất bại chỉ vì timeout.
+
+Thay vào đó:
+
+- Agent quyết định nghiệp vụ: có đủ điều kiện hoàn tiền không?
+- Backend payment service quyết định tính hợp lệ của giao dịch.
+- Idempotency đảm bảo request lặp không tạo giao dịch trùng.
+- Circuit Breaker bảo vệ Payment API.
+- Runtime quản lý môi trường thực thi.
+- Deadline và iteration limit kiểm soát ngân sách thực thi.
+
+Đây chính là cách chia trách nhiệm đúng giữa Agent và hệ thống deterministic.
+
+## 8. Trade-off — lựa chọn theo production requirement
+
+| Cơ chế                | Ưu điểm                               | Nhược điểm / rủi ro                          |
+| --------------------- | ------------------------------------- | -------------------------------------------- |
+| Max iterations        | Đơn giản, giới hạn vòng lặp           | Không giới hạn thời gian thực                |
+| Wall-clock timeout    | Kiểm soát latency và execution budget | Có thể dừng giữa một operation               |
+| No-progress detection | Tránh vòng lặp vô ích                 | Có thể nhận diện nhầm polling hợp lệ         |
+| Retry                 | Chịu được lỗi transient               | Tăng tải và có nguy cơ side effect trùng     |
+| Circuit Breaker       | Ngăn cascading failures               | Có thể reject nhầm request nếu threshold sai |
+| Step Functions        | Control flow rõ ràng, có retry/catch  | Tăng orchestration overhead                  |
+| Human-in-the-loop     | Kiểm soát hành động nhạy cảm          | Tăng latency và độ phức tạp                  |
+
+### Một số nguyên tắc thiết kế senior-level
+
+1. Đặt deadline tổng thể cho mỗi task.
+2. Truyền remaining deadline xuống từng tool.
+3. Dùng bounded retry với exponential backoff và jitter.
+4. Không retry các lỗi permanent như authorization failure.
+5. Dùng idempotency cho các tool tạo side effect.
+6. Phân biệt lỗi nghiệp vụ với lỗi hạ tầng.
+7. Có cơ chế no-progress detection.
+8. Có circuit breaker riêng cho từng dependency quan trọng.
+9. Checkpoint state trước những công việc dài hoặc có thể resume.
+10. Log rõ lý do Agent kết thúc: `COMPLETED`, `TIMEOUT`, `MAX_ITERATIONS`, `CIRCUIT_OPEN`, `POLICY_BLOCKED`...
+
+## 9. AIP-C01 — Keywords và Exam Traps
+
+### Keywords thường xuất hiện trong đề
+
+| Đề mô tả                                 | Cần nghĩ đến                        |
+| ---------------------------------------- | ----------------------------------- |
+| Agent continues indefinitely             | Max iterations / stopping condition |
+| Repeatedly executes the same action      | No-progress detection               |
+| Strict execution time limit              | Deadline / timeout                  |
+| Dependency experiences repeated failures | Circuit Breaker                     |
+| Transient network errors                 | Retry with exponential backoff      |
+| Prevent cascading failures               | Circuit Breaker / bulkhead          |
+| Avoid duplicate transactions             | Idempotency                         |
+| Resume long-running tasks                | Checkpoint / asynchronous execution |
+| Workflow must be deterministic           | Step Functions                      |
+| Human approval before sensitive action   | Human-in-the-loop                   |
+
+### Exam Traps — những đáp án dễ mắc sai lầm
+
+Trap 1: Tăng Max Iterations để xử lý timeout.
+
+Sai. Max iterations giới hạn số vòng, không giới hạn thời gian một vòng.
+
+Nếu một tool treo 20 phút, max iterations bằng 3 vẫn có thể mất 60 phút.
+
+Trap 2: Retry liên tục khi API đang unavailable.
+
+Sai. Đây chính là lúc Circuit Breaker có giá trị.
+
+Retry không giới hạn có thể làm tình hình nghiêm trọng hơn.
+
+Trap 3: Timeout nghĩa là operation thất bại.
+
+Sai. Timeout chỉ cho biết caller không nhận được kết quả đúng hạn. Side effect có thể đã xảy ra.
+
+Trap 4: Dùng AgentCore Runtime idle timeout để giới hạn reasoning loop.
+
+Sai. Idle timeout quản lý vòng đời session khi không hoạt động, không phải số vòng reasoning.
+
+Trap 5: Dùng Step Functions thay thế hoàn toàn Agent framework.
+
+Sai. Step Functions quản lý deterministic workflow; Agent framework quản lý reasoning và quyết định hành động linh hoạt. Chúng có thể phối hợp.
+
+Trap 6: Circuit Breaker OPEN thì retry liên tục cho đến khi thành công.
+
+Sai. OPEN phải fail fast. Sau cooldown mới chuyển HALF-OPEN để kiểm tra khả năng phục hồi.
+
+## 10. Professional-level Scenario
+
+Độ khó: Professional
+
+Một công ty thương mại điện tử triển khai customer support Agent trên Amazon Bedrock AgentCore Runtime sử dụng Strands Agents.
+
+Agent có thể:
+
+- Truy vấn Order API.
+- Truy vấn Inventory API.
+- Gọi Payment API để hoàn tiền.
+- Sử dụng LLM để phân tích nguyên nhân và lập kế hoạch.
+
+Một ngày, Payment API gặp sự cố.
+
+Hệ thống ghi nhận:
+
+- 35% Payment API requests timeout.
+- Agent thường retry cùng một request 5 lần.
+- Một số giao dịch đã hoàn tiền thành công nhưng response bị mất.
+- Agent tiếp tục gọi Payment API trong khi dependency đang quá tải.
+- Một số session Agent chạy lâu hơn dự kiến.
+- Doanh nghiệp yêu cầu mỗi customer request không được vượt quá 60 giây.
+- Không được tạo giao dịch hoàn tiền trùng lặp.
+- Hệ thống phải tiếp tục phục vụ các chức năng tra cứu đơn hàng ngay cả khi Payment API unavailable.
+
+Which architecture BEST addresses these requirements?
+
+A. Increase AgentCore Runtime maxLifetime, allow more iterations, and retry Payment API with exponential backoff until the refund succeeds.
+
+B. Implement a shared Circuit Breaker for Payment API, use bounded retries with exponential backoff and jitter, enforce an end-to-end deadline, use idempotency keys and transaction-status verification, and isolate payment failures from order lookup operations.
+
+C. Reduce AgentCore Runtime idle timeout to 60 seconds and terminate the session whenever Payment API returns an error.
+
+D. Move all Agent reasoning into Step Functions, disable retries, and use a single global Circuit Breaker for Order, Inventory, and Payment APIs.
+
+Kiểm tra đáp án
+
+### Phân tích từng đáp án
+
+A — Sai
+
+Tăng `maxLifetime` chỉ kéo dài vòng đời compute instance. Nó không giải quyết timeout 60 giây.
+
+Retry cho đến khi thành công:
+
+- Có thể gây cascading failure.
+- Không giải quyết giao dịch đã thành công nhưng response bị mất.
+- Có thể tạo refund trùng lặp nếu thiếu idempotency.
+
+B — Đúng
+
+Giải quyết toàn bộ constraint:
+
+| Requirement                        | Giải pháp                        |
+| ---------------------------------- | -------------------------------- |
+| Không quá 60 giây                  | End-to-end deadline              |
+| Payment API quá tải                | Circuit Breaker                  |
+| Lỗi tạm thời                       | Bounded retry + backoff + jitter |
+| Không hoàn tiền hai lần            | Idempotency key                  |
+| Không rõ giao dịch thành công chưa | Transaction-status verification  |
+| Vẫn tra cứu đơn hàng               | Fault isolation / bulkhead       |
+
+Điểm đặc biệt: Order API vẫn hoạt động bình thường khi Payment API lỗi. Không để một dependency làm sụp đổ toàn bộ Agent.
+
+C — Sai
+
+Idle timeout không phải execution deadline.
+
+Ngoài ra, terminate toàn bộ session khi Payment API lỗi sẽ làm gián đoạn các tác vụ không liên quan như tra cứu đơn hàng.
+
+Đây là vi phạm nguyên tắc fault isolation.
+
+D — Sai
+
+Step Functions có thể quản lý các bước deterministic, nhưng không cần loại bỏ hoàn toàn Agent reasoning.
+
+Một global Circuit Breaker cũng không phù hợp vì mỗi dependency có đặc tính lỗi khác nhau.
+
+Ví dụ:
+
+- Order API hoạt động bình thường.
+- Inventory API hoạt động bình thường.
+- Payment API đang lỗi.
+
+Không được chặn cả ba chỉ vì một dependency gặp sự cố.
+
+### AWS ra đề muốn kiểm tra điều gì?
+
+Đề không thực sự hỏi bạn biết bao nhiêu dịch vụ AWS.
+
+Nó kiểm tra bạn có phân biệt được bốn lớp hay không:
+
+1. Agent control: Agent có biết dừng đúng lúc không?
+2. Execution control: Hệ thống có đảm bảo deadline không?
+3. Dependency resilience: Hệ thống có chịu được API lỗi không?
+4. Transaction correctness: Có tránh được side effect trùng lặp không?
+
+Khi thấy đồng thời `timeout + retries + repeated failures + duplicate transaction`, hãy nghĩ đến sự phối hợp:
+
+Deadline + Bounded Retry + Circuit Breaker + Idempotency.
+
+Đây là tổ hợp rất đáng nhớ.
 
 
-### Tuần 12-13: Safety, Security, Governance (Ngày 78-91)
-
-78: Bedrock Guardrails — architecture                          
-79: Guardrails: content filters / denied topics / word filters 
-80: Guardrails: PII / sensitive information                    
-81: Guardrails: contextual grounding / relevance               
-82: **Agent safety vs Model safety**                           
-83: Prompt Injection — bản chất                                
-84: Prompt Injection Defense trong RAG                         
-85: Prompt Injection Defense trong Agent                       
-86: Tool poisoning / malicious tool / untrusted output         
-87: IAM cho GenAI                                              
-88: AgentCore Identity + OAuth + workload identity             
-89: Agent authorization / least privilege / tool permission    
-90: VPC Endpoint / private connectivity / network isolation    
-91: Data privacy / encryption / retention / data residency     
-
-
-### Tuần 14-15: Operational Efficiency, Cost, Testing (Ngày 92-100)
- NgàyBài                                                                  
-----:-------------------------------------------------------------------- 
-92: GenAI Cost Model — token economics                                   
-93: Token efficiency / context pruning / compression                     
-94: **Prompt Caching**                                                   
-95: Model Selection: capability vs cost                                  
-96: **Intelligent Prompt Routing**                                       
-97: Model cascading / fallback / graceful degradation                    
-98: Latency optimization — streaming / concurrency / caching             
-99: Provisioned Throughput / inference profiles / capacity               
-100: **GenAI Observability + CloudWatch + cost/performance optimization** 
-
-
-Tuần 15 — Evaluation, Testing &amp; Troubleshooting
-101: GenAI Evaluation — tại sao BLEU/accuracy truyền thống không đủ 	
-102: LLM-as-a-Judge                                                 	
-103: Relevance / factuality / groundedness / completeness           	
-104: RAG Evaluation                                                 	
-105: Retrieval Evaluation — Recall / Precision / Context relevance  	
-106: Agent Evaluation — task completion / tool usage                	
-107: **AgentCore Evaluations**                                      	
-108: Golden Dataset / Ground Truth / synthetic test data            	
-109: Regression Testing cho Prompt / RAG / Agent                    	
-110: A/B Testing / Canary Testing Model                             	
-111: Production Troubleshooting — hallucination                     	
-112: Retrieval Failure Debugging                                    	
-113: Prompt Failure / Context Overflow / Token Issues               	
-114: Agent Failure — wrong tool / wrong planning / loop             	
-115: **Final Professional Scenario Exam**                           	
-
-
-
-AgentCore Gateway tích hợp MCP -&gt; nên làm lab
 
 
 
 
-
-
-
-
-
-
-
-
-
-
----
-
-## PHẦN 3 — GHI CHÚ SỬ DỤNG
-
-
-
-
-
-
-
-// Nâng cao 
-ReAct (Reason + Act) – nền tảng tư duy của Agent.
-Function Calling / Tool Use – cơ chế LLM quyết định gọi công cụ.
-Model Context Protocol (MCP) – chuẩn kết nối Agent với công cụ và dịch vụ.
-Human-in-the-Loop (HITL) – khi nào Agent phải chuyển cho con người.
-Long-term Memory vs Short-term Memory – các loại bộ nhớ của Agent.
-Reflection / Self-Correction – Agent tự đánh giá và sửa kết quả.
-Workflow vs Autonomous Agent – khác biệt giữa workflow cố định và Agent tự quyết định.
-Deterministic Logic vs AI Reasoning – khi nào dùng code, khi nào dùng LLM.
-Cost Optimization – giảm token, giảm số lần gọi model, cache, batching.
-Enterprise Agent Patterns – các mẫu kiến trúc như Supervisor–Worker, Planner–Executor, Router Agent, Reviewer Agent.
-AWS CDK
 
 
 </code></pre>

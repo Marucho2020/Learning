@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang='vi'><head><meta charset='UTF-8'>
 <meta name='viewport' content='width=device-width, initial-scale=1.0'>
-<title>Lesson 77 -- Lộ trình -//</title>
+<title>Lesson 77 -- AIP-C01  --=Step Functions cho Agent orchestration -//</title>
 <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css'>
 <script src='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js'></script>
 <script id='MathJax-script' async src='https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'></script>
@@ -27,11 +27,345 @@ pre { padding: 20px; border-radius: 8px; white-space: pre-wrap; word-break: brea
 .theme-toggle-btn { display: block; margin: 20px auto; padding: 8px 16px; background: transparent; border: 1px solid #888; color: inherit; border-radius: 5px; cursor: pointer; }
 </style></head><body onload='initLesson()'>
 <div class='container'>
-<div class='nav-bar'><a class='nav-btn' href='lesson75.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../aws-bedrock-agent-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson77.html'>Bài sau ➡️</a></div><h1>Lesson 77 -- Lộ trình -//</h1>
+<div class='nav-bar'><a class='nav-btn' href='lesson75.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../aws-bedrock-agent-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson77.html'>Bài sau ➡️</a></div><h1>Lesson 77 -- AIP-C01  --=Step Functions cho Agent orchestration -//</h1>
 <button id='doneButton' class='done-btn' onclick='toggleDone()'>Mark as Done ⚪</button>
 <div class='content-box'>
 <button class='copy-btn' onclick='copyContent()'>📋 Copy nội dung</button>
-<pre><code id='lessonCode'># Lộ trình 100 ngày học AIP-C01 — Trọng tâm: Kiến trúc AI hiện đại &amp; Agentic AI
+<pre><code id='lessonCode'>Bạn đang hiểu gần đúng bản chất, và tôi muốn chỉnh lại một điểm quan trọng để bạn không bị nhầm khi thiết kế Multi-Agent sau này.
+
+Thực tế, Strands Agents và Step Functions có một vùng chức năng giao nhau. Cả hai đều có thể điều khiển thứ tự thực thi, gọi tool, phân nhánh và lặp lại.
+
+Nhưng chúng khác nhau ở ai là người quyết định, quyết định dựa trên cái gì và ai chịu trách nhiệm đảm bảo quy trình không đi chệch khỏi giới hạn.
+
+Tôi sẽ dùng một ví dụ để bạn có thể nhớ lâu.
+
+# 1. Ví dụ liên tưởng: Một nhà máy sản xuất ô tô
+
+Hãy tưởng tượng bạn là chủ một nhà máy sản xuất ô tô.
+
+Bạn có hai thành phần:
+
+- Một kỹ sư trưởng cực kỳ thông minh, có khả năng quan sát, suy luận, phát hiện vấn đề và tự quyết định cần làm gì.
+- Một hệ thống quản lý dây chuyền sản xuất, đảm bảo công đoạn nào được phép chạy, điều kiện nào phải đáp ứng, lỗi thì xử lý thế nào.
+
+[NEW PAMPHLET: Bye, Bye Globalism — The American System is Back!](https://images.openai.com/static-rsc-4/R9s9giW889ROUeKMehopcprDIkfm10RFXgx0Ijykg4KCxiZDZz2cy-cXx0y-oXblo3Wgo_g2KfqiZpGPu8wDuBwQ-3ND3hARaQ_zLIJaH2wgqGgJRBu5P1rrrUfRig2KKfIgBFpy2XaW72hD_m9r5QQt1-3p4YsnEAukLeUt45I?purpose=inline)
+
+## Strands Agent = Kỹ sư trưởng
+
+Kỹ sư trưởng nhận nhiệm vụ:
+
+&gt; Hãy tìm nguyên nhân tại sao tỷ lệ xe lỗi tăng 15%.
+
+Anh ta bắt đầu suy nghĩ:
+
+- Có thể lỗi đến từ động cơ?
+- Hay hệ thống phanh?
+- Hay linh kiện từ nhà cung cấp?
+- Tôi cần kiểm tra dữ liệu nào trước?
+- Nếu dữ liệu phanh bất thường, cần gọi chuyên gia phanh.
+- Nếu dữ liệu động cơ bình thường, không cần điều tra sâu thêm.
+
+Anh ta có thể tự thay đổi kế hoạch khi phát hiện thông tin mới.
+
+Đó chính là Agent Reasoning.
+
+Strands quyết định bước tiếp theo dựa trên ngữ cảnh và kết quả quan sát được.
+
+## Step Functions = Hệ thống quản lý dây chuyền
+
+Nhà máy có những quy định bất biến:
+
+1. Không được đưa xe vào công đoạn sơn nếu chưa qua kiểm tra thân xe.
+2. Không được xuất xe nếu chưa qua kiểm định cuối cùng.
+3. Nếu robot bị lỗi, thử lại tối đa 3 lần.
+4. Nếu lỗi an toàn nghiêm trọng, dừng dây chuyền và thông báo quản lý.
+5. Nếu cần phê duyệt của con người, phải chờ người có quyền xác nhận.
+
+Hệ thống quản lý dây chuyền không cần thông minh như kỹ sư trưởng. Nó không cần hiểu tại sao động cơ phát ra tiếng lạ.
+
+Nó chỉ cần đảm bảo quy trình được thực hiện đúng quy định.
+
+Đó chính là Workflow Orchestration.
+
+## Công thức ghi nhớ
+
+Strands Agent
+
+# What should I do next?
+
+Tôi nên làm gì tiếp theo dựa trên những gì vừa phát hiện?
+
+Step Functions
+
+# What is allowed to happen next?
+
+Bước tiếp theo nào được phép xảy ra theo quy trình đã định nghĩa?
+
+Đây là khác biệt quan trọng nhất.
+
+# 2. Nhưng có một điểm tinh tế: Strands cũng có thể điều khiển workflow!
+
+Đây là chỗ nhiều người hiểu sai.
+
+Bạn nói:
+
+&gt; Tôi tưởng sử dụng Strands thì nó sẽ quyết định khi nào làm gì. Còn Step Functions chỉ để dùng cho những nhánh cần sự chắc chắn và khả đoán được.
+
+Tôi đồng ý khoảng 90%.
+
+Nhưng Step Functions không chỉ dùng cho các nhánh cố định. Nó có thể điều phối cả một workflow lớn, bao gồm cả những bước mà kết quả phụ thuộc vào LLM.
+
+Hãy xem hai cách triển khai.
+
+## Cách A: Chỉ dùng Strands Agent
+
+[Build AI Agents Using AWS Strands SDK + Bright Data MCP](https://images.openai.com/static-rsc-4/IclytRU9XT8TKnA35r4Yz5qSFbf7GsdFFTB8Wt5F-QOsu-d-XxkH0HQUrQSn1dtReSerkeGIt2jCDuduLQdcAhTQHEvi4qyoUw9Iq29UC6Jg92uVhVB8pYsxVVAvrmLtS5i_HWaFJVoHI5qY-FtpKpt5YmZFNWVEdwQBOFC167M?purpose=inline)
+
+```
+User
+ |
+ v
+Strands Agent
+ |
+ +--&gt; Phân tích yêu cầu
+ |
+ +--&gt; Quyết định gọi Revenue Agent
+ |
+ +--&gt; Nhận kết quả
+ |
+ +--&gt; Quyết định gọi Customer Agent
+ |
+ +--&gt; Nhận kết quả
+ |
+ +--&gt; Quyết định cần kiểm tra Inventory
+ |
+ +--&gt; Gọi Inventory Tool
+ |
+ +--&gt; Tổng hợp
+ |
+ v
+Final Answer
+```
+
+Ở đây, Strands Agent có thể tự quyết định:
+
+- Khi nào gọi Agent con.
+- Gọi Agent nào trước.
+- Có cần gọi thêm Tool không.
+- Kết quả hiện tại đã đủ chưa.
+- Có cần quay lại bước trước không.
+
+Nó có thể thực hiện reasoning loop và điều chỉnh kế hoạch dựa trên kết quả.
+
+Điểm mạnh:
+
+- Linh hoạt.
+- Dynamic planning.
+- Ít thành phần hạ tầng.
+- Dễ xây dựng Agent có hành vi phức tạp.
+
+Nhưng hãy đặt một câu hỏi:
+
+Nếu Agent đang xử lý một nghiệp vụ quan trọng, đột nhiên Runtime bị gián đoạn thì sao?
+
+Ai chịu trách nhiệm đảm bảo:
+
+- Workflow được tiếp tục đúng trạng thái?
+- Không thực hiện giao dịch hai lần?
+- Không bỏ qua bước phê duyệt?
+- Có thể theo dõi chính xác công đoạn nào đã hoàn thành?
+- Có thể chờ con người phản hồi trong 48 giờ?
+
+Strands có thể được lập trình để xử lý nhiều vấn đề trên. Nhưng bạn phải tự xây dựng và tích hợp các cơ chế persistence, recovery, callback, idempotency và observability phù hợp.
+
+Đây là phần Step Functions có lợi thế.
+
+## Cách B: Kết hợp Strands + Step Functions
+
+[Amazon Bedrock과 Claude Agent SDK로 서버리스 멀티 에이전트 구현하기 | AWS 기술 블로그](https://images.openai.com/static-rsc-4/z60cnSV4prlAWVsp1xC4rOsYh6vrE5pPs_ssmEUPyZz64iqznk4hJOR5FfLyX90_R6VBysRl8LtL5_VdPhPdq8qPEuRj0hcSerwtPcx1Itl_B-3428fTLBm8K8SL157JCBQTdB8lCR-HHReQl4SdQwXWb-5ULwO5GApbae_vPck?purpose=inline)
+
+```
+User
+ |
+ v
+Step Functions
+ |
+ +--&gt; Strands Agent
+ |       |
+ |       +--&gt; Dynamic Planning
+ |       +--&gt; Tool Selection
+ |       +--&gt; Reasoning Loop
+ |       +--&gt; Agent Collaboration
+ |
+ +--&gt; Validate Result
+ |
+ +--&gt; Choice: Risk Level
+ |       |
+ |       +--&gt; Low Risk
+ |       |      |
+ |       |      +--&gt; Auto Process
+ |       |
+ |       +--&gt; High Risk
+ |              |
+ |              +--&gt; Human Approval
+ |                       |
+ |                       +--&gt; Wait
+ |                       +--&gt; Approved / Rejected
+ |
+ +--&gt; Update Database
+ |
+ v
+Complete
+```
+
+Ở đây, ta phân công:
+
+| Công việc                                     | Ai chịu trách nhiệm?        |
+| --------------------------------------------- | --------------------------- |
+| Phân tích yêu cầu người dùng                  | Strands                     |
+| Quyết định cần điều tra dữ liệu gì            | Strands                     |
+| Lựa chọn Tool                                 | Strands                     |
+| Reasoning và điều chỉnh kế hoạch              | Strands                     |
+| Kiểm tra kết quả có hợp lệ không              | Step Functions + Validation |
+| Quyết định nhánh nghiệp vụ theo ngưỡng rủi ro | Step Functions              |
+| Đảm bảo phê duyệt trước khi cập nhật          | Step Functions              |
+| Retry / Timeout của các Task                  | Step Functions              |
+| Transaction và tính đúng đắn của Database     | Business Backend            |
+| Ghi nhớ dài hạn                               | AgentCore Memory            |
+
+Đây mới là kiến trúc phân chia trách nhiệm hợp lý.
+
+# 3. Một ví dụ sâu hơn: Bác sĩ và bệnh viện
+
+Tôi muốn dùng thêm ví dụ này vì nó giúp phân biệt được cả hai trong những tình huống phức tạp.
+
+[How to Answer the USMLE's "Most Likely Diagnosis Questions" — MedBoardTutors](https://images.openai.com/static-rsc-4/_rtkSraFjhaSFfCkS-IPjGANgwBIn1dMR_1PIR1kXTm9QfXAfYIZkV0tAR4_1V3pT9H1PPOCo2FH8u8WLXa3k_tDYndZZQPLvtMwc5AJq9AJGEBPgIZA-Lt45jKCb62XEoiLRj4qv319PFTJHrDeUYRcPJgscQAoEzV4gHqtZYs?purpose=inline)
+
+Giả sử bệnh nhân vào bệnh viện với triệu chứng đau ngực.
+
+Bác sĩ = Strands Agent
+
+Bác sĩ suy luận:
+
+- Có thể là vấn đề tim mạch.
+- Cần xét nghiệm máu.
+- Cần ECG.
+- Cần chụp X-quang.
+- Nếu kết quả ECG bất thường, cần ưu tiên bác sĩ chuyên khoa tim.
+- Nếu kết quả không đủ, cần chỉ định thêm xét nghiệm.
+
+Bác sĩ không thể xác định trước toàn bộ các bước cần làm vì phải quan sát kết quả rồi mới quyết định.
+
+Đây là Dynamic Planning.
+
+Quy trình bệnh viện = Step Functions
+
+Bệnh viện có những quy định:
+
+- Phải xác nhận danh tính bệnh nhân.
+- Phải kiểm tra dị ứng trước khi sử dụng thuốc.
+- Một số loại thuốc cần bác sĩ có thẩm quyền phê duyệt.
+- Không được xuất viện khi chưa hoàn tất thủ tục.
+- Nếu hệ thống xét nghiệm gặp lỗi, phải chuyển sang quy trình xử lý sự cố.
+
+Những quy định này không thể phụ thuộc vào việc bác sĩ có nhớ hay không.
+
+Đây là Deterministic Workflow.
+
+Điểm cực kỳ quan trọng:
+
+Bác sĩ có thể đề xuất một quyết định thông minh, nhưng không có nghĩa là bác sĩ có quyền tự động thực hiện mọi hành động.
+
+Tương tự, Agent có thể đề xuất chuyển tiền, xóa dữ liệu hoặc cập nhật ERP, nhưng quyền thực hiện phải được kiểm soát ở tầng nghiệp vụ.
+
+# 4. So sánh kỹ thuật: Strands vs Step Functions
+
+Đây là bảng bạn nên lưu lại khi thiết kế hệ thống.
+
+| Tiêu chí               | Strands Agents                   | Step Functions                         |
+| ---------------------- | -------------------------------- | -------------------------------------- |
+| Bản chất               | Agent framework                  | Managed workflow orchestration         |
+| Mục tiêu               | Xây dựng hành vi Agent           | Quản lý vòng đời workflow              |
+| Dynamic reasoning      | Native                           | Thông qua Model/Agent                  |
+| Dynamic tool selection | Có                               | Có thể thông qua Agent hoặc routing    |
+| Planning               | Agent tự thực hiện               | Không phải chức năng reasoning cốt lõi |
+| Loop                   | Agent loop                       | State machine loop                     |
+| Conditional branching  | Code / Agent logic               | Choice State                           |
+| Parallel execution     | Framework/application logic      | Parallel / Map                         |
+| Retry                  | Framework hoặc application       | Native Retry                           |
+| Timeout                | Runtime / application            | Task và execution timeout              |
+| Long-running workflow  | Cần thiết kế persistence phù hợp | Standard hỗ trợ đến 1 năm              |
+| Human approval         | Phải tích hợp cơ chế phù hợp     | Callback Task Token                    |
+| Execution audit        | Phụ thuộc tracing/logging        | Execution History                      |
+| Business transaction   | Phải gọi backend                 | Phải gọi backend                       |
+| Vendor dependency      | Framework/runtime                | AWS managed service                    |
+
+Một điểm cần phân biệt: Step Functions có thể tạo vòng lặp ReAct bằng cách gọi Model, kiểm tra kết quả rồi quay lại gọi Model. Nhưng đó là điều khiển vòng lặp theo State Machine, không có nghĩa Step Functions tự có năng lực reasoning như Strands.
+
+## 5. Ranh giới quan trọng: Ba cấp độ điều khiển
+
+Hãy ghi nhớ ba cấp độ này:
+
+Level 1 – Cognitive Control
+
+Strands / Agent Framework
+
+Quyết định nên suy nghĩ gì, cần thêm dữ liệu nào, gọi Tool nào và khi nào đủ thông tin.
+
+Level 2 – Workflow Control
+
+Step Functions
+
+Quyết định bước nào được thực hiện, trạng thái nào được chuyển tiếp, khi nào retry, khi nào chờ và khi nào kết thúc.
+
+Level 3 – Business Control
+
+Backend / IAM / Database
+
+Quyết định ai có quyền thực hiện hành động, dữ liệu có hợp lệ không, transaction có được phép commit không.
+
+Đừng gộp ba tầng này thành một.
+
+Ví dụ, một Agent trả về:
+
+```
+{
+  "action": "transfer_money",
+  "amount": 1000000,
+  "account": "A001"
+}
+```
+
+Ba tầng xử lý:
+
+1. Strands: suy luận rằng cần chuyển tiền.
+2. Step Functions: kiểm tra workflow đã qua các bước xác minh và phê duyệt chưa.
+3. Backend: xác thực quyền, số dư, hạn mức, idempotency và thực hiện transaction.
+
+Đó là kiến trúc có khả năng kiểm soát rủi ro.
+
+# 6. Khi nào nên dùng riêng từng loại?
+
+| Scenario                                       | Lựa chọn                                                    |
+| ---------------------------------------------- | ----------------------------------------------------------- |
+| Chatbot hỏi đáp RAG                            | Strands / Agent framework                                   |
+| Agent tự tìm kiếm và điều tra                  | Strands                                                     |
+| Agent tự quyết định gọi MCP tools              | Strands                                                     |
+| Agent cần phối hợp nhiều chuyên gia            | Strands multi-agent                                         |
+| Quy trình phê duyệt tài chính 48 giờ           | Step Functions Standard                                     |
+| Workflow cập nhật ERP nhiều bước               | Step Functions + Backend                                    |
+| Xử lý hàng triệu tài liệu                      | Step Functions Distributed Map hoặc giải pháp batch phù hợp |
+| Workflow có retry, audit, recovery nghiêm ngặt | Step Functions                                              |
+| Dynamic reasoning kết hợp business approval    | Strands + Step Functions                                    |
+
+Một lưu ý: Không nên đưa tất cả những gì Agent làm vào Step Functions. Nếu một Agent cần thực hiện 20 vòng reasoning nội bộ, việc biến mỗi lần suy luận thành một State riêng thường làm workflow phức tạp và tăng chi phí không cần thiết.
+
+Ngược lại, cũng không nên nhét toàn bộ quy trình nghiệp vụ dài ngày vào Agent loop.
+
+Đó là hai thái cực cần tránh.
+
+
+
 
 </code></pre>
 </div>
