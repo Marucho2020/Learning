@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang='vi'><head><meta charset='UTF-8'>
 <meta name='viewport' content='width=device-width, initial-scale=1.0'>
-<title>Lesson 79 -- AIP-C01  --=Agent Loop — stopping condition / timeout / circuit breaker -//</title>
+<title>Lesson 79 -- AIP-C01  --=Multi-Agent Architecture -//</title>
 <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css'>
 <script src='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js'></script>
 <script id='MathJax-script' async src='https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'></script>
@@ -27,12 +27,1005 @@ pre { padding: 20px; border-radius: 8px; white-space: pre-wrap; word-break: brea
 .theme-toggle-btn { display: block; margin: 20px auto; padding: 8px 16px; background: transparent; border: 1px solid #888; color: inherit; border-radius: 5px; cursor: pointer; }
 </style></head><body onload='initLesson()'>
 <div class='container'>
-<div class='nav-bar'><a class='nav-btn' href='lesson77.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../aws-bedrock-agent-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson79.html'>Bài sau ➡️</a></div><h1>Lesson 79 -- AIP-C01  --=Agent Loop — stopping condition / timeout / circuit breaker -//</h1>
+<div class='nav-bar'><a class='nav-btn' href='lesson77.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../aws-bedrock-agent-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson79.html'>Bài sau ➡️</a></div><h1>Lesson 79 -- AIP-C01  --=Multi-Agent Architecture -//</h1>
 <button id='doneButton' class='done-btn' onclick='toggleDone()'>Mark as Done ⚪</button>
 <div class='content-box'>
 <button class='copy-btn' onclick='copyContent()'>📋 Copy nội dung</button>
-<pre><code id='lessonCode'>
- 
+<pre><code id='lessonCode'>   # Multi-Agent Architecture — Kiến trúc đa tác tử trong Agentic AI
+
+
+
+AIP-C01 Professional
+
+AgentCore / Strands Agents
+
+
+
+Đây là một chủ đề rất quan trọng vì nó kiểm tra khả năng thiết kế hệ thống Agent ở cấp độ production, chứ không đơn thuần kiểm tra việc biết cách tạo nhiều Agent.
+
+Tôi muốn bạn nắm chắc một nguyên tắc trước:
+
+Multi-Agent không phải là tạo nhiều Agent để chúng cùng làm việc. Multi-Agent là bài toán phân chia trách nhiệm, điều phối luồng thực thi, quản lý trạng thái và kiểm soát ranh giới tin cậy giữa nhiều đơn vị có khả năng tự quyết định.
+
+Một hệ thống có 10 Agent chưa chắc tốt hơn một Agent. Trong nhiều trường hợp, nó còn tốn kém, chậm và khó debug hơn rất nhiều.
+
+## 1. Bản chất: Tại sao cần Multi-Agent?
+
+Hãy tưởng tượng bạn xây dựng một hệ thống AI hỗ trợ doanh nghiệp Nhật Bản xử lý đơn hàng.
+
+Người dùng yêu cầu:
+
+&gt; Phân tích khách hàng A, kiểm tra lịch sử mua hàng, đánh giá rủi ro tín dụng, kiểm tra tồn kho và đề xuất phương án giao hàng.
+
+Nếu chỉ dùng một Agent, nó phải:
+
+1. Hiểu yêu cầu.
+2. Truy xuất dữ liệu khách hàng.
+3. Phân tích lịch sử mua hàng.
+4. Đánh giá rủi ro.
+5. Kiểm tra tồn kho.
+6. Tính toán phương án giao hàng.
+7. Tổng hợp kết quả.
+
+Một Agent có thể làm được tất cả. Nhưng vấn đề xuất hiện khi hệ thống phát triển:
+
+- Prompt trở nên quá lớn.
+- Tool quá nhiều.
+- Context bị nhiễu.
+- Các nhiệm vụ có yêu cầu bảo mật khác nhau.
+- Một nhiệm vụ cần xử lý song song.
+- Một nhiệm vụ cần workflow xác định, không được tự ý quyết định.
+
+Giải pháp là phân chia thành nhiều Agent chuyên trách.
+
+Ví dụ:
+
+| Agent            | Trách nhiệm                  |
+| ---------------- | ---------------------------- |
+| Supervisor Agent | Phân tích yêu cầu, điều phối |
+| Customer Agent   | Truy xuất dữ liệu khách hàng |
+| Risk Agent       | Đánh giá rủi ro tín dụng     |
+| Inventory Agent  | Kiểm tra tồn kho             |
+| Logistics Agent  | Đề xuất giao hàng            |
+| Reporting Agent  | Tổng hợp báo cáo             |
+
+Điểm quan trọng: các Agent không nhất thiết phải gọi trực tiếp lẫn nhau. Chúng có thể được điều phối bởi một Supervisor hoặc một workflow engine.
+
+Multi-Agent giải quyết bài toán decomposition và separation of concerns, không phải chỉ giải quyết bài toán tăng số lượng Agent.
+
+## 2. Bốn mô hình kiến trúc Multi-Agent
+
+Đây là phần cần hiểu sâu nhất để làm câu hỏi Professional-level.
+
+### 2.1 Supervisor–Worker (Hierarchical Architecture)
+
+Phổ biến nhất trong enterprise
+
+[LangGraph Tutorial: Building Stateful Multi-Agent AI Systems](https://images.openai.com/static-rsc-4/V7nbCz9TNjFGa_h9sZctCUvPQRTgwsHE3hugGUZx2Gnrag8My54gIAtyNtxmRTZ8hb3_DIhDeyFR7iHKfnGGd3W1UFDp8VxzLDROPvoT4fve18kFJA_oMB-SpriB7FVF4spmnEPu5RyyS2Y7Zs8hMBjvLxRS1pp5MTl5eHMKMLc?purpose=inline)
+
+[psitrontech.com](https://psitrontech.com/blog/what-is-langgraph?utm_source=chatgpt.com)
+
+Cấu trúc:
+
+```
+             User
+               |
+               v
+        Supervisor Agent
+          /    |     \
+         /     |      \
+        v      v       v
+   Customer  Risk   Inventory
+    Agent    Agent    Agent
+         \     |      /
+          \    |     /
+           v   v    v
+        Supervisor
+               |
+               v
+          Final Answer
+```
+
+Cách hoạt động:
+
+1. Supervisor nhận yêu cầu.
+2. Phân tích và decomposition thành các subtask.
+3. Chọn Agent phù hợp cho từng subtask.
+4. Gửi task và context cần thiết.
+5. Nhận kết quả.
+6. Đánh giá, tổng hợp và trả lời người dùng.
+
+Ví dụ:
+
+- Customer Agent trả về lịch sử mua hàng.
+- Risk Agent trả về điểm rủi ro.
+- Inventory Agent trả về tình trạng kho.
+- Supervisor kết hợp ba kết quả để đưa ra quyết định.
+
+Ưu điểm
+
+- Phân chia trách nhiệm rõ ràng.
+- Có một điểm kiểm soát trung tâm.
+- Dễ áp dụng authorization và governance.
+- Có thể thực hiện nhiều subtask song song.
+
+Nhược điểm
+
+- Supervisor trở thành bottleneck.
+- Nếu Supervisor lỗi, toàn bộ luồng có thể bị ảnh hưởng.
+- Tốn thêm inference và context khi trao đổi.
+- Supervisor có thể phân công sai hoặc tổng hợp sai kết quả.
+
+Một điểm cần nhớ: Supervisor không nhất thiết phải tự thực hiện mọi công việc. Nó có thể chỉ routing task đến Agent phù hợp.
+
+### 2.2 Sequential / Pipeline Multi-Agent
+
+[Multi-Agent AI Systems: Working, Architecture, and Testing \[2026\] | TestMu AI (Formerly LambdaTest)](https://images.openai.com/static-rsc-4/o0pY6fBd0jWNSjahqIBJzRniXNTWTJX_EV5_Ig05shcO3kXduqBMtZ_a-wSt9BydyjcT-GnQLHV-1qLYa4E0kCurtn5vj05vyLBdjpR50EvDJZnbE3MZSD_88fkk4ajngUAT8szASVaVoYMlnBUmQYSl9hKE4HaUghGhOeW9G0c?purpose=inline)
+
+[testmuai.com](https://www.testmuai.com/learning-hub/multi-agent-ai-systems/?utm_source=chatgpt.com)
+
+Các Agent thực hiện công việc theo thứ tự. Output của Agent trước là input của Agent sau.
+
+```
+User
+ |
+ v
+Research Agent
+ |
+ v
+Analysis Agent
+ |
+ v
+Review Agent
+ |
+ v
+Final Response
+```
+
+Ví dụ production:
+
+Hệ thống phân tích hợp đồng:
+
+1. Extraction Agent: đọc và trích xuất điều khoản.
+2. Compliance Agent: kiểm tra vi phạm quy định.
+3. Risk Agent: đánh giá rủi ro.
+4. Report Agent: tạo báo cáo.
+
+Tại sao không chạy song song?
+
+Vì Compliance Agent cần dữ liệu đã được Extraction Agent chuẩn hóa. Risk Agent cần kết quả kiểm tra compliance.
+
+Đây là dependency thực sự.
+
+Ưu điểm
+
+- Dễ kiểm soát thứ tự.
+- Dễ kiểm tra output tại từng bước.
+- Phù hợp với quy trình có dependency.
+
+Nhược điểm
+
+- Latency tích lũy.
+- Một bước lỗi có thể làm dừng toàn bộ pipeline.
+- Không tận dụng được parallelism khi các task độc lập.
+
+### 2.3 Parallel / Fan-out – Fan-in
+
+Quan trọng cho latency optimization
+
+[🚀 Building Smarter AI Teams: A Deep Dive into Multi-Agent Architectures | by Umadevi R | Medium](https://images.openai.com/static-rsc-4/-k7WzNFG-8AjxGUHk9lO9rAicdWtROxjlbInF_hIUdCcOKJ8PhIDiWwoEP3S21Ou7rdxuoYszH_1T93uKoYSThYhc22bGc8WBxLGHbnZoJ6GA5FMCDTiGP58RKn00-zBFpyHL9IHoQl_d5BUbRCWYJdwig35VJSGA83xQYhIvds?purpose=inline)
+
+[medium.com](https://medium.com/%40poojaauma/building-smarter-ai-teams-a-deep-dive-into-multi-agent-architectures-da879dc86701?utm_source=chatgpt.com)
+
+Đây là mô hình cho phép nhiều Agent thực hiện công việc độc lập cùng lúc.
+
+```
+                  User
+                    |
+                    v
+               Orchestrator
+                    |
+          +---------+---------+
+          |         |         |
+          v         v         v
+       Agent A   Agent B   Agent C
+          |         |         |
+          v         v         v
+       Result A  Result B  Result C
+          |         |         |
+          +---------+---------+
+                    |
+                    v
+               Aggregator
+                    |
+                    v
+               Final Answer
+```
+
+Ví dụ:
+
+Người dùng yêu cầu phân tích một công ty Nhật Bản:
+
+- Agent A: phân tích báo cáo tài chính.
+- Agent B: phân tích đối thủ cạnh tranh.
+- Agent C: phân tích tin tức thị trường.
+
+Ba nhiệm vụ này độc lập nên có thể chạy đồng thời.
+
+Sau đó Aggregator tổng hợp kết quả.
+
+Điểm quan trọng về latency:
+
+Nếu chạy tuần tự:
+
+\\[ T\_{total}=T_A+T_B+T_C+T\_{aggregation} \\]
+
+Nếu chạy song song:
+
+\\[ T\_{total}\approx\max(T_A,T_B,T_C)+T\_{aggregation} \\]
+
+Ví dụ:
+
+- A: 5 giây.
+- B: 8 giây.
+- C: 4 giây.
+- Aggregation: 2 giây.
+
+Tuần tự: 19 giây.
+
+Song song: khoảng 10 giây, nếu không tính overhead đáng kể.
+
+Nhưng đừng nhầm rằng parallel luôn tốt hơn.
+
+Nếu mỗi Agent cần output của Agent trước thì parallel sẽ không giải quyết được dependency.
+
+Ngoài ra, nếu fan-out quá lớn, hệ thống sẽ gặp:
+
+- Token cost tăng.
+- Model throttling.
+- Connection exhaustion.
+- Khó kiểm soát timeout.
+- Aggregator nhận dữ liệu không đồng nhất.
+
+### 2.4 Decentralized / Peer-to-Peer / Swarm
+
+[How My Swarm of AI Agents Built a €4,100 Website in a Day | Llewellyn van Zyl](https://images.openai.com/static-rsc-4/gTZp3wQ_lnOTqH0ngKTP7ZGPNQa5KIhARBsKvHEaDx4g4Qf6eZHjq8knNzCfm1AnsQIi84whxpooy7nM-PavEmFCrhQ2wOvNdamD7052r32Y8XiFxh32dloofX1wwfvckuVhv0H-_KQUnUwMR9a18vq6M_VQ3N2k85PBmKPj9No?purpose=inline)
+
+[llewellynvanzyl.com](https://www.llewellynvanzyl.com/blog/how-my-swarm-of-ai-agents-built-a-7000-website-in-a-day?utm_source=chatgpt.com)
+
+Đây là mô hình các Agent có thể giao tiếp và phối hợp trực tiếp với nhau thay vì luôn phải đi qua một Supervisor duy nhất.
+
+Ví dụ:
+
+- Research Agent phát hiện thiếu dữ liệu và yêu cầu Data Agent bổ sung.
+- Data Agent trả kết quả cho Research Agent.
+- Critic Agent đánh giá kết quả nghiên cứu.
+- Research Agent tiếp tục điều chỉnh dựa trên feedback.
+
+Không có một Supervisor duy nhất kiểm soát mọi quyết định.
+
+Ưu điểm
+
+- Linh hoạt.
+- Có thể thích nghi với nhiệm vụ phức tạp.
+- Giảm sự phụ thuộc vào một điểm điều phối trung tâm.
+
+Nhược điểm
+
+- Khó kiểm soát luồng thực thi.
+- Dễ xảy ra vòng lặp giao tiếp.
+- Khó đảm bảo termination.
+- Khó audit và trace.
+- Security và authorization phức tạp hơn.
+
+Đối với enterprise production, tôi không khuyến nghị bắt đầu bằng Swarm. Chỉ nên sử dụng khi có lý do thực sự cần phối hợp động giữa các Agent.
+
+## 3. So sánh bốn mô hình
+
+| Tiêu chí       | Supervisor | Sequential  | Parallel                 | Swarm          |
+| -------------- | ---------- | ----------- | ------------------------ | -------------- |
+| Điều phối      | Trung tâm  | Theo chuỗi  | Orchestrator             | Phân tán       |
+| Parallelism    | Có         | Thấp        | Cao                      | Có             |
+| Dependency     | Linh hoạt  | Rất phù hợp | Task độc lập             | Linh hoạt      |
+| Kiểm soát      | Cao        | Cao         | Cao nếu orchestrator tốt | Khó            |
+| Debug          | Trung bình | Dễ          | Trung bình               | Khó            |
+| Enterprise fit | Cao        | Cao         | Cao                      | Tùy trường hợp |
+
+Lưu ý: Đây là các pattern kiến trúc, không phải bốn AWS service riêng biệt. Một hệ thống thực tế có thể kết hợp chúng.
+
+Ví dụ: Supervisor phân chia nhiệm vụ, bên trong mỗi nhóm có Parallel Fan-out, sau đó mỗi nhánh lại chạy Sequential Pipeline.
+
+## 4. AgentCore: Ánh xạ Multi-Agent Architecture vào AWS
+
+Đây là phần quan trọng nhất đối với định hướng học hiện tại.
+
+Trước hết, phải phân biệt ba thứ:
+
+1. Agent Framework: quyết định Agent suy luận và phối hợp với nhau như thế nào.
+2. Agent Runtime: cung cấp môi trường thực thi Agent.
+3. Orchestration Engine: quản lý thứ tự, dependency, retry, timeout và trạng thái workflow.
+
+Ba thứ này không phải một.
+
+[Building Secure, Scalable, and Observable Agentic Systems using Amazon Bedrock AgentCore | by Onkar Mishra | Medium](https://images.openai.com/static-rsc-4/R9en6GjeJJynLv5Ah-KZYmTqmRQp2M20Sgt5aIFFl6c3mbO1ZQ3CLqRIdBBPio3TkoMDV9z9ZSPc7o6Fs3UGZH-pC4gOg1xxITeR4nQNfvMpYOe_Mczq6VvvUfB6fJv56zdzqITs01-4PSPS6XmfTb3Fk9W_06d26e9k1uQGK80?purpose=inline)
+
+[medium.com](https://medium.com/%40onkarmishra/building-secure-scalable-and-observable-agentic-systems-using-agentcore-b6ad8226f970?utm_source=chatgpt.com)
+
+### 4.1 Kiến trúc production đề xuất
+
+Giả sử triển khai hệ thống phân tích khách hàng doanh nghiệp:
+
+```
+                  User
+                    |
+                    v
+             API Gateway
+                    |
+                    v
+             Authentication
+                    |
+                    v
+          Supervisor Agent
+          (Strands / LangGraph)
+                    |
+          +---------+---------+
+          |         |         |
+          v         v         v
+      Customer    Risk    Inventory
+       Agent      Agent     Agent
+          |         |         |
+          +---------+---------+
+                    |
+                    v
+             Result Aggregation
+                    |
+                    v
+               Final Answer
+```
+
+Các thành phần AWS:
+
+| Thành phần             | AWS service / technology   | Vai trò                               |
+| ---------------------- | -------------------------- | ------------------------------------- |
+| Agent implementation   | Strands Agents / LangGraph | Logic và agent loop                   |
+| Agent hosting          | AgentCore Runtime          | Chạy Agent                            |
+| Tool integration       | AgentCore Gateway          | Cung cấp tool qua MCP/HTTP            |
+| Identity               | AgentCore Identity         | Authentication, credential management |
+| Memory                 | AgentCore Memory           | Short-term và long-term memory        |
+| Monitoring             | AgentCore Observability    | Theo dõi execution và performance     |
+| Deterministic workflow | Step Functions             | Điều phối các bước có quy tắc         |
+| Async communication    | EventBridge / SQS          | Trao đổi message bất đồng bộ          |
+| Shared state           | DynamoDB / S3              | Lưu trạng thái và artifact            |
+
+AgentCore được thiết kế theo hướng modular và framework-agnostic. Không bắt buộc phải sử dụng Strands Agents. Bạn có thể sử dụng LangGraph, CrewAI hoặc framework khác.&amp;#x20;
+
+[image](https://www.google.com/s2/favicons?domain=https://docs.aws.amazon.com\&amp;sz=32)
+
+Amazon Bedrock AgentCore+1
+
+
+
+### 4.2 Vai trò của Strands Agents và Step Functions
+
+Đây là điểm rất dễ nhầm trong đề thi.
+
+Hãy tưởng tượng bạn có một công ty.
+
+- Strands Agents giống như người quản lý thông minh, có thể suy nghĩ, phân công, thay đổi kế hoạch dựa trên tình hình.
+- Step Functions giống như hệ thống quy trình nghiệp vụ, quy định chính xác bước nào được thực hiện, điều kiện chuyển bước, retry và timeout.
+
+Ví dụ:
+
+Người dùng yêu cầu cấp tín dụng.
+
+Strands Supervisor quyết định:
+
+- Cần kiểm tra thông tin khách hàng.
+- Cần gọi Risk Agent.
+- Cần gọi Compliance Agent.
+- Cần yêu cầu bổ sung thông tin nếu dữ liệu thiếu.
+
+Nhưng khi cần phê duyệt khoản vay:
+
+```
+Check Customer
+      |
+      v
+Evaluate Risk
+      |
+      v
+Check Compliance
+      |
+      v
+Human Approval
+      |
+      v
+Execute Loan
+```
+
+Đây là một quy trình cần tính xác định và kiểm soát.
+
+Step Functions quản lý workflow này. Agent không được tự ý bỏ qua bước Human Approval.
+
+Nguyên tắc thiết kế:
+
+- Agent quyết định cách giải quyết những vấn đề cần reasoning.
+- Step Functions kiểm soát những bước nghiệp vụ bắt buộc và có thể mô tả bằng trạng thái, điều kiện rõ ràng.
+
+Có thể kết hợp cả hai: Step Functions gọi Agent, nhận kết quả có cấu trúc, kiểm tra điều kiện rồi quyết định bước tiếp theo.
+
+### 4.3 AgentCore Runtime không phải Agent Orchestrator
+
+Đây là một exam trap quan trọng.
+
+AgentCore Runtime cung cấp môi trường triển khai và vận hành Agent:
+
+- Isolated execution.
+- Session management.
+- Scaling.
+- Authentication integration.
+- Runtime infrastructure.
+
+Nhưng khi sử dụng Runtime theo mô hình truyền thống, bạn vẫn phải xây dựng orchestration logic trong framework hoặc application code.
+
+Nói cách khác:
+
+```
+AgentCore Runtime
+       |
+       +-- Runs Supervisor Agent
+       |
+       +-- Runs Customer Agent
+       |
+       +-- Runs Risk Agent
+```
+
+Runtime không tự động hiểu rằng Risk Agent phải chạy trước hay sau Customer Agent.
+
+Thứ tự đó thuộc về orchestration logic.
+
+Một điểm cập nhật: AgentCore hiện có thêm AgentCore Harness, một managed agent harness cung cấp orchestration loop. Vì vậy không nên đánh đồng mọi khả năng của AgentCore với Runtime. Harness và Runtime có vai trò khác nhau.&amp;#x20;
+
+[image](https://www.google.com/s2/favicons?domain=https://docs.aws.amazon.com\&amp;sz=32)
+
+Amazon Bedrock AgentCore+1
+
+
+
+## 5. Agent-to-Agent Communication — Các Agent giao tiếp với nhau như thế nào?
+
+Đây là một trong những phần có giá trị thực tế cao nhất.
+
+Giả sử Supervisor cần gọi Risk Agent. Có ba hướng thiết kế phổ biến.
+
+### 5.1 Direct API invocation
+
+```
+Supervisor
+    |
+    | HTTPS / API
+    v
+Risk Agent
+    |
+    v
+Risk Result
+```
+
+Supervisor gọi endpoint của Risk Agent và chờ kết quả.
+
+Phù hợp khi:
+
+- Cần response ngay.
+- Số lượng Agent không quá lớn.
+- Luồng xử lý tương đối đơn giản.
+- Cần giao tiếp request-response.
+
+Trade-off: coupling giữa các Agent cao hơn. Phải quản lý endpoint, authentication, timeout và retry.
+
+### 5.2 MCP — Model Context Protocol
+
+[Model Context Protocol (MCP) Overview | C3 AI Documentation](https://images.openai.com/static-rsc-4/sxukCABIb4yFyk8Qt_lkjcqS0Y1w3cZLYOdiS9cS7T-A0tD48mD7AkPhY9GLsBSHs3KIQ0aJF-eVMlRdLbDCeMuFFkoArKz-R5KUC3JH1g16Z7Gl2Szhz0t9Nv2YKUfixtFM_oVR_G6W3AZOcKem5k4482VnYvsmhvgzhqDUr6M?purpose=inline)
+
+[docs.c3.ai](https://docs.c3.ai/docs/mcpServer/8.9/topic/mcpServer-overview-doc?utm_source=chatgpt.com)
+
+MCP chuẩn hóa cách Agent khám phá và sử dụng tools/resources.
+
+Ví dụ:
+
+```
+Supervisor Agent
+       |
+       v
+MCP Client
+       |
+       v
+AgentCore Gateway
+       |
+       v
+MCP Server / Target
+       |
+       v
+Risk Service
+```
+
+Điểm cần hiểu:
+
+MCP không tự động biến mọi Agent thành một Agent có thể giao tiếp ngang hàng.
+
+MCP chủ yếu chuẩn hóa giao diện để client khám phá và gọi capabilities của server.
+
+AgentCore Gateway có thể cung cấp một điểm truy cập thống nhất cho MCP tools, HTTP endpoints và inference targets.&amp;#x20;
+
+[image](https://www.google.com/s2/favicons?domain=https://docs.aws.amazon.com\&amp;sz=32)
+
+Amazon Bedrock AgentCore+1
+
+
+
+### 5.3 A2A — Agent-to-Agent Protocol
+
+A2A tập trung vào giao tiếp giữa các Agent như những thực thể độc lập.
+
+Ví dụ:
+
+```
+Research Agent
+       |
+       | A2A
+       v
+Data Analysis Agent
+       |
+       v
+Task Result
+```
+
+Một Agent có thể giao nhiệm vụ cho Agent khác, theo dõi trạng thái và nhận kết quả.
+
+Phân biệt:
+
+| Tiêu chí  | MCP                      | A2A                                            |
+| --------- | ------------------------ | ---------------------------------------------- |
+| Trọng tâm | Agent sử dụng tools      | Agent giao tiếp với Agent                      |
+| Đối tượng | Tool / Resource / Server | Agent / Task                                   |
+| Mục đích  | Capability access        | Agent collaboration                            |
+| Ví dụ     | Gọi API kiểm tra tồn kho | Giao nhiệm vụ phân tích tồn kho cho Agent khác |
+
+Không nên hiểu MCP và A2A là hai giao thức cạnh tranh trực tiếp. Chúng giải quyết những lớp vấn đề khác nhau.
+
+## 6. State Management và Shared Memory trong Multi-Agent
+
+Đây là một hidden requirement rất thường gặp trong production scenario.
+
+Giả sử:
+
+- Supervisor chạy trên Runtime instance A.
+- Customer Agent chạy trên Runtime instance B.
+- Risk Agent chạy trên Runtime instance C.
+
+Cả ba Agent cần biết `customer_id`, `session_id` và kết quả phân tích trước đó.
+
+Câu hỏi: Có nên để cả ba Agent sử dụng chung một biến global memory không?
+
+Không.
+
+Mỗi Runtime có thể có execution environment riêng. Không thể dựa vào local memory hoặc biến trong process để chia sẻ trạng thái giữa các Agent.
+
+Thiết kế đúng:
+
+[AWS Bedrock AgentCore Deep Dive | By Joud W. Awad | Medium](https://images.openai.com/static-rsc-4/3p0AScNz6TO0kmScwlGi2X8o-EqVyatwKdWWFSifCF1NqQ1Ux3PZ18YTHnF06D0EWthEHontDDnx9JypRn2QBwN5060K36sJbsupL_Y88uOySDVgV7gQAiNSZ1n9hBdqlb4HipdgjecQsLobrHium7ekPqG2iclfAgUfHRzkyqE?purpose=inline)
+
+[medium.com](https://medium.com/%40joudwawad/aws-bedrock-agentcore-deep-dive-6822e4071774?utm_source=chatgpt.com)
+
+```
+                Supervisor
+                     |
+           +---------+---------+
+           |         |         |
+           v         v         v
+        Customer   Risk    Inventory
+         Agent     Agent     Agent
+           |         |         |
+           +---------+---------+
+                     |
+                     v
+              Shared State Layer
+                     |
+              +------+------+
+              |             |
+              v             v
+          DynamoDB      AgentCore
+                        Memory
+```
+
+Cần phân biệt ba loại dữ liệu:
+
+| Loại dữ liệu                   | Nơi lưu phù hợp        | Ví dụ                     |
+| ------------------------------ | ---------------------- | ------------------------- |
+| Session state                  | DynamoDB / state store | session ID, task status   |
+| Shared artifacts               | S3                     | Báo cáo, file phân tích   |
+| Conversation / semantic memory | AgentCore Memory       | Lịch sử, thông tin đã học |
+
+Không phải mọi thứ đều nên đưa vào Memory.
+
+Ví dụ:
+
+`customer_id`, `approval_status`, `transaction_id` là dữ liệu nghiệp vụ có cấu trúc. Nên lưu trong database phù hợp và kiểm soát bằng schema, transaction, conditional write.
+
+Không nên giao cho semantic memory quyết định trạng thái phê duyệt khoản vay.
+
+### 6.1 Một lỗi thiết kế nghiêm trọng: Concurrent writes
+
+Giả sử hai Agent cùng cập nhật một bản ghi:
+
+```
+Risk Agent:
+  approval_status = "APPROVED"
+
+Compliance Agent:
+  approval_status = "REJECTED"
+```
+
+Nếu cả hai ghi vào cùng một bản ghi mà không có concurrency control, kết quả cuối cùng có thể phụ thuộc vào thứ tự ghi.
+
+Đây là race condition.
+
+Giải pháp:
+
+- DynamoDB conditional writes.
+- Optimistic locking với version number.
+- Transaction khi cần atomicity.
+- Idempotency key để tránh xử lý lặp.
+- Single-writer ownership khi dữ liệu có một nguồn quyết định duy nhất.
+
+Ví dụ:
+
+```
+{
+  "customer_id": "C001",
+  "approval_status": "PENDING",
+  "version": 3
+}
+```
+
+Risk Agent không được tự ý cập nhật `approval_status` nếu nhiệm vụ của nó chỉ là đánh giá rủi ro.
+
+Nó chỉ trả về:
+
+```
+{
+  "risk_score": 42,
+  "risk_level": "LOW",
+  "recommendation": "APPROVE"
+}
+```
+
+Một business workflow hoặc component có quyền phù hợp mới được quyết định cập nhật trạng thái.
+
+Đây chính là ranh giới giữa AI reasoning và business authority.
+
+## 7. Security trong Multi-Agent: Identity và Authorization
+
+Đừng nghĩ rằng chỉ cần authenticate người dùng ở API Gateway là đủ.
+
+Ví dụ:
+
+```
+User
+ |
+ v
+API Gateway
+ |
+ v
+Supervisor Agent
+ |
+ +----&gt; Risk Agent
+ |
+ +----&gt; Customer Agent
+ |
+ +----&gt; Payment Agent
+```
+
+Nếu Supervisor đã xác thực người dùng, điều đó không có nghĩa là tất cả Agent phía sau đều được phép thực hiện mọi hành động thay mặt người dùng.
+
+Phải kiểm soát:
+
+1. Ai là người dùng ban đầu?
+2. Agent nào đang thực thi?
+3. Agent đó được phép gọi Agent nào?
+4. Agent đó được phép sử dụng tool nào?
+5. Có được thực hiện giao dịch tài chính hay không?
+6. Quyền của người dùng có được truyền đúng qua các tầng hay không?
+
+### 7.1 Hai lớp Identity
+
+| Identity                  | Ý nghĩa                                      |
+| ------------------------- | -------------------------------------------- |
+| User identity             | Người dùng cuối đang yêu cầu                 |
+| Agent / Workload identity | Agent hoặc workload đang thực hiện hành động |
+
+Ví dụ:
+
+Người dùng A có quyền đọc thông tin tài khoản nhưng không có quyền chuyển tiền.
+
+Supervisor có thể gọi Account Agent để đọc dữ liệu, nhưng không được tự động cấp quyền chuyển tiền cho Payment Agent.
+
+### 7.2 Authorization phải được kiểm tra ở đâu?
+
+```
+User
+ |
+ v
+Inbound Authentication
+ |
+ v
+Supervisor Authorization
+ |
+ v
+AgentCore Runtime
+ |
+ v
+AgentCore Gateway
+ |
+ v
+Tool / Backend Authorization
+ |
+ v
+Business Database
+```
+
+Mỗi tầng có trách nhiệm khác nhau.
+
+- Inbound authentication: xác định danh tính người gọi.
+- Agent authorization: kiểm tra quyền của Agent đối với hành động.
+- Gateway authorization: kiểm soát truy cập đến các target.
+- Backend authorization: bảo vệ tài nguyên và dữ liệu thực tế.
+
+Đặc biệt, không được tin rằng chỉ vì một Agent gọi một tool thì tool đó phải thực hiện yêu cầu.
+
+Backend vẫn phải kiểm tra quyền.
+
+AgentCore Identity và các cơ chế identity propagation giúp quản lý danh tính trong các luồng multi-hop.&amp;#x20;
+
+[image](https://www.google.com/s2/favicons?domain=https://docs.aws.amazon.com\&amp;sz=32)
+
+Amazon Bedrock AgentCore+1
+
+
+
+## 8. Production Trade-offs — Khi nào nên dùng Multi-Agent?
+
+Đây là bảng tôi muốn bạn ghi nhớ.
+
+| Requirement                       | Thiết kế phù hợp        |
+| --------------------------------- | ----------------------- |
+| Một nhiệm vụ đơn giản             | Single Agent            |
+| Nhiều domain chuyên biệt          | Supervisor–Worker       |
+| Các nhiệm vụ độc lập              | Parallel Fan-out        |
+| Các bước phụ thuộc kết quả trước  | Sequential Pipeline     |
+| Quy trình nghiệp vụ cố định       | Step Functions          |
+| Giao tiếp bất đồng bộ             | SQS / EventBridge       |
+| Chia sẻ trạng thái có cấu trúc    | DynamoDB                |
+| Chia sẻ conversation context      | AgentCore Memory        |
+| Tool interoperability             | MCP / AgentCore Gateway |
+| Agent-to-Agent task collaboration | A2A                     |
+| Cần môi trường thực thi độc lập   | AgentCore Runtime       |
+
+### 8.1 Cost
+
+Một yêu cầu sử dụng 5 Agent có thể cần nhiều lần model invocation hơn một Agent.
+
+Chi phí không chỉ là số lượng Agent mà còn bao gồm:
+
+- Input tokens.
+- Output tokens.
+- Context được truyền giữa Agent.
+- Retry.
+- Tool invocation.
+- Memory operations.
+- Runtime compute.
+
+Đừng tạo Agent chỉ vì muốn chia nhỏ prompt.
+
+### 8.2 Latency
+
+Parallelism có thể giảm thời gian tổng thể nhưng tăng thời gian chờ đồng bộ và aggregation.
+
+Nếu một trong năm Agent bị chậm, Aggregator có thể phải đợi Agent đó.
+
+Cần xác định:
+
+- Timeout cho từng Agent.
+- Global deadline.
+- Partial result policy.
+- Retry policy.
+- Fallback strategy.
+
+### 8.3 Reliability
+
+Một điểm rất quan trọng:
+
+Nếu toàn bộ 5 Agent đều bắt buộc thành công, xác suất hệ thống thành công sẽ thấp hơn xác suất thành công của từng Agent riêng lẻ.
+
+Giả sử mỗi Agent có xác suất thành công 99%.
+
+Nếu cả 5 Agent đều độc lập và đều bắt buộc thành công:
+
+\\[ P=0.99^5\approx95.1\\% \\]
+
+Điều này cho thấy Multi-Agent làm tăng operational complexity.
+
+Không phải cứ thêm Agent là hệ thống tốt hơn.
+
+### 8.4 Observability
+
+Trong hệ thống Multi-Agent, một request có thể đi qua nhiều execution context.
+
+Cần theo dõi được:
+
+```
+Trace ID: T001
+  |
+  +-- Supervisor
+  |     |
+  |     +-- Customer Agent
+  |     |      +-- DynamoDB Query
+  |     |
+  |     +-- Risk Agent
+  |     |      +-- Risk Model Invocation
+  |     |
+  |     +-- Inventory Agent
+  |            +-- Inventory API
+  |
+  +-- Aggregation
+  |
+  +-- Final Response
+```
+
+Mỗi bước cần có correlation ID hoặc trace context để có thể liên kết lại toàn bộ execution.
+
+AgentCore Observability hỗ trợ theo dõi hoạt động của Agent; CloudWatch và OpenTelemetry cũng là các thành phần quan trọng trong kiến trúc monitoring.&amp;#x20;
+
+[image](https://www.google.com/s2/favicons?domain=https://docs.aws.amazon.com\&amp;sz=32)
+
+Amazon Bedrock AgentCore+1
+
+
+
+## 9. AIP-C01: Những điểm cần nhớ và exam traps
+
+Exam Guide AIP-C01 hiện hành đưa Agentic AI vào nhóm công nghệ và khái niệm có thể xuất hiện trong kỳ thi. Tuy nhiên, không nên hiểu rằng mọi tên gọi pattern ở trên đều là một mục tiêu thi độc lập. Chúng thường được kiểm tra thông qua các scenario về implementation, integration, security, reliability và optimization.&amp;#x20;
+
+[image](https://www.google.com/s2/favicons?domain=https://docs.aws.amazon.com\&amp;sz=32)
+
+Professional+1
+
+
+
+Keywords thường xuất hiện trong scenario:
+
+| Keyword                | Requirement ẩn              |
+| ---------------------- | --------------------------- |
+| Independent tasks      | Parallel execution          |
+| Specialized domains    | Multiple specialized agents |
+| Centralized control    | Supervisor                  |
+| Strict execution order | Sequential workflow         |
+| Deterministic workflow | Step Functions              |
+| Dynamic planning       | Agent orchestration         |
+| Shared context         | Memory / state store        |
+| Concurrent updates     | Concurrency control         |
+| Asynchronous execution | SQS / EventBridge           |
+| Least privilege        | Identity / authorization    |
+| Agent interoperability | MCP / A2A                   |
+| End-to-end tracing     | Observability               |
+
+Các bẫy phổ biến:
+
+1. Dùng Step Functions để thay thế toàn bộ reasoning của Agent. Sai nếu nhiệm vụ yêu cầu lập kế hoạch động.
+2. Dùng một Supervisor cho mọi hệ thống. Sai nếu workflow cố định và không cần reasoning động.
+3. Dùng Parallel cho các task có dependency. Sai về mặt thứ tự xử lý.
+4. Dùng local memory để chia sẻ trạng thái giữa các Runtime. Sai vì không đảm bảo tính bền vững và chia sẻ.
+5. Dùng AgentCore Gateway như một workflow engine. Sai, Gateway giải quyết lớp tool connectivity và access.
+6. Cho rằng MCP và A2A giống nhau. Sai vì abstraction khác nhau.
+7. Chỉ kiểm tra quyền ở API Gateway. Sai vì cần bảo vệ từng tầng và backend.
+8. Dùng semantic memory làm database nghiệp vụ. Sai vì không đảm bảo transaction và consistency.
+9. Cho rằng nhiều Agent luôn tăng accuracy. Sai vì có thể làm tăng lỗi tổng hợp, context contamination và propagation of errors.
+
+## 10. Professional-level Scenario
+
+Exam Simulation — Hard
+
+Một công ty tài chính tại Nhật Bản đang xây dựng hệ thống AI hỗ trợ xử lý hồ sơ vay vốn.
+
+Yêu cầu:
+
+- Hệ thống phải phân tích hồ sơ khách hàng, đánh giá tín dụng và kiểm tra compliance.
+- Các bước phân tích có thể chạy song song khi không có dependency.
+- Mỗi domain cần một Agent chuyên biệt để độc lập phát triển và triển khai.
+- Các Agent chạy trong môi trường thực thi được cô lập.
+- Các Agent cần chia sẻ thông tin về cùng một hồ sơ.
+- Hệ thống phải đảm bảo không có Agent nào tự ý phê duyệt khoản vay.
+- Quy trình phê duyệt phải có human approval.
+- Nếu một Agent bị lỗi tạm thời, hệ thống phải retry có kiểm soát.
+- Phải truy vết được toàn bộ execution của một yêu cầu từ đầu đến cuối.
+
+Công ty đang cân nhắc bốn phương án:
+
+A. Sử dụng một Supervisor Agent duy nhất với tất cả tools và Knowledge Bases. Supervisor tự xử lý toàn bộ quy trình trong một AgentCore Runtime session. Sử dụng local memory để lưu trạng thái và để Agent tự quyết định phê duyệt.
+
+B. Sử dụng Strands Agents để triển khai Supervisor và các specialist agents trên AgentCore Runtime. Dùng shared persistent state store để chia sẻ trạng thái nghiệp vụ, AgentCore Memory cho conversational context, Step Functions để điều phối các bước bắt buộc và human approval, đồng thời sử dụng IAM/Identity và Observability để kiểm soát và truy vết.
+
+C. Sử dụng Step Functions để thực hiện tất cả reasoning và quyết định của Agent. Mỗi bước gọi một Lambda chứa prompt cố định. Sử dụng SQS để truyền toàn bộ context giữa các bước và bỏ qua việc xây dựng shared state.
+
+D. Sử dụng Swarm architecture để các Agent tự giao tiếp trực tiếp. Cho phép mỗi Agent cập nhật trạng thái khoản vay và thực hiện hành động khi nhận được recommendation từ Agent khác. Sử dụng AgentCore Gateway để quản lý toàn bộ workflow và approval.
+
+Bạn chọn phương án nào?
+
+A — Single Supervisor Agent
+
+B — Supervisor + AgentCore + Step Functions
+
+C — Step Functions + Lambda
+
+D — Swarm + shared write access
+
+Xác nhận đáp án
+
+## Đáp án B — Chính xác về kiến trúc
+
+Phương án này phân chia đúng reasoning, workflow control, shared state, human approval và security.Phân tích chi tiết A–D
+
+Gợi ý cách suy luận:
+
+Đừng bắt đầu bằng câu hỏi: Agent framework nào mạnh nhất?
+
+Hãy tìm các requirement mang tính bắt buộc:
+
+- Reasoning động → Agent framework.
+- Execution isolation → AgentCore Runtime.
+- Shared business state → Persistent state store.
+- Mandatory approval → Deterministic workflow + HITL.
+- Retry và timeout → Workflow orchestration.
+- Least privilege → Identity / authorization.
+- End-to-end tracing → Observability.
+
+Đáp án tốt nhất là đáp án đáp ứng đồng thời các constraint mà không biến một thành phần thành thứ vốn không được thiết kế để làm.
+
+# 11. Tổng kết: Mental Model cần ghi nhớ
+
+## Multi-Agent Production Architecture
+
+Agent Framework
+
+Strands / LangGraph — Reasoning, Planning, Delegation
+
+AgentCore Runtime
+
+Execution / Isolation
+
+Step Functions
+
+Deterministic Workflow
+
+Gateway / Identity
+
+Tools / Access Control
+
+Memory / DynamoDB
+
+Context / Shared State
+
+Observability + Governance
+
+Trace / Audit / Security / Reliability
+
+Câu quan trọng nhất cần nhớ:
+
+Agent quyết định cách giải quyết vấn đề. Workflow engine kiểm soát những gì bắt buộc phải xảy ra. Runtime cung cấp nơi thực thi. Database quản lý sự thật nghiệp vụ. Identity quyết định ai được phép làm gì.
+
+Đây là tư duy thiết kế Multi-Agent ở cấp độ production, không phải chỉ là tư duy ghép nhiều chatbot lại với nhau.
+
+
+
 
 </code></pre>
 </div>
