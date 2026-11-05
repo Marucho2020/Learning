@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang='vi'><head><meta charset='UTF-8'>
 <meta name='viewport' content='width=device-width, initial-scale=1.0'>
-<title>Lesson 80 -- AIP-C01  --=Agent Loop — stopping condition / timeout / circuit breaker -//</title>
+<title>Lesson 80 -- AIP-C01  --=Supervisor / Sub-agent / Specialist -//</title>
 <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css'>
 <script src='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js'></script>
 <script id='MathJax-script' async src='https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'></script>
@@ -27,12 +27,557 @@ pre { padding: 20px; border-radius: 8px; white-space: pre-wrap; word-break: brea
 .theme-toggle-btn { display: block; margin: 20px auto; padding: 8px 16px; background: transparent; border: 1px solid #888; color: inherit; border-radius: 5px; cursor: pointer; }
 </style></head><body onload='initLesson()'>
 <div class='container'>
-<div class='nav-bar'><a class='nav-btn' href='lesson78.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../aws-bedrock-agent-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson80.html'>Bài sau ➡️</a></div><h1>Lesson 80 -- AIP-C01  --=Agent Loop — stopping condition / timeout / circuit breaker -//</h1>
+<div class='nav-bar'><a class='nav-btn' href='lesson78.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../aws-bedrock-agent-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson80.html'>Bài sau ➡️</a></div><h1>Lesson 80 -- AIP-C01  --=Supervisor / Sub-agent / Specialist -//</h1>
 <button id='doneButton' class='done-btn' onclick='toggleDone()'>Mark as Done ⚪</button>
 <div class='content-box'>
 <button class='copy-btn' onclick='copyContent()'>📋 Copy nội dung</button>
 <pre><code id='lessonCode'>
- 
+# Supervisor / Sub-agent / Specialist trong Agentic AI
+
+Đây là một trong những chủ đề quan trọng nhất khi thiết kế Multi-Agent Architecture.
+
+Muốn hiểu sâu, trước tiên phải bỏ một suy nghĩ sai:
+
+Multi-Agent không đơn giản là tạo nhiều Agent rồi cho chúng gọi lẫn nhau. Mấu chốt là phân chia quyền quyết định, trách nhiệm và phạm vi chuyên môn giữa các Agent.
+
+Ba vai trò Supervisor, Sub-agent và Specialist giải quyết ba vấn đề khác nhau:
+
+- Supervisor: Ai quyết định công việc tiếp theo?
+- Sub-agent: Ai chịu trách nhiệm thực hiện một phần công việc?
+- Specialist: Ai có năng lực chuyên môn sâu để giải quyết một loại vấn đề cụ thể?
+
+# 1. Bản chất của ba vai trò
+
+[LangChain vs LangGraph: Compare Features &amp; Use Cases](https://images.openai.com/static-rsc-4/KgDaCrpy1XeKeX6WaYILs_rad8XUY2tNsdDZVjiQbr5wCblluZVRRcyUfCGA-1XjhoHrN14eGYcM5RqN1KmtlwHfDKAK8hvsASzZ27ksYFlV3uIDYHmRIAsCG7FxA_2Qn1e847kqTjsxrORrVXgIo1cgxbK_FdYe-5JGUyFQlyY?purpose=inline)
+
+Supervisor Agent
+
+Orchestration / Decision
+
+- Phân tích yêu cầu tổng thể.
+- Chia nhỏ công việc.
+- Phân công Agent.
+- Theo dõi kết quả.
+- Quyết định bước tiếp theo hoặc kết thúc.
+
+[AI Agent - 高达AI](https://images.openai.com/static-rsc-4/yUhdEtaW-Cs7-v8QEpF4B13QOgc3iLMPUEyKuA6oxsFZz-ePSemb5XdhdHwkHZqeap3dmOdjsadOX3ren02mtRsZ9JzvQs0JEzHZX3Hpa_tOK7pgVpxv67G_vGZ1S_hIQLw8VRscH5fNc7KUpIKZ9tic-o8FeOyUOLyW-aZui28?purpose=inline)
+
+Sub-agent
+
+Delegation / Execution
+
+- Nhận một nhiệm vụ từ Agent khác.
+- Có thể tiếp tục phân rã nhiệm vụ.
+- Gọi các Specialist hoặc tools.
+- Tổng hợp kết quả trong phạm vi được giao.
+
+[Ai Agent Illustrations - Free Download in SVG, PNG](https://images.openai.com/static-rsc-4/9ybt1oWwoC85fd2d9_GrvVqqQUQ5j04cgrroez9CnLVPFYb56pJ6T8p3vZtRlS2NiZgvaH0RMrg1iKS0-nlMdXjy2HeOs4YIUNuv5XIZo4hiSFh5RsyZbyumqBVkvj_cqgDa2t6M7ciDm33CTXO0UQelimj1U21LuVU0O9f1TVA?purpose=inline)
+
+Specialist Agent
+
+Domain Expertise
+
+- Có kiến thức chuyên biệt.
+- Thực hiện một nhóm nhiệm vụ rõ ràng.
+- Có thể sở hữu tools, instructions và knowledge riêng.
+- Không nhất thiết có quyền điều phối Agent khác.
+
+Điểm quan trọng: Đây là vai trò kiến trúc (architectural roles), không nhất thiết là ba loại Agent được AWS triển khai thành ba dịch vụ riêng biệt.
+
+Một Agent có thể vừa là Sub-agent vừa là Specialist.
+
+Ví dụ: Security Agent là Sub-agent khi được Supervisor giao nhiệm vụ kiểm tra bảo mật, nhưng đồng thời là Specialist vì nó chuyên về Security.
+
+# 2. Ví dụ đời thường: Xây dựng một hệ thống ngân hàng
+
+Giả sử khách hàng yêu cầu:
+
+&gt; Phân tích một giao dịch ngân hàng bất thường, xác định nguy cơ gian lận và đề xuất phương án xử lý.
+
+Ta có kiến trúc:
+
+Supervisor Agent
+
+Điều phối toàn bộ quá trình điều tra
+
+Sub-agent A
+
+Transaction Analysis
+
+Fraud Specialist
+
+Behavior Specialist
+
+Sub-agent B
+
+Customer Analysis
+
+Customer History Specialist
+
+Risk Scoring Specialist
+
+Supervisor tổng hợp kết quả
+
+Đánh giá evidence → quyết định bước tiếp theo → tạo báo cáo
+
+## Luồng hoạt động thực tế
+
+Bước 1 — Supervisor nhận yêu cầu
+
+Supervisor hiểu rằng cần điều tra ba khía cạnh:
+
+1. Giao dịch có bất thường không?
+2. Hành vi khách hàng có khác thường không?
+3. Mức độ rủi ro là bao nhiêu?
+
+Bước 2 — Supervisor phân công Sub-agent
+
+- Transaction Analysis Sub-agent điều tra giao dịch.
+- Customer Analysis Sub-agent điều tra lịch sử khách hàng.
+
+Hai Sub-agent có thể chạy song song.
+
+Bước 3 — Sub-agent gọi Specialist
+
+Transaction Analysis gọi:
+
+- Fraud Specialist.
+- Behavior Specialist.
+
+Customer Analysis gọi:
+
+- Customer History Specialist.
+- Risk Scoring Specialist.
+
+Bước 4 — Kết quả quay về Supervisor
+
+Supervisor nhận kết quả từ hai Sub-agent, đối chiếu evidence và tổng hợp báo cáo.
+
+Bước 5 — Quyết định
+
+Supervisor có thể:
+
+- Yêu cầu điều tra thêm nếu evidence chưa đủ.
+- Gửi yêu cầu đến hệ thống phê duyệt của con người.
+- Hoàn thành báo cáo nếu đủ thông tin.
+
+Lưu ý: Trong hệ thống ngân hàng thực tế, quyết định khóa tài khoản hoặc từ chối giao dịch phải được kiểm soát bằng policy và authorization ở backend. Không nên để LLM tự quyết định quyền thực hiện hành động nhạy cảm.
+
+# 3. Phân biệt Supervisor, Sub-agent và Specialist ở mức kiến trúc
+
+Đây là phần cần nắm thật chắc vì trong đề Professional, AWS có thể mô tả một kiến trúc mà cả ba vai trò đều xuất hiện nhưng không gọi đúng tên.
+
+| Tiêu chí                     | Supervisor      | Sub-agent               | Specialist                   |
+| ---------------------------- | --------------- | ----------------------- | ---------------------------- |
+| Vai trò                      | Điều phối       | Thực thi nhiệm vụ con   | Chuyên môn sâu               |
+| Nhận task từ                 | User / hệ thống | Supervisor / Agent khác | Sub-agent / Supervisor       |
+| Chia nhỏ task                | Có              | Có thể                  | Không bắt buộc               |
+| Gọi Agent khác               | Có              | Có thể                  | Có thể, nhưng không mặc định |
+| Domain knowledge             | Tổng quát       | Theo phạm vi task       | Chuyên biệt                  |
+| Tổng hợp kết quả             | Toàn hệ thống   | Phạm vi task con        | Kết quả chuyên môn           |
+| Quyết định kết thúc workflow | Thường có       | Trong phạm vi task      | Không mặc định               |
+
+## Một điểm rất dễ nhầm
+
+Supervisor không nhất thiết phải là Agent thông minh nhất.
+
+Supervisor cần khả năng:
+
+- Hiểu mục tiêu tổng thể.
+- Phân chia công việc hợp lý.
+- Chọn đúng Agent.
+- Đánh giá kết quả.
+- Kiểm soát tiến trình.
+
+Specialist có thể sở hữu model tốt hơn, nhiều kiến thức hơn và chính xác hơn Supervisor trong domain của nó.
+
+Ví dụ:
+
+Một Security Specialist có thể phân tích IAM policy tốt hơn Supervisor rất nhiều.
+
+Nhưng Security Specialist không nhất thiết biết toàn bộ yêu cầu kinh doanh để quyết định workflow cần thực hiện tiếp theo.
+
+Đó là sự khác biệt giữa Decision Authority và Domain Expertise.
+
+# 4. Mapping với AWS hiện đại
+
+Trong kiến trúc AWS hiện tại, ta nên hiểu các vai trò này thông qua AgentCore và Agent framework, không xem chúng là ba dịch vụ AWS độc lập.
+
+[Unlocking complex problem-solving with multi-agent collaboration on Amazon Bedrock | Artificial Intelligence](https://images.openai.com/static-rsc-4/0wyYGfox2qYLrLggSKCDcMYLFmJOcs2v6MDHZUGPtMozB4YrPWZLtPhz6_NCNG3d4XF2GB7MuweXwVGdVCuXR-pVaYwIYyoIV-ghrqscZj8VqwWclNu2IMp8dL0RMT1D2q8vUcjWIOpRhEflApttfqiO7Mb41snE_wyOVNw8ZTQ?purpose=inline)
+
+[aws.amazon.com](https://aws.amazon.com/blogs/machine-learning/unlocking-complex-problem-solving-with-multi-agent-collaboration-on-amazon-bedrock/?utm_source=chatgpt.com)
+
+## 4.1 Supervisor Agent
+
+Các thành phần có thể sử dụng:
+
+- Strands Agents: triển khai logic điều phối, phân rã task và lựa chọn Sub-agent.
+- Amazon Bedrock AgentCore Runtime: chạy Supervisor trong môi trường runtime được quản lý.
+- AgentCore Gateway: cung cấp giao diện kết nối đến các Agent hoặc tools thông qua các giao thức được hỗ trợ.
+- AgentCore Identity: quản lý danh tính và quyền truy cập khi Agent tương tác với các tài nguyên được bảo vệ.
+- AgentCore Observability: theo dõi execution, trace và hoạt động của Agent.
+
+Ví dụ pseudo-code:
+
+```
+from strands import Agentfrom strands.multiagent import GraphBuildersupervisor = Agent(    system_prompt="""    You are the supervisor.    Analyze the request.    Delegate tasks to the appropriate agents.    Evaluate their results.    Return a consolidated answer.    """)
+```
+
+Đây chỉ là minh họa vai trò Supervisor, không phải một implementation multi-agent hoàn chỉnh.
+
+## 4.2 Sub-agent
+
+Sub-agent có thể là:
+
+- Một Strands Agent độc lập.
+- Một Agent chạy trong AgentCore Runtime.
+- Một workflow riêng sử dụng AWS Step Functions.
+- Một service backend thực hiện một nhiệm vụ cụ thể.
+
+Ví dụ:
+
+```
+Supervisor
+    |
+    +-- Research Sub-agent
+    |       |
+    |       +-- Search Specialist
+    |       +-- Document Specialist
+    |
+    +-- Analysis Sub-agent
+            |
+            +-- Financial Specialist
+            +-- Risk Specialist
+```
+
+Một điểm quan trọng:
+
+Không phải Sub-agent nào cũng cần chạy trên một Runtime riêng.
+
+Nếu Sub-agent chỉ thực hiện một tác vụ nhỏ, có thể triển khai trong cùng process hoặc cùng runtime với Supervisor.
+
+Nếu cần isolation, scaling độc lập, security boundary hoặc deployment độc lập, mới cân nhắc tách thành các Runtime riêng.
+
+## 4.3 Specialist Agent
+
+Specialist thường được thiết kế với:
+
+| Thành phần    | Ví dụ                                    |
+| ------------- | ---------------------------------------- |
+| System prompt | Chỉ xử lý Security Analysis              |
+| Model         | Model phù hợp với độ phức tạp của domain |
+| Knowledge     | Security documentation                   |
+| Tools         | IAM policy analyzer                      |
+| Permissions   | Chỉ đọc những tài nguyên được phép       |
+| Output schema | Structured security findings             |
+
+Ví dụ:
+
+Security Specialist không cần quyền truy cập database khách hàng nếu nhiệm vụ chỉ là phân tích IAM policy.
+
+Đây là nguyên tắc Least Privilege.
+
+Không nên cấp toàn bộ quyền của Supervisor cho mọi Specialist.
+
+# 5. Supervisor Pattern và các pattern khác
+
+Đây là kiến thức quan trọng hơn việc chỉ thuộc tên ba vai trò.
+
+Không phải Multi-Agent Architecture nào cũng cần Supervisor.
+
+Có nhiều cách tổ chức quyền điều phối.
+
+Pattern A — Centralized Supervisor
+
+[Multi-Agent AI Systems: Working, Architecture, and Testing \[2026\]](https://images.openai.com/static-rsc-4/JX6nXhkDWzlNwqz4EiIdTJZ51yUxQpn71rDHvCXRweCf4_qnSDQ_BLAGZq7vcDo4gbq7YSvBfqGZyEEdOID7Paw9GKYWI_u8pDoUtPP01byvCLs6gUzLZNOAtsptGARny7U3Ms3XnGEXEXvyJXj2jKgI6tAfLG-GnqbDOz657GQ?purpose=inline)
+
+[testmuai.com](https://www.testmuai.com/learning-hub/multi-agent-ai-systems/?utm_source=chatgpt.com)
+
+Một Agent trung tâm điều phối mọi công việc.
+
+Phù hợp:
+
+- Workflow phức tạp.
+- Cần một nơi kiểm soát tiến trình.
+- Cần tổng hợp nhiều kết quả.
+- Cần quyết định động dựa trên kết quả trước đó.
+
+Nhược điểm: Supervisor có thể trở thành bottleneck.
+
+Pattern B — Hierarchical Multi-Agent
+
+[Multi-Agent AI Systems: Working, Architecture, and Testing \[2026\] | TestMu AI (Formerly LambdaTest)](https://images.openai.com/static-rsc-4/c_XVp6Fu_ZYbiVVDm2aENjn6UEixs6cd-5l3qI5K6U5XeR9UmlDoOYZ4K2-wb8PU2VKeakQAglXWf6eaRvpYCEUYqas8iZm9Q8SbQmtG2n80B9N-8l1J_qlnJr8AoaiZocxfzOEje5-7jT5mQBG5ZWN8oMktBBEzOAe-FMZLkRI?purpose=inline)
+
+[testmuai.com](https://www.testmuai.com/learning-hub/multi-agent-ai-systems/?utm_source=chatgpt.com)
+
+Supervisor cấp cao quản lý Sub-agent, mỗi Sub-agent lại có thể quản lý các Agent cấp dưới.
+
+Phù hợp:
+
+- Nhiệm vụ lớn.
+- Nhiều domain độc lập.
+- Tổ chức theo nhiều nhóm chuyên môn.
+
+Nhược điểm: Chi phí coordination và độ phức tạp tăng.
+
+Pattern C — Peer-to-Peer / Collaborative
+
+[Comparison of MCP and ANP: What Kind of Communication Protocol Do Agents Need? | by Shan Chang | Medium](https://images.openai.com/static-rsc-4/tBZX0cIfkq2S5gEU7z6JNIdBRp7fTGiqemQlbWuhcCHa9WR6_VoAIRWKDfOBnJLbsunHR8hr9OCHq27oEAWYoCq3Wc_B-NtzGHAm8CevZJnlBh77KBUVOfQKDY61BkwpEMSKx_vZvpnHceAqa5tBwjeQJ9s1Us3srQibqpONSD4?purpose=inline)
+
+[medium.com](https://medium.com/%40changshan/comparison-of-mcp-and-anp-what-kind-of-communication-protocol-do-agents-need-6298f4afda07?utm_source=chatgpt.com)
+
+Các Agent trao đổi và phối hợp với nhau, không nhất thiết có một Supervisor trung tâm.
+
+Phù hợp:
+
+- Các Agent có trách nhiệm ngang nhau.
+- Hợp tác phân tích.
+- Hệ thống cần trao đổi kết quả giữa các domain.
+
+Nhược điểm: Khó kiểm soát luồng, dễ phát sinh vòng lặp giao tiếp và kết quả mâu thuẫn.
+
+## So sánh để chọn kiến trúc
+
+| Requirement                               | Pattern phù hợp        |
+| ----------------------------------------- | ---------------------- |
+| Một nơi kiểm soát toàn bộ                 | Centralized Supervisor |
+| Nhiệm vụ lớn, nhiều cấp                   | Hierarchical           |
+| Agent cần cộng tác ngang hàng             | Peer-to-peer           |
+| Luồng xử lý cố định, có điều kiện rõ ràng | Deterministic workflow |
+| Nhiều nhiệm vụ độc lập chạy song song     | Parallel orchestration |
+
+Một kiến thức cần ghi nhớ: Supervisor và Step Functions không thay thế nhau.
+
+- Supervisor sử dụng reasoning để quyết định cần làm gì tiếp theo.
+- Step Functions thực hiện workflow theo state machine được định nghĩa rõ ràng.
+
+Ví dụ:
+
+Supervisor quyết định cần kiểm tra Fraud, Customer History và Compliance.
+
+Step Functions có thể đảm bảo ba bước kiểm tra được thực hiện theo quy trình, có retry, timeout và error handling rõ ràng.
+
+Đây là cách kết hợp dynamic reasoning với deterministic orchestration.
+
+# 6. Trade-off trong Production
+
+| Tiêu chí        | Centralized Supervisor              | Hierarchical              | Peer-to-peer               |
+| --------------- | ----------------------------------- | ------------------------- | -------------------------- |
+| Latency         | Có thể cao do điều phối tuần tự     | Có thể thấp nhờ song song | Khó dự đoán                |
+| Cost            | Chi phí tại Supervisor và Agent con | Thường cao hơn            | Phụ thuộc số lần giao tiếp |
+| Scalability     | Supervisor có thể thành bottleneck  | Phân tán tốt hơn          | Khó kiểm soát              |
+| Observability   | Tương đối dễ                        | Phức tạp hơn              | Phức tạp                   |
+| Fault isolation | Phụ thuộc thiết kế                  | Có thể tốt                | Khó quản lý                |
+| Governance      | Dễ tập trung policy                 | Phải quản lý nhiều cấp    | Khó tập trung              |
+
+### 6.1 Một vấn đề production rất quan trọng: Context explosion
+
+Giả sử:
+
+- Supervisor gọi 5 Sub-agent.
+- Mỗi Sub-agent trả về 10.000 tokens.
+- Supervisor cần tổng hợp kết quả.
+
+Supervisor phải xử lý khoảng 50.000 tokens đầu ra, chưa kể context ban đầu.
+
+Hậu quả:
+
+- Token cost tăng.
+- Latency tăng.
+- Context window có thể bị vượt giới hạn.
+- Chất lượng tổng hợp có thể giảm.
+
+Giải pháp:
+
+Không nên trả toàn bộ reasoning và dữ liệu thô về Supervisor.
+
+Thay vào đó, Sub-agent trả về structured output:
+
+```
+{
+  "status": "completed",
+  "risk_level": "high",
+  "findings": [
+    "Unusual transaction location",
+    "Transaction amount exceeds baseline"
+  ],
+  "evidence_ids": [
+    "evidence-001",
+    "evidence-002"
+  ],
+  "confidence": 0.94
+}
+```
+
+Supervisor chỉ cần nhận kết quả cần thiết để ra quyết định.
+
+Lưu ý: Confidence do LLM tự khai báo không mặc nhiên là xác suất đã được hiệu chuẩn. Production system cần đánh giá và hiệu chuẩn riêng nếu sử dụng confidence để ra quyết định.
+
+### 6.2 Shared State và Isolation
+
+Giả sử 3 Agent cùng truy cập một database:
+
+- Agent A cập nhật transaction status.
+- Agent B đọc transaction status.
+- Agent C cập nhật risk score.
+
+Không nên cho các Agent tự do ghi dữ liệu vào những vùng dùng chung mà không có kiểm soát.
+
+Cần thiết kế:
+
+- Ownership của từng loại dữ liệu.
+- API contract.
+- Transaction boundary.
+- Idempotency.
+- Concurrency control.
+- Authorization.
+
+AgentCore Runtime cung cấp môi trường thực thi Agent, nhưng không tự động giải quyết transaction consistency cho database dùng chung.
+
+Đây vẫn là trách nhiệm của backend architecture.
+
+# 7. Exam Knowledge — Những từ khóa AWS thường dùng trong đề
+
+| Keyword trong đề          | Suy luận                                         |
+| ------------------------- | ------------------------------------------------ |
+| Centralized coordination  | Supervisor                                       |
+| Delegate tasks            | Supervisor → Sub-agent                           |
+| Domain-specific expertise | Specialist                                       |
+| Decompose complex tasks   | Supervisor hoặc Sub-agent                        |
+| Independent execution     | Sub-agent                                        |
+| Parallel execution        | Nhiều Sub-agent                                  |
+| Nested delegation         | Hierarchical agents                              |
+| Consolidate results       | Supervisor                                       |
+| Shared context            | Cần thiết kế state/context propagation           |
+| Isolated execution        | AgentCore Runtime                                |
+| Dynamic task routing      | Agent reasoning / orchestration                  |
+| Deterministic workflow    | Step Functions                                   |
+| Least privilege           | IAM / AgentCore Identity / backend authorization |
+| Execution tracing         | AgentCore Observability                          |
+
+## 8. Exam Traps — Những đáp án nghe hợp lý nhưng sai
+
+Trap 1: Tạo một Specialist cho mỗi loại task.
+
+Không phải lúc nào cũng cần.
+
+Nếu nhiệm vụ đơn giản, chỉ cần một tool hoặc một function. Tạo Agent mới sẽ làm tăng latency, cost và operational complexity.
+
+Trap 2: Cho tất cả Agent dùng chung một Runtime.
+
+Không sai về mặt kỹ thuật, nhưng không phải lựa chọn tốt khi có yêu cầu isolation, scaling độc lập hoặc security boundary.
+
+Ngược lại, tách mọi Agent thành Runtime riêng cũng không phải best practice mặc định.
+
+Trap 3: Supervisor phải thực hiện tất cả công việc.
+
+Sai. Supervisor nên tập trung orchestration và decision-making. Các công việc chuyên biệt nên được delegate.
+
+Trap 4: Sub-agent và Specialist là hai loại Agent loại trừ nhau.
+
+Sai. Đây là hai góc nhìn khác nhau:
+
+- Sub-agent mô tả vị trí trong hierarchy.
+- Specialist mô tả năng lực chuyên môn.
+
+Trap 5: Dùng LLM Supervisor để quản lý mọi bước workflow.
+
+Nếu workflow yêu cầu thứ tự cố định, retry chính xác, audit và kiểm soát lỗi, Step Functions thường phù hợp hơn.
+
+Trap 6: Supervisor có quyền truy cập tất cả tài nguyên nên các Sub-agent cũng cần quyền tương tự.
+
+Sai. Mỗi Agent cần quyền tối thiểu theo nhiệm vụ. Không được truyền quyền của Supervisor một cách mặc định cho Sub-agent.
+
+# 9. Professional-level Scenario
+
+
+
+Exam simulation
+
+Difficulty: Advanced
+
+
+
+Một công ty tài chính xây dựng hệ thống AI phân tích hồ sơ cho vay bằng Amazon Bedrock AgentCore.
+
+Hệ thống có các yêu cầu:
+
+1. Phân tích một hồ sơ cần kiểm tra Credit Risk, Fraud Risk và Regulatory Compliance.
+2. Ba domain này có thể được phân tích song song.
+3. Mỗi domain có business rules, knowledge base và tools riêng.
+4. Trong quá trình phân tích, mỗi domain có thể phát hiện cần thêm một loại phân tích chuyên biệt.
+5. Hệ thống phải tổng hợp kết quả trước khi đưa ra báo cáo.
+6. Mỗi Agent chỉ được truy cập dữ liệu phù hợp với trách nhiệm của mình.
+7. Công ty muốn giảm latency và tránh việc Supervisor phải xử lý quá nhiều dữ liệu không cần thiết.
+
+Câu hỏi: Kiến trúc nào phù hợp nhất?
+
+Chọn một đáp án
+
+A. Một Supervisor thực hiện tuần tự cả ba domain, sử dụng chung một bộ tools và knowledge base.
+
+B. Một Supervisor điều phối ba Sub-agent chạy song song. Mỗi Sub-agent có thể gọi Specialist phù hợp, sử dụng tools và knowledge riêng, trả về structured results để Supervisor tổng hợp.
+
+C. Tạo một Supervisor riêng cho mỗi domain và cho cả ba Supervisor tự do trao đổi với nhau, không cần Agent điều phối cấp cao.
+
+D. Triển khai tất cả Agent trên các Runtime riêng biệt, cấp quyền truy cập database giống nhau và để chúng tự ghi kết quả vào database chung.
+
+Xác nhận đáp án
+
+## 10. Cách tư duy khi gặp dạng đề này
+
+Đừng nhìn vào số lượng Agent trước. Hãy tìm các hidden requirements:
+
+| Requirement                    | Thiết kế cần suy ra                         |
+| ------------------------------ | ------------------------------------------- |
+| Ba domain độc lập              | Ba Sub-agent                                |
+| Có thể chạy song song          | Parallel execution                          |
+| Mỗi domain có chuyên môn riêng | Specialist                                  |
+| Có thể phát sinh nhiệm vụ mới  | Dynamic delegation                          |
+| Cần tổng hợp cuối cùng         | Supervisor                                  |
+| Giảm context                   | Structured output                           |
+| Quyền truy cập khác nhau       | Least privilege                             |
+| Cần kiểm soát workflow         | Kết hợp deterministic orchestration khi cần |
+
+# 11. Những điều cần nhớ lâu
+
+Tôi muốn bạn ghi nhớ ba câu sau:
+
+# Supervisor = WHO + WHEN
+
+Ai làm việc gì? Khi nào cần làm? Khi nào cần dừng?
+
+# Sub-agent = DELEGATION
+
+Nhận trách nhiệm một phần công việc và thực hiện đến khi hoàn thành phạm vi được giao.
+
+# Specialist = EXPERTISE
+
+Có năng lực chuyên môn sâu để giải quyết một loại vấn đề cụ thể.
+
+Quan điểm kiến trúc của tôi:
+
+Đừng xây dựng Multi-Agent chỉ vì có thể tạo nhiều Agent.
+
+Một hệ thống tốt không phải hệ thống có nhiều Agent nhất, mà là hệ thống có ranh giới trách nhiệm rõ ràng nhất.
+
+Trong production, tôi sẽ ưu tiên:
+
+1. Một Supervisor chịu trách nhiệm orchestration.
+2. Một số Sub-agent theo domain hoặc workload độc lập.
+3. Specialist chỉ được tạo khi thực sự cần domain-specific reasoning hoặc tool isolation.
+4. Step Functions xử lý những đoạn workflow cần tính xác định.
+5. AgentCore Runtime, Identity, Gateway và Observability hỗ trợ execution, security và operation.
+
+Đó là cách tiếp cận cân bằng giữa khả năng reasoning của LLM và tính kỷ luật của hệ thống backend truyền thống.
+
+
+
+
+
+
+
+  
 
 </code></pre>
 </div>
