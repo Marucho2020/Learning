@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang='vi'><head><meta charset='UTF-8'>
 <meta name='viewport' content='width=device-width, initial-scale=1.0'>
-<title>Lesson 82 -- AIP-C01  --=Agent Loop — stopping condition / timeout / circuit breaker -//</title>
+<title>Lesson 82 -- AIP-C01  --=**Agent Handoff -//</title>
 <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css'>
 <script src='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js'></script>
 <script id='MathJax-script' async src='https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'></script>
@@ -27,12 +27,705 @@ pre { padding: 20px; border-radius: 8px; white-space: pre-wrap; word-break: brea
 .theme-toggle-btn { display: block; margin: 20px auto; padding: 8px 16px; background: transparent; border: 1px solid #888; color: inherit; border-radius: 5px; cursor: pointer; }
 </style></head><body onload='initLesson()'>
 <div class='container'>
-<div class='nav-bar'><a class='nav-btn' href='lesson80.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../aws-bedrock-agent-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson82.html'>Bài sau ➡️</a></div><h1>Lesson 82 -- AIP-C01  --=Agent Loop — stopping condition / timeout / circuit breaker -//</h1>
+<div class='nav-bar'><a class='nav-btn' href='lesson80.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../aws-bedrock-agent-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson82.html'>Bài sau ➡️</a></div><h1>Lesson 82 -- AIP-C01  --=**Agent Handoff -//</h1>
 <button id='doneButton' class='done-btn' onclick='toggleDone()'>Mark as Done ⚪</button>
 <div class='content-box'>
 <button class='copy-btn' onclick='copyContent()'>📋 Copy nội dung</button>
-<pre><code id='lessonCode'>
- 
+<pre><code id='lessonCode'># Agent Handoff — Bản chất, kiến trúc và cách vận hành
+
+Agent Handoff là một trong những khái niệm quan trọng nhất khi thiết kế Multi-Agent System.
+
+Nếu Agent Planning trả lời câu hỏi:
+
+&gt; Tôi cần làm những bước nào để hoàn thành nhiệm vụ?
+
+Thì Agent Handoff trả lời:
+
+&gt; Khi nào tôi nên chuyển quyền điều khiển cho một Agent khác, chuyển cho ai, chuyển thông tin gì và ai chịu trách nhiệm tiếp tục công việc?
+
+Điểm quan trọng nhất: Handoff không đơn thuần là Agent A gọi Agent B. Handoff là chuyển quyền điều khiển (control transfer) giữa các Agent.
+
+# PHẦN I — GIẢI THÍCH TIẾNG VIỆT
+
+## 1. Bản chất của Agent Handoff
+
+Hãy tưởng tượng một công ty phần mềm.
+
+Khách hàng yêu cầu:
+
+"Tôi muốn xây dựng một hệ thống thương mại điện tử."
+
+Có một PM (Supervisor Agent) tiếp nhận yêu cầu.
+
+PM nhận thấy cần ba chuyên môn:
+
+- Backend: thiết kế API, database.
+- Security: đánh giá bảo mật.
+- Infrastructure: thiết kế AWS infrastructure.
+
+PM giao việc cho từng nhóm trưởng.
+
+Nhưng có hai cách tổ chức công việc hoàn toàn khác nhau.
+
+### Cách A — Delegation (Ủy quyền)
+
+PM giao nhiệm vụ cho Backend Leader.
+
+Backend Leader thực hiện, sau đó trả kết quả về PM.
+
+PM vẫn là người điều phối chính.
+
+[PPT - Robert Fullagar CISSP CISM CRISC Clas CEH PowerPoint Presentation - ID:3281791](https://images.openai.com/static-rsc-4/cgTuu8udFQEC0Eco9tLTpkxXZ7j9nWlN3ghH6XI9Fyo8nynkbdWZcMNjdX02UgTFYH8xKoi9sbiWR4QLnf2_MHs2O349JpjIHJ3lQfUZq0q77aMNUuI-Rwv2mUcG9myfYb9yDI8SyiseaDctka5nTzJfGUkmKI6hmn_-flILzPQ?purpose=inline)
+
+[slideserve.com](https://www.slideserve.com/kumiko/robert-fullagar-cissp-cism-crisc-clas-ceh?utm_source=chatgpt.com)
+
+Luồng:
+
+```
+Supervisor
+    |
+    | Delegate task
+    v
+Backend Agent
+    |
+    | Execute task
+    v
+Result
+    |
+    v
+Supervisor
+```
+
+Supervisor giữ quyền điều khiển trong suốt quá trình.
+
+### Cách B — Handoff (Chuyển quyền điều khiển)
+
+Khách hàng hỏi về bảo mật.
+
+Supervisor nhận ra Security Agent có chuyên môn phù hợp hơn.
+
+Supervisor chuyển toàn bộ ngữ cảnh cần thiết cho Security Agent và nhường quyền điều khiển.
+
+Security Agent tiếp tục tương tác, thực hiện công việc và có thể tiếp tục handoff cho Agent khác.
+
+[Way Back Home - Live Bidirectional Multi-Agent system  |  Google Codelabs](https://images.openai.com/static-rsc-4/sRheP-dZmF2Suf6REafmw198taJOXYNVBT9YkGS7MbtqcZqGsBQunTfs9OESJbzpF8ostP5yCK31Lhzm2vMDqlQdtpmZjj7NmNYzxIsVj2IsqTHzc2R6ZKAjZe7ULTtcaJHTIVDibHems1chElLJD1-uI8vcgLOxibR3mWNXLoU?purpose=inline)
+
+[codelabs.developers.google.com](https://codelabs.developers.google.com/way-back-home-level-4/instructions?utm_source=chatgpt.com)
+
+```
+Supervisor
+    |
+    | Handoff
+    v
+Security Agent
+    |
+    | Continue execution
+    v
+Another Agent (if needed)
+```
+
+Supervisor không nhất thiết tiếp tục tham gia vào từng bước tiếp theo.
+
+Khác biệt cốt lõi:
+
+| Tiêu chí           | Delegation              | Handoff                   |
+| ------------------ | ----------------------- | ------------------------- |
+| Bản chất           | Giao việc               | Chuyển quyền điều khiển   |
+| Ai điều phối tiếp? | Agent giao việc         | Agent nhận handoff        |
+| Kết quả            | Thường trả về Agent cha | Có thể tiếp tục luồng mới |
+| Phù hợp            | Task độc lập            | Chuyển domain/chuyên môn  |
+| Control flow       | Parent giữ quyền        | Receiver tiếp quản        |
+
+Lưu ý: Đây là phân biệt về mặt kiến trúc. Một framework có thể triển khai delegation bằng handoff nội bộ hoặc ngược lại bằng cơ chế riêng.
+
+## 2. Handoff thực sự chuyển những gì?
+
+Đây là phần rất quan trọng khi triển khai production.
+
+Một handoff đúng nghĩa cần xem xét ít nhất năm thành phần:
+
+| Thành phần        | Ý nghĩa                            |
+| ----------------- | ---------------------------------- |
+| Control           | Ai có quyền điều khiển tiếp theo?  |
+| Context           | Thông tin nào cần chuyển?          |
+| Task              | Agent mới phải giải quyết việc gì? |
+| State             | Công việc đang ở trạng thái nào?   |
+| Identity / Policy | Agent mới được phép làm gì?        |
+
+Ví dụ:
+
+Supervisor chuyển sang Security Agent:
+
+```
+{
+  "handoff": {
+    "from": "supervisor",
+    "to": "security-agent",
+    "task": "Review the proposed AWS architecture",
+    "context": {
+      "architecture": "API Gateway + Lambda + DynamoDB",
+      "requirements": [
+        "Protect customer PII",
+        "Support cross-account access"
+      ]
+    },
+    "state": {
+      "backend_design": "completed",
+      "security_review": "pending"
+    }
+  }
+}
+```
+
+Đây là payload minh họa, không phải schema chuẩn bắt buộc của AgentCore.
+
+Một lỗi thường gặp là chỉ chuyển câu hỏi mà không chuyển context.
+
+Ví dụ:
+
+```
+Supervisor → Security Agent
+
+"Please review security."
+```
+
+Security Agent không biết:
+
+- Kiến trúc nào cần review?
+- Yêu cầu bảo mật là gì?
+- Những quyết định nào đã được đưa ra?
+- Những phần nào đã hoàn thành?
+
+Kết quả là Agent phải hỏi lại hoặc tự suy đoán. Đây là nguyên nhân gây tăng latency, token cost và hallucination.
+
+## 3. Agent Handoff trong kiến trúc Multi-Agent thực tế
+
+Hãy xem kiến trúc sau:
+
+[Overdracht Agent Orchestratie | Microsoft Learn](https://images.openai.com/static-rsc-4/Z23gMAl5VaYOvHA5Q3aCiVNqfZWKhBcrvTIxnjGn7JGqCvczmKfzUUVMPIQgPIFyB8P8zFrXZSnT0jUXDWmqTdFqLcU3m7CBbcGQzmnkV1Pe0T1XTcP4Griacou0-3TFnWKQPx1PA0281Ry98kQ8o5r-3MMpzQXMirnSDuGC1aw?purpose=inline)
+
+[learn.microsoft.com](https://learn.microsoft.com/nl-nl/semantic-kernel/frameworks/agent/agent-orchestration/handoff?utm_source=chatgpt.com)
+
+```
+                    User
+                     |
+                     v
+              Supervisor Agent
+                     |
+          +----------+----------+
+          |          |          |
+          v          v          v
+      Backend    Security    Finance
+       Agent       Agent      Agent
+          |          |          |
+          v          v          v
+       Tools      Tools       Tools
+```
+
+Giả sử User yêu cầu:
+
+"Đánh giá kiến trúc AWS hiện tại, kiểm tra bảo mật và ước tính chi phí."
+
+Một luồng có thể diễn ra:
+
+Bước 1 — Supervisor tiếp nhận
+
+Supervisor phân tích yêu cầu và nhận thấy có ba domain.
+
+Bước 2 — Handoff sang Backend Agent
+
+Backend Agent kiểm tra kiến trúc, phát hiện API Gateway, Lambda và DynamoDB.
+
+Bước 3 — Handoff sang Security Agent
+
+Backend Agent phát hiện hệ thống có dữ liệu PII, cần đánh giá IAM và encryption.
+
+Backend Agent chuyển quyền điều khiển sang Security Agent, kèm kiến trúc và các phát hiện liên quan.
+
+Bước 4 — Security Agent hoàn thành
+
+Security Agent kiểm tra:
+
+- IAM least privilege.
+- KMS encryption.
+- Network isolation.
+- Data protection.
+
+Sau đó trả kết quả về workflow theo cơ chế điều phối đã thiết kế.
+
+Bước 5 — Finance Agent
+
+Một workflow có thể tiếp tục chuyển sang Finance Agent để đánh giá chi phí.
+
+Bước 6 — Supervisor tổng hợp
+
+Supervisor nhận kết quả của các domain và tạo báo cáo cuối cùng.
+
+Điểm cần chú ý: Không phải mọi hệ thống handoff đều tự động quay về Supervisor. Việc quay về, kết thúc hoặc chuyển tiếp phụ thuộc vào orchestration model.
+
+## 4. Nested Handoff — Handoff nhiều tầng
+
+Đây là câu hỏi rất đáng quan tâm khi xây dựng hệ thống lớn:
+
+Một Specialist Agent có thể tiếp tục handoff cho Agent khác không?
+
+Có. Không có giới hạn kiến trúc bắt buộc chỉ được ba tầng.
+
+Ví dụ:
+
+```
+Supervisor
+    |
+    v
+Backend Agent
+    |
+    +----&gt; Database Agent
+    |          |
+    |          +----&gt; SQL Optimization Agent
+    |          |
+    |          +----&gt; Data Modeling Agent
+    |
+    +----&gt; API Agent
+    |          |
+    |          +----&gt; API Security Agent
+    |
+    +----&gt; Testing Agent
+               |
+               +----&gt; Performance Testing Agent
+```
+
+Backend Agent không cần tự thực hiện tất cả.
+
+Nó có thể đóng vai trò như một Sub-supervisor.
+
+Đây chính là hierarchical multi-agent architecture.
+
+Tuy nhiên, cần phân biệt hai trường hợp:
+
+- Hierarchical delegation: Agent cha vẫn kiểm soát workflow và nhận kết quả từ Agent con.
+- Nested handoff: Agent nhận quyền điều khiển có thể tiếp tục chuyển quyền điều khiển cho Agent khác.
+
+Không nên tạo quá nhiều tầng chỉ vì có thể.
+
+Mỗi tầng mới có thể làm tăng:
+
+- End-to-end latency.
+- Token consumption.
+- Context propagation complexity.
+- Failure propagation.
+- Khó khăn trong debugging và observability.
+
+Một thiết kế production tốt thường ưu tiên cấu trúc nông, chỉ phân cấp sâu khi có ranh giới domain hoặc ownership thực sự cần thiết.
+
+## 5. Agent Handoff và AgentCore — Mapping với AWS
+
+Production architecture
+
+Một điểm cần nhớ: Amazon Bedrock AgentCore không phải là một dịch vụ handoff chuyên dụng.
+
+Handoff là một pattern trong agent orchestration. AgentCore cung cấp runtime và các thành phần để triển khai, bảo vệ và vận hành các Agent tham gia pattern này.
+
+Các thành phần liên quan:
+
+[AWS Bedrock e AgentCore: Construindo a Próxima Geração de Agentes de IA | Thomaz Neto | DIO](https://images.openai.com/static-rsc-4/BAAFK1cS8NTBF2RbxnLCxj8wcDWAnTfMrH9RCyY1RE8zn5PXTYfLL2kPlT7Xkv0CjbpniV59j-BQHT1DhuWjuDMMSWt8gGvSAk2ZWex_cJCQZyldpqfu9bQB4c5vQZ07yn5rKZJlGwwExqnXvRFzP-yaRJgGYQtSECO-LD24THQ?purpose=inline)
+
+Amazon Bedrock AgentCore
+
+AgentCore Runtime
+
+Chạy các Agent độc lập, hỗ trợ triển khai nhiều Agent và xử lý session/workload.
+
+AgentCore Gateway
+
+Cung cấp giao diện thống nhất để Agent truy cập tools và các hệ thống backend.
+
+AgentCore Identity
+
+Quản lý danh tính và quyền truy cập khi Agent cần sử dụng tài nguyên hoặc công cụ.
+
+AgentCore Memory
+
+Lưu trữ và truy xuất thông tin memory phục vụ quá trình làm việc của Agent.
+
+AgentCore Observability
+
+Theo dõi execution, trace, latency và các vấn đề vận hành.
+
+Mapping thực tế:
+
+| Thành phần trong Handoff     | AWS / Implementation                    |
+| ---------------------------- | --------------------------------------- |
+| Agent execution              | AgentCore Runtime                       |
+| Agent orchestration          | Strands Agents hoặc custom orchestrator |
+| Agent-to-Agent communication | A2A protocol hoặc API nội bộ            |
+| Tool invocation              | AgentCore Gateway / MCP                 |
+| Authentication               | AgentCore Identity + IAM                |
+| Shared persistent state      | DynamoDB, Aurora PostgreSQL, S3         |
+| Memory                       | AgentCore Memory                        |
+| Tracing                      | AgentCore Observability                 |
+
+Lưu ý: Đây là mapping kiến trúc, không có nghĩa mỗi lần handoff bắt buộc phải sử dụng tất cả dịch vụ trên.
+
+### 5.1. Strands Agents và Handoff
+
+Trong implementation, framework như Strands Agents có thể quản lý logic điều phối Agent.
+
+Ví dụ pseudocode:
+
+```
+# Pseudocode: conceptual handoffasync def supervisor(user_request):    if requires_security_review(user_request):        return await security_agent(            task=user_request,            context=current_context        )    return await backend_agent(        task=user_request,        context=current_context    )
+```
+
+Đây chỉ là mô phỏng logic. Nó chưa thể hiện đầy đủ control-transfer semantics của một framework.
+
+Một kiến trúc khác có thể sử dụng A2A để Agent giao tiếp qua ranh giới runtime hoặc service.
+
+### 5.2. A2A và Agent Handoff
+
+Đây là hai khái niệm liên quan nhưng không đồng nghĩa.
+
+- Agent Handoff: Pattern chuyển quyền điều khiển.
+- A2A (Agent-to-Agent): Protocol hỗ trợ giao tiếp giữa các Agent độc lập.
+
+Ví dụ:
+
+```
+Agent A
+   |
+   | A2A Message / Task
+   v
+Agent B
+   |
+   | Execute
+   v
+Task Result / Artifact
+```
+
+A2A đặc biệt hữu ích khi các Agent:
+
+- Được phát triển bởi các team khác nhau.
+- Chạy trên runtime khác nhau.
+- Có thể sử dụng framework khác nhau.
+- Cần giao tiếp qua network boundary.
+
+A2A có task lifecycle, message và artifact. Vì vậy, đừng nhầm một A2A message với một lệnh gọi function thông thường.
+
+### 5.3. MCP có phải Agent Handoff không?
+
+Không.
+
+| MCP                         | A2A                                           |
+| --------------------------- | --------------------------------------------- |
+| Model Context Protocol      | Agent-to-Agent Protocol                       |
+| Agent kết nối tools/context | Agent giao tiếp với Agent                     |
+| Tool invocation             | Agent task/message                            |
+| Ví dụ: gọi database tool    | Ví dụ: yêu cầu Security Agent audit kiến trúc |
+
+Ví dụ:
+
+```
+Supervisor
+    |
+    +---- MCP ----&gt; DynamoDB Tool
+    |
+    +---- A2A ----&gt; Security Agent
+```
+
+Đây là cách phân biệt rất quan trọng trong thiết kế Agentic AI.
+
+## 6. Những vấn đề Production phải giải quyết
+
+Đây là phần nhiều người hiểu được handoff nhưng chưa đủ khả năng thiết kế production.
+
+### 6.1. Context Propagation
+
+Agent nhận handoff phải nhận đủ context để tiếp tục công việc.
+
+Nhưng không nên chuyển toàn bộ lịch sử hội thoại một cách máy móc.
+
+Nên thiết kế context contract:
+
+```
+{
+  "task_id": "task-123",
+  "parent_task_id": "task-100",
+  "source_agent": "backend-agent",
+  "target_agent": "security-agent",
+  "objective": "Review IAM configuration",
+  "input": {
+    "architecture_summary": "...",
+    "relevant_findings": ["..."]
+  },
+  "constraints": {
+    "read_only": true,
+    "deadline_seconds": 30
+  },
+  "correlation_id": "request-456"
+}
+```
+
+Các trường này là ví dụ thiết kế, không phải schema bắt buộc.
+
+Tại sao cần `correlation_id`?
+
+Giả sử một user request tạo ra 20 handoff.
+
+Khi Agent thứ 15 gặp lỗi, hệ thống phải truy ngược được:
+
+- Nó thuộc user request nào?
+- Được gọi bởi Agent nào?
+- Nằm trong workflow nào?
+- Các bước trước đó đã làm gì?
+
+Correlation ID giúp liên kết các trace và log của cùng một workflow.
+
+### 6.2. Shared State và Session
+
+Giả sử Agent A và Agent B chạy trên hai Runtime khác nhau.
+
+Không nên giả định chúng tự động chia sẻ RAM hoặc local filesystem.
+
+```
+Agent A (Runtime A)
+       |
+       | Write
+       v
+ Shared State Store
+       ^
+       | Read
+       |
+Agent B (Runtime B)
+```
+
+Có thể sử dụng:
+
+- DynamoDB: state, task metadata, coordination.
+- Aurora PostgreSQL: relational data, transactional requirements.
+- S3: artifacts, documents, large outputs.
+- AgentCore Memory: thông tin memory cần duy trì và truy xuất.
+
+Cần phân biệt:
+
+Memory không phải Transactional State.
+
+Ví dụ:
+
+- "User thích câu trả lời tiếng Nhật" → Memory.
+- "Đơn hàng 123 đang ở trạng thái PAYMENT_PENDING" → Transactional State.
+
+Không nên dùng semantic memory làm nguồn dữ liệu có tính nhất quán nghiệp vụ.
+
+### 6.3. Handoff Loop — Vòng lặp vô hạn
+
+Một lỗi nghiêm trọng:
+
+```
+Agent A
+   |
+   v
+Agent B
+   |
+   v
+Agent A
+   |
+   v
+Agent B
+   |
+   v
+...
+```
+
+Nguyên nhân có thể là:
+
+- Agent không hiểu rõ ownership.
+- Routing condition không đủ chính xác.
+- Agent không có stopping condition.
+- Không có giới hạn số lần handoff.
+
+Giải pháp:
+
+| Cơ chế            | Mục đích                        |
+| ----------------- | ------------------------------- |
+| Max handoff depth | Giới hạn độ sâu                 |
+| Max handoff count | Giới hạn tổng số lần            |
+| Timeout           | Giới hạn thời gian              |
+| Circuit breaker   | Ngăn gọi tiếp khi service lỗi   |
+| Ownership rule    | Xác định Agent chịu trách nhiệm |
+| Idempotency key   | Chống thực hiện trùng thao tác  |
+
+Một lưu ý quan trọng: Idempotency không tự ngăn vòng lặp. Nó giúp kiểm soát tác động của những lần thực thi lặp lại.
+
+### 6.4. Security Boundary
+
+Giả sử Security Agent nhận được handoff từ Backend Agent.
+
+Có nên mặc định Security Agent được sử dụng tất cả quyền của Backend Agent không?
+
+Không.
+
+Agent nhận handoff phải được xác thực và cấp quyền theo identity, role và policy của chính nó.
+
+Ví dụ:
+
+```
+Backend Agent
+   |
+   | Handoff
+   v
+Security Agent
+   |
+   | IAM authorization
+   v
+Read-only Security Resources
+```
+
+Không nên mặc định chuyển tiếp toàn bộ credentials hoặc quyền của Agent nguồn.
+
+Cần phân biệt:
+
+- Identity: Ai đang thực hiện hành động?
+- Authentication: Xác minh danh tính.
+- Authorization: Có quyền thực hiện hành động đó không?
+
+Nếu Agent A có quyền ghi database nhưng Agent B chỉ được đọc, handoff không được phép làm Agent B thừa hưởng quyền ghi của A.
+
+### 6.5. Failure Handling
+
+Điều gì xảy ra nếu Agent nhận handoff bị timeout?
+
+Không phải cứ retry là đúng.
+
+Cần phân biệt:
+
+| Lỗi                       | Xử lý                          |
+| ------------------------- | ------------------------------ |
+| Temporary network failure | Retry có backoff               |
+| Throttling                | Exponential backoff + jitter   |
+| Invalid context           | Reject / sửa payload           |
+| Unauthorized              | Không retry mù quáng           |
+| Agent unavailable         | Fallback hoặc báo lỗi          |
+| Partial execution         | Kiểm tra state trước khi retry |
+
+Đặc biệt, nếu Agent đã thực hiện một giao dịch nhưng response bị mất, retry có thể gây duplicate transaction.
+
+Đây là lý do production workflow cần task state, idempotency và reconciliation.
+
+## 7. Trade-off của Agent Handoff
+
+| Tiêu chí        | Ưu điểm                           | Chi phí / rủi ro              |
+| --------------- | --------------------------------- | ----------------------------- |
+| Accuracy        | Chuyên môn hóa theo domain        | Context loss                  |
+| Scalability     | Agent độc lập                     | Network overhead              |
+| Latency         | Chuyển tới Agent phù hợp          | Nhiều round trips             |
+| Cost            | Có thể chọn model nhỏ theo domain | Nhiều lần inference           |
+| Maintainability | Tách domain ownership             | Tăng orchestration complexity |
+| Security        | Phân quyền riêng từng Agent       | Tăng số trust boundary        |
+
+Quan điểm thiết kế: Không nên tạo nhiều Agent chỉ để làm kiến trúc trông có vẻ thông minh.
+
+Nếu một function hoặc một workflow deterministic giải quyết được vấn đề, hãy dùng nó.
+
+Agent Handoff chỉ thực sự đáng giá khi cần chuyển quyền điều khiển giữa các domain có trách nhiệm, context và quyền hạn khác nhau.
+
+## 8. Keywords thường gặp trong đề AIP-C01
+
+| Keyword trong scenario    | Hướng suy luận                 |
+| ------------------------- | ------------------------------ |
+| Transfer control          | Handoff                        |
+| Specialized agent         | Agent chuyên môn               |
+| Delegate task             | Ủy quyền                       |
+| Independent agents        | A2A / service boundary         |
+| Shared context            | Context propagation            |
+| Cross-agent communication | A2A                            |
+| Tool integration          | MCP / Gateway                  |
+| Persistent session state  | State store                    |
+| Agent identity            | AgentCore Identity             |
+| Prevent recursive calls   | Handoff depth / loop control   |
+| Distributed tracing       | Observability / correlation ID |
+
+## 9. Exam Traps
+
+Trap 1: Agent A gọi Agent B tức là Handoff.
+
+Sai. Gọi một tool hoặc API để lấy kết quả không nhất thiết là chuyển quyền điều khiển. Phải xét control-flow semantics.
+
+Trap 2: Dùng MCP để giao tiếp giữa mọi Agent.
+
+Sai. MCP chủ yếu chuẩn hóa việc kết nối với tools và context. A2A phù hợp hơn khi cần giao tiếp giữa các Agent độc lập.
+
+Trap 3: Tất cả Agent dùng chung một session memory là đủ.
+
+Sai. Session, persistent state và semantic memory là các khái niệm khác nhau.
+
+Trap 4: Chuyển toàn bộ conversation history là tốt nhất.
+
+Sai. Có thể tăng token cost, latency và rò rỉ thông tin không cần thiết. Hãy chuyển context tối thiểu nhưng đầy đủ.
+
+Trap 5: Agent nhận handoff kế thừa quyền của Agent gửi.
+
+Sai. Authorization phải được thực hiện theo identity và policy phù hợp.
+
+Trap 6: Dùng Step Functions để thay thế toàn bộ agent reasoning.
+
+Sai. Step Functions phù hợp với workflow có trạng thái và các bước deterministic. Agent framework chịu trách nhiệm reasoning và quyết định hành động động. Hai thành phần có thể phối hợp.
+
+## 10. Scenario Professional-Level
+
+Exam simulation
+
+Một doanh nghiệp xây dựng hệ thống AI phân tích kiến trúc AWS.
+
+Yêu cầu:
+
+- Supervisor Agent tiếp nhận request.
+- Backend Agent đánh giá API và database.
+- Security Agent thực hiện security audit.
+- Cost Agent tính toán chi phí.
+- Các Agent chạy trên các AgentCore Runtime độc lập.
+- Security Agent có quyền đọc security configuration nhưng không được phép sửa đổi.
+- Backend Agent có thể chuyển một phần công việc cho Database Specialist.
+- Hệ thống phải theo dõi được toàn bộ execution và tránh lặp handoff vô hạn.
+
+Doanh nghiệp muốn giảm coupling giữa các Agent và cho phép các team phát triển Agent bằng framework khác nhau.
+
+Phương án nào phù hợp nhất?
+
+Chọn một đáp án
+
+A.
+
+&amp;#x20;Dùng một AgentCore Runtime duy nhất, chia các Agent thành các function bên trong và sử dụng chung toàn bộ IAM permissions.
+
+B.
+
+&amp;#x20;Triển khai Agent độc lập trên AgentCore Runtime, sử dụng A2A cho giao tiếp Agent-to-Agent, truyền context/task metadata rõ ràng, áp dụng identity và authorization riêng, đồng thời giới hạn handoff và thiết lập distributed tracing.
+
+C.
+
+&amp;#x20;Sử dụng MCP cho toàn bộ giao tiếp giữa các Agent, chia sẻ một conversation history và một IAM role để giảm độ phức tạp.
+
+D.
+
+&amp;#x20;Sử dụng Step Functions để quyết định tất cả reasoning của các Agent, không cần Agent framework hoặc context propagation.
+
+Nộp đáp án và phân tích
+
+### Cách AWS ra đề
+
+Đừng chỉ nhìn thấy từ "multiple agents" rồi chọn A2A.
+
+Hãy tìm các hidden requirements:
+
+1. Independent Runtime: Agent có boundary thực thi riêng.
+2. Different frameworks: Cần giao tiếp qua protocol trung lập.
+3. Different permissions: Cần identity và authorization độc lập.
+4. Nested handoff: Backend có thể tiếp tục chuyển cho Database Specialist.
+5. No infinite loops: Cần giới hạn vòng lặp.
+6. End-to-end tracing: Cần correlation và observability.
+
+Điều quan trọng là chọn phương án giải quyết đồng thời các constraint, không phải phương án chỉ có thể thực hiện handoff.
+
+
 
 </code></pre>
 </div>
