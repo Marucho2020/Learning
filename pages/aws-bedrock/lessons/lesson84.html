@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang='vi'><head><meta charset='UTF-8'>
 <meta name='viewport' content='width=device-width, initial-scale=1.0'>
-<title>Lesson 85 -- AIP-C01  --=Agent Loop — stopping condition / timeout / circuit breaker -//</title>
+<title>Lesson 85 -- AIP-C01  --=AgentCore Policy / authorization boundary -//</title>
 <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css'>
 <script src='https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js'></script>
 <script id='MathJax-script' async src='https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'></script>
@@ -27,12 +27,836 @@ pre { padding: 20px; border-radius: 8px; white-space: pre-wrap; word-break: brea
 .theme-toggle-btn { display: block; margin: 20px auto; padding: 8px 16px; background: transparent; border: 1px solid #888; color: inherit; border-radius: 5px; cursor: pointer; }
 </style></head><body onload='initLesson()'>
 <div class='container'>
-<div class='nav-bar'><a class='nav-btn' href='lesson83.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../aws-bedrock-agent-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson85.html'>Bài sau ➡️</a></div><h1>Lesson 85 -- AIP-C01  --=Agent Loop — stopping condition / timeout / circuit breaker -//</h1>
+<div class='nav-bar'><a class='nav-btn' href='lesson83.html'>⬅️ Bài trước</a><a class='nav-btn home-nav' href='../aws-bedrock-agent-learning-list.html'>📋 Mục Lục</a><a class='nav-btn' href='lesson85.html'>Bài sau ➡️</a></div><h1>Lesson 85 -- AIP-C01  --=AgentCore Policy / authorization boundary -//</h1>
 <button id='doneButton' class='done-btn' onclick='toggleDone()'>Mark as Done ⚪</button>
 <div class='content-box'>
 <button class='copy-btn' onclick='copyContent()'>📋 Copy nội dung</button>
 <pre><code id='lessonCode'>
- 
+
+# AgentCore Policy / Authorization Boundary
+
+Chủ đề: Thiết kế ranh giới phân quyền cho Agentic AI trong môi trường Enterprise Production.
+
+Đây là một trong những chủ đề quan trọng nhất khi đưa Agentic AI từ POC lên Production.
+
+Có một nguyên tắc cần nhớ:
+
+&gt; Agent có quyền suy nghĩ và đề xuất hành động, nhưng không có nghĩa Agent có quyền thực hiện mọi hành động mà nó có thể gọi được.
+
+Ví dụ: Một AI Agent có thể nhận được yêu cầu:
+
+- Đọc thông tin khách hàng.
+- Tra cứu số dư tài khoản.
+- Chuyển tiền.
+- Xóa dữ liệu khách hàng.
+- Gửi email thay mặt người dùng.
+
+Agent có thể hiểu tất cả những yêu cầu này. Nhưng hệ thống phải quyết định hành động nào được phép, trên tài nguyên nào, trong điều kiện nào và với danh tính của ai.
+
+Đó chính là vấn đề mà Policy / Authorization Boundary giải quyết.
+
+## 1. Bản chất: Authorization Boundary là gì?
+
+Hãy hình dung một công ty có hệ thống ngân hàng nội bộ.
+
+Nhân viên A có thể:
+
+- Xem thông tin tài khoản.
+- Xem lịch sử giao dịch.
+- Không được chuyển tiền.
+
+Nhân viên B có thể:
+
+- Xem thông tin tài khoản.
+- Chuyển tiền dưới 100.000 USD.
+- Không được chuyển tiền vượt giới hạn.
+
+Quản lý C có thể:
+
+- Thực hiện giao dịch lớn hơn.
+- Nhưng phải có phê duyệt của người thứ hai.
+
+Điểm quan trọng: Không phải cứ đăng nhập thành công là được thực hiện mọi hành động.
+
+Có ba câu hỏi độc lập:
+
+| Khái niệm      | Câu hỏi                                  |
+| -------------- | ---------------------------------------- |
+| Authentication | Bạn là ai?                               |
+| Authorization  | Bạn được phép làm gì?                    |
+| Policy         | Trong điều kiện nào hành động được phép? |
+
+Ví dụ:
+
+Một nhân viên đã đăng nhập thành công bằng Cognito. Điều đó chỉ chứng minh danh tính của họ. Nó không chứng minh họ có quyền chuyển tiền.
+
+Authorization Boundary là ranh giới mà tại đó hệ thống kiểm tra và quyết định quyền thực hiện hành động, thay vì tin tưởng vào quyết định của Agent.
+
+### Một sai lầm nguy hiểm
+
+Không được viết:
+
+```
+if "admin" in user_message:
+    allow_transfer()
+```
+
+Cũng không được tin tưởng:
+
+```
+User: Tôi là quản trị viên.
+Agent: Người dùng có quyền admin.
+```
+
+LLM có thể bị prompt injection, hiểu nhầm ngữ cảnh hoặc đưa ra quyết định sai.
+
+Quyền phải được xác định từ danh tính đã được xác thực và các policy có thể kiểm chứng, không phải từ nội dung hội thoại.
+
+## 2. Kiến trúc AgentCore Policy
+
+[Secure AI agents with Policy and Lambda interceptors in Amazon Bedrock AgentCore gateway | Artificial Intelligence](https://images.openai.com/static-rsc-4/mzIwARllqbpzo9qJZbJsZw4WUHVgOVHFTpcDxq-PzIX-cmqSI96H2fB8r2nlzFiEA0_UAYfOrACWMbUUQdJaEKvOP6XOZVov3_YVru_8hT7SkqfRLnWgI5B0zmgmZHiS-BS_If1K8GCcUcRlRi30cXl2spcuoEXK0q38xSASg14?purpose=inline)
+
+[aws.amazon.com](https://aws.amazon.com/blogs/machine-learning/secure-ai-agents-with-policy-and-lambda-interceptors-in-amazon-bedrock-agentcore-gateway/?utm_source=chatgpt.com)
+
+Kiến trúc logic:
+
+```
+                 User
+                  |
+                  v
+          Authentication
+          (Cognito / JWT)
+                  |
+                  v
+           AgentCore Runtime
+                  |
+                  v
+              AI Agent
+                  |
+             Tool Request
+                  |
+                  v
+          AgentCore Gateway
+                  |
+                  v
+          Policy Engine
+             (Cedar)
+                  |
+          Authorization Check
+             /          \
+          DENY          PERMIT
+           |               |
+        Reject             v
+                     Target Service
+                      /     |     \
+                   Lambda  API   MCP
+                      |
+                      v
+                  Database
+```
+
+Điểm quan trọng nhất:
+
+AgentCore Policy được tích hợp tại AgentCore Gateway, không phải nằm trong LLM và cũng không phải là một prompt instruction.
+
+Gateway chặn tool invocation và chuyển yêu cầu đến Policy Engine để đánh giá trước khi cho phép target được gọi.&amp;#x20;
+
+[image](https://www.google.com/s2/favicons?domain=https://docs.aws.amazon.com\&amp;sz=32)
+
+Amazon Bedrock AgentCore+1
+
+
+
+### 2.1. Các thành phần
+
+| Thành phần        | Trách nhiệm                                   |
+| ----------------- | --------------------------------------------- |
+| AgentCore Runtime | Chạy agent                                    |
+| AgentCore Gateway | Quản lý và định tuyến tool invocation         |
+| Policy Engine     | Lưu trữ và đánh giá policy                    |
+| Cedar             | Ngôn ngữ định nghĩa authorization             |
+| Target            | Lambda, API, MCP server...                    |
+| Backend           | Thực hiện nghiệp vụ và kiểm tra quyền dữ liệu |
+
+Hãy nhớ sự phân chia:
+
+- Runtime: Agent hoạt động ở đâu?
+- Gateway: Agent gọi tool qua đâu?
+- Policy Engine: Agent được gọi tool nào và trong điều kiện nào?
+- Backend: Người gọi có thực sự được phép thực hiện nghiệp vụ trên dữ liệu cụ thể không?
+
+## 3. Cedar Policy — trái tim của Authorization
+
+Cedar là ngôn ngữ policy-based authorization mã nguồn mở do AWS phát triển.
+
+Thay vì viết logic phân quyền rải rác trong hàng chục Lambda, bạn khai báo các quy tắc tập trung.
+
+Một Cedar policy xoay quanh ba đối tượng:
+
+Principal
+
+WHO
+
+Action
+
+WHAT
+
+Resource
+
+WHERE
+
+Condition: WHEN?
+
+Các điều kiện bổ sung quyết định hành động có được thực hiện hay không.
+
+Ví dụ:
+
+- Principal: Nhân viên thuộc phòng Finance.
+- Action: Gọi tool `process_refund`.
+- Resource: Refund Gateway.
+- Condition: Số tiền hoàn dưới 1.000 USD.
+
+### 3.1. Ví dụ Cedar thực tế
+
+Giả sử hệ thống có tool:
+
+```
+RefundTarget___process_refund
+```
+
+Yêu cầu nghiệp vụ:
+
+&gt; Chỉ cho phép xử lý refund nếu số tiền nhỏ hơn 1.000 USD.
+
+Cedar policy:
+
+```
+permit(
+    principal,
+    action == AgentCore::Action::"RefundTarget___process_refund",
+    resource == AgentCore::Gateway::"gateway-arn"
+)
+when {
+    context.input.amount &lt; 1000
+};
+```
+
+Giải thích:
+
+| Thành phần             | Ý nghĩa                  |
+| ---------------------- | ------------------------ |
+| `permit`               | Cho phép                 |
+| `principal`            | Người hoặc danh tính gọi |
+| `action`               | Tool được gọi            |
+| `resource`             | Gateway áp dụng policy   |
+| `context.input.amount` | Giá trị đầu vào          |
+| `&lt; 1000`               | Điều kiện giới hạn       |
+
+Kết quả:
+
+- Refund 500 USD → được phép.
+- Refund 999 USD → được phép.
+- Refund 1.000 USD → không được phép.
+- Refund 5.000 USD → không được phép.
+
+Lưu ý: Ví dụ trên cho phép mọi principal phù hợp với phạm vi policy, vì chưa giới hạn danh tính. Production phải bổ sung điều kiện principal hoặc kết hợp với policy khác theo yêu cầu.
+
+[image](https://www.google.com/s2/favicons?domain=https://docs.aws.amazon.com\&amp;sz=32)
+
+Amazon Bedrock AgentCore+2
+
+### 3.2. Permit và Forbid
+
+Đây là phần cực kỳ quan trọng đối với kỳ thi.
+
+Cedar sử dụng hai loại policy:
+
+| Policy   | Ý nghĩa                        |
+| -------- | ------------------------------ |
+| `permit` | Cho phép khi điều kiện phù hợp |
+| `forbid` | Từ chối khi điều kiện phù hợp  |
+
+AgentCore Policy áp dụng hai quy tắc:
+
+1. Default Deny: Không có policy `permit` phù hợp thì mặc định từ chối.
+2. Forbid Wins: Nếu có `forbid` phù hợp thì từ chối, kể cả khi có `permit` khác cho phép.
+
+Ví dụ:
+
+```
+permit(
+    principal,
+    action,
+    resource
+);
+
+forbid(
+    principal,
+    action,
+    resource
+)
+when {
+    context.input.amount &gt; 5000
+};
+```
+
+Kết quả:
+
+| Amount | Kết quả |
+| ------ | ------- |
+| 100    | Permit  |
+| 1.000  | Permit  |
+| 5.000  | Permit  |
+| 5.001  | Forbid  |
+
+Nếu không có `permit` nào phù hợp, kết quả vẫn là DENY.
+
+Trap: Nhiều người nghĩ chỉ cần có một policy Allow là request được phép. Sai. Một policy Forbid phù hợp sẽ thắng.
+
+[image](https://www.google.com/s2/favicons?domain=https://docs.aws.amazon.com\&amp;sz=32)
+
+Amazon Bedrock AgentCore+1
+
+## 4. Authorization Boundary trong kiến trúc nhiều lớp
+
+Đây là phần cần hiểu ở mức Senior Engineer.
+
+Giả sử có hệ thống gồm:
+
+- Agent A: Customer Support.
+- Agent B: Finance.
+- Agent C: Administrator.
+- Một database khách hàng dùng chung.
+- Một Lambda xử lý refund.
+- Một API quản lý thông tin khách hàng.
+
+Bạn có thể nghĩ rằng chỉ cần AgentCore Policy là đủ.
+
+Tôi không đồng ý.
+
+AgentCore Policy không thay thế authorization ở backend.
+
+Một hệ thống production nên có nhiều lớp kiểm soát.
+
+[Designing Zero Trust for APIs: Service Mesh vs API Gateway vs Hybrid Architecture | by Dilini Mampitiya | Sysco LABS Sri Lanka | Medium](https://images.openai.com/static-rsc-4/OiwWsL_IWbTzLwWfb_Dp685Bb16R7TZFzNr_QAe7z5xJYzY1rRTb-5mCevOyLEXNEIvZFzqVWoQ6dPs_TsXsuZMvkO-ZSjOV6ZoxlJokCx4lVFby4SfCmdEPvpH2da3rZ9hpP5EG45OHGezqKZTehVRIFecKz3vJoKCBd6-odXw?purpose=inline)
+
+[medium.com](https://medium.com/sysco-labs/designing-zero-trust-for-apis-service-mesh-vs-api-gateway-vs-hybrid-architecture-0b137d131721?utm_source=chatgpt.com)
+
+### Lớp 1: Identity / Authentication
+
+Xác định người dùng thực sự là ai.
+
+AWS:
+
+- Amazon Cognito.
+- IAM.
+- OAuth 2.0 / OIDC.
+- JWT.
+
+Ví dụ:
+
+```
+user_id = employee_123
+department = finance
+role = finance_operator
+```
+
+Không lấy những giá trị này từ lời nói của LLM. Phải lấy từ identity đã được xác thực hoặc nguồn dữ liệu tin cậy.
+
+### Lớp 2: AgentCore Policy
+
+Kiểm tra:
+
+- Principal có được gọi tool không?
+- Tool nào được phép?
+- Có giới hạn số tiền không?
+- Có giới hạn theo thời gian không?
+- Có bị cấm theo điều kiện session không?
+
+Đây là lớp authorization tại Gateway.
+
+### Lớp 3: Backend Authorization
+
+Ví dụ:
+
+Agent gọi:
+
+```
+{
+  "customer_id": "customer_999",
+  "action": "read_profile"
+}
+```
+
+Policy có thể cho phép gọi `read_profile`.
+
+Nhưng backend phải kiểm tra thêm:
+
+```
+if request.customer_id not in user.authorized_customers:
+    raise PermissionError()
+```
+
+Tại sao?
+
+Vì được phép gọi tool `read_profile` không đồng nghĩa được đọc hồ sơ của tất cả khách hàng.
+
+Đây là khác biệt giữa:
+
+- Tool-level authorization.
+- Resource-level / object-level authorization.
+
+### Lớp 4: Data-level Security
+
+Database cần tiếp tục bảo vệ dữ liệu:
+
+- IAM database authentication.
+- PostgreSQL Row-Level Security.
+- Database roles.
+- Encryption.
+- VPC và network controls.
+
+Không nên để một Gateway Policy trở thành lớp bảo vệ duy nhất của dữ liệu nhạy cảm.
+
+### Tổng kết
+
+| Lớp                   | Bảo vệ điều gì?                               |
+| --------------------- | --------------------------------------------- |
+| Authentication        | Xác định danh tính                            |
+| Gateway Policy        | Cho phép hoặc cấm tool invocation             |
+| Backend authorization | Kiểm tra quyền nghiệp vụ và đối tượng dữ liệu |
+| Database security     | Bảo vệ dữ liệu ở tầng lưu trữ                 |
+
+## 5. Authorization Boundary và Agent Identity
+
+Một câu hỏi rất quan trọng:
+
+Nếu có 100 người dùng cùng sử dụng một Agent Runtime thì AgentCore Policy làm thế nào để biết ai đang gọi tool?
+
+Câu trả lời: Cần truyền danh tính người dùng đã xác thực qua toàn bộ authorization flow.
+
+Ví dụ:
+
+```
+User A
+  |
+  | JWT
+  v
+Agent Runtime
+  |
+  | User A identity context
+  v
+Gateway
+  |
+  v
+Policy Engine
+  |
+  | Evaluate principal = User A
+  v
+Tool
+```
+
+Giả sử:
+
+- User A thuộc Finance.
+- User B thuộc Customer Support.
+
+Policy:
+
+```
+Finance:
+  Can call process_refund
+
+Customer Support:
+  Cannot call process_refund
+```
+
+Khi đó cùng một Agent có thể phục vụ nhiều nhóm người dùng nhưng quyền khác nhau.
+
+Một Agent không nên được xem là một danh tính có quyền chung cho tất cả người dùng.
+
+### Hai khái niệm cần phân biệt
+
+| Khái niệm      | Ý nghĩa                                          |
+| -------------- | ------------------------------------------------ |
+| Agent identity | Danh tính kỹ thuật của agent hoặc workload       |
+| User identity  | Danh tính người dùng cuối đang yêu cầu hành động |
+
+Đây là vấn đề của identity propagation và delegated authorization.
+
+Nếu Gateway chỉ nhìn thấy IAM role chung của Runtime mà không nhận được danh tính người dùng một cách đáng tin cậy, hệ thống có nguy cơ áp dụng quyền của workload cho tất cả người dùng.
+
+Vì vậy, cần thiết kế identity propagation rõ ràng, không chỉ truyền một trường `user_id` do LLM tự tạo.
+
+## 6. Những năng lực nâng cao của AgentCore Policy
+
+Đây là kiến thức production đáng chú ý và cũng là nơi có thể xuất hiện câu hỏi khó.
+
+### 6.1. Input-based Authorization
+
+Phân quyền dựa trên tham số đầu vào của tool.
+
+Ví dụ:
+
+```
+transfer_money(amount=500)
+transfer_money(amount=50000)
+```
+
+Cùng một tool nhưng quyền thực hiện khác nhau tùy amount.
+
+Ứng dụng:
+
+- Giới hạn refund.
+- Giới hạn số tiền chuyển.
+- Giới hạn số lượng dữ liệu xuất.
+- Chặn các thao tác nhạy cảm.
+
+### 6.2. Temporal Policy
+
+Policy có thể xem xét lịch sử hành động trong cùng một policy session.
+
+Ví dụ:
+
+```
+Một session chỉ được phép refund tối đa 3 lần.
+```
+
+Lần 1 → Permit.
+
+Lần 2 → Permit.
+
+Lần 3 → Permit.
+
+Lần 4 → Deny.
+
+Đây là điểm khác với policy thông thường chỉ đánh giá request hiện tại.
+
+Lưu ý: Temporal policy phải có policy session và identity propagation phù hợp; không được nhầm với một biến đếm trong memory của LLM.
+
+### 6.3. Guardrail-aware Policy
+
+Có thể sử dụng tín hiệu do Guardrails cung cấp trong quá trình đánh giá policy.
+
+Ví dụ:
+
+```
+Nếu yêu cầu có dấu hiệu prompt injection
+thì không cho phép thực hiện thao tác nhạy cảm.
+```
+
+Cần phân biệt:
+
+- Guardrails: Đánh giá nội dung, mức độ rủi ro hoặc các tín hiệu an toàn.
+- Policy: Quyết định authorization dựa trên các điều kiện và tín hiệu đó.
+
+Guardrails không thay thế IAM hoặc backend authorization.
+
+### 6.4. Natural Language Policy Authoring
+
+AWS hỗ trợ mô tả policy bằng ngôn ngữ tự nhiên, sau đó tạo policy ứng viên bằng Cedar.
+
+Ví dụ:
+
+```
+Only finance managers can approve refunds
+above $1,000.
+```
+
+Hệ thống hỗ trợ tạo và kiểm tra policy dựa trên schema của Gateway.
+
+Nhưng không được hiểu rằng:
+
+&gt; Viết một câu tiếng Anh là AWS tự động đảm bảo hệ thống phân quyền chính xác.
+
+Kỹ sư vẫn phải review logic, kiểm tra các trường hợp biên và xác nhận policy trước khi enforce.
+
+Đặc biệt, AWS hiện sử dụng Dogwood, một policy language tương thích với Cedar, bổ sung các điều kiện cho Guardrails và Temporal Policy. Cedar thuần vẫn được hỗ trợ; mọi policy Cedar hợp lệ cũng là policy Dogwood hợp lệ.&amp;#x20;
+
+[image](https://www.google.com/s2/favicons?domain=https://docs.aws.amazon.com\&amp;sz=32)
+
+Amazon Bedrock AgentCore+1
+
+
+
+## 7. So sánh những công nghệ dễ nhầm
+
+| Công nghệ                             | Vai trò chính                             | Không thay thế                          |
+| ------------------------------------- | ----------------------------------------- | --------------------------------------- |
+| IAM                                   | AWS resource/API permissions              | Business authorization                  |
+| Cognito                               | User authentication và identity           | Tool authorization                      |
+| AgentCore Policy                      | Tool-level authorization tại Gateway      | Backend authorization                   |
+| Guardrails                            | Safety/content controls                   | Access control                          |
+| AgentCore Identity                    | Quản lý danh tính và credential cho agent | Policy decision                         |
+| Lambda authorizer / custom middleware | Custom authorization logic                | Không tự động tạo boundary cho mọi tool |
+| Database RLS                          | Row-level data authorization              | Tool-level authorization                |
+
+### Một điểm rất dễ nhầm: IAM và Cedar
+
+IAM trả lời:
+
+&gt; AWS principal này có được gọi AWS API hoặc truy cập AWS resource không?
+
+Cedar trả lời:
+
+&gt; Principal này có được thực hiện action này trên Gateway trong điều kiện hiện tại không?
+
+Chúng bổ sung cho nhau, không thay thế nhau.
+
+Ví dụ, Gateway Execution Role cần quyền gọi Policy Engine để thực hiện authorization. Trong tài liệu AWS hiện tại, các quyền quan trọng gồm:
+
+- `bedrock-agentcore:AuthorizeAction`
+- `bedrock-agentcore:PartiallyAuthorizeActions`
+- `bedrock-agentcore:GetPolicyEngine`
+
+Thiếu những quyền này có thể khiến Policy Engine không đánh giá được và tool invocation bị từ chối, kể cả khi đã có policy `permit`.&amp;#x20;
+
+[image](https://www.google.com/s2/favicons?domain=https://docs.aws.amazon.com\&amp;sz=32)
+
+Amazon Bedrock AgentCore
+
+
+
+## 8. Production Design: Thiết kế hệ thống ngân hàng
+
+[Propagate user authorization context in AI agents with Amazon Bedrock AgentCore | AWS Security Blog](https://images.openai.com/static-rsc-4/so6xNVjlqmDHK0QRZW8yTNxGtFR40cSo7UKg_oGnl8XTT6oS5vwqlJ8aEbxAvUgk4xt9sx7WCYRiByJ2Hygp1VZBTC7ePj_IqkzDuIElxW7w9CFLigm2MgjC1m8h3XqTJzvkzKiWXIWqHbHlMzHYg5vpxks05L2sMSc8LW3LqcE?purpose=inline)
+
+[aws.amazon.com](https://aws.amazon.com/blogs/security/propagate-user-authorization-context-in-ai-agents-with-amazon-bedrock-agentcore/?utm_source=chatgpt.com)
+
+Giả sử xây dựng Banking AI Agent.
+
+Các chức năng:
+
+1. Xem số dư.
+2. Xem lịch sử giao dịch.
+3. Chuyển tiền.
+4. Hủy giao dịch.
+5. Tạo báo cáo tài khoản.
+
+### Thiết kế quyền
+
+| Vai trò  | Read balance           | Transfer       | Cancel transaction |
+| -------- | ---------------------- | -------------- | ------------------ |
+| Customer | Tài khoản của mình     | Giới hạn       | Giao dịch của mình |
+| Support  | Theo phạm vi được giao | Không          | Không              |
+| Finance  | Theo phạm vi nghiệp vụ | Có giới hạn    | Theo quyền         |
+| Admin    | Theo quyền quản trị    | Không mặc định | Không mặc định     |
+
+### Luồng chuyển tiền
+
+```
+1. User yêu cầu chuyển 20.000 USD
+             |
+             v
+2. Cognito xác thực User
+             |
+             v
+3. Agent phân tích yêu cầu
+             |
+             v
+4. Agent gọi transfer_money
+             |
+             v
+5. AgentCore Gateway
+             |
+             v
+6. AgentCore Policy
+   - User có quyền transfer?
+   - Amount có vượt giới hạn?
+   - Có điều kiện cấm nào không?
+             |
+        +----+----+
+        |         |
+       DENY     PERMIT
+                  |
+                  v
+          7. Lambda Backend
+             - Kiểm tra tài khoản
+             - Kiểm tra số dư
+             - Kiểm tra hạn mức
+             - Kiểm tra trạng thái giao dịch
+                  |
+                  v
+          8. Human approval nếu cần
+                  |
+                  v
+          9. Execute transaction
+```
+
+### Tại sao phải kiểm tra cả hai nơi?
+
+Giả sử Cedar cho phép chuyển tiền dưới 10.000 USD.
+
+Nhưng tài khoản khách hàng chỉ có 2.000 USD.
+
+Nếu chỉ kiểm tra Cedar thì không đủ.
+
+Backend vẫn phải kiểm tra số dư.
+
+Một ví dụ khác:
+
+Cedar cho phép gọi `transfer_money`, nhưng người dùng truyền `source_account_id` của người khác.
+
+Gateway Policy có thể cho phép tool invocation, nhưng backend phải kiểm tra quyền sở hữu tài khoản.
+
+Authorization tại Gateway quyết định có được gọi hành động; backend quyết định hành động đó có hợp lệ với tài nguyên và trạng thái nghiệp vụ cụ thể hay không.
+
+### Trade-off
+
+| Tiêu chí        | Đánh giá                                                 |
+| --------------- | -------------------------------------------------------- |
+| Security        | Tăng đáng kể nhờ centralized enforcement                 |
+| Maintainability | Tốt hơn so với phân quyền rải rác trong Agent            |
+| Latency         | Có thêm bước policy evaluation                           |
+| Cost            | Có chi phí policy evaluation và vận hành                 |
+| Scalability     | Policy tập trung, dùng chung cho nhiều agent qua Gateway |
+| Complexity      | Phải thiết kế identity propagation và policy lifecycle   |
+| Reliability     | Cần xử lý lỗi authorization, timeout và fail-closed      |
+
+Với hệ thống tài chính, tôi ưu tiên fail-closed: nếu không thể xác minh quyền thì không thực hiện giao dịch.
+
+## 9. Exam Knowledge — AIP-C01: Keywords và Exam Traps
+
+High-value exam concepts
+
+| Keyword trong đề                    | Hướng suy nghĩ                                                   |
+| ----------------------------------- | ---------------------------------------------------------------- |
+| Centralized authorization           | AgentCore Policy                                                 |
+| Fine-grained tool access            | Cedar                                                            |
+| Based on user identity              | Principal-scoped policy                                          |
+| Based on tool parameters            | Input-based policy                                               |
+| Default deny                        | Không có permit phù hợp thì deny                                 |
+| Explicit deny overrides allow       | Forbid wins                                                      |
+| Session action history              | Temporal policy                                                  |
+| Prompt injection risk               | Không tin tưởng quyết định của LLM; kết hợp Guardrails và Policy |
+| Different permissions per user      | Identity propagation                                             |
+| Protect individual customer records | Backend/object-level authorization                               |
+| Multiple agents share tools         | Gateway và Policy tập trung                                      |
+
+### Các bẫy thường gặp
+
+Trap 1: Chỉ dùng System Prompt để kiểm soát quyền.
+
+Sai vì LLM không phải security enforcement point.
+
+Trap 2: Dùng IAM để thay thế toàn bộ AgentCore Policy.
+
+Sai vì IAM và Cedar xử lý các lớp authorization khác nhau.
+
+Trap 3: Có một policy Permit là mọi request đều được phép.
+
+Sai vì Default Deny và Forbid Wins.
+
+Trap 4: Policy cho phép tool là đủ bảo vệ database.
+
+Sai vì không đảm bảo quyền truy cập từng record.
+
+Trap 5: Mỗi Agent phải triển khai một bộ authorization riêng.
+
+Không phải lựa chọn tốt khi nhiều Agent chia sẻ Gateway và business tools. Centralized policy thường phù hợp hơn.
+
+Trap 6: Tin `user_id` do Agent truyền vào.
+
+Sai. Phải bảo đảm danh tính được truyền từ nguồn authentication đáng tin cậy và không thể bị người dùng hoặc LLM giả mạo.
+
+## 10. Professional-level Scenario
+
+Difficulty: Advanced
+
+Một ngân hàng triển khai hệ thống Multi-Agent trên Amazon Bedrock AgentCore.
+
+Hệ thống có:
+
+- Customer Agent: Phục vụ khách hàng.
+- Finance Agent: Xử lý refund và chuyển tiền.
+- Support Agent: Tra cứu thông tin giao dịch.
+- Tất cả Agent sử dụng chung một AgentCore Gateway.
+- Gateway kết nối tới Lambda và MCP tools.
+- Database Aurora PostgreSQL chứa dữ liệu của tất cả khách hàng.
+
+Yêu cầu:
+
+1. Customer chỉ được đọc tài khoản của chính mình.
+2. Finance có thể refund tối đa 1.000 USD mỗi giao dịch.
+3. Customer Support không được gọi tool refund.
+4. Nếu có dấu hiệu prompt injection, các hành động nhạy cảm phải bị chặn.
+5. Một session không được thực hiện quá 3 lần refund.
+6. Hệ thống phải có centralized authorization, không phụ thuộc vào framework hoặc prompt của từng Agent.
+7. Nếu authorization không xác định được, không được thực hiện hành động.
+
+Bạn chọn kiến trúc nào?
+
+A. Viết authorization logic trong System Prompt của từng Agent. Dùng Lambda để kiểm tra số tiền và quyền người dùng.
+
+B. Dùng AgentCore Gateway kết hợp Policy Engine với Cedar/Dogwood để kiểm tra principal, tool và input; sử dụng Guardrail signals và temporal policies; backend tiếp tục kiểm tra quyền sở hữu record và nghiệp vụ.
+
+C. Chỉ sử dụng IAM Roles riêng cho Customer, Finance và Support. Database dùng một IAM role chung để truy cập.
+
+D. Sử dụng Guardrails để ngăn prompt injection và chặn tool refund của Support. Các Agent còn lại được quyền gọi tool thông qua Gateway.
+
+Đáp án A
+
+Đáp án B
+
+Đáp án C
+
+Đáp án D
+
+Kiểm tra đáp án và phân tích
+
+### Cách AWS ra đề
+
+Đề Professional thường không hỏi đơn giản: "Dịch vụ nào dùng để phân quyền?"
+
+Họ đưa ra nhiều constraint đồng thời:
+
+- Nhiều Agent dùng chung tools.
+- Quyền phụ thuộc vào người dùng.
+- Quyền phụ thuộc vào giá trị input.
+- Có lịch sử hành động trong session.
+- Có rủi ro prompt injection.
+- Cần centralized enforcement.
+- Không được bypass bằng cách thay đổi prompt hoặc framework.
+
+Cách chọn đáp án:
+
+1. Centralized tool authorization → AgentCore Gateway + Policy.
+2. Identity-based → Principal.
+3. Input-based → `context.input`.
+4. Session history → Temporal Policy.
+5. Prompt attack signal → Guardrails + Policy.
+6. Data ownership → Backend authorization.
+7. Không xác định được quyền → Default Deny.
+
+Đáp án tốt nhất thường là kiến trúc kết hợp nhiều lớp, không phải một dịch vụ duy nhất.
+
+## 11. Những tài liệu AWS nên đọc
+
+Để học đúng phiên bản AgentCore hiện hành, ưu tiên:
+
+1. [Policy in Amazon Bedrock AgentCore — Overview](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/policy.html?utm_source=chatgpt.com).
+2. [AgentCore Policy — Core Concepts](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/policy-core-concepts.html?utm_source=chatgpt.com).
+3. [Create a Policy — Cedar Policy](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/policy-create-policies.html?utm_source=chatgpt.com).
+4. [Policy Authoring Guide — Cedar and Dogwood](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/policy-authoring-guide.html?utm_source=chatgpt.com).
+5. [Gateway and Policy IAM Permissions](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/policy-permissions.html?utm_source=chatgpt.com).
+
+## Kết luận cần ghi nhớ
+
+## 5 nguyên tắc cốt lõi
+
+1. Agent biết làm không có nghĩa Agent được phép làm.
+2. Gateway + Policy Engine là authorization boundary cho tool invocation.
+3. Cedar dùng Principal + Action + Resource + Condition.
+4. Default Deny và Forbid Wins là hai nguyên tắc quan trọng.
+5. Gateway Policy không thay thế Backend Authorization và Database Security.
+
+Đây là tư duy cần có khi thiết kế Agentic AI Enterprise: Agent được trao khả năng hành động, nhưng quyền hành động phải nằm ngoài sự kiểm soát của LLM.
+
+Bạn nên nhớ đặc biệt sự khác biệt giữa Tool-level Authorization và Object-level Authorization. Đây là ranh giới giữa một kiến trúc Agent chỉ chạy được và một kiến trúc có thể vận hành an toàn trong Enterprise Production.
+
+
+
+
 
 </code></pre>
 </div>
